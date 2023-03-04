@@ -272,6 +272,7 @@ class FileTools{
 	}
 	
 	public function getTmpDir(){
+		if (!is_dir($GLOBALS['tmp dir'])){$this->statistics['added dirs']+=intval(mkdir($GLOBALS['tmp dir'],0775));}
 		if (!isset($_SESSION[__CLASS__]['tmpDir'])){
 			$_SESSION[__CLASS__]['tmpDir']=$this->arr['Datapool\Tools\StrTools']->getRandomString(20);
 			$_SESSION[__CLASS__]['tmpDir'].='/';
