@@ -78,6 +78,9 @@ class Database{
 		}
 	}
 	
+	/**
+	* @return array|FALSE The method returns information for all columns of the provided database table or all columns of all tables if no table is provided or FALS if the table does not exist.
+	*/
 	public function getDbInfo($table=FALSE){
 		if ($table){
 			if (isset($this->dbInfo[$table])){
@@ -90,17 +93,23 @@ class Database{
 		}
 	}
 	
+	/**
+	* @return string|FALSE The method returns the table for the provided class with namespace. If the table does not exist, FALSE will be returned.
+	*/
 	public function class2source($class,$toTypeOnly=FALSE,$keepCapitalization=FALSE){
 		$source=explode('\\',$class);
 		$source=array_pop($source);
-		if (!$keepCapitalization){$source=strtolower($source);}
 		if ($toTypeOnly || isset($this->dbInfo[$source])){
+			if (!$keepCapitalization){$source=strtolower($source);}
 			return $source;
 		} else {
 			return FALSE;
 		}
 	}
 
+	/**
+	* @return array The method returns the entry template array based on the table and template provided. The method completes the class property entryTemplates which contains all entry templates for all tables.
+	*/
 	public function getEntryTemplateCreateTable($table,$template=array()){
 		// This function returns the entry template based on the root entry template and
 		// the argument $template. In addition this funtion calls create table which creates and updates the
@@ -110,6 +119,9 @@ class Database{
 		return $this->entryTemplates[$table];
 	}
 
+	/**
+	* @return array The method returns the entry template array based on the provided selector.
+	*/
 	public function entryTemplate($selector){
 		if (empty($selector['Source'])){
 			throw new \ErrorException('Function '.__FUNCTION__.': Missing Source key in argument selector',0,E_ERROR,__FILE__,__LINE__);
