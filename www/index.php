@@ -40,6 +40,7 @@ set_exception_handler(function(\Throwable $e){
 	$html.='</html>';
 	echo $html;
 	// logging
+	if (!file_exists($GLOBALS['debugging dir'])){mkdir($GLOBALS['debugging dir'],0750);}
 	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
 	$logFileContent=json_encode($err);
 	$logFileName=$GLOBALS['debugging dir'].time().'_exceptionsLog.json';

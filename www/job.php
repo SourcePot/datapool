@@ -26,9 +26,10 @@ $GLOBALS['base dir']=$basedir;
 $GLOBALS['debugging dir']=$GLOBALS['realpath'].'debugging/';
 // error handling
 set_exception_handler(function(\Throwable $e){
+	if (!file_exists($GLOBALS['debugging dir'])){mkdir($GLOBALS['debugging dir'],0750);}
 	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
 	$logFileContent=json_encode($err);
-	$logFileName=$GLOBALS['env']['debugging dir'].time().'_exceptionsLog.json';
+	$logFileName=$GLOBALS['debugging dir'].time().'_exceptionsLog.json';
 	file_put_contents($logFileName,$logFileContent);
 	echo 'Have run into a problem...';
 	exit;
