@@ -50,7 +50,7 @@ class Settings{
 			return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
 		} else {
 			$arr=$this->arr['Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
-			$selector=$this->arr['Datapool\Foundation\Explorer']->getClassState(__CLASS__);
+			$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			$html=$this->arr['Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
 			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
 			return $arr;
