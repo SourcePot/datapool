@@ -42,7 +42,7 @@ set_exception_handler(function(\Throwable $e){
 	// logging
 	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
 	$logFileContent=json_encode($err);
-	$logFileName=$GLOBALS['env']['debugging dir'].time().'_exceptionsLog.json';
+	$logFileName=$GLOBALS['debugging dir'].time().'_exceptionsLog.json';
 	file_put_contents($logFileName,$logFileContent);
 	exit;
 });

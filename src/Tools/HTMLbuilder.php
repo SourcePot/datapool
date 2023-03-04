@@ -27,10 +27,11 @@ class HTMLbuilder{
 	private $settings=array('pageTitle'=>'Datapool',
 							'pageTimeZone'=>'Europe/Berlin',
 							'mainBackgroundImageFile'=>'main-6.jpg',
+							'loginBackgroundImageFile'=>'main-login.jpg',
 							'iconFile'=>'LaIsla2.ico',
 							'charset'=>'utf-8',
-							'cssFiles'=>array('jquery-ui.min.css','jquery-ui.structure.min.css','jquery-ui.theme.min.css','dynamic.css'),
-							'jsFiles'=>array('jquery-3.6.1.min.js','jquery-ui.min.js','dark.js'),
+							'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','dynamic.css'),
+							'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','dark.js'),
 							'emailWebmaster'=>'admin@datapool.info');
 	
 	public function __construct($arr){
@@ -81,29 +82,36 @@ class HTMLbuilder{
 			$cssFileInclude='';
 			if (!empty($this->settings['cssFiles'])){
 				foreach($this->settings['cssFiles'] as $fileName){
-					$fileAbs=$GLOBALS['media dir'].$fileName;
-					if (is_file($fileAbs)){
-						$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
-						$cssFileInclude.='<link type="text/css" rel="stylesheet" href="'.$href.'" />'.PHP_EOL;
+					if (strpos($fileName,'://')===FALSE){
+						$fileAbs=$GLOBALS['media dir'].$fileName;
+						if (is_file($fileAbs)){
+							$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+						} else {
+							file_put_contents($fileAbs,'');
+							throw new \ErrorException('Function '.__FUNCTION__.': Could not open the css-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
+						}
 					} else {
-						file_put_contents($fileAbs,'');
-						throw new \ErrorException('Function '.__FUNCTION__.': Could not open the css-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
+						$href=$fileName;
 					}
-					
+					$cssFileInclude.='<link type="text/css" rel="stylesheet" href="'.$href.'" />'.PHP_EOL;
 				}
 			}
 			// js-files
 			$jsFileInclude='';
 			if (!empty($this->settings['jsFiles'])){
 				foreach($this->settings['jsFiles'] as $fileName){
-					$fileAbs=$GLOBALS['media dir'].$fileName;
-					if (is_file($fileAbs)){
-						$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
-						$jsFileInclude.='<script src="'.$href.'"></script>'.PHP_EOL;
+					if (strpos($fileName,'://')===FALSE){
+						$fileAbs=$GLOBALS['media dir'].$fileName;
+						if (is_file($fileAbs)){
+							$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+						} else {
+							file_put_contents($fileAbs,'');
+							throw new \ErrorException('Function '.__FUNCTION__.': Could not open the js-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
+						}
 					} else {
-						file_put_contents($fileAbs,'');
-						throw new \ErrorException('Function '.__FUNCTION__.': Could not open the js-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
+						$href=$fileName;
 					}
+					$jsFileInclude.='<script src="'.$href.'"></script>'.PHP_EOL;
 				}
 			}
 		} else {
@@ -124,12 +132,15 @@ class HTMLbuilder{
 
 	public function addHtmlPageBody($arr){
 		$mainTagArr=array('tag'=>'main','element-content'=>"{{explorer}}".PHP_EOL."{{content}}".PHP_EOL,'keep-element-content'=>TRUE);
-		if (!empty($this->settings['mainBackgroundImageFile'])){
-			$fileAbs=$GLOBALS['media dir'].$this->settings['mainBackgroundImageFile'];
-			if (is_file($fileAbs)){
-				$src=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
-				$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');
-			}
+		if (strcmp($_SESSION['page state']['app']['Category'],'Login')===0){
+			$imageFile=$this->settings['loginBackgroundImageFile'];
+		} else {
+			$imageFile=$this->settings['mainBackgroundImageFile'];
+		}
+		$fileAbs=$GLOBALS['media dir'].$imageFile;
+		if (is_file($fileAbs)){
+			$src=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+			$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');
 		}
 		$body=$this->arr['Datapool\Foundation\Menu']->menu().PHP_EOL;
 		$body.='<div class="filler" id="top-filler"></div>'.PHP_EOL;

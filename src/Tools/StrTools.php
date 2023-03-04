@@ -28,6 +28,7 @@ class StrTools{
 	}
 	
 	public function stdReplacements($str=''){
+		if (is_array($str)){return $str;}
 		$pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
 		$toReplace['{{NOW}}']=$this->getDateTime('now');
 		$toReplace['{{YESTERDAY}}']=$this->getDateTime('yesterday');
