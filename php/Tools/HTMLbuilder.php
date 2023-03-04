@@ -560,7 +560,7 @@ class HTMLbuilder{
 				$this->arr['Datapool\Foundation\Database']->moveEntry($selector,FALSE);
 			} else if (isset($formData['cmd']['select'])){
 				if (isset($this->arr['view classes'][$selector['Source']])){
-					$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState($this->arr['view classes'][$selector['Source']],$selector);
+					$this->arr['Datapool\Tools\NetworkTools']->setPageState($this->arr['view classes'][$selector['Source']],$selector);
 				}
 			}
 			return $arr;

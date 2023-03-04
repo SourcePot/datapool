@@ -35,49 +35,38 @@ class Explorer{
 		$this->formProcessing($callingClass);
 		$this->getGuideEntries($callingClass);
 		$html=$this->getForm($callingClass);
-		$this->state2session($callingClass);
 		$arr['page html']=str_replace('{{explorer}}',$html,$arr['page html']);
 		return $arr;
 	}
 	
-	public function getClassState($callingClass){
-		$pageState=$this->state2selector($callingClass);
-		return $pageState;
-	}
-	
-	private function initStateArr($callingClass){
-		$this->state[$callingClass]=array('Source'=>array('Label'=>'Source','Selected'=>FALSE,'orderBy'=>'Source','isAsc'=>TRUE),
-										  'Group'=>array('Label'=>'Group','Selected'=>FALSE,'orderBy'=>'Group','isAsc'=>TRUE),
-										  'Folder'=>array('Label'=>'Folder','Selected'=>FALSE,'orderBy'=>'Folder','isAsc'=>TRUE),
-										  'ElementId'=>array('Label'=>'Name','Selected'=>FALSE,'orderBy'=>'Name','isAsc'=>TRUE)
-										  );
-		$this->state[$callingClass]['Source']['Selected']=$this->arr['Datapool\Foundation\Database']->class2source($callingClass);
-		return $this->state[$callingClass];
+	private function initStateArr(){
+		$this->state=array('Source'=>array('Label'=>'Source','Selected'=>FALSE,'orderBy'=>'Source','isAsc'=>TRUE),
+						   'Group'=>array('Label'=>'Group','Selected'=>FALSE,'orderBy'=>'Group','isAsc'=>TRUE),
+						   'Folder'=>array('Label'=>'Folder','Selected'=>FALSE,'orderBy'=>'Folder','isAsc'=>TRUE),
+						   'ElementId'=>array('Label'=>'Name','Selected'=>FALSE,'orderBy'=>'Name','isAsc'=>TRUE)
+						  );
+		return $this->state;
 	}
 	
 	private function session2state($callingClass){
 		// This function copies the page state to the class state var.
-		if (isset($_SESSION['page state']['selected'][$callingClass])){
-			$selectedEntry=$this->arr['Datapool\Foundation\Database']->entryByKey($_SESSION['page state']['selected'][$callingClass]);
-		} else {
-			$selectedEntry=array();
+		$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		if (!empty($selector['ElementId'])){
+			$entry=$this->arr['Datapool\Foundation\Database']->entryByKey($selector);
+			if (!empty($entry)){$selector=$entry;}
 		}
-		$this->initStateArr($callingClass);
-		foreach($this->state[$callingClass] as $column=>$state){
-			if (isset($_SESSION['page state']['selected'][$callingClass][$column])){
-				$this->state[$callingClass][$column]['Selected']=$_SESSION['page state']['selected'][$callingClass][$column];
-			} else if (isset($selectedEntry[$column])){
-				$this->state[$callingClass][$column]['Selected']=$selectedEntry[$column];
-			}
+		$this->initStateArr();
+		foreach($this->state as $column=>$state){
+			if (isset($selector[$column])){$this->state[$column]['Selected']=$selector[$column];}
 		}
-		return $this->state[$callingClass];
+		return $this->state;
 	}
 	
 	private function getGuideEntries($callingClass){
 		$this->guideEntries=array();
 		$prevGuideEntry=array();
 		$guideEntry=array('Source'=>'__SKIP__','Group'=>'__SKIP__','Folder'=>'__SKIP__','Name'=>'&larrhk;');
-		foreach($this->state[$callingClass] as $column=>$stateArr){
+		foreach($this->state as $column=>$stateArr){
 			if (empty($stateArr['Selected'])){
 				break;
 			} else {
@@ -106,40 +95,25 @@ class Explorer{
 		$guideEntry=$this->arr['Datapool\Tools\StrTools']->addElementId($guideEntry,array('Source','Group','Folder'),0,'-guideEntry');
 		return $guideEntry;
 	}
-	
-	private function state2session($callingClass){
-		foreach($this->state[$callingClass] as $column=>$state){
-			$_SESSION['page state']['selected'][$callingClass][$column]=$this->state[$callingClass][$column]['Selected'];
-		}
-		return $this->state[$callingClass];	
-	}
-	
-	private function state2selector($callingClass){
-		if (!isset($this->state[$callingClass])){$this->session2state($callingClass);}
-		$selector=array();
-		foreach($this->state[$callingClass] as $column=>$state){
-			$selector[$column]=$this->state[$callingClass][$column]['Selected'];
-		}
-		return $selector;		
-	}
-	
+			
 	private function formProcessing($callingClass){
 		// form processing
-		$selector=$this->state2selector($callingClass);
+		$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['select'])){
 			$stateKey=$formData['cmd']['select'];
 			// set selector value
 			$hadMatch=FALSE;
 			$resetKeyRequest=FALSE;
-			foreach($this->state[$callingClass] as $column=>$state){
-				if ($hadMatch){$this->state[$callingClass][$column]['Selected']=FALSE;}
+			foreach($this->state as $column=>$state){
+				if ($hadMatch){$this->state[$column]['Selected']=FALSE;}
 				if (strcmp($column,$stateKey)===0){
 					// column to update
 					if (strpos($formData['val'][$column],'__')!==FALSE){					
-						$this->state[$callingClass][$column]['Selected']=FALSE;
+						$selector=$this->setSelectorByKey($callingClass,$column,FALSE);
+						$selector=$this->setSelectorByKey($callingClass,'ElementId',FALSE);
 					} else {
-						$this->state[$callingClass][$column]['Selected']=$formData['val'][$column];
+						$selector=$this->setSelectorByKey($callingClass,$column,$formData['val'][$column]);
 					}
 					$hadMatch=TRUE;
 				}
@@ -158,30 +132,51 @@ class Explorer{
 			$column=$formData['cmd']['add'];
 			$selector[$column]=$formData['val']['add'][$column];
 			$selector['currentKey']=$column;
-			$this->state[$callingClass][$column]['Selected']=$formData['val']['add'][$column];
+			
+			//$this->state[$column]['Selected']=$formData['val']['add'][$column];
+			//$selector[$column]['Selected']=$formData['val']['add'][$column];
+			
+			$selector=$this->setSelectorByKey($callingClass,$column,$formData['val']['add'][$column]);
+			
 		} else if (isset($formData['cmd']['edit'])){
 			$column=$formData['cmd']['edit'];
 			if (strlen(current($formData['val']['edit']))>2){
 				$entry=$formData['val']['edit'];
 				if (strcmp(key($entry),$column)===0){$newSelectedValue=$entry[$column];} else {$newSelectedValue=$selector[$column];}
 				$this->arr['Datapool\Foundation\Database']->updateEntries($selector,$entry);
-				$this->state[$callingClass][$column]['Selected']=$newSelectedValue;
+			
+				//$this->state[$column]['Selected']=$newSelectedValue;
+				
+				$selector=$this->setSelectorByKey($callingClass,$column,$newSelectedValue);
+		
+				
 			} else {
 				$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'Too short entry provided, changes were discarded.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 			}
 		} else if (isset($formData['cmd']['delete'])){
 			$selectedColumn=key($formData['cmd']['delete']);
 			$this->arr['Datapool\Foundation\Database']->deleteEntries($selector);
-			$this->state[$callingClass][$selectedColumn]['Selected']=FALSE;
+			
+			
+			//$this->state[$selectedColumn]['Selected']=FALSE;
+			
+			
+			$selector=$this->setSelectorByKey($callingClass,$selectedColumn,FALSE);
+			
 		} else if (isset($formData['cmd']['download'])){
 			$this->arr['Datapool\Tools\FileTools']->entry2fileDownload($selector);
 		}
-		$this->state2session($callingClass);
+	}
+	
+	private function setSelectorByKey($callingClass,$key,$value){
+		$this->state[$key]['Selected']=$value;
+		$selector[$key]=$value;
+		return $this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey($callingClass,$key,$value);
 	}
 	
 	private function getForm($callingClass){
 		$html='';
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>ucfirst($this->state[$callingClass]['Source']['Selected'])));
+		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>ucfirst(strval($this->state['Source']['Selected']))));
 		// add explorer components
 		$result=$this->addSelector($callingClass);
 		$html.=$result['html'];
@@ -208,7 +203,7 @@ class Explorer{
 
 	private function addSelector($callingClass){
 		$html='';
-		foreach($this->state[$callingClass] as $stateKey=>$state){
+		foreach($this->state as $stateKey=>$state){
 			$html.=$this->getSelector($callingClass,$stateKey);
 			if ($state['Selected']===FALSE){break;}
 			$setKey=$stateKey;
@@ -221,10 +216,10 @@ class Explorer{
 	private function getSelector($callingClass,$stateKey){
 		$html='';
 		if (strcmp($stateKey,'Source')===0){
-			//$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h2','element-content'=>$this->state[$callingClass][$stateKey]['Selected']));
+			//$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h2','element-content'=>$this->state[$stateKey]['Selected']));
 		} else {
 			$selector=array();
-			foreach($this->state[$callingClass] as $selectorStateKey=>$selectorState){
+			foreach($this->state as $selectorStateKey=>$selectorState){
 				$column=$selectorStateKey;
 				$label=$selectorState['Label'];
 				$orderBy=$selectorState['orderBy'];
@@ -238,7 +233,7 @@ class Explorer{
 				if (!isset($row[$label])){$row=$this->arr['Datapool\Foundation\Database']->entryByKey($row);}
 				$options[$row[$column]]=$row[$label];
 			}
-			$html.=$this->arr['Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>$column,'value'=>$this->state[$callingClass][$column]['Selected'],'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','class'=>'explorer'));
+			$html.=$this->arr['Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>$column,'value'=>$this->state[$column]['Selected'],'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','class'=>'explorer'));
 			$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$html,'keep-element-content'=>TRUE));
 		}
 		return $html;
@@ -248,7 +243,7 @@ class Explorer{
 		$h2Arr=array('tag'=>'h3','element-content'=>'Add');
 		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element($h2Arr);
 		if (strcmp($stateKey,'ElementId')===0){
-			if (empty($this->state[$callingClass]['ElementId']['Selected'])){
+			if (empty($this->state['ElementId']['Selected'])){
 				$key=array('add files');
 				$label='Add file(s)';
 				$fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
@@ -279,11 +274,11 @@ class Explorer{
 		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element($h2Arr);
 		$btnKey=$setKey;
 		if (strcmp($setKey,'ElementId')===0){
-			$selector=array('Source'=>$this->state[$callingClass]['Source']['Selected'],'ElementId'=>$this->state[$callingClass]['ElementId']['Selected']);
+			$selector=array('Source'=>$this->state['Source']['Selected'],'ElementId'=>$this->state['ElementId']['Selected']);
 			$entry=$this->arr['Datapool\Foundation\Database']->entryByKey($selector);
 			if (!empty($entry)){$html.=$this->arr['Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,array(),array());}
 		} else {
-			$value=$this->state[$callingClass][$setKey]['Selected'];
+			$value=$this->state[$setKey]['Selected'];
 			$fileElement=array('tag'=>'input','type'=>'text','value'=>$value,'key'=>array('edit',$setKey),'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
 			$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($fileElement);
 			$addBtn=array('tag'=>'button','element-content'=>'Edit '.$setKey,'key'=>array('edit'),'value'=>$btnKey,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','style'=>array('font-size'=>'1.15em'));
@@ -355,7 +350,7 @@ class Explorer{
 	
 	private function selectorFromState($callingClass){
 		$selector=array('currentKey'=>'Source');
-		foreach($this->state[$callingClass] as $column=>$state){
+		foreach($this->state as $column=>$state){
 			if (!empty($state['Selected'])){
 				$selector[$column]=$state['Selected'];
 				$selector['currentKey']=$column;
@@ -365,7 +360,7 @@ class Explorer{
 	}
 	
 	private function getEntryTemplate($callingClass){
-		$entryTemplate=$this->state2selector($callingClass);
+		$entryTemplate=$this->arr['Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		if (empty($entryTemplate['ElementId'])){
 			$entryTemplate=$this->getGuideEntry();
 			unset($entryTemplate['Name']);

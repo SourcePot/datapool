@@ -57,7 +57,7 @@ class Account{
 			// is admin
 			$user=array('Source'=>$this->entryTable);
 			$html.=$this->arr['Datapool\Foundation\Container']->container('User','entryList',$user,array(),array());	
-			$userSelector=$this->arr['Datapool\Tools\NetworkTools']->getSelectorFromPageState(__CLASS__);
+			$userSelector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			if (isset($userSelector['ElementId'])){$user=$this->arr['Datapool\Foundation\Database']->entryByKey($userSelector);} else {$user=array('Source'=>$this->entryTable,'Type'=>'user');}
 		} else {
 			// is non-admin user

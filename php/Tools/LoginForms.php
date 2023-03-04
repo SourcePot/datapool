@@ -59,7 +59,7 @@ class LoginForms{
 		$result['cmd']=empty($formData['cmd'])?'':key($formData['cmd']);
 		if ($this->formType===1 && !empty($result['Passphrase'])){
 			// symbol login
-			$hashSymbolArr=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'hashSymbolArr');
+			$hashSymbolArr=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'hashSymbolArr');
 			$symbolIds=explode('|',$result['Passphrase']);
 			$result['Passphrase']='';
 			foreach($symbolIds as $index=>$symbolId){
@@ -67,7 +67,7 @@ class LoginForms{
 				$result['Passphrase'].=$hashSymbolArr[$symbolId]['key'];
 			}
 		}
-		$result['Recovery']=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'recovery');
+		$result['Recovery']=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'recovery');
 		if ($this->isLoggedIn() && empty($result['Email'])){
 			$result['Email']=$_SESSION['currentUser']['Params']['User registration']['Email'];
 		}
@@ -107,7 +107,7 @@ class LoginForms{
 	private function getStandard($arr=array()){
 		$recovery=array('Passphrase'=>$this->getHash(20));
 		$recovery['Passphrase for user']='"'.$recovery['Passphrase'].'"';
-		$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'recovery',$recovery);
+		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
 		$passphraseArr=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'required'=>TRUE,'minlength'=>'8','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
 		return $this->arr['Datapool\Tools\HTMLbuilder']->element($passphraseArr);
 	}
@@ -172,8 +172,8 @@ class LoginForms{
 		$phraseArr=array('tag'=>'input','type'=>'hidden','key'=>array('Passphrase'),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','element-content'=>'','class'=>'pass-phrase');
 		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($phraseArr);
 		// save state
-		$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'hashSymbolArr',$hashSymbolArr);
-		$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'recovery',$recovery);
+		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
+		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
 		return $html;
 	}
 	

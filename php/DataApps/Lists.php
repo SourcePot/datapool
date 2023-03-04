@@ -48,7 +48,7 @@ class Lists{
 			return array('Category'=>'Data','Emoji'=>'&#9868;','Label'=>'Lists','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
 			$explorerArr=$this->arr['Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
-			$selector=$this->arr['Datapool\Tools\NetworkTools']->getSelectorFromPageState(__CLASS__);
+			$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			$entryHtml=$this->arr['Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
 			$arr['page html']=str_replace('{{explorer}}',$explorerArr['explorerHtml'],$arr['page html']);
 			$arr['page html']=str_replace('{{content}}',$explorerArr['contentHtml'].$entryHtml,$arr['page html']);

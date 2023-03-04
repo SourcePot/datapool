@@ -114,7 +114,7 @@ class DataExplorer{
 		$return['explorerHtml']=$this->arr['Datapool\Tools\HTMLbuilder']->element($articleArr);
 		// get content html
 		$return['contentHtml']='';
-		$return['selector']=$this->arr['Datapool\Tools\NetworkTools']->getSelectorFromPageState($callingClass);
+		$return['selector']=$this->arr['Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		if (!empty($canvasElement['Content']['Widgets']["Processor"])){
 			$return['contentHtml'].=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('settings',$canvasElement);
 		}
@@ -124,28 +124,28 @@ class DataExplorer{
 	private function canvasFormProcessing($callingClass){
 		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'getCanvas');
 		if (isset($formData['cmd']['select'])){
-			$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'selectedCanvasElement',$formData['element']);
+			$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$formData['element']);
 		} else if (isset($formData['cmd']['delete'])){
 			$this->arr['Datapool\Foundation\Database']->deleteEntries($formData['element']);
-			$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,array('Source'=>$this->entryTable));
+			$this->arr['Datapool\Tools\NetworkTools']->mergePageState(__CLASS__,array('Source'=>$this->entryTable));
 		} else if (isset($formData['cmd']['view'])){
 			$selector=array('Source'=>$formData['element']['Source'],'ElementId'=>$formData['element']['ElementId']);
-			$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'selectedCanvasElement',$selector);
+			$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$selector);
 			$selector=$formData['element']['Content']['Selector'];
 			if (isset($this->arr['view classes'][$selector['Source']])){
-				$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState($this->arr['view classes'][$selector['Source']],$selector);
+				$this->arr['Datapool\Tools\NetworkTools']->mergePageState($this->arr['view classes'][$selector['Source']],$selector);
 			}
 		}
-		$selectedCanvasElement=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'selectedCanvasElement');
+		$selectedCanvasElement=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
 		$canvasElement=$this->arr['Datapool\Foundation\Database']->entryByKey($selectedCanvasElement);
 		return $canvasElement;
 	}
 	
 	private function getCanvas($callingClass){
 		// create html
-		$selectedCanvasElement=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'selectedCanvasElement');
+		$selectedCanvasElement=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
 		$html='';
-		$isEditMode=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'isEditMode',FALSE);
+		$isEditMode=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);
 		$selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
 		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 			$html.=$this->canvasElement2html(__CLASS__,__FUNCTION__,$entry,$selectedCanvasElement);
@@ -155,7 +155,7 @@ class DataExplorer{
 	}
 
 	private function getCntrHtml($callingClass){
-		$selectedCanvasElement=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'selectedCanvasElement');
+		$selectedCanvasElement=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
 		$canvasElement=$this->arr['Datapool\Foundation\Database']->entryByKey($selectedCanvasElement);
 		// get canvas widgets
 		$widgetsHtml='';
@@ -168,9 +168,9 @@ class DataExplorer{
 		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
 		//$this->arr['Datapool\Tools\ArrTools']->arr2file($formData);
 		if (isset($formData['cmd']['edit mode'])){
-			$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'isEditMode',TRUE);	
+			$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',TRUE);	
 		} else if (isset($formData['cmd']['run mode'])){
-			$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'isEditMode',FALSE);	
+			$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',FALSE);	
 		} else if (!empty($formData['cmd'])){
 			$entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
 			$entry=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($entry);
@@ -189,7 +189,7 @@ class DataExplorer{
 					$entry=$this->arr['Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
 					$entry=$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
 					$selector=array('Source'=>$this->entryTable,'ElementId'=>$entry['ElementId']);
-					$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,$selector);
+					$this->arr['Datapool\Tools\NetworkTools']->mergePageState(__CLASS__,$selector);
 					break;
 				}
 			}
@@ -198,7 +198,7 @@ class DataExplorer{
 		$html='';
 		$editorHtml='';
 		if ($this->arr['Datapool\Foundation\Access']->isContentAdmin()){
-			$isEditMode=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'isEditMode',FALSE);
+			$isEditMode=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);
 			foreach($this->cntrBtns as $elementContent=>$element){
 				if (empty($isEditMode)===$element['editMode']){continue;}
 				$btnArr=$element;
@@ -212,7 +212,7 @@ class DataExplorer{
 			}
 			$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','class'=>'canvas','element-content'=>$html,'keep-element-content'=>TRUE));
 			// get canvas element editor
-			$selector=$this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'selectedCanvasElement');
+			$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
 			if (!empty($selector) && !empty($isEditMode)){
 				$canvasElement=$this->arr['Datapool\Foundation\Database']->entryByKey($selector);
 				if ($canvasElement){
@@ -263,7 +263,7 @@ class DataExplorer{
 				$style.=$key.':'.$value.';';
 			}
 		}
-		$isEditMode=!empty($this->arr['Datapool\Tools\NetworkTools']->getClassState(__CLASS__,'isEditMode',FALSE));
+		$isEditMode=!empty($this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE));
 		if ($isEditMode){
 			$btnArr=array('tag'=>'button','value'=>'edit','Source'=>$canvasElement['Source'],'ElementId'=>$canvasElement['ElementId'],'keep-element-content'=>TRUE,'class'=>'canvas-element-btn');
 			$btnArr['callingClass']=$callingClass;

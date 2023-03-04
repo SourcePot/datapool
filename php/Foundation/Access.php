@@ -222,7 +222,7 @@ class Access{
 		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($phraseArr);
 		
 		// save state
-		$this->arr['Datapool\Tools\NetworkTools']->setClassState(__CLASS__,'hashSymbolArr',$hashSymbolArr);
+		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
 		echo $arr['html'];
 		return $arr;
 	}

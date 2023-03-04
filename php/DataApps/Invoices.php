@@ -48,7 +48,7 @@ class Invoices{
 			return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
 			$explorerArr=$this->arr['Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
-			$selector=$this->arr['Datapool\Tools\NetworkTools']->getSelectorFromPageState(__CLASS__);
+			$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			if (empty($selector)){
 				$entryHtml='';
 			} else {

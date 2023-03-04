@@ -85,6 +85,7 @@ class Calendar{
 		$this->arr=$arr;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
+		//
 	}
 
 	public function init($arr){
@@ -93,14 +94,12 @@ class Calendar{
 		$this->definition['Content']['Event']['End timezone']['@options']=$this->options['Timezone'];
 		$this->definition['Content']['Event']['Recurrence']['@options']=$this->options['Recurrence'];
 		$arr['Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+		// get settings
 		$this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>date_default_timezone_get());
 		$this->setting=$arr['Datapool\AdminApps\Settings']->getSetting(__CLASS__,$_SESSION['currentUser']['ElementId'],$this->setting,'Calendar',FALSE);
-		$this->pageState=$arr['Datapool\Tools\NetworkTools']->getSelectorFromPageState(__CLASS__);
-		$this->pageStateTemplate=array('Source'=>$this->entryTable,'Type'=>$this->definition['Type']['@default'],'ElementId'=>'{{ElementId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'');
-		if (empty($this->pageState)){
-			$this->pageState=$this->pageStateTemplate;
-			$this->pageState=$arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,$this->pageState);
-		}
+		// get page state
+		$this->pageStateTemplate=array('Type'=>$this->definition['Type']['@default'],'ElementId'=>'{{ElementId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'');
+		$this->pageState=$arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
 		$this->arr=$arr;
 		return $this->arr;
 	}
@@ -193,10 +192,10 @@ class Calendar{
 			$this->pageState['ElementId']='{{ElementId}}';
 			$this->pageState['calendarDate']='{{YESTERDAY}}';
 			$this->pageState['addDate']='';
-			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,$this->pageState);
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
 		} else if (!empty($formData['cmd'])){
 			$newPageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
-			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,$newPageState);
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
 			$this->setting=$this->arr['Datapool\AdminApps\Settings']->setSetting(__CLASS__,$_SESSION['currentUser']['ElementId'],$formData['val']['setting'],'Calendar',FALSE);
 		}
 		$calendarDate=new \DateTime('@'.$this->calendarStartTimestamp());
@@ -294,16 +293,16 @@ class Calendar{
 	private function eventsFormProcessing(){
 		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'addEvents');
 		if (isset($formData['cmd']['ElementId'])){
-			$this->pageState['ElementId']=key($formData['cmd']['ElementId']);
-			$event=$this->arr['Datapool\Foundation\Database']->entryByKey($this->pageState);
-			$this->pageState['calendarDate']=$event['Start'];
-			$this->pageState['addDate']='';
-			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,$this->pageState);
+			$selector=$this->pageState;
+			$selector['ElementId']=key($formData['cmd']['ElementId']);
+			$event=$this->arr['Datapool\Foundation\Database']->entryByKey($selector);
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'ElementId',key($formData['cmd']['ElementId']));
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',$event['Start']);
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
 		} else if (isset($formData['cmd']['Add'])){
-			$this->pageState['ElementId']='{{ElementId}}';
-			$this->pageState['addDate']=key($formData['cmd']['Add']);
-			$this->pageState['calendarDate']=$this->pageState['addDate'];
-			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setSelectorPageState(__CLASS__,$this->pageState);
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'ElementId','{{ElementId}}');
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',key($formData['cmd']['Add']));
+			$this->pageState=$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate',key($formData['cmd']['Add']));
 		}
 		return $formData;
 	}
@@ -349,6 +348,7 @@ class Calendar{
 	}
 	
 	private function calendarStartTimestamp(){
+		if (empty($this->pageState['calendarDate'])){return 0;}
 		$calendarTimezone=new \DateTimeZone($this->setting['Timezone']);
 		$calendarDate=$this->arr['Datapool\Tools\StrTools']->stdReplacements($this->pageState['calendarDate']);
 		$calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);

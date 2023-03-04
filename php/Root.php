@@ -43,7 +43,7 @@ final class Root{
 		$GLOBALS['expirationPeriod']=600;
 		//unset($_SESSION['page state']);
 		if (empty($_SESSION['page state'])){
-			$pageState=array('lngCode'=>'en','cssFile'=>'dark.css','toolbox'=>FALSE);
+			$pageState=array('lngCode'=>'en','cssFile'=>'dark.css','toolbox'=>FALSE,'selected'=>array());
 			$pageStateInitFile=$GLOBALS['setup dir'].'pageStateInit.json';
 			if (!is_file($pageStateInitFile)){
 				$fileContent=json_encode($pageState);
@@ -98,12 +98,6 @@ final class Root{
 		$arr=$arr['Datapool\Tools\HTMLbuilder']->btn($arr);
 		// add "page html" to the return array
 		if (strpos($type,'index.php')>0){
-			// webpage call, get selected Source from current app
-			if (method_exists($_SESSION['page state']['app']['Class'],'getEntryTable')){
-				$_SESSION['page state']['selected']['Source']=$arr[$_SESSION['page state']['app']['Class']]->getEntryTable();
-			} else {
-				$_SESSION['page state']['selected']['Source']=FALSE;
-			}
 			// build webpage
 			$arr=$arr['Datapool\Tools\HTMLbuilder']->addHtmlPageBackbone($arr);
 			$arr=$arr['Datapool\Tools\HTMLbuilder']->addHtmlPageHeader($arr);
@@ -232,7 +226,8 @@ final class Root{
 		$statistic['Expires']=$arr['Datapool\Tools\StrTools']->getDateTime('tomorrow');
 		$statistic['Owner']='SYSTEM';
 		$statistic=$arr['Datapool\Foundation\Access']->addRights($statistic,'ALL_MEMBER_R','ALL_MEMBER_R');
-		$statistic['Content']=array('app'=>$_SESSION['page state']['app'],'selected'=>$_SESSION['page state']['selected']);
+		$statistic['Content']=array('app'=>$_SESSION['page state']['app']);
+		$statistic['Content']['selected']=$arr['Datapool\Tools\NetworkTools']->getPageState($_SESSION['page state']['app']['Class']);
 		$timeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
 		$statistic['Content']['Script time consumption [ms]']=$timeConsumption;
 		$arr['Datapool\Foundation\Database']->insertEntry($statistic);

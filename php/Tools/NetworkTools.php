@@ -44,44 +44,41 @@ class NetworkTools{
 		return $script.$suffix;
 	}
 
-	public function setSelectorPageState($callingClass,$selector){
-		$_SESSION['page state']['selected'][$callingClass]=$selector;
-		return $selector;
+	public function setPageState($callingClass,$state){
+		$_SESSION['page state']['selected'][$callingClass]=$state;
+		return $_SESSION['page state']['selected'][$callingClass];
 	}
 
-	public function getSelectorFromPageState($callingClass){
+	public function mergePageState($callingClass,$state){
 		if (isset($_SESSION['page state']['selected'][$callingClass])){
-			return $_SESSION['page state']['selected'][$callingClass];
+			$_SESSION['page state']['selected'][$callingClass]=array_merge(	$_SESSION['page state']['selected'][$callingClass],$state);	
 		} else {
-			return FALSE;
+			$_SESSION['page state']['selected'][$callingClass]=$state;
 		}
+		return $_SESSION['page state']['selected'][$callingClass];
 	}
 
-	public function setClassState($callingClass,$key,$value='SAVE KEY ONLY'){
-		if ($value==='SAVE KEY ONLY'){
-			$_SESSION['page state']['vars'][$callingClass]=$key;
-			$_SESSION['page state']['versions'][$callingClass]=hrtime(TRUE);
-		} else {
-			$_SESSION['page state']['vars'][$callingClass][$key]=$value;
-			$_SESSION['page state']['versions'][$callingClass][$key]=hrtime(TRUE);
-		}
-		return $value;
+	public function setPageStateByKey($callingClass,$key,$value){
+		$_SESSION['page state']['selected'][$callingClass][$key]=$value;
+		return $_SESSION['page state']['selected'][$callingClass];
 	}
 
-	public function getClassState($callingClass,$key,$initValue=FALSE){
-		if (isset($_SESSION['page state']['vars'][$callingClass][$key])){
-			return $_SESSION['page state']['vars'][$callingClass][$key];
-		} else {
-			return $initValue;
+	public function getPageState($callingClass,$initState=array()){
+		if (!is_array($initState)){
+			throw new \ErrorException('Function '.__FUNCTION__.': initState must be array-type.',0,E_ERROR,__FILE__,__LINE__);
 		}
+		if (empty($_SESSION['page state']['selected'][$callingClass])){$_SESSION['page state']['selected'][$callingClass]=$initState;}
+		if (method_exists($callingClass,'getEntryTable')){
+			$_SESSION['page state']['selected'][$callingClass]['Source']=$this->arr[$callingClass]->getEntryTable();
+		} else if (!isset($_SESSION['page state']['selected'][$callingClass]['Source'])){
+			$_SESSION['page state']['selected'][$callingClass]['Source']=FALSE;
+		}
+		return $_SESSION['page state']['selected'][$callingClass];
 	}
-	
-	public function getClassStateVersion($callingClass,$key=FALSE){
-		if ($key===FALSE){
-			return $_SESSION['page state']['versions'][$callingClass];
-		} else {
-			return $_SESSION['page state']['versions'][$callingClass][$key];
-		}
+
+	public function getPageStateByKey($callingClass,$key,$initValue=FALSE){
+		if (!isset($_SESSION['page state']['selected'][$callingClass][$key])){$_SESSION['page state']['selected'][$callingClass][$key]=$initValue;}
+		return $_SESSION['page state']['selected'][$callingClass][$key];
 	}
 
 	/** HTML request methods, e.g. to be used for REST interface
