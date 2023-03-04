@@ -4,7 +4,7 @@
 	"description":"The Datapool PHP framework",
 	"keywords":["framework"],
 	"homepage":"https://datapool.info",
-	"license":"AGPL v3.0",
+	"license":"AGPL-3.0-or-later",
 	"authors":[
 		{
 			"name":"Carsten Wallenhauer",
