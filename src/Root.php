@@ -163,6 +163,9 @@ final class Root{
 		return $arr;
 	}
 	
+	/**
+	* @return array The method runs the most overdue job, updates the job setting, adds generated webpage refrenced by the key "page html" to the provided array and returns the completed array.
+	*/
 	private function runJob($arr){
 		// all jobs settings - remove non-existing job methods and add new job methods
 		$jobs=array('due'=>array(),'undue'=>array());
