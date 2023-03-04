@@ -29,7 +29,6 @@ class StrTools{
 	
 	public function stdReplacements($str=''){
 		if (is_array($str)){return $str;}
-		$pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
 		$toReplace['{{NOW}}']=$this->getDateTime('now');
 		$toReplace['{{YESTERDAY}}']=$this->getDateTime('yesterday');
 		$toReplace['{{TOMORROW}}']=$this->getDateTime('tomorrow');
@@ -43,8 +42,11 @@ class StrTools{
 		} else {
 			$toReplace['{{Owner}}']='ANONYM';
 		}
-		$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
-		$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
+		if (isset($this->arr['Datapool\Tools\HTMLbuilder'])){
+			$pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
+			$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
+			$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
+		}
 		//
 		if (is_array($str)){
 			throw new \ErrorException('Function '.__FUNCTION__.' called with argument str of type array.',0,E_ERROR,__FILE__,__LINE__);	

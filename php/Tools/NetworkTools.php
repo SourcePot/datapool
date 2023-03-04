@@ -64,9 +64,6 @@ class NetworkTools{
 	}
 
 	public function getPageState($callingClass,$initState=array()){
-		if (!is_array($initState)){
-			throw new \ErrorException('Function '.__FUNCTION__.': initState must be array-type.',0,E_ERROR,__FILE__,__LINE__);
-		}
 		if (empty($_SESSION['page state']['selected'][$callingClass])){$_SESSION['page state']['selected'][$callingClass]=$initState;}
 		if (method_exists($callingClass,'getEntryTable')){
 			$_SESSION['page state']['selected'][$callingClass]['Source']=$this->arr[$callingClass]->getEntryTable();
