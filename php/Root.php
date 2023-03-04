@@ -32,7 +32,7 @@ final class Root{
 	* @return array An associative array that contains the empty webpage refrenced by the key "page html" as well as the placeholder for all objects to be created.
 	*/
 	public function __construct($arr=array()){
-		$GLOBALS['source dir']=$GLOBALS['realpath'].'src/';
+		$GLOBALS['source dir']=$GLOBALS['realpath'].'php/';
 		$GLOBALS['setup dir']=$GLOBALS['realpath'].'setup/';
 		$GLOBALS['public dir']=$GLOBALS['realpath'].'www/';
 		$GLOBALS['filespace dir']=$GLOBALS['realpath'].'filespace/';

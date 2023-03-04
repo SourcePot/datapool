@@ -181,8 +181,8 @@ class Database{
 	
 	private function connect($arr){
 		// This function establishes the database connection and saves the PDO-object in dbObj.
-		// The database user credentials must be available from file 'connect.json' in the '.\setup\Database\' directory.
-		// 'connect.json' file will be created if it does not exist. But then user database user credentials must be aligned with the database.
+		// The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
+		// 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
 		$namespaceComps=explode('\\',__NAMESPACE__);
 		$dbName=strtolower($namespaceComps[0]);
 		$access=array('Class'=>__CLASS__,'SettingName'=>'connect');

@@ -51,7 +51,7 @@ set_error_handler(function($errno,$errstr,$errfile,$errline){
 	throw new \ErrorException($errstr,$errno,0,$errfile,$errline);
 },E_ALL & ~E_WARNING & ~E_NOTICE & ~E_USER_NOTICE);
 // load root script, initialize it and call run() function
-require_once($GLOBALS['realpath'].'src/Root.php');
+require_once($GLOBALS['realpath'].'php/Root.php');
 $pageObj=new Root();
 $arr=$pageObj->run(__FILE__);
 echo $arr['page html'];
