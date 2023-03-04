@@ -24,6 +24,19 @@ $GLOBALS['script start time']=hrtime(TRUE);
 $GLOBALS['realpath']=$realpath;
 $GLOBALS['base dir']=$basedir;
 $GLOBALS['debugging dir']=$GLOBALS['realpath'].'debugging/';
+// error handling
+set_exception_handler(function(\Throwable $e){
+	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
+	$logFileContent=json_encode($err);
+	$logFileName=$GLOBALS['env']['debugging dir'].time().'_exceptionsLog.json';
+	file_put_contents($logFileName,$logFileContent);
+	echo 'Have run into a problem...';
+	exit;
+});
+set_error_handler(function($errno,$errstr,$errfile,$errline){
+	if (!(error_reporting() && $errno)){return;}
+	throw new \ErrorException($errstr,$errno,0,$errfile,$errline);
+},E_ALL & ~E_WARNING & ~E_NOTICE & ~E_USER_NOTICE);
 // load root script, initialize it and call run() function
 require_once($GLOBALS['realpath'].'src/Root.php');
 $pageObj=new Root();
