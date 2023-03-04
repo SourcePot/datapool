@@ -1,0 +1,17 @@
+{
+	"name":"sourcepot/datapool",
+	"type":"library",
+	"description":"The Datapool PHP framework",
+	"keywords":["framework"],
+	"homepage":"https://datapool.info",
+	"license":"AGPL v3.0",
+	"authors":[
+		{
+			"name":"Carsten Wallenhauer",
+			"email":"admin@datapool.info"
+		}
+	],
+	"require":{
+		"php":">=8.1"
+	}
+}
