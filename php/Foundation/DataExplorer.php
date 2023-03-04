@@ -110,7 +110,7 @@ class DataExplorer{
 		if (!empty($canvasElement)){$return=$canvasElement['Content'];}
 		$cntrHtml=$this->getCntrHtml($callingClass);
 		$canvasHtml=$this->getCanvas($callingClass);
-		$articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtml,'keep-element-content'=>TRUE,'style'=>'width:96%;');
+		$articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtml,'keep-element-content'=>TRUE,'style'=>array());
 		$return['explorerHtml']=$this->arr['Datapool\Tools\HTMLbuilder']->element($articleArr);
 		// get content html
 		$return['contentHtml']='';

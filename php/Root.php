@@ -73,6 +73,7 @@ final class Root{
 									 'Tools/HTMLbuilder.php'=>array('dirname'=>'Tools','component'=>'HTMLbuilder.php'),
 									 'Foundation/Haystack.php'=>array('dirname'=>'Foundation','component'=>'Haystack.php'),
 									 'Foundation/Database.php'=>array('dirname'=>'Foundation','component'=>'Database.php'),
+									 'Foundation/Logging.php'=>array('dirname'=>'Foundation','component'=>'Logging.php'),
 									 'Foundation/User.php'=>array('dirname'=>'Foundation','component'=>'User.php'),
 									 'Tools/NetworkTools.php'=>array('dirname'=>'Tools','component'=>'NetworkTools.php'),
 									 );
