@@ -544,13 +544,13 @@ class Database{
 	* @return array|FALSE This method adds the provided entry to the database. Defaults are added if entry properties are missing. If the entry could not be inserted the method returns FALSE..
 	*/
 	public function insertEntry($entry){
+		if (!isset($this->dbInfo[$entry['Source']])){return FALSE;}
 		$entry=$this->addEntryDefaults($entry);
 		if (!empty($entry['Owner'])){
 			if (strcmp($entry['Owner'],'ANONYM')===0){
 				$entry['Expires']=date('Y-m-d H:i:s',time()+600);
 			}
 		}
-		if (empty($entry['ElementId'])){return FALSE;}
 		$columns='';
 		$values='';
 		$inputs=array();
