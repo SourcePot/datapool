@@ -92,9 +92,8 @@ class Access{
 		if (!isset($entry['Read']) || !isset($entry['Write'])){
 			throw new \ErrorException('Function '.__FUNCTION__.': Unable to set valid entry right.',0,E_ERROR,__FILE__,__LINE__);	
 		}
-		if (!is_int($entry['Read']) || !is_int($entry['Write'])){
-			throw new \ErrorException('Function '.__FUNCTION__.': Entry rights are not of type integer: Read="'.$entry['Read'].'", Write="'.$entry['Write'].'"',0,E_ERROR,__FILE__,__LINE__);	
-		}
+		if (isset($entry['Read'])){$entry['Read']=intval($entry['Read']);}
+		if (isset($entry['Write'])){$entry['Write']=intval($entry['Write']);}
 		return $entry;		
 	}
 	

@@ -421,7 +421,7 @@ class Database{
 		return $result;
 	}
 	
-	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$includeHash=FALSE){
+	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array()){
 		if (empty($selector['Source'])){return FALSE;}
 		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
 		if (empty($primaryKeyValue)){return array();}
@@ -438,12 +438,11 @@ class Database{
 		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':ElementIdEQ'])){$this->arr['Datapool\Tools\ArrTools']->arr2file($sqlArr);}
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
 		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
-		if ($includeHash){$result['hash']='';}
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			if (strpos($row[$primaryKeyValue['primaryKey']],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
 			foreach($row as $column=>$value){
-				if (isset($result['hash'])){$result['hash']=md5($result['hash'].$value);}
+				$result['hash']=crc32($result['hash'].$value);
 				$result=$this->addColumnValue2result($result,$column,$value,$primaryKeyValue['entryTemplate']);
 			}
 			$result['isLast']=($result['rowIndex']+1)===$result['rowCount'];

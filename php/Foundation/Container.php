@@ -91,17 +91,22 @@ class Container{
 
 	private function containerMonitor($containerId,$registerSelector=FALSE){
 		if ($registerSelector===FALSE){
+			// check if data selected by registered selector for the selected container has changed
+			$old=$_SESSION['container monitor'][$containerId];
 			if (!isset($_SESSION['container monitor'][$containerId])){return TRUE;}
-			$containerOldProp=$_SESSION['container monitor'][$containerId];
-			$containerNewPropHash=$this->selector2hash($containerOldProp['selector']);
-			if (strcmp($containerOldProp['hash'],$containerNewPropHash)===0){
+			$newHash=$this->selector2hash($_SESSION['container monitor'][$containerId]['selector']);
+			if (strcmp($_SESSION['container monitor'][$containerId]['hash'],$newHash)===0){
+				// no change detected
 				return TRUE;
 			} else {
-				$_SESSION['container monitor'][$containerId]=array('hash'=>$containerNewPropHash,'selector'=>$containerOldProp['selector']);
+				// change detected
+				$_SESSION['container monitor'][$containerId]['containerId']=$containerId;
+				$_SESSION['container monitor'][$containerId]['hash']=$newHash;
 				return FALSE;
 			}
 		} else {
-			$_SESSION['container monitor'][$containerId]=array('hash'=>$this->selector2hash($registerSelector),'selector'=>$registerSelector);
+			// register the the selector
+			$_SESSION['container monitor'][$containerId]=array('hash'=>$this->selector2hash($registerSelector),'selector'=>$registerSelector,'containerId'=>$containerId);
 		}
 		return TRUE;
 	}
@@ -114,10 +119,11 @@ class Container{
 		if (isset($registerSelector['limit'])){$limit=$registerSelector['limit'];} else {$limit=FALSE;}
 		if (isset($registerSelector['offset'])){$offset=$registerSelector['offset'];} else {$offset=FALSE;}
 		if (isset($registerSelector['selectExprArr'])){$selectExprArr=$registerSelector['selectExprArr'];} else {$selectExprArr=array();}
-		$hash=FALSE;
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($registerSelector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,TRUE) as $row){$hash=$row['hash'];}
-		$hash=strval($hash);
-		return $hash;
+		$hash='';
+		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($registerSelector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,TRUE) as $row){
+			$hash=$row['hash'];
+		}
+		return strval($hash);
 	}
 	
 	// Standard html widgets emploeyed by the container method
