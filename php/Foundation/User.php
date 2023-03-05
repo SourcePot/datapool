@@ -158,17 +158,18 @@ class User{
 			$admin['Content']['Contact details']['First name']='Admin';
 			$admin['Content']['Contact details']['Family name']='Admin';
 			$admin=$this->unifyEntry($admin);
-			$this->arr['Datapool\Foundation\Database']->insertEntry($admin);
-			// Save init admin details
-			$adminFile=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
-			$adminFile['Content']['Admin email']=$admin['Email'];
-			$adminFile['Content']['Admin password']=$admin['Password'];
-			$access=$this->arr['Datapool\Tools\FileTools']->updateEntry($adminFile,TRUE);
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
-			return TRUE;
-		} else {
-			return FALSE;
+			$success=$this->arr['Datapool\Foundation\Database']->insertEntry($admin);
+			if ($success){
+				// Save init admin details
+				$adminFile=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
+				$adminFile['Content']['Admin email']=$admin['Email'];
+				$adminFile['Content']['Admin password']=$admin['Password'];
+				$access=$this->arr['Datapool\Tools\FileTools']->updateEntry($adminFile,TRUE);
+				$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+				return TRUE;
+			}
 		}
+		return FALSE;
 	}
 	
 	public function newlyRegisteredUserLogin($user){
