@@ -541,7 +541,7 @@ class Database{
 	}
 	
 	/**
-	* @return array|FALSE This method adds the provided entry to the database. Defaults are added if entry properties are missing. If the entry could not be inserted the method returns FALSE..
+	* @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
 	*/
 	public function insertEntry($entry){
 		if (!isset($this->dbInfo[$entry['Source']])){return FALSE;}

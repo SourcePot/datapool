@@ -237,6 +237,13 @@ class FileTools{
 			$mimeType=str_replace('/',' ',$entry['Params']['File']['MIME-Type']);
 			if (empty($entry['Type'])){$entry['Type']=$entry['Source'];}
 			$entry['Type'].=' '.$mimeType;
+			// parse pdf content
+			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE && $_SESSION['page state']['autoload.php loaded']){
+				$parser=new \Smalot\PdfParser\Parser();
+				$pdf=$parser->parseFile($file);
+				$text=$pdf->getText();
+				if (!empty($text)){$entry['Content']['File content']=$text;}
+			}
 		}
 		return $entry;
 	}

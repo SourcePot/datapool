@@ -125,44 +125,27 @@ class Explorer{
 				$entry['file']=$fileArr;
 				$entry=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($entry);
 				$entry=$this->arr['Datapool\Tools\FileTools']->fileUpload2entry($entry);
-				if (isset($formData['cmd']['update file']) && isset($entry['Content'])){unset($entry['Content']);}
 				$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
 			}
 		} else if (isset($formData['cmd']['add'])){
 			$column=$formData['cmd']['add'];
 			$selector[$column]=$formData['val']['add'][$column];
 			$selector['currentKey']=$column;
-			
-			//$this->state[$column]['Selected']=$formData['val']['add'][$column];
-			//$selector[$column]['Selected']=$formData['val']['add'][$column];
-			
 			$selector=$this->setSelectorByKey($callingClass,$column,$formData['val']['add'][$column]);
-			
 		} else if (isset($formData['cmd']['edit'])){
 			$column=$formData['cmd']['edit'];
 			if (strlen(current($formData['val']['edit']))>2){
 				$entry=$formData['val']['edit'];
 				if (strcmp(key($entry),$column)===0){$newSelectedValue=$entry[$column];} else {$newSelectedValue=$selector[$column];}
 				$this->arr['Datapool\Foundation\Database']->updateEntries($selector,$entry);
-			
-				//$this->state[$column]['Selected']=$newSelectedValue;
-				
 				$selector=$this->setSelectorByKey($callingClass,$column,$newSelectedValue);
-		
-				
 			} else {
 				$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'Too short entry provided, changes were discarded.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 			}
 		} else if (isset($formData['cmd']['delete'])){
 			$selectedColumn=key($formData['cmd']['delete']);
 			$this->arr['Datapool\Foundation\Database']->deleteEntries($selector);
-			
-			
-			//$this->state[$selectedColumn]['Selected']=FALSE;
-			
-			
 			$selector=$this->setSelectorByKey($callingClass,$selectedColumn,FALSE);
-			
 		} else if (isset($formData['cmd']['download'])){
 			$this->arr['Datapool\Tools\FileTools']->entry2fileDownload($selector);
 		}
@@ -186,11 +169,8 @@ class Explorer{
 		$appHtml.=$this->arr['Datapool\Tools\HTMLbuilder']->app($arr);
 		$arr=$this->miscToolsEntry($callingClass,$result['setKey']);
 		$appHtml.=$this->arr['Datapool\Tools\HTMLbuilder']->app($arr);
-		
 		$arr=$this->sendEmail($callingClass,$result['setKey']);
 		$appHtml.=$this->arr['Datapool\Tools\HTMLbuilder']->app($arr);
-		
-		
 		$arr=$this->setRightsEntry($callingClass,'Read');
 		$appHtml.=$this->arr['Datapool\Tools\HTMLbuilder']->app($arr);
 		$arr=$this->setRightsEntry($callingClass,'Write');
