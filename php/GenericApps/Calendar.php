@@ -98,7 +98,7 @@ class Calendar{
 		$this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>date_default_timezone_get());
 		$this->setting=$arr['Datapool\AdminApps\Settings']->getSetting(__CLASS__,$_SESSION['currentUser']['ElementId'],$this->setting,'Calendar',FALSE);
 		// get page state
-		$this->pageStateTemplate=array('Type'=>$this->definition['Type']['@default'],'ElementId'=>'{{ElementId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'');
+		$this->pageStateTemplate=array('Type'=>$this->definition['Type']['@default'],'ElementId'=>'{{ElementId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
 		$this->pageState=$arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
 		$this->arr=$arr;
 		return $this->arr;

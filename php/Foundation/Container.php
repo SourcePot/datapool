@@ -92,21 +92,26 @@ class Container{
 	private function containerMonitor($containerId,$registerSelector=FALSE){
 		if ($registerSelector===FALSE){
 			// check if data selected by registered selector for the selected container has changed
-			$old=$_SESSION['container monitor'][$containerId];
 			if (!isset($_SESSION['container monitor'][$containerId])){return TRUE;}
+			$isUpToDate=TRUE;
+			if (isset($_SESSION['container monitor'][$containerId]['selector']['refreshInterval'])){
+				$isUpToDate=((time()-$_SESSION['container monitor'][$containerId]['refreshed'])<$_SESSION['container monitor'][$containerId]['selector']['refreshInterval']);
+			}
 			$newHash=$this->selector2hash($_SESSION['container monitor'][$containerId]['selector']);
-			if (strcmp($_SESSION['container monitor'][$containerId]['hash'],$newHash)===0){
+			//$this->arr['Datapool\Tools\ArrTools']->arr2file(array('current'=>$_SESSION['container monitor'][$containerId],'new hash'=>$newHash,'isUpToDate'=>$isUpToDate,'last refresh'=>time()-$_SESSION['container monitor'][$containerId]['refreshed']),__FUNCTION__.'-'.$_SESSION['container monitor'][$containerId]['selector']['Source']);
+			if (strcmp($_SESSION['container monitor'][$containerId]['hash'],$newHash)===0 && $isUpToDate){
 				// no change detected
 				return TRUE;
 			} else {
 				// change detected
 				$_SESSION['container monitor'][$containerId]['containerId']=$containerId;
 				$_SESSION['container monitor'][$containerId]['hash']=$newHash;
+				$_SESSION['container monitor'][$containerId]['refreshed']=time();
 				return FALSE;
 			}
 		} else {
 			// register the the selector
-			$_SESSION['container monitor'][$containerId]=array('hash'=>$this->selector2hash($registerSelector),'selector'=>$registerSelector,'containerId'=>$containerId);
+			$_SESSION['container monitor'][$containerId]=array('hash'=>$this->selector2hash($registerSelector),'selector'=>$registerSelector,'containerId'=>$containerId,'refreshed'=>time());
 		}
 		return TRUE;
 	}
