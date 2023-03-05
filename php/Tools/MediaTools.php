@@ -53,7 +53,7 @@ class MediaTools{
 					$json=$this->arr['Datapool\Tools\FileTools']->file_get_contents_utf8($file);
 					$json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
 					$matrix=$this->arr['Datapool\Tools\ArrTools']->arr2matrix($json);
-					$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name']));
+					$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
 				}
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/pdf')===0){
 				$arr=$this->getPdf($arr);
