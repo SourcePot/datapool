@@ -1,6 +1,6 @@
 # Datapool
  Light Weight Content Management System
-## Installation of the framework
+## Installing the framework
 1. Run composer command ``composer create-project sourcepot/datapool {TARGET DIRECTORY}`` on your server. The **../www/**-subdirectory within the TARGET DIRECTORY (which will be created when running the composer command) is the document root and must be accessible from a web browser.
 2. Create a database for the framework including a user, e.g. a user and database named "webpage".
 3. Set database Collation to **utf8_unicode_ci**.
