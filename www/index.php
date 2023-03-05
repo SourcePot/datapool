@@ -25,6 +25,12 @@ $GLOBALS['realpath']=$realpath;
 $GLOBALS['base dir']=$basedir;
 $GLOBALS['debugging dir']=$GLOBALS['realpath'].'debugging/';
 set_exception_handler(function(\Throwable $e){
+	// logging
+	if (!file_exists($GLOBALS['debugging dir'])){mkdir($GLOBALS['debugging dir'],0750);}
+	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
+	$logFileContent=json_encode($err);
+	$logFileName=$GLOBALS['debugging dir'].time().'_exceptionsLog.json';
+	file_put_contents($logFileName,$logFileContent);
 	//fallback page
 	$html='';
 	$html.='<!DOCTYPE html>';
@@ -34,17 +40,15 @@ set_exception_handler(function(\Throwable $e){
 	$html.='<body style="color:#fff;background-color:#444;font-family: Verdana, Arial, Helvetica, sans-serif;font-size:20px;">';
 	$html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
 	$html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
-	$html.='<p style="width:fit-content;margin: 20px auto;">But some improvements might take a while.</p>';
+	if (strpos($err['message'],'Access denied')===FALSE){
+		$html.='<p style="width:fit-content;margin: 20px auto;">But some improvements might take a while.</p>';
+	} else {
+		$html.='<p style="width:fit-content;margin: 20px auto;">The problem is: '.$err['message'].'</p>';
+	}
 	$html.='<p style="width:fit-content;margin: 20px auto;">The Admin <span style="font-size:2em;">👷</span></p>';
 	$html.='</body>';
 	$html.='</html>';
 	echo $html;
-	// logging
-	if (!file_exists($GLOBALS['debugging dir'])){mkdir($GLOBALS['debugging dir'],0750);}
-	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
-	$logFileContent=json_encode($err);
-	$logFileName=$GLOBALS['debugging dir'].time().'_exceptionsLog.json';
-	file_put_contents($logFileName,$logFileContent);
 	exit;
 });
 set_error_handler(function($errno,$errstr,$errfile,$errline){
