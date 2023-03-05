@@ -56,9 +56,13 @@ class ArrTools{
 	}
 	
 	public function json2arr($json){
-		$arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-		if (empty($arr)){$arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
-		return $arr;
+		if (is_string($json)){
+			$arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+			if (empty($arr)){$arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
+			return $arr;
+		} else {
+			return array();
+		}
 	}
 	
 	// flattend-array functions

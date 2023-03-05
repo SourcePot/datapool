@@ -74,6 +74,7 @@ class Toolbox{
 				$_SESSION['page state']['toolbox']=$toolbox['ElementId'];
 			}
 		}
+		if (empty($toolbox)){return $menuHtml;}
 		$toolboxProviderClass=$toolbox['Content']['class'];
 		$toolboxProviderMethod=$toolbox['Content']['method'];
 		$toolboxProviderArgs=$toolbox['Content']['args'];

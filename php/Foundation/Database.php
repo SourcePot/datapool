@@ -136,6 +136,9 @@ class Database{
 		return $entryTemplate;
 	}
 	
+	/**
+	* @return array|FALSE Based on the selector['Source'] argument provided, the method returns the key and value (if provided) in selector of the primary key column. If this fails it returns FALSE.
+	*/
 	public function getPrimaryKeyValue($selector){
 		if (empty($selector['Source'])){
 			throw new \ErrorException('Function '.__FUNCTION__.': Missing Source key in argument selector',0,E_ERROR,__FILE__,__LINE__);
@@ -376,8 +379,9 @@ class Database{
 	}
 	
 	public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
-		$entries=array();
-		$primaryKeyValue=$this->getPrimaryKeyValue(array('Source'=>$this->arr['Datapool\Foundation\User']->getEntryTable()));
+		$selector=array('Source'=>$this->arr['Datapool\Foundation\User']->getEntryTable());
+		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
+		if (empty($primaryKeyValue)){return FALSE;} else {$entries=array();}
 		if ($returnPrimaryKeyOnly){$return=$primaryKeyValue['primaryKey'];} else {$return='*';}
 		$rights=$this->arr['Datapool\Foundation\Access']->addRights(array(),$right,$right);
 		$right=intval($rights['Read']);

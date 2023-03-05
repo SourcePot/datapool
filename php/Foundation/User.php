@@ -150,8 +150,8 @@ class User{
 	}
 	
 	private function initAdminAccount(){
-		$adminAccounts=count($this->arr['Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
-		if ($adminAccounts===0){
+		$noAdminAccountFound=empty($this->arr['Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
+		if ($noAdminAccountFound){
 			$admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R','Email'=>$this->pageSettings['emailWebmaster'],'Password'=>bin2hex(random_bytes(16)),'Owner'=>'SYSTEM');
 			$admin['ElementId']=$this->arr['Datapool\Foundation\Access']->emailId($admin['Email']);
 			$admin['LoginId']=$this->arr['Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);

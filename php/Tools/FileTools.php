@@ -284,13 +284,15 @@ class FileTools{
 	
 	public function removeTmpDir(){
 		$maxAge=86400;
-		$allDirs=scandir($GLOBALS['tmp dir']);
-		foreach($allDirs as $dirIndex=>$dir){
-			$fullDir=$GLOBALS['tmp dir'].$dir;
-			if (!is_dir($fullDir) || strlen($dir)<4){continue;}
-			$age=time()-filemtime($fullDir);
-			if ($age>$maxAge){
-				$this->delDir($fullDir);
+		if (is_dir($GLOBALS['tmp dir'])){
+			$allDirs=scandir($GLOBALS['tmp dir']);
+			foreach($allDirs as $dirIndex=>$dir){
+				$fullDir=$GLOBALS['tmp dir'].$dir;
+				if (!is_dir($fullDir) || strlen($dir)<4){continue;}
+				$age=time()-filemtime($fullDir);
+				if ($age>$maxAge){
+					$this->delDir($fullDir);
+				}
 			}
 		}
 		return $this->statistics;
