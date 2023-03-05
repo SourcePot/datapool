@@ -210,8 +210,7 @@ class Definitions{
 			} else if (!empty($formData['cmd'])){
 				if (!empty(current($formData['files']))){
 					$fileArr=current(current($formData['files']));
-					$entry['file']=$fileArr;
-					$entry=$this->arr['Datapool\Tools\FileTools']->fileUpload2entry($entry);
+					$entry=$this->arr['Datapool\Tools\FileTools']->file2entries($fileArr,$entry);
 				}
 				$entry=$this->arr['Datapool\Tools\ArrTools']->arrMerge($entry,$formData['val']);
 				$entry['entryIsUpdated']=TRUE;

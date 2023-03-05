@@ -212,40 +212,7 @@ class FileTools{
 		$code=intval($code);
 		if (isset($codeArr[$code])){return $codeArr[$code];} else {return '';}
 	}
-	
-	public function fileUpload2entry($entry,$skipMoveUpload=FALSE){
-		if (empty($entry['Name'])){$entry['Name']=$entry['file']['name'];}
-		if (empty($entry['ElementId'])){
-			$entry=$this->arr['Datapool\Tools\StrTools']->addElementId($entry,array('Source','Group','Folder','Name','Type','Date','Owner'));
-		}
-		$file=$this->selector2file($entry,TRUE);
-		$fileArr=$entry['file'];
-		if (empty($skipMoveUpload)){$success=move_uploaded_file($fileArr['tmp_name'],$file);} else {$success='Skiped upload';}
-		if ($success && is_file($file)){
-			$this->statistics['inserted files']++;
-			$entry['Params']['File']=array('Name'=>$fileArr['name'],
-										   'Size'=>$fileArr['size'],
-										   'Extension'=>pathinfo($fileArr['name'],PATHINFO_EXTENSION),
-										   'Download'=>$this->arr['Datapool\Tools\StrTools']->getDateTime(),
-										   'DownloaderId'=>$_SESSION['currentUser']['ElementId'],
-										   'DownloaderName'=>$_SESSION['currentUser']['Name'],
-										   'MIME-Type'=>mime_content_type($file),
-										   'Style class'=>'',
-										   );
-			$entry=$this->arr['Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
-			$entry=$this->arr['Datapool\Tools\GeoTools']->location2address($entry);
-			$mimeType=str_replace('/',' ',$entry['Params']['File']['MIME-Type']);
-			if (empty($entry['Type'])){$entry['Type']=$entry['Source'];}
-			$entry['Type'].=' '.$mimeType;
-			// parse pdf content
-			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE){
-				$pdfFileContent=$this->parsePdfFile($file);
-				if (!empty($pdfFileContent)){$entry['Content']['File content']=$pdfFileContent;}
-			}
-		}
-		return $entry;
-	}
-	
+
 	public function entry2fileDownload($entry){
 		if (empty($entry['ElementId'])){
 			$zipName=date('Y-m-d His').' bulk download.zip';
@@ -452,6 +419,109 @@ class FileTools{
 			$text=$pdf->getText();
 		}
 		return $text;
+	}
+
+	/**
+	* This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
+	*/
+
+	
+	public function file2entries($fileHandle,$entryTemplate,$isDebugging=FALSE){
+		$debugArr=array('fileHandle'=>$fileHandle,'entryTemplate'=>$entryTemplate);
+		if (empty($_SESSION['currentUser']['ElementId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['ElementId'];}
+		$entryTemplate['Type']=$entryTemplate['Source'];
+		if (!isset($entryTemplate['Params']['Attachment log'])){$entryTemplate['Params']['Attachment log']=array();}
+		if (!isset($entryTemplate['Params']['Content log'])){$entryTemplate['Params']['Content log']=array();}
+		if (!isset($entryTemplate['Params']['Processing log'])){$entryTemplate['Params']['Processing log']=array();}
+		if (empty($entryTemplate['Owner'])){$entryTemplate['Owner']=$userId;}
+		if (isset($fileHandle['name']) && isset($fileHandle['tmp_name'])){
+			// uploaded file via html form
+			$entryTemplate['Params']['File']['Source']=$fileHandle['tmp_name'];
+			$pathArr=pathinfo($fileHandle['name']);
+			$mimeType=mime_content_type($fileHandle['tmp_name']);
+			if (empty($mimeType) && !empty($fileHandle['type'])){$mimeType=$fileHandle['type'];}
+			// move uploaded file to tmp dir
+			$tmpDir=$this->getTmpDir();
+			$newSourceFile=$tmpDir.$pathArr['basename'];
+			$success=move_uploaded_file($fileHandle['tmp_name'],$newSourceFile);
+			if (!$success){return FALSE;}
+			$entryTemplate['Params']['File']['Source']=$newSourceFile;
+			$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$fileHandle['tmp_name'],'new'=>$entryTemplate['Params']['File']['Source'],'userId'=>$userId));
+		} else if (is_file($fileHandle)){
+			// valid file name with path
+			$entryTemplate['Params']['File']['Source']=$fileHandle;
+			$pathArr=pathinfo($fileHandle);
+			$mimeType=mime_content_type($fileHandle);
+			$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('new'=>$entryTemplate['Params']['File']['Source'],'userId'=>$userId));
+		}
+		$entryTemplate['Params']['File']['Size']=filesize($entryTemplate['Params']['File']['Source']);
+		$entryTemplate['Params']['File']['Name']=$pathArr['basename'];
+		$entryTemplate['Params']['File']['Extension']=$pathArr['extension'];
+		$entryTemplate['Params']['File']['Date (created)']=filectime($entryTemplate['Params']['File']['Source']);
+		if (empty($entryTemplate['Name'])){$entryTemplate['Name']=$pathArr['basename'];}
+		if (!empty($mimeType)){$entryTemplate['Params']['File']['MIME-Type']=$mimeType;}
+		$entry=$entryTemplate;
+		if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE){
+			// if file is zip-archive, extract all file and create entries seperately 
+			$entry['Params']['Processing log'][]=array('timestamp'=>time(),'msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"');
+			$debugArr['archive2files return']=$this->archive2files($entry);
+		} else {
+			// save file
+			if (!empty($entry['Params']['File']['MIME-Type'])){	
+				$entry['Type'].=' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
+			}
+			$this->statistics['inserted files']++;
+			$entry['Params']['File']['Style class']='';
+			$entry['Params']['File']['Uploaded']=$this->arr['Datapool\Tools\StrTools']->getDateTime();
+			if (isset($_SESSION['currentUser']['ElementId'])){$entry['Params']['File']['UploaderId']=$_SESSION['currentUser']['ElementId'];}
+			if (isset($_SESSION['currentUser']['Name'])){$entry['Params']['File']['UploaderName']=$_SESSION['currentUser']['Name'];}
+			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE){
+				$pdfFileContent=$this->parsePdfFile($entry['Params']['File']['Source']);
+				if (!empty($pdfFileContent)){$entry['Content']['File content']=$pdfFileContent;}
+			}
+			$entry=$this->arr['Datapool\Foundation\Database']->addEntryDefaults($entry);
+			$entry=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($entry);
+			$targetFile=$this->selector2file($entry,TRUE);
+			copy($entry['Params']['File']['Source'],$targetFile);
+			$entry['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$entry['Params']['File']['Source'],'new'=>$targetFile,'userId'=>$userId));
+			$entry=$this->arr['Datapool\Tools\ExifTools']->addExif2entry($entry,$targetFile);
+			$entry=$this->arr['Datapool\Tools\GeoTools']->location2address($entry);
+			$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+			$debugArr['entry updated']=$entry;
+		}
+		if ($isDebugging){
+			$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
+		}
+		return $entry;
+	}
+	
+	private function archive2files($entryTemplate){
+		$zipStatistic=array('errors'=>array(),'files'=>array());
+		// extract zip archive to a temporary dir
+		if (is_file($entryTemplate['Params']['File']['Source'])){
+			if (!is_dir($GLOBALS['tmp dir'])){$this->statistics['added dirs']+=intval(mkdir($GLOBALS['tmp dir'],0775));}
+			$zipDir=$GLOBALS['tmp dir'].$this->arr['Datapool\Tools\StrTools']->getRandomString(20).'/';
+			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775));
+			$zip=new \ZipArchive;
+			if ($zip->open($entryTemplate['Params']['File']['Source'])===TRUE){
+				$zip->extractTo($zipDir);
+				$zip->close();
+			} else {
+				$zipStatistic['errors'][]='Failed to open zip archive';
+			}
+		} else {
+			$zipStatistic['errors'][]='Zip archive is not a file';
+		}
+		$files=scandir($zipDir);
+		foreach($files as $file){
+			if (strlen($file)<3){continue;}
+			$zipStatistic['files'][]=$file;
+			$entryTemplate['ElementId']='{{ElementId}}';
+			$entryTemplate['Name']='';
+			$this->file2entries($zipDir.$file,$entryTemplate,count($zipStatistic['files']));
+		}
+		$this->delDir($zipDir);
+		return $zipStatistic;
 	}
 	
 }

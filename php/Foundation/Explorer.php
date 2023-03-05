@@ -106,26 +106,21 @@ class Explorer{
 			$hadMatch=FALSE;
 			$resetKeyRequest=FALSE;
 			foreach($this->state as $column=>$state){
-				if ($hadMatch){$this->state[$column]['Selected']=FALSE;}
+				if (isset($formData['val'][$column])){$value=$formData['val'][$column];} else {$value=$state['Selected'];}
+				if ($hadMatch){$value=FALSE;}
 				if (strcmp($column,$stateKey)===0){
-					// column to update
-					if (strpos($formData['val'][$column],'__')!==FALSE){					
-						$selector=$this->setSelectorByKey($callingClass,$column,FALSE);
-						$selector=$this->setSelectorByKey($callingClass,'ElementId',FALSE);
-					} else {
-						$selector=$this->setSelectorByKey($callingClass,$column,$formData['val'][$column]);
-					}
 					$hadMatch=TRUE;
+					if (strpos($value,'__')!==FALSE){	
+						$value=FALSE;
+						$selector=$this->setSelectorByKey($callingClass,'ElementId',FALSE);
+					}
 				}
+				$selector=$this->setSelectorByKey($callingClass,$column,$value);	
 			}
 		} else if (isset($formData['cmd']['update file']) || isset($formData['cmd']['add files'])){
 			$key=key($formData['cmd']);
 			foreach($formData['files'][$key] as $fileIndex=>$fileArr){
-				$entry=$this->getEntryTemplate($callingClass);
-				$entry['file']=$fileArr;
-				$entry=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($entry);
-				$entry=$this->arr['Datapool\Tools\FileTools']->fileUpload2entry($entry);
-				$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+				$this->arr['Datapool\Tools\FileTools']->file2entries($fileArr,$this->getEntryTemplate($callingClass));
 			}
 		} else if (isset($formData['cmd']['add'])){
 			$column=$formData['cmd']['add'];
@@ -183,6 +178,7 @@ class Explorer{
 
 	private function addSelector($callingClass){
 		$html='';
+		$setKey='Source';
 		foreach($this->state as $stateKey=>$state){
 			$html.=$this->getSelector($callingClass,$stateKey);
 			if ($state['Selected']===FALSE){break;}

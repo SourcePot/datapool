@@ -170,9 +170,11 @@ class Database{
 		foreach($entryTemplate as $column=>$defArr){
 			if (!isset($defArr['value'])){continue;}
 			if (!isset($entry[$column]) || ($defArr['value']===TRUE && empty($entry[$column]))){
-				if (is_string($defArr['value'])){$defArr['value']=$this->arr['Datapool\Tools\StrTools']->stdReplacements($defArr['value']);}
 				$entry[$column]=$defArr['value'];
 			} // if not set or empty but must not be empty
+			if (is_string($entry[$column])){
+				$entry[$column]=$this->arr['Datapool\Tools\StrTools']->stdReplacements($entry[$column]);
+			}
 			$entry=$this->arr['Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
 		} // loop throug entry-template-array
 		$debugArr['entry out']=$entry;
