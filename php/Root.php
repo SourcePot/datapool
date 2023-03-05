@@ -33,6 +33,7 @@ final class Root{
 	*/
 	public function __construct($arr=array()){
 		$GLOBALS['source dir']=$GLOBALS['realpath'].'php/';
+		$GLOBALS['vendor dir']=$GLOBALS['realpath'].'vendor/';
 		$GLOBALS['setup dir']=$GLOBALS['realpath'].'setup/';
 		$GLOBALS['public dir']=$GLOBALS['realpath'].'www/';
 		$GLOBALS['filespace dir']=$GLOBALS['realpath'].'filespace/';
@@ -57,6 +58,15 @@ final class Root{
 		}
 		$arr['page html']='';
 		$arr['registered methods']=array();
+		// load all external components
+		$_SESSION['page state']['autoload.php loaded']=FALSE;
+		if (is_dir($GLOBALS['vendor dir'])){
+			$autoloadFile=$GLOBALS['vendor dir'].'autoload.php';
+			if (is_file($autoloadFile)){
+				$_SESSION['page state']['autoload.php loaded']=TRUE;
+				require_once $autoloadFile;
+			}
+		}
 		$this->arr=$arr;
 	}
 
