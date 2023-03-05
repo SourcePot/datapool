@@ -13,7 +13,6 @@
 	],
 	"require":{
 		"php":">=8.1",
-		"smalot/pdfparser":">=v2.0",
-		"tecnickcom/tc-lib-pdf-parser":"^2.3"
+		"smalot/pdfparser":">=v2.0"
 	}
 }

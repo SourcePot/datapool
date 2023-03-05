@@ -27,6 +27,17 @@ class StrTools{
 		return $this->arr;
 	}
 	
+	public function base64decodeIfEncoded($str){
+		$decoded=base64_decode($str,TRUE);
+		if (empty($decoded)){return $str;}
+		$encoded=base64_encode($decoded);
+		if ($encoded===$str){
+			return $decoded;
+		} else {
+			return $str;
+		}
+	}
+	
 	public function stdReplacements($str=''){
 		if (is_array($str)){return $str;}
 		$toReplace['{{NOW}}']=$this->getDateTime('now');

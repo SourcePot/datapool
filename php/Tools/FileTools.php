@@ -238,11 +238,9 @@ class FileTools{
 			if (empty($entry['Type'])){$entry['Type']=$entry['Source'];}
 			$entry['Type'].=' '.$mimeType;
 			// parse pdf content
-			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE && $_SESSION['page state']['autoload.php loaded']){
-				$parser=new \Smalot\PdfParser\Parser();
-				$pdf=$parser->parseFile($file);
-				$text=$pdf->getText();
-				if (!empty($text)){$entry['Content']['File content']=$text;}
+			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE){
+				$pdfFileContent=$this->parsePdfFile($file);
+				if (!empty($pdfFileContent)){$entry['Content']['File content']=$pdfFileContent;}
 			}
 		}
 		return $entry;
@@ -437,6 +435,23 @@ class FileTools{
 		$msg='Import resulted in '.$this->arr['Datapool\Tools\ArrTools']->statistic2str($statistics);
 		$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $statistics;
+	}
+	
+	public function parsePdfFile($file){
+		$text=FALSE;
+		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
+			$fileContent=file_get_contents($file);
+			$fileContent=$this->arr['Datapool\Tools\StrTools']->base64decodeIfEncoded($fileContent);
+			// parser configuration
+			$config=new \Smalot\PdfParser\Config();
+			$config->setHorizontalOffset('');
+			$config->setRetainImageContent(FALSE);
+			// parse content
+			$parser=new \Smalot\PdfParser\Parser([],$config);
+			$pdf=$parser->parseContent($fileContent);
+			$text=$pdf->getText();
+		}
+		return $text;
 	}
 	
 }
