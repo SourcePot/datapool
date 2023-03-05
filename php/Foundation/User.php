@@ -158,7 +158,7 @@ class User{
 			$admin['Content']['Contact details']['First name']='Admin';
 			$admin['Content']['Contact details']['Family name']='Admin';
 			$admin=$this->unifyEntry($admin);
-			$this->arr['Datapool\Foundation\Database']->updateEntry($admin,TRUE);
+			$this->arr['Datapool\Foundation\Database']->insertEntry($admin);
 			// Save init admin details
 			$adminFile=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
 			$adminFile['Content']['Admin email']=$admin['Email'];
