@@ -514,11 +514,13 @@ class FileTools{
 		}
 		$files=scandir($zipDir);
 		foreach($files as $file){
-			if (strlen($file)<3){continue;}
+			$file=$zipDir.$file;
+			if (is_dir($file)){continue;}
 			$zipStatistic['files'][]=$file;
 			$entryTemplate['ElementId']='{{ElementId}}';
 			$entryTemplate['Name']='';
-			$this->file2entries($zipDir.$file,$entryTemplate,count($zipStatistic['files']));
+			//$this->file2entries($file,$entryTemplate,count($zipStatistic['files']));
+			$this->file2entries($file,$entryTemplate);
 		}
 		$this->delDir($zipDir);
 		return $zipStatistic;
