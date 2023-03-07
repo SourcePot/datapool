@@ -117,7 +117,9 @@ class FileTools{
 		// add defaults at missing keys
 		foreach($this->entryTemplate as $key=>$defArr){
 			if (!isset($entry[$key])){$entry[$key]=$defArr['value'];}
-			$entry[$key]=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($entry[$key]);
+			If (isset($this->arr['SourcePot\Datapool\Foundation\Database'])){
+				$entry[$key]=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($entry[$key]);
+			}
 		}
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		return $entry;
