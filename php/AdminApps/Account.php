@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\AdminApps;
+namespace SourcePot\Datapool\AdminApps;
 
 class Account{
 	
@@ -19,8 +19,8 @@ class Account{
 	private $entryTemplate=array();
     
 	public function __construct($arr){
-		$this->entryTable=$arr['Datapool\Foundation\User']->getEntryTable();
-		$this->entryTemplate=$arr['Datapool\Foundation\User']->getEntryTemplate();
+		$this->entryTable=$arr['SourcePot\Datapool\Foundation\User']->getEntryTable();
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\User']->getEntryTemplate();
 		$this->arr=$arr;
 	}
 
@@ -53,17 +53,17 @@ class Account{
 	
 	private function account(){
 		$html='';
-		if ($this->arr['Datapool\Foundation\Access']->isAdmin()){
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 			// is admin
 			$user=array('Source'=>$this->entryTable);
-			$html.=$this->arr['Datapool\Foundation\Container']->container('User','entryList',$user,array(),array());	
-			$userSelector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			if (isset($userSelector['ElementId'])){$user=$this->arr['Datapool\Foundation\Database']->entryByKey($userSelector);} else {$user=array('Source'=>$this->entryTable,'Type'=>'user');}
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,array(),array());	
+			$userSelector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+			if (isset($userSelector['ElementId'])){$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($userSelector);} else {$user=array('Source'=>$this->entryTable,'Type'=>'user');}
 		} else {
 			// is non-admin user
 			$user=$_SESSION['currentUser'];
 		}
-		$html.=$this->arr['Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'Datapool\Foundation\User','method'=>'userAccountForm'),array());	
+		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());	
 		return $html;
 	}
 	

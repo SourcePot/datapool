@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class CSVtools{
 
@@ -87,7 +87,7 @@ class CSVtools{
 	}
 	
 	public function csvIterator($selector){
-		$csvFile=$this->arr['Datapool\Tools\FileTools']->selector2file($selector);
+		$csvFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($selector);
 		if (!is_file($csvFile)){yield array();}
 		$csvSettings=$this->csvSetting();
 		$csv=new \SplFileObject($csvFile);
@@ -130,24 +130,24 @@ class CSVtools{
 					$statistics['row count']++;
 				}
 				// save csv content
-				$targetFile=$this->arr['Datapool\Tools\FileTools']->selector2file($entry);
+				$targetFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entry);
 				file_put_contents($targetFile,$csvContent);
 				if (empty($entry['Params']['File']['Name'])){$entry['Params']['File']['Name']=str_replace('.csv','',$entry['Name']).'.csv';}
 				$entry['Params']['File']['Size']=filesize($targetFile);
 				$entry['Params']['File']['Extension']='csv';
 				$entry['Params']['File']['MIME-Type']='text/csv';
-				$entry['Date']=$this->arr['Datapool\Tools\StrTools']->getDateTime();
-				$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+				$entry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 				// reset csv var-space
 				unset($_SESSION['csvVarSpace'][$ElementId]);
 				$statistics['csv entries']++;
-				$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'CSV-entry created named "'.$entry['Name'].'" containing '.count($csvDefArr['rows']).' rows.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'CSV-entry created named "'.$entry['Name'].'" containing '.count($csvDefArr['rows']).' rows.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 			return $statistics;
 		} else if (isset($entry['Content'])){
-			$entry=$this->arr['Datapool\Tools\StrTools']->addElementId($entry,array('Source','Group','Folder'),$this->csvTimestamp,'',TRUE);
+			$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entry,array('Source','Group','Folder'),$this->csvTimestamp,'',TRUE);
 			$elementId=$entry['ElementId'];
-			$flatContentArr=$this->arr['Datapool\Tools\ArrTools']->arr2flat($entry['Content']);
+			$flatContentArr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry['Content']);
 			if (!isset($_SESSION['csvVarSpace'][$elementId])){
 				$_SESSION['csvVarSpace'][$elementId]=array('rows'=>array(),'entry'=>$entry,'first row'=>$flatContentArr);
 			}
@@ -162,7 +162,7 @@ class CSVtools{
 			$_SESSION['csvVarSpace']=array();
 		} else {
 			$trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2);
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'Method "'.__FUNCTION__.'" called by "'.$trace[1]['function'].'" without content','priority'=>20,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Method "'.__FUNCTION__.'" called by "'.$trace[1]['function'].'" without content','priority'=>20,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		return FALSE;
 	}
@@ -193,19 +193,19 @@ class CSVtools{
 		if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
 		$settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
 		$debugArr=array('arr in'=>$arr,'settings in'=>$settings,'valuesToUpdate'=>array());
-		$attachedFile=$this->arr['Datapool\Tools\FileTools']->selector2file($arr['selector']);
+		$attachedFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($arr['selector']);
 		if (!is_file($attachedFile)){return $arr;}
-		$csvEntry=$this->arr['Datapool\Foundation\Database']->entryByKey($arr['selector']);
+		$csvEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr['selector']);
 		// get settings
 		foreach($this->getSettings() as $settingKey=>$settingValue){
 			if (!isset($settings[$settingKey])){$settings[$settingKey]=$settingValue;}
 		}
 		// form processing
 		$valuesTorUpdate=array();
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (!empty($formData['cmd'])){
 			// csv settings
-			$settings=$this->arr['Datapool\Tools\ArrTools']->arrMerge($settings,$formData['val']['settings']);
+			$settings=array_replace_recursive($settings,$formData['val']['settings']);
 			$this->setSetting($settings);
 			// csv valus
 			if (isset($formData['val']['values'])){
@@ -214,7 +214,7 @@ class CSVtools{
 			}
 		}
 		// create sample
-		$S=$this->arr['Datapool\Tools\ArrTools']->getSeparator();
+		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		$columns=array();
 		$rowCount=0;
 		$rowLimitCount=0;
@@ -248,27 +248,27 @@ class CSVtools{
 		$caption='CSV sample:';
 		$caption.=' "'.$csvEntry['Name'].'" ';
 		$caption.=' ('.$rowCount.')';
-		$sampleHtml=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+		$sampleHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		// create control
 		$selectArr=array('key'=>array('settings','limit'),'value'=>$settings['limit'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'keep-element-content'=>TRUE);
 		$selectArr['options']=array(5=>'5',10=>'10',25=>'25',50=>'50');
-		$limitSelector=$this->arr['Datapool\Tools\HTMLbuilder']->select($selectArr);
+		$limitSelector=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		$selectArr['key']=array('settings','enclosure');
 		$selectArr['value']=$settings['enclosure'];
 		$selectArr['options']=$this->alias(FALSE,'enclosure');
-		$enclosureSelector=$this->arr['Datapool\Tools\HTMLbuilder']->select($selectArr);
+		$enclosureSelector=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		$selectArr['key']=array('settings','separator');
 		$selectArr['value']=$settings['separator'];
 		$selectArr['options']=$this->alias(FALSE,'separator');
-		$separatorSelector=$this->arr['Datapool\Tools\HTMLbuilder']->select($selectArr);
+		$separatorSelector=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		$selectArr['key']=array('settings','lineSeparator');
 		$selectArr['value']=$settings['lineSeparator'];
 		$selectArr['options']=$this->alias(FALSE,'lineSeparator');
-		$lineSeparatorSelector=$this->arr['Datapool\Tools\HTMLbuilder']->select($selectArr);
+		$lineSeparatorSelector=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		$selectArr['key']=array('settings','mode');
 		$selectArr['value']=$settings['mode'];
 		$selectArr['options']=array('Show','Edit');
-		$modeSelector=$this->arr['Datapool\Tools\HTMLbuilder']->select($selectArr);
+		$modeSelector=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		$matrix=array();
 		$matrix['Cntr']['Offset']=array('tag'=>'input','type'=>'range','min'=>0,'max'=>$rowCount-$settings['limit'],'value'=>$settings['offset'],'key'=>array('settings','offset'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
 		$matrix['Cntr']['Limit']=$limitSelector;
@@ -279,14 +279,14 @@ class CSVtools{
 		}
 		$matrix['Cntr']['Mode']=$modeSelector;
 		$caption='CSV control';
-		$cntrHtml=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+		$cntrHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		//
 		$arr['html'].=$cntrHtml;
 		$arr['html'].=$sampleHtml;
 		if ($isDebugging){
 			$debugArr['arr out']=$arr;
 			$debugArr['settings out']=$settings;
-			$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr);
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $arr;
 	}

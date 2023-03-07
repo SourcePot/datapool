@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\AdminApps;
+namespace SourcePot\Datapool\AdminApps;
 
 class Admin{
 	
@@ -29,7 +29,7 @@ class Admin{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
 
@@ -58,19 +58,19 @@ class Admin{
 	
 	public function logsArticle($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		$selector=array('Source'=>$this->arr['Datapool\Foundation\Logging']->getEntryTable());
-		$arr['html']=$this->arr['Datapool\Foundation\Container']->container('Log entries','entryList',$selector,array(),array());
+		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\Logging']->getEntryTable());
+		$arr['html']=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Log entries','entryList',$selector,array(),array());
 		return $arr;
 	}
 	
 	public function backupArticle($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// form processing
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
-		$this->arr['Datapool\Foundation\Database']->resetStatistic();
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (isset($formData['cmd']['export'])){
 			$selectors=array($formData['val']);
-			$dumpFile=$this->arr['Datapool\Tools\FileTools']->exportEntries($selectors,FALSE,$formData['val']['Size']);
+			$dumpFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->exportEntries($selectors,FALSE,$formData['val']['Size']);
 			if (is_file($dumpFile)){
 				header('Content-Type: application/zip');
 				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' '.$formData['val']['Source'].' dump.zip"');
@@ -78,12 +78,12 @@ class Admin{
 				readfile($dumpFile);
 			}	
 		} else if (isset($formData['cmd']['import'])){
-			$tmpFile=$this->arr['Datapool\Tools\FileTools']->getTmpDir().'tmp.zip';
+			$tmpFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir().'tmp.zip';
 			if (!empty($formData['files']['import'])){
 				$success=move_uploaded_file($formData['files']['import'][0]['tmp_name'],$tmpFile);
-				if ($success){$this->arr['Datapool\Tools\FileTools']->importEntries($tmpFile);}
+				if ($success){$this->arr['SourcePot\Datapool\Tools\FileTools']->importEntries($tmpFile);}
 			} else {
-				$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 		}
 		// export html
@@ -96,7 +96,7 @@ class Admin{
 									   10000000000=>'Skip files if >10 GB'
 									   );
 		$tables=array(''=>'none');
-		$dbInfo=$this->arr['Datapool\Foundation\Database']->getDbInfo();
+		$dbInfo=$this->arr['SourcePot\Datapool\Foundation\Database']->getDbInfo();
 		foreach($dbInfo as $table=>$infoArr){
 			$tables[$table]=ucfirst($table);
 		}
@@ -109,8 +109,8 @@ class Admin{
 		$sizeSelect['selected']=10000000;
 		$sizeSelect['options']=$attachedFileSizeOptions;
 		$btnArr['cmd']='export';
-		$matrix['Backup to file']=array('Input'=>$this->arr['Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->arr['Datapool\Tools\HTMLbuilder']->select($sizeSelect),
-								'Cmd'=>$this->arr['Datapool\Tools\HTMLbuilder']->btn($btnArr));
+		$matrix['Backup to file']=array('Input'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
+								'Cmd'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
 		// import html		
 		$fileArr=$btnArr;
 		$fileArr['tag']='input';
@@ -119,9 +119,9 @@ class Admin{
 		$fileArr['key']=array('import');
 		$btnArr['cmd']='import';
 		$btnArr['hasCover']=TRUE;
-		$matrix['Recover from file']=array('Input'=>$this->arr['Datapool\Tools\HTMLbuilder']->element($fileArr),'Cmd'=>$this->arr['Datapool\Tools\HTMLbuilder']->btn($btnArr));
-		$tableHtml=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
+		$matrix['Recover from file']=array('Input'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileArr),'Cmd'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
+		$tableHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
 		return $arr;
 	}
 	

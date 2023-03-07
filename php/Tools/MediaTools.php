@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class MediaTools{
 
@@ -31,7 +31,7 @@ class MediaTools{
 			$arr['style']['max-height']=$arr['maxDim'];
 		}
 		$isSmallPreview=(!empty($arr['style']['max-width']) || !empty($arr['style']['width']));
-		$file=$this->arr['Datapool\Tools\FileTools']->selector2file($arr['selector']);
+		$file=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($arr['selector']);
 		if (is_file($file)){
 			if (!isset($arr['selector']['Params']['File']['MIME-Type'])){
 				// attached file has unknown file type
@@ -45,26 +45,26 @@ class MediaTools{
 				$id=md5('wrapper'.$arr['selector']['Source'].$arr['selector']['ElementId']);
 				$imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'class'=>'preview','id'=>$id,'source'=>$arr['selector']['Source'],'element-id'=>$arr['selector']['ElementId']);
 				$imageArr['style']=array('cursor'=>'pointer','padding'=>'3px');
-				$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($imageArr);
+				$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imageArr);
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
 				if ($isSmallPreview){
 					$arr['html']='&plusb;';
 				} else {
-					$json=$this->arr['Datapool\Tools\FileTools']->file_get_contents_utf8($file);
+					$json=$this->arr['SourcePot\Datapool\Tools\FileTools']->file_get_contents_utf8($file);
 					$json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-					$matrix=$this->arr['Datapool\Tools\ArrTools']->arr2matrix($json);
-					$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
+					$matrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json);
+					$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
 				}
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/pdf')===0){
 				$arr=$this->getPdf($arr);
-			} else if ($this->arr['Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
+			} else if ($this->arr['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
 				$arr['html']='&plusb;';
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
-				$text=$this->arr['Datapool\Tools\FileTools']->file_get_contents_utf8($file);
+				$text=$this->arr['SourcePot\Datapool\Tools\FileTools']->file_get_contents_utf8($file);
 				$arr=$this->addPreviewTextStyle($arr);
 				$arr['tag']='p';
 				$arr['element-content']=substr($text,0,200);
-				$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($arr);
+				$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($arr);
 			} else {
 				// attached file with undefined mime-type
 				$arr['html'].='&#9782;';
@@ -95,32 +95,32 @@ class MediaTools{
 		} else {
 			if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
 			$iconArr=array('tag'=>'p','element-content'=>$text,'style'=>array());
-			$iconHtml=$this->arr['Datapool\Tools\HTMLbuilder']->element($iconArr);
+			$iconHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($iconArr);
 		}
 		$imageArr=array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'class'=>'icon','style'=>array('width'=>$arr['newWidth'],'height'=>$arr['newHeight']));
 		if (isset($iconHtml)){$imageArr['element-content']=$iconHtml;}
 		if (isset($iconSrc)){
 			$imageArr['style']['background-image']='url("'.$iconSrc.'")';
 		}
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($imageArr);
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imageArr);
 		if (empty($arr['returnHtmlOnly'])){return $arr;} else {return $arr['html'];}
 	}
 	
 	public function presentEntry($arr){
 		if (empty($arr['selector'])){
-			return $this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called arr["selector"] being empty.'));
+			return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called arr["selector"] being empty.'));
 		} else if (!isset($arr['selector']['Content'])){
-			return $this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called, but arr["selector*]["Content"] is missing.'));	
+			return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called, but arr["selector*]["Content"] is missing.'));	
 		} else if (empty($arr['setting'])){
-			return $this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called with arr["setting"] being empty.'));	
+			return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called with arr["setting"] being empty.'));	
 		}
 		if (!isset($arr['html'])){$arr['html']='';}
 		// compile entry and add presentation keys
 		if (!empty($arr['setting']['Show userAbstract'])){$arr['selector'][':::userAbstract']=TRUE;}
 		if (!empty($arr['setting']['Show getPreview'])){$arr['selector'][':::getPreview']=TRUE;}
 		$arrElements=array('arr'=>$arr,'elements'=>array());
-		$S=$this->arr['Datapool\Tools\ArrTools']->getSeparator();
-		$flatEntry=$this->arr['Datapool\Tools\ArrTools']->arr2flat($arr['selector']);
+		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+		$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
 		foreach($flatEntry as $flatEntryKey=>$flatEntryValue){
 			$flatEntryKey=str_replace($S,'|',$flatEntryKey);
 			$arrElements=$this->addElementFromKeySettingValue($arrElements,$flatEntryKey,$flatEntryValue);
@@ -130,13 +130,13 @@ class MediaTools{
 		ksort($arrElements['elements']);
 		foreach($arrElements['elements'] as $presentationIndex=>$element){
 			if (!empty($element['element'])){
-				$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($element['element']);
+				$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element['element']);
 			}
 			if (isset($element['html'])){
 				$arr['html'].=$element['html'];	
 			}
 		}
-		if (!empty($arr['setting']['Show entry editor'])){$arr=$this->arr['Datapool\Foundation\Container']->entryEditor($arr);}
+		if (!empty($arr['setting']['Show entry editor'])){$arr=$this->arr['SourcePot\Datapool\Foundation\Container']->entryEditor($arr);}
 		if (empty($arr['returnHtmlOnly'])){return $arr;} else {return $arr['html'];}
 	}
 	
@@ -160,7 +160,7 @@ class MediaTools{
 		if (isset($arrElements['elements'][$presentationIndex])){
 			$msg='Problem detected: Two entry keys "'.$key.'" and "'.$arrElements['elements'][$presentationIndex]['entryKey'].'" have the same "presentationIndex". ';
 			$msg.='Change presentationIndex of key "'.$key.'" in setting with Name="'.$arrElements['arr']['selector']['Source'].'".';
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>44,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>44,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		$arrElements['elements'][$presentationIndex]=$arrElements['arr']['setting']['Key tags'][$key];
 		$arrElements['elements'][$presentationIndex]['entryKey']=$key;
@@ -174,8 +174,8 @@ class MediaTools{
 			$widgetArr=$arrElements['arr'];
 			if (strcmp($key,':::userAbstract')===0){
 				$widgetArr['wrapResult']=array('tag'=>'div','style'=>array('float'=>'left','clear'=>'both','width'=>'100%','color'=>'#000','background-color'=>'#fff8'));
-				$widgetArr['selector']=array('Source'=>$this->arr['Datapool\Foundation\User']->getEntryTable(),'ElementId'=>$arrElements['arr']['selector']['Owner']);
-				$arrElements['elements'][$presentationIndex]['html']=$this->arr['Datapool\Foundation\User']->userAbtract($widgetArr,2);
+				$widgetArr['selector']=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'ElementId'=>$arrElements['arr']['selector']['Owner']);
+				$arrElements['elements'][$presentationIndex]['html']=$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract($widgetArr,2);
 			} else if (strcmp($key,':::getPreview')===0){
 				$widgetArr['returnHtmlOnly']=TRUE;
 				$widgetArr['style']=array('margin'=>'3px');
@@ -188,21 +188,21 @@ class MediaTools{
 	}
 	
 	public function loadImage($arr){
-		$image=$this->arr['Datapool\Foundation\Database']->entryByKey($arr);
+		$image=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr);
 		// get source file
-		$imageFile=$this->arr['Datapool\Tools\FileTools']->selector2file($image);
+		$imageFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($image);
 		if (is_file($imageFile)){
 			// get target file
-			$absFile=$this->arr['Datapool\Tools\FileTools']->getTmpDir();
+			$absFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
 			$absFile.=$image['ElementId'].'_org.'.$image['Params']['File']['Extension'];
-			//$absFile.=$this->arr['Datapool\Tools\StrTools']->getElementId().'.'.$image['Params']['File']['Extension'];
-			$relFile=$this->arr['Datapool\Tools\FileTools']->abs2rel($absFile);
+			//$absFile.=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getElementId().'.'.$image['Params']['File']['Extension'];
+			$relFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($absFile);
 			copy($imageFile,$absFile);
 			$arr['src']=$relFile;
 			$arr['title']='';
 			if (!empty($image['Params']['reverseGeoLoc']['display_name'])){$arr['title']=$image['Params']['reverseGeoLoc']['display_name'];}
 			if (!empty($image['Params']['DateTime']['GPS'])){
-				$pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
+				$pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
 				$arr['title'].=' '.$image['Params']['DateTime']['GPS'].' ('.$pageSettings['pageTimeZone'].')';
 			}
 			if (!empty($image['Params']['GPS']['GPSAltitude'])){$arr['title'].=' | Altitude: '.$image['Params']['GPS']['GPSAltitude'];}
@@ -217,19 +217,19 @@ class MediaTools{
 	private function getVideo($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		$video=$arr['selector'];
-		$videoFile=$this->arr['Datapool\Tools\FileTools']->selector2file($video);
+		$videoFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($video);
 		if (is_file($videoFile)){
 			// copy video to temp folder
-			$absFile=$this->arr['Datapool\Tools\FileTools']->getTmpDir();
+			$absFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
 			$absFile.=$video['ElementId'].'.'.$video['Params']['File']['Extension'];
 			copy($videoFile,$absFile);
 			$videoArr=$arr;
 			$videoArr['tag']='video';
 			$videoArr['type']=$video['Params']['File']['MIME-Type'];
-			$videoArr['src']=$this->arr['Datapool\Tools\FileTools']->abs2rel($absFile);
+			$videoArr['src']=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($absFile);
 			$videoArr['element-content']=$arr['selector']['Name'];
 			$videoArr['controls']=TRUE;
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($videoArr);
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($videoArr);
 		}
 		return $arr;
 	}
@@ -237,41 +237,41 @@ class MediaTools{
 	private function getAudio($arr,$maxDim=FALSE){
 		if (!isset($arr['html'])){$arr['html']='';}
 		$audio=$arr['selector'];
-		$audioFile=$this->arr['Datapool\Tools\FileTools']->selector2file($audio);
+		$audioFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($audio);
 		if (is_file($audioFile)){
 			// copy audio to temp folder
-			$absFile=$this->arr['Datapool\Tools\FileTools']->getTmpDir();
+			$absFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
 			$absFile.=$audio['ElementId'].'.'.$audio['Params']['File']['Extension'];
 			copy($audioFile,$absFile);
 			$audioArr=$arr;
 			$audioArr['tag']='audio';
 			$audioArr['type']=$audio['Params']['File']['MIME-Type'];
-			$audioArr['src']=$this->arr['Datapool\Tools\FileTools']->abs2rel($absFile);
+			$audioArr['src']=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($absFile);
 			$audioArr['element-content']=$arr['selector']['Name'];
 			$audioArr['controls']=TRUE;
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($audioArr);
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($audioArr);
 		}
 		return $arr;
 	}
 
 	private function getPdf($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		$sourceFile=$this->arr['Datapool\Tools\FileTools']->selector2file($arr['selector']);
-		$tmpDir=$this->arr['Datapool\Tools\FileTools']->getTmpDir();
+		$sourceFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($arr['selector']);
+		$tmpDir=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
 		$pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
-		$this->arr['Datapool\Tools\FileTools']->tryCopy($sourceFile,$pdfFile);
+		$this->arr['SourcePot\Datapool\Tools\FileTools']->tryCopy($sourceFile,$pdfFile);
 		if (is_file($pdfFile)){
 			$pdfArr=$arr;
 			$pdfArr['tag']='embed';
-			$pdfArr['src']=$this->arr['Datapool\Tools\FileTools']->abs2rel($pdfFile);
+			$pdfArr['src']=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($pdfFile);
 			$pdfArr['type']='application/pdf';
 			$pdfArr['style']['float']='left';
 			$pdfArr['style']['clear']='both';
 			$pdfArr['style']['width']='98%';
 			$pdfArr['style']['height']='500px';
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($pdfArr);
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($pdfArr);
 		} else {
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
 		}
 		$arr['wrapperSettings']=array('style'=>'width:95%;');
 		return $arr;
@@ -279,22 +279,22 @@ class MediaTools{
 	
 	private function getImage($arr){
 		$html='';
-		$sourceFile=$this->arr['Datapool\Tools\FileTools']->selector2file($arr['selector']);
+		$sourceFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($arr['selector']);
 		// return svg file without processing 
 		if (stripos($arr['selector']['Params']['File']['MIME-Type'],'/svg')!==FALSE){
-			return $this->arr['Datapool\Tools\FileTools']->file_get_contents_utf8($sourceFile);
+			return $this->arr['SourcePot\Datapool\Tools\FileTools']->file_get_contents_utf8($sourceFile);
 		}
 		//target file saved in the tmp directory
-		$arr['targetFile']=$this->arr['Datapool\Tools\FileTools']->getTmpDir();
+		$arr['targetFile']=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
 		$arr['targetFile'].=$arr['selector']['ElementId'].'.'.$arr['selector']['Params']['File']['Extension'];
-		$arr['src']=$this->arr['Datapool\Tools\FileTools']->abs2rel($arr['targetFile']);
+		$arr['src']=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($arr['targetFile']);
 		//-- resampling will destroy exif data, rotation and flipping required
 		$tmpArr=@getimagesize($sourceFile);
 		if (empty($tmpArr)){
 			// is not an image
 			$arr['tag']='p';
 			$arr['element-content']=$arr['selector']['Params']['File']['Name'].' seems to be not an image file...';
-			return $this->arr['Datapool\Tools\HTMLbuilder']->element($arr);
+			return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($arr);
 		} else {
 			// is an image
 			(empty($arr['selector']['Params']['File']['Style class']))?$arr['styleClass']='rotate0':$arr['styleClass']=$arr['selector']['Params']['File']['Style class'];
@@ -332,7 +332,7 @@ class MediaTools{
 				} else if (strpos($imgArr['fileType'],'/jpeg')!==FALSE){
 					$orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
 				} else {
-					$string=$this->arr['Datapool\Tools\FileTools']->file_get_contents_utf8($imgArr['sourceFile']);
+					$string=$this->arr['SourcePot\Datapool\Tools\FileTools']->file_get_contents_utf8($imgArr['sourceFile']);
 					if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
 					$orgImage=imagecreatefromstring($string);	
 				}
@@ -388,7 +388,7 @@ class MediaTools{
 				@imagedestroy($newImage);
 				if (empty($arr['returnImgFileOnly'])){
 					$imageTagArr['src']=$arr['src'];
-					$html=$this->arr['Datapool\Tools\HTMLbuilder']->element($imageTagArr);
+					$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imageTagArr);
 					if (!empty($arr['Date'])){$html.='<p class="imgOverlay">'.$arr['Date'].'</p>';}
 				} else {
 					return $arr['src'];
@@ -400,7 +400,7 @@ class MediaTools{
 				ob_end_clean();
 				$imageTagArr['src']='data:image/png;base64,'.base64_encode($imagedata);
 				$imageTagArr['keep-element-content']=TRUE;
-				$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($imageTagArr);
+				$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imageTagArr);
 			}
 		}
 		return $html;

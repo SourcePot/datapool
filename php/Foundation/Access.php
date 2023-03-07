@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Foundation;
+namespace SourcePot\Datapool\Foundation;
 
 class Access{
 	
@@ -55,9 +55,9 @@ class Access{
 	
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$access=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__,'Content'=>$this->access);
-		$access=$this->arr['Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($access,TRUE);
+		$access=$this->arr['SourcePot\Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($access,TRUE);
 		$this->access=$access['Content'];
 		return $this->arr;
 	}
@@ -179,7 +179,7 @@ class Access{
 		foreach ($this->digits as $digitIndex => $digitDef){
 			$layersHtml='';
 			for ($layer=0;$layer<10;$layer++){ 
-				$imgTmpHash=$this->arr['Datapool\Tools\StrTools']->getRandomString(20);
+				$imgTmpHash=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 				$image=imagecreate($arr['symbolSize'],$arr['symbolSize']);
 				$bg=imagecolorallocatealpha($image,255,255,255,0);
 				$fg=imagecolorallocate($image,0,0,0);
@@ -206,22 +206,22 @@ class Access{
 				$imgArr['src']='data:image/png;base64,'.base64_encode($imagedata);
 				$aArr['id']=$imgTmpHash.'_loginSymbol';
 				$aArr['title']='Login symbol';
-				$aArr['element-content']=$this->arr['Datapool\Tools\HTMLbuilder']->element($imgArr);
-				$layersHtml.=$this->arr['Datapool\Tools\HTMLbuilder']->element($aArr);
+				$aArr['element-content']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imgArr);
+				$layersHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($aArr);
 				$hashSymbolArr[$imgTmpHash]=array('digit'=>$digitDef['key']);
 			}
 			$layersDivArr['element-content']=$layersHtml;
 			if ($digitIndex%$arr['symbolColumnCount']===0 && $digitIndex>0){$layersDivArr['style']['clear']='both';} else {$layersDivArr['style']['clear']='none';}
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($layersDivArr);
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($layersDivArr);
 		}
 		// add hidden input and passphrase preview
 		$previewArr=array('tag'=>'div','element-content'=>'','class'=>'phrase-preview');
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($previewArr);
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($previewArr);
 		$phraseArr=array('tag'=>'input','type'=>'hidden','key'=>array('Login','Password'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'element-content'=>'','class'=>'pass-phrase');
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element($phraseArr);
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($phraseArr);
 		
 		// save state
-		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
+		$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
 		echo $arr['html'];
 		return $arr;
 	}

@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Processing;
+namespace SourcePot\Datapool\Processing;
 
 class DeleteEntries{
 	
@@ -28,7 +28,7 @@ class DeleteEntries{
 	
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
 
@@ -41,7 +41,7 @@ class DeleteEntries{
 		// $callingElementSelector ... array('Source'=>'...', 'ElementId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['Datapool\Foundation\Database']->entryByKey($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($callingElementSelector);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -83,14 +83,14 @@ class DeleteEntries{
 	}
 
 	private function getDeleteEntriesWidget($callingElement){
-		return $this->arr['Datapool\Foundation\Container']->container('Delete entries','generic',$callingElement,array('method'=>'getDeleteEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Delete entries','generic',$callingElement,array('method'=>'getDeleteEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getDeleteEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runDeleteEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -105,17 +105,17 @@ class DeleteEntries{
 		$btnArr['value']='Run';
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Deletion widget'));
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Deletion widget'));
 		foreach($result as $caption=>$matrix){
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		return $arr;
 	}
 
 	private function getDeleteEntriesSettings($callingElement){
 		$html='';
-		if ($this->arr['Datapool\Foundation\Access']->isContentAdmin()){
-			$html.=$this->arr['Datapool\Foundation\Container']->container('Deleteing entries settings','generic',$callingElement,array('method'=>'getDeleteEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Deleteing entries settings','generic',$callingElement,array('method'=>'getDeleteEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
 		}
 		return $html;
 	}
@@ -133,20 +133,20 @@ class DeleteEntries{
 										  'Skipped entries'=>array('value'=>0),
 										  )
 					 );
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
 			$result['Statistics']['Entry count']['value']=$entry['rowCount'];
 			break;
 		}
 		if ($isTestRun){
-			foreach($this->arr['Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],FALSE,'Write') as $entry){
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],FALSE,'Write') as $entry){
 				$result['Statistics']['Deleted entries']['value']=$entry['rowCount'];
 				break;
 			}
 			$result['Statistics']['Deleted files']['value']='?';
 		} else {
-			$this->arr['Datapool\Foundation\Database']->resetStatistic();
-			$this->arr['Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector']);
-			$statistic=$this->arr['Datapool\Foundation\Database']->getStatistic();
+			$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector']);
+			$statistic=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			$result['Statistics']['Deleted files']['value']=$statistic['removed'];
 			$result['Statistics']['Deleted entries']['value']=$statistic['deleted'];
 			$result['Statistics']['Skipped entries']['value']=$result['Statistics']['Entry count']['value']-$result['Statistics']['Deleted entries']['value'];

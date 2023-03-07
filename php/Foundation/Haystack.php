@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Foundation;
+namespace SourcePot\Datapool\Foundation;
 
 class Haystack{
 	
@@ -26,7 +26,7 @@ class Haystack{
 	
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
 	

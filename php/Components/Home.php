@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Components;
+namespace SourcePot\Datapool\Components;
 
 class Home{
 	
@@ -34,10 +34,10 @@ class Home{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		// check database user entry definition 
 		$this->definition['save']=array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@Write'=>'ADMIN_R','@Read'=>'ADMIN_R');
-		$arr['Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 		return $this->arr;
 	}
 
@@ -54,7 +54,7 @@ class Home{
 	}
 
 	public function unifyEntry($entry){
-		$entry=$this->arr['Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
 		return $entry;
 	}
 
@@ -71,13 +71,13 @@ class Home{
 	
 	private function contactHtml(){
 		$entry=array('Source'=>$this->entryTable,'Group'=>'Imprint','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Imprint text','Type'=>'home','Owner'=>'SYSTEM');
-		$entry=$this->arr['Datapool\Tools\StrTools']->addElementId($entry,array('Source','Group','Folder','Name'),0);
-		$entry=$this->arr['Datapool\Foundation\Access']->addRights($entry,'ALL_R','ADMIN_R');
-		$definition=$this->arr['Datapool\Foundation\Definitions']->getDefinition($entry);
-		if ($this->arr['Datapool\Foundation\Access']->isAdmin()){$definition['hideKeys']=FALSE;}
-		$entry=$this->arr['Datapool\Foundation\Database']->entryByKeyCreateIfMissing($entry,TRUE);
-		$html=$this->arr['Datapool\Foundation\Definitions']->definition2form($definition,$entry);
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entry,array('Source','Group','Folder','Name'),0);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ADMIN_R');
+		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($entry);
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){$definition['hideKeys']=FALSE;}
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($entry,TRUE);
+		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$entry);
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
 		return $html;
 	}
 	

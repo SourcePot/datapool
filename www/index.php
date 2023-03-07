@@ -10,7 +10,7 @@
 	
 declare(strict_types=1);
 	
-namespace Datapool;
+namespace SourcePot\Datapool;
 
 mb_internal_encoding("UTF-8");
 	

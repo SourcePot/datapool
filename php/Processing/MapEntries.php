@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Processing;
+namespace SourcePot\Datapool\Processing;
 
 class MapEntries{
 	
@@ -41,7 +41,7 @@ class MapEntries{
 	
 	public function init($arr){
 		$this->arr=$arr;	
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
 	
@@ -54,7 +54,7 @@ class MapEntries{
 		// $callingElementSelector ... array('Source'=>'...', 'ElementId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['Datapool\Foundation\Database']->entryByKey($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($callingElementSelector);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -96,14 +96,14 @@ class MapEntries{
 	}
 
 	private function getMapEntriesWidget($callingElement){
-		return $this->arr['Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,array('method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,array('method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getMapEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runMapEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -118,9 +118,9 @@ class MapEntries{
 		$btnArr['value']='Run';
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget'));
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget'));
 		foreach($result as $caption=>$matrix){
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		return $arr;
 	}
@@ -128,8 +128,8 @@ class MapEntries{
 
 	private function getMapEntriesSettings($callingElement){
 		$html='';
-		if ($this->arr['Datapool\Foundation\Access']->isContentAdmin()){
-			$html.=$this->arr['Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,array('method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,array('method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
 		}
 		return $html;
 	}
@@ -138,8 +138,8 @@ class MapEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->mappingParams($arr['selector']);
 		$arr['html'].=$this->mappingRules($arr['selector']);
-		//$selectorMatrix=$this->arr['Datapool\Tools\ArrTools']->arr2matrix($callingElement['Content']['Selector']);
-		//$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for mapping'));
+		//$selectorMatrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
+		//$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for mapping'));
 		return $arr;
 	}
 
@@ -151,15 +151,15 @@ class MapEntries{
 		// get selctor
 		$mappingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);
 		if (empty($mappingParams)){return '';}
-		$mappingParams=$this->arr['Datapool\Foundation\Access']->addRights($mappingParams,'ALL_R','ALL_CONTENTADMIN_R');
+		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($mappingParams,'ALL_R','ALL_CONTENTADMIN_R');
 		$mappingParams['Content']=array();
-		$mappingParams=$this->arr['Datapool\Foundation\Database']->entryByKeyCreateIfMissing($mappingParams,TRUE);
+		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($mappingParams,TRUE);
 		// form processing
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (!empty($formData['val'][$elementId]['Content'])){
 			$mappingParams['Content']=$formData['val'][$elementId]['Content'];
-			$mappingParams=$this->arr['Datapool\Foundation\Database']->updateEntry($mappingParams);
+			$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($mappingParams);
 		}
 		// get HTML
 		$arr=$mappingParams;
@@ -169,10 +169,10 @@ class MapEntries{
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Mapping control: Select mapping target and type';
 		$arr['noBtns']=TRUE;
-		$row=$this->arr['Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
 		if (empty($mappingParams['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
-		return $this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 	
 	private function mappingRules($callingElement){
@@ -192,14 +192,14 @@ class MapEntries{
 		$arr['caption']='Mapping rules: Map selected entry values or constants (Source value) to target entry values';
 		$arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 
 	private function runMapEntries($callingElement,$testRun=FALSE){
 		$targetEntry=array();
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['ElementId']);
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','ElementId',TRUE) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','ElementId',TRUE) as $entry){
 			$elementIdComps=explode('___',$entry['ElementId']);
 			if (count($elementIdComps)<2){
 				$targetEntry[$entry['Group']]=$entry['Content'];
@@ -213,7 +213,7 @@ class MapEntries{
 		}
 		// loop through source entries and map these entries
 		$result=array('Source statistics'=>array('Entries'=>array('value'=>0),'CSV rows'=>array('value'=>0)));
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
 			$result['Source statistics']['Entries']['value']++;
 			$isCsvEntry=FALSE;
 			if (isset($sourceEntry['Params']['File']['MIME-Type'])){
@@ -222,7 +222,7 @@ class MapEntries{
 				}
 			}
 			if ($isCsvEntry){
-				foreach($this->arr['Datapool\Tools\CSVtools']->csvIterator($sourceEntry) as $rowIndex=>$cells){
+				foreach($this->arr['SourcePot\Datapool\Tools\CSVtools']->csvIterator($sourceEntry) as $rowIndex=>$cells){
 					$result['Source statistics']['CSV rows']['value']++;
 					foreach($cells as $cellKey=>$cellValue){
 						$sourceEntry['File content'][$cellKey]=$cellValue;
@@ -234,13 +234,13 @@ class MapEntries{
 				$sourceEntry['isNewEntry']=FALSE;
 			}
 		}
-		if (strcmp($targetEntry['mappingParams']['Type'],'csv')===0){$this->arr['Datapool\Tools\CSVtools']->entry2csv();}
+		if (strcmp($targetEntry['mappingParams']['Type'],'csv')===0){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv();}
 		unset($result['ElementIds']);
 		return $result;
 	}
 	
 	private function mapEntry($callingElement,$sourceEntry,$targetEntry,$result,$testRun){
-		$S=$this->arr['Datapool\Tools\ArrTools']->getSeparator();
+		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		$keepExistingElementId=empty($targetEntry['mappingParams']['Mode']);
 		if (!isset($result['Mapping statistics'])){
 			$result['Mapping statistics']=array('Rule source entry key missing'=>array('value'=>0),
@@ -254,14 +254,14 @@ class MapEntries{
 		}
 		if (!isset($result['Log'])){$result['Log']=array();}
 		// copy base key values across
-		$baseKeys=$this->arr['Datapool\Foundation\Database']->entryTemplate($sourceEntry);
+		$baseKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($sourceEntry);
 		foreach($baseKeys as $key=>$def){
 			if (strcmp($key,'File content')===0 || strcmp($key,'Content')===0 || strcmp($key,'Params')===0 || strcmp($key,'ElementId')===0){continue;}
 			$targetEntry[$key]=$sourceEntry[$key];
 		}
 		// rule based mapping
-		$flatSourceEntry=$this->arr['Datapool\Tools\ArrTools']->arr2flat($sourceEntry);
-		$flatTargetEntry=$this->arr['Datapool\Tools\ArrTools']->arr2flat($targetEntry);
+		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
+		$flatTargetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);
 		foreach($targetEntry['mappingRules'] as $ruleIndex=>$rule){
 			if (strcmp($rule['...value selected by'],'useValue')===0){
 				$targetValue=$rule['Target value or...'];
@@ -289,22 +289,22 @@ class MapEntries{
 			ksort($value);
 			$flatTargetEntry[$key]=implode('|',$value);
 		}
-		$targetEntry=$this->arr['Datapool\Tools\ArrTools']->flat2arr($flatTargetEntry);
+		$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatTargetEntry);
 		$targetEntry=$this->applyCallingElement($callingElement['Source'],$targetEntry['mappingParams']['Target'],$targetEntry);
 		// Save and return result
 		if ($testRun){
 			unset($targetEntry['mappingParams']);
 			unset($targetEntry['mappingRules']);
 			if (empty($result['Sample result'])){
-				$result['Sample result']=$this->arr['Datapool\Tools\ArrTools']->arr2matrix($targetEntry);
+				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 			} else if (mt_rand(1,100)>90){
-				$result['Sample result']=$this->arr['Datapool\Tools\ArrTools']->arr2matrix($targetEntry);
+				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 			}
 		} else {
 			if (strcmp($targetEntry['mappingParams']['Type'],'entries')===0){
 				// create entries as mapping result
-				$targetEntry=$this->arr['Datapool\Tools\StrTools']->addElementId($targetEntry,array('Source','Group','Folder','Name','Type'),0,'',$keepExistingElementId);
-				$this->arr['Datapool\Foundation\Database']->updateEntry($targetEntry);
+				$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($targetEntry,array('Source','Group','Folder','Name','Type'),0,'',$keepExistingElementId);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
 				if ($keepExistingElementId){
 					$result['Mapping statistics']['Target entry updated (inserted if source is csv)']['value']++;
 				} else {
@@ -312,7 +312,7 @@ class MapEntries{
 				}
 			} else if (strcmp($targetEntry['mappingParams']['Type'],'csv')===0){
 				// create csv list entry from mapping result
-				$this->arr['Datapool\Tools\CSVtools']->entry2csv($targetEntry);
+				$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
 				$result['Mapping statistics']['CSV row added']['value']++;
 			}
 		}
@@ -421,22 +421,22 @@ class MapEntries{
 	}
 
 	public function convert2float($value){
-		$value=$this->arr['Datapool\Tools\NumberTools']->str2float($value);
+		$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2float($value);
 		return $value;
 	}
 	
 	public function convert2int($value){
-		$value=$this->arr['Datapool\Tools\NumberTools']->str2float($value);
+		$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2float($value);
 		return round($value);
 	}
 
 	public function convert2money($value){
-		$arr=$this->arr['Datapool\Tools\NumberTools']->str2money($value);
+		$arr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2money($value);
 		return $arr;
 	}
 
 	public function convert2date($value){
-		$arr=$this->arr['Datapool\Tools\NumberTools']->str2date($value);
+		$arr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2date($value);
 		return $arr;
 	}
 	
@@ -477,7 +477,7 @@ class MapEntries{
 				$arr['Region long']=$region;
 				break;
 			}
-			$countries=$this->arr['Datapool\Tools\GeoTools']->getCountryCodes();
+			$countries=$this->arr['SourcePot\Datapool\Tools\GeoTools']->getCountryCodes();
 			foreach($countries as $alpha2code=>$countryArr){
 				if (strpos($prefixSuffix[1],$alpha2code)===FALSE){continue;}
 				$arr['Country']=$alpha2code;
@@ -494,7 +494,7 @@ class MapEntries{
 		if (!empty($prefixSuffix[0])){
 			$arr['Prefix']=trim($prefixSuffix[0],'- ');
 		}
-		//$this->arr['Datapool\Tools\ArrTools']->arr2file($arr);
+		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
 		return $arr;
 	}
 	
@@ -502,7 +502,7 @@ class MapEntries{
 		// This method returns the target selector of the cnavas element selected by $elementId
 		// and returns this selector.
 		$selector=array('Source'=>$source,'ElementId'=>$elementId);
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 			if (is_bool($target)){
 				return $entry;
 			} else if (is_array($target)){
@@ -525,10 +525,10 @@ class MapEntries{
 	
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['ElementId'])){return array();}
-		$type=$this->arr['Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
+		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
 		$type.='|'.$callingFunction;
 		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['ElementId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['Datapool\Tools\StrTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
+		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
 		return $entrySelector;
 
 	}

@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
 	
@@ -38,12 +38,12 @@ class GeoTools{
 		// load country codes
 		$file=$GLOBALS['setup dir'].'countryCodes.json';
 		if (!is_file($file)){
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'File "countryCodes.json" missing.','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'File "countryCodes.json" missing.','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		$cc=file_get_contents($file);
-		$this->countryCodes=$this->arr['Datapool\Tools\ArrTools']->json2arr($cc);
+		$this->countryCodes=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($cc);
 		if (empty($this->countryCodes)){
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'File error "countryCodes.json"','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'File error "countryCodes.json"','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		return $this->arr;
 	}
@@ -54,7 +54,7 @@ class GeoTools{
 			$entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
 			$entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
 			$query=$entry['Params']['Geo'];
-			$response=$this->arr['Datapool\Tools\NetworkTools']->performRequest('GET',"https://nominatim.openstreetmap.org/",'reverse',$query,$this->requestHeader);
+			$response=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->performRequest('GET',"https://nominatim.openstreetmap.org/",'reverse',$query,$this->requestHeader);
 			if (isset($response['response'][1]['addressparts'])){
 				$entry['Params'][$targetKey]=$this->normalizeAddress($response['response'][1]['addressparts']);
 				if (isset($response['response'][1]['result'])){
@@ -79,7 +79,7 @@ class GeoTools{
 		if (!empty($address)){
 			$query=$this->getRequestAddress($address);
 			if ($query){
-				$response=$this->arr['Datapool\Tools\NetworkTools']->performRequest('GET',"https://nominatim.openstreetmap.org/",'search',$query,$this->requestHeader);
+				$response=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->performRequest('GET',"https://nominatim.openstreetmap.org/",'search',$query,$this->requestHeader);
 				if (isset($response['response'][1][0])){$entry['Params']['Geo']=$response['response'][1][0];}
 			}
 		}
@@ -88,7 +88,7 @@ class GeoTools{
 			if (isset($query)){$debugArr['query']=$query;}
 			if (isset($response)){$debugArr['response']=$response;}
 			$debugArr['entry_out']=$entry;
-			$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr);
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $entry;	
 	}
@@ -142,7 +142,7 @@ class GeoTools{
 		$bbLon2=$entry['Params']['Geo']['lon']+$dL;
 		$style.='width:'.($width+50).'px;height:'.($height+60).'px';
 		if ($hasWrapper){$arr['html'].='<div class="whiteBoard" style="'.$style.'">';}
-		$arr['html'].='<h3 class="whiteBoard">'.$this->arr['Datapool\Foundation\Dictionary']->lng('Location').'</h3>';
+		$arr['html'].='<h3 class="whiteBoard">'.$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng('Location').'</h3>';
 		if ($hasWrapper){$arr['html'].='<div class="whiteBoard" style="width:'.$width.'px;height:'.$height.'px;">';}
 		$arr['html'].='<iframe class="whiteBoard" style="margin:3px;width:98%;height:'.($height-45).'px;"';
   		$arr['html'].='src="https://www.openstreetmap.org/export/embed.html?bbox='.$bbLon1.','.$bbLat1.','.$bbLon2.','.$bbLat2.'&amp;';
@@ -157,11 +157,11 @@ class GeoTools{
 		$href='http://www.openstreetmap.org/';
 		$href.='?lat='.$entry['Params']['Geo']['lat'].'&amp;lon='.$entry['Params']['Geo']['lon'];
 		$href.='&amp;zoom=16&amp;layers=M&amp;mlat='.$entry['Params']['Geo']['lat'].'&amp;mlon='.$entry['Params']['Geo']['lon'];
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Map','target'=>'_blank'));
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Map','target'=>'_blank'));
 		$href='https://www.google.de/maps/@'.$entry['Params']['Geo']['lat'].','.$entry['Params']['Geo']['lon'].',16z';
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Google Maps','target'=>'_blank'));
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Google Maps','target'=>'_blank'));
 		$href='https://www.taxifarefinder.com';
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Cab Fares','target'=>'_blank'));
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Cab Fares','target'=>'_blank'));
 		return $html;
 	}
 	

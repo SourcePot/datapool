@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class NetworkTools{
 	
@@ -22,13 +22,13 @@ class NetworkTools{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
+		$this->pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
 		return $this->arr;
 	}
 		
 	public function resetSession(){
 		$_SESSION=array('page state'=>$_SESSION['page state']);
-		$this->arr['Datapool\Tools\FileTools']->removeTmpDir();
+		$this->arr['SourcePot\Datapool\Tools\FileTools']->removeTmpDir();
 		session_regenerate_id(TRUE);
 	}
 	
@@ -87,7 +87,7 @@ class NetworkTools{
 		$requestArr['url']=trim($requestArr['url'],'/');
 		$requestArr['url']=$requestArr['url'].'/'.$requestArr['resource'];
 		if (!empty($requestArr['query'])){$requestArr['url']=$requestArr['url'].'?'.http_build_query($requestArr['query']);}
-		if ($isDebugging){$this->arr['Datapool\Tools\ArrTools']->arr2file($requestArr);}
+		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
 		return $requestArr;
 	}
 	
@@ -102,16 +102,16 @@ class NetworkTools{
 			$header[]=$key.': '.$value;
 		}
 		$requestArr['header']=$header;
-		if ($isDebugging){$this->arr['Datapool\Tools\ArrTools']->arr2file($requestArr);}
+		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
 		return $requestArr;
 	}
 	
 	private function requestDecodeResponse($requestArr){
 		foreach($requestArr['response'] as $index=>$response){
-			$json=$this->arr['Datapool\Tools\ArrTools']->json2arr($response);
+			$json=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
 			if (stripos(trim($response),'<?xml ')===0){
 				// is xml encoded
-				$requestArr['response'][$index]=$this->arr['Datapool\Tools\XMLtools']->xml2arr($response);
+				$requestArr['response'][$index]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response);
 			} else if (!empty($json)){
 				// json encoded
 				$requestArr['response'][$index]=$json;
@@ -172,9 +172,9 @@ class NetworkTools{
 		
 		$response=curl_exec($curl);
 		if ($response===false){
-			if (isset($this->arr['Datapool\Foundation\Logging'])){
+			if (isset($this->arr['SourcePot\Datapool\Foundation\Logging'])){
 				$logArr=array('msg'=>'CURL error '.curl_error($curl).' '.curl_errno($curl),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->arr['Datapool\Foundation\Logging']->addLog($logArr);
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			}
 			$requestArr['response']=array('error'=>curl_error($curl),'no'=>curl_errno($curl));
 		} else {
@@ -183,7 +183,7 @@ class NetworkTools{
 			$requestArr['response']['status']=(int)curl_getinfo($curl,\CURLINFO_HTTP_CODE);
 			curl_close($curl);
 		}
-		if ($isDebugging){$this->arr['Datapool\Tools\ArrTools']->arr2file($requestArr);}
+		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
 		return $requestArr;
 	}
 	
@@ -196,10 +196,10 @@ class NetworkTools{
 		// This methode converts an entry to an emial address, the $mail-keys are:
 		// 'selector' ... selects the entry
 		// 'To' ... is the recipients emal address, use array for multiple addressees
-		$mail['selector']=$this->arr['Datapool\Foundation\Database']->entryByKey($mail['selector'],TRUE);
+		$mail['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($mail['selector'],TRUE);
 		if (empty($mail['selector'])){
 			$logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-			$this->arr['Datapool\Foundation\Logging']->addLog($logArr);	
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);	
 		} else {
 			if (!empty($mail['selector']['Content']['To']) && empty($mail['To'])){
 				$mail['To']=$mail['selector']['Content']['To'];
@@ -215,7 +215,7 @@ class NetworkTools{
 			}
 			if (empty($mail['Subject'])){$mail['Subject']=$mail['selector']['Name'];}	
 			// get message parts
-			$flatContent=$this->arr['Datapool\Tools\ArrTools']->arr2flat($mail['selector']['Content']);
+			$flatContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($mail['selector']['Content']);
 			$msgTextPlain='';
 			$msgTextHtml='';
 			foreach($flatContent as $flatContentKey=>$flatContentValue){
@@ -242,7 +242,7 @@ class NetworkTools{
 			$message.="\r\n\r\n--".$textBoundery."--\r\n";
 			// get attched file			
 			$mixedBoundery='multipart-'.md5($mail['selector']['ElementId']);
-			$file=$this->arr['Datapool\Tools\FileTools']->selector2file($mail['selector']);
+			$file=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($mail['selector']);
 			if (is_file($file)){
 				$msgPrefix='--'.$mixedBoundery."\r\n".$msgPrefix;
 				// get file content
@@ -269,7 +269,7 @@ class NetworkTools{
 			}
 			if (empty($mail['To']) || empty($mail['Subject'])){
 				$logArr=array('msg'=>'On of the following was empty: "To" or "Subject". The email was not sent.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->arr['Datapool\Foundation\Logging']->addLog($logArr);
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 				return FALSE;
 			} else {
 				$header['MIMI-Version']='1.0';

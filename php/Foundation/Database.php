@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Foundation;
+namespace SourcePot\Datapool\Foundation;
 
 class Database{
 
@@ -135,7 +135,100 @@ class Database{
 		}
 		return $entryTemplate;
 	}
-	
+
+	public function unifyEntry($entry){
+		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
+		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
+		$this->resetStatistic();
+		$className=ucfirst($entry['Source']);
+		foreach($this->arr['registered methods']['unifyEntry'] as $classWithNamespace=>$return){
+			if (strpos($classWithNamespace,$className)===FALSE){continue;}
+			return $this->arr[$classWithNamespace]->unifyEntry($entry);
+		}
+		return $entry;	
+	}
+
+	public function addEntryDefaults($entry,$isDebugging=FALSE){
+		$entryTemplate=$this->entryTemplate($entry);
+		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry);
+		foreach($entryTemplate as $column=>$defArr){
+			if (!isset($defArr['value'])){continue;}
+			if (!isset($entry[$column]) || ($defArr['value']===TRUE && empty($entry[$column]))){
+				$entry[$column]=$defArr['value'];
+			} // if not set or empty but must not be empty
+			if (is_string($entry[$column])){
+				$entry[$column]=$this->stdReplacements($entry[$column]);
+			}
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
+		} // loop throug entry-template-array
+		$debugArr['entry out']=$entry;
+		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);}
+		return $entry;
+	}
+
+	public function stdReplacements($str=''){
+		if (is_array($str)){return $str;}
+		$toReplace['{{NOW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+		$toReplace['{{YESTERDAY}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
+		$toReplace['{{TOMORROW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
+		$toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
+		$toReplace['{{Expires}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
+		$toReplace['{{ElementId}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getElementId();
+		if (!isset($_SESSION['currentUser']['ElementId'])){
+			$toReplace['{{Owner}}']='SYSTEM';
+		} else if (strpos($_SESSION['currentUser']['ElementId'],'EID')===FALSE){
+			$toReplace['{{Owner}}']=$_SESSION['currentUser']['ElementId'];
+		} else {
+			$toReplace['{{Owner}}']='ANONYM';
+		}
+		if (isset($this->arr['SourcePot\Datapool\Tools\HTMLbuilder'])){
+			$pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
+			$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
+			$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
+		}
+		//
+		if (is_array($str)){
+			throw new \ErrorException('Function '.__FUNCTION__.' called with argument str of type array.',0,E_ERROR,__FILE__,__LINE__);	
+		} else if (is_string($str)){
+			foreach($toReplace as $needle=>$replacement){
+				$str=str_replace($needle,$replacement,$str);
+			}
+		}
+		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($toReplace);
+		return $str;
+	}
+
+	public function arrStdReplacements($arr,$flatKeyMapping=array(),$isDebugging=FALSE){
+		// This method maps array-keys found in flatKeyMapping-argument to new array-keys.
+		// On array-values class 'Datapool\Tools\MiscTools' method 'stdReplacements' will be called
+		// If different source keys mapped on the same target key, the string-value will be added to the end of the existing string-value with a space character in between.
+		// The structur of argument flatKeyMapping is:
+		// array({1. flat source key}=>{1. flat target key} or FALSE,{2. flat source key}=>{2. flat target key} or FALSE,....)
+		// If FALSE is used instead of a valid flat target key, the key-value will be removed from the result.
+		$debugArr=array('arr'=>$arr,'flatKeyMapping'=>$flatKeyMapping);
+		$result=array();
+		$flatArr=$this->arr2flat($arr);
+		foreach($flatArr as $flatKey=>$value){
+			if (isset($flatKeyMapping[$flatKey])){$flatResultKey=$flatKeyMapping[$flatKey];} else {$flatResultKey=$flatKey;}
+			if ($flatResultKey===FALSE){continue;}
+			if (empty($result[$flatResultKey])){
+				$result[$flatResultKey]=$this->stdReplacements($value);
+			} else {
+				$result[$flatResultKey].=' '.$this->stdReplacements($value);
+			}
+		}
+		$result=$this->flat2arr($result);
+		if ($isDebugging){
+			$debugArr['result']=$result;
+			$this->arr2file($debugArr);
+		}
+		return $result;
+	}
+
+
+
+
+
 	/**
 	* @return array|FALSE Based on the selector['Source'] argument provided, the method returns the key and value (if provided) in selector of the primary key column. If this fails it returns FALSE.
 	*/
@@ -164,24 +257,6 @@ class Database{
 		return $result;
 	}
 
-	public function addEntryDefaults($entry,$isDebugging=FALSE){
-		$entryTemplate=$this->entryTemplate($entry);
-		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry);
-		foreach($entryTemplate as $column=>$defArr){
-			if (!isset($defArr['value'])){continue;}
-			if (!isset($entry[$column]) || ($defArr['value']===TRUE && empty($entry[$column]))){
-				$entry[$column]=$defArr['value'];
-			} // if not set or empty but must not be empty
-			if (is_string($entry[$column])){
-				$entry[$column]=$this->arr['Datapool\Tools\StrTools']->stdReplacements($entry[$column]);
-			}
-			$entry=$this->arr['Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
-		} // loop throug entry-template-array
-		$debugArr['entry out']=$entry;
-		if ($isDebugging){$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);}
-		return $entry;
-	}
-	
 	public function getDbName(){return $this->dbName;}	
 	
 	private function connect($arr){
@@ -193,7 +268,7 @@ class Database{
 		$access=array('Class'=>__CLASS__,'SettingName'=>'connect');
 		$access['Read']=65535;
 		$access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
-		$access=$this->arr['Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($access,TRUE);
+		$access=$this->arr['SourcePot\Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($access,TRUE);
 		$this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
 		$this->dbObj->exec("SET CHARACTER SET 'utf8'");
 		$this->dbName=$access['Content']['dbName'];
@@ -224,9 +299,9 @@ class Database{
 			if ($debugging){$debugArr['sql']=str_replace($bindKey,$bindValue,$debugArr['sql']);}
 			$stmt->bindValue($bindKey,$bindValue);
 		}
-		if ($debugging){$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr,__FUNCTION__);}
+		if ($debugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__);}
 		$stmt->execute();
-		$this->arr['Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);
+		$this->arr['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);
 		return $stmt;
 	}
 	
@@ -280,11 +355,11 @@ class Database{
 			if ($value===FALSE){continue;}
 			preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
 			if (!empty($match[2])){$operator=$match[2];} else {$operator='=';}
-			$column=explode($this->arr['Datapool\Tools\ArrTools']->getSeparator(),$column);
+			$column=explode($this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
 			$column=trim($column[0],' <>=!');
 			if (!isset($entryTemplate[$column])){continue;}
 			$placeholder=':'.$column.$opAlias[$operator];
-			if (is_array($value)){$value=$this->arr['Datapool\Tools\ArrTools']->arr2json($value);}
+			if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 			if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards($value)){
 				$column='`'.$column.'`';
 				if (empty($value)){
@@ -349,7 +424,7 @@ class Database{
 		if (!isset($entryTemplate[$column]['value'])){
 			$result[$column]=$value;
 		} else if (is_array($entryTemplate[$column]['value'])){
-			$result[$column]=$this->arr['Datapool\Tools\ArrTools']->json2arr($value);
+			$result[$column]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($value);
 		} else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
 			$result[$column]=intval($value);
 		} else if (strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
@@ -381,13 +456,13 @@ class Database{
 	}
 	
 	public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
-		$selector=array('Source'=>$this->arr['Datapool\Foundation\User']->getEntryTable());
+		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable());
 		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
 		if (empty($primaryKeyValue)){return FALSE;} else {$entries=array();}
 		if ($returnPrimaryKeyOnly){$return=$primaryKeyValue['primaryKey'];} else {$return='*';}
-		$rights=$this->arr['Datapool\Foundation\Access']->addRights(array(),$right,$right);
+		$rights=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights(array(),$right,$right);
 		$right=intval($rights['Read']);
-		$sql="SELECT ".$return." FROM `".$this->arr['Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
+		$sql="SELECT ".$return." FROM `".$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
 		$stmt=$this->executeStatement($sql);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			foreach($row as $column=>$value){
@@ -435,7 +510,7 @@ class Database{
 		$sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 		$sqlArr['sql'].=';';
 		//var_dump($sqlArr);
-		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':ElementIdEQ'])){$this->arr['Datapool\Tools\ArrTools']->arr2file($sqlArr);}
+		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':ElementIdEQ'])){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($sqlArr);}
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
 		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
 		$this->addStatistic('matches',$result['rowCount']);
@@ -504,7 +579,7 @@ class Database{
 				if (strcmp($column,'Source')===0){continue;}
 				$sqlPlaceholder=':'.$column;
 				$valueSql.="`".$column."`=".$sqlPlaceholder.",";
-				if (is_array($value)){$value=$this->arr['Datapool\Tools\ArrTools']->arr2json($value);}
+				if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 				$inputs[$sqlPlaceholder]=strval($value);
 			}
 			$sql="UPDATE `".$selector['Source']."` SET ".trim($valueSql,',')." ".$entryList['sql'].";";
@@ -532,7 +607,7 @@ class Database{
 		if (empty($entryList['primaryKeys'])){return FALSE;}
 		foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
 			$entrySelector=array('Source'=>$selector['Source'],$entryList['primaryKey']=>$primaryKeyValue);
-			$fileToDelete=$this->arr['Datapool\Tools\FileTools']->selector2file($entrySelector);
+			$fileToDelete=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entrySelector);
 			if (is_file($fileToDelete)){
 				$this->addStatistic('removed',1);
 				unlink($fileToDelete);
@@ -561,7 +636,7 @@ class Database{
 			$sqlPlaceholder=':'.$column;
 			$columns.='`'.$column.'`,';
 			$values.=$sqlPlaceholder.',';
-			if (is_array($value)){$value=$this->arr['Datapool\Tools\ArrTools']->arr2json($value);}
+			if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 			$inputs[$sqlPlaceholder]=strval($value);
 		}
 		$sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `ElementId`='".$entry['ElementId']."';";
@@ -581,9 +656,9 @@ class Database{
 			$primaryKeyValue=$this->getPrimaryKeyValue($entry);
 			unset($entry[$primaryKeyValue['primaryKey']]);
 			$selector=array('Source'=>$entry['Source'],$primaryKeyValue['primaryKey']=>$primaryKeyValue['primaryValue']);
-			$entry=$this->arr['Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
-			$entry=$this->arr['Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
-			$entry=$this->arr['Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
 			$this->updateEntries($selector,$entry,$isSystemCall);
 			$entry=$this->entryByKey($selector,$isSystemCall,'Write');
 		}
@@ -598,7 +673,7 @@ class Database{
 		if (empty($existingEntry['rowCount']) && isset($this->dbInfo[$entry['Source']])){
 			$existingEntry=$this->insertEntry($entry);
 		}
-		if ($this->arr['Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
 			$return=$existingEntry;
 		} else {
 			$return=FALSE;
@@ -621,12 +696,12 @@ class Database{
 	}
 	
 	public function moveEntryByElementId($entry,$targetSelector){
-		$entryFileName=$this->arr['Datapool\Tools\FileTools']->selector2file($entry);
-		$targetFileName=$this->arr['Datapool\Tools\FileTools']->selector2file($targetSelector);
+		$entryFileName=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entry);
+		$targetFileName=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($targetSelector);
 		// backup an existing entry with ElementId=$targetSelector
 		$return=$this->entryByKey($targetSelector);
 		if (!empty($return)){
-			$return['File']=$this->arr['Datapool\Tools\FileTools']->getTmpDir().__FUNCTION__.'.file';
+			$return['File']=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir().__FUNCTION__.'.file';
 			@rename($targetFileName,$return['File']);
 		}
 		// move entry
@@ -642,7 +717,7 @@ class Database{
 		$entryB=$this->moveEntryByElementId($entryA,$entryB);
 		if (!empty($entryB)){
 			$entryB['ElementId']=$entryA['ElementId'];
-			$entryBfileName=$this->arr['Datapool\Tools\FileTools']->selector2file($entryB);
+			$entryBfileName=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entryB);
 			@rename($entryB['File'],$entryBfileName);
 			$this->updateEntry($entryB);
 		}
@@ -693,7 +768,7 @@ class Database{
 		}
 		if ($isDebugging){
 			if (isset($_SESSION[__CLASS__][__FUNCTION__]['callCount'])){$_SESSION[__CLASS__][__FUNCTION__]['callCount']++;} else {$_SESSION[__CLASS__][__FUNCTION__]['callCount']=1;}
-			$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr,'DebugArr '.__FUNCTION__.'-'.$_SESSION[__CLASS__][__FUNCTION__]['callCount'].'-');
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,'DebugArr '.__FUNCTION__.'-'.$_SESSION[__CLASS__][__FUNCTION__]['callCount'].'-');
 		}
 		return TRUE;
 	}

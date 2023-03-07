@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Datapool;
+namespace SourcePot\Datapool;
 
 final class Root{
 	/** Directory structure
@@ -76,16 +76,14 @@ final class Root{
 	public function run($type){
 		$arr=$this->arr;
 		// create all objects and get structure
-		$orderedInitialization=array('Tools/ArrTools.php'=>array('dirname'=>'Tools','component'=>'ArrTools.php'),
+		$orderedInitialization=array('Tools/MiscTools.php'=>array('dirname'=>'Tools','component'=>'MiscTools.php'),
 									 'Foundation/Access.php'=>array('dirname'=>'Foundation','component'=>'Access.php'),
-									 'Tools/StrTools.php'=>array('dirname'=>'Tools','component'=>'StrTools.php'),
 									 'Tools/FileTools.php'=>array('dirname'=>'Tools','component'=>'FileTools.php'),
 									 'Tools/HTMLbuilder.php'=>array('dirname'=>'Tools','component'=>'HTMLbuilder.php'),
 									 'Foundation/Haystack.php'=>array('dirname'=>'Foundation','component'=>'Haystack.php'),
 									 'Foundation/Database.php'=>array('dirname'=>'Foundation','component'=>'Database.php'),
 									 'Foundation/Logging.php'=>array('dirname'=>'Foundation','component'=>'Logging.php'),
 									 'Foundation/User.php'=>array('dirname'=>'Foundation','component'=>'User.php'),
-									 'Tools/NetworkTools.php'=>array('dirname'=>'Tools','component'=>'NetworkTools.php'),
 									 );
 		$dirs=scandir($GLOBALS['source dir']);
 		foreach($dirs as $dirIndex=>$dirname){
@@ -104,22 +102,22 @@ final class Root{
 		// loop through components and invoke the init method
 		foreach($arr['registered methods']['init'] as $classWithNamespace=>$returnArr){$arr=$arr[$classWithNamespace]->init($arr);}
 		//
-		$GLOBALS['tmp user dir']=$arr['Datapool\Tools\FileTools']->getTmpDir();
+		$GLOBALS['tmp user dir']=$arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
 		// generic button form processing
-		$arr=$arr['Datapool\Tools\HTMLbuilder']->btn($arr);
+		$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
 		// add "page html" to the return array
 		if (strpos($type,'index.php')>0){
 			// build webpage
-			$arr=$arr['Datapool\Tools\HTMLbuilder']->addHtmlPageBackbone($arr);
-			$arr=$arr['Datapool\Tools\HTMLbuilder']->addHtmlPageHeader($arr);
-			$arr=$arr['Datapool\Tools\HTMLbuilder']->addHtmlPageBody($arr);
+			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->addHtmlPageBackbone($arr);
+			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->addHtmlPageHeader($arr);
+			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->addHtmlPageBody($arr);
 			$arr=$arr[$_SESSION['page state']['app']['Class']]->run($arr);
-			$arr=$arr['Datapool\Tools\HTMLbuilder']->finalizePage($arr);
+			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->finalizePage($arr);
 			// add page statistic for the web page called by a user
 			$this->addPageStatistic($arr,$type);
 		} else if (strpos($type,'js.php')>0){
 			// js-call Processing
-			$arr=$arr['Datapool\Foundation\Container']->jsCall($arr);
+			$arr=$arr['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
 		} else if (strpos($type,'job.php')>0){
 			// job Processing
 			$arr=$this->runJob($arr);
@@ -175,10 +173,10 @@ final class Root{
 		// all jobs settings - remove non-existing job methods and add new job methods
 		$jobs=array('due'=>array(),'undue'=>array());
 		$allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
-		$allJobsSetting=array('Source'=>$arr['Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Type'=>'array setting');
-		$allJobsSetting=$arr['Datapool\Tools\StrTools']->addElementId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
-		$allJobsSetting=$arr['Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
-		$allJobsSetting=$arr['Datapool\Foundation\Database']->entryByKeyCreateIfMissing($allJobsSetting,TRUE);
+		$allJobsSetting=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Type'=>'array setting');
+		$allJobsSetting=$arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
+		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
+		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($allJobsSetting,TRUE);
 		$allJobsSettingContent=$allJobsSetting['Content'];
 		$allJobsSetting['Content']=array();
 		foreach($arr['registered methods']['job'] as $class=>$initContent){
@@ -192,35 +190,35 @@ final class Root{
 			if ($dueTime>0){$jobs['due'][$class]=$dueTime;} else {$jobs['undue'][$class]=$dueTime;}
 		}
 		// get most overdue job
-		$arr['page html']=$arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Job processing triggered'));
+		$arr['page html']=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Job processing triggered'));
 		if (empty($jobs['due'])){
-			$matrix=$arr['Datapool\Tools\ArrTools']->arr2matrix($jobs);
-			$arr['page html'].=$arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE));	
+			$matrix=$arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobs);
+			$arr['page html'].=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE));	
 		} else {
 			arsort($jobs['due']);
 			reset($jobs['due']);
 			$dueJob=key($jobs['due']);
 			$dueMethod=$allJobsSetting['Content'][$dueJob]['method'];
 			// job var space and run job
-			$jobVars=array('Source'=>$arr['Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'Var space','Name'=>$dueJob,'Type'=>'array vars');
-			$jobVars=$arr['Datapool\Tools\StrTools']->addElementId($jobVars,array('Source','Group','Folder','Name','Type'),0);
-			$jobVars=$arr['Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
-			$jobVars=$arr['Datapool\Foundation\Database']->entryByKeyCreateIfMissing($jobVars,TRUE);
+			$jobVars=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'Var space','Name'=>$dueJob,'Type'=>'array vars');
+			$jobVars=$arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($jobVars,array('Source','Group','Folder','Name','Type'),0);
+			$jobVars=$arr['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
+			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($jobVars,TRUE);
 			$jobStartTime=hrtime(TRUE);
-			$arr['Datapool\Foundation\Database']->resetStatistic();
+			$arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 			$jobVars['Content']=$arr[$dueJob]->$dueMethod($jobVars['Content']);
-			$jobStatistic=$arr['Datapool\Foundation\Database']->getStatistic();
+			$jobStatistic=$arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			$allJobsSetting['Content'][$dueJob]['Last run']=time();
 			$allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]']=round((hrtime(TRUE)-$jobStartTime)/1000000);
 			// update job vars
-			$jobVars=$arr['Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);
+			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);
 			// show results
-			$matrix=$arr['Datapool\Tools\ArrTools']->arr2matrix($allJobsSetting['Content'][$dueJob]);
-			$arr['page html'].=$arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job done','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
-			$matrix=$arr['Datapool\Tools\ArrTools']->arr2matrix($jobStatistic);
-			$arr['page html'].=$arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job statistic','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
+			$matrix=$arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($allJobsSetting['Content'][$dueJob]);
+			$arr['page html'].=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job done','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
+			$matrix=$arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobStatistic);
+			$arr['page html'].=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job statistic','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
 		}
-		$arr['Datapool\Foundation\Database']->updateEntry($allJobsSetting,TRUE);
+		$arr['SourcePot\Datapool\Foundation\Database']->updateEntry($allJobsSetting,TRUE);
 		return $arr;
 	}
 	
@@ -232,19 +230,19 @@ final class Root{
 		$userId=(isset($_SESSION['currentUser']['ElementId']))?$_SESSION['currentUser']['ElementId']:'ANONYM';
 		$statistic=array('Source'=>$arr[$GLOBALS['logging class']]->getEntryTable(),'Group'=>$userId,'Name'=>'Page statistic type '.$calledBy,'Type'=>'statistic');
 		if (isset($_SESSION['page state']['app'])){$statistic['Folder']=$_SESSION['page state']['app']['Class'];} else {$statistic['Folder']='No app call';}
-		$statistic['ElementId']=$arr['Datapool\Tools\StrTools']->getElementId();
-		$statistic['Date']=$arr['Datapool\Tools\StrTools']->getDateTime();
-		$statistic['Expires']=$arr['Datapool\Tools\StrTools']->getDateTime('tomorrow');
+		$statistic['ElementId']=$arr['SourcePot\Datapool\Tools\MiscTools']->getElementId();
+		$statistic['Date']=$arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+		$statistic['Expires']=$arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
 		$statistic['Owner']='SYSTEM';
-		$statistic=$arr['Datapool\Foundation\Access']->addRights($statistic,'ALL_MEMBER_R','ALL_MEMBER_R');
+		$statistic=$arr['SourcePot\Datapool\Foundation\Access']->addRights($statistic,'ALL_MEMBER_R','ALL_MEMBER_R');
 		$statistic['Content']=array('app'=>$_SESSION['page state']['app']);
-		$statistic['Content']['selected']=$arr['Datapool\Tools\NetworkTools']->getPageState($_SESSION['page state']['app']['Class']);
+		$statistic['Content']['selected']=$arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($_SESSION['page state']['app']['Class']);
 		$timeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
 		$statistic['Content']['Script time consumption [ms]']=$timeConsumption;
-		$arr['Datapool\Foundation\Database']->insertEntry($statistic);
+		$arr['SourcePot\Datapool\Foundation\Database']->insertEntry($statistic);
 		if ($timeConsumption>200){
 			$msg='Page performance warning: Page creation took '.$timeConsumption.'ms.';
-			$arr['Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		return $statistic;
 	}

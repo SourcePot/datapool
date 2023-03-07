@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\DataApps;
+namespace SourcePot\Datapool\DataApps;
 
 class Invoices{
 	
@@ -26,12 +26,12 @@ class Invoices{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
 
 	public function job($vars){
-		$this->arr['Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__);
+		$this->arr['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__);
 		return $vars;
 	}
 
@@ -47,12 +47,12 @@ class Invoices{
 		if ($arr===TRUE){
 			return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
-			$explorerArr=$this->arr['Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
-			$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+			$explorerArr=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
+			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			if (empty($selector)){
 				$entryHtml='';
 			} else {
-				$entryHtml=$this->arr['Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
+				$entryHtml=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
 			}
 			$arr['page html']=str_replace('{{explorer}}',$explorerArr['explorerHtml'],$arr['page html']);
 			$arr['page html']=str_replace('{{content}}',$explorerArr['contentHtml'].$entryHtml,$arr['page html']);

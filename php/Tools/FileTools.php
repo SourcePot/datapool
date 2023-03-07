@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class FileTools{
 
@@ -117,9 +117,9 @@ class FileTools{
 		// add defaults at missing keys
 		foreach($this->entryTemplate as $key=>$defArr){
 			if (!isset($entry[$key])){$entry[$key]=$defArr['value'];}
-			$entry[$key]=$this->arr['Datapool\Tools\StrTools']->stdReplacements($entry[$key]);
+			$entry[$key]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->stdReplacements($entry[$key]);
 		}
-		$entry=$this->arr['Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		return $entry;
 	}
 	
@@ -134,7 +134,7 @@ class FileTools{
 		if (!empty($arr)){
 			$entry['rowCount']=1;
 			if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-			$entry['access']=$this->arr['Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
+			$entry['access']=$this->arr['SourcePot\Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
 			if ($entry['access']){
 				$entry=array_merge($entry,$arr);
 				return $entry;
@@ -152,7 +152,7 @@ class FileTools{
 			// insert entry
 			$dir=$this->class2dir($entry['Class'],TRUE);	
 			$entry=$this->unifyEntry($entry);
-			$this->arr['Datapool\Tools\ArrTools']->arr2file($entry,$existingEntry['file']);
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
 			$this->statistics['inserted files']++;
 			return $entry;
 		} else {
@@ -172,15 +172,15 @@ class FileTools{
 		} else {
 			$existingEntry=$this->entryByKey($entry,TRUE,'Read',TRUE);
 			if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-			if ($this->arr['Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
+			if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
 				// write access update exsisting entry
 				$entry=array_merge($existingEntry,$entry);
 				$dir=$this->class2dir($entry['Class'],TRUE);	
 				$entry=$this->unifyEntry($entry);
-				$this->arr['Datapool\Tools\ArrTools']->arr2file($entry,$existingEntry['file']);
+				$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
 				$this->statistics['inserted files']++;
 				return $entry;
-			} else if ($this->arr['Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
+			} else if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
 				// read access only
 				return $existingEntry;
 			} else {
@@ -220,7 +220,7 @@ class FileTools{
 			$zip = new \ZipArchive;
 			$zip->open($zipFile,\ZipArchive::CREATE);
 			$selector=$entry;
-			foreach($this->arr['Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 				$file=$this->selector2file($entry);
 				if (!is_file($file)){continue;}
 				$zip->addFile($file,str_replace('_', '-',basename($entry['Params']['File']['Name'])));
@@ -229,7 +229,7 @@ class FileTools{
 			$entry=array('Params'=>array('File'=>array('Extension'=>'zip','Name'=>$zipName)));
 			$fileForDownload=$zipFile;
 		} else {
-			$entry=$this->arr['Datapool\Foundation\Database']->entryByKey($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($entry);
 			$fileForDownload=$this->selector2file($entry);
 		}
 		if (is_file($fileForDownload)){
@@ -239,14 +239,14 @@ class FileTools{
 			readfile($fileForDownload);
 			exit;
 		} else {
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'No file found to download.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No file found to download.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 	}
 	
 	public function getTmpDir(){
 		if (!is_dir($GLOBALS['tmp dir'])){$this->statistics['added dirs']+=intval(mkdir($GLOBALS['tmp dir'],0775));}
 		if (!isset($_SESSION[__CLASS__]['tmpDir'])){
-			$_SESSION[__CLASS__]['tmpDir']=$this->arr['Datapool\Tools\StrTools']->getRandomString(20);
+			$_SESSION[__CLASS__]['tmpDir']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 			$_SESSION[__CLASS__]['tmpDir'].='/';
 		}
 		$tmpDir=$GLOBALS['tmp dir'].$_SESSION[__CLASS__]['tmpDir'];
@@ -331,7 +331,7 @@ class FileTools{
 	public function exportEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000){
 		$statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>array(),'Errors'=>array());
 		if (isset($selectors['Source'])){$selectors=array($selectors);}
-		$pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
+		$pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
 		$fileName=preg_replace('/\W+/','_',$pageSettings['pageTitle']).' dump.zip';
 		$dir=$this->getTmpDir();
 		$dumpFile=$dir.$fileName;
@@ -340,14 +340,14 @@ class FileTools{
 		$zip = new \ZipArchive;
 		$zip->open($dumpFile,\ZipArchive::CREATE);
 		foreach($selectors as $index=>$selector){
-			foreach($this->arr['Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall) as $entry){
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall) as $entry){
 				$attachedFileName=$entry['Source'].'~'.$entry['ElementId'].'.file';
 				$attachedFile=$this->selector2file($entry);
 				if (is_file($attachedFile)){
 					$statistics['Attached filesize']+=filesize($attachedFile);
 					$attachedFiles[]=array('attachedFile'=>$attachedFile,'attachedFileName'=>$attachedFileName);
 				}
-				$jsonFileContent=$this->arr['Datapool\Tools\ArrTools']->arr2json($entry);
+				$jsonFileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry);
 				$jsonFileName=$entry['Source'].'~'.$entry['ElementId'].'.json';
 				$zip->addFromString($jsonFileName,$jsonFileContent);
 				$statistics['added entries']++;
@@ -363,9 +363,9 @@ class FileTools{
 			$statistics['Errors'][]='Attached files were skipped do to their size. Use FTP to back them up!';
 		}
 		$zip->close();
-		$statistics['Attached filesize']=$this->arr['Datapool\Tools\StrTools']->float2str($statistics['Attached filesize'],2,1024);
-		$msg='Export resulted in '.$this->arr['Datapool\Tools\ArrTools']->statistic2str($statistics);
-		$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		$statistics['Attached filesize']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->float2str($statistics['Attached filesize'],2,1024);
+		$msg='Export resulted in '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
+		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $dumpFile;
 	}
 	
@@ -382,13 +382,13 @@ class FileTools{
 				if (!is_file($file)){continue;}
 				if (strpos($fileName,'.json')===FALSE){continue;}
 				$fileContent=file_get_contents($file);
-				$entry=$this->arr['Datapool\Tools\ArrTools']->json2arr($fileContent);
+				$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($fileContent);
 				if (!$entry){
 					$statistics['json decode errors']++;
 					continue;
 				}
 				$statistics['entries updated']++;
-				$this->arr['Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
 				$source=$dir.$entry['Source'].'~'.$entry['ElementId'].'.file';
 				$target=$this->selector2file($entry);
 				if (is_file($source)){
@@ -399,8 +399,8 @@ class FileTools{
 		} else {
 			$statistics['zip errors']++;
 		}
-		$msg='Import resulted in '.$this->arr['Datapool\Tools\ArrTools']->statistic2str($statistics);
-		$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		$msg='Import resulted in '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
+		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $statistics;
 	}
 	
@@ -408,7 +408,7 @@ class FileTools{
 		$text=FALSE;
 		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
 			$fileContent=file_get_contents($file);
-			$fileContent=$this->arr['Datapool\Tools\StrTools']->base64decodeIfEncoded($fileContent);
+			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
 			// parser configuration
 			$config=new \Smalot\PdfParser\Config();
 			$config->setHorizontalOffset('');
@@ -472,25 +472,25 @@ class FileTools{
 			}
 			$this->statistics['inserted files']++;
 			$entry['Params']['File']['Style class']='';
-			$entry['Params']['File']['Uploaded']=$this->arr['Datapool\Tools\StrTools']->getDateTime();
+			$entry['Params']['File']['Uploaded']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 			if (isset($_SESSION['currentUser']['ElementId'])){$entry['Params']['File']['UploaderId']=$_SESSION['currentUser']['ElementId'];}
 			if (isset($_SESSION['currentUser']['Name'])){$entry['Params']['File']['UploaderName']=$_SESSION['currentUser']['Name'];}
 			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE){
 				$pdfFileContent=$this->parsePdfFile($entry['Params']['File']['Source']);
 				if (!empty($pdfFileContent)){$entry['Content']['File content']=$pdfFileContent;}
 			}
-			$entry=$this->arr['Datapool\Foundation\Database']->addEntryDefaults($entry);
-			$entry=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
 			$targetFile=$this->selector2file($entry,TRUE);
 			copy($entry['Params']['File']['Source'],$targetFile);
 			$entry['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$entry['Params']['File']['Source'],'new'=>$targetFile,'userId'=>$userId));
-			$entry=$this->arr['Datapool\Tools\ExifTools']->addExif2entry($entry,$targetFile);
-			$entry=$this->arr['Datapool\Tools\GeoTools']->location2address($entry);
-			$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+			$entry=$this->arr['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$targetFile);
+			$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 			$debugArr['entry updated']=$entry;
 		}
 		if ($isDebugging){
-			$this->arr['Datapool\Tools\ArrTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
 		}
 		return $entry;
 	}
@@ -500,7 +500,7 @@ class FileTools{
 		// extract zip archive to a temporary dir
 		if (is_file($entryTemplate['Params']['File']['Source'])){
 			if (!is_dir($GLOBALS['tmp dir'])){$this->statistics['added dirs']+=intval(mkdir($GLOBALS['tmp dir'],0775));}
-			$zipDir=$GLOBALS['tmp dir'].$this->arr['Datapool\Tools\StrTools']->getRandomString(20).'/';
+			$zipDir=$GLOBALS['tmp dir'].$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
 			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775));
 			$zip=new \ZipArchive;
 			if ($zip->open($entryTemplate['Params']['File']['Source'])===TRUE){

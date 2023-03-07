@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Components;
+namespace SourcePot\Datapool\Components;
 
 class Logout{
 	
@@ -32,10 +32,10 @@ class Logout{
 		if ($arr===TRUE){
 			return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
 		} else {
-			$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'User logout '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
-			$this->arr['Datapool\Tools\NetworkTools']->resetSession();
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User logout '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->resetSession();
 			// load Home-app
-			header("Location: ".$this->arr['Datapool\Tools\NetworkTools']->href(array('app'=>'Datapool\Components\Home')));
+			header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('app'=>'SourcePot\Datapool\Components\Home')));
 			exit;
 			return $arr;
 		}

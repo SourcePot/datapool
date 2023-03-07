@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\GenericApps;
+namespace SourcePot\Datapool\GenericApps;
 
 class Forum{
 	
@@ -36,10 +36,10 @@ class Forum{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		// complete defintion
 		$this->definition['Send']=array('@tag'=>'button','@key'=>'save','@element-content'=>'Send');
-		$arr['Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 		return $this->arr;
 	}
 
@@ -72,26 +72,26 @@ class Forum{
 						  'Type'=>$this->entryTable.' entry',
 						  'Owner'=>$_SESSION['currentUser']['ElementId'],
 						  );
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
 			if ($entry['isSkipRow']){continue;}
 			$forumEntry=$entry;
 		}
 		if (empty($forumEntry)){
-			$forumEntry=$this->arr['Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
+			$forumEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
 		} 
-		$definition=$this->arr['Datapool\Foundation\Definitions']->getDefinition($forumEntry);
+		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($forumEntry);
 		$definition['hideKeys']=TRUE;
-		$html=$this->arr['Datapool\Foundation\Definitions']->definition2form($definition,$forumEntry);
-		$html.=$this->arr['Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','style'=>array('background-color'=>'#888','min-width'=>'100%','margin'=>'0')));
+		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$forumEntry);
+		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','style'=>array('background-color'=>'#888','min-width'=>'100%','margin'=>'0')));
 		return $html;
 	}
 	
 	private function loadForumEntries(){
 		$html='';
 		$forumSelector=array('Source'=>$this->entryTable,'Folder'=>'Sent');
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
-			$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'element-id'=>$entry['ElementId'],'class'=>'forum'));
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
+			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'element-id'=>$entry['ElementId'],'class'=>'forum'));
 		}
 		return $html;
 	}
@@ -99,7 +99,7 @@ class Forum{
 	public function unifyEntry($forumEntry){
 		$forumEntry['Group']=$_SESSION['currentUser']['Privileges'];
 		$forumEntry['Folder']='Sent';
-		$forumEntry['Date']=$this->arr['Datapool\Tools\StrTools']->getDateTime();
+		$forumEntry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 		$forumEntry['Name']=substr($forumEntry['Content']['Message'],0,30);
 		return $forumEntry;
 	}

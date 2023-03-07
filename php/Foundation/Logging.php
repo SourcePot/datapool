@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Foundation;
+namespace SourcePot\Datapool\Foundation;
 
 class Logging{
 	
@@ -38,7 +38,7 @@ class Logging{
 	
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->registerToolbox();
 		return $this->arr;
 	}
@@ -84,13 +84,13 @@ class Logging{
 		} else {
 			$readR='ADMIN_R';
 		}
-		$logEntry=$this->arr['Datapool\Foundation\Access']->addRights($logEntry,$readR,'ADMIN_R');
-		$logEntry['Expires']=$this->arr['Datapool\Tools\StrTools']->getDateTime('now','PT'.$this->logLevelCntr[$level]['Lifespan'].'S');
+		$logEntry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($logEntry,$readR,'ADMIN_R');
+		$logEntry['Expires']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT'.$this->logLevelCntr[$level]['Lifespan'].'S');
 		// Update log instead of adding log if log with same message, from the same IP and same user is detected within 10seconds
 		$minPause=round(time()/10);
 		$logEntry['ElementId']=md5($logEntry['Content']['Message'].$logEntry['Content']['User id'].$logEntry['Content']['IP'].$minPause);
 		// add log to database
-		$logEntry=$this->arr['Datapool\Foundation\Database']->insertEntry($logEntry);
+		$logEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->insertEntry($logEntry);
 		return $logEntry;
 	}
 	
@@ -110,7 +110,7 @@ class Logging{
 		$arr['classWithNamespace']=__CLASS__;
 		$arr['method']='logsToolboxHtml';
 		$selector=array('Source'=>$this->entryTable,'Type'=>'log%');
-		$html=$this->arr['Datapool\Foundation\Container']->container('Logging','generic',$selector,$arr,array());
+		$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Logging','generic',$selector,$arr,array());
 		return $html;
 	}
 
@@ -119,18 +119,18 @@ class Logging{
 		$html='';
 		$needle=date('Y-m-d').' ';
 		$selector=array('Source'=>$this->entryTable,'Type'=>'log%');
-		if (!$this->arr['Datapool\Foundation\Access']->isAdmin()){$selector['Group']=$_SESSION['currentUser']['ElementId'];}
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$maxCount) as $logEntry){
+		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){$selector['Group']=$_SESSION['currentUser']['ElementId'];}
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$maxCount) as $logEntry){
 			$levelArr=$logEntry['Content']['Level'];
 			$levelArr=$this->logLevelCntr[$levelArr];
 			$text=$logEntry['Date'].': '.htmlspecialchars($logEntry['Content']['Message']);
 			$text=str_replace($needle,'',$text);
 			if ($logEntry['isFirst']){$style=$levelArr['style'].'font-weight:bold;';} else {$style=$levelArr['style'];} 
 			$pTagArr=array('tag'=>'p','class'=>'log','style'=>$style,'element-content'=>$text,'keep-element-content'=>TRUE,'source'=>$logEntry['Source'],'elementid'=>$logEntry['ElementId'],'title'=>htmlspecialchars($logEntry['Content']['Message']));
-			$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($pTagArr);
+			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($pTagArr);
 		}
 		$divTagArr=array('tag'=>'div','class'=>'log','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'log-div');
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element($divTagArr);
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($divTagArr);
 		$wrapperStyle=array('width'=>'100%','margin'=>'0','padding'=>'0','height'=>'80px');
 		return array('html'=>$html,'wrapperSettings'=>array('class'=>'toolbox','style'=>$wrapperStyle));
 	}	
@@ -139,8 +139,8 @@ class Logging{
 		$toolbox=array('Name'=>'Logs',
 					   'Content'=>array('class'=>__CLASS__,'method'=>'logsToolbox','args'=>array('maxCount'=>10),'settings'=>array())
 					   );
-		$toolbox=$this->arr['Datapool\Foundation\Access']->addRights($toolbox,'ALL_R','ADMIN_R');
-		$toolbox=$this->arr['Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
+		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($toolbox,'ALL_R','ADMIN_R');
+		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
 		if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['ElementId'])){$_SESSION['page state']['toolbox']=$toolbox['ElementId'];}
 		return $toolbox;
 	}

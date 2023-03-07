@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class LoginForms{
 	
@@ -54,12 +54,12 @@ class LoginForms{
 	}
 	
 	private function formData(){
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'loginForm');
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'loginForm');
 		$result=$formData['val'];
 		$result['cmd']=empty($formData['cmd'])?'':key($formData['cmd']);
 		if ($this->formType===1 && !empty($result['Passphrase'])){
 			// symbol login
-			$hashSymbolArr=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'hashSymbolArr');
+			$hashSymbolArr=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'hashSymbolArr');
 			$symbolIds=explode('|',$result['Passphrase']);
 			$result['Passphrase']='';
 			foreach($symbolIds as $index=>$symbolId){
@@ -67,7 +67,7 @@ class LoginForms{
 				$result['Passphrase'].=$hashSymbolArr[$symbolId]['key'];
 			}
 		}
-		$result['Recovery']=$this->arr['Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'recovery');
+		$result['Recovery']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'recovery');
 		if ($this->isLoggedIn() && empty($result['Email'])){
 			$result['Email']=$_SESSION['currentUser']['Params']['User registration']['Email'];
 		}
@@ -94,12 +94,12 @@ class LoginForms{
 		} else {
 			$matrix['Email']=array('Value'=>$email);
 			$matrix['Passphrase']=array('Value'=>$passphrase);
-			$btns=$this->arr['Datapool\Tools\HTMLbuilder']->element($loginBtn).$this->arr['Datapool\Tools\HTMLbuilder']->element($registerBtn);
+			$btns=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($loginBtn).$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($registerBtn);
 			$matrix['']=array('Value'=>$btns);
 			$matrix['Recover']=array('Value'=>$loginLinkBtn);
 		}
-		$formHtml=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Login'));
-		$formHtml=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'none','margin'=>'2em auto','width'=>'fit-content','padding'=>'1em')));
+		$formHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Login'));
+		$formHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'none','margin'=>'2em auto','width'=>'fit-content','padding'=>'1em')));
 		if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
 		return $arr;
 	}
@@ -107,9 +107,9 @@ class LoginForms{
 	private function getStandard($arr=array()){
 		$recovery=array('Passphrase'=>$this->getHash(20));
 		$recovery['Passphrase for user']='"'.$recovery['Passphrase'].'"';
-		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
+		$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
 		$passphraseArr=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'required'=>TRUE,'minlength'=>'8','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
-		return $this->arr['Datapool\Tools\HTMLbuilder']->element($passphraseArr);
+		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($passphraseArr);
 	}
 	
 	private function getSymbolKeypad($arr=array()){
@@ -158,22 +158,22 @@ class LoginForms{
 				$aArr['id']=$imgTmpHash.'_loginSymbol';
 				$aArr['title']='Login symbol';
 				//$aArr['title']=$digitDef['description'];
-				$aArr['element-content']=$this->arr['Datapool\Tools\HTMLbuilder']->element($imgArr);
-				$layersHtml.=$this->arr['Datapool\Tools\HTMLbuilder']->element($aArr);
+				$aArr['element-content']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imgArr);
+				$layersHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($aArr);
 				$hashSymbolArr[$imgTmpHash]=$digitDef;
 			}
 			$layersDivArr['element-content']=$layersHtml;
 			if ($digitIndex%$arr['symbolColumnCount']===0 && $digitIndex>0){$layersDivArr['style']['clear']='both';} else {$layersDivArr['style']['clear']='none';}
-			$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($layersDivArr);
+			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($layersDivArr);
 		}
 		// add hidden input and passphrase preview
 		$previewArr=array('tag'=>'div','element-content'=>'','class'=>'phrase-preview');
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($previewArr);
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($previewArr);
 		$phraseArr=array('tag'=>'input','type'=>'hidden','key'=>array('Passphrase'),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','element-content'=>'','class'=>'pass-phrase');
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element($phraseArr);
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($phraseArr);
 		// save state
-		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
-		$this->arr['Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
+		$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
+		$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
 		return $html;
 	}
 	

@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Processing;
+namespace SourcePot\Datapool\Processing;
 
 class MatchEntries{
 	
@@ -28,7 +28,7 @@ class MatchEntries{
 	
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
 
@@ -41,7 +41,7 @@ class MatchEntries{
 		// $callingElementSelector ... array('Source'=>'...', 'ElementId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['Datapool\Foundation\Database']->entryByKey($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($callingElementSelector);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -83,14 +83,14 @@ class MatchEntries{
 	}
 
 	private function getMatchEntriesWidget($callingElement){
-		return $this->arr['Datapool\Foundation\Container']->container('Matching','generic',$callingElement,array('method'=>'getMatchEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Matching','generic',$callingElement,array('method'=>'getMatchEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getMatchEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runMatchEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -105,28 +105,28 @@ class MatchEntries{
 		$btnArr['value']='Run';
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Matching widget'));
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Matching widget'));
 		foreach($result as $caption=>$matrix){
-			$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		return $arr;
 	}
 
 	private function getMatchEntriesSettings($callingElement){
 		$html='';
-		if ($this->arr['Datapool\Foundation\Access']->isContentAdmin()){
-			$html.=$this->arr['Datapool\Foundation\Container']->container('Matching entries settings','generic',$callingElement,array('method'=>'getMatchEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Matching entries settings','generic',$callingElement,array('method'=>'getMatchEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
 		}
 		return $html;
 	}
 	
 	public function getMatchEntriesSettingsHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Match entries selected by Selector A with Selector B selected entries'));
+		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Match entries selected by Selector A with Selector B selected entries'));
 		$arr['html'].=$this->matchingParams($arr['selector']);
 		$arr['html'].=$this->matchingRules($arr['selector']);
-		//$selectorMatrix=$this->arr['Datapool\Tools\ArrTools']->arr2matrix($callingElement['Content']['Selector']);
-		//$arr['html'].=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Matching'));
+		//$selectorMatrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
+		//$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Matching'));
 		return $arr;
 	}
 	
@@ -141,15 +141,15 @@ class MatchEntries{
 		$contentStructure['Column to match']+=$callingElement['Content']['Selector'];
 		// get selctorB
 		$matchingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);;
-		$matchingParams=$this->arr['Datapool\Foundation\Access']->addRights($matchingParams,'ALL_R','ALL_CONTENTADMIN_R');
+		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($matchingParams,'ALL_R','ALL_CONTENTADMIN_R');
 		$matchingParams['Content']=array('Column to match'=>'Name');
-		$matchingParams=$this->arr['Datapool\Foundation\Database']->entryByKeyCreateIfMissing($matchingParams,TRUE);
+		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($matchingParams,TRUE);
 		// form processing
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (!empty($formData['val'][$elementId]['Content'])){
 			$matchingParams['Content']=$formData['val'][$elementId]['Content'];
-			$matchingParams=$this->arr['Datapool\Foundation\Database']->updateEntry($matchingParams);
+			$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($matchingParams);
 		}
 		// get HTML
 		$arr=$matchingParams;
@@ -159,8 +159,8 @@ class MatchEntries{
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Choose the column to be used for matching, the entries you want to match with and success/failure targets';
 		$arr['noBtns']=TRUE;
-		$matrix=array('Parameter'=>$this->arr['Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE));
-		return $this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+		$matrix=array('Parameter'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE));
+		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 
 	private function matchingRules($callingElement){
@@ -177,7 +177,7 @@ class MatchEntries{
 		$arr['caption']='Filter-rules: Skip entries if one of the conditions is met';
 		$arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 		
@@ -191,7 +191,7 @@ class MatchEntries{
 					 );
 		$settings=array();
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['ElementId']);
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','ElementId',TRUE) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','ElementId',TRUE) as $entry){
 			$elementIdComps=explode('___',$entry['ElementId']);
 			if (count($elementIdComps)<2){
 				$settings[$entry['Group']]=$entry['Content'];
@@ -206,7 +206,7 @@ class MatchEntries{
 		foreach($settings['matchingRules'] as $elementId=>$rule){$rules[$rule['Entry']][]=$rule;}
 		
 		
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $entryA){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $entryA){
 			if ($entryA['isSkipRow']){continue;}
 			$result['Statistics']['Entry A count']['value']++;
 			$currentSelectorB[$column2match]=$entryA[$column2match];
@@ -216,7 +216,7 @@ class MatchEntries{
 			}
 			if (!empty($rules['Entry B'])){$skipDueToEntryBrule=TRUE;} else {$skipDueToEntryBrule=FALSE;}
 			$hadMatch=FALSE;
-			foreach($this->arr['Datapool\Foundation\Database']->entryIterator($currentSelectorB) as $entryB){
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($currentSelectorB) as $entryB){
 				if ($entryB['isSkipRow']){continue;}
 				$hadMatch=$entryB['Content'];
 				if ($this->skipMatch($entryB,$rules['Entry B'])){
@@ -239,7 +239,7 @@ class MatchEntries{
 			}
 			if (!$isTestRun){
 				$entryA['Content']['Match selector']=$currentSelectorB;
-				$this->arr['Datapool\Foundation\Database']->updateEntry($entryA);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entryA);
 			}
 			$firstLoopEntriesA=TRUE;
 		} // loop through A entries
@@ -251,7 +251,7 @@ class MatchEntries{
 		foreach($rules as $ruleIndex=>$rule){
 			$haystack=$entry[$rule['Column']];
 			$needle=$rule['Needle'];
-			if (is_array($haystack)){$haystack=$this->arr['Datapool\Tools\ArrTools']->arr2json($haystack);}
+			if (is_array($haystack)){$haystack=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($haystack);}
 			if (strcmp($rule['Operation'],'skipIfNotFound')===0){
 				if (strpos($haystack,$needle)===FALSE){
 					return TRUE;
@@ -269,7 +269,7 @@ class MatchEntries{
 		// This method returns the target selector of the cnavas element selected by $elementId
 		// and returns this selector.
 		$selector=array('Source'=>$source,'ElementId'=>$elementId);
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 			if (is_bool($target)){
 				return $entry;
 			} else if (is_array($target)){
@@ -292,10 +292,10 @@ class MatchEntries{
 
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['ElementId'])){return array();}
-		$type=$this->arr['Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
+		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
 		$type.='|'.$callingFunction;
 		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['ElementId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['Datapool\Tools\StrTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
+		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
 		return $entrySelector;
 
 	}

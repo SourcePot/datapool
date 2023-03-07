@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\GenericApps;
+namespace SourcePot\Datapool\GenericApps;
 
 class Multimedia{
 	
@@ -29,8 +29,8 @@ class Multimedia{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$arr['Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 		return $this->arr;
 	}
 
@@ -56,9 +56,9 @@ class Multimedia{
 		if ($arr===TRUE){
 			return array('Category'=>'Apps','Emoji'=>'&#10063;','Label'=>'Multimedia','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
-			$arr=$this->arr['Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
-			$selector=$this->arr['Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			$html=$this->arr['Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
+			$arr=$this->arr['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
+			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
 			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
 			return $arr;
 		}

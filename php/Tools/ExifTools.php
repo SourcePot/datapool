@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class ExifTools{
 	
@@ -88,7 +88,7 @@ class ExifTools{
 		}
 		// get address if location has been updated
 		if ($entry['Params']['Geo']['lat']!=$oldGeo['lat'] || $entry['Params']['Geo']['lon']!=$oldGeo['lon']){
-			$entry=$this->arr['Datapool\Tools\GeoTools']->location2address($entry,'Address');
+			$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->location2address($entry,'Address');
 		}
 		return $entry;
 	}
@@ -102,7 +102,7 @@ class ExifTools{
 			} else {
 				$exifDateTime.=' 12:00:00';
 			}
-			$pageSettings=$this->arr['Datapool\Tools\HTMLbuilder']->getSettings();
+			$pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
 			$dateTime=\DateTime::createFromFormat('Y-m-d H:i:s',$exifDateTime,new \DateTimeZone('UTC'));
 			$dateTime->setTimeZone(new \DateTimeZone($pageSettings['pageTimeZone']));
 			$entry['Date']=$dateTime->format('Y-m-d H:i:s');

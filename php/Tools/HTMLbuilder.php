@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Tools;
+namespace SourcePot\Datapool\Tools;
 
 class HTMLbuilder{
 	
@@ -43,7 +43,7 @@ class HTMLbuilder{
 		// Initialize page settings
 		$settings=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
 		$settings['Content']=$this->settings;
-		$settings=$this->arr['Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($settings,TRUE);
+		$settings=$this->arr['SourcePot\Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($settings,TRUE);
 		$this->settings=$settings['Content'];
 		$this->settings['cssFiles'][]=$_SESSION['page state']['cssFile'];
 		return $this->arr;
@@ -72,7 +72,7 @@ class HTMLbuilder{
 			if (!empty($this->settings['iconFile'])){
 				$fileAbs=$GLOBALS['media dir'].$this->settings['iconFile'];
 				if (is_file($fileAbs)){
-					$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+					$href=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($fileAbs);
 					$icoFileInclude.='<link rel="shortcut icon" href="'.$href.'">'.PHP_EOL;
 				} else {
 					throw new \ErrorException('Function '.__FUNCTION__.': Could not open the ico-file '.$fileAbs.' provided',0,E_ERROR,__FILE__,__LINE__);
@@ -85,7 +85,7 @@ class HTMLbuilder{
 					if (strpos($fileName,'://')===FALSE){
 						$fileAbs=$GLOBALS['media dir'].$fileName;
 						if (is_file($fileAbs)){
-							$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+							$href=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($fileAbs);
 						} else {
 							file_put_contents($fileAbs,'');
 							throw new \ErrorException('Function '.__FUNCTION__.': Could not open the css-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
@@ -103,7 +103,7 @@ class HTMLbuilder{
 					if (strpos($fileName,'://')===FALSE){
 						$fileAbs=$GLOBALS['media dir'].$fileName;
 						if (is_file($fileAbs)){
-							$href=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+							$href=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($fileAbs);
 						} else {
 							file_put_contents($fileAbs,'');
 							throw new \ErrorException('Function '.__FUNCTION__.': Could not open the js-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
@@ -139,17 +139,17 @@ class HTMLbuilder{
 		}
 		$fileAbs=$GLOBALS['media dir'].$imageFile;
 		if (is_file($fileAbs)){
-			$src=$this->arr['Datapool\Tools\FileTools']->abs2rel($fileAbs);
+			$src=$this->arr['SourcePot\Datapool\Tools\FileTools']->abs2rel($fileAbs);
 			$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');
 		}
-		$body=$this->arr['Datapool\Foundation\Menu']->menu().PHP_EOL;
+		$body=$this->arr['SourcePot\Datapool\Foundation\Menu']->menu().PHP_EOL;
 		$body.='<div class="filler" id="top-filler"></div>'.PHP_EOL;
 		$body.=$this->element($mainTagArr);
 		$body.='<div class="filler" id="bottom-filler"></div>'.PHP_EOL;
-		$body.=$this->arr['Datapool\Foundation\Toolbox']->getToolbox().PHP_EOL;
+		$body.=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->getToolbox().PHP_EOL;
 		$body.='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
 		$body.='<script>jQuery("article").hide();</script>'.PHP_EOL;
-		$name=$this->arr['Datapool\Tools\StrTools']->getRandomString(30);;
+		$name=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(30);;
 		$body='<form name="'.$name.'" method="post" enctype="multipart/form-data">'.PHP_EOL.$body.'</form>'.PHP_EOL;
 		$body='<body>'.PHP_EOL.$body.'</body>'.PHP_EOL;
 		$arr['page html']=str_replace('{{body}}',$body,$arr['page html']);
@@ -187,7 +187,7 @@ class HTMLbuilder{
 			if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 			if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION__;}
 			if (isset($arr['style'])){
-				if (is_array($arr['style'])){$arr['style']=$this->arr['Datapool\Tools\XMLtools']->arr2style($arr['style']);}
+				if (is_array($arr['style'])){$arr['style']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2style($arr['style']);}
 				if (!empty($arr['hasCover'])){
 					$arr['coverStyle']=$arr['style'];
 					unset($arr['style']);
@@ -197,7 +197,7 @@ class HTMLbuilder{
 			// get and unfiy key
 			if (isset($arr['key'])){
 				if (is_array($arr['key'])){
-					$arr['key']=implode($this->arr['Datapool\Tools\ArrTools']->getSeparator(),$arr['key']);
+					$arr['key']=implode($this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$arr['key']);
 				}
 			}
 			// add name-key if required
@@ -211,7 +211,7 @@ class HTMLbuilder{
 						$arr['name']=$arr['id'];
 					} else {
 						$arr['name']=$this->arr2id($arr);
-						//$arr['name']=$this->arr['Datapool\Tools\StrTools']->getHash($callingClass.$callingFunction.$arr['key']);
+						//$arr['name']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getHash($callingClass.$callingFunction.$arr['key']);
 					}
 				}
 			}
@@ -232,7 +232,7 @@ class HTMLbuilder{
 				if (empty($arr['keep-element-content'])){
 					$arr['element-content']=htmlspecialchars($arr['element-content'],ENT_QUOTES,'UTF-8');
 				}
-				if (strcmp($arr['tag'],'p')===0){$arr['element-content']=$this->arr['Datapool\Tools\XMLtools']->wrapUTF8($arr['element-content']);}
+				if (strcmp($arr['tag'],'p')===0){$arr['element-content']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($arr['element-content']);}
 				$toReplace['{{element-content}}']=$arr['element-content'];
 				$arr['html']='<{{tag}} {{attr}}>{{element-content}}</{{tag}}>';
 			} else {
@@ -279,22 +279,40 @@ class HTMLbuilder{
 		}
 		return $arr;
 	}
+
+	public function template2string($template='Hello [p:{{key}}]...',$arr=array('key'=>'world'),$element=array()){
+		$flatArr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
+		foreach($flatArr as $flatArrKey=>$flatArrValue){
+			$template=str_replace('{{'.$flatArrKey.'}}',(string)$flatArrValue,$template);
+		}
+		$template=preg_replace('/{{[^{}]+}}/','',$template);
+		preg_match_all('/(\[\w+:)([^\]]+)(\])/',$template,$matches);
+		if (isset($matches[0][0])){
+			foreach($matches[0] as $matchIndex=>$match){
+				$element['tag']=trim($matches[1][$matchIndex],'[:');
+				$element['element-content']=$matches[2][$matchIndex];
+				$replacement=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);
+				$template=str_replace($match,$replacement,$template);
+			}
+		}
+		return $template;
+	}
 	
 	private function arr2id($arr){
 		$toHash=array($arr['callingClass'],$arr['callingFunction'],$arr['key']);
-		return $this->arr['Datapool\Tools\StrTools']->getHash($toHash);
+		return $this->arr['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash);
 	}
 	
 	private function elementTranslations($arr){
 		if (!empty($arr['keep-element-content'])){return $arr;}
 		if (empty($arr['dontTranslateContent']) && !empty($arr['element-content'])){
-			$arr['element-content']=$this->arr['Datapool\Foundation\Dictionary']->lng($arr['element-content']);
+			$arr['element-content']=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['element-content']);
 		}
 		if (empty($arr['dontTranslateTitle']) && !empty($arr['title'])){
-			$arr['title']=$this->arr['Datapool\Foundation\Dictionary']->lng($arr['title']);
+			$arr['title']=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['title']);
 		}
 		if (empty($arr['dontTranslateValue']) && !empty($arr['value']) && !empty($arr['type'])){
-			if (strcmp($arr['tag'],'input')===0 && strcmp($arr['type'],'submit')===0){$arr['value']=$this->arr['Datapool\Foundation\Dictionary']->lng($arr['value']);}
+			if (strcmp($arr['tag'],'input')===0 && strcmp($arr['type'],'submit')===0){$arr['value']=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['value']);}
 		}
 		return $arr;
 	}
@@ -312,10 +330,10 @@ class HTMLbuilder{
 			if (empty($arr['style'])){
 				$html.='<table {{class}}>'.PHP_EOL;
 			} else {
-				$arr['style']=is_array($arr['style'])?$this->arr['Datapool\Tools\XMLtools']->arr2style($arr['style']):$arr['style'];
+				$arr['style']=is_array($arr['style'])?$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2style($arr['style']):$arr['style'];
 				$html.='<table {{class}} style="'.$arr['style'].'">'.PHP_EOL;	
 			}
-			if (!empty($arr['caption'])){$html.='<caption {{class}}>'.PHP_EOL.$this->arr['Datapool\Foundation\Dictionary']->lng($arr['caption']).'</caption>'.PHP_EOL;}
+			if (!empty($arr['caption'])){$html.='<caption {{class}}>'.PHP_EOL.$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['caption']).'</caption>'.PHP_EOL;}
 			if (empty($arr['hideHeader'])){$html.='<thead {{class}}>'.PHP_EOL.'{{thead}}</thead>'.PHP_EOL;}
 			$html.='<tbody {{class}}>'.PHP_EOL.'{{tbody}}</tbody>'.PHP_EOL;
 			$html.='</table>'.PHP_EOL;
@@ -327,8 +345,8 @@ class HTMLbuilder{
 				$toReplace['{{thead}}']='<tr {{class}}>';
 				$newRow='<tr {{class}} row="'.$rowIndex.'" style="'.$setRowStyle.'">';
 				if (empty($arr['hideKeys'])){
-					$toReplace['{{thead}}'].='<th {{class}}>'.$this->arr['Datapool\Foundation\Dictionary']->lng('Key').'</th>';
-					$newRow.='<td {{class}}>'.$this->arr['Datapool\Foundation\Dictionary']->lng($row).'</td>';						
+					$toReplace['{{thead}}'].='<th {{class}}>'.$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng('Key').'</th>';
+					$newRow.='<td {{class}}>'.$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($row).'</td>';						
 				}
 				$allCellsEmpty=TRUE;
 				$cellIndex=1;
@@ -372,7 +390,7 @@ class HTMLbuilder{
 		if (!isset($arr['key'])){
 			throw new \ErrorException('Function '.__FUNCTION__.': Missing key-key in argument arr',0,E_ERROR,__FILE__,__LINE__);
 		}
-		if (is_array($arr['key'])){$key=implode($this->arr['Datapool\Tools\ArrTools']->getSeparator(),$arr['key']);} else {$key=$arr['key'];}
+		if (is_array($arr['key'])){$key=implode($this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$arr['key']);} else {$key=$arr['key'];}
 		$inputId=$this->arr2id($arr).'input';
 		$triggerId=$this->arr2id($arr).'btn';	
 		$html='';
@@ -426,7 +444,7 @@ class HTMLbuilder{
 	
 	public function tableSelect($arr){
 		$html='';
-		foreach($this->arr['Datapool\Foundation\Database']->getDbInfo() as $table=>$tableDef){$arr['options'][$table]=ucfirst($table);}
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDbInfo() as $table=>$tableDef){$arr['options'][$table]=ucfirst($table);}
 		$html.=$this->select($arr);
 		return $html;
 	}
@@ -435,16 +453,16 @@ class HTMLbuilder{
 		$html='';
 		if (empty($arr['Source'])){return $html;}
 		$fileContentKeys=array();
-		$keys=$this->arr['Datapool\Foundation\Database']->entryTemplate($arr);
+		$keys=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($arr);
 		if (empty($arr['standardColumsOnly'])){
-			foreach($this->arr['Datapool\Foundation\Database']->entryIterator($arr,TRUE) as $tmpEntry){
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,TRUE) as $tmpEntry){
 				if ($tmpEntry['isSkipRow']){continue;}
 				if (isset($tmpEntry['Params']['File']['MIME-Type'])){
 					if (strpos($tmpEntry['Params']['File']['MIME-Type'],'text/')===0){
-						$fileContentKeys=$this->arr['Datapool\Tools\CSVtools']->csvIterator($tmpEntry)->current();
+						$fileContentKeys=$this->arr['SourcePot\Datapool\Tools\CSVtools']->csvIterator($tmpEntry)->current();
 					}
 				}
-				$keys=$this->arr['Datapool\Tools\ArrTools']->arr2flat($tmpEntry);
+				$keys=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
 				break;
 			}
 		}
@@ -455,11 +473,11 @@ class HTMLbuilder{
 			$arr['options']=array();
 		}
 		foreach($fileContentKeys as $key=>$value){
-			$key='File content'.$this->arr['Datapool\Tools\ArrTools']->getSeparator().$key;
-			$arr['options'][$key]=$this->arr['Datapool\Tools\ArrTools']->flatKey2label($key);
+			$key='File content'.$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator().$key;
+			$arr['options'][$key]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
 		}
 		foreach($keys as $key=>$value){
-			$arr['options'][$key]=$this->arr['Datapool\Tools\ArrTools']->flatKey2label($key);
+			$arr['options'][$key]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
 		}
 		$html.=$this->select($arr);
 		return $html;
@@ -469,7 +487,7 @@ class HTMLbuilder{
 		if (empty($arr['canvasCallingClass'])){
 			throw new \ErrorException('Function '.__FUNCTION__.': Argument arr[canvasCallingClass] is missing but required.',0,E_ERROR,__FILE__,__LINE__);
 		}
-		$canvasElements=$this->arr['Datapool\Foundation\DataExplorer']->getCanvasElements($arr['canvasCallingClass']);
+		$canvasElements=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($arr['canvasCallingClass']);
 		$arr['options']=array();
 		foreach($canvasElements as $key=>$canvasEntry){
 			if (empty($canvasEntry['Content']['Selector']['Source'])){continue;}
@@ -480,7 +498,7 @@ class HTMLbuilder{
 	}
 	
 	public function preview($arr){
-		return $this->arr['Datapool\Tools\MediaTools']->getPreview($arr);
+		return $this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
 	}
 	
 	public function btn($arr){
@@ -505,12 +523,12 @@ class HTMLbuilder{
 			// compile button
 			if (isset($arr['selector']['Source'])){$arr['Source']=$arr['selector']['Source'];}
 			if (isset($arr['selector']['ElementId'])){$arr['ElementId']=$arr['selector']['ElementId'];}
-			$arr=$this->arr['Datapool\Tools\ArrTools']->arrMerge($stdKeys,$arr);
+			$arr=array_replace_recursive($stdKeys,$arr);
 			if (!isset($arr['element-content'])){$arr['element-content']=ucfirst($arr['cmd']);}
 			$arr['tag']='button';
 			if (empty($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 			if (empty($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION__;}
-			$arr['id']=$this->arr['Datapool\Tools\StrTools']->getHash($arr,TRUE);
+			$arr['id']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getHash($arr,TRUE);
 			if (!isset($arr['value'])){
 				if (isset($arr['ElementId'])){$arr['value']=$arr['ElementId'];} else {$arr['value']=$arr['id'];};
 			}
@@ -518,13 +536,13 @@ class HTMLbuilder{
 			$arr['keep-element-content']=TRUE;
 			if (isset($btnDefs[$arr['cmd']])){
 				// found button definition
-				$arr=$this->arr['Datapool\Tools\ArrTools']->arrMerge($arr,$btnDefs[$arr['cmd']]);
+				$arr=array_replace_recursive($arr,$btnDefs[$arr['cmd']]);
 				if (!empty($arr['requiredRight'])){
-					$hasAccess=$this->arr['Datapool\Foundation\Access']->access($arr,$arr['requiredRight']);
+					$hasAccess=$this->arr['SourcePot\Datapool\Foundation\Access']->access($arr,$arr['requiredRight']);
 					if (empty($hasAccess)){$arr=FALSE;}
 				}
 				if (!empty($arr['requiresFile']) && strpos($arr['ElementId'],'-guideEntry')===FALSE){
-					$hasFile=is_file($this->arr['Datapool\Tools\FileTools']->selector2file($arr));
+					$hasFile=is_file($this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($arr));
 					if (!$hasFile){$arr=FALSE;}
 				}
 			} else {
@@ -538,29 +556,29 @@ class HTMLbuilder{
 			// button command processing
 			$formData=$this->formProcessing(__CLASS__,__FUNCTION__);
 			$selector=$this->formData2selector($formData);
-			//if (!empty($formData['cmd'])){$this->arr['Datapool\Tools\ArrTools']->arr2file($formData);}
+			//if (!empty($formData['cmd'])){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);}
 			if (isset($formData['cmd']['download'])){
-				$this->arr['Datapool\Tools\FileTools']->entry2fileDownload($selector);
+				$this->arr['SourcePot\Datapool\Tools\FileTools']->entry2fileDownload($selector);
 			} else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
-				//$this->arr['Datapool\Tools\ArrTools']->arr2file($selector);
-				$this->arr['Datapool\Foundation\Database']->deleteEntries($selector);
+				//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($selector);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
 			} else if (isset($formData['cmd']['remove'])){
 				$entry=$formData['element'];
 				if (!empty($entry['ElementId'])){
-					$file=$this->arr['Datapool\Tools\FileTools']->selector2file($entry);
+					$file=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entry);
 					if (is_file($file)){unlink($file);}
 					if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
-					$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+					$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 				}
 			} else if (isset($formData['cmd']['delete all entries'])){
-				$this->arr['Datapool\Foundation\Database']->deleteEntriesOnly($selector);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntriesOnly($selector);
 			} else if (isset($formData['cmd']['moveUp'])){
-				$this->arr['Datapool\Foundation\Database']->moveEntry($selector,TRUE);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE);
 			} else if (isset($formData['cmd']['moveDown'])){
-				$this->arr['Datapool\Foundation\Database']->moveEntry($selector,FALSE);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE);
 			} else if (isset($formData['cmd']['select'])){
 				if (isset($this->arr['view classes'][$selector['Source']])){
-					$this->arr['Datapool\Tools\NetworkTools']->setPageState($this->arr['view classes'][$selector['Source']],$selector);
+					$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageState($this->arr['view classes'][$selector['Source']],$selector);
 				}
 			}
 			return $arr;
@@ -574,7 +592,7 @@ class HTMLbuilder{
 		$arr['style']['width']=$arr['default-min-width'];
 		$arr['style']['height']=$arr['default-min-height'];
 		if (empty($arr['html'])){return '';}
-		$id=$this->arr['Datapool\Tools\StrTools']->getHash($arr['html'],TRUE);
+		$id=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getHash($arr['html'],TRUE);
 		$iconArr=$arr;
 		unset($iconArr['default-min-width']);
 		unset($iconArr['default-min-height']);
@@ -607,9 +625,9 @@ class HTMLbuilder{
 		}
 		$currentKeys=explode('||',$_SESSION[__CLASS__]['settings'][$callingFunction]['Category']);
 		$options=array();
-		foreach($this->arr['Datapool\Tools\StrTools']->emojis as $category=>$categoryArr){
+		foreach($this->arr['SourcePot\Datapool\Tools\MiscTools']->emojis as $category=>$categoryArr){
 			foreach($categoryArr as $group=>$groupArr){
-				$firstEmoji=$this->arr['Datapool\Tools\StrTools']->code2utf(key($groupArr));
+				$firstEmoji=$this->arr['SourcePot\Datapool\Tools\MiscTools']->code2utf(key($groupArr));
 				$options[$category.'||'.$group]=$firstEmoji.' '.$group;
 			}
 		}
@@ -617,10 +635,10 @@ class HTMLbuilder{
 		$arr['html'].=$this->select($categorySelectArr);
 		if (count($currentKeys)>1){
 			$tagArr=array('tag'=>'a','href'=>'#','class'=>'emoji','target'=>$arr['settings']['target']);
-			foreach($this->arr['Datapool\Tools\StrTools']->emojis[$currentKeys[0]][$currentKeys[1]] as $code=>$title){
+			foreach($this->arr['SourcePot\Datapool\Tools\MiscTools']->emojis[$currentKeys[0]][$currentKeys[1]] as $code=>$title){
 				$tagArr['id']='utf8-'.$code;
 				$tagArr['title']=$title;
-				$tagArr['element-content']=$this->arr['Datapool\Tools\StrTools']->code2utf($code);
+				$tagArr['element-content']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->code2utf($code);
 				$arr['html'].=$this->element($tagArr);
 			}
 		}
@@ -664,12 +682,12 @@ class HTMLbuilder{
 		$updateBtn=array('tag'=>'button','key'=>array($key,'save'),'value'=>'save','element-content'=>'💾','callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
 		$matrix['Cmd']['Current value']=$this->element($updateBtn);
 		if ($saveRequest){
-			$selector=$this->arr['Datapool\Foundation\Explorer']->guideEntry2selector($selector);
-			$this->arr['Datapool\Foundation\Database']->resetStatistic();
-			$this->arr['Datapool\Foundation\Database']->updateEntries($selector,array($key=>$updatedInteger),FALSE,FALSE);
-			$statistics=$this->arr['Datapool\Foundation\Database']->getStatistic();
+			$selector=$this->arr['SourcePot\Datapool\Foundation\Explorer']->guideEntry2selector($selector);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,array($key=>$updatedInteger),FALSE,FALSE);
+			$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			if ($statistics['updated']>0){
-				$this->arr['Datapool\Foundation\Logging']->addLog(array('msg'=>'Key "'.$key.'" updated for "'.$statistics['updated'].'" entries.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Key "'.$key.'" updated for "'.$statistics['updated'].'" entries.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 		}
 		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>FALSE,'hideKeys'=>TRUE,'hideHeader'=>TRUE));
@@ -682,11 +700,11 @@ class HTMLbuilder{
 		if (isset($arr['selector'])){$entry=$arr['selector'];} else {return $arr;}
 		if (empty($arr['key'])){$arr['key']='Read';}
 		if (empty($entry['Source']) || empty($entry['ElementId']) || empty($entry[$arr['key']])){
-			$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Required keys missing.'));
-		} else if ($this->arr['Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
-			$html=$this->arr['Datapool\Tools\HTMLbuilder']->integerEditor($entry,$arr['key'],$this->arr['Datapool\Foundation\User']->getUserRols());
+			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Required keys missing.'));
+		} else if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
+			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor($entry,$arr['key'],$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols());
 		} else {
-			$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'access denied'));
+			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'access denied'));
 		}
 		return $html;
 	}
@@ -696,14 +714,14 @@ class HTMLbuilder{
 		// 'download' an attached file, 'remove' the attached file and 'delete' the entry.
 		// $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
 		if (!isset($arr['selector'])){return 'Selector missing';}
-		$entry=$this->arr['Datapool\Foundation\Database']->entryByKey($arr['selector']);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr['selector']);
 		if (empty($entry)){return 'Entry does not exsist (yet).';}
 		if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 		if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION____;}
 		$html='';
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-		$html.=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
-		$mediaArr=$this->arr['Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
+		$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
 		$html.=$mediaArr['html'];
 		$btnArr=$arr['selector'];
 		$matrix=array();
@@ -716,7 +734,7 @@ class HTMLbuilder{
 		
 		}
 		$html.=$this->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
 		return $html;
 	}
 
@@ -736,7 +754,7 @@ class HTMLbuilder{
 		$arr['rowCount']=0;
 		$matrix=array();
 		$matrix['New']=$this->entry2row($arr,TRUE,FALSE);
-		foreach($this->arr['Datapool\Foundation\Database']->entryIterator($arr,FALSE,'Read','ElementId',TRUE) as $entry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,FALSE,'Read','ElementId',TRUE) as $entry){
 			$arr['rowCount']=$entry['rowCount'];
 			$entryArr=$entry;
 			if (isset($arr['canvasCallingClass'])){$entryArr['canvasCallingClass']=$arr['canvasCallingClass'];}
@@ -758,29 +776,29 @@ class HTMLbuilder{
 				$entry=$arr;
 				$entry['ElementId']=current($formData['cmd']);
 				$entry['Content']=$formData['val'][$entry['ElementId']]['Content'];
-				$entry=$this->arr['Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-				$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+				$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 			} else if (isset($formData['cmd']['delete'])){
 				$selector=array('Source'=>$arr['Source'],'ElementId'=>$formData['cmd']['delete']);
-				$this->arr['Datapool\Foundation\Database']->deleteEntries($selector);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
 			} else if (isset($formData['cmd']['moveUp'])){
 				$selector=array('Source'=>$arr['Source'],'ElementId'=>$formData['cmd']['moveUp']);
-				$this->arr['Datapool\Foundation\Database']->moveEntry($selector,TRUE);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE);
 			} else if (isset($formData['cmd']['moveDown'])){
 				$selector=array('Source'=>$arr['Source'],'ElementId'=>$formData['cmd']['moveDown']);
-				$this->arr['Datapool\Foundation\Database']->moveEntry($selector,FALSE);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE);
 			}
 			if ($commandProcessingOnly){return array();}
 		}
 		$row=array();
 		if (empty($arr['ElementId'])){
 			$newEntry=TRUE;
-			$arr=$this->arr['Datapool\Tools\StrTools']->addElementId($arr,array('Source','Group','Folder','Name','Type'),0);
+			$arr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($arr,array('Source','Group','Folder','Name','Type'),0);
 			if ($singleRowOnly){
 				// nothing to do here yet
 			} else if (isset($arr['rowCount'])){
-				$arr['ElementId']=$this->arr['Datapool\Foundation\Database']->addOrderedListIndexToElementId($arr['ElementId'],$arr['rowCount']+1);
-				$this->arr['Datapool\Foundation\Database']->orderedEntryListCleanup($arr);
+				$arr['ElementId']=$this->arr['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToElementId($arr['ElementId'],$arr['rowCount']+1);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr);
 			}
 		}
 		foreach($arr['contentStructure'] as $contentKey=>$elementArr){
@@ -825,7 +843,7 @@ class HTMLbuilder{
 		$result['valFlat']=array();
 		$result['changed']=array();
 		$result['files']=array();
-		$S=$this->arr['Datapool\Tools\ArrTools']->getSeparator();
+		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if (isset($_SESSION[$callingClass][$callingFunction])){
 			foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){
 				if (isset($_POST[$name])){
@@ -854,24 +872,24 @@ class HTMLbuilder{
 						foreach($fileArr as $fileIndex=>$fileValue){
 							if (strcmp($fileKey,'error')===0){
 								if (intval($fileValue)>0){
-									$result['file errors'][$fileIndex]=$this->arr['Datapool\Tools\FileTools']->fileErrorCode2str($fileValue);
+									$result['file errors'][$fileIndex]=$this->arr['SourcePot\Datapool\Tools\FileTools']->fileErrorCode2str($fileValue);
 								}
 							}
 							$result['files'][$arr['key'].$S.$fileIndex.$S.$fileKey]=$fileValue;
 							$result['files'][$arr['key'].$S.$fileIndex.$S.'element name']=$name;
 						}
 					}
-					$result['files']=$this->arr['Datapool\Tools\ArrTools']->flat2arr($result['files']);
+					$result['files']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['files']);
 					foreach($result['file errors'] as $fileIndex=>$error){unset($result['files'][$arr['key']][$fileIndex]);}
 				}
 			}
 			if ($resetAfterProcessing){$_SESSION[$callingClass][$callingFunction]=array();}
 		}
 		$result['valFlat']=$result['val'];
-		$result['cmd']=$this->arr['Datapool\Tools\ArrTools']->flat2arr($result['cmd']);
-		$result['val']=$this->arr['Datapool\Tools\ArrTools']->flat2arr($result['val']);
-		$result['changed']=$this->arr['Datapool\Tools\ArrTools']->flat2arr($result['changed']);
-		//$this->arr['Datapool\Tools\ArrTools']->arr2file($result);
+		$result['cmd']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['cmd']);
+		$result['val']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['val']);
+		$result['changed']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['changed']);
+		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($result);
 		return $result;
 	}
 	
@@ -883,7 +901,7 @@ class HTMLbuilder{
 		} else if (!empty($formData['element']['ElementId'])){
 			$selectorTemplate=array('Source'=>TRUE,'ElementId'=>TRUE);
 		} else {
-			$selectorTemplate=$this->arr['Datapool\Foundation\Database']->entryTemplate($formData['element']);
+			$selectorTemplate=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($formData['element']);
 			$selectorTemplate['Source']=array();
 		}
 		foreach($selectorTemplate as $column=>$defArr){

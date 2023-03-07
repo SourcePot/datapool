@@ -9,7 +9,7 @@
 */
 declare(strict_types=1);
 
-namespace Datapool\Foundation;
+namespace SourcePot\Datapool\Foundation;
 
 class Dictionary{
 	
@@ -29,7 +29,7 @@ class Dictionary{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->initDictionaryIfEmpty();
 		$this->registerToolbox();
 		return $this->arr;
@@ -37,7 +37,7 @@ class Dictionary{
 	
 	private function initDictionaryIfEmpty(){
 		$added=0;
-		$hasEntry=$this->arr['Datapool\Foundation\Database']->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
+		$hasEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
 		if (empty($hasEntry)){
 			$transl=array('de'=>array('Add'=>'Hinzufügen','Save'=>'Speichern','Update'=>'Aktualisieren','Login'=>'Anmelden','Logout'=>'Abmelden',
 									  'Register'=>'Registrieren','Send login link'=>'Login link anfordern','Password'=>'Passwort','...repeat'=>'...wiederholen','Delete'=>'Löschen',
@@ -73,10 +73,10 @@ class Dictionary{
 		if (empty($entry['Folder'])){$entry['Folder']=$entry['langCode'];}
 		if (empty($entry['Name'])){$entry['Name']=substr($entry['phrase'],0,100);}
 		if (empty($entry['Type'])){$entry['Type']='dictionary';}
-		if (empty($entry['Date'])){$entry['Date']=$this->arr['Datapool\Tools\StrTools']->getDateTime();}
+		if (empty($entry['Date'])){$entry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();}
 		if (empty($entry['Owner'])){$entry['Owner']='SYSTEM';}
 		if (empty($entry['Content'])){$entry['Content']=array('translation'=>$entry['translation']);}
-		$entry=$this->arr['Datapool\Foundation\Access']->addRights($entry,'ALL_R','ADMIN_R');
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ADMIN_R');
 		return $entry;
 	}
 	
@@ -92,7 +92,7 @@ class Dictionary{
 		if ($translation===FALSE){
 			// translation request
 			$selector=array('Source'=>$this->entryTable,'ElementId'=>$elementId);
-			$entry=$this->arr['Datapool\Foundation\Database']->entryByKey($selector);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector);
 			if (empty($entry)){
 				return $phrase;
 			} else {
@@ -101,8 +101,8 @@ class Dictionary{
 		} else {
 			// update translation
 			$entry=array('Source'=>$this->entryTable,'phrase'=>$phrase,'translation'=>$translation,'langCode'=>$langCode);
-			$entry=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($entry);
-			$this->arr['Datapool\Foundation\Database']->updateEntry($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 			return $translation;
 		}
 		return $phrase;
@@ -123,36 +123,36 @@ class Dictionary{
 	}
 	
 	public function lngSelector(){
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['select'])){
 			$_SESSION['page state']['lngCode']=$formData['val']['lngCode'];
 		}
 		//
 		$selectArr=array('options'=>$this->lngCodes,'value'=>$_SESSION['page state']['lngCode'],'key'=>array('lngCode'),'hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->select($selectArr);
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		return $html;
 	}
 	
 	public function dictWidget($arr=array()){
 		$langCode=$_SESSION['page state']['lngCode'];
 		if (strcmp($langCode,$this->sourceLng)===0){
-			$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Please select a language different to '.$this->lngCodes[$this->sourceLng],'style'=>'fonct-size:2em;padding:10px;'));
+			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Please select a language different to '.$this->lngCodes[$this->sourceLng],'style'=>'fonct-size:2em;padding:10px;'));
 			return $arr;
 		}
 		// form processing
 		if (!isset($_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode])){
 			$_SESSION[__CLASS__][__FUNCTION__]=array('phrase'=>array('en'=>''),'translation'=>array($langCode=>''));
 		}
-		$formData=$this->arr['Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['update']) && !empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$translation=array('Source'=>$this->entryTable,'phrase'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'translation'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'langCode'=>$langCode);
-			$translation=$this->arr['Datapool\Tools\ArrTools']->unifyEntry($translation);
-			$this->arr['Datapool\Foundation\Database']->updateEntry($translation);	
+			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($translation);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($translation);	
 		} else if (!empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$elementId=md5($formData['val']['phrase']['en'].'|'.$langCode);
-			$translation=$this->arr['Datapool\Foundation\Database']->entryByKey(array('Source'=>$this->entryTable,'ElementId'=>$elementId));
+			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey(array('Source'=>$this->entryTable,'ElementId'=>$elementId));
 			if (empty($translation)){
 				$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]='';
 			} else {
@@ -166,13 +166,13 @@ class Dictionary{
 		$matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode));
 		$matrix['Translation']['Translation']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>array('translation',$langCode),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
 		$matrix['Translation']['Cmd']=array('tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'','style'=>'margin:0;'));
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'','style'=>'margin:0;'));
 		return array('html'=>$html,'wrapperSettings'=>array('class'=>'toolbox'));
 	}
 	
 	public function dictToolbox($arr=array()){
-		$html=$this->arr['Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h2','class'=>'toolbox','element-content'=>'Dictionary'));
-		$html.=$this->arr['Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('style'=>'float:left;clear:both;padding:0 10px;margin:5px;'));
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h2','class'=>'toolbox','element-content'=>'Dictionary'));
+		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('style'=>'float:left;clear:both;padding:0 10px;margin:5px;'));
 		return $html;
 	}
 	
@@ -180,8 +180,8 @@ class Dictionary{
 		$toolbox=array('Name'=>'Dictionary',
 					   'Content'=>array('class'=>__CLASS__,'method'=>'dictToolbox','args'=>array(),'settings'=>array())
 					   );
-		$toolbox=$this->arr['Datapool\Foundation\Access']->addRights($toolbox,'ALL_CONTENTADMIN_R','ADMIN_R');
-		$toolbox=$this->arr['Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
+		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($toolbox,'ALL_CONTENTADMIN_R','ADMIN_R');
+		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
 		if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['ElementId'])){$_SESSION['page state']['toolbox']=$toolbox['ElementId'];}
 		return $toolbox;
 	}
