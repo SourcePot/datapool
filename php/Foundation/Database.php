@@ -426,6 +426,7 @@ class Database{
 		$right=intval($rights['Read']);
 		$sql="SELECT ".$return." FROM `".$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
 		$stmt=$this->executeStatement($sql);
+		$entries=array();
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			foreach($row as $column=>$value){
 				$row=$this->addColumnValue2result($row,$column,$value,$this->entryTemplates[$selector['Source']]);
