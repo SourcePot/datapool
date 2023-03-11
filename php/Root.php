@@ -82,6 +82,7 @@ final class Root{
 									 'Foundation/Backbone.php'=>array('dirname'=>'Foundation','component'=>'Backbone.php'),
 									 'Foundation/Haystack.php'=>array('dirname'=>'Foundation','component'=>'Haystack.php'),
 									 'Foundation/Database.php'=>array('dirname'=>'Foundation','component'=>'Database.php'),
+									 'Foundation/Definitions.php'=>array('dirname'=>'Foundation','component'=>'Definitions.php'),
 									 'Foundation/Dictionary.php'=>array('dirname'=>'Foundation','component'=>'Dictionary.php'),
 									 'Tools/HTMLbuilder.php'=>array('dirname'=>'Tools','component'=>'HTMLbuilder.php'),
 									 'Foundation/Logging.php'=>array('dirname'=>'Foundation','component'=>'Logging.php'),
