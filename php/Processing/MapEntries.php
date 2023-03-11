@@ -254,7 +254,7 @@ class MapEntries{
 		}
 		if (!isset($result['Log'])){$result['Log']=array();}
 		// copy base key values across
-		$baseKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($sourceEntry);
+		$baseKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($sourceEntry['Source']);
 		foreach($baseKeys as $key=>$def){
 			if (strcmp($key,'File content')===0 || strcmp($key,'Content')===0 || strcmp($key,'Params')===0 || strcmp($key,'EntryId')===0){continue;}
 			$targetEntry[$key]=$sourceEntry[$key];

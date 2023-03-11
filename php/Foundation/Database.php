@@ -19,8 +19,7 @@ class Database{
 
 	private $dbObj;
 	private $dbName=FALSE;
-	private $dbInfo=array();
-
+	
 	public const ADMIN_R=32768;
 	
 	private $entryTable='settings';
@@ -40,8 +39,6 @@ class Database{
 								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
 	
-	private $entryTemplates=array();
-    
 	public function __construct($arr){
 		$this->arr=$arr;
 		$this->resetStatistic();
@@ -50,7 +47,7 @@ class Database{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->dbInfo=$this->collectDatabaseInfo();
+		$this->collectDatabaseInfo();
 		$this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
@@ -84,25 +81,13 @@ class Database{
 	public function getDbName(){return $this->dbName;}
 	
 	/**
-	* @return array|FALSE The method returns information for all columns of the provided database table or all columns of all tables if no table is provided or FALSE if the table does not exist.
-	*/
-	public function getDbInfo($table=FALSE){
-		if ($table){
-			if (isset($this->dbInfo[$table])){return $this->dbInfo[$table];}
-		} else {
-			return $this->dbInfo;
-		}
-		return FALSE;
-	}
-
-	/**
 	* @return array|FALSE The method returns entry template for all columns of the provided database table or all columns of all tables if no table is provided or FALSE if the table does not exist.
 	*/
 	public function getEntryTemplate($table=FALSE){
 		if ($table){
-			if (isset($this->entryTemplates[$table])){return $this->entryTemplates[$table];}
+			if (isset($GLOBALS['dbInfo'][$table])){return $GLOBALS['dbInfo'][$table];}
 		} else {
-			return $this->entryTemplates;
+			return $GLOBALS['dbInfo'];
 		}
 		return FALSE;
 	}
@@ -113,7 +98,7 @@ class Database{
 	public function class2source($class,$toTypeOnly=FALSE,$keepCapitalization=FALSE){
 		$source=explode('\\',$class);
 		$source=array_pop($source);
-		if ($toTypeOnly || isset($this->dbInfo[$source])){
+		if ($toTypeOnly || isset($GLOBALS['dbInfo'][$source])){
 			if (!$keepCapitalization){$source=strtolower($source);}
 			return $source;
 		} else {
@@ -122,15 +107,15 @@ class Database{
 	}
 
 	/**
-	* @return array The method returns the entry template array based on the table and template provided. The method completes the class property entryTemplates which contains all entry templates for all tables.
+	* @return array The method returns the entry template array based on the table and template provided. The method completes the class property dbInfo which contains all entry templates for all tables.
 	*/
 	public function getEntryTemplateCreateTable($table,$template=array()){
 		// This function returns the entry template based on the root entry template and
 		// the argument $template. In addition this funtion calls create table which creates and updates the
 		// database table based on the entry template.
-		$this->entryTemplates[$table]=array_merge($this->rootEntryTemplate,$template);
-		$this->createTable($table,$this->entryTemplates[$table]);
-		return $this->entryTemplates[$table];
+		$GLOBALS['dbInfo'][$table]=array_merge($this->rootEntryTemplate,$template);
+		$this->createTable($table,$GLOBALS['dbInfo'][$table]);
+		return $GLOBALS['dbInfo'][$table];
 	}
 
 	public function unifyEntry($entry){
@@ -146,7 +131,7 @@ class Database{
 	}
 
 	public function addEntryDefaults($entry,$isDebugging=FALSE){
-		$entryTemplate=$this->entryTemplates[$entry['Source']];
+		$entryTemplate=$GLOBALS['dbInfo'][$entry['Source']];
 		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry);
 		foreach($entryTemplate as $column=>$defArr){
 			if (!isset($defArr['value'])){continue;}
@@ -239,21 +224,14 @@ class Database{
 	}
 	
 	private function collectDatabaseInfo(){
-		$dbInfo=array();
 		$sql='SHOW TABLES;';
 		$stmt=$this->executeStatement($sql);
 		$tables=$stmt->fetchAll(\PDO::FETCH_ASSOC);
 		foreach($tables as $table){
 			$table=current($table);
-			$sql='SHOW COLUMNS FROM `'.$table.'`;';
-			$stmt=$this->executeStatement($sql);
-			$tableInfo=$stmt->fetchAll(\PDO::FETCH_ASSOC);
-			$this->entryTemplates[$table]=$this->rootEntryTemplate;
-			foreach($tableInfo as $columnArr){
-				$dbInfo[$table][$columnArr['Field']]=$columnArr;
-			}
+			$GLOBALS['dbInfo'][$table]=$this->rootEntryTemplate;
 		}
-		return $dbInfo;
+		return $GLOBALS['dbInfo'];
 	}
 
 	private function executeStatement($sql,$inputs=array(),$debugging=FALSE){
@@ -265,7 +243,7 @@ class Database{
 		}
 		if ($debugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__);}
 		$stmt->execute();
-		$this->arr['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);
+		if (isset($this->arr['SourcePot\Datapool\Foundation\Haystack'])){$this->arr['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);}
 		return $stmt;
 	}
 	
@@ -293,7 +271,7 @@ class Database{
 	}
 	
 	private function deleteExpiredEntries(){
-		foreach($this->dbInfo as $table=>$infoArr){
+		foreach($GLOBALS['dbInfo'] as $table=>$entryTemplate){
 			$selector=array('Source'=>$table,'Expires<'=>date('Y-m-d H:i:s'));
 			$this->deleteEntries($selector,TRUE);
 		}
@@ -313,7 +291,7 @@ class Database{
 		// e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
 		// If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
 		// e.g. 'Date|[]|Start' -> refers to column 'Date'.
-		$entryTemplate=$this->entryTemplates[$selector['Source']];
+		$entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
 		$opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
 		$sqlArr=array('sql'=>array(),'inputs'=>array());			
 		foreach($selector as $column=>$value){
@@ -404,7 +382,7 @@ class Database{
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
 		$sqlArr=$this->selector2sql($selector,);
 		$sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
-		$sqlArr=$this->addSuffix2sql($sqlArr,$this->entryTemplates[$selector['Source']],$orderBy,$isAsc,$limit,$offset);
+		$sqlArr=$this->addSuffix2sql($sqlArr,$GLOBALS['dbInfo'][$selector['Source']],$orderBy,$isAsc,$limit,$offset);
 		return $sqlArr;
 	}
 	
@@ -429,7 +407,7 @@ class Database{
 		$entries=array();
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			foreach($row as $column=>$value){
-				$row=$this->addColumnValue2result($row,$column,$value,$this->entryTemplates[$selector['Source']]);
+				$row=$this->addColumnValue2result($row,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
 			}
 			$entries[$row['EntryId']]=$row;
 		}
@@ -448,7 +426,7 @@ class Database{
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			foreach($row as $column=>$value){
-				$result=$this->addColumnValue2result($result,$column,$value,$this->entryTemplates[$selector['Source']]);
+				$result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
 			}
 			yield $result;
 			$result['isFirst']=FALSE;
@@ -477,7 +455,7 @@ class Database{
 			if (strpos($row['EntryId'],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
 			foreach($row as $column=>$value){
 				$result['hash']=crc32($result['hash'].$value);
-				$result=$this->addColumnValue2result($result,$column,$value,$this->entryTemplates[$selector['Source']]);
+				$result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
 			}
 			$result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
 			yield $result;
@@ -503,7 +481,7 @@ class Database{
 			$row=$stmt->fetch(\PDO::FETCH_ASSOC);
 			if (is_array($row)){
 				foreach($row as $column=>$value){
-					$result=$this->addColumnValue2result($result,$column,$value,$this->entryTemplates[$selector['Source']]);
+					$result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
 				}
 			} else {
 				if (!$returnMetaOnNoMatch){$result=array();}
@@ -524,7 +502,7 @@ class Database{
 	
 	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$isDebugging=FALSE){
 		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Write');
-		if (empty($this->dbInfo[$selector['Source']])){return FALSE;}
+		$entryTemplate=$this->getEntryTemplate($selector['Source']);
 		if (empty($entryList['primaryKeys'])){
 			return FALSE;
 		} else {
@@ -532,7 +510,7 @@ class Database{
 			$inputs=array();
 			$valueSql='';
 			foreach($entry as $column=>$value){
-				if (!isset($this->dbInfo[$selector['Source']][$column])){continue;}
+				if (!isset($entryTemplate[$column])){continue;}
 				if (strcmp($column,'Source')===0){continue;}
 				$sqlPlaceholder=':'.$column;
 				$valueSql.="`".$column."`=".$sqlPlaceholder.",";
@@ -575,7 +553,7 @@ class Database{
 	* @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
 	*/
 	public function insertEntry($entry){
-		if (!isset($this->dbInfo[$entry['Source']])){return FALSE;}
+		$entryTemplate=$this->getEntryTemplate($entry['Source']);
 		$entry=$this->addEntryDefaults($entry);
 		if (!empty($entry['Owner'])){
 			if (strcmp($entry['Owner'],'ANONYM')===0){
@@ -586,7 +564,7 @@ class Database{
 		$values='';
 		$inputs=array();
 		foreach ($entry as $column => $value){
-			if (!isset($this->dbInfo[$entry['Source']][$column])){continue;}
+			if (!isset($entryTemplate[$column])){continue;}
 			if (strcmp($column,'Source')===0){continue;}
 			$sqlPlaceholder=':'.$column;
 			$columns.='`'.$column.'`,';
@@ -624,7 +602,7 @@ class Database{
 		// The existing entry is selecvted by kay, i.e. the primary key must to be provided!
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
 		$existingEntry=$this->hasEntry($entry,$isSystemCall,TRUE);
-		if (empty($existingEntry['rowCount']) && isset($this->dbInfo[$entry['Source']])){
+		if (empty($existingEntry['rowCount']) && isset($GLOBALS['dbInfo'][$entry['Source']])){
 			$existingEntry=$this->insertEntry($entry);
 		}
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){

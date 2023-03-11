@@ -321,7 +321,7 @@ class HTMLbuilder{
 		$html='';
 		if (empty($arr['Source'])){return $html;}
 		$fileContentKeys=array();
-		$keys=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($arr);
+		$keys=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
 		if (empty($arr['standardColumsOnly'])){
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,TRUE) as $tmpEntry){
 				if ($tmpEntry['isSkipRow']){continue;}

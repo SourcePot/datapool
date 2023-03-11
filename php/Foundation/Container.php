@@ -197,7 +197,7 @@ class Container{
 		$debugArr=array('arr in'=>$arr,'settings in'=>$settings);
 		if (!isset($arr['html'])){$arr['html']='';}
 		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($arr['selector']);
-		$tableInfo=$this->arr['SourcePot\Datapool\Foundation\Database']->getDbInfo($arr['selector']['Source']);
+		$tableInfo=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['selector']['Source']);
 		$flatDefinition=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition);
 		$entryCanWrite=!empty($this->arr['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write'));
 		if (empty($arr['selector'])){

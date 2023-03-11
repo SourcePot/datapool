@@ -15,6 +15,7 @@ class Dictionary{
 	
 	private $arr;
 
+	private $dbObj=FALSE;
 	private $entryTable='';
 	private $entryTemplate=array();
 	
@@ -29,7 +30,8 @@ class Dictionary{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->dbObj=new \SourcePot\Datapool\Foundation\Database($arr);
+		$this->entryTemplate=$this->dbObj->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->initDictionaryIfEmpty();
 		$this->registerToolbox();
 		return $this->arr;
@@ -37,7 +39,7 @@ class Dictionary{
 	
 	private function initDictionaryIfEmpty(){
 		$added=0;
-		$hasEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
+		$hasEntry=$this->dbObj->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
 		if (empty($hasEntry)){
 			$transl=array('de'=>array('Add'=>'Hinzufügen','Save'=>'Speichern','Update'=>'Aktualisieren','Login'=>'Anmelden','Logout'=>'Abmelden',
 									  'Register'=>'Registrieren','Send login link'=>'Login link anfordern','Password'=>'Passwort','...repeat'=>'...wiederholen','Delete'=>'Löschen',
@@ -92,7 +94,7 @@ class Dictionary{
 		if ($translation===FALSE){
 			// translation request
 			$selector=array('Source'=>$this->entryTable,'EntryId'=>$elementId);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+			$entry=$this->dbObj->entryById($selector);
 			if (empty($entry)){
 				return $phrase;
 			} else {
@@ -101,8 +103,8 @@ class Dictionary{
 		} else {
 			// update translation
 			$entry=array('Source'=>$this->entryTable,'phrase'=>$phrase,'translation'=>$translation,'langCode'=>$langCode);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+			$entry=$this->dbObj->unifyEntry($entry);
+			$this->dbObj->updateEntry($entry);
 			return $translation;
 		}
 		return $phrase;
@@ -147,12 +149,12 @@ class Dictionary{
 		if (isset($formData['cmd']['update']) && !empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$translation=array('Source'=>$this->entryTable,'phrase'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'translation'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'langCode'=>$langCode);
-			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($translation);
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($translation);	
+			$translation=$this->dbObj->unifyEntry($translation);
+			$this->dbObj->updateEntry($translation);	
 		} else if (!empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$elementId=md5($formData['val']['phrase']['en'].'|'.$langCode);
-			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$this->entryTable,'EntryId'=>$elementId));
+			$translation=$this->dbObj->entryById(array('Source'=>$this->entryTable,'EntryId'=>$elementId));
 			if (empty($translation)){
 				$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]='';
 			} else {

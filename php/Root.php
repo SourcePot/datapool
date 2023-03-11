@@ -80,7 +80,6 @@ final class Root{
 									 'Foundation/Access.php'=>array('dirname'=>'Foundation','component'=>'Access.php'),
 									 'Foundation/Filespace.php'=>array('dirname'=>'Foundation','component'=>'Filespace.php'),
 									 'Foundation/Backbone.php'=>array('dirname'=>'Foundation','component'=>'Backbone.php'),
-									 'Foundation/Haystack.php'=>array('dirname'=>'Foundation','component'=>'Haystack.php'),
 									 'Foundation/Database.php'=>array('dirname'=>'Foundation','component'=>'Database.php'),
 									 'Foundation/Definitions.php'=>array('dirname'=>'Foundation','component'=>'Definitions.php'),
 									 'Foundation/Dictionary.php'=>array('dirname'=>'Foundation','component'=>'Dictionary.php'),

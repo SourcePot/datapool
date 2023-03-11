@@ -82,8 +82,8 @@ class DataExplorer{
 	private function completeDefintion(){
 		// add Source selector
 		$sourceOptions=array(''=>'&larrhk;');
-		$dbInfo=$this->arr['SourcePot\Datapool\Foundation\Database']->getDbInfo();
-		foreach($dbInfo as $Source=>$defArr){$sourceOptions[$Source]=$Source;}
+		$dbInfo=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate();
+		foreach($dbInfo as $Source=>$entryTemplate){$sourceOptions[$Source]=$Source;}
 		$functionOptions=array(''=>'&larrhk;');
 		$this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
 		// add data processors
