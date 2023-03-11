@@ -43,7 +43,7 @@ class Explorer{
 		$this->state=array('Source'=>array('Label'=>'Source','Selected'=>FALSE,'orderBy'=>'Source','isAsc'=>TRUE),
 						   'Group'=>array('Label'=>'Group','Selected'=>FALSE,'orderBy'=>'Group','isAsc'=>TRUE),
 						   'Folder'=>array('Label'=>'Folder','Selected'=>FALSE,'orderBy'=>'Folder','isAsc'=>TRUE),
-						   'ElementId'=>array('Label'=>'Name','Selected'=>FALSE,'orderBy'=>'Name','isAsc'=>TRUE)
+						   'EntryId'=>array('Label'=>'Name','Selected'=>FALSE,'orderBy'=>'Name','isAsc'=>TRUE)
 						  );
 		return $this->state;
 	}
@@ -51,8 +51,8 @@ class Explorer{
 	private function session2state($callingClass){
 		// This function copies the page state to the class state var.
 		$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-		if (!empty($selector['ElementId'])){
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector);
+		if (!empty($selector['EntryId'])){
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
 			if (!empty($entry)){$selector=$entry;}
 		}
 		$this->initStateArr();
@@ -74,7 +74,7 @@ class Explorer{
 				$guideEntry['Type']='__'.$column.'__';
 			}
 			$guideEntry=$this->completeGuideEntry($callingClass,$guideEntry,$prevGuideEntry);
-			$this->guideEntries[$column]=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($guideEntry,TRUE);
+			$this->guideEntries[$column]=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($guideEntry,TRUE);
 			$prevGuideEntry=$this->guideEntries[$column];
 		}	
 		return $this->guideEntries;
@@ -86,13 +86,13 @@ class Explorer{
 			$entryTemplate=$this->arr[$callingClass]->getEntryTemplate();
 			$prevGuideEntry=array('Read'=>$entryTemplate['Read']['value'],'Write'=>$entryTemplate['Write']['value'],'Owner'=>$entryTemplate['Owner']['value']);
 		} else {
-			$prevGuideEntry['Owner']=$_SESSION['currentUser']['ElementId'];
+			$prevGuideEntry['Owner']=$_SESSION['currentUser']['EntryId'];
 		}
 		foreach($keysToSet as $keyIndex=>$key){
 			$guideEntry[$key]=$this->arr['SourcePot\Datapool\Foundation\Access']->accessString2int($prevGuideEntry[$key],FALSE);
 		}
-		if (isset($guideEntry['ElementId'])){unset($guideEntry['ElementId']);}
-		$guideEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($guideEntry,array('Source','Group','Folder'),0,'-guideEntry');
+		if (isset($guideEntry['EntryId'])){unset($guideEntry['EntryId']);}
+		$guideEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($guideEntry,array('Source','Group','Folder'),0,'-guideEntry');
 		return $guideEntry;
 	}
 			
@@ -112,7 +112,7 @@ class Explorer{
 					$hadMatch=TRUE;
 					if (strpos($value,'__')!==FALSE){	
 						$value=FALSE;
-						$selector=$this->setSelectorByKey($callingClass,'ElementId',FALSE);
+						$selector=$this->setSelectorByKey($callingClass,'EntryId',FALSE);
 					}
 				}
 				$selector=$this->setSelectorByKey($callingClass,$column,$value);	
@@ -120,7 +120,7 @@ class Explorer{
 		} else if (isset($formData['cmd']['update file']) || isset($formData['cmd']['add files'])){
 			$key=key($formData['cmd']);
 			foreach($formData['files'][$key] as $fileIndex=>$fileArr){
-				$this->arr['SourcePot\Datapool\Tools\FileTools']->file2entries($fileArr,$this->getEntryTemplate($callingClass));
+				$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$this->getEntryTemplate($callingClass));
 			}
 		} else if (isset($formData['cmd']['add'])){
 			$column=$formData['cmd']['add'];
@@ -142,7 +142,7 @@ class Explorer{
 			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
 			$selector=$this->setSelectorByKey($callingClass,$selectedColumn,FALSE);
 		} else if (isset($formData['cmd']['download'])){
-			$this->arr['SourcePot\Datapool\Tools\FileTools']->entry2fileDownload($selector);
+			$this->arr['SourcePot\Datapool\Foundation\Filespace']->entry2fileDownload($selector);
 		}
 	}
 	
@@ -204,9 +204,9 @@ class Explorer{
 				$selector[$selectorStateKey]=$selectorState['Selected'];
 			}
 			$options=array('__'.$column.'__'=>'&larrhk;');
-			if (strcmp($column,'ElementId')===0){$selector['Name!']='&larrhk;';} else {$selector[$column.'!']='__SKIP__';}
+			if (strcmp($column,'EntryId')===0){$selector['Name!']='&larrhk;';} else {$selector[$column.'!']='__SKIP__';}
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$orderBy,$isAsc) as $row){
-				if (!isset($row[$label])){$row=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($row);}
+				if (!isset($row[$label])){$row=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($row);}
 				$options[$row[$column]]=$row[$label];
 			}
 			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>$column,'value'=>$this->state[$column]['Selected'],'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','class'=>'explorer'));
@@ -218,8 +218,8 @@ class Explorer{
 	private function addEntry($callingClass,$stateKey){
 		$h2Arr=array('tag'=>'h3','element-content'=>'Add');
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($h2Arr);
-		if (strcmp($stateKey,'ElementId')===0){
-			if (empty($this->state['ElementId']['Selected'])){
+		if (strcmp($stateKey,'EntryId')===0){
+			if (empty($this->state['EntryId']['Selected'])){
 				$key=array('add files');
 				$label='Add file(s)';
 				$fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
@@ -249,9 +249,9 @@ class Explorer{
 		$h2Arr=array('tag'=>'h3','element-content'=>'Edit');
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($h2Arr);
 		$btnKey=$setKey;
-		if (strcmp($setKey,'ElementId')===0){
-			$selector=array('Source'=>$this->state['Source']['Selected'],'ElementId'=>$this->state['ElementId']['Selected']);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector);
+		if (strcmp($setKey,'EntryId')===0){
+			$selector=array('Source'=>$this->state['Source']['Selected'],'EntryId'=>$this->state['EntryId']['Selected']);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
 			if (!empty($entry)){$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,array(),array());}
 		} else {
 			$value=$this->state[$setKey]['Selected'];
@@ -281,9 +281,9 @@ class Explorer{
 	private function sendEmail($callingClass,$setKey){
 		$html='';
 		$selector=$this->selectorFromState($callingClass);
-		if (!empty($selector['ElementId'])){
+		if (!empty($selector['EntryId'])){
 			$matrix=array();
-			$mail=array('selector'=>$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector));
+			$mail=array('selector'=>$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector));
 			$template=array('val'=>array('To'=>'','Subject'=>'Das wollte ich Dir schicken...','From'=>$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract(FALSE,5)),
 							'filter'=>array('To'=>FILTER_SANITIZE_EMAIL,'Subject'=>'','From'=>FILTER_SANITIZE_EMAIL)
 							);
@@ -337,11 +337,11 @@ class Explorer{
 	
 	private function getEntryTemplate($callingClass){
 		$entryTemplate=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-		if (empty($entryTemplate['ElementId'])){
+		if (empty($entryTemplate['EntryId'])){
 			$entryTemplate=$this->getGuideEntry();
 			unset($entryTemplate['Name']);
 			unset($entryTemplate['Type']);
-			unset($entryTemplate['ElementId']);
+			unset($entryTemplate['EntryId']);
 		}
 		return $entryTemplate;
 	}
@@ -352,8 +352,8 @@ class Explorer{
 	}
 
 	public function guideEntry2selector($guideEntry){
-		if (empty($guideEntry['ElementId'])){return $guideEntry;}
-		if (empty(strpos($guideEntry['ElementId'],'-guideEntry'))){return $guideEntry;}
+		if (empty($guideEntry['EntryId'])){return $guideEntry;}
+		if (empty(strpos($guideEntry['EntryId'],'-guideEntry'))){return $guideEntry;}
 		$selector=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE);
 		foreach($selector as $key=>$initValue){
 			if (!isset($guideEntry[$key])){continue;}

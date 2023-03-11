@@ -84,7 +84,7 @@ class User{
 	public function init($arr){
 		$this->arr=$arr;
 		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$this->pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
+		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		$this->userRols();
 		// check database user entry definition 
 		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
@@ -102,7 +102,7 @@ class User{
 		$entry=$this->userRols;
 		$entry['Class']=__CLASS__;
 		$entry['SettingName']=__FUNCTION__;
-		$this->userRols=$this->arr['SourcePot\Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($entry,TRUE);
+		$this->userRols=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($entry,TRUE);
 		return $this->userRols;
 	}
 	
@@ -119,7 +119,7 @@ class User{
 	}
 	
 	private function getCurrentUser(){
-		if (empty($_SESSION['currentUser']['ElementId']) || empty($_SESSION['currentUser']['Privileges'])){$this->anonymousUserLogin();}
+		if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges'])){$this->anonymousUserLogin();}
 		return $_SESSION['currentUser'];
 	}
 	
@@ -153,7 +153,7 @@ class User{
 		$noAdminAccountFound=empty($this->arr['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
 		if ($noAdminAccountFound){
 			$admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R','Email'=>$this->pageSettings['emailWebmaster'],'Password'=>bin2hex(random_bytes(16)),'Owner'=>'SYSTEM');
-			$admin['ElementId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
+			$admin['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
 			$admin['LoginId']=$this->arr['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
 			$admin['Content']['Contact details']['First name']='Admin';
 			$admin['Content']['Contact details']['Family name']='Admin';
@@ -164,7 +164,7 @@ class User{
 				$adminFile=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
 				$adminFile['Content']['Admin email']=$admin['Email'];
 				$adminFile['Content']['Admin password']=$admin['Password'];
-				$access=$this->arr['SourcePot\Datapool\Tools\FileTools']->updateEntry($adminFile,TRUE);
+				$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->updateEntry($adminFile,TRUE);
 				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 				return TRUE;
 			}
@@ -173,7 +173,7 @@ class User{
 	}
 	
 	public function newlyRegisteredUserLogin($user){
-		$user['Owner']=$user['ElementId'];
+		$user['Owner']=$user['EntryId'];
 		$user['LoginId']=$user['LoginId'];
 		$user=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']='REGISTERED_R';
@@ -188,14 +188,14 @@ class User{
 		if (empty($arr)){
 			$user=$_SESSION['currentUser'];
 		} else if (!is_array($arr)){
-			$user=array('Source'=>$this->entryTable,'ElementId'=>$arr);
+			$user=array('Source'=>$this->entryTable,'EntryId'=>$arr);
 		} else if (isset($arr['selector'])){
 			$user=$arr['selector'];
 		} else {
 			$user=$arr;
 		}
 		if (!isset($user['Content'])){
-			$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($user);
+			$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user);
 		}
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if ($template===0){
@@ -227,10 +227,10 @@ class User{
 	public function userAccountForm($arr){
 		$template=array('html'=>'');
 		$arr=array_merge($template,$arr);
-		if (isset($arr['selector']['ElementId'])){
+		if (isset($arr['selector']['EntryId'])){
 			if (!isset($arr['selector']['Type'])){$arr['selector']['Type']='user';}
 			$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($arr['selector']);
-			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr['selector'],TRUE);
+			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
 			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$arr['selector']);
 		}
 		return $arr;

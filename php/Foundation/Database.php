@@ -26,7 +26,7 @@ class Database{
 	private $entryTable='settings';
 	private $entryTemplate=array();
 
-	private $rootEntryTemplate=array('ElementId'=>array('index'=>'PRIMARY','type'=>'VARCHAR(255)','value'=>'{{ElementId}}','Description'=>'This is the unique entry key, e.g. ElementId, User hash, etc.','Write'=>0),
+	private $rootEntryTemplate=array('EntryId'=>array('index'=>'PRIMARY','type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0),
 								 'Group'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
 								 'Folder'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
 								 'Name'=>array('index'=>'NAME_IND','type'=>'VARCHAR(1024)','value'=>'...','Description'=>'Third level ordering criterion'),
@@ -37,7 +37,7 @@ class Database{
 								 'Expires'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'2999-01-01 01:00:00','Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
 								 'Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>self::ADMIN_R,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>self::ADMIN_R,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
-								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s ElementId or SYSTEM. The Owner has Read and Write access.')
+								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
 	
 	private $entryTemplates=array();
@@ -79,18 +79,32 @@ class Database{
 	}
 	
 	/**
-	* @return array|FALSE The method returns information for all columns of the provided database table or all columns of all tables if no table is provided or FALS if the table does not exist.
+	* @return string|FALSE The method returns the database name or FALSE if connection to the database failed.
+	*/
+	public function getDbName(){return $this->dbName;}
+	
+	/**
+	* @return array|FALSE The method returns information for all columns of the provided database table or all columns of all tables if no table is provided or FALSE if the table does not exist.
 	*/
 	public function getDbInfo($table=FALSE){
 		if ($table){
-			if (isset($this->dbInfo[$table])){
-				return $this->dbInfo[$table];
-			} else {
-				return FALSE;
-			}
+			if (isset($this->dbInfo[$table])){return $this->dbInfo[$table];}
 		} else {
 			return $this->dbInfo;
 		}
+		return FALSE;
+	}
+
+	/**
+	* @return array|FALSE The method returns entry template for all columns of the provided database table or all columns of all tables if no table is provided or FALSE if the table does not exist.
+	*/
+	public function getEntryTemplate($table=FALSE){
+		if ($table){
+			if (isset($this->entryTemplates[$table])){return $this->entryTemplates[$table];}
+		} else {
+			return $this->entryTemplates;
+		}
+		return FALSE;
 	}
 	
 	/**
@@ -119,23 +133,6 @@ class Database{
 		return $this->entryTemplates[$table];
 	}
 
-	/**
-	* @return array The method returns the entry template array based on the provided selector.
-	*/
-	public function entryTemplate($selector){
-		if (empty($selector['Source'])){
-			throw new \ErrorException('Function '.__FUNCTION__.': Missing Source key in argument selector',0,E_ERROR,__FILE__,__LINE__);
-		} else {
-			$table=$selector['Source'];
-			if (isset($this->entryTemplates[$table])){
-				$entryTemplate=$this->entryTemplates[$table];
-			} else {
-				$entryTemplate=$this->rootEntryTemplate;
-			}
-		}
-		return $entryTemplate;
-	}
-
 	public function unifyEntry($entry){
 		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
 		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
@@ -149,7 +146,7 @@ class Database{
 	}
 
 	public function addEntryDefaults($entry,$isDebugging=FALSE){
-		$entryTemplate=$this->entryTemplate($entry);
+		$entryTemplate=$this->entryTemplates[$entry['Source']];
 		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry);
 		foreach($entryTemplate as $column=>$defArr){
 			if (!isset($defArr['value'])){continue;}
@@ -173,16 +170,16 @@ class Database{
 		$toReplace['{{TOMORROW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
 		$toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
 		$toReplace['{{Expires}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
-		$toReplace['{{ElementId}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getElementId();
-		if (!isset($_SESSION['currentUser']['ElementId'])){
+		$toReplace['{{EntryId}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+		if (!isset($_SESSION['currentUser']['EntryId'])){
 			$toReplace['{{Owner}}']='SYSTEM';
-		} else if (strpos($_SESSION['currentUser']['ElementId'],'EID')===FALSE){
-			$toReplace['{{Owner}}']=$_SESSION['currentUser']['ElementId'];
+		} else if (strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
+			$toReplace['{{Owner}}']=$_SESSION['currentUser']['EntryId'];
 		} else {
 			$toReplace['{{Owner}}']='ANONYM';
 		}
 		if (isset($this->arr['SourcePot\Datapool\Tools\HTMLbuilder'])){
-			$pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
+			$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 			$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
 			$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
 		}
@@ -225,40 +222,6 @@ class Database{
 		return $result;
 	}
 
-
-
-
-
-	/**
-	* @return array|FALSE Based on the selector['Source'] argument provided, the method returns the key and value (if provided) in selector of the primary key column. If this fails it returns FALSE.
-	*/
-	public function getPrimaryKeyValue($selector){
-		if (empty($selector['Source'])){
-			throw new \ErrorException('Function '.__FUNCTION__.': Missing Source key in argument selector',0,E_ERROR,__FILE__,__LINE__);
-		}
-		$result=FALSE;
-		if (isset($this->dbInfo[$selector['Source']])){
-			foreach($this->dbInfo[$selector['Source']] as $column=>$defArr){
-				if (empty($defArr["Key"])){continue;}
-				if (strcmp($defArr["Key"],'PRI')===0){
-					// get template
-					if (isset($this->entryTemplates[$selector['Source']])){
-						$entryTemplate=$this->entryTemplates[$selector['Source']];
-					} else {
-						$entryTemplate=$this->rootEntryTemplate;
-					}
-					$result=array('entryTemplate'=>$entryTemplate,'primaryKey'=>$column);
-					// get primary value
-					if (isset($selector[$column])){$result['primaryValue']=$selector[$column];} else {$result['primaryValue']=FALSE;}
-					break;
-				}
-			}
-		}
-		return $result;
-	}
-
-	public function getDbName(){return $this->dbName;}	
-	
 	private function connect($arr){
 		// This function establishes the database connection and saves the PDO-object in dbObj.
 		// The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
@@ -268,7 +231,7 @@ class Database{
 		$access=array('Class'=>__CLASS__,'SettingName'=>'connect');
 		$access['Read']=65535;
 		$access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
-		$access=$this->arr['SourcePot\Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($access,TRUE);
+		$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
 		$this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
 		$this->dbObj->exec("SET CHARACTER SET 'utf8'");
 		$this->dbName=$access['Content']['dbName'];
@@ -285,6 +248,7 @@ class Database{
 			$sql='SHOW COLUMNS FROM `'.$table.'`;';
 			$stmt=$this->executeStatement($sql);
 			$tableInfo=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+			$this->entryTemplates[$table]=$this->rootEntryTemplate;
 			foreach($tableInfo as $columnArr){
 				$dbInfo[$table][$columnArr['Field']]=$columnArr;
 			}
@@ -341,7 +305,7 @@ class Database{
 		return preg_match('/[^\\\\][%_]{1}/',$string);
 	}
 	
-	private function selector2sql($selector,$entryTemplate){
+	private function selector2sql($selector){
 		// This function creates a sql-query from a selector.
 		// For types VARCHAR and BLOB the mysql keyword LIKE is used, for all other datatypes math operators will be used.
 		// f no operator is provided the '=' operator will be applied. Use '!' operator for 'NOT EQUAL'.
@@ -349,6 +313,7 @@ class Database{
 		// e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
 		// If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
 		// e.g. 'Date|[]|Start' -> refers to column 'Date'.
+		$entryTemplate=$this->entryTemplates[$selector['Source']];
 		$opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
 		$sqlArr=array('sql'=>array(),'inputs'=>array());			
 		foreach($selector as $column=>$value){
@@ -435,17 +400,16 @@ class Database{
 		return $result;	
 	}
 	
-	private function standardSelectQuery($selector,$primaryKeyValue,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
+	private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-		$sqlArr=$this->selector2sql($selector,$primaryKeyValue['entryTemplate']);
+		$sqlArr=$this->selector2sql($selector,);
 		$sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
-		$sqlArr=$this->addSuffix2sql($sqlArr,$primaryKeyValue['entryTemplate'],$orderBy,$isAsc,$limit,$offset);
+		$sqlArr=$this->addSuffix2sql($sqlArr,$this->entryTemplates[$selector['Source']],$orderBy,$isAsc,$limit,$offset);
 		return $sqlArr;
 	}
 	
 	public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
-		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
-		$sqlArr=$this->standardSelectQuery($selector,$primaryKeyValue,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
 		$selectExprSQL='';
 		$sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 		$sqlArr['sql'].=';';
@@ -457,27 +421,23 @@ class Database{
 	
 	public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
 		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable());
-		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
-		if (empty($primaryKeyValue)){return FALSE;} else {$entries=array();}
-		if ($returnPrimaryKeyOnly){$return=$primaryKeyValue['primaryKey'];} else {$return='*';}
+		if ($returnPrimaryKeyOnly){$return='EntryId';} else {$return='*';}
 		$rights=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights(array(),$right,$right);
 		$right=intval($rights['Read']);
 		$sql="SELECT ".$return." FROM `".$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
 		$stmt=$this->executeStatement($sql);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			foreach($row as $column=>$value){
-				$row=$this->addColumnValue2result($row,$column,$value,$primaryKeyValue['entryTemplate']);
+				$row=$this->addColumnValue2result($row,$column,$value,$this->entryTemplates[$selector['Source']]);
 			}
-			$entries[$row[$primaryKeyValue['primaryKey']]]=$row;
+			$entries[$row['EntryId']]=$row;
 		}
 		return $entries;
 	}
 	
 	public function getDistinct($selector,$column,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE){
 		$column=trim($column,'!');
-		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
-		if (empty($primaryKeyValue)){return array();}
-		$sqlArr=$this->standardSelectQuery($selector,$primaryKeyValue,$isSystemCall,$rightType,$orderBy,$isAsc,$limit=FALSE,$offset=FALSE);
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit=FALSE,$offset=FALSE);
 		$selectExprSQL='';
 		$sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 		$sqlArr['sql'].=';';
@@ -487,7 +447,7 @@ class Database{
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			foreach($row as $column=>$value){
-				$result=$this->addColumnValue2result($result,$column,$value,$primaryKeyValue['entryTemplate']);
+				$result=$this->addColumnValue2result($result,$column,$value,$this->entryTemplates[$selector['Source']]);
 			}
 			yield $result;
 			$result['isFirst']=FALSE;
@@ -498,27 +458,25 @@ class Database{
 	
 	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array()){
 		if (empty($selector['Source'])){return FALSE;}
-		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
-		if (empty($primaryKeyValue)){return array();}
-		$sqlArr=$this->standardSelectQuery($selector,$primaryKeyValue,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
 		if (empty($selectExprArr)){
 			$selectExprSQL=$selector['Source'].'.*';
 		} else {
-			if (!in_array($primaryKeyValue['primaryKey'],$selectExprArr)){$selectExprArr[]=$primaryKeyValue['primaryKey'];}
+			if (!in_array('EntryId',$selectExprArr)){$selectExprArr[]='EntryId';}
 			$selectExprSQL=$selector['Source'].'.'.implode(','.$selector['Source'].'.',$selectExprArr);
 		}
 		$sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 		$sqlArr['sql'].=';';
 		//var_dump($sqlArr);
-		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':ElementIdEQ'])){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($sqlArr);}
+		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':EntryIdEQ'])){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($sqlArr);}
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
 		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
-			if (strpos($row[$primaryKeyValue['primaryKey']],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
+			if (strpos($row['EntryId'],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
 			foreach($row as $column=>$value){
 				$result['hash']=crc32($result['hash'].$value);
-				$result=$this->addColumnValue2result($result,$column,$value,$primaryKeyValue['entryTemplate']);
+				$result=$this->addColumnValue2result($result,$column,$value,$this->entryTemplates[$selector['Source']]);
 			}
 			$result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
 			yield $result;
@@ -528,24 +486,23 @@ class Database{
 		return $result;
 	}
 	
-	public function entryByKey($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE){
+	public function entryById($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE){
 		$result=array();
 		if (empty($selector['Source'])){return $result;}
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-		$primaryArr=$this->getPrimaryKeyValue($selector);
-		if (!empty($primaryArr['primaryValue'])){
-			$sqlPlaceholder=':'.$primaryArr['primaryKey'];
-			$sqlArr=array('sql'=>"SELECT * FROM `".$selector['Source']."` WHERE `".$primaryArr['primaryKey']."`=".$sqlPlaceholder,'inputs'=>array($sqlPlaceholder=>$primaryArr['primaryValue']));
+		if (!empty($selector['EntryId'])){
+			$sqlPlaceholder=':'.'EntryId';
+			$sqlArr=array('sql'=>"SELECT * FROM `".$selector['Source']."` WHERE `".'EntryId'."`=".$sqlPlaceholder,'inputs'=>array($sqlPlaceholder=>$selector['EntryId']));
 			$sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
 			$sqlArr['sql'].=';';
 			//var_dump($sqlArr);
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-			$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>$primaryArr['primaryKey'],'primaryValue'=>$primaryArr['primaryValue'],'Source'=>$selector['Source']);
+			$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source']);
 			$this->addStatistic('matches',$result['rowCount']);
 			$row=$stmt->fetch(\PDO::FETCH_ASSOC);
 			if (is_array($row)){
 				foreach($row as $column=>$value){
-					$result=$this->addColumnValue2result($result,$column,$value,$primaryArr['entryTemplate']);
+					$result=$this->addColumnValue2result($result,$column,$value,$this->entryTemplates[$selector['Source']]);
 				}
 			} else {
 				if (!$returnMetaOnNoMatch){$result=array();}
@@ -554,20 +511,18 @@ class Database{
 		return $result;
 	}
 
-	private function sqlPrimaryKeyListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
-		$result=$this->getPrimaryKeyValue($selector);
-		$result['primaryKeys']=array();
-		$result['sql']='';
-		foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,array($result['primaryKey'])) as $row){
-			$result['sql'].=",'".$row[$result['primaryKey']]."'";
-			$result['primaryKeys'][]=$row[$result['primaryKey']];
+	private function sqlEntryIdListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
+		$result=array('primaryKeys'=>array(),'sql'=>'');
+		foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,array('EntryId')) as $row){
+			$result['sql'].=",'".$row['EntryId']."'";
+			$result['primaryKeys'][]=$row['EntryId'];
 		}
-		$result['sql']='WHERE `'.$result['primaryKey'].'` IN('.trim($result['sql'],',').')';
+		$result['sql']='WHERE `'.'EntryId'.'` IN('.trim($result['sql'],',').')';
 		return $result;
 	}	
 	
 	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$isDebugging=FALSE){
-		$entryList=$this->sqlPrimaryKeyListSelector($selector,$isSystemCall,'Write');
+		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Write');
 		if (empty($entryList['primaryKeys'])){
 			return FALSE;
 		} else {
@@ -591,9 +546,7 @@ class Database{
 	
 	public function deleteEntriesOnly($selector,$isSystemCall=FALSE){
 		if (empty($selector['Source'])){return FALSE;}
-		$primaryKeyValue=$this->getPrimaryKeyValue($selector);
-		if (empty($primaryKeyValue)){return array();}
-		$sqlArr=$this->standardSelectQuery($selector,$primaryKeyValue,$isSystemCall,'Write');
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write');
 		$sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
 		//var_dump($sqlArr);
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
@@ -603,11 +556,11 @@ class Database{
 	public function deleteEntries($selector,$isSystemCall=FALSE){
 		$this->deleteEntriesOnly($selector,$isSystemCall);
 		// delete files
-		$entryList=$this->sqlPrimaryKeyListSelector($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE);
+		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE);
 		if (empty($entryList['primaryKeys'])){return FALSE;}
 		foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
 			$entrySelector=array('Source'=>$selector['Source'],$entryList['primaryKey']=>$primaryKeyValue);
-			$fileToDelete=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entrySelector);
+			$fileToDelete=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
 			if (is_file($fileToDelete)){
 				$this->addStatistic('removed',1);
 				unlink($fileToDelete);
@@ -639,7 +592,7 @@ class Database{
 			if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 			$inputs[$sqlPlaceholder]=strval($value);
 		}
-		$sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `ElementId`='".$entry['ElementId']."';";
+		$sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
 		$stmt=$this->executeStatement($sql,$inputs,FALSE);
 		$this->addStatistic('inserted',$stmt->rowCount());
 		return $entry;
@@ -648,24 +601,23 @@ class Database{
 	public function updateEntry($entry,$isSystemCall=FALSE){
 		// This function updates the selected entry or inserts a new entry.
 		// The primary key needs to be provided.
-		$existingEntry=$this->entryByKey($entry,TRUE,'Write',TRUE);
+		$existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
 		if (empty($existingEntry['rowCount'])){
 			$entry=$this->insertEntry($entry);
 		} else {
 			// update entry
-			$primaryKeyValue=$this->getPrimaryKeyValue($entry);
-			unset($entry[$primaryKeyValue['primaryKey']]);
-			$selector=array('Source'=>$entry['Source'],$primaryKeyValue['primaryKey']=>$primaryKeyValue['primaryValue']);
+			$selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
+			unset($entry['EntryId']);
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
 			$this->updateEntries($selector,$entry,$isSystemCall);
-			$entry=$this->entryByKey($selector,$isSystemCall,'Write');
+			$entry=$this->entryById($selector,$isSystemCall,'Write');
 		}
 		return $entry;
 	}
 	
-	public function entryByKeyCreateIfMissing($entry,$isSystemCall=FALSE){
+	public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
 		// This function updates the selected entry or inserts a new entry.
 		// The existing entry is selecvted by kay, i.e. the primary key must to be provided!
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
@@ -685,59 +637,59 @@ class Database{
 		if (empty($selector['Source'])){
 			throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);	
 		}
-		if (empty($selector['ElementId'])){
+		if (empty($selector['EntryId'])){
 			foreach($this->entryIterator($selector,$isSystemCall,'Read',FALSE,TRUE,1) as $entry){
 				return $entry;
 			}
 		} else {
-			return $this->entryByKey($selector,TRUE,'Read',$returnMetaOnNoMatch);
+			return $this->entryById($selector,TRUE,'Read',$returnMetaOnNoMatch);
 		}
 		return FALSE;
 	}
 	
-	public function moveEntryByElementId($entry,$targetSelector){
-		$entryFileName=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entry);
-		$targetFileName=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($targetSelector);
-		// backup an existing entry with ElementId=$targetSelector
-		$return=$this->entryByKey($targetSelector);
+	public function moveEntryByEntryId($entry,$targetSelector){
+		$entryFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+		$targetFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetSelector);
+		// backup an existing entry with EntryId=$targetSelector
+		$return=$this->entryById($targetSelector);
 		if (!empty($return)){
-			$return['File']=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir().__FUNCTION__.'.file';
+			$return['File']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().__FUNCTION__.'.file';
 			@rename($targetFileName,$return['File']);
 		}
 		// move entry
 		@rename($entryFileName,$targetFileName);
 		$newEntry=$entry;
-		$newEntry['ElementId']=$targetSelector['ElementId'];
+		$newEntry['EntryId']=$targetSelector['EntryId'];
 		$this->updateEntry($newEntry);
 		$this->deleteEntries($entry);
 		return $return;
 	}
 	
-	public function swapEntriesByElementId($entryA,$entryB){
-		$entryB=$this->moveEntryByElementId($entryA,$entryB);
+	public function swapEntriesByEntryId($entryA,$entryB){
+		$entryB=$this->moveEntryByEntryId($entryA,$entryB);
 		if (!empty($entryB)){
-			$entryB['ElementId']=$entryA['ElementId'];
-			$entryBfileName=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entryB);
+			$entryB['EntryId']=$entryA['EntryId'];
+			$entryBfileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
 			@rename($entryB['File'],$entryBfileName);
 			$this->updateEntry($entryB);
 		}
 		return $entryB;
 	}
 	
-	public function addOrderedListIndexToElementId($primaryKeyValue,$index){
+	public function addOrderedListIndexToEntryId($primaryKeyValue,$index){
 		$primaryKeyValue=$this->orderedListComps($primaryKeyValue);
 		$primaryKeyValue=array_pop($primaryKeyValue);	
 		return str_pad(strval($index),4,'0',STR_PAD_LEFT).'___'.$primaryKeyValue;
 	}
 	
-	public function getOrderedListIndexFromElementId($primaryKeyValue){
+	public function getOrderedListIndexFromEntryId($primaryKeyValue){
 		$comps=$this->orderedListComps($primaryKeyValue);
 		if (count($comps)<2){return 0;}
 		$index=array_shift($comps);
 		return intval($index);
 	}
 	
-	public function getOrderedListKeyFromElementId($primaryKeyValue){
+	public function getOrderedListKeyFromEntryId($primaryKeyValue){
 		$comps=$this->orderedListComps($primaryKeyValue);
 		$key=array_pop($comps);
 		return $key;
@@ -748,8 +700,8 @@ class Database{
 	}
 	
 	private function orderedList2selector($entry){
-		if (empty($entry['Source']) || empty($entry['ElementId'])){return FALSE;}
-		$selector=array('Source'=>$entry['Source'],'ElementId'=>'%'.$this->getOrderedListKeyFromElementId($entry['ElementId']));
+		if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
+		$selector=array('Source'=>$entry['Source'],'EntryId'=>'%'.$this->getOrderedListKeyFromEntryId($entry['EntryId']));
 		return $selector;
 	}
 	
@@ -758,12 +710,12 @@ class Database{
 		if (empty($orderedListSelector)){return FALSE;}
 		$targetIndex=1;
 		$debugArr=array('selector'=>$selector,'orderedListSelector'=>$orderedListSelector);
-		foreach($this->entryIterator($orderedListSelector,FALSE,'Read','ElementId',TRUE) as $entry){
-			$targetElementId=$this->addOrderedListIndexToElementId($entry['ElementId'],$targetIndex);
-			if (strcmp($entry['ElementId'],$targetElementId)!==0){
-				$this->moveEntryByElementId($entry,array('Source'=>$selector['Source'],'ElementId'=>$targetElementId));
+		foreach($this->entryIterator($orderedListSelector,FALSE,'Read','EntryId',TRUE) as $entry){
+			$targetEntryId=$this->addOrderedListIndexToEntryId($entry['EntryId'],$targetIndex);
+			if (strcmp($entry['EntryId'],$targetEntryId)!==0){
+				$this->moveEntryByEntryId($entry,array('Source'=>$selector['Source'],'EntryId'=>$targetEntryId));
 			}
-			$debugArr['stpes'][]=array('targetIndex'=>$targetIndex,'entry ElementId'=>$entry['ElementId'],'target ElementId'=>$targetElementId);
+			$debugArr['stpes'][]=array('targetIndex'=>$targetIndex,'entry EntryId'=>$entry['EntryId'],'target EntryId'=>$targetEntryId);
 			$targetIndex++;
 		}
 		if ($isDebugging){
@@ -774,25 +726,25 @@ class Database{
 	}
 	
 	public function moveEntry($selector,$moveUp=TRUE){
-		// This method requires column ElementId have the format [constant prefix]|[index]
+		// This method requires column EntryId have the format [constant prefix]|[index]
 		// The index range is: 1...index...rowCount
 		$orderedListSelector=$this->orderedList2selector($selector);
 		if (empty($orderedListSelector)){return FALSE;}
-		$status=array('rowCount'=>0,'targetElementId'=>FALSE,'selectedElementId'=>FALSE,'entries'=>array());
-		foreach($this->entryIterator($orderedListSelector,FALSE,'Read','ElementId',TRUE) as $entry){
+		$status=array('rowCount'=>0,'targetEntryId'=>FALSE,'selectedEntryId'=>FALSE,'entries'=>array());
+		foreach($this->entryIterator($orderedListSelector,FALSE,'Read','EntryId',TRUE) as $entry){
 			$status['rowCount']=$entry['rowCount'];
-			$status['entries'][$entry['ElementId']]=$entry;
-			if (strcmp($entry['ElementId'],$selector['ElementId'])!==0){continue;}
-			$currentIndex=$this->getOrderedListIndexFromElementId($entry['ElementId']);
+			$status['entries'][$entry['EntryId']]=$entry;
+			if (strcmp($entry['EntryId'],$selector['EntryId'])!==0){continue;}
+			$currentIndex=$this->getOrderedListIndexFromEntryId($entry['EntryId']);
 			if ($moveUp){
 				if ($currentIndex<$entry['rowCount']){$targetIndex=$currentIndex+1;} else {return TRUE;}
 			} else {
 				if ($currentIndex>1){$targetIndex=$currentIndex-1;} else {return TRUE;}
 			}
-			$key=$this->getOrderedListKeyFromElementId($entry['ElementId']);
+			$key=$this->getOrderedListKeyFromEntryId($entry['EntryId']);
 			$targetSelector=array('Source'=>$selector['Source']);
-			$targetSelector['ElementId']=$this->addOrderedListIndexToElementId($key,$targetIndex);
-			$this->swapEntriesByElementId($entry,$targetSelector);
+			$targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($key,$targetIndex);
+			$this->swapEntriesByEntryId($entry,$targetSelector);
 		}
 		return TRUE;
 	}

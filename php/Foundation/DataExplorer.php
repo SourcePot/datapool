@@ -31,7 +31,7 @@ class DataExplorer{
 																'Group'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'Folder'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'Name'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-																'ElementId'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
+																'EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'Type'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																),
 											  'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
@@ -129,7 +129,7 @@ class DataExplorer{
 			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($formData['element']);
 			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->mergePageState(__CLASS__,array('Source'=>$this->entryTable));
 		} else if (isset($formData['cmd']['view'])){
-			$selector=array('Source'=>$formData['element']['Source'],'ElementId'=>$formData['element']['ElementId']);
+			$selector=array('Source'=>$formData['element']['Source'],'EntryId'=>$formData['element']['EntryId']);
 			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$selector);
 			$selector=$formData['element']['Content']['Selector'];
 			if (isset($this->arr['view classes'][$selector['Source']])){
@@ -137,7 +137,7 @@ class DataExplorer{
 			}
 		}
 		$selectedCanvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
-		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selectedCanvasElement);
+		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
 		return $canvasElement;
 	}
 	
@@ -156,7 +156,7 @@ class DataExplorer{
 
 	private function getCntrHtml($callingClass){
 		$selectedCanvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
-		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selectedCanvasElement);
+		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
 		// get canvas widgets
 		$widgetsHtml='';
 		$widgetsHtml.=$this->getFileUpload($canvasElement);
@@ -188,7 +188,7 @@ class DataExplorer{
 					}
 					$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
 					$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-					$selector=array('Source'=>$this->entryTable,'ElementId'=>$entry['ElementId']);
+					$selector=array('Source'=>$this->entryTable,'EntryId'=>$entry['EntryId']);
 					$this->arr['SourcePot\Datapool\Tools\NetworkTools']->mergePageState(__CLASS__,$selector);
 					break;
 				}
@@ -214,7 +214,7 @@ class DataExplorer{
 			// get canvas element editor
 			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
 			if (!empty($selector) && !empty($isEditMode)){
-				$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector);
+				$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
 				if ($canvasElement){
 					$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($canvasElement);
 					$editorHtml.=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$canvasElement);
@@ -251,8 +251,8 @@ class DataExplorer{
 		$style='';
 		$element=array('tag'=>'div');
 		// get canvas element style
-		if (!empty($selectedCanvasElement['ElementId'])){
-			if (strcmp($selectedCanvasElement['ElementId'],$canvasElement['ElementId'])===0){
+		if (!empty($selectedCanvasElement['EntryId'])){
+			if (strcmp($selectedCanvasElement['EntryId'],$canvasElement['EntryId'])===0){
 				$canvasElement['Content']['Style']['border']='2px solid #d00';
 			}
 		}
@@ -265,33 +265,33 @@ class DataExplorer{
 		}
 		$isEditMode=!empty($this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE));
 		if ($isEditMode){
-			$btnArr=array('tag'=>'button','value'=>'edit','Source'=>$canvasElement['Source'],'ElementId'=>$canvasElement['ElementId'],'keep-element-content'=>TRUE,'class'=>'canvas-element-btn');
+			$btnArr=array('tag'=>'button','value'=>'edit','Source'=>$canvasElement['Source'],'EntryId'=>$canvasElement['EntryId'],'keep-element-content'=>TRUE,'class'=>'canvas-element-btn');
 			$btnArr['callingClass']=$callingClass;
 			$btnArr['callingFunction']=$callingFunction;
 			// canvas element select button
 			$btnArr['style']='top:-5px;';
 			$btnArr['key']=array('select');
 			$btnArr['title']='Select';
-			$btnArr['id']=md5('select'.$canvasElement['ElementId'].__FUNCTION__);
+			$btnArr['id']=md5('select'.$canvasElement['EntryId'].__FUNCTION__);
 			$btnArr['element-content']='&#10022;';
 			$text.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr);
 			// canvas element delete button
 			$btnArr['style']='bottom:-5px;';
 			$btnArr['title']='Delete';
 			$btnArr['key']=array('delete');
-			$btnArr['id']=md5('delete'.$canvasElement['ElementId'].__FUNCTION__);
+			$btnArr['id']=md5('delete'.$canvasElement['EntryId'].__FUNCTION__);
 			$btnArr['element-content']='🗑';
 			$text.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr);
 			//
 			$element['source']=$canvasElement['Source'];
-			$element['element-id']=$canvasElement['ElementId'];
+			$element['entry-id']=$canvasElement['EntryId'];
 			$style.='cursor:pointer;';
 		} else {
 			if (!empty($canvasElement['Content']['Selector']['Source'])){
 				// canvas element view button
 				$element=$canvasElement;
 				$element['key']=array('view');
-				$element['id']=md5('view'.$canvasElement['ElementId'].__FUNCTION__);
+				$element['id']=md5('view'.$canvasElement['EntryId'].__FUNCTION__);
 				$element['tag']='button';
 				$style.='z-index:5;';
 				$rowCountSelector=$canvasElement['Content']['Selector'];
@@ -316,8 +316,8 @@ class DataExplorer{
 	
 	public function setCanvasElementPosition($arr){
 		$canvasElement=array();
-		if (!empty($arr['Source']) && !empty($arr['ElementId']) && !empty($arr['Content']['Style'])){
-			$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey(array('Source'=>$arr['Source'],'ElementId'=>$arr['ElementId']));
+		if (!empty($arr['Source']) && !empty($arr['EntryId']) && !empty($arr['Content']['Style'])){
+			$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$arr['Source'],'EntryId'=>$arr['EntryId']));
 			if ($canvasElement){
 				$canvasElement=array_replace_recursive($canvasElement,$arr);
 				$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($canvasElement);
@@ -333,12 +333,12 @@ class DataExplorer{
 		if (isset($formData['cmd']['uplaod'])){
 			foreach($formData['files']['files'] as $fileIndex=>$fileArr){
 				$entry=$canvasElement['Content']['Selector'];
-				$entry['ElementId']=hash_file('md5',$fileArr["tmp_name"]);
+				$entry['EntryId']=hash_file('md5',$fileArr["tmp_name"]);
 				if (empty($entry['Folder'])){$entry['Folder']='Upload';}
 				if (empty($entry['Name'])){$entry['Name']=$fileArr["name"];}
 				if (!empty($entry['Type'])){$entry['Type']=trim($entry['Type'],'%');}
 				$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');	
-				$entry=$this->arr['SourcePot\Datapool\Tools\FileTools']->file2entries($fileArr,$entry);
+				$entry=$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
 			}
 		}
 		// create html
@@ -372,7 +372,7 @@ class DataExplorer{
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (isset($formData['cmd']['download backup'])){
-			$dumpFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->exportEntries($selectors);
+			$dumpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors);
 			if (is_file($dumpFile)){
 				header('Content-Type: application/zip');
 				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' canvas dump.zip"');
@@ -380,11 +380,11 @@ class DataExplorer{
 				readfile($dumpFile);
 			}	
 		} else if (isset($formData['cmd']['import'])){
-			$tmpFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir().'tmp.zip';
+			$tmpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
 			$success=move_uploaded_file($formData["files"]["import files"][0]['tmp_name'],$tmpFile);
 			if ($success){
 				foreach($selectors as $index=>$selector){$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);}
-				$this->arr['SourcePot\Datapool\Tools\FileTools']->importEntries($tmpFile);
+				$this->arr['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);
 			}
 		}
 		$btnArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>'float:left;clear:both;margin:30px 10px 0 0;');

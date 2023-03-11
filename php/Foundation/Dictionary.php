@@ -68,7 +68,7 @@ class Dictionary{
 	}
 	
 	public function unifyEntry($entry){
-		if (empty($entry['ElementId'])){$entry['ElementId']=md5($entry['phrase'].'|'.$entry['langCode']);}
+		if (empty($entry['EntryId'])){$entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);}
 		if (empty($entry['Group'])){$entry['Group']='Translations from en';}
 		if (empty($entry['Folder'])){$entry['Folder']=$entry['langCode'];}
 		if (empty($entry['Name'])){$entry['Name']=substr($entry['phrase'],0,100);}
@@ -91,8 +91,8 @@ class Dictionary{
 		$elementId=md5($phrase.'|'.$langCode);
 		if ($translation===FALSE){
 			// translation request
-			$selector=array('Source'=>$this->entryTable,'ElementId'=>$elementId);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector);
+			$selector=array('Source'=>$this->entryTable,'EntryId'=>$elementId);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
 			if (empty($entry)){
 				return $phrase;
 			} else {
@@ -152,7 +152,7 @@ class Dictionary{
 		} else if (!empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$elementId=md5($formData['val']['phrase']['en'].'|'.$langCode);
-			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey(array('Source'=>$this->entryTable,'ElementId'=>$elementId));
+			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$this->entryTable,'EntryId'=>$elementId));
 			if (empty($translation)){
 				$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]='';
 			} else {
@@ -182,7 +182,7 @@ class Dictionary{
 					   );
 		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($toolbox,'ALL_CONTENTADMIN_R','ADMIN_R');
 		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
-		if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['ElementId'])){$_SESSION['page state']['toolbox']=$toolbox['ElementId'];}
+		if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['EntryId'])){$_SESSION['page state']['toolbox']=$toolbox['EntryId'];}
 		return $toolbox;
 	}
 

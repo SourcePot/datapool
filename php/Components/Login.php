@@ -25,7 +25,7 @@ class Login{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
+		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		return $this->arr;
 	}
 
@@ -60,8 +60,8 @@ class Login{
 	private function loginRequest($arr){
 		if (empty($arr['Passphrase']) || empty($arr['Email'])){return 'Password and/or email password were empty';}
 		$user['Source']=$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable();
-		$user['ElementId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
-		$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($user,TRUE);
+		$user['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
+		$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 		if (empty($user)){return 'Please register';}
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
 			$this->loginSuccess($user);
@@ -102,8 +102,8 @@ class Login{
 			$user['Source']=$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable();
 			$user['Params']['User registration']=array('Email'=>$arr['Email'],'Date'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime());
 			$user['Email']=$arr['Email'];
-			$user['ElementId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
-			$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($user,TRUE);
+			$user['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
+			$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 			if ($existingUser){
 				$err='You are registered already, try to login.';
 			} else {
@@ -124,9 +124,9 @@ class Login{
 
 	private function updateRequest($arr){
 		$user=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-					'ElementId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
+					'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
 					);
-		$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($user,TRUE);
+		$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 		if ($existingUser){
 			if (strlen($arr['Passphrase'])<self::MIN_PASSPHRASDE_LENGTH){
 				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Passphrase with '.strlen($arr['Passphrase']).' characters is too short (min. '.self::MIN_PASSPHRASDE_LENGTH.' characters), passphrase update failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
@@ -147,8 +147,8 @@ class Login{
 			return 'Failed: invalid email address';
 		}
 		// check if user exists
-		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'ElementId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
-		$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($selector,TRUE);
+		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
+		$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
 		if (empty($existingUser)){
 			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login-link request for an unknown email.','priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			return 'Failed: unknown email.';
@@ -169,7 +169,7 @@ class Login{
 						  'Group'=>$this->pageSettings['pageTitle'],
 						  'Folder'=>'Login links',
 						  'Name'=>$arr['Recovery']['Passphrase'],
-						  'ElementId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
+						  'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
 						  'Expires'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime(600)
 						  );
 		$loginEntry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
@@ -201,9 +201,9 @@ class Login{
 	
 	private function getOneTimeEntry($email){
 		$entry=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-					 'ElementId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink'
+					 'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink'
 					 );
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($entry,TRUE);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($entry,TRUE);
 		return $entry;
 	}
 

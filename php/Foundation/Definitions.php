@@ -38,9 +38,9 @@ class Definitions{
 		// This function adds a definition entry to the database defintions table.		
 		$Type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source($callingClass,TRUE);
 		$entry=array('Source'=>$this->entryTable,'Group'=>'Templates','Folder'=>$callingClass,'Name'=>$Type,'Type'=>'definition','Owner'=>'SYSTEM');
-		$entry['ElementId']=md5(json_encode($entry));
+		$entry['EntryId']=md5(json_encode($entry));
 		$entry['Content']=$definition;
-		$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($entry,TRUE);
+		$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
 	}
 	
 	public function getDefinition($entry,$isDebugging=FALSE){
@@ -215,7 +215,7 @@ class Definitions{
 					$debugArr['entry_updated']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 				} else {
 					$fileArr=current(current($formData['files']));
-					$entry=$this->arr['SourcePot\Datapool\Tools\FileTools']->file2entries($fileArr,$entry);
+					$entry=$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
 				}
 				$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 				if (isset($this->arr['SourcePot\Datapool\Foundation\Logging'])){
@@ -300,7 +300,7 @@ class Definitions{
 		if (method_exists($class,$function)){
 			$defArr['keep-element-content']=TRUE;
 			$defArr['selector']=array();
-			$selectorKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($defArr);
+			$selectorKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($defArr['Source']);
 			$selectorKeys+=array('Source'=>array());
 			foreach($selectorKeys as $selectorKey=>$templateArr){
 				if (isset($defArr[$selectorKey])){$defArr['selector'][$selectorKey]=$defArr[$selectorKey];}

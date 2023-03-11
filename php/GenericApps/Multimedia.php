@@ -19,7 +19,7 @@ class Multimedia{
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 );
 
-	public $definition=array('ElementId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
+	public $definition=array('EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
 
 	public function __construct($arr){
 		$this->arr=$arr;

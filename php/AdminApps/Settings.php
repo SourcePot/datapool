@@ -18,7 +18,7 @@ class Settings{
 	private $entryTable;
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s ElementId or SYSTEM. The Owner has Read and Write access.')
+								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
     
 	public function __construct($arr){
@@ -60,7 +60,7 @@ class Settings{
 	public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
 		if ($isSystemCall){$entry['Owner']='SYSTEM';}
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
 		$entry['Content']=$setting;
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
 		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
@@ -69,10 +69,10 @@ class Settings{
 	public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE){
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
 		if ($isSystemCall){$entry['Owner']='SYSTEM';}
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
 		$entry['Content']=$initSetting;
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($entry,$isSystemCall);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
 		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
 	}
 	

@@ -18,7 +18,7 @@ class Admin{
 	private $entryTable;
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s ElementId or SYSTEM. The Owner has Read and Write access.')
+								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
     
 	public function __construct($arr){
@@ -70,7 +70,7 @@ class Admin{
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (isset($formData['cmd']['export'])){
 			$selectors=array($formData['val']);
-			$dumpFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->exportEntries($selectors,FALSE,$formData['val']['Size']);
+			$dumpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors,FALSE,$formData['val']['Size']);
 			if (is_file($dumpFile)){
 				header('Content-Type: application/zip');
 				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' '.$formData['val']['Source'].' dump.zip"');
@@ -78,10 +78,10 @@ class Admin{
 				readfile($dumpFile);
 			}	
 		} else if (isset($formData['cmd']['import'])){
-			$tmpFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir().'tmp.zip';
+			$tmpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
 			if (!empty($formData['files']['import'])){
 				$success=move_uploaded_file($formData['files']['import'][0]['tmp_name'],$tmpFile);
-				if ($success){$this->arr['SourcePot\Datapool\Tools\FileTools']->importEntries($tmpFile);}
+				if ($success){$this->arr['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);}
 			} else {
 				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}

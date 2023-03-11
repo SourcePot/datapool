@@ -22,13 +22,13 @@ class NetworkTools{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
+		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		return $this->arr;
 	}
 		
 	public function resetSession(){
 		$_SESSION=array('page state'=>$_SESSION['page state']);
-		$this->arr['SourcePot\Datapool\Tools\FileTools']->removeTmpDir();
+		$this->arr['SourcePot\Datapool\Foundation\Filespace']->removeTmpDir();
 		session_regenerate_id(TRUE);
 	}
 	
@@ -196,7 +196,7 @@ class NetworkTools{
 		// This methode converts an entry to an emial address, the $mail-keys are:
 		// 'selector' ... selects the entry
 		// 'To' ... is the recipients emal address, use array for multiple addressees
-		$mail['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($mail['selector'],TRUE);
+		$mail['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($mail['selector'],TRUE);
 		if (empty($mail['selector'])){
 			$logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
 			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);	
@@ -229,7 +229,7 @@ class NetworkTools{
 				$msgTextHtml.=$flatContentValue;
 			}
 			// create text part of the message
-			$textBoundery='text-'.md5($mail['selector']['ElementId']);
+			$textBoundery='text-'.md5($mail['selector']['EntryId']);
 			$message='';
 			$msgPrefix="Content-Type: multipart/alternative; boundary=\"".$textBoundery."\"\r\n";
 			$message.="\r\n\r\n--".$textBoundery."\r\n";
@@ -241,8 +241,8 @@ class NetworkTools{
 			$message.=chunk_split($msgTextHtml);
 			$message.="\r\n\r\n--".$textBoundery."--\r\n";
 			// get attched file			
-			$mixedBoundery='multipart-'.md5($mail['selector']['ElementId']);
-			$file=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($mail['selector']);
+			$mixedBoundery='multipart-'.md5($mail['selector']['EntryId']);
+			$file=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($mail['selector']);
 			if (is_file($file)){
 				$msgPrefix='--'.$mixedBoundery."\r\n".$msgPrefix;
 				// get file content

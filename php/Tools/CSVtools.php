@@ -87,7 +87,7 @@ class CSVtools{
 	}
 	
 	public function csvIterator($selector){
-		$csvFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($selector);
+		$csvFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
 		if (!is_file($csvFile)){yield array();}
 		$csvSettings=$this->csvSetting();
 		$csv=new \SplFileObject($csvFile);
@@ -113,14 +113,14 @@ class CSVtools{
 	public function entry2csv($entry=FALSE,$rowId=FALSE){
 		// When called with an object this method adds the object to a session var space for later
 		// csv-file creation. When the class is created the session var space will be written to respective csv-file-objects
-		// csv-file name = $entry['Name'], if $entry['ElementId'] is not set it will be created from $entry['Name']
+		// csv-file name = $entry['Name'], if $entry['EntryId'] is not set it will be created from $entry['Name']
 		//$_SESSION['csvVarSpace']=array();
 		if (empty($entry) && isset($_SESSION['csvVarSpace'])){
 			$statistics=array('csv entries'=>0,'row count'=>0);
 			$csvSetting=$this->csvSetting();
 			if (!empty($csvSetting['noEnclosureOutput'])){$csvSetting['enclosure']='';}
 			$prodessedEntries=0;
-			foreach($_SESSION['csvVarSpace'] as $ElementId=>$csvDefArr){
+			foreach($_SESSION['csvVarSpace'] as $EntryId=>$csvDefArr){
 				$csvContent='';
 				$entry=$csvDefArr['entry'];
 				foreach($csvDefArr['rows'] as $rowIndex=>$valArr){
@@ -130,7 +130,7 @@ class CSVtools{
 					$statistics['row count']++;
 				}
 				// save csv content
-				$targetFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($entry);
+				$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
 				file_put_contents($targetFile,$csvContent);
 				if (empty($entry['Params']['File']['Name'])){$entry['Params']['File']['Name']=str_replace('.csv','',$entry['Name']).'.csv';}
 				$entry['Params']['File']['Size']=filesize($targetFile);
@@ -139,14 +139,14 @@ class CSVtools{
 				$entry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 				// reset csv var-space
-				unset($_SESSION['csvVarSpace'][$ElementId]);
+				unset($_SESSION['csvVarSpace'][$EntryId]);
 				$statistics['csv entries']++;
 				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'CSV-entry created named "'.$entry['Name'].'" containing '.count($csvDefArr['rows']).' rows.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 			return $statistics;
 		} else if (isset($entry['Content'])){
-			$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entry,array('Source','Group','Folder'),$this->csvTimestamp,'',TRUE);
-			$elementId=$entry['ElementId'];
+			$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder'),$this->csvTimestamp,'',TRUE);
+			$elementId=$entry['EntryId'];
 			$flatContentArr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry['Content']);
 			if (!isset($_SESSION['csvVarSpace'][$elementId])){
 				$_SESSION['csvVarSpace'][$elementId]=array('rows'=>array(),'entry'=>$entry,'first row'=>$flatContentArr);
@@ -193,9 +193,9 @@ class CSVtools{
 		if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
 		$settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
 		$debugArr=array('arr in'=>$arr,'settings in'=>$settings,'valuesToUpdate'=>array());
-		$attachedFile=$this->arr['SourcePot\Datapool\Tools\FileTools']->selector2file($arr['selector']);
+		$attachedFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
 		if (!is_file($attachedFile)){return $arr;}
-		$csvEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr['selector']);
+		$csvEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
 		// get settings
 		foreach($this->getSettings() as $settingKey=>$settingValue){
 			if (!isset($settings[$settingKey])){$settings[$settingKey]=$settingValue;}

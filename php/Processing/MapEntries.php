@@ -51,10 +51,10 @@ class MapEntries{
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
-		// $callingElementSelector ... array('Source'=>'...', 'ElementId'=>'...', ...)
+		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -153,7 +153,7 @@ class MapEntries{
 		if (empty($mappingParams)){return '';}
 		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($mappingParams,'ALL_R','ALL_CONTENTADMIN_R');
 		$mappingParams['Content']=array();
-		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($mappingParams,TRUE);
+		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($mappingParams,TRUE);
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
@@ -198,9 +198,9 @@ class MapEntries{
 
 	private function runMapEntries($callingElement,$testRun=FALSE){
 		$targetEntry=array();
-		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['ElementId']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','ElementId',TRUE) as $entry){
-			$elementIdComps=explode('___',$entry['ElementId']);
+		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+			$elementIdComps=explode('___',$entry['EntryId']);
 			if (count($elementIdComps)<2){
 				$targetEntry[$entry['Group']]=$entry['Content'];
 			} else {
@@ -235,18 +235,18 @@ class MapEntries{
 			}
 		}
 		if (strcmp($targetEntry['mappingParams']['Type'],'csv')===0){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv();}
-		unset($result['ElementIds']);
+		unset($result['EntryIds']);
 		return $result;
 	}
 	
 	private function mapEntry($callingElement,$sourceEntry,$targetEntry,$result,$testRun){
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-		$keepExistingElementId=empty($targetEntry['mappingParams']['Mode']);
+		$keepExistingEntryId=empty($targetEntry['mappingParams']['Mode']);
 		if (!isset($result['Mapping statistics'])){
 			$result['Mapping statistics']=array('Rule source entry key missing'=>array('value'=>0),
 												'CSV row added'=>array('value'=>0)
 												);
-			if ($keepExistingElementId){
+			if ($keepExistingEntryId){
 				$result['Mapping statistics']['Target entry updated (inserted if source is csv)']['value']=0;
 			} else {
 				$result['Mapping statistics']['Target entry inserted (updated if source=target)']['value']=0;
@@ -256,7 +256,7 @@ class MapEntries{
 		// copy base key values across
 		$baseKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($sourceEntry);
 		foreach($baseKeys as $key=>$def){
-			if (strcmp($key,'File content')===0 || strcmp($key,'Content')===0 || strcmp($key,'Params')===0 || strcmp($key,'ElementId')===0){continue;}
+			if (strcmp($key,'File content')===0 || strcmp($key,'Content')===0 || strcmp($key,'Params')===0 || strcmp($key,'EntryId')===0){continue;}
 			$targetEntry[$key]=$sourceEntry[$key];
 		}
 		// rule based mapping
@@ -303,9 +303,9 @@ class MapEntries{
 		} else {
 			if (strcmp($targetEntry['mappingParams']['Type'],'entries')===0){
 				// create entries as mapping result
-				$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($targetEntry,array('Source','Group','Folder','Name','Type'),0,'',$keepExistingElementId);
+				$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name','Type'),0,'',$keepExistingEntryId);
 				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
-				if ($keepExistingElementId){
+				if ($keepExistingEntryId){
 					$result['Mapping statistics']['Target entry updated (inserted if source is csv)']['value']++;
 				} else {
 					$result['Mapping statistics']['Target entry inserted (updated if source=target)']['value']++;
@@ -501,7 +501,7 @@ class MapEntries{
 	private function applyCallingElement($source,$elementId,$target=FALSE){
 		// This method returns the target selector of the cnavas element selected by $elementId
 		// and returns this selector.
-		$selector=array('Source'=>$source,'ElementId'=>$elementId);
+		$selector=array('Source'=>$source,'EntryId'=>$elementId);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 			if (is_bool($target)){
 				return $entry;
@@ -524,11 +524,11 @@ class MapEntries{
 	}
 	
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
-		if (!isset($callingElement['Folder']) || !isset($callingElement['ElementId'])){return array();}
+		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
 		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
 		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['ElementId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
+		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
 		return $entrySelector;
 
 	}

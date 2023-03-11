@@ -102,7 +102,7 @@ class ExifTools{
 			} else {
 				$exifDateTime.=' 12:00:00';
 			}
-			$pageSettings=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getSettings();
+			$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 			$dateTime=\DateTime::createFromFormat('Y-m-d H:i:s',$exifDateTime,new \DateTimeZone('UTC'));
 			$dateTime->setTimeZone(new \DateTimeZone($pageSettings['pageTimeZone']));
 			$entry['Date']=$dateTime->format('Y-m-d H:i:s');

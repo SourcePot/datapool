@@ -42,10 +42,10 @@ class CanvasProcessing{
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
-		// $callingElementSelector ... array('Source'=>'...', 'ElementId'=>'...', ...)
+		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -147,7 +147,7 @@ class CanvasProcessing{
 		$canvasProcessingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);
 		$canvasProcessingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($canvasProcessingParams,'ALL_R','ALL_CONTENTADMIN_R');
 		$canvasProcessingParams['Content']=array('Column to match'=>'Name');
-		$canvasProcessingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($canvasProcessingParams,TRUE);
+		$canvasProcessingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($canvasProcessingParams,TRUE);
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
@@ -183,7 +183,7 @@ class CanvasProcessing{
 	
 	public function runCanvasProcessingOnClass($class,$isTestRun=TRUE){
 		$canvasElementsSelector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements');
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','ElementId',TRUE) as $canvasElement){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $canvasElement){
 			if (empty($canvasElement['Content']['Widgets']['Processor'])){continue;}
 			if (strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
 			$this->runCanvasProcessing($canvasElement,$isTestRun);
@@ -198,8 +198,8 @@ class CanvasProcessing{
 		}
 		$currentCanvasElement=array_shift($canvasElements);
 		$this->arr['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,__FUNCTION__,$canvasElements,'Processing steps',TRUE);
-		$targetCanvasElement=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'ElementId'=>$currentCanvasElement['Content']['Process']);
-		$targetCanvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($targetCanvasElement,TRUE);
+		$targetCanvasElement=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$currentCanvasElement['Content']['Process']);
+		$targetCanvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($targetCanvasElement,TRUE);
 		if ($targetCanvasElement){
 			$processor=$targetCanvasElement['Content']['Widgets']['Processor'];
 			$result=$this->arr[$processor]->dataProcessor($isTestRun?'test':'run',$targetCanvasElement);
@@ -209,19 +209,19 @@ class CanvasProcessing{
 	}
 	
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
-		if (!isset($callingElement['Folder']) || !isset($callingElement['ElementId'])){return array();}
+		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
 		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
 		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['ElementId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
+		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
 		return $entrySelector;
 	}
 
 	private function getCanvasElements($callingElement,$group='canvasProcessingRules'){
 		$canvasElements=array();
 		$canvasElementsSelector=array('Source'=>$this->entryTable,'Group'=>$group,'Folder'=>$callingElement['Folder']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','ElementId',TRUE) as $entry){
-			$canvasElements[$entry['ElementId']]=$entry;
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+			$canvasElements[$entry['EntryId']]=$entry;
 		}
 		return $canvasElements;
 	}

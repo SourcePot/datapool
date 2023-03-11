@@ -78,7 +78,7 @@ final class Root{
 		// create all objects and get structure
 		$orderedInitialization=array('Tools/MiscTools.php'=>array('dirname'=>'Tools','component'=>'MiscTools.php'),
 									 'Foundation/Access.php'=>array('dirname'=>'Foundation','component'=>'Access.php'),
-									 'Tools/FileTools.php'=>array('dirname'=>'Tools','component'=>'FileTools.php'),
+									 'Foundation/Filespace.php'=>array('dirname'=>'Foundation','component'=>'Filespace.php'),
 									 'Tools/HTMLbuilder.php'=>array('dirname'=>'Tools','component'=>'HTMLbuilder.php'),
 									 'Foundation/Haystack.php'=>array('dirname'=>'Foundation','component'=>'Haystack.php'),
 									 'Foundation/Database.php'=>array('dirname'=>'Foundation','component'=>'Database.php'),
@@ -102,17 +102,17 @@ final class Root{
 		// loop through components and invoke the init method
 		foreach($arr['registered methods']['init'] as $classWithNamespace=>$returnArr){$arr=$arr[$classWithNamespace]->init($arr);}
 		//
-		$GLOBALS['tmp user dir']=$arr['SourcePot\Datapool\Tools\FileTools']->getTmpDir();
+		$GLOBALS['tmp user dir']=$arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		// generic button form processing
 		$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
 		// add "page html" to the return array
 		if (strpos($type,'index.php')>0){
 			// build webpage
-			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->addHtmlPageBackbone($arr);
-			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->addHtmlPageHeader($arr);
-			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->addHtmlPageBody($arr);
+			$arr=$arr['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
+			$arr=$arr['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
+			$arr=$arr['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
 			$arr=$arr[$_SESSION['page state']['app']['Class']]->run($arr);
-			$arr=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->finalizePage($arr);
+			$arr=$arr['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
 			// add page statistic for the web page called by a user
 			$this->addPageStatistic($arr,$type);
 		} else if (strpos($type,'js.php')>0){
@@ -174,9 +174,9 @@ final class Root{
 		$jobs=array('due'=>array(),'undue'=>array());
 		$allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
 		$allJobsSetting=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Type'=>'array setting');
-		$allJobsSetting=$arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
+		$allJobsSetting=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
 		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
-		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($allJobsSetting,TRUE);
+		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($allJobsSetting,TRUE);
 		$allJobsSettingContent=$allJobsSetting['Content'];
 		$allJobsSetting['Content']=array();
 		foreach($arr['registered methods']['job'] as $class=>$initContent){
@@ -201,9 +201,9 @@ final class Root{
 			$dueMethod=$allJobsSetting['Content'][$dueJob]['method'];
 			// job var space and run job
 			$jobVars=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'Var space','Name'=>$dueJob,'Type'=>'array vars');
-			$jobVars=$arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($jobVars,array('Source','Group','Folder','Name','Type'),0);
+			$jobVars=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name','Type'),0);
 			$jobVars=$arr['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
-			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($jobVars,TRUE);
+			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($jobVars,TRUE);
 			$jobStartTime=hrtime(TRUE);
 			$arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 			$jobVars['Content']=$arr[$dueJob]->$dueMethod($jobVars['Content']);
@@ -227,10 +227,10 @@ final class Root{
 	*/
 	private function addPageStatistic($arr,$calledBy){
 		//if (mt_rand(0,1000)<950){return FALSE;}	// only save sample
-		$userId=(isset($_SESSION['currentUser']['ElementId']))?$_SESSION['currentUser']['ElementId']:'ANONYM';
+		$userId=(isset($_SESSION['currentUser']['EntryId']))?$_SESSION['currentUser']['EntryId']:'ANONYM';
 		$statistic=array('Source'=>$arr[$GLOBALS['logging class']]->getEntryTable(),'Group'=>$userId,'Name'=>'Page statistic type '.$calledBy,'Type'=>'statistic');
 		if (isset($_SESSION['page state']['app'])){$statistic['Folder']=$_SESSION['page state']['app']['Class'];} else {$statistic['Folder']='No app call';}
-		$statistic['ElementId']=$arr['SourcePot\Datapool\Tools\MiscTools']->getElementId();
+		$statistic['EntryId']=$arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
 		$statistic['Date']=$arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 		$statistic['Expires']=$arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
 		$statistic['Owner']='SYSTEM';
@@ -240,7 +240,7 @@ final class Root{
 		$timeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
 		$statistic['Content']['Script time consumption [ms]']=$timeConsumption;
 		$arr['SourcePot\Datapool\Foundation\Database']->insertEntry($statistic);
-		if ($timeConsumption>200){
+		if ($timeConsumption>900){
 			$msg='Page performance warning: Page creation took '.$timeConsumption.'ms.';
 			$arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}

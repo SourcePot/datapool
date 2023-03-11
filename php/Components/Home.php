@@ -71,11 +71,11 @@ class Home{
 	
 	private function contactHtml(){
 		$entry=array('Source'=>$this->entryTable,'Group'=>'Imprint','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Imprint text','Type'=>'home','Owner'=>'SYSTEM');
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entry,array('Source','Group','Folder','Name'),0);
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0);
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ADMIN_R');
 		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($entry);
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){$definition['hideKeys']=FALSE;}
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($entry,TRUE);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
 		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$entry);
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
 		return $html;

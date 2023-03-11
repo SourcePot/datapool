@@ -36,13 +36,13 @@ class Toolbox{
 		$toolboxTemplate=array('Source'=>$this->entryTable,'Group'=>'Settings','Folder'=>$callingClass,'Type'=>'toolbox','owner'=>'SYSTEM');
 		if (empty($toolboxEntry['Name'])){$toolboxEntry['Name']='NAME WAS NOT PROVIDED';}
 		$toolboxEntry=array_merge($toolboxEntry,$toolboxTemplate);
-		$toolboxEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($toolboxEntry,array('Source','Group','Folder','Name'),0);
+		$toolboxEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($toolboxEntry,array('Source','Group','Folder','Name'),0);
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 			$toolboxEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($toolboxEntry);
 		} else {
-			$toolboxEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($toolboxEntry);
+			$toolboxEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($toolboxEntry);
 		}
-		if (!empty($toolboxEntry)){$this->toolboxes[$toolboxEntry['ElementId']]=$toolboxEntry;}
+		if (!empty($toolboxEntry)){$this->toolboxes[$toolboxEntry['EntryId']]=$toolboxEntry;}
 		return $toolboxEntry;
 	}
 	
@@ -67,11 +67,11 @@ class Toolbox{
 	public function getToolbox(){
 		$menuHtml=$this->getToolboxMenu();
 		if (empty($_SESSION['page state']['toolbox'])){return '';}
-		$toolbox=array('Source'=>$this->entryTable,'ElementId'=>$_SESSION['page state']['toolbox']);
-		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($toolbox);
+		$toolbox=array('Source'=>$this->entryTable,'EntryId'=>$_SESSION['page state']['toolbox']);
+		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($toolbox);
 		if (empty($toolbox)){
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$this->entryTable,'Name'=>'Logs','Group'=>'Settings'),TRUE) as $toolbox){
-				$_SESSION['page state']['toolbox']=$toolbox['ElementId'];
+				$_SESSION['page state']['toolbox']=$toolbox['EntryId'];
 			}
 		}
 		if (empty($toolbox)){return $menuHtml;}

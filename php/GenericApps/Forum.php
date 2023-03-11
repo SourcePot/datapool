@@ -70,7 +70,7 @@ class Forum{
 		$draftSelector=array('Source'=>$this->entryTable,
 						  'Folder'=>'Draft',
 						  'Type'=>$this->entryTable.' entry',
-						  'Owner'=>$_SESSION['currentUser']['ElementId'],
+						  'Owner'=>$_SESSION['currentUser']['EntryId'],
 						  );
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
 			if ($entry['isSkipRow']){continue;}
@@ -91,7 +91,7 @@ class Forum{
 		$html='';
 		$forumSelector=array('Source'=>$this->entryTable,'Folder'=>'Sent');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'element-id'=>$entry['ElementId'],'class'=>'forum'));
+			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum'));
 		}
 		return $html;
 	}

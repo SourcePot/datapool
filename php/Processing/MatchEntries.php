@@ -38,10 +38,10 @@ class MatchEntries{
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
-		// $callingElementSelector ... array('Source'=>'...', 'ElementId'=>'...', ...)
+		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -143,7 +143,7 @@ class MatchEntries{
 		$matchingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);;
 		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($matchingParams,'ALL_R','ALL_CONTENTADMIN_R');
 		$matchingParams['Content']=array('Column to match'=>'Name');
-		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKeyCreateIfMissing($matchingParams,TRUE);
+		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($matchingParams,TRUE);
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
@@ -190,9 +190,9 @@ class MatchEntries{
 										  )
 					 );
 		$settings=array();
-		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['ElementId']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','ElementId',TRUE) as $entry){
-			$elementIdComps=explode('___',$entry['ElementId']);
+		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+			$elementIdComps=explode('___',$entry['EntryId']);
 			if (count($elementIdComps)<2){
 				$settings[$entry['Group']]=$entry['Content'];
 			} else {
@@ -268,7 +268,7 @@ class MatchEntries{
 	private function applyCallingElement($source,$elementId,$target=FALSE){
 		// This method returns the target selector of the cnavas element selected by $elementId
 		// and returns this selector.
-		$selector=array('Source'=>$source,'ElementId'=>$elementId);
+		$selector=array('Source'=>$source,'EntryId'=>$elementId);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 			if (is_bool($target)){
 				return $entry;
@@ -291,11 +291,11 @@ class MatchEntries{
 	}
 
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
-		if (!isset($callingElement['Folder']) || !isset($callingElement['ElementId'])){return array();}
+		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
 		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
 		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['ElementId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addElementId($entrySelector,array('Group','Folder','Name','Type'),0);}
+		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
 		return $entrySelector;
 
 	}

@@ -68,14 +68,13 @@ class MiscTools{
 	}
 	
 	public function xml2arr($xml){
+		$arr=array('xml'=>$xml);
 		if (extension_loaded('SimpleXML')){
 			$xml=simplexml_load_string($xml);
 			$json=json_encode($xml);
 			$arr=json_decode($json,TRUE);	
 		} else {
-			$logArr=array('msg'=>'PHP extension SimpleXML missing.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-			$arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
-			$arr=array('xml'=>$xml);
+			throw new \ErrorException('Function '.__FUNCTION__.': PHP extension SimpleXML missing.',0,E_ERROR,__FILE__,__LINE__);
 		}
 		return $arr;
 	}
@@ -250,28 +249,28 @@ class MiscTools{
 		return $hash;
 	}	
 	
-	public function getElementId($base=FALSE,$timestamp=FALSE){
-		//	Creates and returns the unique ElementId
+	public function getEntryId($base=FALSE,$timestamp=FALSE){
+		//	Creates and returns the unique EntryId
 		if ($base){$suffix=$this->getHash($base,TRUE);} else {$suffix=mt_rand(100000,999999);}
 		if ($timestamp===FALSE){
 			$timestamp=time();
 		} else {
 			$timestamp=$timestamp;
 		}
-		$elementId="EID".$timestamp.'-'.$suffix."eid";
-		return $elementId;
+		$entryId="EID".$timestamp.'-'.$suffix."eid";
+		return $entryId;
 	}
 	
-	public function getElementIdAge($elementId){
-		// Returns the age of a provided ElementId
-		if (strpos($elementId,'eid')===FALSE || strpos($elementId,'EID')===FALSE){return 0;}
-		$timestamp=substr($elementId,3,strpos($elementId,'-')-1);
+	public function getEntryIdAge($entryId){
+		// Returns the age of a provided EntryId
+		if (strpos($entryId,'eid')===FALSE || strpos($entryId,'EID')===FALSE){return 0;}
+		$timestamp=substr($entryId,3,strpos($entryId,'-')-1);
 		$timestamp=intval($timestamp);
 		return time()-$timestamp;
 	}
 	
-	public function addElementId($entry,$relevantKeys=array('Source','Group','Folder','Name','Type'),$timestampToUse=FALSE,$suffix='',$keepExistingElementId=FALSE){
-		if (!empty($entry['ElementId']) && $keepExistingElementId){return $entry;}
+	public function addEntryId($entry,$relevantKeys=array('Source','Group','Folder','Name','Type'),$timestampToUse=FALSE,$suffix='',$keepExistingEntryId=FALSE){
+		if (!empty($entry['EntryId']) && $keepExistingEntryId){return $entry;}
 		$base=array();
 		foreach($relevantKeys as $keyIindex=>$relevantKey){
 			if (isset($entry[$relevantKey])){$base[]=$entry[$relevantKey];}
@@ -285,8 +284,8 @@ class MiscTools{
 		} else {
 			$timestamp=$timestampToUse;
 		}
-		$entry['ElementId']=$this->getElementId($base,$timestamp);
-		if (!empty($suffix)){$entry['ElementId'].=$suffix;}
+		$entry['EntryId']=$this->getEntryId($base,$timestamp);
+		if (!empty($suffix)){$entry['EntryId'].=$suffix;}
 		return $entry;
 	}
 

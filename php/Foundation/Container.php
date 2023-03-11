@@ -32,8 +32,8 @@ class Container{
 			} else if (strcmp($_POST['function'],'containerMonitor')===0){
 				$jsAnswer['arr']=array('isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']);
 			} else if (strcmp($_POST['function'],'loadEntry')===0){
-				$selector=array('Source'=>$_POST['Source'],'ElementId'=>$_POST['ElementId']);
-				$jsAnswer['html']=$this->arr['SourcePot\Datapool\Foundation\Container']->container($selector['ElementId'],'selectedView',$selector,array());
+				$selector=array('Source'=>$_POST['Source'],'EntryId'=>$_POST['EntryId']);
+				$jsAnswer['html']=$this->arr['SourcePot\Datapool\Foundation\Container']->container($selector['EntryId'],'selectedView',$selector,array());
 			} else if (strcmp($_POST['function'],'setCanvasElementPosition')===0){
 				$jsAnswer['arr']=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementPosition($_POST['arr']);
 			} else {
@@ -166,12 +166,10 @@ class Container{
 						   );
 			$arr['setting']=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,__FUNCTION__,$setting,$arr['selector']['Source'],TRUE);
 			// compile html
-			$primaryKeyValue=$this->arr['SourcePot\Datapool\Foundation\Database']->getPrimaryKeyValue($arr['selector']);
-			$key=$primaryKeyValue['primaryKey'];
-			if (empty($arr['selector'][$key])){
+			if (empty($arr['selector']['EntryId'])){
 				if (!empty($setting['Show entry list'])){$arr=$this->entryList($arr);}
 			} else {
-				$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr['selector']);
+				$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
 				if (empty($arr['selector'])){
 					$arr['html']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'P','element-content'=>'Nothing to show here. Entry does not exist.'));
 				} else {
@@ -192,7 +190,7 @@ class Container{
 	}
 
 	public function entryEditor($arr,$isDebugging=FALSE){
-		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByKey($arr['selector']);
+		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
 		if (empty($arr['selector'])){return $arr;}
 		if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
 		$settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
@@ -330,7 +328,7 @@ class Container{
 			$settings=array_replace_recursive($settings,$formData['val']);
 			// command processing
 			if (isset($formData['cmd']['addColumn'])){
-				$settings['columns'][]=array('Column'=>'ElementId','Filter'=>'');
+				$settings['columns'][]=array('Column'=>'EntryId','Filter'=>'');
 			} else if (isset($formData['cmd']['removeColumn'])){
 				$key2remove=key($formData['cmd']['removeColumn']);
 				unset($settings['columns'][$key2remove]);
@@ -474,7 +472,7 @@ class Container{
 		if (isset($formData['cmd']['Add comment'])){
 			//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);
 			$timestamp=$formData['cmd']['Add comment'];
-			$arr['selector']['Content']['Comments'][$timestamp]=array('Comment'=>$formData['val']['comment'],'Author'=>$_SESSION['currentUser']['ElementId']);
+			$arr['selector']['Content']['Comments'][$timestamp]=array('Comment'=>$formData['val']['comment'],'Author'=>$_SESSION['currentUser']['EntryId']);
 			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
 		}
 		if (isset($arr['selector']['Content']['Comments'])){$Comments=$arr['selector']['Content']['Comments'];} else {$Comments=array();}

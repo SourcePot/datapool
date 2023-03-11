@@ -57,7 +57,7 @@ class Access{
 		$this->arr=$arr;
 		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$access=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__,'Content'=>$this->access);
-		$access=$this->arr['SourcePot\Datapool\Tools\FileTools']->entryByKeyCreateIfMissing($access,TRUE);
+		$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
 		$this->access=$access['Content'];
 		return $this->arr;
 	}
@@ -109,9 +109,9 @@ class Access{
 		if (empty($entry)){return FALSE;}
 		if ($user===FALSE){$user=$_SESSION['currentUser'];}
 		if (empty($entry['Owner'])){$entry['Owner']='Entry Owner Missing';}
-		if (empty($user['Owner'])){$user['Owner']='User ElementId Missing';}
-		if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){$user['ElementId']='User id Invalid';}
-		if (strcmp($entry['Owner'],$user['ElementId'])===0){
+		if (empty($user['Owner'])){$user['Owner']='User EntryId Missing';}
+		if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){$user['EntryId']='User id Invalid';}
+		if (strcmp($entry['Owner'],$user['EntryId'])===0){
 			return 'CREATOR MATCH';
 		} else if (isset($entry[$type])){
 			$accessLevel=intval($entry[$type]) & intval($user['Privileges']);
