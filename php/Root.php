@@ -33,6 +33,7 @@ final class Root{
 	*/
 	public function __construct($arr=array()){
 		$GLOBALS['source dir']=$GLOBALS['realpath'].'php/';
+		$GLOBALS['traits dir']=$GLOBALS['realpath'].'php/Traits/';
 		$GLOBALS['vendor dir']=$GLOBALS['realpath'].'vendor/';
 		$GLOBALS['setup dir']=$GLOBALS['realpath'].'setup/';
 		$GLOBALS['public dir']=$GLOBALS['realpath'].'www/';
@@ -75,6 +76,12 @@ final class Root{
 	*/
 	public function run($type){
 		$arr=$this->arr;
+		// include traits
+		$traits=scandir($GLOBALS['traits dir']);
+		foreach($traits as $traitIndex=>$trait){
+			if (strpos($trait,'.php')===FALSE){continue;}
+			require_once $GLOBALS['traits dir'].$trait;
+		}
 		// create all objects and get structure
 		$orderedInitialization=array('Tools/MiscTools.php'=>array('dirname'=>'Tools','component'=>'MiscTools.php'),
 									 'Foundation/Access.php'=>array('dirname'=>'Foundation','component'=>'Access.php'),
@@ -89,11 +96,12 @@ final class Root{
 									 );
 		$dirs=scandir($GLOBALS['source dir']);
 		foreach($dirs as $dirIndex=>$dirname){
-			if (empty(str_replace('.','',$dirname)) || strpos($dirname,'.php')!==FALSE){continue;}
-			$dir=$GLOBALS['source dir'].$dirname;
+			if (strlen($dirname)<3 || strpos($dirname,'Traits')!==FALSE || strpos($dirname,'.php')!==FALSE){continue;}
+			$dir=$GLOBALS['source dir'].$dirname.'/';
 			$Components=scandir($dir);
 			// loop through all components found in $dir
 			foreach($Components as $componentIndex=>$component){
+				if (strpos($component,'.php')===FALSE){continue;}
 				if (empty(str_replace('.','',$component))){continue;}
 				$orderedInitialization[$dirname.'/'.$component]=array('dirname'=>$dirname,'component'=>$component);
 			}

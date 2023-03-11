@@ -44,13 +44,15 @@ class Invoices{
 	}
 
 	public function run($arr=TRUE){
+		$html='';
 		if ($arr===TRUE){
 			return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
 			$explorerArr=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
-			$entryHtml=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$explorerArr['Selector'],array(),array());
+			$html.=$explorerArr['contentHtml'];
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$explorerArr['selector'],array(),array());
 			$arr['page html']=str_replace('{{explorer}}',$explorerArr['explorerHtml'],$arr['page html']);
-			$arr['page html']=str_replace('{{content}}',$explorerArr['contentHtml'].$entryHtml,$arr['page html']);
+			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
 			return $arr;
 		}
 	}

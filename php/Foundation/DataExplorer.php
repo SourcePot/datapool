@@ -104,7 +104,7 @@ class DataExplorer{
 	}
 
 	public function getDataExplorer($callingClass){
-		$result=array('Content'=>array('Selector'=>array(),'Widgets'=>array()));
+		$return=array('Content'=>array('Selector'=>array(),'Widgets'=>array()));
 		// get explorer html
 		$canvasElement=$this->canvasFormProcessing($callingClass);
 		if (!empty($canvasElement)){$return=$canvasElement['Content'];}
