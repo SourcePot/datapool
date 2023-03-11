@@ -5,7 +5,7 @@
 2. Create the database and a user, e.g. a user and database named "webpage" which will be used by the framework.
 3. Set database collation to **utf8_unicode_ci**.
 4. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. Check the error log which can be found in the **../debugging/**-subdirectory, each error generates a .json file containing the details. Calling the webpage creates the file **../setup/Database/connect.json** which contains the database access credentials. Use a text editor to update the credentials. This file will enable the database access.
-5. If the database access credentials are correct, all database table will be created when the webpage is called in the web browser again. This call will additionally create a first admin user account. The user credentials of this admin account can be found in **../setup/User/initAdminAccount.json**.
+5. If the database access credentials are correct, all the database tables will be created the next time the webpage is called. This call will additionally create an initial admin user account. The user credentials of this admin account can be found in **../setup/User/initAdminAccount.json**.
 6. Open the webpage, select "Login" and login using the user credentials copy&paste from initAdminAccount.json.
 ![Using credentials from initAdminAccount.json](https://github.com/SourcePot/datapool/blob/main/docs/initAdminAccount.jpg?raw=true)
 ## Initial adjustments
