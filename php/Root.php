@@ -79,9 +79,11 @@ final class Root{
 		$orderedInitialization=array('Tools/MiscTools.php'=>array('dirname'=>'Tools','component'=>'MiscTools.php'),
 									 'Foundation/Access.php'=>array('dirname'=>'Foundation','component'=>'Access.php'),
 									 'Foundation/Filespace.php'=>array('dirname'=>'Foundation','component'=>'Filespace.php'),
-									 'Tools/HTMLbuilder.php'=>array('dirname'=>'Tools','component'=>'HTMLbuilder.php'),
+									 'Foundation/Backbone.php'=>array('dirname'=>'Foundation','component'=>'Backbone.php'),
 									 'Foundation/Haystack.php'=>array('dirname'=>'Foundation','component'=>'Haystack.php'),
 									 'Foundation/Database.php'=>array('dirname'=>'Foundation','component'=>'Database.php'),
+									 'Foundation/Dictionary.php'=>array('dirname'=>'Foundation','component'=>'Dictionary.php'),
+									 'Tools/HTMLbuilder.php'=>array('dirname'=>'Tools','component'=>'HTMLbuilder.php'),
 									 'Foundation/Logging.php'=>array('dirname'=>'Foundation','component'=>'Logging.php'),
 									 'Foundation/User.php'=>array('dirname'=>'Foundation','component'=>'User.php'),
 									 );

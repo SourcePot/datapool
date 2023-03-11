@@ -523,6 +523,7 @@ class Database{
 	
 	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$isDebugging=FALSE){
 		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Write');
+		if (empty($this->dbInfo[$selector['Source']])){return FALSE;}
 		if (empty($entryList['primaryKeys'])){
 			return FALSE;
 		} else {
