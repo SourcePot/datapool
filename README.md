@@ -1,7 +1,7 @@
 # Datapool
  Light Weight Content Management System
 ## Installing the framework
-1. Run composer cthe ommand ``composer create-project sourcepot/datapool <TARGET DIRECTORY>`` on your server. The **../www/**-subdirectory within the <TARGET DIRECTORY> (which will be created when running the composer command) is the document root and should be accessible via the network, i.e. from a client web browser.
+1. Run composer cthe ommand ``composer create-project sourcepot/datapool <TARGET DIRECTORY>`` on your server. The **../www/**-subdirectory within the \<TARGET DIRECTORY\> (which will be created when running the composer command) is the document root and should be accessible via the network, i.e. from a client web browser.
 2. Create the database and a user, e.g. a user and database named "webpage" which will be used by the framework.
 3. Set database collation to **utf8_unicode_ci**.
 4. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. Check the error log which can be found in the **../debugging/**-subdirectory, each error generates a .json file containing the details. Calling the webpage creates the file **../setup/Database/connect.json** which contains the database access credentials. Use a text editor to update the credentials. This file will enable the database access.
