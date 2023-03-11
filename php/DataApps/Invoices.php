@@ -48,12 +48,7 @@ class Invoices{
 			return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
 			$explorerArr=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
-			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			if (empty($selector)){
-				$entryHtml='';
-			} else {
-				$entryHtml=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
-			}
+			$entryHtml=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$explorerArr['Selector'],array(),array());
 			$arr['page html']=str_replace('{{explorer}}',$explorerArr['explorerHtml'],$arr['page html']);
 			$arr['page html']=str_replace('{{content}}',$explorerArr['contentHtml'].$entryHtml,$arr['page html']);
 			return $arr;

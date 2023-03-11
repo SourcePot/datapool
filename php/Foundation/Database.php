@@ -53,7 +53,7 @@ class Database{
 	}
 	
 	public function job($vars){
-		$this->deleteExpiredEntries();
+		$vars['statistics']=$this->deleteExpiredEntries();
 		return $vars;
 	}
 
