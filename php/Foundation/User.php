@@ -237,7 +237,6 @@ class User{
 	}
 
 	public function loginUser($user){
-		$this->arr['SourcePot\Datapool\Tools\NetworkTools']->resetSession();
 		$_SESSION['currentUser']=$user;
 		if (strcmp($user['Owner'],'ANONYM')!==0){
 			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User login '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	

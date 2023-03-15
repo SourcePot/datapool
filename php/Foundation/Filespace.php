@@ -34,6 +34,7 @@ class Filespace{
 	
 	public function init($arr){
 		$this->arr=$arr;
+		$this->removeTmpDir();
 		return $this->arr;
 	}
 		

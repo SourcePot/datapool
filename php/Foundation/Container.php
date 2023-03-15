@@ -398,11 +398,11 @@ class Container{
 						// order by buttons
 						if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}
 						if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
-						$element=array('tag'=>'button','element-content'=>'&uArr;','key'=>array('asc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
+						$element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
 						$matrix[$filterKey][$columnIndex].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);
 						$matrix[$filterKey][$columnIndex].=$filterTextField;
 						if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
-						$element=array('tag'=>'button','element-content'=>'&dArr;','key'=>array('desc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
+						$element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
 						$matrix[$filterKey][$columnIndex].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);
 						// remove column button
 						$matrix['Columns'][$columnIndex]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));

@@ -63,6 +63,10 @@ class Login{
 		$user['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
 		$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 		if (empty($user)){return 'Please register';}
+		// reset session | keep page state
+		$_SESSION=array('page state'=>$_SESSION['page state']);
+		session_regenerate_id(TRUE);
+		// login check
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
 			$this->loginSuccess($user);
 		} else {

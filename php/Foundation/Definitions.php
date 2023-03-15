@@ -199,8 +199,9 @@ class Definitions{
 		
 	public function definition2form($definition,$entry=array(),$isDebugging=FALSE){
 		$debugArr=array('definition'=>$definition,'entry_in'=>$entry,'entry_updated'=>array());
+		$html='';
 		if (empty($entry)){
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Called '.__FUNCTION__.' with empty entry.'));
+			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Called '.__FUNCTION__.' with empty entry.'));
 		} else {
 			// form processing
 			$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
@@ -222,12 +223,9 @@ class Definitions{
 					$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>ucfirst($entry['Source']).'-entry processed: '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 				}
 			}
-			// create html
 			if (isset($this->arr['SourcePot\Datapool\Tools\MediaTools'])){
 				$iconArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$entry));
-				$html=$iconArr['html'];
-			} else {
-				$html='';
+				$html.=$iconArr['html'];
 			}
 			$html.=$this->definition2html($definition,$entry,__CLASS__,__FUNCTION__);
 		}

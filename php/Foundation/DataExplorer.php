@@ -366,6 +366,7 @@ class DataExplorer{
 		$selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass),
 						 'mapping'=>array('Source'=>'mapentries','Folder'=>$callingClass),
 						 'matching'=>array('Source'=>'matchentries','Folder'=>$callingClass),
+						 'parser'=>array('Source'=>'parseentries','Folder'=>$callingClass),
 						 'processing'=>array('Source'=>'canvasprocessing','Folder'=>$callingClass),
 						 );
 		$result=array();

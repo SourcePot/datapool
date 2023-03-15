@@ -25,13 +25,7 @@ class NetworkTools{
 		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		return $this->arr;
 	}
-		
-	public function resetSession(){
-		$_SESSION=array('page state'=>$_SESSION['page state']);
-		$this->arr['SourcePot\Datapool\Foundation\Filespace']->removeTmpDir();
-		session_regenerate_id(TRUE);
-	}
-	
+
 	public function href($arr){
 		$script=$_SERVER['SCRIPT_NAME'];
 		$suffix='';

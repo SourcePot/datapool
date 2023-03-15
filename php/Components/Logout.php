@@ -33,7 +33,9 @@ class Logout{
 			return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
 		} else {
 			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User logout '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
-			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->resetSession();
+			// reset session | keep page state
+			$_SESSION=array('page state'=>$_SESSION['page state']);
+			session_regenerate_id(TRUE);
 			// load Home-app
 			header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('app'=>'SourcePot\Datapool\Components\Home')));
 			exit;

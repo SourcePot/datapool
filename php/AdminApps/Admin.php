@@ -96,8 +96,8 @@ class Admin{
 									   10000000000=>'Skip files if >10 GB'
 									   );
 		$tables=array(''=>'none');
-		$dbInfo=$this->arr['SourcePot\Datapool\Foundation\Database']->getDbInfo();
-		foreach($dbInfo as $table=>$infoArr){
+		$entryTemplates=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate();
+		foreach($entryTemplates as $table=>$entryTemplate){
 			$tables[$table]=ucfirst($table);
 		}
 		$btnArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('float'=>'left','clear'=>'both'));

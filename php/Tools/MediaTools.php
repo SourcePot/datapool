@@ -302,7 +302,7 @@ class MediaTools{
 			$absSinRot=abs(sin(deg2rad($transformArr['deg'])));
 			$imgArr=array('sourceFile'=>$sourceFile,
 						  'targetFile'=>$arr['targetFile'],
-						  'fileType'=>$arr['selector']['Params']['File']['MIME-Type'],
+						  'fileType'=>$tmpArr['mime'],
 						  'absSinRot'=>$absSinRot,
 						  'scaler'=>1,
 						  'orgWidth'=>$tmpArr[0],

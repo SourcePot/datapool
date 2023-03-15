@@ -138,6 +138,18 @@ class Access{
 		$emailId=$this->emailId($email);
 		$userPass=$password.$emailId;
 		if (password_verify($userPass,$loginId)===TRUE){
+			$this->rehashPswIfNeeded(array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$emailId),$userPass,$loginId);
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	}
+	
+	private function rehashPswIfNeeded($user,$userPass,$loginId){
+		if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
+			$user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User account login id for "'.$user['EntryId'].'" was rehashed.','priority'=>41,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			return TRUE;
 		} else {
 			return FALSE;
