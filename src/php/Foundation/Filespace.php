@@ -54,7 +54,7 @@ class Filespace{
 	private function class2dir($class,$mkDirIfMissing=FALSE){
 		$classComps=explode('\\',$class);
 		$class=array_pop($classComps);
-		$dir=$GLOBALS['setup dir'].$class.'/';
+		$dir=$GLOBALS['dirs']['setup'].$class.'/';
 		if (!file_exists($dir) && $mkDirIfMissing){
 			$mkDir=trim($dir,'/');
 			mkdir($mkDir,0750);
@@ -67,12 +67,7 @@ class Filespace{
 		$source=explode('\\',$source);
 		$source=array_pop($source);
 		// select dir and create the directory if neccessary
-		$dir=$GLOBALS['filespace dir'];
-		if (!file_exists($dir) && $mkDirIfMissing){
-			$mkDir=rtrim($dir,'/');
-			mkdir($mkDir,0750);
-		}
-		$dir.=$source.'/';
+		$dir=$GLOBALS['dirs']['filespace'].$source.'/';
 		if (!file_exists($dir) && $mkDirIfMissing){
 			$mkDir=rtrim($dir,'/');
 			mkdir($mkDir,0750);
@@ -228,22 +223,21 @@ class Filespace{
 	}
 	
 	public function getTmpDir(){
-		if (!is_dir($GLOBALS['tmp dir'])){$this->statistics['added dirs']+=intval(mkdir($GLOBALS['tmp dir'],0775));}
 		if (!isset($_SESSION[__CLASS__]['tmpDir'])){
 			$_SESSION[__CLASS__]['tmpDir']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 			$_SESSION[__CLASS__]['tmpDir'].='/';
 		}
-		$tmpDir=$GLOBALS['tmp dir'].$_SESSION[__CLASS__]['tmpDir'];
+		$tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
 		if (!is_dir($tmpDir)){$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775));}
 		return $tmpDir;
 	}
 	
 	public function removeTmpDir(){
 		$maxAge=86400;
-		if (is_dir($GLOBALS['tmp dir'])){
-			$allDirs=scandir($GLOBALS['tmp dir']);
+		if (is_dir($GLOBALS['dirs']['tmp'])){
+			$allDirs=scandir($GLOBALS['dirs']['tmp']);
 			foreach($allDirs as $dirIndex=>$dir){
-				$fullDir=$GLOBALS['tmp dir'].$dir;
+				$fullDir=$GLOBALS['dirs']['tmp'].$dir;
 				if (!is_dir($fullDir) || strlen($dir)<4){continue;}
 				$age=time()-filemtime($fullDir);
 				if ($age>$maxAge){
@@ -288,8 +282,8 @@ class Filespace{
 	}
 
 	public function abs2rel($file){
-		$rel=str_replace($GLOBALS['base dir'],'../',$file);
-		if (strpos($GLOBALS['base dir'],'xampp')===FALSE){
+		$rel=str_replace($GLOBALS['dirs']['src'],'../',$file);
+		if (strpos($GLOBALS['dirs']['src'],'xampp')===FALSE){
 			// productive environment -> dir entrypoint should be /wwww/ directory
 			$rel=str_replace('www/','',$rel);
 		} else {
@@ -299,7 +293,7 @@ class Filespace{
 	}
 
 	public function rel2abs($file){
-		$abs=str_replace('../',$GLOBALS['base dir'],$file);
+		$abs=str_replace('../',$GLOBALS['dirs']['src'],$file);
 		return $abs;
 	}
 	
@@ -407,8 +401,7 @@ class Filespace{
 		$zipStatistic=array('errors'=>array(),'files'=>array());
 		// extract zip archive to a temporary dir
 		if (is_file($entryTemplate['Params']['File']['Source'])){
-			if (!is_dir($GLOBALS['tmp dir'])){$this->statistics['added dirs']+=intval(mkdir($GLOBALS['tmp dir'],0775));}
-			$zipDir=$GLOBALS['tmp dir'].$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
+			$zipDir=$GLOBALS['dirs']['tmp'].$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
 			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775));
 			$zip=new \ZipArchive;
 			if ($zip->open($entryTemplate['Params']['File']['Source'])===TRUE){

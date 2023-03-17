@@ -26,7 +26,7 @@ class Backbone{
 	
 	private $settings=array('pageTitle'=>'Datapool',
 							'pageTimeZone'=>'Europe/Berlin',
-							'mainBackgroundImageFile'=>'main-6.jpg',
+							'mainBackgroundImageFile'=>FALSE,
 							'loginBackgroundImageFile'=>'main-login.jpg',
 							'iconFile'=>'LaIsla2.ico',
 							'charset'=>'utf-8',
@@ -66,11 +66,11 @@ class Backbone{
 		$icoFileInclude='';
 		$cssFileInclude='';
 		$jsFileInclude='';
-		if (is_dir($GLOBALS['media dir'])){
+		if (is_dir($GLOBALS['dirs']['media'])){
 			// add ico file
 			$icoFileInclude='';
 			if (!empty($this->settings['iconFile'])){
-				$fileAbs=$GLOBALS['media dir'].$this->settings['iconFile'];
+				$fileAbs=$GLOBALS['dirs']['media'].$this->settings['iconFile'];
 				if (is_file($fileAbs)){
 					$href=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
 					$icoFileInclude.='<link rel="shortcut icon" href="'.$href.'">'.PHP_EOL;
@@ -83,7 +83,7 @@ class Backbone{
 			if (!empty($this->settings['cssFiles'])){
 				foreach($this->settings['cssFiles'] as $fileName){
 					if (strpos($fileName,'://')===FALSE){
-						$fileAbs=$GLOBALS['media dir'].$fileName;
+						$fileAbs=$GLOBALS['dirs']['media'].$fileName;
 						if (is_file($fileAbs)){
 							$href=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
 						} else {
@@ -101,7 +101,7 @@ class Backbone{
 			if (!empty($this->settings['jsFiles'])){
 				foreach($this->settings['jsFiles'] as $fileName){
 					if (strpos($fileName,'://')===FALSE){
-						$fileAbs=$GLOBALS['media dir'].$fileName;
+						$fileAbs=$GLOBALS['dirs']['media'].$fileName;
 						if (is_file($fileAbs)){
 							$href=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
 						} else {
@@ -115,7 +115,7 @@ class Backbone{
 				}
 			}
 		} else {
-			throw new \ErrorException('Function '.__FUNCTION__.': Media dir "'.$GLOBALS['media dir'].'" is missing.',0,E_ERROR,__FILE__,__LINE__);
+			throw new \ErrorException('Function '.__FUNCTION__.': Media dir "'.$GLOBALS['dirs']['media'].'" is missing.',0,E_ERROR,__FILE__,__LINE__);
 		}
 		$head='';
 		$head.='<head>'.PHP_EOL;
@@ -137,7 +137,7 @@ class Backbone{
 		} else {
 			$imageFile=$this->settings['mainBackgroundImageFile'];
 		}
-		$fileAbs=$GLOBALS['media dir'].$imageFile;
+		$fileAbs=$GLOBALS['dirs']['media'].$imageFile;
 		if (is_file($fileAbs)){
 			$src=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
 			$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');

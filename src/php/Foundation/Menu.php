@@ -18,7 +18,7 @@ class Menu{
 	private $categories=array('Home'=>array('Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home'),
 							  'Login'=>array('Emoji'=>'&#8688;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login'),
 							  'Logout'=>array('Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout'),
-							  'Admin'=>array('Emoji'=>'&#9874;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account'),
+							  'Admin'=>array('Emoji'=>'&#128295;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account'),
 							  'Apps'=>array('Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia'),
 							  'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Lists'),
 							 );

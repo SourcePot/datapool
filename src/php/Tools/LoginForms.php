@@ -148,7 +148,7 @@ class LoginForms{
 				$imgAngleMin=-20;
 				$imgAngle=mt_rand($imgAngleMin,$imgAngleMax);
 				$symbol=(is_int($digitDef['symbol']))?chr($digitDef['symbol']):$digitDef['symbol'];
-				$fontFile=$GLOBALS['font dir'].$digitDef['font'];
+				$fontFile=$GLOBALS['dirs']['fonts'].$digitDef['font'];
 				imagettftext($image,$imgSize,$imgAngle,$imgX,$imgY,$fg,$fontFile,$symbol);
 				ob_start();
 				imagepng($image);

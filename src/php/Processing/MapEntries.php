@@ -13,6 +13,8 @@ namespace SourcePot\Datapool\Processing;
 
 class MapEntries{
 	
+	use \SourcePot\Datapool\Traits\Conversions;
+	
 	private $arr;
 
 	private $entryTable='';
@@ -400,102 +402,6 @@ class MapEntries{
 				break;
 		}
 		return $return;
-	}
-
-	// data type conversions
-	
-	public function convert2string($value){
-		return $value;
-	}
-
-	public function convert2stringNoWhitespaces($value){
-		$value=preg_replace("/\s/",'',$value);
-		return $value;
-	}
-
-	public function convert2splitString($value){
-		$value=strtolower($value);
-		$value=trim($value);
-		$value=preg_split("/[^a-zäöü0-9ß]+/",$value);
-		return $value;
-	}
-
-	public function convert2float($value){
-		$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2float($value);
-		return $value;
-	}
-	
-	public function convert2int($value){
-		$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2float($value);
-		return round($value);
-	}
-
-	public function convert2money($value){
-		$arr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2money($value);
-		return $arr;
-	}
-
-	public function convert2date($value){
-		$arr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->str2date($value);
-		return $arr;
-	}
-	
-	public function convert2codepfad($value){
-		$codepfade=explode(';',$value);
-		$arr=array();
-		foreach($codepfade as $codePfadIndex=>$codepfad){
-			$codepfadComps=explode('\\',$codepfad);
-			if ($codePfadIndex===0){
-				if (isset($codepfadComps[0])){$arr['FhI']=$codepfadComps[0];}
-				if (isset($codepfadComps[1])){$arr['FhI Teil']=$codepfadComps[1];}
-				if (isset($codepfadComps[2])){$arr['Codepfad 3']=$codepfadComps[2];}
-			} else {
-				if (isset($codepfadComps[0])){$arr[$codePfadIndex]['FhI']=$codepfadComps[0];}
-				if (isset($codepfadComps[1])){$arr[$codePfadIndex]['FhI Teil']=$codepfadComps[1];}
-				if (isset($codepfadComps[2])){$arr[$codePfadIndex]['Codepfad 3']=$codepfadComps[2];}
-			}
-		}
-		return $arr;
-	}
-	
-	public function convert2unycom($value){
-		$keyTemplate=array('Match','Year','Type','Number');
-		$regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-		$value=str_replace(' ','',$value);
-		preg_match('/([1-2][0-9]{3})([FPRZX]{1,2})([0-9]{5})/',$value,$matches);
-		if (empty($matches[0])){return array();}
-		$arr=array_combine($keyTemplate,$matches);
-		$arr['Region']='  ';
-		$arr['Country']='  ';
-		$arr['Part']='  ';
-		$prefixSuffix=explode($matches[0],$value);
-		if (!empty($prefixSuffix[1])){
-			$prefixSuffix[1]=substr($prefixSuffix[1],0,6);
-			foreach($regions as $rc=>$region){
-				if (strpos($prefixSuffix[1],$rc)!==0){continue;}
-				$arr['Region']=$rc;
-				$arr['Region long']=$region;
-				break;
-			}
-			$countries=$this->arr['SourcePot\Datapool\Tools\GeoTools']->getCountryCodes();
-			foreach($countries as $alpha2code=>$countryArr){
-				if (strpos($prefixSuffix[1],$alpha2code)===FALSE){continue;}
-				$arr['Country']=$alpha2code;
-				$arr['Country long']=$countryArr['Country'];
-				break;
-			}
-			$part=preg_replace('/[^0-9]+/','',$prefixSuffix[1]);
-			if (!empty($part)){$arr['Part']=$part;}
-			$country=preg_replace('/[^A-Z]+/','',$prefixSuffix[1]);
-			$country=str_replace($arr['Region'],'',$country);
-			if (strcmp($arr['Country'],'  ')===0 && !empty($country)){$arr['Country']=$country;}
-		}
-		$arr['Reference']=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
-		if (!empty($prefixSuffix[0])){
-			$arr['Prefix']=trim($prefixSuffix[0],'- ');
-		}
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
-		return $arr;
 	}
 	
 	private function applyCallingElement($source,$elementId,$target=FALSE){

@@ -144,13 +144,9 @@ button,input,textarea,select,a.btn{
 	border-right:1px solid #555;
 	border-bottom:1px solid #555;
 }
-input[type=text],select{
-	max-width:60%;
-}
 button,a.btn{
 	color:#000;
 	background-color:#aaa;
-	font-size:1.2em;
 }
 input[type=submit]{
 	color:#000;
@@ -162,6 +158,7 @@ button:hover,input[type=submit]:hover,a.btn:hover{
 	background-color:#eee;
 }
 select{
+	max-width:280px;
 	cursor:pointer;
 }
 div.preview,main,div,select,video,img,p,ul,ol,li{
@@ -386,7 +383,8 @@ div.icon{
 	height:500px;
 	font-size:16px;
 	background-color:#000;
-	border:1px solid #888;
+	border-top:1px solid #888;
+	border-bottom:1px solid #888;
 	overflow:auto;
 	background-image:url("canvasbg.png");
 }
@@ -401,7 +399,7 @@ div.icon{
 	background:none;
 }
 .canvas-element{
-	border:2px solid #000;
+	border:2px solid #0000;
 }
 .canvas-element-btn{
 	position:absolute;

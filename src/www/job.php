@@ -17,19 +17,16 @@ mb_internal_encoding("UTF-8");
 session_start();
 	
 // get basic environment information and initialize arr
-$basedir=trim(str_replace('\\','/',getcwd()),'/');
-$basedir=substr($basedir,0,strrpos($basedir,'/')+1);
-$realpath=str_replace('\\','/',realpath('../')).'/';
 $GLOBALS['script start time']=hrtime(TRUE);
-$GLOBALS['realpath']=$realpath;
-$GLOBALS['base dir']=$basedir;
-$GLOBALS['debugging dir']=$GLOBALS['realpath'].'debugging/';
+$GLOBALS['dirs']=array('root'=>realpath('../../'));
+$GLOBALS['dirs']['root']=strtr($GLOBALS['dirs']['root'],array('\\'=>'/')).'/';
+$GLOBALS['dirs']['debugging']=$GLOBALS['dirs']['root'].'src/debugging/';
 // error handling
 set_exception_handler(function(\Throwable $e){
-	if (!file_exists($GLOBALS['debugging dir'])){mkdir($GLOBALS['debugging dir'],0750);}
+	if (!file_exists($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0750);}
 	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
 	$logFileContent=json_encode($err);
-	$logFileName=$GLOBALS['debugging dir'].time().'_exceptionsLog.json';
+	$logFileName=$GLOBALS['dirs']['debugging'].time().'_exceptionsLog.json';
 	file_put_contents($logFileName,$logFileContent);
 	echo 'Have run into a problem...';
 	exit;
@@ -39,7 +36,7 @@ set_error_handler(function($errno,$errstr,$errfile,$errline){
 	throw new \ErrorException($errstr,$errno,0,$errfile,$errline);
 },E_ALL & ~E_WARNING & ~E_NOTICE & ~E_USER_NOTICE);
 // load root script, initialize it and call run() function
-require_once($GLOBALS['realpath'].'php/Root.php');
+require_once($GLOBALS['dirs']['root'].'src/php/Root.php');
 $pageObj=new Root();
 $arr=$pageObj->run(__FILE__);
 echo $arr['page html'];

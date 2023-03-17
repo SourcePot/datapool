@@ -19,7 +19,7 @@ class DataExplorer{
 	private $entryTemplate=array();
 	
 	public $definition=array('Content'=>array('Style'=>array('text'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															 'font-size'=>array('@tag'=>'input','@type'=>'text','@default'=>'1em'),
+															 'font-size'=>array('@tag'=>'input','@type'=>'text','@default'=>'25px'),
 															 'color'=>array('@tag'=>'input','@type'=>'text','@default'=>'#fff'),
 															 'background-color'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 															 'border'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
@@ -45,19 +45,31 @@ class DataExplorer{
 
 	private $cntrBtns=array('&#9874;'=>array('key'=>array('edit mode'),'value'=>'edit','editMode'=>FALSE,'style'=>'color:#fff;background-color:#d00;clear:right;'),
 							'&#10006;'=>array('key'=>array('run mode'),'value'=>'run','editMode'=>TRUE,'style'=>'color:#fff;background-color:#d00;clear:right;'),
-							'...'=>array('key'=>array('...'),'value'=>'new','editMode'=>TRUE,'title'=>'Text box','style'=>'clear:left;'),
-							'&larr;'=>array('key'=>array('&larr;'),'value'=>'new','editMode'=>TRUE),
+							'&#9881;'=>array('key'=>array('&#9881;'),'value'=>'new','cronJobCntr'=>TRUE,'title'=>'CRON job','editMode'=>TRUE,'style'=>'clear:left;'),
+							'...'=>array('key'=>array('...'),'value'=>'new','editMode'=>TRUE,'title'=>'Text box','style'=>'clear:right;'),
+							'&larr;'=>array('key'=>array('&larr;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:left;'),
 							'&uarr;'=>array('key'=>array('&uarr;'),'value'=>'new','editMode'=>TRUE),
 							'&rarr;'=>array('key'=>array('&rarr;'),'value'=>'new','editMode'=>TRUE),
 							'&darr;'=>array('key'=>array('&darr;'),'value'=>'new','editMode'=>TRUE),
-							'&harr;'=>array('key'=>array('&harr;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:right;'),
-							'&varr;'=>array('key'=>array('&varr;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:left;'),
+							'&harr;'=>array('key'=>array('&harr;'),'value'=>'new','editMode'=>TRUE),
+							'&varr;'=>array('key'=>array('&varr;'),'value'=>'new','editMode'=>TRUE),
 							'&nwarr;'=>array('key'=>array('&nwarr;'),'value'=>'new','editMode'=>TRUE),
 							'&nearr;'=>array('key'=>array('&nearr;'),'value'=>'new','editMode'=>TRUE),
 							'&searr;'=>array('key'=>array('&searr;'),'value'=>'new','editMode'=>TRUE),
-							'&swarr;'=>array('key'=>array('&swarr;'),'value'=>'new','editMode'=>TRUE),
-							'|'=>array('key'=>array('|'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:right;'),
-							'&#9881;'=>array('key'=>array('&#9881;'),'value'=>'new','cronJobCntr'=>TRUE,'title'=>'CRON job','editMode'=>TRUE,'style'=>'clear:left;'),
+							'&swarr;'=>array('key'=>array('&swarr;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:right;'),
+							'&#10137;'=>array('key'=>array('&#10137;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:left;'),
+							'&#10154;'=>array('key'=>array('&#10154;'),'value'=>'new','editMode'=>TRUE),
+							'&#10140;'=>array('key'=>array('&#10140;'),'value'=>'new','editMode'=>TRUE),
+							'&#10141;'=>array('key'=>array('&#10141;'),'value'=>'new','editMode'=>TRUE),
+							'&#9615;'=>array('key'=>array('&#9615;'),'value'=>'new','editMode'=>TRUE),
+							'&#9601;'=>array('key'=>array('&#9601;'),'value'=>'new','editMode'=>TRUE),
+							'&#9675;'=>array('key'=>array('&#9675;'),'value'=>'new','editMode'=>TRUE),
+							'&#9679;'=>array('key'=>array('&#9679;'),'value'=>'new','editMode'=>TRUE),
+							'&#9711;'=>array('key'=>array('&#9711;'),'value'=>'new','editMode'=>TRUE),
+							'&#9476;'=>array('key'=>array('&#9476;'),'value'=>'new','editMode'=>TRUE),
+							'&#9482;'=>array('key'=>array('&#9482;'),'value'=>'new','editMode'=>TRUE),
+							'&#9552;'=>array('key'=>array('&#9552;'),'value'=>'new','editMode'=>TRUE),
+							'&#9553;'=>array('key'=>array('&#9553;'),'value'=>'new','editMode'=>TRUE),
 							);
     
 	private $processorOptions=array();
@@ -180,7 +192,7 @@ class DataExplorer{
 					$entry['Content']['Style']=array('text'=>$elementContent);
 					if (strcmp($elementContent,'...')===0){
 						$entry['Content']['Style']['color']='#000';
-						$entry['Content']['Style']['background-color']='#aaa';
+						$entry['Content']['Style']['background-color']='#fff';
 					} else if (strcmp($elementContent,'&#9881;')===0){
 						$entry['Content']['Style']['color']='#fff';
 						$entry['Content']['Style']['background-color']='#20f';

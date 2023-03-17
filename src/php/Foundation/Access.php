@@ -209,7 +209,7 @@ class Access{
 				$imgAngleMin=-20;
 				$imgAngle=mt_rand($imgAngleMin,$imgAngleMax);
 				$symbol=(is_int($digitDef['symbol']))?chr($digitDef['symbol']):$digitDef['symbol'];
-				$fontFile=$this->arr['env']['font dir'].$digitDef['font'];
+				$fontFile=$this->arr['env']['dirs']['fonts'].$digitDef['font'];
 				imagettftext($image,$imgSize,$imgAngle,$imgX,$imgY,$fg,$fontFile,$symbol);
 				ob_start();
 				imagepng($image);

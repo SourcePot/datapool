@@ -104,7 +104,7 @@ trait Conversions{
 				break;
 			}
 			// get country codes from file
-			$file=$GLOBALS['setup dir'].'countryCodes.json';
+			$file=$GLOBALS['dirs']['setup'].'countryCodes.json';
 			if (is_file($file)){
 				$cc=file_get_contents($file);
 				$countries=json_decode($cc,TRUE,512,JSON_INVALID_UTF8_IGNORE);

@@ -35,7 +35,7 @@ jQuery(document).ready(function(){
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]').first();
 		if (isVisible(obj)===true){
-			let arr={'Source':jQuery(obj).attr('source'),'ElementId':jQuery(obj).attr('element-id'),'function':jQuery(obj).attr('function')};
+			let arr={'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id'),'function':jQuery(obj).attr('function')};
 			loadNextSelectedView(arr);
 		}
 	}
@@ -49,7 +49,7 @@ jQuery(document).ready(function(){
 				data:arr,
 				dataType: "json"
 			}).done(function(data){
-				jQuery('[function=loadEntry][element-id='+arr['ElementId']+']').replaceWith(data['html']);
+				jQuery('[function=loadEntry][entry-id='+arr['EntryId']+']').replaceWith(data['html']);
 				attachMissingContainerEvents();
 				resetAll();
 			}).fail(function(data){
@@ -260,7 +260,7 @@ jQuery(document).ready(function(){
 		imgId2index={};
 		let index=0;
 		jQuery('div[class*=preview]').each(function(imgIndex){
-			let img={'id':jQuery(this).attr('id'),'Source':jQuery(this).attr('source'),'ElementId':jQuery(this).attr('element-id'),'index':index};
+			let img={'id':jQuery(this).attr('id'),'Source':jQuery(this).attr('source'),'EntryId':jQuery(this).attr('entry-id'),'index':index};
 			imgs[index]=img;
 			imgId2index[img['id']]=index;
 			jQuery(this).unbind('click').bind('click',loadImage);
@@ -318,14 +318,14 @@ jQuery(document).ready(function(){
 	initDraggable();
 	function initDraggable(){
 		jQuery('.canvas-element').each(function(containerIndex){
-			if (typeof jQuery(this).attr('element-id')!=='undefined'){
+			if (typeof jQuery(this).attr('entry-id')!=='undefined'){
 				jQuery(this).draggable({
 					containment:'parent',
 					grid:[5,5],
 					start: function(){},
 					drag: function(){},
 					stop: function(){
-						let arr={'Content':{'Style':{'top':jQuery(this).css('top'),'left':jQuery(this).css('left')}},'Source':jQuery(this).attr('source'),'ElementId':jQuery(this).attr('element-id')};
+						let arr={'Content':{'Style':{'top':jQuery(this).css('top'),'left':jQuery(this).css('left')}},'Source':jQuery(this).attr('source'),'EntryId':jQuery(this).attr('entry-id')};
 						setCanvasElementPosition(arr);
 					}
 				});

@@ -14,7 +14,7 @@ namespace SourcePot\Datapool;
 
 final class Root{
 	/** Directory structure
-	* the "src\" directory contains php-files only, Root.php is the entry point:
+	* the "php\" directory contains php-files only, Root.php is the entry point:
 	* 'Tools\' ... Contains generic support classes.
 	* 'Foundation\' ... Contains controller and model classes such as database connector, logging etc. These clases might require methods of support classes.
 	* 'Processing\' ... Contains data Processing classes which must contain the dataProcessor method.
@@ -32,21 +32,23 @@ final class Root{
 	* @return array An associative array that contains the empty webpage refrenced by the key "page html" as well as the placeholder for all objects to be created.
 	*/
 	public function __construct($arr=array()){
-		$GLOBALS['source dir']=$GLOBALS['realpath'].'php/';
-		$GLOBALS['traits dir']=$GLOBALS['realpath'].'php/Traits/';
-		$GLOBALS['vendor dir']=$GLOBALS['realpath'].'vendor/';
-		$GLOBALS['setup dir']=$GLOBALS['realpath'].'setup/';
-		$GLOBALS['public dir']=$GLOBALS['realpath'].'www/';
-		$GLOBALS['filespace dir']=$GLOBALS['realpath'].'filespace/';
-		$GLOBALS['font dir']=$GLOBALS['realpath'].'fonts/';
-		$GLOBALS['media dir']=$GLOBALS['public dir'].'media/';
-		$GLOBALS['tmp dir']=$GLOBALS['public dir'].'tmp/';
-		$GLOBALS['script start time']=hrtime(TRUE);
-		$GLOBALS['expirationPeriod']=600;
+		$GLOBALS['dirs']['src']=$GLOBALS['dirs']['root'].'src/';
+		$GLOBALS['dirs']['setup']=$GLOBALS['dirs']['root'].'src/setup/';
+		$GLOBALS['dirs']['filespace']=$GLOBALS['dirs']['root'].'src/filespace/';
+		$GLOBALS['dirs']['fonts']=$GLOBALS['dirs']['root'].'src/fonts/';
+		$GLOBALS['dirs']['php']=$GLOBALS['dirs']['root'].'src/php/';
+		$GLOBALS['dirs']['traits']=$GLOBALS['dirs']['root'].'src/php/Traits/';
+		$GLOBALS['dirs']['public']=$GLOBALS['dirs']['root'].'src/www/';
+		$GLOBALS['dirs']['media']=$GLOBALS['dirs']['root'].'src/www/media/';
+		$GLOBALS['dirs']['tmp']=$GLOBALS['dirs']['root'].'src/www/tmp/';
+		foreach($GLOBALS['dirs'] as $dirName=>$dir){
+			$dir=trim($dir,'/');
+			if (!is_dir($dir)){mkdir($dir,0750);}
+		}
 		//unset($_SESSION['page state']);
 		if (empty($_SESSION['page state'])){
 			$pageState=array('lngCode'=>'en','cssFile'=>'dark.css','toolbox'=>FALSE,'selected'=>array());
-			$pageStateInitFile=$GLOBALS['setup dir'].'pageStateInit.json';
+			$pageStateInitFile=$GLOBALS['dirs']['setup'].'pageStateInit.json';
 			if (!is_file($pageStateInitFile)){
 				$fileContent=json_encode($pageState);
 				file_put_contents($pageStateInitFile,$fileContent);
@@ -60,9 +62,10 @@ final class Root{
 		$arr['page html']='';
 		$arr['registered methods']=array();
 		// load all external components
+		$GLOBALS['dirs']['vendor']=$GLOBALS['dirs']['root'].'vendor/';
 		$_SESSION['page state']['autoload.php loaded']=FALSE;
-		if (is_dir($GLOBALS['vendor dir'])){
-			$autoloadFile=$GLOBALS['vendor dir'].'autoload.php';
+		if (is_dir($GLOBALS['dirs']['vendor'])){
+			$autoloadFile=$GLOBALS['dirs']['vendor'].'autoload.php';
 			if (is_file($autoloadFile)){
 				$_SESSION['page state']['autoload.php loaded']=TRUE;
 				require_once $autoloadFile;
@@ -77,10 +80,10 @@ final class Root{
 	public function run($type){
 		$arr=$this->arr;
 		// include traits
-		$traits=scandir($GLOBALS['traits dir']);
+		$traits=scandir($GLOBALS['dirs']['traits']);
 		foreach($traits as $traitIndex=>$trait){
 			if (strpos($trait,'.php')===FALSE){continue;}
-			require_once $GLOBALS['traits dir'].$trait;
+			require_once $GLOBALS['dirs']['traits'].$trait;
 		}
 		// create all objects and get structure
 		$orderedInitialization=array('Tools/MiscTools.php'=>array('dirname'=>'Tools','component'=>'MiscTools.php'),
@@ -94,10 +97,10 @@ final class Root{
 									 'Foundation/Logging.php'=>array('dirname'=>'Foundation','component'=>'Logging.php'),
 									 'Foundation/User.php'=>array('dirname'=>'Foundation','component'=>'User.php'),
 									 );
-		$dirs=scandir($GLOBALS['source dir']);
+		$dirs=scandir($GLOBALS['dirs']['php']);
 		foreach($dirs as $dirIndex=>$dirname){
 			if (strlen($dirname)<3 || strpos($dirname,'Traits')!==FALSE || strpos($dirname,'.php')!==FALSE){continue;}
-			$dir=$GLOBALS['source dir'].$dirname.'/';
+			$dir=$GLOBALS['dirs']['php'].$dirname.'/';
 			$Components=scandir($dir);
 			// loop through all components found in $dir
 			foreach($Components as $componentIndex=>$component){
@@ -107,7 +110,7 @@ final class Root{
 			}
 		}
 		foreach($orderedInitialization as $dir=>$componentArr){
-			$arr=$this->createComponent($GLOBALS['source dir'],$componentArr['dirname'],$componentArr['component'],$arr);
+			$arr=$this->createComponent($GLOBALS['dirs']['php'],$componentArr['dirname'],$componentArr['component'],$arr);
 		}
 		// loop through components and invoke the init method
 		foreach($arr['registered methods']['init'] as $classWithNamespace=>$returnArr){$arr=$arr[$classWithNamespace]->init($arr);}
