@@ -35,6 +35,7 @@ final class Root{
 		$GLOBALS['dirs']['src']=$GLOBALS['dirs']['root'].'src/';
 		$GLOBALS['dirs']['setup']=$GLOBALS['dirs']['root'].'src/setup/';
 		$GLOBALS['dirs']['filespace']=$GLOBALS['dirs']['root'].'src/filespace/';
+		$GLOBALS['dirs']['ftp']=$GLOBALS['dirs']['root'].'src/ftp/';
 		$GLOBALS['dirs']['fonts']=$GLOBALS['dirs']['root'].'src/fonts/';
 		$GLOBALS['dirs']['php']=$GLOBALS['dirs']['root'].'src/php/';
 		$GLOBALS['dirs']['traits']=$GLOBALS['dirs']['root'].'src/php/Traits/';
@@ -43,7 +44,7 @@ final class Root{
 		$GLOBALS['dirs']['tmp']=$GLOBALS['dirs']['root'].'src/www/tmp/';
 		foreach($GLOBALS['dirs'] as $dirName=>$dir){
 			$dir=trim($dir,'/');
-			if (!is_dir($dir)){mkdir($dir,0750);}
+			if (!is_dir($dir)){mkdir($dir,0770,TRUE);}
 		}
 		//unset($_SESSION['page state']);
 		if (empty($_SESSION['page state'])){

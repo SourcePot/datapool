@@ -220,7 +220,7 @@ class Definitions{
 				}
 				$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 				if (isset($this->arr['SourcePot\Datapool\Foundation\Logging'])){
-					$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>ucfirst($entry['Source']).'-entry processed: '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+					$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>ucfirst(strval($entry['Source'])).'-entry processed: '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 				}
 			}
 			if (isset($this->arr['SourcePot\Datapool\Tools\MediaTools'])){

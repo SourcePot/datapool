@@ -57,7 +57,7 @@ class Filespace{
 		$dir=$GLOBALS['dirs']['setup'].$class.'/';
 		if (!file_exists($dir) && $mkDirIfMissing){
 			$mkDir=trim($dir,'/');
-			mkdir($mkDir,0750);
+			mkdir($mkDir,0750,TRUE);
 		}
 		return $dir;	
 	}
@@ -70,7 +70,7 @@ class Filespace{
 		$dir=$GLOBALS['dirs']['filespace'].$source.'/';
 		if (!file_exists($dir) && $mkDirIfMissing){
 			$mkDir=rtrim($dir,'/');
-			mkdir($mkDir,0750);
+			mkdir($mkDir,0750,TRUE);
 		}
 		return $dir;
 	}
@@ -228,7 +228,7 @@ class Filespace{
 			$_SESSION[__CLASS__]['tmpDir'].='/';
 		}
 		$tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
-		if (!is_dir($tmpDir)){$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775));}
+		if (!is_dir($tmpDir)){$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775,TRUE));}
 		return $tmpDir;
 	}
 	
@@ -282,18 +282,12 @@ class Filespace{
 	}
 
 	public function abs2rel($file){
-		$rel=str_replace($GLOBALS['dirs']['src'],'../',$file);
-		if (strpos($GLOBALS['dirs']['src'],'xampp')===FALSE){
-			// productive environment -> dir entrypoint should be /wwww/ directory
-			$rel=str_replace('www/','',$rel);
-		} else {
-			// development environment
-		}
+		$rel=str_replace($GLOBALS['dirs']['public'],'../',$file);
 		return $rel;
 	}
 
 	public function rel2abs($file){
-		$abs=str_replace('../',$GLOBALS['dirs']['src'],$file);
+		$abs=str_replace('../',$GLOBALS['dirs']['public'],$file);
 		return $abs;
 	}
 	
@@ -402,7 +396,7 @@ class Filespace{
 		// extract zip archive to a temporary dir
 		if (is_file($entryTemplate['Params']['File']['Source'])){
 			$zipDir=$GLOBALS['dirs']['tmp'].$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
-			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775));
+			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
 			$zip=new \ZipArchive;
 			if ($zip->open($entryTemplate['Params']['File']['Source'])===TRUE){
 				$zip->extractTo($zipDir);
