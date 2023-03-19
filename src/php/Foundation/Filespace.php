@@ -282,12 +282,12 @@ class Filespace{
 	}
 
 	public function abs2rel($file){
-		$rel=str_replace($GLOBALS['dirs']['public'],'../',$file);
+		$rel=str_replace($GLOBALS['dirs']['public'],'./',$file);
 		return $rel;
 	}
 
 	public function rel2abs($file){
-		$abs=str_replace('../',$GLOBALS['dirs']['public'],$file);
+		$abs=str_replace('./',$GLOBALS['dirs']['public'],$file);
 		return $abs;
 	}
 	

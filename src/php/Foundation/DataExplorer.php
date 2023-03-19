@@ -19,22 +19,22 @@ class DataExplorer{
 	private $entryTemplate=array();
 	
 	public $definition=array('Content'=>array('Style'=>array('text'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															 'font-size'=>array('@tag'=>'input','@type'=>'text','@default'=>'25px'),
-															 'color'=>array('@tag'=>'input','@type'=>'text','@default'=>'#fff'),
-															 'background-color'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															 'border'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															 'line-height'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															 'top'=>array('@tag'=>'input','@type'=>'text','@default'=>'0px'),
-															 'left'=>array('@tag'=>'input','@type'=>'text','@default'=>'0px'),
-															 ),
-											  'Selector'=>array('Source'=>array('@function'=>'select','@options'=>array()),
+															'font-size'=>array('@tag'=>'input','@type'=>'text','@default'=>'25px'),
+															'color'=>array('@tag'=>'input','@type'=>'text','@default'=>'#fff'),
+															'background-color'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
+															'border'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
+															'line-height'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
+															'top'=>array('@tag'=>'input','@type'=>'text','@default'=>'0px'),
+															'left'=>array('@tag'=>'input','@type'=>'text','@default'=>'0px'),
+															),
+											'Selector'=>array('Source'=>array('@function'=>'select','@options'=>array()),
 																'Group'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'Folder'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'Name'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																'Type'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
 																),
-											  'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
+											 'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
 															   'File upload'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
 															   'Delete selected entries'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>1),
 																),
@@ -42,36 +42,36 @@ class DataExplorer{
 							 'Read'=>array('@tag'=>'p','@default'=>'ALL_R'),
 							 'Write'=>array('@tag'=>'p','@default'=>'ADMIN_R'),
 							);
-
-	private $cntrBtns=array('&#9874;'=>array('key'=>array('edit mode'),'value'=>'edit','editMode'=>FALSE,'style'=>'color:#fff;background-color:#d00;clear:right;'),
-							'&#10006;'=>array('key'=>array('run mode'),'value'=>'run','editMode'=>TRUE,'style'=>'color:#fff;background-color:#d00;clear:right;'),
-							'&#9881;'=>array('key'=>array('&#9881;'),'value'=>'new','cronJobCntr'=>TRUE,'title'=>'CRON job','editMode'=>TRUE,'style'=>'clear:left;'),
-							'...'=>array('key'=>array('...'),'value'=>'new','editMode'=>TRUE,'title'=>'Text box','style'=>'clear:right;'),
-							'&larr;'=>array('key'=>array('&larr;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:left;'),
-							'&uarr;'=>array('key'=>array('&uarr;'),'value'=>'new','editMode'=>TRUE),
-							'&rarr;'=>array('key'=>array('&rarr;'),'value'=>'new','editMode'=>TRUE),
-							'&darr;'=>array('key'=>array('&darr;'),'value'=>'new','editMode'=>TRUE),
-							'&harr;'=>array('key'=>array('&harr;'),'value'=>'new','editMode'=>TRUE),
-							'&varr;'=>array('key'=>array('&varr;'),'value'=>'new','editMode'=>TRUE),
-							'&nwarr;'=>array('key'=>array('&nwarr;'),'value'=>'new','editMode'=>TRUE),
-							'&nearr;'=>array('key'=>array('&nearr;'),'value'=>'new','editMode'=>TRUE),
-							'&searr;'=>array('key'=>array('&searr;'),'value'=>'new','editMode'=>TRUE),
-							'&swarr;'=>array('key'=>array('&swarr;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:right;'),
-							'&#10137;'=>array('key'=>array('&#10137;'),'value'=>'new','editMode'=>TRUE,'style'=>'clear:left;'),
-							'&#10154;'=>array('key'=>array('&#10154;'),'value'=>'new','editMode'=>TRUE),
-							'&#10140;'=>array('key'=>array('&#10140;'),'value'=>'new','editMode'=>TRUE),
-							'&#10141;'=>array('key'=>array('&#10141;'),'value'=>'new','editMode'=>TRUE),
-							'&#9615;'=>array('key'=>array('&#9615;'),'value'=>'new','editMode'=>TRUE),
-							'&#9601;'=>array('key'=>array('&#9601;'),'value'=>'new','editMode'=>TRUE),
-							'&#9675;'=>array('key'=>array('&#9675;'),'value'=>'new','editMode'=>TRUE),
-							'&#9679;'=>array('key'=>array('&#9679;'),'value'=>'new','editMode'=>TRUE),
-							'&#9711;'=>array('key'=>array('&#9711;'),'value'=>'new','editMode'=>TRUE),
-							'&#9476;'=>array('key'=>array('&#9476;'),'value'=>'new','editMode'=>TRUE),
-							'&#9482;'=>array('key'=>array('&#9482;'),'value'=>'new','editMode'=>TRUE),
-							'&#9552;'=>array('key'=>array('&#9552;'),'value'=>'new','editMode'=>TRUE),
-							'&#9553;'=>array('key'=>array('&#9553;'),'value'=>'new','editMode'=>TRUE),
-							);
     
+	private $tags=array('run'=>array('tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'),'showEditMode'=>TRUE,'type'=>'Cntr'),
+						'edit'=>array('tag'=>'button','element-content'=>'⚙','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'),'showEditMode'=>FALSE,'type'=>'Cntr'),
+						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'16px','color'=>'#fff','background-color'=>'#20f'),'showEditMode'=>TRUE,'type'=>'Cntr'),
+						'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'style'=>array('font-size'=>'17px','color'=>'#000','background-color'=>'#fff','min-width'=>'150px','text-align'=>'center'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&larr;'=>array('tag'=>'div','element-content'=>'&larr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&uarr;'=>array('tag'=>'div','element-content'=>'&uarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&rarr;'=>array('tag'=>'div','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&darr;'=>array('tag'=>'div','element-content'=>'&darr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&harr;'=>array('tag'=>'div','element-content'=>'&harr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&varr;'=>array('tag'=>'div','element-content'=>'&varr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&nwarr;'=>array('tag'=>'div','element-content'=>'&nwarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&nearr;'=>array('tag'=>'div','element-content'=>'&nearr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&searr;'=>array('tag'=>'div','element-content'=>'&searr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&swarr;'=>array('tag'=>'div','element-content'=>'&swarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#10137'=>array('tag'=>'div','element-content'=>'&#10137','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#10154'=>array('tag'=>'div','element-content'=>'&#10154','keep-element-content'=>TRUE,'style'=>array('font-size'=>'30px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#10140'=>array('tag'=>'div','element-content'=>'&#10140','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#10141'=>array('tag'=>'div','element-content'=>'&#10141','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9615'=>array('tag'=>'div','element-content'=>'&#9615','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9601'=>array('tag'=>'div','element-content'=>'&#9601','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9675'=>array('tag'=>'div','element-content'=>'&#9675','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9679'=>array('tag'=>'div','element-content'=>'&#9679','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9711'=>array('tag'=>'div','element-content'=>'&#9711','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9476'=>array('tag'=>'div','element-content'=>'&#9476','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9482'=>array('tag'=>'div','element-content'=>'&#9482','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9552'=>array('tag'=>'div','element-content'=>'&#9552','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9553'=>array('tag'=>'div','element-content'=>'&#9553','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						);
+	
 	private $processorOptions=array();
 	
 	public function __construct($arr){
@@ -111,22 +111,31 @@ class DataExplorer{
 	}
 
 	public function unifyEntry($entry){
+		if (!empty($entry['style'])){$entry['Content']['Style']=$entry['style'];}
+		if (!empty($entry['element-content'])){
+			$entry['Name']=$entry['element-content'];
+			$entry['Content']['Style']['text']=$entry['element-content'];
+			if (strpos($entry['element-content'],'&#9881;')!==FALSE){
+				$entry['Content']['Selector']['Source']=$this->arr[$entry['Folder']]->getEntryTable();
+				$entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
+			}
+		}
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
 		return $entry;
 	}
 
 	public function getDataExplorer($callingClass){
-		$return=array('Content'=>array('Selector'=>array(),'Widgets'=>array()));
+		$return=array('Content'=>array('Selector'=>array(),'Widgets'=>array()),'selector'=>array());
 		// get explorer html
 		$canvasElement=$this->canvasFormProcessing($callingClass);
-		if (!empty($canvasElement)){$return=$canvasElement['Content'];}
+		//if (!empty($canvasElement)){$return=$canvasElement['Content'];}
 		$cntrHtml=$this->getCntrHtml($callingClass);
 		$canvasHtml=$this->getCanvas($callingClass);
 		$articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtml,'keep-element-content'=>TRUE,'style'=>array());
 		$return['explorerHtml']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($articleArr);
 		// get content html
+		if (isset($canvasElement['Content']['Selector'])){$return['selector']=$canvasElement['Content']['Selector'];}
 		$return['contentHtml']='';
-		$return['selector']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		if (!empty($canvasElement['Content']['Widgets']["Processor"])){
 			$return['contentHtml'].=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('settings',$canvasElement);
 		}
@@ -136,20 +145,20 @@ class DataExplorer{
 	private function canvasFormProcessing($callingClass){
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'getCanvas');
 		if (isset($formData['cmd']['select'])){
-			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$formData['element']);
+			$canvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$formData['element']);
 		} else if (isset($formData['cmd']['delete'])){
 			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($formData['element']);
-			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->mergePageState(__CLASS__,array('Source'=>$this->entryTable));
+			$canvasElement=array();
 		} else if (isset($formData['cmd']['view'])){
-			$selector=array('Source'=>$formData['element']['Source'],'EntryId'=>$formData['element']['EntryId']);
-			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$selector);
-			$selector=$formData['element']['Content']['Selector'];
-			if (isset($this->arr['view classes'][$selector['Source']])){
-				$this->arr['SourcePot\Datapool\Tools\NetworkTools']->mergePageState($this->arr['view classes'][$selector['Source']],$selector);
+			$canvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$formData['element']);
+			$selector=$canvasElement['Content']['Selector'];
+			if (isset($this->arr['source2class'][$selector['Source']])){
+				$classWithNamespace=$this->arr['source2class'][$selector['Source']];
+				$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
 			}
+		} else {
+			$canvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');	
 		}
-		$selectedCanvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
-		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
 		return $canvasElement;
 	}
 	
@@ -165,77 +174,48 @@ class DataExplorer{
 		$html='<div id="canvas">'.$html.'</div>';
 		return $html;
 	}
-
+	
 	private function getCntrHtml($callingClass){
-		$selectedCanvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
-		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
-		// get canvas widgets
-		$widgetsHtml='';
-		$widgetsHtml.=$this->getFileUpload($canvasElement);
-		$widgetsHtml.=$this->getDeleteBtn($canvasElement);
-		if (!empty($canvasElement['Content']['Widgets']["Processor"])){
-			$widgetsHtml.=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('widget',$canvasElement);
-		}
-		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);
-		if (isset($formData['cmd']['edit mode'])){
-			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',TRUE);	
-		} else if (isset($formData['cmd']['run mode'])){
-			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',FALSE);	
+		if (isset($formData['cmd']['run'])){
+			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',FALSE);
+		} else if (isset($formData['cmd']['edit'])){
+			$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',TRUE);
 		} else if (!empty($formData['cmd'])){
 			$entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
-			foreach($this->cntrBtns as $elementContent=>$def){
-				$key=current($def['key']);
-				if (isset($formData['cmd'][$key])){
-					$entry['Content']['Style']=array('text'=>$elementContent);
-					if (strcmp($elementContent,'...')===0){
-						$entry['Content']['Style']['color']='#000';
-						$entry['Content']['Style']['background-color']='#fff';
-					} else if (strcmp($elementContent,'&#9881;')===0){
-						$entry['Content']['Style']['color']='#fff';
-						$entry['Content']['Style']['background-color']='#20f';
-						$entry['Content']['Selector']['Source']=$this->arr[$callingClass]->getEntryTable();
-					}
-					$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-					$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-					$selector=array('Source'=>$this->entryTable,'EntryId'=>$entry['EntryId']);
-					$this->arr['SourcePot\Datapool\Tools\NetworkTools']->mergePageState(__CLASS__,$selector);
-					break;
-				}
+			$entry=array_merge($this->tags[key($formData['cmd'])],$entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);	
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+		}
+		
+		// build control html
+		$isEditMode=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);
+		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){$isEditMode=FALSE;}
+		$matrix=array();
+		foreach($this->tags as $key=>$tag){
+			if ($tag['showEditMode']!==$isEditMode){continue;}
+			$btn=$tag;
+			$btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('padding'=>'2px'));
+			$btn=array_replace_recursive($btn,$btnTemplate);
+			if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
+			$matrix[$tag['type']]['Btn'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btn);
+		}
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'hideHeader'=>TRUE,'caption'=>'Canvas elements'));
+		$selectedCanvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
+		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
+		if ($isEditMode){
+			if ($canvasElement){
+				$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($canvasElement);
+				$html.=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$canvasElement);
+			}
+		} else {
+			$html.=$this->getFileUpload($canvasElement);
+			$html.=$this->getDeleteBtn($canvasElement);
+			$html.=$this->exportImportHtml($callingClass);
+			if (!empty($canvasElement['Content']['Widgets']["Processor"])){
+				$html.=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('widget',$canvasElement);
 			}
 		}
-		// get canves buttons
-		$html='';
-		$editorHtml='';
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-			$isEditMode=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);
-			foreach($this->cntrBtns as $elementContent=>$element){
-				if (empty($isEditMode)===$element['editMode']){continue;}
-				$btnArr=$element;
-				$btnArr['element-content']=$elementContent;
-				$btnArr['keep-element-content']=TRUE;
-				$btnArr['tag']='button';
-				$btnArr['class']='canvas';
-				$btnArr['callingClass']=__CLASS__;
-				$btnArr['callingFunction']=__FUNCTION__;
-				$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr);
-			}
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','class'=>'canvas','element-content'=>$html,'keep-element-content'=>TRUE));
-			// get canvas element editor
-			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
-			if (!empty($selector) && !empty($isEditMode)){
-				$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-				if ($canvasElement){
-					$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($canvasElement);
-					$editorHtml.=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$canvasElement);
-				}
-			}
-			if (empty($isEditMode)){$editorHtml.=$this->exportImportHtml($callingClass);}
-		}
-		if (empty($isEditMode)){$html.=$widgetsHtml;}
-		$html.=$editorHtml;
 		return $html;
 	}
 	
@@ -256,6 +236,21 @@ class DataExplorer{
 		}
 		ksort($elements);
 		return $elements;
+	}
+	
+	public function entryId2selector($entryId){
+		$selector=array('Source'=>$this->entryTable,'EntryId'=>$entryId);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+		if (isset($entry['Content']['Selector'])){
+			$selector=array();
+			foreach($entry['Content']['Selector'] as $key=>$value){
+				if (empty($value)){continue;}
+				$selector[$key]=$value;
+			}
+			return $selector;
+		} else {
+			return array();
+		}
 	}
 
 	private function canvasElement2html($callingClass,$callingFunction,$canvasElement,$selectedCanvasElement=FALSE){

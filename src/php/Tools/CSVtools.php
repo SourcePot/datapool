@@ -41,7 +41,19 @@ class CSVtools{
 	
 	public function isCSV($selector){
 		foreach($this->csvIterator($selector) as $rowIndex=>$rowArr){
-			if (count($rowArr)>1){return TRUE;} else {return FALSE;}
+			if (count($rowArr)>1){
+				//change file content encoding to utf-8 if encoding is different from utf-8
+				$csvFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
+				$csvContent=file_get_contents($csvFile);
+				$sourceEncoding=mb_detect_encoding($csvContent,["ASCII","ISO-8859-1","EUC-JP","SJIS","eucJP-win","SJIS-win","JIS","ISO-2022-JP","UTF-7","UTF-8",],TRUE);
+				if ($sourceEncoding!=='UTF-8'){
+					$csvContent=mb_convert_encoding($csvContent,"UTF-8",$sourceEncoding);
+					file_put_contents($csvFile,$csvContent);
+					$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Changed file content encoding from '.$sourceEncoding.' to UTF-8','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+				}
+				return TRUE;
+			}
+			break;
 		}
 		return FALSE;
 	}

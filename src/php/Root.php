@@ -35,6 +35,7 @@ final class Root{
 		$GLOBALS['dirs']['src']=$GLOBALS['dirs']['root'].'src/';
 		$GLOBALS['dirs']['setup']=$GLOBALS['dirs']['root'].'src/setup/';
 		$GLOBALS['dirs']['filespace']=$GLOBALS['dirs']['root'].'src/filespace/';
+		$GLOBALS['dirs']['debugging']=$GLOBALS['dirs']['root'].'src/debugging/';
 		$GLOBALS['dirs']['ftp']=$GLOBALS['dirs']['root'].'src/ftp/';
 		$GLOBALS['dirs']['fonts']=$GLOBALS['dirs']['root'].'src/fonts/';
 		$GLOBALS['dirs']['php']=$GLOBALS['dirs']['root'].'src/php/';
@@ -155,6 +156,10 @@ final class Root{
 		$classWithNamespace=__NAMESPACE__.'\\'.$dir.'\\'.$class;
 		$arr[$classWithNamespace]=new $classWithNamespace($arr);
 		// get registered methods
+		if (method_exists($arr[$classWithNamespace],'getEntryTable')){
+			$source=$arr[$classWithNamespace]->getEntryTable();
+			$arr['source2class'][$source]=$classWithNamespace;
+		}
 		$methods2register=array('init'=>FALSE,
 								'job'=>FALSE,
 								'run'=>TRUE,

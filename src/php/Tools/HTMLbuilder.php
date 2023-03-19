@@ -783,7 +783,7 @@ class HTMLbuilder{
 		} else if (!empty($formData['element']['EntryId'])){
 			$selectorTemplate=array('Source'=>TRUE,'EntryId'=>TRUE);
 		} else {
-			$selectorTemplate=$this->arr['SourcePot\Datapool\Foundation\Database']->entryTemplate($formData['element']);
+			$selectorTemplate=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($formData['element']['Source']);
 			$selectorTemplate['Source']=array();
 		}
 		foreach($selectorTemplate as $column=>$defArr){

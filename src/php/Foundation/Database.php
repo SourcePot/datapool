@@ -122,11 +122,12 @@ class Database{
 		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
 		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
 		$this->resetStatistic();
-		$className=ucfirst($entry['Source']);
-		foreach($this->arr['registered methods']['unifyEntry'] as $classWithNamespace=>$return){
-			if (strpos($classWithNamespace,$className)===FALSE){continue;}
-			return $this->arr[$classWithNamespace]->unifyEntry($entry);
-		}
+		if (isset($this->arr['source2class'][$entry['Source']])){
+			$classWithNamespace=$this->arr['source2class'][$entry['Source']];
+			if (isset($this->arr['registered methods']['unifyEntry'][$classWithNamespace])){
+				return $this->arr[$classWithNamespace]->unifyEntry($entry);
+			}
+		}	
 		return $entry;	
 	}
 

@@ -124,6 +124,7 @@ class MapEntries{
 		foreach($result as $caption=>$matrix){
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
+		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
 		return $arr;
 	}
 

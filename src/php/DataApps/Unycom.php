@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Invoices{
+class Unycom{
 	
 	private $arr;
 	
@@ -46,7 +46,7 @@ class Invoices{
 	public function run($arr=TRUE){
 		$html='';
 		if ($arr===TRUE){
-			return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+			return array('Category'=>'Data','Emoji'=>'€','Label'=>'UNYCOM','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
 			$explorerArr=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
 			$html.=$explorerArr['contentHtml'];

@@ -23,7 +23,7 @@ class ParseEntries{
 								 );
 		
 	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
-	private $sections=array(''=>'all sections');
+	private $sections=array(''=>'all sections','CONSTANT'=>'CONSTANT');
 	
 	public function __construct($arr){
 		$this->arr=$arr;
@@ -114,6 +114,7 @@ class ParseEntries{
 		foreach($result as $caption=>$matrix){
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
+		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
 		return $arr;
 	}
 
@@ -137,10 +138,10 @@ class ParseEntries{
 	}
 
 	private function parserParams($callingElement){
-		$contentStructure=array('Source column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE),
-								'Target'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-								'Type'=>array('htmlBuilderMethod'=>'select','value'=>'string','options'=>array('entries'=>'Entries','csv'=>'CSV-List entry')),
-								'Mode'=>array('htmlBuilderMethod'=>'select','value'=>'string','options'=>array(0=>'Update source entry with result',1=>'Add result to selected target',2=>'Remove source entry on success')),
+		$contentStructure=array('Source column'=>array('htmlBuilderMethod'=>'keySelect','value'=>'useValue','addSourceValueColumn'=>TRUE),
+								'Target on success'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
+								'EntryId'=>array('htmlBuilderMethod'=>'select','value'=>'string','options'=>array('keepEntryId'=>'Keep EntryId','entrIdFromName'=>'EntryId from Name')),
+								'Target on failure'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
 								);
 		$contentStructure['Source column']+=$callingElement['Content']['Selector'];
 		// get selector
@@ -171,13 +172,13 @@ class ParseEntries{
 	}
 	
 	private function parserSectionRules($callingElement){
-		$contentStructure=array('Regular expression'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Keyword'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Section name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
-		$arr['caption']='Parser section rules. Provide rules to divide the text into sections.';
+		$arr['caption']='Provide rules to divide the text into sections.';
 		$arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
@@ -193,9 +194,11 @@ class ParseEntries{
 		//
 		$contentStructure=array('Rule relevant on section'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->sections),
 								'Regular expression to match or constant to be used'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Match index'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
 								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
 								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
 								'Target key'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Match required'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'boolean','options'=>array('No','Yes')),
 								);
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
 		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
@@ -217,100 +220,115 @@ class ParseEntries{
 			$base[$key][$entry['EntryId']]=$entry;
 		}
 		// loop through source entries and parse these entries
+		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		$result=array('Source statistics'=>array('Entries'=>array('value'=>0),'CSV rows'=>array('value'=>0)));
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
 			$result['Source statistics']['Entries']['value']++;
-			$result=$this->parseEntry($base,$callingElement,$result,$testRun);
+			$result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
 		}
-		//if (strcmp($targetEntry['parserParams']['Type'],'csv')===0){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv();}
+		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
+		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
 		return $result;
 	}
 	
-	private function parseEntry($base,$callingElement,$result,$testRun){
+	private function parseEntry($base,$sourceEntry,$result,$testRun){
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		$params=current($base['parserparams']);
+		$canvasElements=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($params['Folder']);
 		$params=$params['Content'];
-		$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($params,__FUNCTION__.'-'.$callingElement['EntryId']);
-		/*
-		$keepExistingEntryId=empty($targetEntry['parserParams']['Mode']);
-		if (!isset($result['Parser statistics'])){
-			$result['Mapping statistics']=array('Rule source entry key missing'=>array('value'=>0),
-												'CSV row added'=>array('value'=>0)
-												);
-			if ($keepExistingEntryId){
-				$result['Mapping statistics']['Target entry updated (inserted if source is csv)']['value']=0;
-			} else {
-				$result['Mapping statistics']['Target entry inserted (updated if source=target)']['value']=0;
-			}	
-		}
-		if (!isset($result['Log'])){$result['Log']=array();}
-		// copy base key values across
-		$baseKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($sourceEntry['Source']);
-		foreach($baseKeys as $key=>$def){
-			if (strcmp($key,'File content')===0 || strcmp($key,'Content')===0 || strcmp($key,'Params')===0 || strcmp($key,'EntryId')===0){continue;}
-			$targetEntry[$key]=$sourceEntry[$key];
-		}
-		// rule based mapping
+		// get source text
 		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-		$flatTargetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);
-		foreach($targetEntry['parserRules'] as $ruleIndex=>$rule){
-			if (strcmp($rule['...value selected by'],'useValue')===0){
-				$targetValue=$rule['Target value or...'];
-			} else {
-				if (!empty($rule['Target value or...'])){
-					$result['Log'][$ruleIndex]['value']='Source value is not empty ('.$rule['Target value or...'].'), but is not used.';
-				}
-				if (isset($flatSourceEntry[$rule['...value selected by']])){
-					$targetValue=$flatSourceEntry[$rule['...value selected by']];
-				} else {
-					$result['Mapping statistics']['Rule source entry key missing']['value']++;
-					$targetValue='{{missing}}';
-				}
-			}
-			$flatTargetEntry=$this->addValue2flatEntry($flatTargetEntry,$rule['Target column'],$rule['Target key'],$targetValue,$rule['Target data type'],$rule);
-		}
-		// wrapping up
-		foreach($flatTargetEntry as $key=>$value){
-			if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
-			if (!is_array($value)){continue;}
-			foreach($value as $subKey=>$subValue){
-				$value[$subKey]=$this->getStdValueFromValueArr($subValue);
-			}
-			// set order of array values
-			ksort($value);
-			$flatTargetEntry[$key]=implode('|',$value);
-		}
-		$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatTargetEntry);
-		$targetEntry=$this->applyCallingElement($callingElement['Source'],$targetEntry['parserParams']['Target'],$targetEntry);
-		// Save and return result
-		if ($testRun){
-			unset($targetEntry['parserParams']);
-			unset($targetEntry['parserRules']);
-			if (empty($result['Sample result'])){
-				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
-			} else if (mt_rand(1,100)>90){
-				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
-			}
+		if (isset($flatSourceEntry[$params['Source column']])){
+			$fullText=$flatSourceEntry[$params['Source column']];
+			$fullText=preg_replace('/[\t ]+/',' ',$fullText);
+			$fullText=preg_replace('/(\n )+|(\n )+/',"\n",$fullText);
+			$fullText=preg_replace('/(\n)+/',"\n",$fullText);
+			$lastSection='START';
+			$base['parsersectionrules'][$lastSection]=array('Content'=>array('Keyword'=>'_____','Section name'=>'START'));
+			$textSections[$lastSection]=$fullText;
 		} else {
-			if (strcmp($targetEntry['parserParams']['Type'],'entries')===0){
-				// create entries as mapping result
-				$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name','Type'),0,'',$keepExistingEntryId);
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
-				if ($keepExistingEntryId){
-					$result['Mapping statistics']['Target entry updated (inserted if source is csv)']['value']++;
-				} else {
-					$result['Mapping statistics']['Target entry inserted (updated if source=target)']['value']++;
-				}
-			} else if (strcmp($targetEntry['parserParams']['Type'],'csv')===0){
-				// create csv list entry from mapping result
-				$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
-				$result['Mapping statistics']['CSV row added']['value']++;
+			return $result;
+		}
+		// create text sections
+		foreach($base['parsersectionrules'] as $entryId=>$sectionRule){
+			$keywordPos=strpos($textSections[$lastSection],$sectionRule['Content']['Keyword']);
+			if ($keywordPos!==FALSE){
+				$tmpText=$textSections[$lastSection];
+				$textSections[$lastSection]=substr($tmpText,0,$keywordPos);
+				if ($testRun){$result['Parser text sections'][$base['parsersectionrules'][$lastSection]['Content']['Section name']]=array('value'=>$textSections[$lastSection]);}
+				$lastSection=$entryId;
+				$textSections[$lastSection]=substr($tmpText,$keywordPos);
+				if ($testRun){$result['Parser text sections'][$base['parsersectionrules'][$lastSection]['Content']['Section name']]=array('value'=>$textSections[$lastSection]);}
 			}
 		}
-		*/
+		// parse sections
+		$parserFailed=FALSE;
+		$targetEntry=array();
+		foreach($base['parserrules'] as $ruleEntryId=>$rule){
+			$relevantText='';
+			if (empty($rule['Content']['Rule relevant on section'])){
+				$relevantText=$fullText;
+			} else if (isset($textSections[$rule['Content']['Rule relevant on section']])){
+				$relevantText=$textSections[$rule['Content']['Rule relevant on section']];
+			}
+			if (strcmp($rule['Content']['Rule relevant on section'],'CONSTANT')===0){
+				$matches[0][0]=$rule['Content']['Regular expression to match or constant to be used'];
+			} else {
+				preg_match_all('/'.$rule['Content']['Regular expression to match or constant to be used'].'/',$relevantText,$matches);
+			}
+			if (isset($rule['Content']['Match required'])){$matchRequired=boolval($rule['Content']['Match required']);} else {$matchRequired=FALSE;}
+			
+			if (!isset($matches[0][0])){
+				$ruleFailed=TRUE;
+				$matchText='No match.';
+			} else if (isset($matches[$rule['Content']['Match index']])){
+				$ruleFailed=FALSE;
+				$matchText=$matches[$rule['Content']['Match index']][0];
+				foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$value){
+					if (count($matches[$rule['Content']['Match index']])>1){$targetKey=$rule['Content']['Target key'].' '.$hitIndex;} else {$targetKey=$rule['Content']['Target key'];}
+					$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$value,$rule['Content']['Target data type']);
+				}
+			} else {
+				$ruleFailed=TRUE;
+				$matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
+			}
+			if ($testRun){$result['Parser rule matches'][$ruleEntryId]=array('Match'=>$matchText,'Rule failed'=>strval($ruleFailed),'Match required'=>strval($matchRequired));}
+			if ($ruleFailed && $matchRequired){$parserFailed=TRUE;break;}
+		}
+		if ($parserFailed){
+			$selector=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($params['Target on failure']);
+			$targetEntry=array_replace_recursive($sourceEntry,$selector);
+		} else {
+			$selector=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($params['Target on success']);
+			$targetEntry=array_replace_recursive($sourceEntry,$selector,$targetEntry);
+			// wrapping up
+			foreach($targetEntry as $key=>$value){
+				if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
+				if (!is_array($value)){continue;}
+				foreach($value as $subKey=>$subValue){
+					$value[$subKey]=$this->getStdValueFromValueArr($subValue);
+				}
+				// set order of array values
+				ksort($value);
+				$targetEntry[$key]=implode('|',$value);
+			}
+			if (strcmp($params['EntryId'],'entrIdFromName')===0){
+				$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+				$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
+				$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+				if (is_file($sourceFile)){
+					rename($sourceFile,$targetFile);
+				}
+			}
+		}
+		if ($testRun){
+			$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+		} else {
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
+		}
 		return $result;
 	}
-	
+		
 	private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR'){
 		if (isset($value[$useKeyIfPresent])){
 			$value=$value[$useKeyIfPresent];
@@ -321,102 +339,17 @@ class ParseEntries{
 		return $value;
 	}
 
-	private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule){
+	private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType){
 		$dataTypeMethod='convert2'.$dataType;
 		if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
 		if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
 		$newValue=array($key=>$this->$dataTypeMethod($value));
-		if ($this->useRule($rule,$dataType,$newValue[$key])){
-			if (is_array($entry[$baseKey])){
-				$entry[$baseKey]=array_merge_recursive($entry[$baseKey],$newValue);
-			} else {
-				$entry[$baseKey]=$newValue;
-			}
+		if (is_array($entry[$baseKey])){
+			$entry[$baseKey]=array_merge_recursive($entry[$baseKey],$newValue);
+		} else {
+			$entry[$baseKey]=$newValue;
 		}
 		return $entry;
-	}
-
-	private function useRule($rule,$dataType,$targetValue){
-		// unify datatype
-		if (strcmp(($rule['Use rule if Compare value']),'always')===0){return TRUE;}
-		if (strlen($rule['Use rule if Compare value'])>2){
-			// compare strings
-			$compareValue=$rule['Compare value'];
-			$targetValue=$this->getStdValueFromValueArr($targetValue);
-			$targetValue=strval($targetValue);
-		} else {
-			// compare numbers
-			$compareValue=floatval($rule['Compare value']);
-			if (strcmp($dataType,'date')===0){
-				$targetValue=$this->getStdValueFromValueArr($targetValue,'System');
-				$targetValue=strtotime($targetValue);
-				$compareValue=strtotime($rule['Compare value']);
-			} else if (strcmp($dataType,'int')===0){
-				$targetValue=$this->getStdValueFromValueArr($targetValue);
-				$compareValue=round($compareValue);
-			} else if (strcmp($dataType,'unycom')===0){
-				$targetValue=$this->getStdValueFromValueArr($targetValue,'Number');
-				$compareValue=round($compareValue);
-			} else {
-				$targetValue=$this->getStdValueFromValueArr($targetValue);
-			}
-		}
-		$return=FALSE;
-		switch($rule['Use rule if Compare value']){
-			case 'stripos':
-				if (stripos($targetValue,$compareValue)!==FALSE){$return=TRUE;}
-				break;
-			case 'stripos!':
-				if (stripos($targetValue,$compareValue)===FALSE){$return=TRUE;}
-				break;
-			case 'strcmp':
-				if (strcmp($targetValue,$compareValue)===0){$return=TRUE;}
-				break;
-			case 'eq':
-				if ($targetValue==$compareValue){$return=TRUE;}
-				break;
-			case 'le':
-				if ($targetValue>=$compareValue){$return=TRUE;}
-				break;
-			case 'lt':
-				if ($targetValue>$compareValue){$return=TRUE;}
-				break;
-			case 'ge':
-				if ($targetValue<=$compareValue){$return=TRUE;}
-				break;
-			case 'gt':
-				if ($targetValue<$compareValue){$return=TRUE;}
-				break;
-			case 'ne':
-				if ($targetValue!=$compareValue){$return=TRUE;}
-				break;
-		}
-		return $return;
-	}
-	
-	private function applyCallingElement($source,$elementId,$target=FALSE){
-		// This method returns the target selector of the cnavas element selected by $elementId
-		// and returns this selector.
-		$selector=array('Source'=>$source,'EntryId'=>$elementId);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
-			if (is_bool($target)){
-				return $entry;
-			} else if (is_array($target)){
-				foreach($entry['Content']['Selector'] as $key=>$value){
-					if (empty($value)){continue;}
-					if (is_array($value)){continue;}
-					if (!isset($target[$key])){$target[$key]='';}
-					if (strpos($value,'%')===FALSE){
-						$target[$key]=str_replace('%',' '.$target[$key].' ',$value);
-						$target[$key]=trim($target[$key]);
-					} else {
-						$target[$key]=$value;
-					}
-				}
-				return $target;
-			}
-		}
-		return $target;
 	}
 	
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){

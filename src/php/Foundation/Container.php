@@ -235,7 +235,8 @@ class Container{
 			$navHtml='';
 			if (empty($settings['selectorKey'])){$selectorKeyComps=array();} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
 			$level=count($selectorKeyComps);
-			while($key=array_pop($selectorKeyComps)){
+			while(count($selectorKeyComps)>0){
+				$key=array_pop($selectorKeyComps);
 				$btnArrKey=implode($S,$selectorKeyComps);
 				$element=array('tag'=>'button','element-content'=>$key.' &rarr;','key'=>array('setSelectorKey'),'value'=>$btnArrKey,'keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
 				$element['style']=array('font-size'=>'0.9em','color'=>'#000','background-color'=>'#aaa');

@@ -123,7 +123,8 @@ trait Conversions{
 			$country=str_replace($arr['Region'],'',$country);
 			if (strcmp($arr['Country'],'  ')===0 && !empty($country)){$arr['Country']=$country;}
 		}
-		$arr['Reference']=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
+		$reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
+		$arr=array('Reference'=>$reference)+$arr;
 		if (!empty($prefixSuffix[0])){
 			$arr['Prefix']=trim($prefixSuffix[0],'- ');
 		}

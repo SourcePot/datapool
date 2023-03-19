@@ -43,6 +43,7 @@ class NetworkTools{
 		return $_SESSION['page state']['selected'][$callingClass];
 	}
 
+	/*
 	public function mergePageState($callingClass,$state){
 		if (isset($_SESSION['page state']['selected'][$callingClass])){
 			$_SESSION['page state']['selected'][$callingClass]=array_merge(	$_SESSION['page state']['selected'][$callingClass],$state);	
@@ -51,10 +52,11 @@ class NetworkTools{
 		}
 		return $_SESSION['page state']['selected'][$callingClass];
 	}
+	*/
 
 	public function setPageStateByKey($callingClass,$key,$value){
 		$_SESSION['page state']['selected'][$callingClass][$key]=$value;
-		return $_SESSION['page state']['selected'][$callingClass];
+		return $_SESSION['page state']['selected'][$callingClass][$key];
 	}
 
 	public function getPageState($callingClass,$initState=array()){
