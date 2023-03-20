@@ -340,6 +340,9 @@ class HTMLbuilder{
 		} else {
 			$arr['options']=array();
 		}
+		if (!empty($arr['addColumns'])){
+			$arr['options']+=$arr['addColumns'];
+		}
 		foreach($fileContentKeys as $key=>$value){
 			$key='File content'.$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator().$key;
 			$arr['options'][$key]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
@@ -375,15 +378,15 @@ class HTMLbuilder{
 		$btnDefs=array('test'=>array('title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE),
 					   'run'=>array('title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE),
 					   'add'=>array('title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','requiredRight'=>FALSE,'requiresFile'=>FALSE),
-					   'save'=>array('title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&veeeq;','requiredRight'=>'Write','requiresFile'=>FALSE),
+					   'save'=>array('title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','requiredRight'=>'Write','requiresFile'=>FALSE),
 					   'download'=>array('title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE),
 					   'select'=>array('title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','requiredRight'=>'Read','excontainer'=>TRUE),
-					   'delete'=>array('title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&#x02A50;','requiredRight'=>'Write','style'=>array('float'=>'left')),
-					   'remove'=>array('title'=>'Remove file','hasCover'=>TRUE,'element-content'=>'&#x02A50;','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array('float'=>'left')),
+					   'delete'=>array('title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','requiredRight'=>'Write','style'=>array('float'=>'left')),
+					   'remove'=>array('title'=>'Remove file','hasCover'=>TRUE,'element-content'=>'&coprod;','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array('float'=>'left')),
 					   'delete all'=>array('title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','requiredRight'=>FALSE,'style'=>array('float'=>'left')),
 					   'delete all entries'=>array('title'=>'Delete all selected entries excluding attched files','hasCover'=>TRUE,'element-content'=>'Delete all selected','requiredRight'=>FALSE,'style'=>'float:left;'),
-					   'moveUp'=>array('title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#8681;','requiredRight'=>'Write'),
-					   'moveDown'=>array('title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#8679;','requiredRight'=>'Write'),
+					   'moveUp'=>array('title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','requiredRight'=>'Write'),
+					   'moveDown'=>array('title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','requiredRight'=>'Write'),
 					   );
 		$html='';
 		$stdKeys=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'cmd'=>'select');

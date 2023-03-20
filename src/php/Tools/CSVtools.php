@@ -282,7 +282,7 @@ class CSVtools{
 		$selectArr['options']=array('Show','Edit');
 		$modeSelector=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 		$matrix=array();
-		$matrix['Cntr']['Offset']=array('tag'=>'input','type'=>'range','min'=>0,'max'=>$rowCount-$settings['limit'],'value'=>$settings['offset'],'key'=>array('settings','offset'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+		$matrix['Cntr']['Offset']=array('tag'=>'input','type'=>'range','min'=>0,'max'=>($rowCount>$settings['limit'])?$rowCount>$settings['limit']:0,'value'=>$settings['offset'],'key'=>array('settings','offset'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
 		$matrix['Cntr']['Limit']=$limitSelector;
 		if (empty($settings['mode'])){
 			$matrix['Cntr']['Separator']=$separatorSelector;

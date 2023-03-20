@@ -158,6 +158,7 @@ trait Conversions{
 	}
 
 	public function str2money($string,$currency=FALSE){
+		$string=$this->convert2stringNoWhitespaces($string);
 		$value=$this->str2float($string,TRUE);
 		foreach($this->currencies as $needle){
 			if (strpos($string,$needle)===FALSE){continue;}
@@ -184,8 +185,8 @@ trait Conversions{
 				if (!empty($date['month'])){break;}
 				if (mb_stripos($string,$needle)===FALSE){continue;}
 				$date['month']=$monthStr;
-				$string=str_replace($monthStr,'',$string);
-				$chunks=preg_split("/[^0-9]/",$string);
+				$tmpStr=str_replace($needle,'',$string);
+				$chunks=preg_split("/[^0-9]+/",$tmpStr);
 				foreach($chunks as $chunk){
 					if (empty($chunk)){continue;}
 					if (strlen($chunk)===4){

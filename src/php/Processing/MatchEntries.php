@@ -134,11 +134,13 @@ class MatchEntries{
 	private function matchingParams($callingElement){
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $html;}
-		$contentStructure=array('Column to match'=>array('htmlBuilderMethod'=>'keySelect','standardColumsOnly'=>TRUE),
-							  'Match with'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-							  );
+		$contentStructure=array('Column to match'=>array('htmlBuilderMethod'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
+							  'Match with'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
+							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
+							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
+							  'EntryId'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('keepEntryId'=>'Keep EntryId','entrIdFromName'=>'EntryId from Name')),
+							  'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+							);
 		$contentStructure['Column to match']+=$callingElement['Content']['Selector'];
 		// get selctorB
 		$matchingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);;
@@ -148,7 +150,7 @@ class MatchEntries{
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
-		if (!empty($formData['val'][$elementId]['Content'])){
+		if (isset($formData['cmd'][$elementId])){
 			$matchingParams['Content']=$formData['val'][$elementId]['Content'];
 			$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($matchingParams);
 		}
@@ -158,7 +160,7 @@ class MatchEntries{
 		$arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
-		$arr['caption']='Choose the column to be used for matching, the entries you want to match with and success/failure targets';
+		$arr['caption']='Select column to match and the success/failure targets';
 		$arr['noBtns']=TRUE;
 		$matrix=array('Parameter'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE));
 		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
@@ -182,74 +184,89 @@ class MatchEntries{
 		return $html;
 	}
 		
-	public function runMatchEntries($callingElement,$isTestRun=TRUE){
-		$result=array('Statistics'=>array('Entry A count'=>array('value'=>0),
-										  'Skipped entry A count'=>array('value'=>0),
-										  'Skipped entry B count'=>array('value'=>0),
-										  'Successful matches'=>array('value'=>0),
-										  'Failed matches'=>array('value'=>0)
-										  )
-					 );
-		$settings=array();
+	public function runMatchEntries($callingElement,$testRun=TRUE){
+		$base=array();
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-			$elementIdComps=explode('___',$entry['EntryId']);
-			if (count($elementIdComps)<2){
-				$settings[$entry['Group']]=$entry['Content'];
-			} else {
-				$index=intval($elementIdComps[0]);
-				$settings[$entry['Group']][$index]=$entry['Content'];
+			$key=explode('|',$entry['Type']);
+			$key=array_pop($key);
+			$base[$key][$entry['EntryId']]=$entry;
+			// entry template
+			foreach($entry['Content'] as $contentKey=>$content){
+				if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+				$template=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
+				if ($template){$base['entryTemplates'][$content]=$template;}
 			}
 		}
-		$currentSelectorB=$this->applyCallingElement($callingElement['Source'],$settings['matchingParams']['Match with'],array());
-		$column2match=$settings['matchingParams']['Column to match'];
-		$rules=array('Entry A'=>array(),'Entry B'=>array());
-		foreach($settings['matchingRules'] as $elementId=>$rule){$rules[$rule['Entry']][]=$rule;}
-		
-		
+		// loop through source entries and parse these entries
+		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		$result=array('Parser statistics'=>array('Entries A'=>array('value'=>0),
+												 'Entries B'=>array('value'=>0),
+												 'Skipped entries A'=>array('value'=>0),
+												 'Skipped entries B'=>array('value'=>0),
+												 'Matched'=>array('value'=>0),
+												 'Failed'=>array('value'=>0),
+												 'Skip rows'=>array('value'=>0),
+												 )
+					 );
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $entryA){
-			if ($entryA['isSkipRow']){continue;}
-			$result['Statistics']['Entry A count']['value']++;
-			$currentSelectorB[$column2match]=$entryA[$column2match];
-			if ($this->skipMatch($entryA,$rules['Entry A'])){
-				$result['Statistics']['Skipped entry A count']['value']++;
+			if ($entry['isSkipRow']){
+				$result['Parser statistics']['Skip rows']['value']++;
 				continue;
 			}
-			if (!empty($rules['Entry B'])){$skipDueToEntryBrule=TRUE;} else {$skipDueToEntryBrule=FALSE;}
-			$hadMatch=FALSE;
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($currentSelectorB) as $entryB){
-				if ($entryB['isSkipRow']){continue;}
-				$hadMatch=$entryB['Content'];
-				if ($this->skipMatch($entryB,$rules['Entry B'])){
-					continue;
-				} else {
-					$skipDueToEntryBrule=FALSE;
-				}
-			} // loop through B entries
-			if ($skipDueToEntryBrule){
-				$result['Statistics']['Skipped entry B count']['value']++;
-				continue;	
+			if ($this->skipMatch($entryA,$base,'Entry A')){
+				$result['Parser statistics']['Skipped entries A']['value']++;
+				continue;
 			}
-			if ($hadMatch){
-				$result['Statistics']['Successful matches']['value']++;
-				$entryA=$this->applyCallingElement($callingElement['Source'],$settings['matchingParams']['Match success'],$entryA);
-				$entryA['Content']['Match']=$hadMatch;
-			} else {
-				$result['Statistics']['Failed matches']['value']++;	
-				$entryA=$this->applyCallingElement($callingElement['Source'],$settings['matchingParams']['Match failure'],$entryA);
-			}
-			if (!$isTestRun){
-				$entryA['Content']['Match selector']=$currentSelectorB;
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entryA);
-			}
-			$firstLoopEntriesA=TRUE;
-		} // loop through A entries
+			$result['Parser statistics']['Entries A']['value']++;
+			$result=$this->matchEntry($base,$entryA,$result,$testRun);
+		}
+		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
+		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
 		return $result;
 	}
 	
-	private function skipMatch($entry,$rules){
+	private function matchEntry($base,$entryA,$result,$testRun){
+		$success=FALSE;
+		$params=current($base['matchingparams']);
+		// match column and value
+		$columnToMatch=$params['Content']['Column to match'];
+		// create entry b selector
+		$selectorB=$params['Content']['Match with'];
+		$selectorB=$base['entryTemplates'][$selectorB];
+		$selectorB[$columnToMatch]=$entryA[$columnToMatch];
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selectorB) as $entryB){
+			if ($this->skipMatch($entryB,$base,'Entry B')){
+				$result['Parser statistics']['Skipped entries B']['value']++;
+				continue;
+			}
+			$result['Parser statistics']['Matched']['value']++;
+			$success=TRUE;
+			break;
+		}
+		if ($success){
+			$result['Parser statistics']['Matched']['value']++;
+			$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match success']]);
+		} else {
+			$result['Parser statistics']['Failed']['value']++;
+			$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match failure']]);
+		}
+		if (!$testRun){
+			if (strcmp($params['EntryId'],'entrIdFromName')===0){
+				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,FALSE,array('Name'));
+			} else {
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entryA);
+			}
+		}
+		return $result;
+	}
+	
+	private function skipMatch($entry,$base,$entryType='Entry A'){
 		$skip=FALSE;
-		foreach($rules as $ruleIndex=>$rule){
+		if (!isset($base['matchingrules'])){return $skip;}
+		foreach($base['matchingrules'] as $entryId=>$rule){
+			$rule=$rule['Content'];
+			if (strcmp($rule['Entry'],$entryType)!==0){continue;}
 			$haystack=$entry[$rule['Column']];
 			$needle=$rule['Needle'];
 			if (is_array($haystack)){$haystack=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($haystack);}
@@ -264,31 +281,6 @@ class MatchEntries{
 			}
 		}
 		return $skip;
-	}
-
-	private function applyCallingElement($source,$elementId,$target=FALSE){
-		// This method returns the target selector of the cnavas element selected by $elementId
-		// and returns this selector.
-		$selector=array('Source'=>$source,'EntryId'=>$elementId);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
-			if (is_bool($target)){
-				return $entry;
-			} else if (is_array($target)){
-				foreach($entry['Content']['Selector'] as $key=>$value){
-					if (empty($value)){continue;}
-					if (is_array($value)){continue;}
-					if (!isset($target[$key])){$target[$key]='';}
-					if (strpos($value,'%')===FALSE){
-						$target[$key]=str_replace('%',' '.$target[$key].' ',$value);
-						$target[$key]=trim($target[$key]);
-					} else {
-						$target[$key]=$value;
-					}
-				}
-				return $target;
-			}
-		}
-		return $target;
 	}
 
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){

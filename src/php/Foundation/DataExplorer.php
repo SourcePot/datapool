@@ -376,6 +376,8 @@ class DataExplorer{
 						 'parser'=>array('Source'=>'parseentries','Folder'=>$callingClass),
 						 'processing'=>array('Source'=>'canvasprocessing','Folder'=>$callingClass),
 						 );
+		$callingClassName=substr($callingClass,strrpos($callingClass,'\\')+1);
+		$className=substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
 		$result=array();
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -383,7 +385,7 @@ class DataExplorer{
 			$dumpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors);
 			if (is_file($dumpFile)){
 				header('Content-Type: application/zip');
-				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' canvas dump.zip"');
+				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' '.$className.' '.$callingClassName.' dump.zip"');
 				header('Content-Length: '.fileSize($dumpFile));
 				readfile($dumpFile);
 			}	

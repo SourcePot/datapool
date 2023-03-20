@@ -430,7 +430,7 @@ class Container{
 					$matrix['Limit<br/>offset'][$columnIndex]='';
 				} else if ($columnIndex===0){
 					$max=$rowCount-intval($settings['limit']);
-					if ($max<0){$max=0;} else {$max=strval($max);}
+					if ($max<0){$max=0;}
 					$otions=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200');
 					$matrix['Limit<br/>offset'][$columnIndex]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$otions,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 					if ($rowCount>intval($settings['limit'])){

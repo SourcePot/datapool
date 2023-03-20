@@ -628,10 +628,26 @@ class Database{
 		return FALSE;
 	}
 	
+	public function moveEntryOverwriteTraget($sourceEntry,$targetSelector=FALSE,$relevantKeys=array('Source','Group','Folder','Name')){
+		$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
+		if (!empty($targetSelector)){$targetEntry=array_replace_recursive($sourceEntry,$targetSelector);}
+		$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($sourceEntry,$relevantKeys,'0','',FALSE);
+		$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+		if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])!==0){
+			if (is_file($sourceFile)){
+				@rename($sourceFile,$targetFile);
+				if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
+				$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$sourceFile,'new'=>$targetFile,'userId'=>$userId));
+			}
+			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']));
+		}
+		return $this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
+	}
+	
 	public function moveEntryByEntryId($entry,$targetSelector){
 		$entryFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
 		$targetFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetSelector);
-		// backup an existing entry with EntryId=$targetSelector
+		// backup an existing entry file with EntryId equal to $targetSelector at the tmp dir 
 		$return=$this->entryById($targetSelector);
 		if (!empty($return)){
 			$return['File']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().__FUNCTION__.'.file';

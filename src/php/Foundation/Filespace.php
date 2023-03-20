@@ -305,16 +305,28 @@ class Filespace{
 		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
 			$fileContent=file_get_contents($file);
 			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
-			// parser configuration
-			$config=new \Smalot\PdfParser\Config();
-			$config->setHorizontalOffset('');
-			$config->setRetainImageContent(FALSE);
-			// parse content
-			$parser=new \Smalot\PdfParser\Parser([],$config);
-			$pdf=$parser->parseContent($fileContent);
-			$text=$pdf->getText();
+			$text='';
+			if ($this->pdfOK($fileContent)){				
+				// parser configuration
+				$config=new \Smalot\PdfParser\Config();
+				$config->setHorizontalOffset('');
+				$config->setRetainImageContent(FALSE);
+				// parse content
+				$parser=new \Smalot\PdfParser\Parser([],$config);
+				$pdf=$parser->parseContent($fileContent);
+				$text=$pdf->getText();
+				// clean-up
+				$text=preg_replace('/[\t ]+/',' ',$text);
+				$text=preg_replace('/(\n )+|(\n )+/',"\n",$text);
+				$text=preg_replace('/(\n)+/',"\n",$text);
+			}
 		}
 		return $text;
+	}
+
+	private function pdfOK($pdfContent){
+		if (empty(preg_match_all('/[\r\n]startxref[\s]*[\r\n]+([0-9]+)[\s]*[\r\n]+%%EOF/i',$pdfContent,$matches,\PREG_SET_ORDER,0))){return FALSE;}
+        return TRUE;
 	}
 
 	/**
