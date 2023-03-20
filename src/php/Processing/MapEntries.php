@@ -22,7 +22,7 @@ class MapEntries{
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 );
 
-	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
+	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
 	private $skipCondition=array('always'=>'always',
 								 'stripos'=>'is substring of target value',
 								 'stripos!'=>'is not substring  of target value',
@@ -148,7 +148,6 @@ class MapEntries{
 
 	private function mappingParams($callingElement){
 		$contentStructure=array('Target'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Type'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('entries'=>'Entries','csv'=>'CSV-List entry')),
 								'Mode'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('keepEntryId'=>'Keep EntryId','csv'=>'Create csv','zip'=>'Create zip','entrIdFromName'=>'EntryId from Name')),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
@@ -273,10 +272,34 @@ class MapEntries{
 			$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
 		}			
 		if ($base['zipRequested']){
-			$result['Mapping statistics']['Output format']['value']='Zip + csv';
-			$zip->close();
+			if (isset($result['Target']['Source'])){
+				// add csv file to zip archive
+				$csvFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file(array('Source'=>$result['Target']['Source']['value'],'EntryId'=>$result['Target']['EntryId']['value']));
+				$zipFileName=preg_replace('/[^a-zA-Z0-9\-]/','_',$result['Target']['Name']['value']);
+				$zip->addFile($csvFile,$zipFileName.'.csv');
+			}
+			$zip->close();	
+			if (isset($result['Target']['Source'])){
+				// create zip entry
+				$zipEntry=array('Source'=>$result['Target']['Source']['value'],'Name'=>$result['Target']['Name']['value'].' (complete)');
+				$zipEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$zipEntry);
+				$zipEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($zipEntry,array('Name'),'0','',FALSE);
+				// add file info
+				$pathArr=pathinfo($zipFile);
+				$zipEntry['Params']['File']['Source']=$zipFile;
+				$zipEntry['Params']['File']['Size']=filesize($zipEntry['Params']['File']['Source']);
+				$zipEntry['Params']['File']['Name']=$pathArr['basename'];
+				$zipEntry['Params']['File']['Extension']=$pathArr['extension'];
+				$zipEntry['Params']['File']['MIME-Type']=mime_content_type($zipFile);
+				$zipEntry['Params']['File']['Date (created)']=filectime($zipEntry['Params']['File']['Source']);
+				// save entry and file
+				$zipEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry);
+				$entryFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
+				$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
+				$debugArr['zipEntry']=$zipEntry;
+				$result['Mapping statistics']['Output format']['value']='Zip + csv';
+			}
 		}
-		//
 	
 
 		$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
@@ -289,8 +312,6 @@ class MapEntries{
 	
 	private function mapEntry($base,$sourceEntry,$result,$testRun){
 		$params=current($base['mappingparams']);
-		$params=$params['Content'];
-		//
 		$targetEntry=array();
 		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
 		foreach($base['mappingrules'] as $ruleIndex=>$rule){
@@ -318,15 +339,16 @@ class MapEntries{
 		}
 		unset($sourceEntry['Content']);
 		unset($sourceEntry['Params']);
-		$targetEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Target']],$targetEntry);
+		$targetEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$targetEntry);
 		$result['Mapping statistics']['Entries']['value']++;
 		if ($base['csvRequested'] || $base['zipRequested']){
 			$targetEntry['Name']=$sourceEntry['Attachment name'];
 			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
 			if (!$testRun){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);}
-		} else if (strcmp($params['Mode'],'entrIdFromName')===0){
+		} else if (strcmp($params['Content']['Mode'],'entrIdFromName')===0){
 			if (!$testRun){$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));}
 		} else {
+			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Group','Folder','Name'),'0','',FALSE);
 			if (!$testRun){$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);}
 		}
 		if ($testRun){
@@ -336,6 +358,7 @@ class MapEntries{
 				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 			}
 		}
+		$result['Target']=array('Source'=>array('value'=>$targetEntry['Source']),'EntryId'=>array('value'=>$targetEntry['EntryId']),'Name'=>array('value'=>$targetEntry['Name']));
 		return $result;
 	}
 	

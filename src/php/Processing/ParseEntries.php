@@ -22,7 +22,7 @@ class ParseEntries{
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 );
 		
-	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
+	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
 	private $sections=array(''=>'all sections','CONSTANT'=>'CONSTANT');
 	
 	public function __construct($arr){
@@ -269,6 +269,7 @@ class ParseEntries{
 			// parse sections
 			$targetEntry=array();
 			foreach($base['parserrules'] as $ruleEntryId=>$rule){
+				// get relevant text section
 				$relevantText='';
 				if (empty($rule['Content']['Rule relevant on section'])){
 					$relevantText=$fullText;
@@ -276,36 +277,40 @@ class ParseEntries{
 					$relevantText=$textSections[$rule['Content']['Rule relevant on section']];
 				}
 				if (strcmp($rule['Content']['Rule relevant on section'],'CONSTANT')===0){
+					// use constant
+					$ruleFailed=FALSE;
 					$sectionName='CONSTANT';
-					$matches[0][0]=$rule['Content']['Regular expression to match or constant to be used'];
+					$value=$rule['Content']['Regular expression to match or constant to be used'];
+					$matchText=$value;
+					$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$value,$rule['Content']['Target data type']);
 				} else {
+					// match rule with text section
 					if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
 						$sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
 					} else {
 						$sectionName='Section missing, check rules!';
 					}
 					preg_match_all('/'.$rule['Content']['Regular expression to match or constant to be used'].'/u',$relevantText,$matches);
+					if (!isset($matches[0][0])){
+						$ruleFailed=TRUE;
+						$matchText='No match.';
+					} else if (isset($matches[$rule['Content']['Match index']])){
+						$ruleFailed=FALSE;
+						$matchText=$matches[$rule['Content']['Match index']][0];
+						foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$value){
+							if (count($matches[$rule['Content']['Match index']])>1 && $rule['Content']['Allow multiple hits']){
+								$targetKey=$rule['Content']['Target key'].' '.$hitIndex;
+							} else {
+								$targetKey=$rule['Content']['Target key'];
+							}
+							$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$value,$rule['Content']['Target data type']);
+						}
+					} else {
+						$ruleFailed=TRUE;
+						$matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
+					}
 				}
 				if (isset($rule['Content']['Match required'])){$matchRequired=boolval($rule['Content']['Match required']);} else {$matchRequired=FALSE;}
-				
-				if (!isset($matches[0][0])){
-					$ruleFailed=TRUE;
-					$matchText='No match.';
-				} else if (isset($matches[$rule['Content']['Match index']])){
-					$ruleFailed=FALSE;
-					$matchText=$matches[$rule['Content']['Match index']][0];
-					foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$value){
-						if (count($matches[$rule['Content']['Match index']])>1 && $rule['Content']['Allow multiple hits']){
-							$targetKey=$rule['Content']['Target key'].' '.$hitIndex;
-						} else {
-							$targetKey=$rule['Content']['Target key'];
-						}
-						$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$value,$rule['Content']['Target data type']);
-					}
-				} else {
-					$ruleFailed=TRUE;
-					$matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
-				}
 				if ($testRun){
 					$rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
 					$result['Parser rule matches'][$rowKey]=array('Regular expression...'=>$rule['Content']['Regular expression to match or constant to be used'],

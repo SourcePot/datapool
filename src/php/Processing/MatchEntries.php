@@ -139,6 +139,7 @@ class MatchEntries{
 							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
 							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
 							  'EntryId'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('keepEntryId'=>'Keep EntryId','entrIdFromName'=>'EntryId from Name')),
+							  'Combine content'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('No','Yes')),
 							  'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		$contentStructure['Column to match']+=$callingElement['Content']['Selector'];
@@ -241,6 +242,7 @@ class MatchEntries{
 				continue;
 			}
 			$result['Parser statistics']['Matched']['value']++;
+			if (!empty($params['Content']['Combine content'])){$entryA['Content']=array_replace_recursive($entryB['Content'],$entryA['Content']);}
 			$success=TRUE;
 			break;
 		}
@@ -251,7 +253,13 @@ class MatchEntries{
 			$result['Parser statistics']['Failed']['value']++;
 			$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match failure']]);
 		}
-		if (!$testRun){
+		if ($testRun){
+			if (isset($result['Sample result'])){
+				if (mt_rand(1,100)>50){$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);}
+			} else {
+				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
+			}
+		} else {
 			if (strcmp($params['EntryId'],'entrIdFromName')===0){
 				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,FALSE,array('Name'));
 			} else {

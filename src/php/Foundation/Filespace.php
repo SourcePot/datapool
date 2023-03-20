@@ -305,20 +305,25 @@ class Filespace{
 		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
 			$fileContent=file_get_contents($file);
 			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
-			$text='';
+			$text='Parser failed!';
 			if ($this->pdfOK($fileContent)){				
 				// parser configuration
 				$config=new \Smalot\PdfParser\Config();
 				$config->setHorizontalOffset('');
 				$config->setRetainImageContent(FALSE);
-				// parse content
-				$parser=new \Smalot\PdfParser\Parser([],$config);
-				$pdf=$parser->parseContent($fileContent);
-				$text=$pdf->getText();
-				// clean-up
-				$text=preg_replace('/[\t ]+/',' ',$text);
-				$text=preg_replace('/(\n )+|(\n )+/',"\n",$text);
-				$text=preg_replace('/(\n)+/',"\n",$text);
+				// check for encryption etc.
+				$parser=new \Smalot\PdfParser\RawData\RawDataParser([],$config);
+				list($xref,$data)=$parser->parseData($fileContent);
+				if (!empty($data)){
+					// parse content
+					$parser=new \Smalot\PdfParser\Parser([],$config);
+					$pdf=$parser->parseContent($fileContent);
+					$text=$pdf->getText();
+					// clean-up
+					$text=preg_replace('/[\t ]+/',' ',$text);
+					$text=preg_replace('/(\n )+|(\n )+/',"\n",$text);
+					$text=preg_replace('/(\n)+/',"\n",$text);				
+				}
 			}
 		}
 		return $text;
@@ -361,6 +366,8 @@ class Filespace{
 			$pathArr=pathinfo($fileHandle);
 			$mimeType=mime_content_type($fileHandle);
 			$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('new'=>$entryTemplate['Params']['File']['Source'],'userId'=>$userId));
+		} else {
+			return FALSE;
 		}
 		$entryTemplate['Params']['File']['Size']=filesize($entryTemplate['Params']['File']['Source']);
 		$entryTemplate['Params']['File']['Name']=$pathArr['basename'];
