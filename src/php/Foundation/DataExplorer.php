@@ -39,37 +39,35 @@ class DataExplorer{
 															   'Delete selected entries'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>1),
 																),
 											  ),
-							 'Read'=>array('@tag'=>'p','@default'=>'ALL_R'),
-							 'Write'=>array('@tag'=>'p','@default'=>'ADMIN_R'),
 							);
     
 	private $tags=array('run'=>array('tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'),'showEditMode'=>TRUE,'type'=>'Cntr'),
 						'edit'=>array('tag'=>'button','element-content'=>'⚙','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'),'showEditMode'=>FALSE,'type'=>'Cntr'),
-						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'16px','color'=>'#fff','background-color'=>'#20f'),'showEditMode'=>TRUE,'type'=>'Cntr'),
-						'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'style'=>array('font-size'=>'17px','color'=>'#000','background-color'=>'#fff','min-width'=>'150px','text-align'=>'center'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&larr;'=>array('tag'=>'div','element-content'=>'&larr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&uarr;'=>array('tag'=>'div','element-content'=>'&uarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&rarr;'=>array('tag'=>'div','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&darr;'=>array('tag'=>'div','element-content'=>'&darr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&harr;'=>array('tag'=>'div','element-content'=>'&harr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&varr;'=>array('tag'=>'div','element-content'=>'&varr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&nwarr;'=>array('tag'=>'div','element-content'=>'&nwarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&nearr;'=>array('tag'=>'div','element-content'=>'&nearr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&searr;'=>array('tag'=>'div','element-content'=>'&searr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&swarr;'=>array('tag'=>'div','element-content'=>'&swarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#10137'=>array('tag'=>'div','element-content'=>'&#10137','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#10154'=>array('tag'=>'div','element-content'=>'&#10154','keep-element-content'=>TRUE,'style'=>array('font-size'=>'30px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#10140'=>array('tag'=>'div','element-content'=>'&#10140','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#10141'=>array('tag'=>'div','element-content'=>'&#10141','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9615'=>array('tag'=>'div','element-content'=>'&#9615','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9601'=>array('tag'=>'div','element-content'=>'&#9601','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9675'=>array('tag'=>'div','element-content'=>'&#9675','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9679'=>array('tag'=>'div','element-content'=>'&#9679','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9711'=>array('tag'=>'div','element-content'=>'&#9711','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9476'=>array('tag'=>'div','element-content'=>'&#9476','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9482'=>array('tag'=>'div','element-content'=>'&#9482','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9552'=>array('tag'=>'div','element-content'=>'&#9552','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
-						'&#9553'=>array('tag'=>'div','element-content'=>'&#9553','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Add'),
+						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'16px','color'=>'#fff','background-color'=>'#20f'),'showEditMode'=>TRUE,'type'=>'Elements'),
+						'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'style'=>array('font-size'=>'17px','color'=>'#000','background-color'=>'#fff','min-width'=>'150px','text-align'=>'center'),'showEditMode'=>TRUE,'type'=>'Elements'),
+						'Text'=>array('tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'style'=>array('font-size'=>'17px','color'=>'#fff'),'showEditMode'=>TRUE,'type'=>'Elements'),
+						'&larr;'=>array('tag'=>'div','element-content'=>'&larr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&uarr;'=>array('tag'=>'div','element-content'=>'&uarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&rarr;'=>array('tag'=>'div','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&darr;'=>array('tag'=>'div','element-content'=>'&darr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&harr;'=>array('tag'=>'div','element-content'=>'&harr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&varr;'=>array('tag'=>'div','element-content'=>'&varr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&nwarr;'=>array('tag'=>'div','element-content'=>'&nwarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&nearr;'=>array('tag'=>'div','element-content'=>'&nearr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&searr;'=>array('tag'=>'div','element-content'=>'&searr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&swarr;'=>array('tag'=>'div','element-content'=>'&swarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&#10137'=>array('tag'=>'div','element-content'=>'&#10137','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&#10154'=>array('tag'=>'div','element-content'=>'&#10154','keep-element-content'=>TRUE,'style'=>array('font-size'=>'30px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&#10140'=>array('tag'=>'div','element-content'=>'&#10140','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
+						'|'=>array('tag'=>'div','element-content'=>'|','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9601'=>array('tag'=>'div','element-content'=>'&#9601','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9675'=>array('tag'=>'div','element-content'=>'&#9675','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9679'=>array('tag'=>'div','element-content'=>'&#9679','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9711'=>array('tag'=>'div','element-content'=>'&#9711','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9476'=>array('tag'=>'div','element-content'=>'&#9476','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9482'=>array('tag'=>'div','element-content'=>'&#9482','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9552'=>array('tag'=>'div','element-content'=>'&#9552','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9553'=>array('tag'=>'div','element-content'=>'&#9553','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
 						);
 	
 	private $processorOptions=array();
@@ -120,6 +118,7 @@ class DataExplorer{
 				$entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
 			}
 		}
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_CONTENTADMIN_R');
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
 		return $entry;
 	}
@@ -195,7 +194,7 @@ class DataExplorer{
 		foreach($this->tags as $key=>$tag){
 			if ($tag['showEditMode']!==$isEditMode){continue;}
 			$btn=$tag;
-			$btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('padding'=>'2px'));
+			$btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('padding'=>'2px','line-height'=>'26px'));
 			$btn=array_replace_recursive($btn,$btnTemplate);
 			if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
 			$matrix[$tag['type']]['Btn'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btn);
@@ -255,7 +254,7 @@ class DataExplorer{
 
 	private function canvasElement2html($callingClass,$callingFunction,$canvasElement,$selectedCanvasElement=FALSE){
 		$rowCount=FALSE;
-		$style='';
+		$style=array();
 		$element=array('tag'=>'div');
 		// get canvas element style
 		if (!empty($selectedCanvasElement['EntryId'])){
@@ -267,7 +266,7 @@ class DataExplorer{
 			if (strcmp($key,'text')===0){
 				$text=$value;
 			} else if (!empty($value)){
-				$style.=$key.':'.$value.';';
+				$style[$key]=$value;
 			}
 		}
 		$isEditMode=!empty($this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE));
@@ -276,14 +275,14 @@ class DataExplorer{
 			$btnArr['callingClass']=$callingClass;
 			$btnArr['callingFunction']=$callingFunction;
 			// canvas element select button
-			$btnArr['style']='top:-5px;';
+			$btnArr['style']=array('top'=>'-5px');
 			$btnArr['key']=array('select');
 			$btnArr['title']='Select';
 			$btnArr['id']=md5('select'.$canvasElement['EntryId'].__FUNCTION__);
 			$btnArr['element-content']='&#10022;';
 			$text.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr);
 			// canvas element delete button
-			$btnArr['style']='bottom:-5px;';
+			$btnArr['style']=array('bottom'=>'-5px');
 			$btnArr['title']='Delete';
 			$btnArr['key']=array('delete');
 			$btnArr['id']=md5('delete'.$canvasElement['EntryId'].__FUNCTION__);
@@ -292,7 +291,7 @@ class DataExplorer{
 			//
 			$element['source']=$canvasElement['Source'];
 			$element['entry-id']=$canvasElement['EntryId'];
-			$style.='cursor:pointer;';
+			$style['cursor']='pointer';
 		} else {
 			if (!empty($canvasElement['Content']['Selector']['Source'])){
 				// canvas element view button
@@ -300,7 +299,8 @@ class DataExplorer{
 				$element['key']=array('view');
 				$element['id']=md5('view'.$canvasElement['EntryId'].__FUNCTION__);
 				$element['tag']='button';
-				$style.='z-index:5;';
+				$style['z-index']='5';
+				$style['box-sizing']='content-box';
 				$rowCountSelector=$canvasElement['Content']['Selector'];
 				if (!empty($rowCountSelector['Type'])){$rowCountSelector['Type'].='%';}
 				$rowCount=$this->arr['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE);

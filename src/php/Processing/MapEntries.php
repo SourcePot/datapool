@@ -227,11 +227,6 @@ class MapEntries{
 		$targetFileName=date('Y-m-d').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);
 		$base['zipRequested']=(!$testRun && strcmp($params['Content']['Mode'],'zip')===0);
 		$base['csvRequested']=(!$testRun && (strcmp($params['Content']['Mode'],'csv')===0 || strcmp($params['Content']['Mode'],'zip')===0));
-		
-		$debugArr=array('params'=>$params,'targetFileName'=>$targetFileName,'zipRequested'=>$base['zipRequested']);
-		
-		
-		
 		if ($base['zipRequested']){
 			$zipName=date('Y-m-d His').' '.__FUNCTION__.'.zip';
 			$zipFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().$zipName;
@@ -249,7 +244,6 @@ class MapEntries{
 				if (is_file($attachment)){
 					$result['Mapping statistics']['Files added to zip']['value']++;
 					$sourceEntry['Linked file']=$sourceEntry['EntryId'].'.'.$sourceEntry['Params']['File']['Extension'];
-					$debugArr['Linked files'][]=$sourceEntry['Linked file'];
 					$zip->addFile($attachment,$sourceEntry['Linked file']);
 				} else {
 					$sourceEntry['Linked file']='';
@@ -296,15 +290,9 @@ class MapEntries{
 				$zipEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry);
 				$entryFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
 				$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
-				$debugArr['zipEntry']=$zipEntry;
 				$result['Mapping statistics']['Output format']['value']='Zip + csv';
 			}
 		}
-	
-
-		$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-	
-
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
 		return $result;

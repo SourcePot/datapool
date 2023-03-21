@@ -20,7 +20,7 @@ class Menu{
 							  'Logout'=>array('Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout'),
 							  'Admin'=>array('Emoji'=>'&#128295;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account'),
 							  'Apps'=>array('Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia'),
-							  'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Lists'),
+							  'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Invoices'),
 							 );
 							 
 	private $available=array('Categories'=>array(),'Apps'=>array());
