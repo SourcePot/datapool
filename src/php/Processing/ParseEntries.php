@@ -23,7 +23,7 @@ class ParseEntries{
 								 );
 		
 	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
-	private $sections=array(''=>'all sections','CONSTANT'=>'CONSTANT');
+	private $sections=array(0=>'all sections');
 	
 	public function __construct($arr){
 		$this->arr=$arr;
@@ -192,8 +192,9 @@ class ParseEntries{
 			$this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
 		}
 		//
-		$contentStructure=array('Rule relevant on section'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->sections),
-								'Regular expression to match or constant to be used'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Rule relevant on section'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections),
+								'Contant or...'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'regular expression'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Match index'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
 								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
 								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
@@ -250,6 +251,8 @@ class ParseEntries{
 		$parserFailed=FALSE;
 		if (isset($flatSourceEntry[$params['Source column']])){
 			$fullText=$flatSourceEntry[$params['Source column']];
+			$textSections=array(0=>$fullText);
+			$base['parsersectionrules'][0]=array('Content'=>array('Regular expression'=>'_____','Section name'=>'All sections'));
 			$lastSection='START';
 			$base['parsersectionrules'][$lastSection]=array('Content'=>array('Regular expression'=>'_____','Section name'=>'START'));
 			$textSections[$lastSection]=$fullText;
@@ -275,35 +278,40 @@ class ParseEntries{
 					$relevantText=$fullText;
 				} else if (isset($textSections[$rule['Content']['Rule relevant on section']])){
 					$relevantText=$textSections[$rule['Content']['Rule relevant on section']];
+				} else {
+					continue;
 				}
-				if (strcmp($rule['Content']['Rule relevant on section'],'CONSTANT')===0){
+				if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
+					$sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
+				} else {
+					$sectionName='Section missing, check rules!';
+				}
+				if (!empty($rule['Content']['Contant or...'])){
 					// use constant
 					$ruleFailed=FALSE;
-					$sectionName='CONSTANT';
-					$value=$rule['Content']['Regular expression to match or constant to be used'];
-					$matchText=$value;
-					$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$value,$rule['Content']['Target data type']);
+					$matchText=$rule['Content']['Contant or...'];
+					$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
 				} else {
 					// match rule with text section
-					if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
-						$sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
-					} else {
-						$sectionName='Section missing, check rules!';
-					}
-					preg_match_all('/'.$rule['Content']['Regular expression to match or constant to be used'].'/u',$relevantText,$matches);
+					preg_match_all('/'.$rule['Content']['regular expression'].'/u',$relevantText,$matches);
 					if (!isset($matches[0][0])){
-						$ruleFailed=TRUE;
-						$matchText='No match.';
+						if (strcmp($rule['Content']['Target data type'],'bool')===0){
+							$ruleFailed=FALSE;
+							$matchText=FALSE;
+							$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
+						} else {
+							$ruleFailed=TRUE;
+							$matchText='No match.';
+						}
 					} else if (isset($matches[$rule['Content']['Match index']])){
 						$ruleFailed=FALSE;
-						$matchText=$matches[$rule['Content']['Match index']][0];
-						foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$value){
+						foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$matchText){
 							if (count($matches[$rule['Content']['Match index']])>1 && $rule['Content']['Allow multiple hits']){
 								$targetKey=$rule['Content']['Target key'].' '.$hitIndex;
 							} else {
 								$targetKey=$rule['Content']['Target key'];
 							}
-							$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$value,$rule['Content']['Target data type']);
+							$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$matchText,$rule['Content']['Target data type']);
 						}
 					} else {
 						$ruleFailed=TRUE;
@@ -313,7 +321,7 @@ class ParseEntries{
 				if (isset($rule['Content']['Match required'])){$matchRequired=boolval($rule['Content']['Match required']);} else {$matchRequired=FALSE;}
 				if ($testRun){
 					$rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
-					$result['Parser rule matches'][$rowKey]=array('Regular expression...'=>$rule['Content']['Regular expression to match or constant to be used'],
+					$result['Parser rule matches'][$rowKey]=array('Regular expression or contant used'=>$rule['Content']['Contant or...'].$rule['Content']['regular expression'],
 																  'Section name'=>$sectionName,
 																  'Match'=>$matchText,
 																  'Rule failed'=>($ruleFailed)?'<p style="color:#f00;font-weight:bold;">Failed</p>':'<p style="color:#0f0;">Success</p>',

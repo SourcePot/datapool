@@ -210,10 +210,10 @@ class DataExplorer{
 		} else {
 			$html.=$this->getFileUpload($canvasElement);
 			$html.=$this->getDeleteBtn($canvasElement);
-			$html.=$this->exportImportHtml($callingClass);
 			if (!empty($canvasElement['Content']['Widgets']["Processor"])){
 				$html.=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('widget',$canvasElement);
 			}
+			$html.=$this->exportImportHtml($callingClass);
 		}
 		return $html;
 	}
@@ -409,8 +409,6 @@ class DataExplorer{
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9850;'));
 		return $html;
 	}
-
-
 
 }
 ?>

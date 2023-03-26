@@ -450,7 +450,7 @@ class Database{
 		//var_dump($sqlArr);
 		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':EntryIdEQ'])){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($sqlArr);}
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
+		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'');
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			if (strpos($row['EntryId'],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}

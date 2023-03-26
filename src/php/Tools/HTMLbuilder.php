@@ -633,10 +633,11 @@ class HTMLbuilder{
 			$entryArr['callingFunction']=$arr['callingFunction'];
 			$entryArr['contentStructure']=$arr['contentStructure'];
 			$entryArr['Name']=$arr['Name'];
-			$matrix[$entry['EntryId']]=$this->entry2row($entryArr,FALSE,FALSE);
+			$key=substr($entry['EntryId'],0,strpos($entry['EntryId'],'__'));
+			$matrix[$key]=$this->entry2row($entryArr,FALSE,FALSE);
 		}
 		$matrix['New']=$this->entry2row($arr,FALSE,FALSE);
-		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 		return $html;
 	}
 

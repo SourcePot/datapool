@@ -170,7 +170,13 @@ trait Conversions{
 			break;
 		}
 		$return=array();
-		if ($value!==FALSE){$return['Amount']=$value;}
+		if ($value!==FALSE){
+			$return['Amount']=$value;
+			$return['Amount (US)']=number_format($value,2);	
+			$return['Amount (DE)']=number_format($value,2,',','');	
+			$return['Amount (DE full)']=number_format($value,2,',','.');	
+			$return['Amount (FR)']=number_format($value,2,'.',' ');	
+		}
 		if ($currency!==FALSE){
 			$return['Currency']=$currency;
 			$return['Unit']=$currency;
