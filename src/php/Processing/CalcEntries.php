@@ -341,6 +341,7 @@ class CalcEntries{
 					'eq'=>floatval($value)==floatval($rule['Content']['Compare value']),
 					'ne'=>floatval($value)!=floatval($rule['Content']['Compare value']),
 				};
+				if ($failureMet){break;}
 			}
 		}
 		// wrapping up
