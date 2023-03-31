@@ -16,8 +16,8 @@ class Calendar{
 	private $arr;
 	
 	private $entryTable;
-	private $entryTemplate=array('Group'=>array('index'=>FALSE,'value'=>'{{pageTitle}}','type'=>'DATETIME','Description'=>'This is the Group category'),
-								 'Folder'=>array('index'=>FALSE,'value'=>'Events','type'=>'DATETIME','Description'=>'This is the Group category'),
+	private $entryTemplate=array('Group'=>array('index'=>FALSE,'value'=>'{{pageTitle}}','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
+								 'Folder'=>array('index'=>FALSE,'value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
 								 'Start'=>array('index'=>FALSE,'value'=>'{{TODAY}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
 								 'End'=>array('index'=>FALSE,'value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
 								 );
@@ -63,7 +63,7 @@ class Calendar{
 											 'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
 											 'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
 											 'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
-											 'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC')
+											 'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'),
 							);
 
 	private $oldEventsKeyMapping=array('Content|[]|Entry|[]|Description'=>'Content|[]|Event|[]|Description',
@@ -138,7 +138,7 @@ class Calendar{
 			$entry['Content']['Event']['Description']='';
 		}
 		if (!isset($entry['Folder'])){
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($entry);		
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);		
 		} else if (strpos($entry['Folder'],'--')===0){
 			// old style event needs to be translated into event
 			$entry['Type']='calendar event';
@@ -172,10 +172,10 @@ class Calendar{
 	private function getCalendarEntry($arr=array()){
 		$template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
 		$arr=array_merge($template,$arr);
-		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($this->pageState);
 		$event=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($this->pageState);
 		if (empty($event)){$event=$this->pageState;}
-		$event=$this->unifyEntry($event);
+		$event=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
+		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($event);
 		if (strcmp($this->pageState['EntryId'],'{{EntryId}}')===0 && empty($this->pageState['addDate'])){
 			$arr['html'].=$this->getEventsOverview($arr);
 		} else {
@@ -296,13 +296,13 @@ class Calendar{
 			$selector=$this->pageState;
 			$selector['EntryId']=key($formData['cmd']['EntryId']);
 			$event=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',key($formData['cmd']['EntryId']));
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',$event['Start']);
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
+			$this->pageState['EntryId']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',key($formData['cmd']['EntryId']));
+			$this->pageState['calendarDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',$event['Start']);
+			$this->pageState['addDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
 		} else if (isset($formData['cmd']['Add'])){
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId','{{EntryId}}');
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',key($formData['cmd']['Add']));
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate',key($formData['cmd']['Add']));
+			$this->pageState['EntryId']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId','{{EntryId}}');
+			$this->pageState['calendarDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',key($formData['cmd']['Add']));
+			$this->pageState['addDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate',key($formData['cmd']['Add']));
 		}
 		return $formData;
 	}
@@ -487,6 +487,16 @@ class Calendar{
 			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($loopEntry);
 		}
 		return $entry;
+	}
+	
+	public function regexDateMatch($regex='....-..-.. ..:..:.. . . ..',$timestamp=null){
+		// The regex will be matched against the date string of following format (format characters are used):
+		// "YYYY-mm-dd HH:ii:ss N L WW" with
+		// 'N' ... ISO 8601 numeric representation of the day of the week, 1 (for Monday) through 7 (for Sunday)
+		// 'WW' ... ISO 8601 week number of year, weeks starting on Monday
+		// 'L' ... Whether it's a leap year, 1 if it is a leap year, 0 otherwise.
+		$now=date('Y-m-d H:i:s N L WW',$timestamp);
+		return preg_match('/'.$regex.'/',$now,$matches);
 	}
 
 }
