@@ -240,9 +240,9 @@ class Calendar{
 		$events=$this->getEvents(time());
 		foreach($events as $EntryId=>$event){
 			if (strpos($event['State'],'Upcomming')!==FALSE){
-				$matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts in'=>$this->getTimeDiff($event['Start'],'@'.time(),date_default_timezone_get()));
+				$matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts in'=>$this->getTimeDiff($event['Start'],'now',date_default_timezone_get(),date_default_timezone_get()));
 			} else {
-				$matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'End in'=>$this->getTimeDiff($event['End'],'@'.time(),date_default_timezone_get()));
+				$matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Ends in'=>$this->getTimeDiff($event['End'],'now',date_default_timezone_get(),date_default_timezone_get()));
 			}
 		}
 		$html='';
