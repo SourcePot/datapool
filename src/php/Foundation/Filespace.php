@@ -330,6 +330,7 @@ class Filespace{
 	}
 
 	private function pdfOK($pdfContent){
+		if (FALSE===($trimpos=strpos($pdfContent,'%PDF-'))){return FALSE;}
 		if (empty(preg_match_all('/[\r\n]startxref[\s]*[\r\n]+([0-9]+)[\s]*[\r\n]+%%EOF/i',$pdfContent,$matches,\PREG_SET_ORDER,0))){return FALSE;}
         return TRUE;
 	}

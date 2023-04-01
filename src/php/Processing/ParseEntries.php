@@ -139,7 +139,6 @@ class ParseEntries{
 	private function parserParams($callingElement){
 		$contentStructure=array('Source column'=>array('htmlBuilderMethod'=>'keySelect','value'=>'useValue','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
 								'Target on success'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'EntryId'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('keepEntryId'=>'Keep EntryId','entrIdFromName'=>'EntryId from Name')),
 								'Target on failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
@@ -214,7 +213,7 @@ class ParseEntries{
 	}
 
 	private function runParseEntries($callingElement,$testRun=FALSE){
-		$base=array();
+		$base=array('Script start timestamp'=>time());
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -240,6 +239,8 @@ class ParseEntries{
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
+		$result['Statistics']['Script start']['value']=date('Y-m-d H:i:s',$base['Script start timestamp']);
+		$result['Statistics']['Time consumption [sec]']['value']=time()-$base['Script start timestamp'];
 		return $result;
 	}
 	
@@ -248,7 +249,7 @@ class ParseEntries{
 		$params=$params['Content'];
 		// get source text
 		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-		$parserFailed=FALSE;
+		$parserFailed='';
 		if (isset($flatSourceEntry[$params['Source column']])){
 			$fullText=$flatSourceEntry[$params['Source column']];
 			$textSections=array(0=>$fullText);
@@ -272,6 +273,7 @@ class ParseEntries{
 			// parse sections
 			$targetEntry=array();
 			foreach($base['parserrules'] as $ruleEntryId=>$rule){
+				$ruleFailed='';
 				// get relevant text section
 				$relevantText='';
 				if (empty($rule['Content']['Rule relevant on section'])){
@@ -288,7 +290,6 @@ class ParseEntries{
 				}
 				if (!empty($rule['Content']['Contant or...'])){
 					// use constant
-					$ruleFailed=FALSE;
 					$matchText=$rule['Content']['Contant or...'];
 					$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
 				} else {
@@ -296,15 +297,13 @@ class ParseEntries{
 					preg_match_all('/'.$rule['Content']['regular expression'].'/u',$relevantText,$matches);
 					if (!isset($matches[0][0])){
 						if (strcmp($rule['Content']['Target data type'],'bool')===0){
-							$ruleFailed=FALSE;
 							$matchText=FALSE;
 							$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
 						} else {
-							$ruleFailed=TRUE;
 							$matchText='No match.';
+							$ruleFailed.='|'.$matchText.' rule '.$ruleEntryId;
 						}
 					} else if (isset($matches[$rule['Content']['Match index']])){
-						$ruleFailed=FALSE;
 						foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$matchText){
 							if (count($matches[$rule['Content']['Match index']])>1 && $rule['Content']['Allow multiple hits']){
 								$targetKey=$rule['Content']['Target key'].' '.$hitIndex;
@@ -314,8 +313,8 @@ class ParseEntries{
 							$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$matchText,$rule['Content']['Target data type']);
 						}
 					} else {
-						$ruleFailed=TRUE;
 						$matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
+						$ruleFailed.='|'.$matchText.' rule '.$ruleEntryId;
 					}
 				}
 				if (isset($rule['Content']['Match required'])){$matchRequired=boolval($rule['Content']['Match required']);} else {$matchRequired=FALSE;}
@@ -328,19 +327,20 @@ class ParseEntries{
 																  'Match required'=>($matchRequired)?'<p style="color:#fd0;">Yes</p>':'<p style="color:#0f0;">No</p>'
 																  );
 				}
-				if ($ruleFailed && $matchRequired){
-					$parserFailed=TRUE;
+				if (!empty($ruleFailed) && $matchRequired){
+					$parserFailed=$ruleFailed;
 					break;
 				}
 			} // loop through parser rules
 		} else {
 			// source column missing
-			$parserFailed=TRUE;
+			$parserFailed='No text to parse';
 			$result['Parser statistics']['No text, skipped']['value']++;
 		}
-		if ($parserFailed){
+		if (!empty($parserFailed)){
 			$result['Parser statistics']['Failed']['value']++;
 			$targetEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Target on failure']]);
+			$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($parserFailed,'| '));
 			if ($testRun){
 				$result['Sample result (failed)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 			} else {
@@ -361,14 +361,11 @@ class ParseEntries{
 				ksort($value);
 				$targetEntry[$key]=implode('|',$value);
 			}
+			$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>TRUE);
 			if ($testRun){
 				$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 			} else {
-				if (strcmp($params['EntryId'],'entrIdFromName')===0){
-					$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));
-				} else {
-					$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
-				}
+				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));
 			}
 		}
 		return $result;

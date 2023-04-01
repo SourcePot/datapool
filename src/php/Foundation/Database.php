@@ -235,7 +235,7 @@ class Database{
 		return $GLOBALS['dbInfo'];
 	}
 
-	private function executeStatement($sql,$inputs=array(),$debugging=FALSE){
+	public function executeStatement($sql,$inputs=array(),$debugging=FALSE){
 		$debugArr=array('sql'=>$sql,'inputs'=>$inputs);
 		$stmt=$this->dbObj->prepare($sql);
 		foreach($inputs as $bindKey=>$bindValue){
@@ -549,7 +549,7 @@ class Database{
 		}
 		return $this->getStatistic('deleted');
 	}
-	
+		
 	/**
 	* @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
 	*/

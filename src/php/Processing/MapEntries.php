@@ -148,7 +148,7 @@ class MapEntries{
 
 	private function mappingParams($callingElement){
 		$contentStructure=array('Target'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Mode'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('keepEntryId'=>'Keep EntryId','csv'=>'Create csv','zip'=>'Create zip','entrIdFromName'=>'EntryId from Name')),
+								'Mode'=>array('htmlBuilderMethod'=>'select','value'=>'entries','excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip','entrIdFromName'=>'EntryId from Name')),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		// get selctor
@@ -200,7 +200,7 @@ class MapEntries{
 	}
 
 	private function runMapEntries($callingElement,$testRun=FALSE){
-		$base=array();
+		$base=array('Script start timestamp'=>time());
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -219,12 +219,12 @@ class MapEntries{
 												  'CSV-Entries'=>array('value'=>0),
 												  'Files added to zip'=>array('value'=>0),
 												  'Skip rows'=>array('value'=>0),
-												  'Output format'=>array('value'=>'Entries')
+												  'Output format'=>array('value'=>'Entries'),
 												 )
 					);
 		// loop through entries
 		$params=current($base['mappingparams']);
-		$targetFileName=date('Y-m-d').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);
+		$base['Attachment name']=date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);
 		$base['zipRequested']=(!$testRun && strcmp($params['Content']['Mode'],'zip')===0);
 		$base['csvRequested']=(!$testRun && (strcmp($params['Content']['Mode'],'csv')===0 || strcmp($params['Content']['Mode'],'zip')===0));
 		if ($base['zipRequested']){
@@ -233,7 +233,9 @@ class MapEntries{
 			$zip= new \ZipArchive;
 			$zip->open($zipFile,\ZipArchive::CREATE);
 		}
+		$deleteEntries=array('Source'=>$callingElement['Content']['Selector']['Source'],'EntryIds'=>array());
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
+			//if (time()-$base['Script start timestamp']>30){break;}
 			if ($entry['isSkipRow']){
 				$result['Mapping statistics']['Skip rows']['value']++;
 				continue;
@@ -248,8 +250,8 @@ class MapEntries{
 				} else {
 					$sourceEntry['Linked file']='';
 				}
+				$deleteEntries['EntryIds'][]="'".$sourceEntry['EntryId']."'";
 			}
-			$sourceEntry['Attachment name']=$targetFileName;
 			// map entry
 			if ($this->arr['SourcePot\Datapool\Tools\CSVtools']->isCSV($sourceEntry)){
 				foreach($this->arr['SourcePot\Datapool\Tools\CSVtools']->csvIterator($sourceEntry) as $rowIndex=>$rowArr){
@@ -286,15 +288,19 @@ class MapEntries{
 				$zipEntry['Params']['File']['Extension']=$pathArr['extension'];
 				$zipEntry['Params']['File']['MIME-Type']=mime_content_type($zipFile);
 				$zipEntry['Params']['File']['Date (created)']=filectime($zipEntry['Params']['File']['Source']);
+				$zipEntry['Type']=$zipEntry['Source'].' '.str_replace('/',' ',$zipEntry['Params']['File']['MIME-Type']);
 				// save entry and file
 				$zipEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry);
 				$entryFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
 				$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
 				$result['Mapping statistics']['Output format']['value']='Zip + csv';
 			}
+			$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
+		$result['Statistics']['Script start']['value']=date('Y-m-d H:i:s',$base['Script start timestamp']);
+		$result['Statistics']['Time consumption [sec]']['value']=time()-$base['Script start timestamp'];
 		return $result;
 	}
 	
@@ -329,15 +335,13 @@ class MapEntries{
 		unset($sourceEntry['Params']);
 		$targetEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$targetEntry);
 		$result['Mapping statistics']['Entries']['value']++;
+		$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'mode'=>$params['Content']['Mode']);
 		if ($base['csvRequested'] || $base['zipRequested']){
-			$targetEntry['Name']=$sourceEntry['Attachment name'];
+			$targetEntry['Name']=$base['Attachment name'];
 			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
 			if (!$testRun){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);}
-		} else if (strcmp($params['Content']['Mode'],'entrIdFromName')===0){
-			if (!$testRun){$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));}
 		} else {
-			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Group','Folder','Name'),'0','',FALSE);
-			if (!$testRun){$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);}
+			if (!$testRun){$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));}
 		}
 		if ($testRun){
 			if (isset($result['Sample result'])){
@@ -348,6 +352,21 @@ class MapEntries{
 		}
 		$result['Target']=array('Source'=>array('value'=>$targetEntry['Source']),'EntryId'=>array('value'=>$targetEntry['EntryId']),'Name'=>array('value'=>$targetEntry['Name']));
 		return $result;
+	}
+	
+	private function deleteEntriesById($Source,$EntryIds){
+		foreach($EntryIds as $EntryId){
+			$entrySelector=array('Source'=>$Source,'EntryId'=>$EntryId);
+			$fileToDelete=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
+			if (is_file($fileToDelete)){
+				$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
+				unlink($fileToDelete);
+			}
+		}
+		$sql="DELETE FROM ".$Source." WHERE `EntryId` IN(".implode(',',$EntryIds).");";
+		$stmt=$this->arr['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
+		$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('deleted',$stmt->rowCount());
+		return $this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 	}
 	
 	private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR'){

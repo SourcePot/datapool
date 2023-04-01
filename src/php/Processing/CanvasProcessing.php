@@ -127,47 +127,12 @@ class CanvasProcessing{
 	
 	public function getCanvasProcessingSettingsHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Convas processor parameters'));
-		$arr['html'].=$this->canvasProcessingParams($arr['selector']);
 		$arr['html'].=$this->canvasProcessingRules($arr['selector']);
 		//$selectorMatrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
 		//$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for CanvasProcessing'));
 		return $arr;
 	}
 	
-	private function canvasProcessingParams($callingElement){
-		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
-		if (!isset($callingElement['Content']['Selector']['Source'])){return $html;}
-		$contentStructure=array('Column to match'=>array('htmlBuilderMethod'=>'keySelect','standardColumsOnly'=>TRUE),
-							  'Match with'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect'),
-							  );
-		$contentStructure['Column to match']+=$callingElement['Content']['Selector'];
-		// get selctorB
-		$canvasProcessingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);
-		$canvasProcessingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($canvasProcessingParams,'ALL_R','ALL_CONTENTADMIN_R');
-		$canvasProcessingParams['Content']=array('Column to match'=>'Name');
-		$canvasProcessingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($canvasProcessingParams,TRUE);
-		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
-		$elementId=key($formData['val']);
-		if (!empty($formData['val'][$elementId]['Content'])){
-			$canvasProcessingParams['Content']=$formData['val'][$elementId]['Content'];
-			$canvasProcessingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($canvasProcessingParams);
-		}
-		// get HTML
-		$arr=$canvasProcessingParams;
-		$arr['canvasCallingClass']=$callingElement['Folder'];
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
-		$arr['contentStructure']=$contentStructure;
-		$arr['caption']='Choose the column to be used for canvasProcessing, the entries you want to match with and success/failure targets';
-		$arr['noBtns']=TRUE;
-		$matrix=array('Parameter'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE));
-		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
-	}
-
 	private function canvasProcessingRules($callingElement){
 		$contentStructure=array('Process'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
 							   );

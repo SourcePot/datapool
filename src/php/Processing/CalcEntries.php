@@ -235,7 +235,7 @@ class CalcEntries{
 	}
 
 	private function runCalcEntries($callingElement,$testRun=FALSE){
-		$base=array();
+		$base=array('Script start timestamp'=>time());
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -265,11 +265,14 @@ class CalcEntries{
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$return['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
+		$result['Statistics']['Script start']['value']=date('Y-m-d H:i:s',$base['Script start timestamp']);
+		$result['Statistics']['Time consumption [sec]']['value']=time()-$base['Script start timestamp'];
 		return $return;
 	}
 	
 	private function calcEntry($base,$sourceEntry,$return,$testRun){
 		$debugArr=array();
+		$log='';
 		$params=current($base['calculationparams']);
 		$targetEntry=array();
 		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
@@ -301,7 +304,7 @@ class CalcEntries{
 				$return['Calc rule'][$ruleIndex]=array('A'=>$value['A'],'Operation'=>$rule['Content']['Operation'],'B'=>$value['B'],'Result'=>$result[$ruleIndex]);
 			}
 		}
-		// loop through calculation rules
+		// loop through conditional value rules
 		if (!empty($base['conditionalvaluerules'])){
 			foreach($base['conditionalvaluerules'] as $ruleEntryId=>$rule){
 				if (isset($result[$rule['Content']['Condition']])){
@@ -317,7 +320,10 @@ class CalcEntries{
 					'eq'=>floatval($value)==0,
 					'ne'=>floatval($value)!=0,
 				};
-				if ($conditionMet){$sourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$rule['Content']['Value'];}
+				if ($conditionMet){
+					$log.='|Value condition '.$ruleEntryId.' met: '.floatval($value).$this->conditionalValue[$rule['Content']['Use value if...']];
+					$sourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$rule['Content']['Value'];
+				}
 			}
 		}
 		// loop through failurerules rules
@@ -341,7 +347,10 @@ class CalcEntries{
 					'eq'=>floatval($value)==floatval($rule['Content']['Compare value']),
 					'ne'=>floatval($value)!=floatval($rule['Content']['Compare value']),
 				};
-				if ($failureMet){break;}
+				if ($failureMet){
+					$log.='|Failure condition '.$ruleEntryId.' met: '.floatval($value).$this->failureCondition[$rule['Content']['Failure if Result...']].floatval($rule['Content']['Compare value']);
+					break;
+				}
 			}
 		}
 		// wrapping up
@@ -358,9 +367,11 @@ class CalcEntries{
 		$return['Calculate statistics']['Entries']['value']++;
 		if ($failureMet){
 			$sourceEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']]);
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($log,'| '));
 			$return['Calculate statistics']['Failure']['value']++;
 		} else {
 			$sourceEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']]);
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>trim($log,'| '));
 			$return['Calculate statistics']['Success']['value']++;
 		}
 		if ($testRun){

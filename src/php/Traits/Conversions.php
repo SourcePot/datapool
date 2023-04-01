@@ -90,9 +90,8 @@ trait Conversions{
 	
 	public function convert2unycom($value){
 		$keyTemplate=array('Match','Year','Type','Number');
-		$regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-		$value=str_replace(' ','',$value);
-		preg_match('/([1-2][0-9]{3})([FPRZX]{1,2})([0-9]{5})/',$value,$matches);
+		$regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
+		preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZX]{1,2})([0-9\s]{5,6})/',$value,$matches);
 		if (empty($matches[0])){return array();}
 		$arr=array_combine($keyTemplate,$matches);
 		$arr['Region']='  ';
@@ -100,38 +99,53 @@ trait Conversions{
 		$arr['Part']='  ';
 		$prefixSuffix=explode($matches[0],$value);
 		if (!empty($prefixSuffix[1])){
-			$prefixSuffix[1]=substr($prefixSuffix[1],0,6);
+			$suffix=preg_replace('/\s+/','',$prefixSuffix[1]);
+			$suffix=strtoupper($suffix);
+			$suffix=str_split($suffix,2);
 			foreach($regions as $rc=>$region){
-				if (strpos($prefixSuffix[1],$rc)!==0){continue;}
+				if (strpos($suffix[0],$rc)!==0){continue;}
+				array_shift($suffix);
 				$arr['Region']=$rc;
 				$arr['Region long']=$region;
 				break;
 			}
-			// get country codes from file
-			$file=$GLOBALS['dirs']['setup'].'countryCodes.json';
-			if (is_file($file)){
-				$cc=file_get_contents($file);
-				$countries=json_decode($cc,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+			if (!empty($suffix[0])){
+				// get country codes from file
+				$file=$GLOBALS['dirs']['setup'].'countryCodes.json';
+				if (is_file($file)){
+					$cc=file_get_contents($file);
+					$countries=json_decode($cc,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+					foreach($countries as $alpha2code=>$countryArr){
+						if (strpos($suffix[0],$alpha2code)===FALSE){continue;}
+						$arr['Country']=$alpha2code;
+						$arr['Country long']=$countryArr['Country'];
+						break;
+					}
+				}
+				// get part
+				$suffix=implode('',$suffix);
+				$part=preg_replace('/[^0-9]+/','',$suffix);
+				$nonNumericSuffix=str_replace($part,'',$suffix);
+				if (strlen($part)<2){$part='0'.$part;}
+				if (!empty($part)){$arr['Part']=$part;}
+				if (empty($arr['Country long']) && strlen($nonNumericSuffix)>1){
+					// get country, if country is empty
+					$arr['Country']=substr($nonNumericSuffix,0,2);
+				}
+			}
+		}
+		foreach($keyTemplate as $key){$arr[$key]=preg_replace('/\s+/','',$arr[$key]);}
+		if (strlen($arr['Year'])===2){
+			if (intval($arr['Year'])<50){
+				$arr['Year']='20'.$arr['Year'];
 			} else {
-				$countries=array();
+				$arr['Year']='19'.$arr['Year'];
 			}
-			foreach($countries as $alpha2code=>$countryArr){
-				if (strpos($prefixSuffix[1],$alpha2code)===FALSE){continue;}
-				$arr['Country']=$alpha2code;
-				$arr['Country long']=$countryArr['Country'];
-				break;
-			}
-			$part=preg_replace('/[^0-9]+/','',$prefixSuffix[1]);
-			if (!empty($part)){$arr['Part']=$part;}
-			$country=preg_replace('/[^A-Z]+/','',$prefixSuffix[1]);
-			$country=str_replace($arr['Region'],'',$country);
-			if (strcmp($arr['Country'],'  ')===0 && !empty($country)){$arr['Country']=$country;}
 		}
 		$reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
-		$arr=array('Reference'=>$reference)+$arr;
-		if (!empty($prefixSuffix[0])){
-			$arr['Prefix']=trim($prefixSuffix[0],'- ');
-		}
+		$arr=array('Reference'=>$reference,'Full'=>$reference)+$arr;
+		$arr['Prefix']=trim($prefixSuffix[0],'- ');
+		if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
 		//$this->arr2file($arr);
 		return $arr;
 	}
@@ -162,12 +176,16 @@ trait Conversions{
 	}
 
 	public function str2money($string,$currency=FALSE){
-		$string=$this->convert2stringNoWhitespaces($string);
-		$value=$this->str2float($string,TRUE);
-		foreach($this->currencies as $needle){
-			if (strpos($string,$needle)===FALSE){continue;}
-			$currency=$needle;
-			break;
+		if (is_int($string) || is_float($string)){
+			$value=$string;
+		} else {
+			$string=$this->convert2stringNoWhitespaces($string);
+			$value=$this->str2float($string,TRUE);
+			foreach($this->currencies as $needle){
+				if (strpos($string,$needle)===FALSE){continue;}
+				$currency=$needle;
+				break;
+			}
 		}
 		$return=array();
 		if ($value!==FALSE){
