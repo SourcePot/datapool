@@ -17,6 +17,8 @@ class CalcEntries{
 	
 	private $arr;
 
+	private $vars=array();
+
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -40,13 +42,14 @@ class CalcEntries{
 	
 	public function getEntryTable(){return $this->entryTable;}
 
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($action='info',$callingElementSelector=array(),$vars=array()){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
+		$this->vars=$vars;
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
@@ -95,12 +98,12 @@ class CalcEntries{
 	public function getCalcEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
-		$return=array();
+		$result=$this->vars;
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
-			$return=$this->runCalcEntries($arr['selector'],FALSE);
+			$result=$this->runCalcEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
-			$return=$this->runCalcEntries($arr['selector'],TRUE);
+			$result=$this->runCalcEntries($arr['selector'],TRUE);
 		}
 		// build html
 		$btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
@@ -112,7 +115,7 @@ class CalcEntries{
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
 		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Calculate widget'));
-		foreach($return as $caption=>$matrix){
+		foreach($result as $caption=>$matrix){
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
@@ -250,7 +253,7 @@ class CalcEntries{
 		}
 		// loop through source entries and parse these entries
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-		$return=array('Calculate statistics'=>array('Entries'=>array('value'=>0),
+		$result=array('Calculate statistics'=>array('Entries'=>array('value'=>0),
 													'Failure'=>array('value'=>0),
 													'Success'=>array('value'=>0),
 													)
@@ -258,19 +261,19 @@ class CalcEntries{
 		// loop through entries
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
 			if ($entry['isSkipRow']){
-				$return['Calculate statistics']['Skip rows']['value']++;
+				$result['Calculate statistics']['Skip rows']['value']++;
 				continue;
 			}
-			$return=$this->calcEntry($base,$sourceEntry,$return,$testRun);
+			$result=$this->calcEntry($base,$sourceEntry,$result,$testRun);
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
-		$return['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
-		$result['Statistics']['Script start']['value']=date('Y-m-d H:i:s',$base['Script start timestamp']);
-		$result['Statistics']['Time consumption [sec]']['value']=time()-$base['Script start timestamp'];
-		return $return;
+		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
+		$result['Statistics'][]=array('columns'=>'Script start','value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
+		$result['Statistics'][]=array('columns'=>'Time consumption [sec]','value'=>time()-$base['Script start timestamp']);
+		return $result;
 	}
 	
-	private function calcEntry($base,$sourceEntry,$return,$testRun){
+	private function calcEntry($base,$sourceEntry,$result,$testRun){
 		$debugArr=array();
 		$log='';
 		$params=current($base['calculationparams']);
@@ -301,7 +304,7 @@ class CalcEntries{
 					'%'=>(floatval($value['B'])===0)?'NaN':floatval($value['A'])%floatval($value['B']),
 				};
 				$sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$result[$ruleIndex],$rule['Content']['Target data type']);
-				$return['Calc rule'][$ruleIndex]=array('A'=>$value['A'],'Operation'=>$rule['Content']['Operation'],'B'=>$value['B'],'Result'=>$result[$ruleIndex]);
+				$result['Calc rule'][$ruleIndex]=array('A'=>$value['A'],'Operation'=>$rule['Content']['Operation'],'B'=>$value['B'],'Result'=>$result[$ruleIndex]);
 			}
 		}
 		// loop through conditional value rules
@@ -364,27 +367,27 @@ class CalcEntries{
 			ksort($value);
 			$sourceEntry[$key]=implode('|',$value);
 		}
-		$return['Calculate statistics']['Entries']['value']++;
+		$result['Calculate statistics']['Entries']['value']++;
 		if ($failureMet){
 			$sourceEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']]);
 			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($log,'| '));
-			$return['Calculate statistics']['Failure']['value']++;
+			$result['Calculate statistics']['Failure']['value']++;
 		} else {
 			$sourceEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']]);
 			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>trim($log,'| '));
-			$return['Calculate statistics']['Success']['value']++;
+			$result['Calculate statistics']['Success']['value']++;
 		}
 		if ($testRun){
-			if (isset($return['Sample result'])){
-				if (mt_rand(1,100)>50){$return['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);}
+			if (isset($result['Sample result'])){
+				if (mt_rand(1,100)>50){$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);}
 			} else {
-				$return['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
+				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
 			}
 		} else {
 			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry);
 		}
-		$return['Target']=array('Source'=>array('value'=>$sourceEntry['Source']),'EntryId'=>array('value'=>$sourceEntry['EntryId']),'Name'=>array('value'=>$sourceEntry['Name']));
-		return $return;
+		$result['Target']=array('Source'=>array('value'=>$sourceEntry['Source']),'EntryId'=>array('value'=>$sourceEntry['EntryId']),'Name'=>array('value'=>$sourceEntry['Name']));
+		return $result;
 	}
 	
 	private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR'){

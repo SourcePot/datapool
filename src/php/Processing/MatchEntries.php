@@ -15,6 +15,8 @@ class MatchEntries{
 	
 	private $arr;
 
+	private $vars=array();
+
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -34,13 +36,14 @@ class MatchEntries{
 
 	public function getEntryTable(){return $this->entryTable;}
 	
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($action='info',$callingElementSelector=array(),$vars=array()){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
+		$this->vars=$vars;
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
@@ -89,7 +92,7 @@ class MatchEntries{
 	public function getMatchEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
-		$result=array();
+		$result=$this->vars;
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runMatchEntries($arr['selector'],FALSE);
@@ -132,11 +135,11 @@ class MatchEntries{
 	
 	private function matchingParams($callingElement){
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
-		if (empty($callingElement['Content']['Selector']['Source'])){return $html;}
+		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
 		$contentStructure=array('Column to match'=>array('htmlBuilderMethod'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
 							  'Match with'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
+							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
+							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
 							  'Combine content'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('No','Yes')),
 							  'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
@@ -205,6 +208,7 @@ class MatchEntries{
 												 'Skipped entries B'=>array('value'=>0),
 												 'Matched'=>array('value'=>0),
 												 'Failed'=>array('value'=>0),
+												 'Kept entry'=>array('value'=>0),
 												 'Skip rows'=>array('value'=>0),
 												 )
 					 );
@@ -222,8 +226,8 @@ class MatchEntries{
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
-		$result['Statistics']['Script start']['value']=date('Y-m-d H:i:s',$base['Script start timestamp']);
-		$result['Statistics']['Time consumption [sec]']['value']=time()-$base['Script start timestamp'];
+		$result['Statistics'][]=array('columns'=>'Script start','value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
+		$result['Statistics'][]=array('columns'=>'Time consumption [sec]','value'=>time()-$base['Script start timestamp']);
 		return $result;
 	}
 	
@@ -246,12 +250,21 @@ class MatchEntries{
 			$success=TRUE;
 			break;
 		}
+		$doNothing=FALSE;
 		if ($success){
 			$result['Matching statistics']['Matched']['value']++;
-			$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match success']]);
+			if (isset($base['entryTemplates'][$params['Content']['Match success']])){
+				$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match success']]);
+			} else {
+				$doNothing=TRUE;
+			}
 		} else {
 			$result['Matching statistics']['Failed']['value']++;
-			$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match failure']]);
+			if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
+				$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match failure']]);
+			} else {
+				$doNothing=TRUE;
+			}
 		}
 		$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'match'=>$success);
 		if ($testRun){
@@ -260,6 +273,8 @@ class MatchEntries{
 			} else {
 				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
 			}
+		} else if ($doNothing){
+			$result['Matching statistics']['Kept entry']['value']++;
 		} else {
 			$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,FALSE,array('Name'));
 		}

@@ -81,7 +81,7 @@ class LoginForms{
 		$updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
 		$loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
 		$registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('float'=>'right'));
-		$loginLinkBtn=array('tag'=>'input','type'=>'submit','key'=>array('pswRequest'),'value'=>'Get one time psw','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
+		$loginLinkBtn=array('tag'=>'input','type'=>'submit','key'=>array('pswRequest'),'value'=>'Get login token','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('margin'=>'2em 0.2em'));
 		if ($this->formType===1){
 			$passphrase=$this->getSymbolKeypad($arr);
 		} else {

@@ -245,7 +245,7 @@ class Container{
 			// create table matrix
 			$btnsHtml='';
 			if ($entryCanWrite){
-				$btnsHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>'&veeeq;','keep-element-content'=>TRUE,'key'=>array('save'),'value'=>'save','title'=>'Save','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+				$btnsHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'key'=>array('save'),'value'=>'save','title'=>'Save','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 			}
 			$btnArr=$arr['selector'];
 			$btnArr['cmd']='download';

@@ -41,6 +41,7 @@ class CSVtools{
 	
 	public function isCSV($selector){
 		$file=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
+		if (!is_file($file)){return FALSE;}
 		if (strpos(mime_content_type($file),'text/')!==0){return FALSE;}
 		foreach($this->csvIterator($selector) as $rowIndex=>$rowArr){
 			if (count($rowArr)>1){

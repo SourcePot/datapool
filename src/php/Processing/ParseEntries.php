@@ -17,6 +17,8 @@ class ParseEntries{
 	
 	private $arr;
 
+	private $vars=array();
+
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -39,13 +41,14 @@ class ParseEntries{
 	
 	public function getEntryTable(){return $this->entryTable;}
 
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($action='info',$callingElementSelector=array(),$vars=array()){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
+		$this->vars=$vars;
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
@@ -94,7 +97,7 @@ class ParseEntries{
 	public function getParseEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
-		$result=array();
+		$result=$this->vars;
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runParseEntries($arr['selector'],FALSE);
@@ -239,8 +242,8 @@ class ParseEntries{
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
-		$result['Statistics']['Script start']['value']=date('Y-m-d H:i:s',$base['Script start timestamp']);
-		$result['Statistics']['Time consumption [sec]']['value']=time()-$base['Script start timestamp'];
+		$result['Statistics'][]=array('columns'=>'Script start','value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
+		$result['Statistics'][]=array('columns'=>'Time consumption [sec]','value'=>time()-$base['Script start timestamp']);
 		return $result;
 	}
 	

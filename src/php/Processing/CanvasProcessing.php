@@ -14,6 +14,8 @@ namespace SourcePot\Datapool\Processing;
 class CanvasProcessing{
 	
 	private $arr;
+	
+	private $vars=array();
 
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -32,19 +34,16 @@ class CanvasProcessing{
 		return $this->arr;
 	}
 
-	public function job($vars){
-		return $vars;
-	}
-
 	public function getEntryTable(){return $this->entryTable;}
 	
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($action='info',$callingElementSelector=array(),$vars=array()){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
+		$this->vars=$vars;
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
@@ -93,7 +92,7 @@ class CanvasProcessing{
 	public function getCanvasProcessingWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
-		$result=array();
+		$result=$this->vars;
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runCanvasProcessing($arr['selector'],FALSE);
@@ -147,13 +146,15 @@ class CanvasProcessing{
 		return $html;
 	}
 	
-	public function runCanvasProcessingOnClass($class,$isTestRun=TRUE){
+	public function runCanvasProcessingOnClass($class,$isTestRun=FALSE,$vars=array()){
+		$this->vars=$vars;
 		$canvasElementsSelector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $canvasElement){
 			if (empty($canvasElement['Content']['Widgets']['Processor'])){continue;}
 			if (strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
 			$this->runCanvasProcessing($canvasElement,$isTestRun);
 		}
+		return $this->vars;
 	}
 	
 	public function runCanvasProcessing($callingElement,$isTestRun=TRUE){
@@ -167,8 +168,14 @@ class CanvasProcessing{
 		$targetCanvasElement=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$currentCanvasElement['Content']['Process']);
 		$targetCanvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($targetCanvasElement,TRUE);
 		if ($targetCanvasElement){
+			if (isset($this->vars[$currentCanvasElement['Content']['Process']])){
+				$result=$this->vars[$currentCanvasElement['Content']['Process']];
+			} else {
+				$result=array();
+			}
 			$processor=$targetCanvasElement['Content']['Widgets']['Processor'];
-			$result=$this->arr[$processor]->dataProcessor($isTestRun?'test':'run',$targetCanvasElement);
+			$result=$this->arr[$processor]->dataProcessor($isTestRun?'test':'run',$targetCanvasElement,$result);
+			$this->vars[$currentCanvasElement['Content']['Process']]=$result;
 		}
 		$result['Canvas processing']['Stack']['value']=count($canvasElements);
 		return $result;
