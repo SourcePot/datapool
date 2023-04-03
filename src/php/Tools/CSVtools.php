@@ -150,6 +150,7 @@ class CSVtools{
 				$entry['Params']['File']['Size']=filesize($targetFile);
 				$entry['Params']['File']['Extension']='csv';
 				$entry['Params']['File']['MIME-Type']='text/csv';
+				$entry['Type']=$entry['Source'].' '.str_replace('/',' ',$entry['Params']['File']['MIME-Type']);
 				$entry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 				// reset csv var-space

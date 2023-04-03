@@ -175,14 +175,12 @@ final class Root{
 				}
 			}
 		}
-		/*
 		if (stripos($classWithNamespace,'\Tools\\')===FALSE && stripos($classWithNamespace,'\Foundation\\')===FALSE){
 			if (method_exists($arr[$classWithNamespace],'getEntryTable')){
 				$source=$arr[$classWithNamespace]->getEntryTable();
 				$arr['view classes'][$source]=$classWithNamespace;
 			}
 		}
-		*/
 		if (stripos($classWithNamespace,'logging')!==FALSE){$GLOBALS['logging class']=$classWithNamespace;}
 		return $arr;
 	}

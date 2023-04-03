@@ -305,7 +305,6 @@ class Filespace{
 		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
 			$fileContent=file_get_contents($file);
 			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
-			$text='Parser failed!';
 			if ($this->pdfOK($fileContent)){				
 				// parser configuration
 				$config=new \Smalot\PdfParser\Config();

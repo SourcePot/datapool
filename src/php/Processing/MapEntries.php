@@ -44,7 +44,7 @@ class MapEntries{
 	}
 	
 	public function init($arr){
-		$this->arr=$arr;	
+		$this->arr=$arr;
 		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		return $this->arr;
 	}
@@ -249,7 +249,7 @@ class MapEntries{
 				$attachment=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
 				if (is_file($attachment)){
 					$result['Mapping statistics']['Files added to zip']['value']++;
-					$sourceEntry['Linked file']=$sourceEntry['EntryId'].'.'.$sourceEntry['Params']['File']['Extension'];
+					$sourceEntry['Linked file']=preg_replace('/[^0-9a-zA-ZöüäÖÜÄß\-]/','_',$sourceEntry['Name']).'.'.$sourceEntry['Params']['File']['Extension'];
 					$zip->addFile($attachment,$sourceEntry['Linked file']);
 				} else {
 					$sourceEntry['Linked file']='';
@@ -267,7 +267,7 @@ class MapEntries{
 				$result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
 			}
 		}
-		if ($base['csvRequested']){
+		if ($base['csvRequested'] || $base['zipRequested']){
 			$result['Mapping statistics']['Output format']['value']='CSV';
 			$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
 		}			
@@ -299,7 +299,7 @@ class MapEntries{
 				$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
 				$result['Mapping statistics']['Output format']['value']='Zip + csv';
 			}
-			$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
+			//$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
