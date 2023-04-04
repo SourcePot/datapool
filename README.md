@@ -6,9 +6,9 @@ This framework aims to fill the gap between the big software packages such as SA
 ![Example application, import of invoices with including cost records](https://github.com/SourcePot/datapool/blob/main/docs/ExampleApplication.png?raw=true)
 
 The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices.  The payment is usually dealt with by SAP by the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case. This requires the following:
-1. Content extraction from the invoice. SAP relevant data as well as patent case specific data.
+1. Parsing: Content extraction from the invoice. SAP relevant data as well as patent case specific data.
 2. Matching an SAP accounting record with the patent case.
-3. Adjusting data formats and types to create a UNYCOM compatible dataset.
+3. Mapping: Adjusting data formats and types to create a UNYCOM compatible dataset.
 The Datapool framework can just achieve this.
 
 # Requirements
