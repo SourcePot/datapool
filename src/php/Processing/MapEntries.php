@@ -299,7 +299,7 @@ class MapEntries{
 				$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
 				$result['Mapping statistics']['Output format']['value']='Zip + csv';
 			}
-			//$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
+			$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
 		}
 		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
