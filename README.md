@@ -12,7 +12,7 @@ The figure shows a typical application example in a company software setup inclu
 The Datapool framework can just achieve this.
 
 # Requirements
-This software is designed to run on a server, i.e. the user interface is the web browser. It requires PHP and a database. Depending on the application access to an email account might be required.
+This software is designed to run on a server, i.e. the user interface is the web browser. It requires PHP and a database. Depending on the application requirements access to an email account might be required.
 
 # Fist steps
 ## Installing the framework
