@@ -3,7 +3,7 @@ In some way this software package is a result of desperation.
 Many big organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Even more challenging might be the task of moving data between the packages.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department.  The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the more valuable tasks.
 
-[Example application, import of invoices with including cost records](https://github.com/SourcePot/datapool/blob/main/docs/Media/ExampleApplication.png?raw=true)
+[Example application, import of invoices with including cost records](https://github.com/SourcePot/datapool/blob/main/docs/Media/ExampleApplication.png)
 
 The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices.  The payment is usually dealt with by SAP by the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case. This requires the following:
 1. Parsing: Content extraction from the invoice. SAP relevant data as well as patent case specific data.
