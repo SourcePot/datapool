@@ -15,8 +15,6 @@ class CanvasProcessing{
 	
 	private $arr;
 	
-	private $vars=array();
-
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -36,14 +34,13 @@ class CanvasProcessing{
 
 	public function getEntryTable(){return $this->entryTable;}
 	
-	public function dataProcessor($action='info',$callingElementSelector=array(),$vars=array()){
+	public function dataProcessor($action='info',$callingElementSelector=array()){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$this->vars=$vars;
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
 		switch($action){
 			case 'run':
@@ -92,7 +89,7 @@ class CanvasProcessing{
 	public function getCanvasProcessingWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
-		$result=$this->vars;
+		$result=array();
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runCanvasProcessing($arr['selector'],FALSE);
@@ -146,38 +143,59 @@ class CanvasProcessing{
 		return $html;
 	}
 	
-	public function runCanvasProcessingOnClass($class,$isTestRun=FALSE,$vars=array()){
-		$this->vars=$vars;
-		$canvasElementsSelector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements');
+	public function runCanvasProcessingOnClass($class,$isTestRun=FALSE){
+		$result=array();
+		$canvasElementsSelector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Folder'=>$class);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $canvasElement){
 			if (empty($canvasElement['Content']['Widgets']['Processor'])){continue;}
 			if (strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
-			$this->runCanvasProcessing($canvasElement,$isTestRun);
+			$result=$this->runCanvasProcessing($canvasElement,$isTestRun);
 		}
-		return $this->vars;
+		return $result;
 	}
 	
 	public function runCanvasProcessing($callingElement,$isTestRun=TRUE){
-		// get job processing canvas elements
-		$canvasElements=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,__FUNCTION__,array(),'Processing steps',TRUE);
-		if (empty($canvasElements)){
-			$canvasElements=$this->getCanvasElements($callingElement);
-		}
-		$currentCanvasElement=array_shift($canvasElements);
-		$this->arr['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,__FUNCTION__,$canvasElements,'Processing steps',TRUE);
-		$targetCanvasElement=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$currentCanvasElement['Content']['Process']);
-		$targetCanvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($targetCanvasElement,TRUE);
-		if ($targetCanvasElement){
-			if (isset($this->vars[$currentCanvasElement['Content']['Process']])){
-				$result=$this->vars[$currentCanvasElement['Content']['Process']];
-			} else {
-				$result=array();
+		// get canvas processing rules
+		$settingsKey=__CLASS__.'|'.$callingElement['Folder'];
+		$base=array('canvasprocessingrules'=>array());
+		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+			$key=explode('|',$entry['Type']);
+			$key=array_pop($key);
+			$base[$key][$entry['EntryId']]=$entry;
+			// entry template
+			foreach($entry['Content'] as $contentKey=>$content){
+				if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+				$template=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
+				if ($template){$base['entryTemplates'][$content]=$template;}
 			}
-			$processor=$targetCanvasElement['Content']['Widgets']['Processor'];
-			$result=$this->arr[$processor]->dataProcessor($isTestRun?'test':'run',$targetCanvasElement,$result);
-			$this->vars[$currentCanvasElement['Content']['Process']]=$result;
 		}
-		$result['Canvas processing']['Stack']['value']=count($canvasElements);
+		$base['Step count']=count($base['canvasprocessingrules']);
+		$savedBase=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getSetting('Job processing','Var space',$base,$settingsKey,TRUE);
+		if (empty($savedBase['canvasprocessingrules'])){
+			$base=$this->arr['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$base,$settingsKey,TRUE);
+		} else {
+			$base=$savedBase;
+		}
+		if (empty($base['canvasprocessingrules'])){
+			return array('Results'=>array('Step count'=>array('Value'=>$base['Step count']),
+										  'Error'=>array('Value'=>'No processing rules found...'),
+										 )
+						);
+		}
+		// process canvas element
+		$canvasElement2process=array_shift($base['canvasprocessingrules']);
+		if (!empty($canvasElement2process)){
+			$canvasElement=array('Source'=>'dataexplorer','EntryId'=>$canvasElement2process['Content']['Process']);
+			$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
+			$processor=$canvasElement['Content']['Widgets']['Processor'];
+			$result=$this->arr[$processor]->dataProcessor($isTestRun?'test':'run',$canvasElement);
+			$result['Statistics'][$isTestRun?'Tested':'Processed']=array('Value'=>'Step '.(intval($base['Step count'])-count($base['canvasprocessingrules'])).': '.$canvasElement['Content']['Style']['Text']);
+			$result['Statistics']['Timestamp']=array('Value'=>time());
+			$result['Statistics']['Date']=array('Value'=>date('Y-m-d H:i:s'));
+			$base['Statistics']=$result['Statistics'];
+		}
+		$this->arr['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$base,$settingsKey,TRUE);
 		return $result;
 	}
 	
@@ -190,14 +208,6 @@ class CanvasProcessing{
 		return $entrySelector;
 	}
 
-	private function getCanvasElements($callingElement,$group='canvasProcessingRules'){
-		$canvasElements=array();
-		$canvasElementsSelector=array('Source'=>$this->entryTable,'Group'=>$group,'Folder'=>$callingElement['Folder']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-			$canvasElements[$entry['EntryId']]=$entry;
-		}
-		return $canvasElements;
-	}
 
 }
 ?>

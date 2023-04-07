@@ -159,7 +159,7 @@ class HTMLbuilder{
 			foreach($matches[0] as $matchIndex=>$match){
 				$element['tag']=trim($matches[1][$matchIndex],'[:');
 				$element['element-content']=$matches[2][$matchIndex];
-				$replacement=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);
+				$replacement=$this->element($element);
 				$template=str_replace($match,$replacement,$template);
 			}
 		}
@@ -362,7 +362,7 @@ class HTMLbuilder{
 		if (empty($arr['addColumns'])){$arr['options']=array();} else {$arr['options']=$arr['addColumns'];}
 		foreach($canvasElements as $key=>$canvasEntry){
 			if (empty($canvasEntry['Content']['Selector']['Source'])){continue;}
-			$arr['options'][$canvasEntry['EntryId']]=$canvasEntry['Content']['Style']['text'];
+			$arr['options'][$canvasEntry['EntryId']]=$canvasEntry['Content']['Style']['Text'];
 		}
 		$html=$this->select($arr);
 		return $html;
@@ -403,7 +403,7 @@ class HTMLbuilder{
 			if (!isset($arr['value'])){
 				if (isset($arr['EntryId'])){$arr['value']=$arr['EntryId'];} else {$arr['value']=$arr['id'];};
 			}
-			$arr['key']=$arr['cmd'];
+			if (empty($arr['key'])){$arr['key']=$arr['cmd'];}
 			$arr['keep-element-content']=TRUE;
 			if (isset($btnDefs[$arr['cmd']])){
 				// found button definition
@@ -571,11 +571,11 @@ class HTMLbuilder{
 		if (isset($arr['selector'])){$entry=$arr['selector'];} else {return $arr;}
 		if (empty($arr['key'])){$arr['key']='Read';}
 		if (empty($entry['Source']) || empty($entry['EntryId']) || empty($entry[$arr['key']])){
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Required keys missing.'));
+			$html=$this->element(array('tag'=>'p','element-content'=>'Required keys missing.'));
 		} else if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor($entry,$arr['key'],$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols());
+			$html=$this->integerEditor($entry,$arr['key'],$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols());
 		} else {
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'access denied'));
+			$html=$this->element(array('tag'=>'p','element-content'=>'access denied'));
 		}
 		return $html;
 	}
@@ -590,8 +590,8 @@ class HTMLbuilder{
 		if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 		if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION____;}
 		$html='';
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
+		$html.=$this->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+		$html.=$this->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
 		$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
 		$html.=$mediaArr['html'];
 		$btnArr=$arr['selector'];
@@ -605,7 +605,7 @@ class HTMLbuilder{
 		
 		}
 		$html.=$this->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
+		$html=$this->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
 		return $html;
 	}
 
@@ -621,7 +621,7 @@ class HTMLbuilder{
 		if (empty($arr['Name'])){$arr['Name']=$arr['caption'];}
 		if (empty($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 		if (empty($arr['callingFunction'])){$arr['callingFunction']=__CLASS__;}
-		if (empty($arr['contentStructure']) || empty($arr['Source'])){return array('error'=>'Required arr key(s) missing in '.__FUNCTION__);}
+		if (empty($arr['contentStructure']) || empty($arr['Source'])){return 'Required arr key(s) missing in '.__FUNCTION__;}
 		$arr['rowCount']=0;
 		$matrix=array();
 		$matrix['New']=$this->entry2row($arr,TRUE,FALSE);
@@ -683,6 +683,11 @@ class HTMLbuilder{
 			$elementArr['key']=array($arr['EntryId'],'Content',$contentKey);
 			if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
 			$row[$contentKey]=$this->$htmlBuilderMethod($elementArr);
+			if (isset($elementArr['type']) && isset($elementArr['value'])){
+				if (strcmp($elementArr['type'],'hidden')===0){
+					$row[$contentKey].=$elementArr['value'];
+				}
+			}
 		}
 		if (empty($arr['noBtns'])){
 			if (empty($newEntry)){

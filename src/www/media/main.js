@@ -13,11 +13,10 @@ jQuery(document).ready(function(){
 	
 	jQuery('div.second-menu').css({'height':0,'overflow':'hidden'});
 	jQuery('a.first-menu').on('click',function(e){
-		jQuery('div.second-menu').clearQueue();
-		if (jQuery('div.second-menu').height()==0){
-			jQuery('div.second-menu').css({'height':'auto'}).delay(4000).animate({'height':0},500);
+		if (jQuery('div.second-menu').css('height').length>3){
+			jQuery('div.second-menu').css({'height':'auto'}).animate({'height':0},200);
 		} else {
-			jQuery('div.second-menu').css({'height':0});
+			jQuery('div.second-menu').css({'height':'auto'});
 		}
 	});
 
@@ -317,7 +316,7 @@ jQuery(document).ready(function(){
 // canvas interactivity
 	initDraggable();
 	function initDraggable(){
-		jQuery('.canvas-element').each(function(containerIndex){
+		jQuery("div[class^='canvas-']").each(function(containerIndex){
 			if (typeof jQuery(this).attr('entry-id')!=='undefined'){
 				jQuery(this).draggable({
 					containment:'parent',

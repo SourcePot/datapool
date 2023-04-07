@@ -116,11 +116,8 @@ class Menu{
 
 	private function def2div($def){
 		$href='?'.http_build_query(array('category'=>$def['Category']));
-		if (empty($def['isSelected'])){
-			$style='border-bottom:4px solid #400;';
-		} else {
-			$style='border-bottom:4px solid #a00;';
-		}
+		$style='';
+		if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}
 		$html='';
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE));
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE));

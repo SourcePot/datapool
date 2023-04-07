@@ -49,17 +49,7 @@ final class Root{
 		}
 		//unset($_SESSION['page state']);
 		if (empty($_SESSION['page state'])){
-			$pageState=array('lngCode'=>'en','cssFile'=>'dark.css','toolbox'=>FALSE,'selected'=>array());
-			$pageStateInitFile=$GLOBALS['dirs']['setup'].'pageStateInit.json';
-			if (!is_file($pageStateInitFile)){
-				$fileContent=json_encode($pageState);
-				file_put_contents($pageStateInitFile,$fileContent);
-			}
-			if (is_file($pageStateInitFile)){
-				$pageState=file_get_contents($pageStateInitFile);
-				$pageState=json_decode($pageState,TRUE);
-			}
-			$_SESSION['page state']=$pageState;
+			$_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>FALSE,'selected'=>array());
 		}
 		$arr['page html']='';
 		$arr['registered methods']=array();
@@ -219,8 +209,12 @@ final class Root{
 			$dueJob=key($jobs['due']);
 			$dueMethod=$allJobsSetting['Content'][$dueJob]['method'];
 			// job var space and run job
-			$jobVars=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'Var space','Name'=>$dueJob,'Type'=>'array vars');
-			$jobVars=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name','Type'),0);
+			$jobVars=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
+						   'Group'=>'Job processing','Folder'=>'Var space',
+						   'Name'=>$dueJob,
+						   'Type'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable()
+						   );
+			$jobVars=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
 			$jobVars=$arr['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
 			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($jobVars,TRUE);
 			$jobStartTime=hrtime(TRUE);

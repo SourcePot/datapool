@@ -31,7 +31,7 @@ class Sap{
 	}
 
 	public function job($vars){
-		$vars=$this->arr['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__,FALSE,$vars);
+		$vars=$this->arr['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__,FALSE);
 		return $vars;
 	}
 

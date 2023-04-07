@@ -76,7 +76,7 @@ class Container{
 			$wrapperSettings=array_merge($wrapperSettings,$return['wrapperSettings']);
 		}
 		if (isset($return['settings'])){$_SESSION['container store'][$containerId]=array_merge($_SESSION['container store'][$containerId],$return['settings']);}
-		$reloadBtnStyle=array('position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'0','border-radius'=>'revert');
+		$reloadBtnStyle=array('position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'3px','border'=>'none','background-color'=>'#ccc');
 		$reloadBtnArr=array('tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>'reloadBtnArr','callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE);
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($reloadBtnArr);
 		// add wrappers
@@ -207,7 +207,10 @@ class Container{
 			$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 			$debugArr['formData']=$formData;
 			if (!empty($formData['cmd'])){
-				if (isset($formData['cmd']['stepIn'])){
+				if (isset($formData['cmd']['Upload'])){
+					$fileArr=current(current($formData['files']));
+					$entry=$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$arr['selector']);
+				} else if (isset($formData['cmd']['stepIn'])){
 					if (empty($settings['selectorKey'])){$selectorKeyComps=array();} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
 					$selectorKeyComps[]=$formData['cmd']['stepIn'];
 					$settings['selectorKey']=implode($S,$selectorKeyComps);
@@ -239,7 +242,7 @@ class Container{
 				$key=array_pop($selectorKeyComps);
 				$btnArrKey=implode($S,$selectorKeyComps);
 				$element=array('tag'=>'button','element-content'=>$key.' &rarr;','key'=>array('setSelectorKey'),'value'=>$btnArrKey,'keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
-				$element['style']=array('font-size'=>'0.9em','color'=>'#000','background-color'=>'#aaa');
+				$element['style']=array('font-size'=>'0.9em','border'=>'none','border-bottom'=>'1px solid #aaa');
 				$navHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element).$navHtml;
 			}
 			// create table matrix
@@ -297,6 +300,9 @@ class Container{
 				$matrix['<i>Add</i>']=array('value'=>$valueHtml,'cmd'=>$cmdHtml);
 			}
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name']));
+			if ($level==0){
+				$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
+			}
 		}
 		if ($isDebugging){
 			$debugArr['arr out']=$arr;

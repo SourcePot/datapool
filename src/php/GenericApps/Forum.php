@@ -83,7 +83,7 @@ class Forum{
 		$definition['hideKeys']=TRUE;
 		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$forumEntry);
 		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','style'=>array('background-color'=>'#888','min-width'=>'100%','margin'=>'0')));
+		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','style'=>array('min-width'=>'100%','margin'=>'0')));
 		return $html;
 	}
 	

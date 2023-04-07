@@ -195,14 +195,15 @@ class ParseEntries{
 		}
 		//
 		$contentStructure=array('Rule relevant on section'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections),
-								'Contant or...'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Constant or...'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'regular expression'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Match index'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
 								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
 								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
 								'Target key'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Allow multiple hits'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'boolean','options'=>array('No','Yes')),
-								'Match required'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'boolean','options'=>array('No','Yes')),
+								'Allow multiple hits'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+								'Remove match'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+								'Match required'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
 								);
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
 		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
@@ -240,10 +241,9 @@ class ParseEntries{
 			$result['Parser statistics']['Entries']['value']++;
 			$result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
 		}
-		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
-		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
-		$result['Statistics'][]=array('columns'=>'Script start','value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics'][]=array('columns'=>'Time consumption [sec]','value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
+		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
 		return $result;
 	}
 	
@@ -274,11 +274,13 @@ class ParseEntries{
 				}
 			}
 			// parse sections
+			$textSections2show=$textSections;
 			$targetEntry=array();
 			foreach($base['parserrules'] as $ruleEntryId=>$rule){
 				$ruleFailed='';
 				// get relevant text section
 				$relevantText='';
+				$relevantText2show='';
 				if (empty($rule['Content']['Rule relevant on section'])){
 					$relevantText=$fullText;
 				} else if (isset($textSections[$rule['Content']['Rule relevant on section']])){
@@ -286,14 +288,16 @@ class ParseEntries{
 				} else {
 					continue;
 				}
+				$matchRemoved='<p>No</p>';
+				$rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
 				if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
 					$sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
 				} else {
 					$sectionName='Section missing, check rules!';
 				}
-				if (!empty($rule['Content']['Contant or...'])){
+				if (!empty($rule['Content']['Constant or...'])){
 					// use constant
-					$matchText=$rule['Content']['Contant or...'];
+					$matchText=$rule['Content']['Constant or...'];
 					$targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
 				} else {
 					// match rule with text section
@@ -319,13 +323,25 @@ class ParseEntries{
 						$matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
 						$ruleFailed.='|'.$matchText.' rule '.$ruleEntryId;
 					}
+					if (!empty($matches[0][0]) && !empty($rule['Content']['Remove match'])){
+						$matchRemoved='<p style="color:#fd0;">True</p>';
+				
+						
+						$textSections[$rule['Content']['Rule relevant on section']]=str_replace($matches[0][0],'',$textSections[$rule['Content']['Rule relevant on section']]);
+						
+						if (isset($textSections2show[$rule['Content']['Rule relevant on section']])){						
+							$textSections2show[$rule['Content']['Rule relevant on section']]=str_replace($matches[0][0],'<span title="Rule: '.$rowKey.'" style="text-decoration:line-through;">'.$matches[0][0].'</span>',$textSections2show[$rule['Content']['Rule relevant on section']]);
+							$sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
+							if ($testRun){$result['Parser text sections'][$sectionName]=array('value'=>$textSections2show[$rule['Content']['Rule relevant on section']]);}
+						}
+					}
 				}
 				if (isset($rule['Content']['Match required'])){$matchRequired=boolval($rule['Content']['Match required']);} else {$matchRequired=FALSE;}
 				if ($testRun){
-					$rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
-					$result['Parser rule matches'][$rowKey]=array('Regular expression or contant used'=>$rule['Content']['Contant or...'].$rule['Content']['regular expression'],
+					$result['Parser rule matches'][$rowKey]=array('Regular expression or constant used'=>$rule['Content']['Constant or...'].$rule['Content']['regular expression'],
 																  'Section name'=>$sectionName,
 																  'Match'=>$matchText,
+																  'Removed match'=>$matchRemoved,
 																  'Rule failed'=>($ruleFailed)?'<p style="color:#f00;font-weight:bold;">Failed</p>':'<p style="color:#0f0;">Success</p>',
 																  'Match required'=>($matchRequired)?'<p style="color:#fd0;">Yes</p>':'<p style="color:#0f0;">No</p>'
 																  );

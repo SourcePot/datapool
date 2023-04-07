@@ -118,7 +118,7 @@ class User{
 		return implode(', ',$userRols);
 	}
 	
-	private function getCurrentUser(){
+	public function getCurrentUser(){
 		if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges'])){$this->anonymousUserLogin();}
 		return $_SESSION['currentUser'];
 	}

@@ -16,8 +16,8 @@ class Calendar{
 	private $arr;
 	
 	private $entryTable;
-	private $entryTemplate=array('Group'=>array('index'=>FALSE,'value'=>'{{pageTitle}}','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
-								 'Folder'=>array('index'=>FALSE,'value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
+	private $entryTemplate=array('Group'=>array('index'=>FALSE,'value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
+								 'Folder'=>array('index'=>FALSE,'value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
 								 'Start'=>array('index'=>FALSE,'value'=>'{{TODAY}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
 								 'End'=>array('index'=>FALSE,'value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
 								 );
@@ -105,6 +105,37 @@ class Calendar{
 	}
 
 	public function job($vars){
+		$events=$this->getEvents(time());
+		$trigger=array();
+		$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger');
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read') as $triggerId=>$entry){
+			$triggerId=$entry['EntryId'];
+			$trigger[$triggerId]=array('detected event last time'=>$vars['trigger'][$triggerId]['detected event']??FALSE,
+									   'detected event'=>FALSE,
+									   'risingSlope'=>boolval($entry['Content']['Slope']),
+									   'trigger name'=>$entry['Content']['Trigger name'],
+									   'EntryId'=>$entry['EntryId'],
+									   'Folder'=>$entry['Folder'],
+									   'active'=>$vars['trigger'][$triggerId]['active']??FALSE
+									   );
+			foreach($events as $event){
+				if (strcmp($event['State'],'Finnishing event')!==0){continue;}
+				if (empty($entry['Content']['Event folder']) || strcmp($event['Folder'],$entry['Content']['Event folder'])===0){
+					if (empty($entry['Content']['Event name']) || strcmp($event['Name'],$entry['Content']['Event name'])===0){
+						$trigger[$triggerId]['detected event']=TRUE;
+						break;
+					}
+				}
+			}
+		}
+		foreach($trigger as $triggerId=>$triggerArr){
+			if ($triggerArr['risingSlope']){
+				if (!$triggerArr['detected event last time'] && $triggerArr['detected event']){$trigger[$triggerId]['active']=TRUE;}
+			} else {
+				if ($triggerArr['detected event last time'] && !$triggerArr['detected event']){$trigger[$triggerId]['active']=TRUE;}
+			}
+		}
+		$vars['trigger']=$trigger;
 		return $vars;
 	}
 
@@ -122,6 +153,13 @@ class Calendar{
 		} else {
 			$html='';
 			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
+			
+			
+			$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId']);
+		
+			
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
 			return $arr;
 		}
@@ -136,18 +174,12 @@ class Calendar{
 			$entry['Content']['Event']['End']=$entry['addDate'].'T23:59';
 			$entry['Content']['Event']['End timezone']=$this->setting['Timezone'];
 			$entry['Content']['Event']['Description']='';
+			$entry['Content']['Event']['Type']='event';
 		}
-		if (!isset($entry['Folder'])){
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);		
-		} else if (strpos($entry['Folder'],'--')===0){
-			// old style event needs to be translated into event
-			$entry['Type']='calendar event';
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($entry,$this->oldEventsKeyMapping);
-		} else {
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($entry);	
-		}
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);		
 		if (!empty($entry['Content']['Event']['Start']) && !empty($entry['Content']['Event']['Start timezone']) && 
 			!empty($entry['Content']['Event']['End']) && !empty($entry['Content']['Event']['End timezone'])){
+			$entry['Folder']=$entry['Content']['Event']['Type'];
 			$entry['Name']=substr($entry['Content']['Event']['Description'],0,100);
 			$entry['Start']=$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],date_default_timezone_get());
 			$entry['End']=$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],date_default_timezone_get());
@@ -208,7 +240,7 @@ class Calendar{
 		$calendarDateArr['key']=array('pageState','calendarDate');
 		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($calendarDateArr);
 		$btnArr=$arr;
-		$btnArr['style']=array('font-size'=>'20px','line-height'=>'15px','width'=>'50px','color'=>'#fff','background-color'=>'#000');
+		$btnArr['style']=array('font-size'=>'20px','line-height'=>'15px','width'=>'50px');
 		$btnArr['cmd']='Set';
 		$btnArr['title']='Set';
 		$btnArr['element-content']='&#10022;';
@@ -274,11 +306,7 @@ class Calendar{
 			if (strcmp($date,$this->pageState['addDate'])===0){$dayStyle['background-color']='#f008';}
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle));
 			$dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
-			if (strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0){
-				$dayStyle['background-color']='#af6';
-			} else {
-				$dayStyle['background-color']='#fff';
-			}
+			if (strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0){$dayStyle['background-color']='#af6';}
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$dayContent,'keep-element-content'=>TRUE,'key'=>array('Add',$date),'title'=>'Click here to open a new event','callingClass'=>__CLASS__,'callingFunction'=>'addEvents','class'=>'calendar-day','style'=>$dayStyle));
 			$arr['html'].=$this->timeLineHtml($date);
 			$lastDayPos=$newDayPos;
@@ -317,15 +345,13 @@ class Calendar{
 			if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
 			$style['left']=$event['x0'];
 			$style['width']=$event['x1']-$event['x0']-2;
-			$style['border']='1px solid #aaa';
+			$class='calendar-event';
 			if (!empty($this->pageState['EntryId'])){
 				if (strcmp($EntryId,$this->pageState['EntryId'])===0){
-					$style['border']='1px solid #fff';
-					$style['color']='#000';
-					$style['background-color']='#fff';
+					$class='calendar-event-selected';
 				}
 			}
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$event['Name'],'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'calendar-event','style'=>$style));
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$event['Name'],'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>$class,'style'=>$style));
 		}
 		return $arr;
 	}
@@ -400,9 +426,9 @@ class Calendar{
 		$events=array();
 		$oldEvents=array();
 		$selectors=array();
-		$selectors['Ongoing event']=array('Source'=>$this->entryTable,'Start<'=>$viewStart,'End>'=>$viewEnd);
-		$selectors['Finnishing event']=array('Source'=>$this->entryTable,'End>='=>$viewStart,'End<='=>$viewEnd);
-		$selectors['Upcomming event']=array('Source'=>$this->entryTable,'Start>='=>$viewStart,'Start<='=>$viewEnd);
+		$selectors['Ongoing event']=array('Source'=>$this->entryTable,'Group'=>'Events','Start<'=>$viewStart,'End>'=>$viewEnd);
+		$selectors['Finnishing event']=array('Source'=>$this->entryTable,'Group'=>'Events','End>='=>$viewStart,'End<='=>$viewEnd);
+		$selectors['Upcomming event']=array('Source'=>$this->entryTable,'Group'=>'Events','Start>='=>$viewStart,'Start<='=>$viewEnd);
 		foreach($selectors as $state=>$selector){
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Start') as $entry){
 				$key=$entry['EntryId'];
@@ -489,15 +515,82 @@ class Calendar{
 		return $entry;
 	}
 	
-	public function regexDateMatch($regex='....-..-.. ..:..:.. . . ..',$timestamp=null){
-		// The regex will be matched against the date string of following format (format characters are used):
-		// "YYYY-mm-dd HH:ii:ss N L WW" with
-		// 'N' ... ISO 8601 numeric representation of the day of the week, 1 (for Monday) through 7 (for Sunday)
-		// 'WW' ... ISO 8601 week number of year, weeks starting on Monday
-		// 'L' ... Whether it's a leap year, 1 if it is a leap year, 0 otherwise.
-		$now=date('Y-m-d H:i:s N L WW',$timestamp);
-		return preg_match('/'.$regex.'/',$now,$matches);
+	public function getTriggerHtml($arr){
+		$html='';
+		$slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');
+		$eventSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Events');
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+		if (isset($formData['cmd']['Reset'])){
+			$this->resetTrigger(key($formData['cmd']['Reset']));
+		}
+		if (isset($formData['changed']['Folder'])){$formData['val']['Name']='';}
+		$eventSelector=array_merge($eventSelector,$formData['val']);
+		// get selector
+		$matrix=array();
+		$selectArr=array('hasSelectBtn'=>FALSE,'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+		foreach(array('Folder','Name') as $column){
+			$selectArr['options']=array(''=>'&larrhk;');
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDistinct($eventSelector,$column,FALSE,'Read',$column) as $row){
+				$selectArr['key']=array($column);
+				if (isset($eventSelector[$column])){$selectArr['selected']=$eventSelector[$column];}
+				$selectArr['options'][$row[$column]]=ucfirst($row[$column]);
+			}
+			$matrix['Selector'][$column]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
+		}
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Event selection','keep-element-content'=>TRUE));
+		// get trigger
+		$contentStructure=array('Trigger name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Event folder'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelector['Folder']??'','excontainer'=>TRUE),
+								'Event name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelector['Name']??'','excontainer'=>TRUE),
+								'Slope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>1,'options'=>$slopeOptions),
+								);
+		$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+		$listArr=$arr['selector'];
+		$listArr['canvasCallingClass']=__CLASS__;
+		$listArr['contentStructure']=$contentStructure;
+		$listArr['caption']='Event trigger';
+		$listArr['callingClass']=__CLASS__;
+		$listArr['callingFunction']=__FUNCTION__;
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($listArr);
+		// get current trigger state
+		$matrix=array();
+		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		foreach($vars['trigger'] as $triggerId=>$trigger){
+			if (strcmp($trigger['Folder'],$arr['selector']['Folder'])!==0){continue;}
+			$style=array('color'=>'#f00','width'=>'100%','height'=>'8px');
+			$matrix[$trigger['trigger name']]=array('Slope'=>$slopeOptions[intval($trigger['risingSlope'])]);
+			if ($trigger['detected event last time']){$style['background-color']='#f00';} else {$style['background-color']='#4f0';}
+			$matrix[$trigger['trigger name']]['Past status']=array('tag'=>'div','style'=>$style,'keep-element-content'=>TRUE);
+			if ($trigger['detected event']){$style['background-color']='#f00';} else {$style['background-color']='#4f0';}
+			$matrix[$trigger['trigger name']]['Current status']=array('tag'=>'div','style'=>$style,'keep-element-content'=>TRUE);
+			if ($trigger['active']){$style['background-color']='#f00';} else {$style['background-color']='#4f0';}
+			$matrix[$trigger['trigger name']]['Active']=array('tag'=>'div','style'=>$style,'keep-element-content'=>TRUE);
+			$btnArr=$arr;
+			$btnArr['cmd']='Reset';
+			$btnArr['key']=array('Reset',$triggerId);
+			$matrix[$trigger['trigger name']]['Reset']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+		}
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Trigger status','keep-element-content'=>TRUE));
+		$arr['html']=$html;
+		return $arr;
 	}
+	
+	public function resetTrigger($triggerId){
+		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		$vars['trigger'][$triggerId]['active']=FALSE;
+		return $this->arr['SourcePot\Datapool\AdminApps\Settings']->setVars(__CLASS__,$vars,TRUE);
+	}
+	
+	public function getTrigger(){
+		$return=array('options'=>array(''=>'&rArr;'),'trigger'=>array());
+		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		foreach($vars['trigger'] as $triggerId=>$trigger){
+			$return['options'][$triggerId]=$trigger['trigger name'];
+			$return['trigger'][$triggerId]=$trigger['active'];
+		}
+		return $return;
+	}
+	
 
 }
 ?>

@@ -28,10 +28,10 @@ class Backbone{
 							'pageTimeZone'=>'Europe/Berlin',
 							'mainBackgroundImageFile'=>FALSE,
 							'loginBackgroundImageFile'=>'main-login.jpg',
-							'iconFile'=>'LaIsla2.ico',
+							'iconFile'=>'main.ico',
 							'charset'=>'utf-8',
-							'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','dynamic.css'),
-							'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','dark.js'),
+							'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css'),
+							'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
 							'emailWebmaster'=>'admin@datapool.info');
 	
 	public function __construct($arr){

@@ -18,21 +18,17 @@ class DataExplorer{
 	private $entryTable;
 	private $entryTemplate=array();
 	
-	public $definition=array('Content'=>array('Style'=>array('text'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															'font-size'=>array('@tag'=>'input','@type'=>'text','@default'=>'25px'),
-															'color'=>array('@tag'=>'input','@type'=>'text','@default'=>'#fff'),
-															'background-color'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															'border'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															'line-height'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-															'top'=>array('@tag'=>'input','@type'=>'text','@default'=>'0px'),
-															'left'=>array('@tag'=>'input','@type'=>'text','@default'=>'0px'),
+	public $definition=array('Content'=>array('Style'=>array('Text'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
+															'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Red','canvas-green'=>'Green','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'processor'),'@default'=>'canvas-std'),
+															'top'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
+															'left'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
 															),
 											'Selector'=>array('Source'=>array('@function'=>'select','@options'=>array()),
-																'Group'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-																'Folder'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-																'Name'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-																'EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
-																'Type'=>array('@tag'=>'input','@type'=>'text','@default'=>''),
+																'Group'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
+																'Folder'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
+																'Name'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
+																'EntryId'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
+																'Type'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
 																),
 											 'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
 															   'File upload'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
@@ -43,31 +39,32 @@ class DataExplorer{
     
 	private $tags=array('run'=>array('tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'),'showEditMode'=>TRUE,'type'=>'Cntr'),
 						'edit'=>array('tag'=>'button','element-content'=>'⚙','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'),'showEditMode'=>FALSE,'type'=>'Cntr'),
-						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'16px','color'=>'#fff','background-color'=>'#20f'),'showEditMode'=>TRUE,'type'=>'Elements'),
-						'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'style'=>array('font-size'=>'17px','color'=>'#000','background-color'=>'#fff','min-width'=>'150px','text-align'=>'center'),'showEditMode'=>TRUE,'type'=>'Elements'),
-						'Text'=>array('tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'style'=>array('font-size'=>'17px','color'=>'#fff'),'showEditMode'=>TRUE,'type'=>'Elements'),
-						'&larr;'=>array('tag'=>'div','element-content'=>'&larr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&uarr;'=>array('tag'=>'div','element-content'=>'&uarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&rarr;'=>array('tag'=>'div','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&darr;'=>array('tag'=>'div','element-content'=>'&darr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&harr;'=>array('tag'=>'div','element-content'=>'&harr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&varr;'=>array('tag'=>'div','element-content'=>'&varr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&nwarr;'=>array('tag'=>'div','element-content'=>'&nwarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&nearr;'=>array('tag'=>'div','element-content'=>'&nearr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&searr;'=>array('tag'=>'div','element-content'=>'&searr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&swarr;'=>array('tag'=>'div','element-content'=>'&swarr;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&#10137'=>array('tag'=>'div','element-content'=>'&#10137','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&#10154'=>array('tag'=>'div','element-content'=>'&#10154','keep-element-content'=>TRUE,'style'=>array('font-size'=>'30px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'&#10140'=>array('tag'=>'div','element-content'=>'&#10140','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Connectors'),
-						'|'=>array('tag'=>'div','element-content'=>'|','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9601'=>array('tag'=>'div','element-content'=>'&#9601','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9675'=>array('tag'=>'div','element-content'=>'&#9675','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9679'=>array('tag'=>'div','element-content'=>'&#9679','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9711'=>array('tag'=>'div','element-content'=>'&#9711','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9476'=>array('tag'=>'div','element-content'=>'&#9476','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9482'=>array('tag'=>'div','element-content'=>'&#9482','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9552'=>array('tag'=>'div','element-content'=>'&#9552','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
-						'&#9553'=>array('tag'=>'div','element-content'=>'&#9553','keep-element-content'=>TRUE,'style'=>array('font-size'=>'20px'),'showEditMode'=>TRUE,'type'=>'Misc'),
+						
+						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements'),
+						'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements'),
+						'Text'=>array('tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements'),
+						'&larr;'=>array('tag'=>'div','element-content'=>'&larr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&uarr;'=>array('tag'=>'div','element-content'=>'&uarr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&rarr;'=>array('tag'=>'div','element-content'=>'&rarr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&darr;'=>array('tag'=>'div','element-content'=>'&darr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&harr;'=>array('tag'=>'div','element-content'=>'&harr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&varr;'=>array('tag'=>'div','element-content'=>'&varr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&nwarr;'=>array('tag'=>'div','element-content'=>'&nwarr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&nearr;'=>array('tag'=>'div','element-content'=>'&nearr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&searr;'=>array('tag'=>'div','element-content'=>'&searr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&swarr;'=>array('tag'=>'div','element-content'=>'&swarr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&#10137'=>array('tag'=>'div','element-content'=>'&#10137','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&#10154'=>array('tag'=>'div','element-content'=>'&#10154','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'&#10140'=>array('tag'=>'div','element-content'=>'&#10140','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors'),
+						'|'=>array('tag'=>'div','element-content'=>'|','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9601'=>array('tag'=>'div','element-content'=>'&#9601','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9675'=>array('tag'=>'div','element-content'=>'&#9675','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9679'=>array('tag'=>'div','element-content'=>'&#9679','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9711'=>array('tag'=>'div','element-content'=>'&#9711','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9476'=>array('tag'=>'div','element-content'=>'&#9476','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9482'=>array('tag'=>'div','element-content'=>'&#9482','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9552'=>array('tag'=>'div','element-content'=>'&#9552','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
+						'&#9553'=>array('tag'=>'div','element-content'=>'&#9553','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Misc'),
 						);
 	
 	private $processorOptions=array();
@@ -82,7 +79,32 @@ class DataExplorer{
 		$this->arr=$arr;
 		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->completeDefintion();
+		//$this->canvasElementsVersionUpdate();
 		return $this->arr;
+	}
+	
+	private function canvasElementsVersionUpdate(){
+		$selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Type'=>'dataexplorer');
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+			if (!isset($entry['Content']['Style']['Text'])){continue;}
+			$oldEntry=$entry;
+			/*
+			$entry['Content']['Style']=array('Text'=>$entry['Content']['Style']['Text'],
+											 'Style class'=>empty($entry['Content']['Selector']['Source'])?'canvas-symbol':'canvas-std',
+											 'top'=>$entry['Content']['Style']['top'],
+											 'left'=>$entry['Content']['Style']['left']
+											 );
+			*/
+			if (!empty($entry['Content']['Selector']['Source'])){
+				$entry['Content']['Style']['Style class']='canvas-std';
+			} else if (mb_strlen($entry['Content']['Style']['Text'])>1){
+				$entry['Content']['Style']['Style class']='canvas-text';
+			} else {
+				$entry['Content']['Style']['Style class']='canvas-symbol';
+			}
+			//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('old'=>$oldEntry['Content'],'new'=>$entry['Content']));
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+		}
 	}
 	
 	public function getEntryTable(){return $this->entryTable;}
@@ -109,10 +131,10 @@ class DataExplorer{
 	}
 
 	public function unifyEntry($entry){
-		if (!empty($entry['style'])){$entry['Content']['Style']=$entry['style'];}
+		if (!empty($entry['class'])){$entry['Content']['Style']['Style class']=$entry['class'];}
 		if (!empty($entry['element-content'])){
 			$entry['Name']=$entry['element-content'];
-			$entry['Content']['Style']['text']=$entry['element-content'];
+			$entry['Content']['Style']['Text']=$entry['element-content'];
 			if (strpos($entry['element-content'],'&#9881;')!==FALSE){
 				$entry['Content']['Selector']['Source']=$this->arr[$entry['Folder']]->getEntryTable();
 				$entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
@@ -165,7 +187,6 @@ class DataExplorer{
 		// create html
 		$selectedCanvasElement=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
 		$html='';
-		$isEditMode=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);
 		$selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 			$html.=$this->canvasElement2html(__CLASS__,__FUNCTION__,$entry,$selectedCanvasElement);
@@ -194,7 +215,7 @@ class DataExplorer{
 		foreach($this->tags as $key=>$tag){
 			if ($tag['showEditMode']!==$isEditMode){continue;}
 			$btn=$tag;
-			$btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('padding'=>'2px','line-height'=>'26px'));
+			$btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('position'=>'relative','padding'=>'2px','margin'=>'5px','line-height'=>'35px'));
 			$btn=array_replace_recursive($btn,$btnTemplate);
 			if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
 			$matrix[$tag['type']]['Btn'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($btn);
@@ -230,8 +251,8 @@ class DataExplorer{
 		$elements=array();
 		$selector=$this->canvasSelector($callingClass);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
-			if (strcmp($entry['Content']['Style']['text'],'&#9881;')===0){continue;}
-			$elements[$entry['Content']['Style']['text']]=$entry;
+			if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0){continue;}
+			$elements[$entry['Content']['Style']['Text']]=$entry;
 		}
 		ksort($elements);
 		return $elements;
@@ -254,21 +275,15 @@ class DataExplorer{
 
 	private function canvasElement2html($callingClass,$callingFunction,$canvasElement,$selectedCanvasElement=FALSE){
 		$rowCount=FALSE;
-		$style=array();
 		$element=array('tag'=>'div');
 		// get canvas element style
+		$style=array('left'=>$canvasElement['Content']['Style']['left'],'top'=>$canvasElement['Content']['Style']['top']);
 		if (!empty($selectedCanvasElement['EntryId'])){
 			if (strcmp($selectedCanvasElement['EntryId'],$canvasElement['EntryId'])===0){
-				$canvasElement['Content']['Style']['border']='2px solid #d00';
+				$style['border']='3px solid #d00';
 			}
 		}
-		foreach($canvasElement['Content']['Style'] as $key=>$value){
-			if (strcmp($key,'text')===0){
-				$text=$value;
-			} else if (!empty($value)){
-				$style[$key]=$value;
-			}
-		}
+		$text=$canvasElement['Content']['Style']['Text'];
 		$isEditMode=!empty($this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE));
 		if ($isEditMode){
 			$btnArr=array('tag'=>'button','value'=>'edit','Source'=>$canvasElement['Source'],'EntryId'=>$canvasElement['EntryId'],'keep-element-content'=>TRUE,'class'=>'canvas-element-btn');
@@ -307,16 +322,16 @@ class DataExplorer{
 			}
 		}
 		// canvas element
-		if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['text'],'&#9881;')!==0){
+		if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0){
 			$elmentInfo=array('tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')');
 			$text.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($elmentInfo);
 		}
+		$element['class']=$canvasElement['Content']['Style']['Style class'];
 		$element['element-content']=$text;
 		$element['keep-element-content']=TRUE;
 		$element['callingClass']=$callingClass;
 		$element['callingFunction']=$callingFunction;
 		$element['style']=$style;
-		$element['class']='canvas-element';
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);
 		return $html;
 	}
@@ -374,6 +389,7 @@ class DataExplorer{
 						 'mapping'=>array('Source'=>'mapentries','Folder'=>$callingClass),
 						 'matching'=>array('Source'=>'matchentries','Folder'=>$callingClass),
 						 'parser'=>array('Source'=>'parseentries','Folder'=>$callingClass),
+						 'calculations'=>array('Source'=>'calcentries','Folder'=>$callingClass),
 						 'processing'=>array('Source'=>'canvasprocessing','Folder'=>$callingClass),
 						 );
 		$callingClassName=substr($callingClass,strrpos($callingClass,'\\')+1);

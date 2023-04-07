@@ -76,5 +76,13 @@ class Settings{
 		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
 	}
 	
+	public function getVars($class,$initVars=array(),$isSystemCall=FALSE){
+		return $this->getSetting('Job processing','Var space',$initVars,$class,$isSystemCall);
+	}
+
+	public function setVars($class,$vars=array(),$isSystemCall=FALSE){
+		return $this->setSetting('Job processing','Var space',$vars,$class,$isSystemCall);
+	}
+	
 }
 ?>

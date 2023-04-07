@@ -147,42 +147,41 @@ class MediaTools{
 		// if setting key does not exist yet add the standard key-value
 		if (!isset($arrElements['arr']['setting']['Key tags'][$key])){
 			$arrElements['arr']['settingNeedsUpdate']=TRUE;
-			$arrElements['arr']['setting']['Key tags'][$key]=array('presentation-index'=>mt_rand(1000,9000));
-			if (strpos($key,':::')!==0){
+			
+			$presentationIndex=1;
+			while(isset($arrElements['elements'][$presentationIndex])){$presentationIndex+=10;}
+			$arrElements['arr']['setting']['Key tags'][$key]=array('presentation-index'=>$presentationIndex);
+			
+			$class=$arrElements['arr']['selector']['Source'];
+			if (strpos($key,':::')===0){
+				$arrElements['arr']['setting']['Key tags'][$key]['class']=$class;
+			} else {
 				$style=array('float'=>'left','clear'=>'both','font-size'=>'1em','padding'=>'0.5em','display'=>'initial');
 				if (strcmp($key,'Name')!==0 && strcmp($key,'Message')!==0 && strcmp($key,'Date')!==0){$style['display']='none';}
-				$class=$arrElements['arr']['selector']['Source'];
-				$arrElements['arr']['setting']['Key tags'][$key]['element']=array('tag'=>'p','style'=>$style,'class'=>$class);
+				$arrElements['arr']['setting']['Key tags'][$key]['element']=array('tag'=>'p','style'=>$style,'class'=>$class,'keep-element-content'=>'');
 			}
 		}
 		// create elements or widgets for presentation on the web page
 		$presentationIndex=$arrElements['arr']['setting']['Key tags'][$key]['presentation-index'];
-		if (isset($arrElements['elements'][$presentationIndex])){
-			$msg='Problem detected: Two entry keys "'.$key.'" and "'.$arrElements['elements'][$presentationIndex]['entryKey'].'" have the same "presentationIndex". ';
-			$msg.='Change presentationIndex of key "'.$key.'" in setting with Name="'.$arrElements['arr']['selector']['Source'].'".';
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>44,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-		}
 		$arrElements['elements'][$presentationIndex]=$arrElements['arr']['setting']['Key tags'][$key];
 		$arrElements['elements'][$presentationIndex]['entryKey']=$key;
-		if (isset($arrElements['arr']['setting']['Key tags'][$key]['element'])){
-			$value=strval($value);
-			$value=strip_tags($value);
-			$value=str_replace("\n",'<br />',$value);
-			$arrElements['elements'][$presentationIndex]['element']['element-content']=$value;
-			$arrElements['elements'][$presentationIndex]['element']['keep-element-content']=TRUE;
-		} else {
-			$widgetArr=$arrElements['arr'];
-			if (strcmp($key,':::userAbstract')===0){
-				$widgetArr['wrapResult']=array('tag'=>'div','style'=>array('float'=>'left','clear'=>'both','width'=>'100%','color'=>'#000','background-color'=>'#fff8'));
-				$widgetArr['selector']=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$arrElements['arr']['selector']['Owner']);
-				$arrElements['elements'][$presentationIndex]['html']=$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract($widgetArr,2);
-			} else if (strcmp($key,':::getPreview')===0){
-				$widgetArr['returnHtmlOnly']=TRUE;
-				$widgetArr['style']=array('margin'=>'3px');
-				$arrElements['elements'][$presentationIndex]['html']=$this->getPreview($widgetArr);
+		if (isset($arrElements['arr']['setting']['Key tags'][$key])){
+			if (strpos($key,':::')===0){
+				$widgetArr=$arrElements['arr'];
+				if (strcmp($key,':::userAbstract')===0){
+					$widgetArr['wrapResult']=array('tag'=>'div','style'=>array('float'=>'left','clear'=>'both','width'=>'100%','color'=>'#000','background-color'=>'#fff8'));
+					$widgetArr['selector']=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$arrElements['arr']['selector']['Owner']);
+					$arrElements['elements'][$presentationIndex]['html']=$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract($widgetArr,2);
+				} else if (strcmp($key,':::getPreview')===0){
+					$widgetArr['returnHtmlOnly']=TRUE;
+					$widgetArr=array_merge($widgetArr,$arrElements['arr']['setting']['Key tags'][$key]);
+					$arrElements['elements'][$presentationIndex]['html']=$this->getPreview($widgetArr);
+				}
 			} else {
-				$arrElements['elements'][$presentationIndex]['html']='<p>Unkown key "'.$key.'" used in "'.__FUNCTION__.'"</p>';
+				$arrElements['elements'][$presentationIndex]['element']['element-content']=strval($value);
 			}
+		} else {
+			$arrElements['elements'][$presentationIndex]['html']='<p>Unkown key "'.$key.'" used in "'.__FUNCTION__.'"</p>';
 		}
 		return $arrElements;
 	}
@@ -225,6 +224,7 @@ class MediaTools{
 			copy($videoFile,$absFile);
 			$videoArr=$arr;
 			$videoArr['tag']='video';
+			$videoArr['style']=array('margin'=>'10px 0 0 5px');
 			$videoArr['type']=$video['Params']['File']['MIME-Type'];
 			$videoArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
 			$videoArr['element-content']=$arr['selector']['Name'];
@@ -265,10 +265,10 @@ class MediaTools{
 			$pdfArr['tag']='embed';
 			$pdfArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
 			$pdfArr['type']='application/pdf';
-			$pdfArr['style']['float']='left';
-			$pdfArr['style']['clear']='both';
+			$pdfArr['style']['margin']='10px 0 0 5px';
 			$pdfArr['style']['width']='98%';
 			$pdfArr['style']['height']='500px';
+			$pdfArr['style']['border']='1px solid #444';
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($pdfArr);
 		} else {
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));

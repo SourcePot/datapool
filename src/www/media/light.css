@@ -1,13 +1,14 @@
 *{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size:14px;
+	font-size:13px;
 	margin:0;
 	padding:0;
 	text-decoration:none;
+	color:#444;
 }
 body{
-	color:#ccc;
-	background-image:url("darkbg.png");
+	color:#333;
+	background-image:url("lightbg.png");
 	background-repeat:repeat;
 	background-attachment:fixed;
 }
@@ -18,7 +19,7 @@ body{
 	left:0;
 	width:100%;
 	height:100%;
-	background-color:#000;
+	background-color:#fff;
 	z-index:20;
 }
 #overlay-image{
@@ -26,9 +27,9 @@ body{
 	max-width:95%;
 	max-height:95%;
 	margin:0 auto;
-	border: 1px solid #fff;
+	border: 1px solid #000;
 	cursor:pointer;
-	background-color:#000;
+	background-color:#fff;
 	background-image:url("busy.gif");
 	background-repeat:no-repeat;
 	background-position:center;
@@ -48,10 +49,10 @@ body{
 	min-width:5%;
 	cursor:pointer;
 	font-size:3em;
-	background-color:#fff2;
+	background-color:#0002;
 }
 #prev-img-btn:hover,#next-img-btn:hover{
-	background-color:#fff8;
+	background-color:#0008;
 }
 #prev-img-btn{
 	left:0;
@@ -62,9 +63,11 @@ body{
 #overlay-title{
 	text-align:center;
 }
-h1,h2,h3,li,ul{
+h1,h2,h3,li,ul,div,p.comment,p.comment-footer,div.calendar-sheet-wrapper,embed{
 	float:left;
 	clear:both;
+}
+h1,h2,h3,li,ul{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-variant:petite-caps;
 }
@@ -80,30 +83,24 @@ h3{
 	font-size:1.1em;
 	margin:0 0 0.2em 0.5em;
 }
-div{
-	float:left;
-	clear:both;
-}
 label{
 	margin-top:-1.5em;
 }
 main,#top-filler{
 	position:relative;
 	width:100%;
-	background-color:#000a;
+	background-color:#fff;
 	z-index:3;
 }
 #top-filler{
 	height:33px;
-	background:none;
-	background-color:#444a;
 }
 #bottom-filler{
 	position:relative;
 	width:100%;
 	height:80px;
 	z-index:1;
-	border-top:1px solid #ccc;
+	border-top:1px solid #333;
 }
 #bottom-menu{
 	position:fixed;
@@ -123,7 +120,6 @@ input[type=submit].bottom-menu{
 	float:none;
 	font-size:1.25em;
 	margin:0 25px;
-	color:#ccc;
 	border:none;
 	background:none;
 	transition: 0.2s;
@@ -136,26 +132,13 @@ button,input,textarea,select,a.btn{
 	float:left;
 	padding:0.4em;
 	margin: 0 0.2em;
-	color:#aaa;
-	background-color:#000;
+	color:#000;
+	background-color:#fff;
 	border-radius:unset;
 	border-left:1px solid #888;
 	border-top:1px solid #888;
 	border-right:1px solid #555;
 	border-bottom:1px solid #555;
-}
-button,a.btn{
-	color:#000;
-	background-color:#aaa;
-}
-input[type=submit]{
-	color:#000;
-	background-color:#aaa;
-	font-size:1em;
-}
-button:hover,input[type=submit]:hover,a.btn:hover{
-	cursor:pointer;
-	background-color:#eee;
 }
 select{
 	max-width:280px;
@@ -180,7 +163,7 @@ p.cover{
 	width:100%;
 	height:100%;
 	color:#fff;
-	background-color:#f009;
+	background-color:#f88a;
 	text-align:center;
 	cursor:pointer;
 }
@@ -191,8 +174,8 @@ div.first-menu,div.second-menu{
 	width:100%;
 	height:33px;
 	z-index:10;
-	border-bottom:1px dotted #aaa;
-	background-color:#000a;
+	border-bottom:1px dotted #000;
+	background-color:#0005;
 	overflow:hidden;
 }
 div.second-menu{
@@ -201,7 +184,7 @@ div.second-menu{
 ul.menu{
 	list-style-type: none;
 	border-bottom:1px dotted #aaa;
-	background-color:#400;
+	background-color:#fff;
 }
 li.menu{
 	clear:none;
@@ -211,7 +194,7 @@ li.menu{
 	overflow:hidden;
 }
 li.menu:hover{
-	border-bottom:4px solid #aaa;	
+	border-bottom:4px solid #000;	
 }
 a.menu,a.first-menu,p.first-menu{
 	display:block;
@@ -225,16 +208,17 @@ a.first-menu,p.first-menu{
 	font-weight:bold;
 	line-height:33px;
 	width:50px;
-	background-color:#000;
-	border-right:1px solid #444;
+	border-right:1px solid #bbb;
 }
 
 select.menu{
 	font-size:16px;
 	padding:7px;
 }
-a.menu:hover,a.first-menu{
-	color:#eee;
+a.first-menu{
+	color:#000;
+	background-color:#fff;
+	margin:1px 0 0 1px;
 }
 div.menu-item-emoji,div.menu-item-label{
 	float:inherit;
@@ -251,8 +235,6 @@ select.lng-selector{
 }
 p.standard{
 	padding:2px;
-	color:#ccc;
-	background-color:#222;
 }
 table{
 	float:left;
@@ -261,24 +243,23 @@ table{
 	margin:0 2em 2em 0;
 }
 caption{
-	color:#fff;
 	margin:1.5em 0 1em 0;
 	font-size:1.3em;
 	font-variant:petite-caps;
 }
 tr:hover{
-	color:#fff;
-	background-color:#333;
+	color:#000;
+	background-color:#ccc;
 }
 th{
-	color:#db934a;
+	color:#ca843d;
 	border-bottom:1px solid #888;
 }
 td,th{
 	position:relative;
 	padding:3px;
 	min-width:30px;
-	border-right:1px dotted #ccc;
+	border-right:1px dotted #333;
 }
 div.log{
 	overflow-y:auto;
@@ -298,8 +279,7 @@ article{
 	position:relative;
 	width:100%;
 	overflow:auto;
-	background-color:#444c;
-	border-top:1px solid #888;
+	background-color:#fffb;
 	border-bottom:1px solid #555;
 }
 div.container-busy{
@@ -311,9 +291,9 @@ div.container-busy{
 	top:0;
 	background-image:url('busy.gif');
 	background-color:#fff;
-	opacity:0.4;
 	background-repeat:no-repeat;
 	background-position:center;
+	opacity:0.7;
 	z-index:60;
 }
 div.app{
@@ -326,8 +306,8 @@ div.app{
 	overflow:hidden;
 }
 .toolbox{
-	color:#000;
-	background-color:#ddd;
+	color:#444;
+	background-color:#fff;
 }
 div.toolbox{
 	position:fixed;
@@ -348,12 +328,12 @@ a.app,a.toolbox{
 	width:100%;
 	text-align:center;
 	background:none;
-	border-bottom:1px solid #ccc;
+	border-bottom:1px solid #333;
 }
 a.app:hover,a.toolbox:hover{
 	cursor:pointer;
 	color:#000;
-	background:#fffa;
+	background:#0004;
 }
 div.explorer{
 	clear:none;
@@ -382,24 +362,38 @@ div.icon{
 	min-width:1500px;
 	height:500px;
 	font-size:16px;
-	background-color:#000;
+	background-color:#fff;
 	border-top:1px solid #888;
 	border-bottom:1px solid #888;
 	overflow:auto;
-	background-image:url("canvasbg.png");
+	background-image:url("canvaslightbg.png");
 }
-.canvas-element{
+.canvas-std,.canvas-red,.canvas-green,.canvas-symbol,.canvas-text,.canvas-processor{
 	position:absolute;
-}
-.canvas-element{
 	margin:0;
+	color:#000;
 	padding:5px;
-	font-size:20px;
-	color:#aaa;
-	background:none;
+	font-size:17px;
 }
-.canvas-element{
-	border:2px solid #0000;
+.canvas-symbol{
+	font-size:30px;
+}
+button.canvas-processor{
+	color:#fff;
+	background-color:#00f;
+}
+.canvas-std,.canvas-red,.canvas-green{
+	min-width:140px;
+	border:1px solid #000;
+}
+button.canvas-std{
+	background-color:#eee;
+}
+button.canvas-red{
+	background-color:#fcc;
+}
+button.canvas-green{
+	background-color:#cfc;
 }
 .canvas-element-btn{
 	position:absolute;
@@ -423,16 +417,14 @@ div.canvas{
 }
 p.canvas-info{
 	position:absolute;
-	bottom:-15px;
+	bottom:-18px;
 	left:0px;
-	color:#fff;
+	color:#000;
 	font-size:10px;
-	background-color:#000;
+	background-color:#fff;
 	padding:1px;
 }
 div.calendar-sheet-wrapper{
-	float:left;
-	clear:both;
 	width:100%;
 	margin:5px 0;
 	overflow:auto;
@@ -441,7 +433,7 @@ div.calendar-sheet{
 	position:relative;
 	overflow:hidden;
 	min-height:200px;
-	background-image:url("canvasbg.png");
+	background-image:url("canvaslightbg.png");
 }
 div.calendar-day,button.calendar-day{
 	position:absolute;
@@ -459,40 +451,40 @@ button.calendar-day{
 	border:none;
 	font-size:0.96em;
 	font-weight:bold;
+	background-color:#ddd;
 }
 p.calendar-hour,div.calendar-hour{
 	position:absolute;
-	color:#444;
+	color:#000;
 	top:50px;
 	width:0;
 }
 div.calendar-hour{
 	top:65px;
 	height:5px;
-	border-left:1px solid #aaa;
+	border-left:1px solid #444;
 }
 div.calendar-timeline{
 	position:absolute;
 	top:0;
 	height:100%;
-	border-left:2px dashed #f00;	
+	border-left:3px dashed #f00;	
 }
-button.calendar-event{
+button.calendar-event,.calendar-event-selected{
 	position:absolute;
 	padding:0;
 	height:25px;
 	overflow:hidden;
 	text-align:center;
-	color:#fff;
-	background-color:#160;
+	color:#000;
+	background-color:#ddd;
 }
-p.comment,p.comment-footer{
-	float:left;
-	clear:both;
+.calendar-event-selected{
+	border:2px solid #f00;
 }
 p.comment{
 	font-size:1.2em;
-	color:#ffdbac;
+	color:#a80;
 }
 div.comment{
 	padding:3px 5px;
@@ -515,7 +507,7 @@ div.phrase-preview{
 	clear:both;
 	width:100%;
 	height:100px;
-	background-color:#fff;
+	background-color:#000;
 }
 span.symbol-preview{
 	float:left;
@@ -525,5 +517,10 @@ a.emoji{
 	float:left;
 	clear:none;
 	font-size:2em;
+	color:#000;
+}
+button:hover,input[type=submit]:hover,a.btn:hover{
+	cursor:pointer;
 	color:#fff;
+	background-color:#000;
 }

@@ -75,6 +75,16 @@ class Database{
 		}
 	}
 	
+	public function statistic2matrix(){
+		$matrix=array();
+		if (isset($_SESSION[__CLASS__]['Statistic'])){
+			foreach($_SESSION[__CLASS__]['Statistic'] as $key=>$value){
+				$matrix[$key]=array('Value'=>$value);
+			}
+		}
+		return $matrix;
+	}
+	
 	/**
 	* @return string|FALSE The method returns the database name or FALSE if connection to the database failed.
 	*/

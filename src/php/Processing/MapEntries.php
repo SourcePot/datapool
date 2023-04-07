@@ -301,10 +301,9 @@ class MapEntries{
 			}
 			$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
 		}
-		$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
-		$result['Statistics']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($statistics);
-		$result['Statistics'][]=array('columns'=>'Script start','value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics'][]=array('columns'=>'Time consumption [sec]','value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
+		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
 		return $result;
 	}
 	
@@ -359,6 +358,7 @@ class MapEntries{
 	}
 	
 	private function deleteEntriesById($Source,$EntryIds){
+		if (empty($EntryIds)){return $this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();}
 		foreach($EntryIds as $EntryId){
 			$entrySelector=array('Source'=>$Source,'EntryId'=>$EntryId);
 			$fileToDelete=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
