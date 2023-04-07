@@ -417,7 +417,7 @@ class Calendar{
 		$serverTimezone=new \DateTimeZone(date_default_timezone_get());
 		$calendarDateTime->setTimezone($serverTimezone);
 		$viewStart=$calendarDateTime->format('Y-m-d H:i:s');
-		$calendarDateTime->add(\DateInterval::createFromDateString($this->setting['Days to show'].' days'));
+		$calendarDateTime->add(\DateInterval::createFromDateString(($this->setting['Days to show']??'10').' days'));
 		$viewEnd=$calendarDateTime->format('Y-m-d H:i:s');
 		$events=array();
 		$oldEvents=array();
