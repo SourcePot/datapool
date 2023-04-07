@@ -153,12 +153,8 @@ class Calendar{
 		} else {
 			$html='';
 			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
-			
-			
 			$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
 			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId']);
-		
-			
 			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
 			return $arr;
@@ -529,9 +525,9 @@ class Calendar{
 		$matrix=array();
 		$selectArr=array('hasSelectBtn'=>FALSE,'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
 		foreach(array('Folder','Name') as $column){
+			$selectArr['key']=array($column);
 			$selectArr['options']=array(''=>'&larrhk;');
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDistinct($eventSelector,$column,FALSE,'Read',$column) as $row){
-				$selectArr['key']=array($column);
 				if (isset($eventSelector[$column])){$selectArr['selected']=$eventSelector[$column];}
 				$selectArr['options'][$row[$column]]=ucfirst($row[$column]);
 			}

@@ -18,12 +18,17 @@ session_start();
 
 // get basic environment information and initialize arr
 $GLOBALS['script start time']=hrtime(TRUE);
-$GLOBALS['dirs']=array('root'=>realpath('../../'));
-$GLOBALS['dirs']['root']=strtr($GLOBALS['dirs']['root'],array('\\'=>'/')).'/';
+$GLOBALS['dirs']=array();
+$GLOBALS['dirs']['public']=strtr(__DIR__,array('\\'=>'/'));
+$pathComps=explode('/',$GLOBALS['dirs']['public']);
+array_pop($pathComps);
+array_pop($pathComps);
+$GLOBALS['dirs']['public'].='/';
+$GLOBALS['dirs']['root']=implode('/',$pathComps).'/';
 $GLOBALS['dirs']['debugging']=$GLOBALS['dirs']['root'].'src/debugging/';
 set_exception_handler(function(\Throwable $e){
 	// logging
-	if (!file_exists($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0750);}
+	if (!is_dir($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);}
 	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
 	$logFileContent=json_encode($err);
 	$logFileName=$GLOBALS['dirs']['debugging'].time().'_exceptionsLog.json';
