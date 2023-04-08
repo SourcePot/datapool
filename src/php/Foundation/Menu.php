@@ -86,7 +86,7 @@ class Menu{
 	}
 	
 	private function firstMenuBar(){
-		$options=Array();
+		$options=array();
 		$selected=FALSE;
 		foreach($this->available['Apps'] as $class=>$def){
 			$options[$class]=$def['Label'];
@@ -98,6 +98,7 @@ class Menu{
 		if (!empty($options)){
 			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selected,'key'=>array('Class'),'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
+		$html.='{{firstMenuBar}}';
 		$html.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu'));
 		return $html;
@@ -118,6 +119,7 @@ class Menu{
 		$href='?'.http_build_query(array('category'=>$def['Category']));
 		$style='';
 		if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}
+		$def['Label']=$arr['element-content']=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);
 		$html='';
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE));
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE));

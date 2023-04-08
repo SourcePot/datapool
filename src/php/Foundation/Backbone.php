@@ -158,10 +158,10 @@ class Backbone{
 	
 	public function finalizePage($arr){
 		// This method is called last
-		$toReplace=array();
-		$toReplace['{{explorer}}']='';
-		$toReplace['{{content}}']='Page content is missing...';
-		foreach($toReplace as $needle=>$value){$arr['page html']=str_replace($needle,$value,$arr['page html']);}
+		if (!isset($arr['toReplace']['{{firstMenuBar}}'])){$arr['toReplace']['{{firstMenuBar}}']='';}
+		if (!isset($arr['toReplace']['{{explorer}}'])){$arr['toReplace']['{{explorer}}']='';}
+		if (!isset($arr['toReplace']['{{content}}'])){$arr['toReplace']['{{content}}']='Page content is missing...';}
+		foreach($arr['toReplace'] as $needle=>$replacement){$arr['page html']=str_replace($needle,$replacement,$arr['page html']);}
 		return $arr;
 	}
 }

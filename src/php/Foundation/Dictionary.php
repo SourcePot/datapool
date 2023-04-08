@@ -15,12 +15,11 @@ class Dictionary{
 	
 	private $arr;
 
-	private $dbObj=FALSE;
 	private $entryTable='';
 	private $entryTemplate=array();
 	
 	private $sourceLng='en';
-	private $lngCodes=array('en'=>'English','de'=>'Deutsch','es'=>'Español','pl'=>'Polski');
+	private $lngCodes=array('en'=>'English','de'=>'Deutsch','es'=>'Español');
 	
 	public function __construct($arr){
 		$this->arr=$arr;
@@ -30,34 +29,35 @@ class Dictionary{
 
 	public function init($arr){
 		$this->arr=$arr;
-		$this->dbObj=new \SourcePot\Datapool\Foundation\Database($arr);
-		$this->entryTemplate=$this->dbObj->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->initDictionaryIfEmpty();
 		$this->registerToolbox();
 		return $this->arr;
 	}
 	
+	public function getEntryTable(){
+		return $this->entryTable;
+	}
+
+	public function getEntryTemplate(){
+		return $this->entryTemplate;
+	}
+
 	private function initDictionaryIfEmpty(){
 		$added=0;
-		$hasEntry=$this->dbObj->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
+		$hasEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
 		if (empty($hasEntry)){
-			$transl=array('de'=>array('Add'=>'Hinzufügen','Save'=>'Speichern','Update'=>'Aktualisieren','Login'=>'Anmelden','Logout'=>'Abmelden',
+			$transl=array('de'=>array('Add'=>'Hinzufügen','Save'=>'Speichern','Update'=>'Aktualisieren','Login'=>'Anmelden','Logout'=>'Abmelden','Calendar'=>'Kalender',
 									  'Register'=>'Registrieren','Send login link'=>'Login link anfordern','Password'=>'Passwort','...repeat'=>'...wiederholen','Delete'=>'Löschen',
 									  'Language'=>'Sprache','Home'=>'Start','Account'=>'Konto','Email'=>'E-Mail',
 									  'Dear'=>'Hallo','Please use your requested one-time link to log into'=>'Bitte benutze den angeforderten Einmal-Link zur Anmeldung bei',
 									  'Requested login link from'=>'Der angefprderte Link von','The link is valid for 24hrs'=>'Der Link ist gültig für 24h','Best regards'=>'Viele Grüße'
 									  ),
-						  'es'=>array('Add'=>'Añadir','Save'=>'Guardar','Update'=>'Actualizar','Login'=>'Entrar','Logout'=>'Salir',
+						  'es'=>array('Add'=>'Añadir','Save'=>'Guardar','Update'=>'Actualizar','Login'=>'Entrar','Logout'=>'Salir','Calendar'=>'Calendario',
 									  'Register'=>'Registrar','Send login link'=>'Enviar enlace de acceso','Password'=>'Contraseña','...repeat'=>'...repetir','Delete'=>'Borrar',
 									  'Language'=>'Lengua','Home'=>'Inicio','Account'=>'Cuenta','Email'=>'Correo electrónico',
 									  'Dear'=>'Querido','Please use your requested one-time link to log into'=>'Por favor, utilice el enlace solicitado para iniciar sesión',
 									  'Requested login link from'=>'Solicitado enlace de inicio de sesión de','The link is valid for 24hrs'=>'El enlace es válido durante 24 horas','Best regards'=>'Saludos cordiales'
-									  ),
-						  'pl'=>array('Add'=>'Dodaj','Save'=>'Zapisz','Update'=>'Aktualizuj','Login'=>'Zaloguj','Logout'=>'Wyloguj',
-									  'Register'=>'Zarejestruj','Send login link'=>'Wyślij link do logowania','Password'=>'Hasło','...repeat'=>'...powtarzaj','Delete'=>'Usuń',
-									  'Language'=>'Język','Home'=>'Start','Account'=>'Konto','Email'=>'Email',
-									  'Dear'=>'Drogi','Please use your requested one-time link to log into'=>'Proszę użyć żądanego jednorazowego linku, aby zalogować się do',
-									  'Requested login link from'=>'Poproszono o link do logowania z','The link is valid for 24hrs'=>'Link jest ważny przez 24 godziny','Best regards'=>'Z wyrazami szacunku'
 									  ),
 						  );
 			foreach($transl as $langCode=>$phrases){
@@ -70,15 +70,16 @@ class Dictionary{
 	}
 	
 	public function unifyEntry($entry){
-		if (empty($entry['EntryId'])){$entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);}
-		if (empty($entry['Group'])){$entry['Group']='Translations from en';}
-		if (empty($entry['Folder'])){$entry['Folder']=$entry['langCode'];}
-		if (empty($entry['Name'])){$entry['Name']=substr($entry['phrase'],0,100);}
-		if (empty($entry['Type'])){$entry['Type']='dictionary';}
-		if (empty($entry['Date'])){$entry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();}
-		if (empty($entry['Owner'])){$entry['Owner']='SYSTEM';}
-		if (empty($entry['Content'])){$entry['Content']=array('translation'=>$entry['translation']);}
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ADMIN_R');
+		$entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);
+		$entry['Group']='Translations from en';
+		$entry['Folder']=$entry['langCode'];
+		$entry['Name']=substr($entry['phrase'],0,100);
+		$entry['Type']='dictionary';
+		$entry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+		$entry['Owner']='SYSTEM';
+		$entry['Content']=array('translation'=>$entry['translation']);
+		$entry['Read']='ALL_R';
+		$entry['Write']='ADMIN_R';
 		return $entry;
 	}
 	
@@ -94,7 +95,7 @@ class Dictionary{
 		if ($translation===FALSE){
 			// translation request
 			$selector=array('Source'=>$this->entryTable,'EntryId'=>$elementId);
-			$entry=$this->dbObj->entryById($selector);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
 			if (empty($entry)){
 				return $phrase;
 			} else {
@@ -103,8 +104,8 @@ class Dictionary{
 		} else {
 			// update translation
 			$entry=array('Source'=>$this->entryTable,'phrase'=>$phrase,'translation'=>$translation,'langCode'=>$langCode);
-			$entry=$this->dbObj->unifyEntry($entry);
-			$this->dbObj->updateEntry($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 			return $translation;
 		}
 		return $phrase;
@@ -149,12 +150,12 @@ class Dictionary{
 		if (isset($formData['cmd']['update']) && !empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$translation=array('Source'=>$this->entryTable,'phrase'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'translation'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'langCode'=>$langCode);
-			$translation=$this->dbObj->unifyEntry($translation);
-			$this->dbObj->updateEntry($translation);	
+			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($translation);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($translation);	
 		} else if (!empty($formData['val']['phrase']['en'])){
 			$_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
 			$elementId=md5($formData['val']['phrase']['en'].'|'.$langCode);
-			$translation=$this->dbObj->entryById(array('Source'=>$this->entryTable,'EntryId'=>$elementId));
+			$translation=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$this->entryTable,'EntryId'=>$elementId));
 			if (empty($translation)){
 				$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]='';
 			} else {

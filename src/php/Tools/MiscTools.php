@@ -363,6 +363,20 @@ class MiscTools{
 	}
 	
 	/**
+	* @return array This method returns an array representing last subkey value pairs
+	*/
+	public function flatArrLeaves($flatArr){
+		$leaves=array();
+		foreach($flatArr as $flatKey=>$flatValue){
+			$leafKey=explode(self::ONEDIMSEPARATOR,$flatKey);
+			$leafKey=array_pop($leafKey);
+			$leaves[$leafKey]=$flatValue;
+		}
+		return $leaves;
+	}
+
+
+	/**
 	* @return string This method returns a string for a web page created from a statistics array, e.g. array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'file added'=>0)
 	*/
 	public function statistic2str($statistic){

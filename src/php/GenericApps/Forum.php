@@ -25,9 +25,7 @@ class Forum{
 							 'Attachment'=>array('@tag'=>'input','@type'=>'file','@default'=>''),
 							 'Preview'=>array('@function'=>'preview','@Write'=>'ADMIN_R'),
 							);
-	
-	private $menuDef=array('Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
-
+							
 	public function __construct($arr){
 		$this->arr=$arr;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -57,13 +55,30 @@ class Forum{
 
 	public function run($arr=TRUE){
 		if ($arr===TRUE){
-			return $this->menuDef;
+			return array('Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
+			$arr=$this->addYearSelector2menu($arr);
 			$entryHtml=$this->newEntryHtml();
 			$entryHtml.=$this->loadForumEntries();
 			$arr['page html']=str_replace('{{content}}',$entryHtml,$arr['page html']);
 			return $arr;
 		}
+	}
+	
+	private function addYearSelector2menu($arr){
+		$selectedYear=$arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		if (isset($formData['cmd']['select'])){
+			$selectedYear=$arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Year',$formData['val']['Year']);
+		}
+		// get selector
+		$options=array(''=>'All');
+		$startYear=intval(date('Y'));
+		for($year=$startYear;$year>$startYear-10;$year--){
+			$options[$year]='Year '.$year;
+		}
+		$arr['toReplace']['{{firstMenuBar}}']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selectedYear,'key'=>array('Year'),'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		return $arr;
 	}
 	
 	private function newEntryHtml(){
@@ -88,8 +103,10 @@ class Forum{
 	}
 	
 	private function loadForumEntries(){
-		$html='';
 		$forumSelector=array('Source'=>$this->entryTable,'Folder'=>'Sent');
+		$selectedYear=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
+		if (!empty($selectedYear)){$forumSelector['Date']=$selectedYear.'-%';}
+		$html='';
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
 			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum'));
 		}

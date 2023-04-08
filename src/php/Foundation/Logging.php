@@ -101,8 +101,12 @@ class Logging{
 			$ip=$_SERVER["REMOTE_ADDR"];
 		} else if (array_key_exists('HTTP_CLIENT_IP',$_SERVER)){
 			$ip=$_SERVER["HTTP_CLIENT_IP"];
-		} 
-		if ($hashOnly){$ip=password_hash($ip,PASSWORD_DEFAULT);}
+		}
+		if (empty($ip)){
+			return 'empty';
+		} else if ($hashOnly){
+			$ip=password_hash($ip,PASSWORD_DEFAULT);
+		}
 		return $ip;
 	}
 

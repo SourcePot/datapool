@@ -294,7 +294,8 @@ class HTMLbuilder{
 				if (strcmp(strval($name),strval($selected))===0){$optionArr['selected']=TRUE;}
 				$optionArr['value']=$name;
 				$optionArr['element-content']=$label;
-				$optionArr['keep-element-content']=TRUE;
+				$optionArr['keep-element-content']=FALSE;
+				$optionArr['dontTranslateValue']=TRUE;
 				$toReplace['{{options}}'].=$this->element($optionArr);				
 			}
 			foreach($toReplace as $needle=>$value){$html=str_replace($needle,$value,$html);}
@@ -648,8 +649,18 @@ class HTMLbuilder{
 				$entry=$arr;
 				$entry['EntryId']=current($formData['cmd']);
 				$entry['Content']=$formData['val'][$entry['EntryId']]['Content'];
-				$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+				$file=FALSE;
+				if (isset($formData['files'][$entry['EntryId']])){
+					$flatFile=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files'][$entry['EntryId']]);
+					$file=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatFile);
+					if ($file['error']!=0){$file=FALSE;}
+				}
+				if ($file){
+					$entry=$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($file,$entry);
+				} else {
+					$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
+					$entry==$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+				}
 			} else if (isset($formData['cmd']['delete'])){
 				$selector=array('Source'=>$arr['Source'],'EntryId'=>$formData['cmd']['delete']);
 				$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
@@ -677,7 +688,16 @@ class HTMLbuilder{
 			if (!isset($elementArr['htmlBuilderMethod'])){array('error'=>'arr["contentStructure" key "htmlBuilderMethod" missing in '.__FUNCTION__);}
 			$htmlBuilderMethod=$elementArr['htmlBuilderMethod'];
 			if (!method_exists(__NAMESPACE__,$htmlBuilderMethod)){array('error'=>'arr["contentStructure" requests method '.$htmlBuilderMethod.' which does not exist in '.__FUNCTION__);}
-			if (isset($arr['Content'][$contentKey])){$elementArr['value']=$arr['Content'][$contentKey];}
+			if (isset($arr['Content'][$contentKey])){
+				if (isset($elementArr['element-content'])){
+					$elementArr['element-content']=$arr['Content'][$contentKey];
+					if (!empty($elementArr['value'])){
+						$elementArr['value']=$elementArr['value'];
+					}
+				} else {
+					$elementArr['value']=$arr['Content'][$contentKey];
+				}
+			}
 			$elementArr['callingClass']=$arr['callingClass'];
 			$elementArr['callingFunction']=$arr['callingFunction'];
 			$elementArr['key']=array($arr['EntryId'],'Content',$contentKey);
@@ -715,11 +735,7 @@ class HTMLbuilder{
 	public function formProcessing($callingClass,$callingFunction,$resetAfterProcessing=FALSE){
 		// This method returns the result from processing of $_POST and $_FILES.
 		// It returns an array with the old values, the new values, files und commmands.
-		$result['cmd']=array();
-		$result['val']=array();
-		$result['valFlat']=array();
-		$result['changed']=array();
-		$result['files']=array();
+		$result=array('cmd'=>array(),'val'=>array(),'valFlat'=>array(),'changed'=>array(),'files'=>array());
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if (isset($_SESSION[$callingClass][$callingFunction])){
 			foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){
@@ -766,7 +782,7 @@ class HTMLbuilder{
 		$result['cmd']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['cmd']);
 		$result['val']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['val']);
 		$result['changed']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['changed']);
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($result);
+		//if (!empty($_FILES)){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($result);}
 		return $result;
 	}
 

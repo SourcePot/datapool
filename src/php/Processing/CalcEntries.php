@@ -50,7 +50,7 @@ class CalcEntries{
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
 		$this->vars=$vars;
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -158,7 +158,7 @@ class CalcEntries{
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$calculationParams['Content']=$formData['val'][$elementId]['Content'];
-			$calculationParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($calculationParams);
+			$calculationParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($calculationParams,TRUE);
 		}
 		// get HTML
 		$arr=$calculationParams;
@@ -259,7 +259,7 @@ class CalcEntries{
 													)
 					);
 		// loop through entries
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
 			if ($entry['isSkipRow']){
 				$result['Calculate statistics']['Skip rows']['value']++;
 				continue;
@@ -383,7 +383,7 @@ class CalcEntries{
 				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
 			}
 		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE);
 		}
 		$result['Target']=array('Source'=>array('value'=>$sourceEntry['Source']),'EntryId'=>array('value'=>$sourceEntry['EntryId']),'Name'=>array('value'=>$sourceEntry['Name']));
 		return $result;

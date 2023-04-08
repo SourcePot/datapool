@@ -59,7 +59,7 @@ class MapEntries{
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
 		$this->vars=$vars;
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -166,7 +166,7 @@ class MapEntries{
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$mappingParams['Content']=$formData['val'][$elementId]['Content'];
-			$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($mappingParams);
+			$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($mappingParams,TRUE);
 		}
 		// get HTML
 		$arr=$mappingParams;
@@ -238,7 +238,7 @@ class MapEntries{
 			$zip->open($zipFile,\ZipArchive::CREATE);
 		}
 		$deleteEntries=array('Source'=>$callingElement['Content']['Selector']['Source'],'EntryIds'=>array());
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
 			//if (time()-$base['Script start timestamp']>30){break;}
 			if ($entry['isSkipRow']){
 				$result['Mapping statistics']['Skip rows']['value']++;
@@ -294,7 +294,7 @@ class MapEntries{
 				$zipEntry['Params']['File']['Date (created)']=filectime($zipEntry['Params']['File']['Source']);
 				$zipEntry['Type']=$zipEntry['Source'].' '.str_replace('/',' ',$zipEntry['Params']['File']['MIME-Type']);
 				// save entry and file
-				$zipEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry);
+				$zipEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry,TRUE);
 				$entryFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
 				$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
 				$result['Mapping statistics']['Output format']['value']='Zip + csv';

@@ -128,16 +128,17 @@ class Database{
 		return $GLOBALS['dbInfo'][$table];
 	}
 
-	public function unifyEntry($entry){
+	public function unifyEntry($entry,$addEntryDefaults=FALSE){
 		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
 		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
 		$this->resetStatistic();
 		if (isset($this->arr['source2class'][$entry['Source']])){
 			$classWithNamespace=$this->arr['source2class'][$entry['Source']];
 			if (isset($this->arr['registered methods']['unifyEntry'][$classWithNamespace])){
-				return $this->arr[$classWithNamespace]->unifyEntry($entry);
+				$entry=$this->arr[$classWithNamespace]->unifyEntry($entry);
 			}
-		}	
+		}
+		if ($addEntryDefaults){$entry=$this->addEntryDefaults($entry);}
 		return $entry;	
 	}
 
@@ -651,7 +652,7 @@ class Database{
 			}
 			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']));
 		}
-		return $this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
+		return $this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
 	}
 	
 	public function moveEntryByEntryId($entry,$targetSelector){
@@ -667,8 +668,8 @@ class Database{
 		@rename($entryFileName,$targetFileName);
 		$newEntry=$entry;
 		$newEntry['EntryId']=$targetSelector['EntryId'];
-		$this->updateEntry($newEntry);
-		$this->deleteEntries($entry);
+		$this->updateEntry($newEntry,TRUE);
+		$this->deleteEntries($entry,TRUE);
 		return $return;
 	}
 	
@@ -678,7 +679,7 @@ class Database{
 			$entryB['EntryId']=$entryA['EntryId'];
 			$entryBfileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
 			@rename($entryB['File'],$entryBfileName);
-			$this->updateEntry($entryB);
+			$this->updateEntry($entryB,TRUE);
 		}
 		return $entryB;
 	}

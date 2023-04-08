@@ -49,7 +49,7 @@ class ParseEntries{
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
 		$this->vars=$vars;
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -157,7 +157,7 @@ class ParseEntries{
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$parserParams['Content']=$formData['val'][$elementId]['Content'];
-			$parserParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($parserParams);
+			$parserParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($parserParams,TRUE);
 		}
 		// get HTML
 		$arr=$parserParams;
@@ -233,7 +233,7 @@ class ParseEntries{
 		// loop through source entries and parse these entries
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		$result=array('Parser statistics'=>array('Entries'=>array('value'=>0),'Success'=>array('value'=>0),'Failed'=>array('value'=>0),'No text, skipped'=>array('value'=>0),'Skip rows'=>array('value'=>0)));
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $sourceEntry){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
 			if ($entry['isSkipRow']){
 				$result['Parser statistics']['Skip rows']['value']++;
 				continue;
@@ -363,7 +363,7 @@ class ParseEntries{
 			if ($testRun){
 				$result['Sample result (failed)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 			} else {
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry);
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
 			}
 		} else {
 			$result['Parser statistics']['Success']['value']++;

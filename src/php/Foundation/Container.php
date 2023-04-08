@@ -41,6 +41,8 @@ class Container{
 			}
 		} else if (isset($_POST['loadImage'])){
 			$jsAnswer=$this->arr['SourcePot\Datapool\Tools\MediaTools']->loadImage($_POST['loadImage']);
+		} else {
+			//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($_POST,hrtime(TRUE).'-'.__FUNCTION__);
 		}
 		$arr['page html']=json_encode($jsAnswer,JSON_INVALID_UTF8_IGNORE);
 		return $arr;

@@ -337,7 +337,6 @@ class Filespace{
 	/**
 	* This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
 	*/
-
 	
 	public function file2entries($fileHandle,$entryTemplate,$isDebugging=FALSE){
 		$debugArr=array('fileHandle'=>$fileHandle,'entryTemplate'=>$entryTemplate);

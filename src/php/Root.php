@@ -152,7 +152,7 @@ final class Root{
 		}
 		$methods2register=array('init'=>FALSE,
 								'job'=>FALSE,
-								'run'=>TRUE,
+								'run'=>TRUE,			// claas ->run() which returns menu definition
 								'unifyEntry'=>FALSE,
 								'dataProcessor'=>TRUE
 								);
@@ -181,7 +181,7 @@ final class Root{
 	private function runJob($arr){
 		// all jobs settings - remove non-existing job methods and add new job methods
 		$jobs=array('due'=>array(),'undue'=>array());
-		$allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
+		$allJobsSettingInitContent=array('Last run'=>time(),'Last run date'=>date('Y-m-d H:i:s'),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
 		$allJobsSetting=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Type'=>'array setting');
 		$allJobsSetting=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
 		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
@@ -222,6 +222,7 @@ final class Root{
 			$jobVars['Content']=$arr[$dueJob]->$dueMethod($jobVars['Content']);
 			$jobStatistic=$arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			$allJobsSetting['Content'][$dueJob]['Last run']=time();
+			$allJobsSetting['Content'][$dueJob]['Last run date']=date('Y-m-d H:i:s');
 			$allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]']=round((hrtime(TRUE)-$jobStartTime)/1000000);
 			// update job vars
 			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);

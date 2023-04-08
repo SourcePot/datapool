@@ -260,7 +260,7 @@ class DataExplorer{
 	
 	public function entryId2selector($entryId){
 		$selector=array('Source'=>$this->entryTable,'EntryId'=>$entryId);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
 		if (isset($entry['Content']['Selector'])){
 			$selector=array();
 			foreach($entry['Content']['Selector'] as $key=>$value){

@@ -96,7 +96,7 @@ class Calendar{
 		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 		// get settings
 		$this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>date_default_timezone_get());
-		$this->setting=$arr['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$_SESSION['currentUser']['EntryId'],$this->setting,'Calendar',FALSE);
+		$this->setting=$arr['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$_SESSION['currentUser']['EntryId'],$this->setting,'Calendar',TRUE);
 		// get page state
 		$this->pageStateTemplate=array('Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
 		$this->pageState=$arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
@@ -105,7 +105,7 @@ class Calendar{
 	}
 
 	public function job($vars){
-		$events=$this->getEvents(time());
+		$events=$this->getEvents(time(),TRUE);
 		$trigger=array();
 		$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read') as $triggerId=>$entry){
@@ -412,7 +412,7 @@ class Calendar{
 		return $dateTime->format('Y-m-d H:i:s');
 	}
 
-	private function getEvents($timestamp){
+	private function getEvents($timestamp,$isSystemCall=FALSE){
 		$calendarDateTime=new \DateTime('@'.$timestamp);
 		$serverTimezone=new \DateTimeZone(date_default_timezone_get());
 		$calendarDateTime->setTimezone($serverTimezone);
@@ -426,7 +426,7 @@ class Calendar{
 		$selectors['Finnishing event']=array('Source'=>$this->entryTable,'Group'=>'Events','End>='=>$viewStart,'End<='=>$viewEnd);
 		$selectors['Upcomming event']=array('Source'=>$this->entryTable,'Group'=>'Events','Start>='=>$viewStart,'Start<='=>$viewEnd);
 		foreach($selectors as $state=>$selector){
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Start') as $entry){
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Start') as $entry){
 				$key=$entry['EntryId'];
 				$eventStartTimestamp=strtotime($entry['Start']);
 				if (strcmp($state,'Finnishing event')===0){

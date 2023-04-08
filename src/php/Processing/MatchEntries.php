@@ -44,7 +44,7 @@ class MatchEntries{
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
 		$this->vars=$vars;
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -154,7 +154,7 @@ class MatchEntries{
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$matchingParams['Content']=$formData['val'][$elementId]['Content'];
-			$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($matchingParams);
+			$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($matchingParams,TRUE);
 		}
 		// get HTML
 		$arr=$matchingParams;
@@ -212,7 +212,7 @@ class MatchEntries{
 												 'Skip rows'=>array('value'=>0),
 												 )
 					 );
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector']) as $entryA){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entryA){
 			if ($entry['isSkipRow']){
 				$result['Matching statistics']['Skip rows']['value']++;
 				continue;
@@ -239,7 +239,7 @@ class MatchEntries{
 		$selectorB=$params['Content']['Match with'];
 		$selectorB=$base['entryTemplates'][$selectorB];
 		$selectorB[$columnToMatch]=$entryA[$columnToMatch];
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selectorB) as $entryB){
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selectorB,TRUE) as $entryB){
 			if ($this->skipMatch($entryB,$base,'Entry B')){
 				$result['Matching statistics']['Skipped entries B']['value']++;
 				continue;
