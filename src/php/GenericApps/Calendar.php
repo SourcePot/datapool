@@ -551,6 +551,7 @@ class Calendar{
 		// get current trigger state
 		$matrix=array();
 		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		if (!isset($vars['trigger'])){$vars['trigger']=array();}
 		foreach($vars['trigger'] as $triggerId=>$trigger){
 			if (strcmp($trigger['Folder'],$arr['selector']['Folder'])!==0){continue;}
 			$style=array('color'=>'#f00','width'=>'100%','height'=>'8px');
@@ -580,6 +581,7 @@ class Calendar{
 	public function getTrigger(){
 		$return=array('options'=>array(''=>'&rArr;'),'trigger'=>array());
 		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		if (!isset($vars['trigger'])){$vars['trigger']=array();}
 		foreach($vars['trigger'] as $triggerId=>$trigger){
 			$return['options'][$triggerId]=$trigger['trigger name'];
 			$return['trigger'][$triggerId]=$trigger['active'];
