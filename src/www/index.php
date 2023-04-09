@@ -20,16 +20,15 @@ session_start();
 $GLOBALS['script start time']=hrtime(TRUE);
 $fromRelPath=strtr(realpath('./'),array('\\'=>'/'));
 $fromAbsPath=strtr(__DIR__,array('\\'=>'/'));
-$fromAbsPathRoot=substr($fromAbsPath,0,strrpos($fromAbsPath,'/www'));
-$fromAbsPathRoot=substr($fromAbsPath,0,strrpos($fromAbsPath,'/src'));
-if (strlen($fromRelPath)<strlen($fromAbsPathRoot)){
-	$diff=str_replace($fromRelPath,'',$fromAbsPathRoot);
-} else {
+$fromAbsPathRoot=str_replace('/src/www','',$fromAbsPath);
+if (strlen($fromAbsPath)===strlen($fromRelPath)){
 	$diff=FALSE;
+} else {
+	$diff=str_replace($fromRelPath,'',$fromAbsPathRoot);
 }
-$GLOBALS['dirSuffix']=array('root'=>'../..',
-							'vendor'=>'../vendor',
-							'src'=>'..',
+$GLOBALS['dirSuffix']=array('root'=>'../../',
+							'vendor'=>'../../vendor',
+							'src'=>'../',
 							'setup'=>'../setup',
 							'filespace'=>'../filespace',
 							'debugging'=>'../debugging',
@@ -37,25 +36,29 @@ $GLOBALS['dirSuffix']=array('root'=>'../..',
 							'fonts'=>'../fonts',
 							'php'=>'../php',
 							'traits'=>'../php/Traits',
-							'public'=>'.',
+							'public'=>'./',
 							'media'=>'./media',
 							'tmp'=>'./tmp'
 							);
 $GLOBALS['dirs']=array();
 foreach($GLOBALS['dirSuffix'] as $dirName=>$suffix){
 	if (strpos($suffix,'../../')===0){
-		$prefix='';
+		$prefix='/';
 	} else if (strpos($suffix,'../')===0){
 		$prefix='/src/';
 	} else {
 		$prefix='/src/www/';
 	}
-	$GLOBALS['dirs'][$dirName]=$fromAbsPathRoot.$prefix.ltrim($suffix,'./');
-	if ($diff){
-		$GLOBALS['relDirs'][$dirName]='.'.$diff.$prefix.ltrim($suffix,'./').'/';		
-	} else {
+	$suffix=trim($suffix,'/');
+	$cleanSuffix=trim($suffix,'./');
+	if (empty($diff)){
 		$GLOBALS['relDirs'][$dirName]=$suffix.'/';
+	} else {
+		$GLOBALS['relDirs'][$dirName]='.'.$diff.$prefix;		
+		if (!empty($cleanSuffix)){$GLOBALS['relDirs'][$dirName].=$cleanSuffix.'/';}
 	}
+	$suffix=trim($suffix,'./');
+	$GLOBALS['dirs'][$dirName]=$fromAbsPathRoot.$prefix.$cleanSuffix;
 }
 // error handling
 set_exception_handler(function(\Throwable $e){
