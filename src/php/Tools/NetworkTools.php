@@ -272,8 +272,15 @@ class NetworkTools{
 				$mail['To']=addcslashes(mb_encode_mimeheader($mail['To'],"UTF-8"),'"');
 				$mail['Subject']=addcslashes(mb_encode_mimeheader($mail['Subject'],"UTF-8"),'"');
 				$header['From']=addcslashes(mb_encode_mimeheader($header['From'],"UTF-8"),'"');
-				@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
-				return TRUE;
+				$success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
+				if ($success){
+					$logArr=array('msg'=>'Email sent...','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+					$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+				} else {
+					$logArr=array('msg'=>'Sending email failed.','priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+					$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+				}
+				return $success;
 			}
 		}
 		return FALSE;

@@ -449,9 +449,7 @@ class HTMLbuilder{
 			} else if (isset($formData['cmd']['moveDown'])){
 				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE);
 			} else if (isset($formData['cmd']['select'])){
-				if (isset($this->arr['view classes'][$selector['Source']])){
-					$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageState($this->arr['view classes'][$selector['Source']],$selector);
-				}
+				$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageState($this->arr['source2class'][$selector['Source']],$selector);
 			}
 			return $arr;
 		}
