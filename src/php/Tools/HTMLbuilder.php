@@ -97,6 +97,7 @@ class HTMLbuilder{
 			// create HTML-element structure
 			$toReplace=array();
 			if (isset($arr['element-content'])){
+				$arr['element-content']=strval($arr['element-content']);
 				if (empty($arr['keep-element-content'])){
 					$arr['element-content']=htmlspecialchars($arr['element-content'],ENT_QUOTES,'UTF-8');
 				}
@@ -294,7 +295,6 @@ class HTMLbuilder{
 				if (strcmp(strval($name),strval($selected))===0){$optionArr['selected']=TRUE;}
 				$optionArr['value']=$name;
 				$optionArr['element-content']=$label;
-				$optionArr['keep-element-content']=FALSE;
 				$optionArr['dontTranslateValue']=TRUE;
 				$toReplace['{{options}}'].=$this->element($optionArr);				
 			}
@@ -591,7 +591,7 @@ class HTMLbuilder{
 		if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 		if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION____;}
 		$html='';
-		$html.=$this->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+		$html.=$this->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 		$html.=$this->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
 		$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
 		$html.=$mediaArr['html'];

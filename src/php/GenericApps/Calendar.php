@@ -154,7 +154,7 @@ class Calendar{
 			$html='';
 			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
-			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId']);
+			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId'],'refreshInterval'=>300);
 			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
 			return $arr;
@@ -523,7 +523,7 @@ class Calendar{
 		$eventSelector=array_merge($eventSelector,$formData['val']);
 		// get selector
 		$matrix=array();
-		$selectArr=array('hasSelectBtn'=>FALSE,'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+		$selectArr=array('hasSelectBtn'=>FALSE,'excontainer'=>FALSE,'keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
 		foreach(array('Folder','Name') as $column){
 			$selectArr['key']=array($column);
 			$selectArr['options']=array(''=>'&larrhk;');

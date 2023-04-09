@@ -70,48 +70,31 @@ class Backbone{
 			// add ico file
 			$icoFileInclude='';
 			if (!empty($this->settings['iconFile'])){
-				$fileAbs=$GLOBALS['dirs']['media'].$this->settings['iconFile'];
-				if (is_file($fileAbs)){
-					$href=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
-					$icoFileInclude.='<link rel="shortcut icon" href="'.$href.'">'.PHP_EOL;
-				} else {
-					throw new \ErrorException('Function '.__FUNCTION__.': Could not open the ico-file '.$fileAbs.' provided',0,E_ERROR,__FILE__,__LINE__);
-				}
+				$href=$this->mediaFile2href($this->settings['iconFile']);
+				if ($href){$icoFileInclude.='<link rel="shortcut icon" href="'.$href.'">'.PHP_EOL;}
 			}
 			// css-files
 			$cssFileInclude='';
 			if (!empty($this->settings['cssFiles'])){
 				foreach($this->settings['cssFiles'] as $fileName){
 					if (strpos($fileName,'://')===FALSE){
-						$fileAbs=$GLOBALS['dirs']['media'].$fileName;
-						if (is_file($fileAbs)){
-							$href=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
-						} else {
-							file_put_contents($fileAbs,'');
-							throw new \ErrorException('Function '.__FUNCTION__.': Could not open the css-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
-						}
+						$href=$this->mediaFile2href($fileName);
 					} else {
 						$href=$fileName;
 					}
-					$cssFileInclude.='<link type="text/css" rel="stylesheet" href="'.$href.'" />'.PHP_EOL;
+					if ($href){$cssFileInclude.='<link type="text/css" rel="stylesheet" href="'.$href.'" />'.PHP_EOL;}
 				}
 			}
 			// js-files
 			$jsFileInclude='';
 			if (!empty($this->settings['jsFiles'])){
 				foreach($this->settings['jsFiles'] as $fileName){
-					if (strpos($fileName,'://')===FALSE){
-						$fileAbs=$GLOBALS['dirs']['media'].$fileName;
-						if (is_file($fileAbs)){
-							$href=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
-						} else {
-							file_put_contents($fileAbs,'');
-							throw new \ErrorException('Function '.__FUNCTION__.': Could not open the js-file '.$fileAbs.' provided. An empty file was added for further use.',0,E_ERROR,__FILE__,__LINE__);
-						}
+					if (strpos($fileName,'://')===FALSE){	
+						$href=$this->mediaFile2href($fileName);
 					} else {
 						$href=$fileName;
 					}
-					$jsFileInclude.='<script src="'.$href.'"></script>'.PHP_EOL;
+					if ($href){$jsFileInclude.='<script src="'.$href.'"></script>'.PHP_EOL;}
 				}
 			}
 		} else {
@@ -137,11 +120,8 @@ class Backbone{
 		} else {
 			$imageFile=$this->settings['mainBackgroundImageFile'];
 		}
-		$fileAbs=$GLOBALS['dirs']['media'].$imageFile;
-		if (is_file($fileAbs)){
-			$src=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($fileAbs);
-			$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');
-		}
+		$src=$this->mediaFile2href($imageFile);
+		if ($src){$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');}
 		$body=$this->arr['SourcePot\Datapool\Foundation\Menu']->menu().PHP_EOL;
 		$body.='<div class="filler" id="top-filler"></div>'.PHP_EOL;
 		$body.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($mainTagArr);
@@ -163,6 +143,18 @@ class Backbone{
 		if (!isset($arr['toReplace']['{{content}}'])){$arr['toReplace']['{{content}}']='Page content is missing...';}
 		foreach($arr['toReplace'] as $needle=>$replacement){$arr['page html']=str_replace($needle,$replacement,$arr['page html']);}
 		return $arr;
+	}
+	
+	private function mediaFile2href($mediaFile,$throwException=FALSE){
+		$mediaFileAbs=$GLOBALS['dirs']['media'].'/'.$mediaFile;
+		if (is_file($mediaFileAbs)){
+			return $GLOBALS['relDirs']['media'].$mediaFile;
+		} else {
+			if ($throwException){
+				throw new \ErrorException('Function '.__FUNCTION__.': Could not open file '.$mediaFileAbs,0,E_ERROR,__FILE__,__LINE__);
+			}
+			return FALSE;
+		}
 	}
 }
 ?>

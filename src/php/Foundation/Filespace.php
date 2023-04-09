@@ -50,29 +50,26 @@ class Filespace{
 	public function getStatistics(){
 		return $this->statistics;
 	}
-
+	
 	private function class2dir($class,$mkDirIfMissing=FALSE){
 		$classComps=explode('\\',$class);
 		$class=array_pop($classComps);
-		$dir=$GLOBALS['dirs']['setup'].$class.'/';
-		if (!file_exists($dir) && $mkDirIfMissing){
-			$mkDir=trim($dir,'/');
-			mkdir($mkDir,0750,TRUE);
+		$dir=$GLOBALS['relDirs']['setup'].$class.'/';
+		if (!is_dir($dir) && $mkDirIfMissing){
+			mkdir($dir,0750,TRUE);
 		}
 		return $dir;	
-	}
+	}	
 
 	private function source2dir($source,$mkDirIfMissing=TRUE){
 		// This function returns the filespace directory based on the tablename provided.
 		$source=explode('\\',$source);
 		$source=array_pop($source);
-		// select dir and create the directory if neccessary
-		$dir=$GLOBALS['dirs']['filespace'].$source.'/';
-		if (!file_exists($dir) && $mkDirIfMissing){
-			$mkDir=rtrim($dir,'/');
-			mkdir($mkDir,0750,TRUE);
+		$dir=$GLOBALS['relDirs']['filespace'].$source.'/';
+		if (!is_dir($dir) && $mkDirIfMissing){
+			mkdir($dir,0750,TRUE);
 		}
-		return $dir;
+		return $dir;	
 	}
 	
 	public function selector2file($selector,$mkDirIfMissing=TRUE){
@@ -227,8 +224,10 @@ class Filespace{
 			$_SESSION[__CLASS__]['tmpDir']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 			$_SESSION[__CLASS__]['tmpDir'].='/';
 		}
-		$tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
-		if (!is_dir($tmpDir)){$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775,TRUE));}
+		$tmpDir=$GLOBALS['dirs']['tmp'].'/'.$_SESSION[__CLASS__]['tmpDir'];
+		if (!is_dir($tmpDir)){
+			$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775,TRUE));
+		}
 		return $tmpDir;
 	}
 	
@@ -237,7 +236,7 @@ class Filespace{
 		if (is_dir($GLOBALS['dirs']['tmp'])){
 			$allDirs=scandir($GLOBALS['dirs']['tmp']);
 			foreach($allDirs as $dirIndex=>$dir){
-				$fullDir=$GLOBALS['dirs']['tmp'].$dir;
+				$fullDir=$GLOBALS['dirs']['tmp'].'/'.$dir;
 				if (!is_dir($fullDir) || strlen($dir)<4){continue;}
 				$age=time()-filemtime($fullDir);
 				if ($age>$maxAge){
@@ -413,7 +412,7 @@ class Filespace{
 		$zipStatistic=array('errors'=>array(),'files'=>array());
 		// extract zip archive to a temporary dir
 		if (is_file($entryTemplate['Params']['File']['Source'])){
-			$zipDir=$GLOBALS['dirs']['tmp'].$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
+			$zipDir=$GLOBALS['dirs']['tmp'].'/'.$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
 			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
 			$zip=new \ZipArchive;
 			if ($zip->open($entryTemplate['Params']['File']['Source'])===TRUE){

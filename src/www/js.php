@@ -18,20 +18,51 @@ session_start();
 	
 // get basic environment information and initialize arr
 $GLOBALS['script start time']=hrtime(TRUE);
+$fromRelPath=strtr(realpath('./'),array('\\'=>'/'));
+$fromAbsPath=strtr(__DIR__,array('\\'=>'/'));
+$fromAbsPathRoot=substr($fromAbsPath,0,strrpos($fromAbsPath,'/www'));
+$fromAbsPathRoot=substr($fromAbsPath,0,strrpos($fromAbsPath,'/src'));
+if (strlen($fromRelPath)<strlen($fromAbsPathRoot)){
+	$diff=str_replace($fromRelPath,'',$fromAbsPathRoot);
+} else {
+	$diff=FALSE;
+}
+$GLOBALS['dirSuffix']=array('root'=>'../..',
+							'vendor'=>'../vendor',
+							'src'=>'..',
+							'setup'=>'../setup',
+							'filespace'=>'../filespace',
+							'debugging'=>'../debugging',
+							'ftp'=>'../ftp',
+							'fonts'=>'../fonts',
+							'php'=>'../php',
+							'traits'=>'../php/Traits',
+							'public'=>'.',
+							'media'=>'./media',
+							'tmp'=>'./tmp'
+							);
 $GLOBALS['dirs']=array();
-$GLOBALS['dirs']['public']=strtr(__DIR__,array('\\'=>'/'));
-$pathComps=explode('/',$GLOBALS['dirs']['public']);
-array_pop($pathComps);
-array_pop($pathComps);
-$GLOBALS['dirs']['public'].='/';
-$GLOBALS['dirs']['root']=implode('/',$pathComps).'/';
-$GLOBALS['dirs']['debugging']=$GLOBALS['dirs']['root'].'src/debugging/';
+foreach($GLOBALS['dirSuffix'] as $dirName=>$suffix){
+	if (strpos($suffix,'../../')===0){
+		$prefix='';
+	} else if (strpos($suffix,'../')===0){
+		$prefix='/src/';
+	} else {
+		$prefix='/src/www/';
+	}
+	$GLOBALS['dirs'][$dirName]=$fromAbsPathRoot.$prefix.ltrim($suffix,'./');
+	if ($diff){
+		$GLOBALS['relDirs'][$dirName]='.'.$diff.$prefix.ltrim($suffix,'./').'/';		
+	} else {
+		$GLOBALS['relDirs'][$dirName]=$suffix.'/';
+	}
+}
 // error handling
 set_exception_handler(function(\Throwable $e){
 	if (!is_dir($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);}
 	$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
 	$logFileContent=json_encode($err);
-	$logFileName=$GLOBALS['dirs']['debugging'].time().'_exceptionsLog.json';
+	$logFileName=$GLOBALS['dirs']['debugging'].'/'.time().'_exceptionsLog.json';
 	file_put_contents($logFileName,$logFileContent);
 	echo 'Have run into a problem...';
 	exit;
@@ -41,7 +72,7 @@ set_error_handler(function($errno,$errstr,$errfile,$errline){
 	throw new \ErrorException($errstr,$errno,0,$errfile,$errline);
 },E_ALL & ~E_WARNING & ~E_NOTICE & ~E_USER_NOTICE);
 // load root script, initialize it and call run() function
-require_once($GLOBALS['dirs']['root'].'src/php/Root.php');
+require_once($GLOBALS['dirs']['php'].'/Root.php');
 $pageObj=new Root();
 $arr=$pageObj->run(__FILE__);
 echo $arr['page html'];

@@ -209,7 +209,7 @@ class Explorer{
 				if (!isset($row[$label])){$row=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($row);}
 				$options[$row[$column]]=$row[$label];
 			}
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>$column,'value'=>$this->state[$column]['Selected'],'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','class'=>'explorer'));
+			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>$column,'value'=>$this->state[$column]['Selected'],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','class'=>'explorer'));
 			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$html,'keep-element-content'=>TRUE));
 		}
 		return $html;

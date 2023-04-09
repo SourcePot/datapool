@@ -36,7 +36,7 @@ class GeoTools{
 	public function init($arr){
 		$this->arr=$arr;
 		// load country codes
-		$file=$GLOBALS['dirs']['setup'].'countryCodes.json';
+		$file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
 		if (!is_file($file)){
 			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'File "countryCodes.json" missing.','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}

@@ -32,20 +32,14 @@ final class Root{
 	* @return array An associative array that contains the empty webpage refrenced by the key "page html" as well as the placeholder for all objects to be created.
 	*/
 	public function __construct($arr=array()){
-		$GLOBALS['dirs']['src']=$GLOBALS['dirs']['root'].'src/';
-		$GLOBALS['dirs']['setup']=$GLOBALS['dirs']['root'].'src/setup/';
-		$GLOBALS['dirs']['filespace']=$GLOBALS['dirs']['root'].'src/filespace/';
-		$GLOBALS['dirs']['debugging']=$GLOBALS['dirs']['root'].'src/debugging/';
-		$GLOBALS['dirs']['ftp']=$GLOBALS['dirs']['root'].'src/ftp/';
-		$GLOBALS['dirs']['fonts']=$GLOBALS['dirs']['root'].'src/fonts/';
-		$GLOBALS['dirs']['php']=$GLOBALS['dirs']['root'].'src/php/';
-		$GLOBALS['dirs']['traits']=$GLOBALS['dirs']['root'].'src/php/Traits/';
-		$GLOBALS['dirs']['public']=$GLOBALS['dirs']['root'].'src/www/';
-		$GLOBALS['dirs']['media']=$GLOBALS['dirs']['root'].'src/www/media/';
-		$GLOBALS['dirs']['tmp']=$GLOBALS['dirs']['root'].'src/www/tmp/';
-		foreach($GLOBALS['dirs'] as $dirName=>$dir){
-			$dir=trim($dir,'/');
-			if (!is_dir($dir)){mkdir($dir,0770,TRUE);}
+		foreach($GLOBALS['relDirs'] as $dirName=>$relDir){
+			if (!is_dir($relDir)){
+				if (strcmp($dirName,'public')===0 || strcmp($dirName,'tmp')===0 || strcmp($dirName,'media')===0){
+					mkdir($relDir,0775,TRUE);
+				} else {
+					mkdir($relDir,0770,TRUE);		
+				}
+			}
 		}
 		//unset($_SESSION['page state']);
 		if (empty($_SESSION['page state'])){
@@ -54,7 +48,6 @@ final class Root{
 		$arr['page html']='';
 		$arr['registered methods']=array();
 		// load all external components
-		$GLOBALS['dirs']['vendor']=$GLOBALS['dirs']['root'].'vendor/';
 		$_SESSION['page state']['autoload.php loaded']=FALSE;
 		if (is_dir($GLOBALS['dirs']['vendor'])){
 			$autoloadFile=$GLOBALS['dirs']['vendor'].'autoload.php';
@@ -75,7 +68,7 @@ final class Root{
 		$traits=scandir($GLOBALS['dirs']['traits']);
 		foreach($traits as $traitIndex=>$trait){
 			if (strpos($trait,'.php')===FALSE){continue;}
-			require_once $GLOBALS['dirs']['traits'].$trait;
+			require_once $GLOBALS['dirs']['traits'].'/'.$trait;
 		}
 		// create all objects and get structure
 		$orderedInitialization=array('Tools/MiscTools.php'=>array('dirname'=>'Tools','component'=>'MiscTools.php'),
@@ -92,7 +85,7 @@ final class Root{
 		$dirs=scandir($GLOBALS['dirs']['php']);
 		foreach($dirs as $dirIndex=>$dirname){
 			if (strlen($dirname)<3 || strpos($dirname,'Traits')!==FALSE || strpos($dirname,'.php')!==FALSE){continue;}
-			$dir=$GLOBALS['dirs']['php'].$dirname.'/';
+			$dir=$GLOBALS['dirs']['php'].'/'.$dirname.'/';
 			$Components=scandir($dir);
 			// loop through all components found in $dir
 			foreach($Components as $componentIndex=>$component){
@@ -141,7 +134,7 @@ final class Root{
 		* it stores the object in $arr for later use and checks the
 		* if the object provides the init() and job() function.
 		*/
-		require_once($srcDir.$dir.'/'.$component);
+		require_once($srcDir.'/'.$dir.'/'.$component);
 		$class=str_replace('.php','',$component);
 		$classWithNamespace=__NAMESPACE__.'\\'.$dir.'\\'.$class;
 		$arr[$classWithNamespace]=new $classWithNamespace($arr);

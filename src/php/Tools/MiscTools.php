@@ -19,7 +19,7 @@ class MiscTools{
 	private $emojiFile='';
 	
 	public function __construct(){
-		$this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
+		$this->emojiFile=$GLOBALS['dirs']['setup'].'/emoji.json';
 		$this->loadEmojis($this->emojiFile);
 	}
 		
@@ -255,10 +255,10 @@ class MiscTools{
 			if ($addDateTime){$fileName.=date('Y-m-d h_m_s').' ';}
 			$fileName.=$trace[1]['class'].' '.$trace[1]['function'];
 			$fileName=mb_ereg_replace("[^A-Za-z0-9\-\_ ]",'_', $fileName);
-			$file=$GLOBALS['dirs']['debugging'].$fileName.'.json';
+			$file=$GLOBALS['dirs']['debugging'].'/'.$fileName.'.json';
 		} else if (strpos($fileName,'/')===FALSE && strpos($fileName,'\\')===FALSE){
 			$fileName=mb_ereg_replace("[^A-Za-z0-9\-\_ ]",'_', $fileName);
-			$file=$GLOBALS['dirs']['debugging'].$fileName.'.json';
+			$file=$GLOBALS['dirs']['debugging'].'/'.$fileName.'.json';
 		} else {
 			$file=$fileName;
 		}
