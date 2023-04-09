@@ -195,7 +195,8 @@ class User{
 			$user=$arr;
 		}
 		if (!isset($user['Content'])){
-			$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user);
+			if ($template<4){$isSystemCall=TRUE;} else {$isSystemCall=FALSE;}
+			$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,$isSystemCall);
 		}
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if ($template===0){
