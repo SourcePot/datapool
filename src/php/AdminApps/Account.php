@@ -33,14 +33,6 @@ class Account{
 		return $vars;
 	}
 	
-	public function getEntryTable(){
-		return $this->entryTable;
-	}
-
-	public function getEntryTemplate(){
-		return $this->entryTemplate;
-	}
-	
 	public function run($arr=TRUE){
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
