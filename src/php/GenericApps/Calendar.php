@@ -349,7 +349,10 @@ class Calendar{
 					$class='calendar-event-selected';
 				}
 			}
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$event['Name'],'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>$class,'style'=>$style));
+			$title=$event['Name']."\n";
+			$title.=str_replace('T',' ',$event['Content']['Event']['Start']).' ('.$event['Content']['Event']['Start timezone'].")\n";
+			$title.=str_replace('T',' ',$event['Content']['Event']['End']).' ('.$event['Content']['Event']['End timezone'].')';
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$event['Name'],'title'=>$title,'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>$class,'style'=>$style));
 		}
 		return $arr;
 	}
