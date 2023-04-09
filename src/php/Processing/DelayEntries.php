@@ -274,7 +274,6 @@ class DelayEntries{
 	private function moveEntries($base,$callingElement,$result,$testRun){
 		$params=current($base['delayingparams']);
 		$entryTemplate=$base['entryTemplates'][$params['Content']['Forward to canvas element']];
-		$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entryTemplate);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
 			$entry=array_replace_recursive($entry,$entryTemplate);
 			if (!$testRun){
