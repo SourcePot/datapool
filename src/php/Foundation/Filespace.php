@@ -42,6 +42,38 @@ class Filespace{
 		return $this->entryTemplate;
 	}
 	
+	public function job($vars){
+		if (empty($vars['Dirs to process'])){
+			$dirs=scandir($GLOBALS['relDirs']['filespace']);
+			foreach($dirs as $dir){
+				if (strcmp($dir,'.')===0 || strcmp($dir,'..')===0){continue;}
+				$vars['Dirs to process'][$dir]=array('absDir'=>$GLOBALS['dirs']['filespace'].'/'.$dir,'table'=>$dir);
+			}
+		}
+		$dir2process=array_shift($vars['Dirs to process']);
+		$files=scandir($GLOBALS['relDirs']['filespace']);
+		foreach(new \DirectoryIterator($dir2process['absDir']) as $fileInfo){
+			$file=$dir2process['absDir'].'/'.$fileInfo->getFilename();
+			$extensionPos=strpos($fileInfo->getFilename(),'.file');
+			if (empty($extensionPos)){continue;}
+			$entryId=substr($fileInfo->getFilename(),0,$extensionPos);
+			$sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
+			$stmt=$this->arr['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
+			if (empty($stmt->fetchAll())){
+				if (is_file($file)){
+					if (unlink($file)){
+						$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
+					} else {
+						$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
+					}
+				}
+				$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
+			}
+		}
+		$vars['Last processed dir']=$dir2process['absDir'];
+		return $vars;
+	}
+
 	public function resetStatistics(){
 		$this->statistics=array('matched files'=>0,'updateed files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0);
 		return $this->statistics;
@@ -299,40 +331,6 @@ class Filespace{
       	return $content;
 	}
 	
-	public function parsePdfFile($file){
-		$text=FALSE;
-		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
-			$fileContent=file_get_contents($file);
-			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
-			if ($this->pdfOK($fileContent)){				
-				// parser configuration
-				$config=new \Smalot\PdfParser\Config();
-				$config->setHorizontalOffset('');
-				$config->setRetainImageContent(FALSE);
-				// check for encryption etc.
-				$parser=new \Smalot\PdfParser\RawData\RawDataParser([],$config);
-				list($xref,$data)=$parser->parseData($fileContent);
-				if (!empty($data)){
-					// parse content
-					$parser=new \Smalot\PdfParser\Parser([],$config);
-					$pdf=$parser->parseContent($fileContent);
-					$text=$pdf->getText();
-					// clean-up
-					$text=preg_replace('/[\t ]+/',' ',$text);
-					$text=preg_replace('/(\n )+|(\n )+/',"\n",$text);
-					$text=preg_replace('/(\n)+/',"\n",$text);				
-				}
-			}
-		}
-		return $text;
-	}
-
-	private function pdfOK($pdfContent){
-		if (FALSE===($trimpos=strpos($pdfContent,'%PDF-'))){return FALSE;}
-		if (empty(preg_match_all('/[\r\n]startxref[\s]*[\r\n]+([0-9]+)[\s]*[\r\n]+%%EOF/i',$pdfContent,$matches,\PREG_SET_ORDER,0))){return FALSE;}
-        return TRUE;
-	}
-
 	/**
 	* This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
 	*/
@@ -388,17 +386,12 @@ class Filespace{
 			$entry['Params']['File']['Uploaded']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 			if (isset($_SESSION['currentUser']['EntryId'])){$entry['Params']['File']['UploaderId']=$_SESSION['currentUser']['EntryId'];}
 			if (isset($_SESSION['currentUser']['Name'])){$entry['Params']['File']['UploaderName']=$_SESSION['currentUser']['Name'];}
-			if (stripos($entry['Params']['File']['Extension'],'pdf')!==FALSE){
-				$pdfFileContent=$this->parsePdfFile($entry['Params']['File']['Source']);
-				if (!empty($pdfFileContent)){$entry['Content']['File content']=$pdfFileContent;}
-			}
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
 			$targetFile=$this->selector2file($entry,TRUE);
 			copy($entry['Params']['File']['Source'],$targetFile);
 			$entry['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$entry['Params']['File']['Source'],'new'=>$targetFile,'userId'=>$userId));
-			$entry=$this->arr['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$targetFile);
-			$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
+			$entry=$this->fileUploadPostProcessing($entry);
 			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 			$debugArr['entry updated']=$entry;
 		}
@@ -438,6 +431,54 @@ class Filespace{
 		return $zipStatistic;
 	}
 	
+	private function fileUploadPostProcessing($entry){
+		$file=$this->selector2file($entry,TRUE);
+		$entry=$this->arr['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
+		$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
+		// if pdf parse content
+		if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
+			$pdfFileContent=$this->parsePdfFile($file);
+			if (!empty($pdfFileContent)){
+				$entry['Content']['File content']=$pdfFileContent;
+			}
+		}			
+		return $entry;
+	}
+
+	public function parsePdfFile($file){
+		$text=FALSE;
+		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
+			$fileContent=file_get_contents($file);
+			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
+			if ($this->pdfOK($fileContent)){				
+				// parser configuration
+				$config=new \Smalot\PdfParser\Config();
+				$config->setHorizontalOffset('');
+				$config->setRetainImageContent(FALSE);
+				// check for encryption etc.
+				$parser=new \Smalot\PdfParser\RawData\RawDataParser([],$config);
+				list($xref,$data)=$parser->parseData($fileContent);
+				if (!empty($data)){
+					// parse content
+					$parser=new \Smalot\PdfParser\Parser([],$config);
+					$pdf=$parser->parseContent($fileContent);
+					$text=$pdf->getText();
+					// clean-up
+					$text=preg_replace('/[\t ]+/',' ',$text);
+					$text=preg_replace('/(\n )+|(\n )+/',"\n",$text);
+					$text=preg_replace('/(\n)+/',"\n",$text);				
+				}
+			}
+		}
+		return $text;
+	}
+
+	private function pdfOK($pdfContent){
+		if (FALSE===($trimpos=strpos($pdfContent,'%PDF-'))){return FALSE;}
+		if (empty(preg_match_all('/[\r\n]startxref[\s]*[\r\n]+([0-9]+)[\s]*[\r\n]+%%EOF/i',$pdfContent,$matches,\PREG_SET_ORDER,0))){return FALSE;}
+        return TRUE;
+	}
+
 	public function exportEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000){
 		$statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>array(),'Errors'=>array());
 		if (isset($selectors['Source'])){$selectors=array($selectors);}

@@ -524,3 +524,13 @@ button:hover,input[type=submit]:hover,a.btn:hover{
 	color:#fff;
 	background-color:#000;
 }
+.status-on,.status-off{
+	background-color:#2a0;
+	color:#fff;
+	min-width:100%;
+	min-height:8px;
+	padding:0.1em;
+}
+.status-on{
+	background-color:#f00;
+}

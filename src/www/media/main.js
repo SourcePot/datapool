@@ -1,5 +1,4 @@
 jQuery(document).ready(function(){
-	let state={'activeAjaxRequests':{},'maxActiveAjaxRequests':2,'ajaxTimeConsumption':{}};
 	
 // basic content adjustments
 	jQuery('article').fadeIn(300);
@@ -31,32 +30,32 @@ jQuery(document).ready(function(){
 	}
 
 // step-by-step entry presentation
+	var busyLoadingEntry=false;
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]').first();
-		if (isVisible(obj)===true){
+		if (isVisible(obj)===true && busyLoadingEntry===false){
 			let arr={'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id'),'function':jQuery(obj).attr('function')};
 			loadNextSelectedView(arr);
 		}
 	}
 	
 	const loadNextSelectedView=function(arr){
-		if (ajaxRequestOk('loadNextSelectedView')){
-			jQuery.ajax({
-				method:"POST",
-				url:'js.php',
-				context:document.body,
-				data:arr,
-				dataType: "json"
-			}).done(function(data){
-				jQuery('[function=loadEntry][entry-id='+arr['EntryId']+']').replaceWith(data['html']);
-				attachMissingContainerEvents();
-				resetAll();
-			}).fail(function(data){
-				console.log(data);
-			}).always(function(){
-				unsetActiveAjaxRequest('loadNextSelectedView');
-			});
-		}
+		busyLoadingEntry=true;
+		jQuery.ajax({
+			method:"POST",
+			url:'js.php',
+			context:document.body,
+			data:arr,
+			dataType: "json"
+		}).done(function(data){
+			jQuery('[function=loadEntry][entry-id='+arr['EntryId']+']').replaceWith(data['html']);
+			attachMissingContainerEvents();
+			resetAll();
+		}).fail(function(data){
+			console.log(data);
+		}).always(function(){
+			busyLoadingEntry=false;
+		});
 	}
 
 // html-app management
@@ -117,31 +116,29 @@ jQuery(document).ready(function(){
 	}
 	
 	const containerMonitor=function(){
-		if (ajaxRequestOk('containerMonitor')){
-			jQuery('article[container-id]').each(function(containerIndex){
-				// loop through container
-				let containerId=jQuery(this).attr('container-id');
-				jQuery.ajax({
-					method:"POST",
-					url:'js.php',
-					context:document.body,
-					data:{'function':'containerMonitor','container-id':containerId},
-					dataType: "json"
-				}).done(function(data){
-					if (!data['arr']['isUp2date']){
-						containerId=data['arr']['container-id'];
-						data=jQuery(data).serializeArray();
-						reloadContainer(containerId,data);
-					}
-				}).fail(function(data){
-					console.log(data);	
-				}).always(function(){
-					unsetActiveAjaxRequest('containerMonitor');
-				});
+		jQuery('article[container-id]').each(function(containerIndex){
+			// loop through container
+			let containerId=jQuery(this).attr('container-id');
+			jQuery.ajax({
+				method:"POST",
+				url:'js.php',
+				context:document.body,
+				data:{'function':'containerMonitor','container-id':containerId},
+				dataType: "json"
+			}).done(function(data){
+				if (!data['arr']['isUp2date']){
+					containerId=data['arr']['container-id'];
+					data=jQuery(data).serializeArray();
+					reloadContainer(containerId,data);
+				}
+			}).fail(function(data){
+				console.log(data);	
+			}).always(function(){
+
 			});
-		}
+		});
 	}
-	
+
 	let attachedEvents={};
 	attachMissingContainerEvents()
 	function attachMissingContainerEvents(){
@@ -156,7 +153,7 @@ jQuery(document).ready(function(){
 	
 	function attachEventsToContainer(containerId){
 		let wrapper=jQuery('article[container-id='+containerId+']');
-		jQuery(wrapper).find('[type=submit]').each(function(i){
+		jQuery(wrapper).find('[type=submit],button').each(function(i){
 			if (jQuery(this).attr('excontainer')===undefined){
 				jQuery(this).unbind('click');
 				jQuery(this).on('click',function(e){
@@ -166,17 +163,7 @@ jQuery(document).ready(function(){
 				});
 			}
 		});
-		jQuery(wrapper).find('button').each(function(i){
-			if (jQuery(this).attr('excontainer')===undefined){
-				jQuery(this).unbind('click');
-				jQuery(this).on('click',function(e){
-					e.preventDefault();
-					e.stopPropagation();
-					submitForm(this,containerId);
-				});
-			}
-		});
-		jQuery(wrapper).find('[type=text],[type=password],[type=email],[type=tel]').each(function(i){
+		jQuery(wrapper).find('[type=text],[type=password],[type=email],[type=tel],[type=file]').each(function(i){
 			if (jQuery(this).attr('excontainer')===undefined){
 				jQuery(this).unbind('focusout');
 				jQuery(this).focusout(function(e){
@@ -220,34 +207,64 @@ jQuery(document).ready(function(){
 	}
 	
 	function reloadContainer(containerId,data){
-		if (ajaxRequestOk('reloadContainer')){
-			containerBusy(containerId,true);
-			data.push({name:'function',value:'container'});
-			data.push({name:'container-id',value:containerId});
-			jQuery.ajax({
-				method:"POST",
-				url:'js.php',
-				context:document.body,
-				data:data,
-				dataType: "json"
-			}).done(function(data){
-				jQuery('article[container-id='+containerId+']').replaceWith(data['html']);
-				attachEventsToContainer(containerId);
-				resetAll();
-			}).fail(function(data){
-				console.log(data);
-			}).always(function(){
-				containerBusy(containerId,false);
-				unsetActiveAjaxRequest('reloadContainer');
-			});
-		}
+		var formData=new FormData();
+		formData.append('function','container');
+		formData.append('container-id',containerId);
+		postRequest(containerId,formData);
 	}
 	
-	function submitForm(trigger,containerId){	
-		let formToSubmit=jQuery(trigger).parents('form:first');
-		let formToSubmitData=jQuery(formToSubmit).serializeArray();
-		formToSubmitData.push({name:trigger.name,value:trigger.value});
-		reloadContainer(containerId,formToSubmitData);
+	function submitForm(trigger,containerId){
+		containerBusy(containerId,true);
+		var formData=new FormData($('form')[0]);
+		formData.append(trigger.name,trigger.value);
+		formData.append('function','container');
+		formData.append('container-id',containerId);
+		postRequest(containerId,formData);
+	}
+
+	function postRequest(containerId,data){
+		containerBusy(containerId,true);
+		$.ajax({
+			url:'js.php',
+			type:'POST',
+			data: data,
+			cache: false,
+			contentType: false,
+			processData: false,
+			xhr: function(){
+				var myXhr=$.ajaxSettings.xhr();
+				if (myXhr.upload){
+					myXhr.upload.addEventListener('progress',function(e){
+						/*
+						if (e.lengthComputable){
+							$('progress').attr({
+								value: e.loaded,
+								max: e.total,
+							});
+						}
+						*/
+					},false);		
+					myXhr.addEventListener('load',function(e){
+						try{
+							var jsonResp=JSON.parse(this.response);
+							jQuery('article[container-id='+containerId+']').replaceWith(jsonResp['html']);
+							attachEventsToContainer(containerId);
+							resetAll();
+						} catch(e){
+							console.log(this.response);
+						}
+						containerBusy(containerId,false);
+					},false);
+					myXhr.addEventListener('error',function(e){
+						console.log(this.response);
+					},false);
+					myXhr.addEventListener('loaded',function(e){
+						containerBusy(containerId,false);
+					},false);
+				}				
+				return myXhr;
+			}
+		});	
 	}
 
 // image-overlay
@@ -333,23 +350,22 @@ jQuery(document).ready(function(){
 	}
 	
 	function setCanvasElementPosition(arr){
-		if (ajaxRequestOk('setCanvasElementPosition')){
-			let data={'function':'setCanvasElementPosition','arr':arr};
-			jQuery.ajax({
-				method:"POST",
-				url:'js.php',
-				context:document.body,
-				data:data,
-				dataType: "json"
-			}).done(function(data){
-				//console.log(data);
-			}).fail(function(data){
-				console.log(data);
-			}).always(function(){
-				unsetActiveAjaxRequest('setCanvasElementPosition');
-			});
-		}
+		let data={'function':'setCanvasElementPosition','arr':arr};
+		jQuery.ajax({
+			method:"POST",
+			url:'js.php',
+			context:document.body,
+			data:data,
+			dataType: "json"
+		}).done(function(data){
+			//console.log(data);
+		}).fail(function(data){
+			console.log(data);
+		}).always(function(){
+
+		});
 	}
+
 // symbol login
 	
 	addSymbolLoginEvents();
@@ -400,12 +416,6 @@ jQuery(document).ready(function(){
 		} else if (heartbeats%5===0){
 			loadNextEntry();
 		}
-		/*
-		if (heartbeats%50===0){
-			console.clear();
-			console.log(state);
-		}
-		*/
 	})();
 
 	function isVisible(obj){
@@ -421,21 +431,6 @@ jQuery(document).ready(function(){
 		}
 	}
 	
-	function unsetActiveAjaxRequest(method){
-		let timeConsumption=Date.now()-state['activeAjaxRequests'][method];
-		state['ajaxTimeConsumption'][method]=timeConsumption;
-		delete state['activeAjaxRequests'][method];
-	}
-
-	function ajaxRequestOk(method){
-		if (Object.keys(state['activeAjaxRequests']).length<state['maxActiveAjaxRequests'] && state['activeAjaxRequests'][method]===undefined){
-			state['activeAjaxRequests'][method]=Date.now();
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	function resetAll(){
 		adjustMainHeight();
 		addSafetyCoverEvent();

@@ -415,7 +415,7 @@ class HTMLbuilder{
 				}
 				if (!empty($arr['requiresFile']) && strpos($arr['EntryId'],'-guideEntry')===FALSE){
 					$hasFile=is_file($this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr));
-					if (!$hasFile){$arr=FALSE;}
+					if (!$hasFile || empty($arr['Params']['File'])){$arr=FALSE;}
 				}
 			} else {
 				// missing button definition
@@ -516,23 +516,30 @@ class HTMLbuilder{
 		return $arr;
 	}
 	
-	public function integerEditor($selector,$key,$integerDef=array(),$bitCount=16){
+	public function integerEditor($arr,$key=FALSE,$integerDef=array(),$bitCount=16){
 		// This function provides the HTML-script for an integer editor for the provided entry argument.
 		// Typical use is for keys 'Read', 'Write' or 'Priviledges'.
 		//
-		$integer=$selector[$key];
+		if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
+		$template=array('key'=>'Read','integerDef'=>$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>$bitCount);
+		$arr=array_replace_recursive($template,$arr);
+		$entry=$arr['selector'];
+		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
+			return $this->element(array('tag'=>'p','element-content'=>'access denied'));
+		}
+		$integer=$entry[$arr['key']];
 		$callingClass=__CLASS__;
-		$callingFunction=__FUNCTION__.$key;
+		$callingFunction=__FUNCTION__.$arr['key'];
 		$formData=$this->formProcessing($callingClass,$callingFunction);
-		$saveRequest=isset($formData['cmd'][$key]['save']);
+		$saveRequest=isset($formData['cmd'][$arr['key']]['save']);
 		$updatedInteger=0;
 		$matrix=array();
 		if (is_string($integer)){$integer=intval($integer);}
-		for($bitIndex=0;$bitIndex<$bitCount;$bitIndex++){
+		for($bitIndex=0;$bitIndex<$arr['bitCount'];$bitIndex++){
 			$currentVal=pow(2,$bitIndex);
 			if ($saveRequest){
 				// get checkboxes from form
-				if (empty($formData['val'][$key][$bitIndex])){
+				if (empty($formData['val'][$arr['key']][$bitIndex])){
 					$checked=FALSE;
 				} else {
 					$updatedInteger+=$currentVal;
@@ -542,22 +549,22 @@ class HTMLbuilder{
 				// get checkboxes from form
 				if (($currentVal & $integer)==0){$checked=FALSE;} else {$checked=TRUE;}
 			}
-			if (isset($integerDef[$bitIndex]['Name'])){$label=$integerDef[$bitIndex]['Name'];} else {$label=$bitIndex;}
+			if (isset($arr['integerDef'][$bitIndex]['Name'])){$label=$arr['integerDef'][$bitIndex]['Name'];} else {$label=$bitIndex;}
 			$bitIndex=strval($bitIndex);
 			$id=md5($callingClass.$callingFunction.$bitIndex);
 			$cellHtml=$this->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
-			$cellHtml.=$this->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($key,$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
+			$cellHtml.=$this->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
 			$matrix[$bitIndex]['Current value']=$cellHtml;
 		}
-		$updateBtn=array('tag'=>'button','key'=>array($key,'save'),'value'=>'save','element-content'=>'💾','callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
+		$updateBtn=array('tag'=>'button','key'=>array($arr['key'],'save'),'value'=>'save','element-content'=>'💾','callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
 		$matrix['Cmd']['Current value']=$this->element($updateBtn);
 		if ($saveRequest){
-			$selector=$this->arr['SourcePot\Datapool\Foundation\Explorer']->guideEntry2selector($selector);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Explorer']->guideEntry2selector($entry);
 			$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,array($key=>$updatedInteger),FALSE,FALSE);
+			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,FALSE);
 			$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			if ($statistics['updated']>0){
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Key "'.$key.'" updated for "'.$statistics['updated'].'" entries.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Key "'.$arr['key'].'" updated for "'.$statistics['updated'].'" entries.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 		}
 		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>FALSE,'hideKeys'=>TRUE,'hideHeader'=>TRUE));
@@ -567,14 +574,12 @@ class HTMLbuilder{
 	public function setAccessByte($arr){
 		// This method returns html with a number of checkboxes to set the bits of an access-byte.
 		// $arr[key] ... Selects the respective access-byte, e.g. $arr['key']='Read', $arr['key']='Write' or $arr['key']='Privileges'.   
-		if (isset($arr['selector'])){$entry=$arr['selector'];} else {return $arr;}
+		if (!isset($arr['selector'])){return $arr;}
 		if (empty($arr['key'])){$arr['key']='Read';}
-		if (empty($entry['Source']) || empty($entry['EntryId']) || empty($entry[$arr['key']])){
+		if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId']) || empty($arr['selector'][$arr['key']])){
 			$html=$this->element(array('tag'=>'p','element-content'=>'Required keys missing.'));
-		} else if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
-			$html=$this->integerEditor($entry,$arr['key'],$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols());
 		} else {
-			$html=$this->element(array('tag'=>'p','element-content'=>'access denied'));
+			$html=$this->integerEditor($arr);
 		}
 		return $html;
 	}

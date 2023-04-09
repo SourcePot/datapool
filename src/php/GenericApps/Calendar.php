@@ -51,7 +51,8 @@ class Calendar{
 																 ),
 											),
 							 'Misc'=>array('@function'=>'entryControls','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-							 'Read'=>array('@function'=>'setAccessByte','@default'=>'ALL_MEMBER_R','@key'=>'Read','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Read'=>array('@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Write'=>array('@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 );
 
 	private $options=array('Type'=>array('event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'),
@@ -109,13 +110,12 @@ class Calendar{
 		$trigger=array();
 		$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read') as $triggerId=>$entry){
-			$triggerId=$entry['EntryId'];
+			$triggerId=$entry['Source'].'|'.$entry['EntryId'];
 			$trigger[$triggerId]=array('detected event last time'=>$vars['trigger'][$triggerId]['detected event']??FALSE,
 									   'detected event'=>FALSE,
 									   'risingSlope'=>boolval($entry['Content']['Slope']),
 									   'trigger name'=>$entry['Content']['Trigger name'],
-									   'EntryId'=>$entry['EntryId'],
-									   'Folder'=>$entry['Folder'],
+									   'selector'=>array('Source'=>$entry['Source'],'Group'=>$entry['Group'],'Folder'=>$entry['Folder'],'EntryId'=>$entry['EntryId']),
 									   'active'=>$vars['trigger'][$triggerId]['active']??FALSE
 									   );
 			foreach($events as $event){
@@ -515,6 +515,7 @@ class Calendar{
 		$html='';
 		$slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');
 		$eventSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Events');
+		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (isset($formData['cmd']['Reset'])){
 			$this->resetTrigger(key($formData['cmd']['Reset']));
@@ -527,17 +528,18 @@ class Calendar{
 		foreach(array('Folder','Name') as $column){
 			$selectArr['key']=array($column);
 			$selectArr['options']=array(''=>'&larrhk;');
+			if (isset($eventSelector[$column])){$selectArr['selected']=$eventSelector[$column];}
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDistinct($eventSelector,$column,FALSE,'Read',$column) as $row){
-				if (isset($eventSelector[$column])){$selectArr['selected']=$eventSelector[$column];}
 				$selectArr['options'][$row[$column]]=ucfirst($row[$column]);
 			}
 			$matrix['Selector'][$column]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
+			if (empty($selectArr['selected'])){break;}
 		}
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Event selection','keep-element-content'=>TRUE));
 		// get trigger
+		$eventSelectorString=implode('|',$eventSelector);
 		$contentStructure=array('Trigger name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Event folder'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelector['Folder']??'','excontainer'=>TRUE),
-								'Event name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelector['Name']??'','excontainer'=>TRUE),
+								'Event selector'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelectorString,'excontainer'=>TRUE),
 								'Slope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>1,'options'=>$slopeOptions),
 								);
 		$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
@@ -550,18 +552,16 @@ class Calendar{
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($listArr);
 		// get current trigger state
 		$matrix=array();
-		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
-		if (!isset($vars['trigger'])){$vars['trigger']=array();}
-		foreach($vars['trigger'] as $triggerId=>$trigger){
-			if (strcmp($trigger['Folder'],$arr['selector']['Folder'])!==0){continue;}
-			$style=array('color'=>'#f00','width'=>'100%','height'=>'8px');
+		$triggerArr=$this->getTrigger();
+		foreach($triggerArr['trigger'] as $triggerId=>$trigger){
+			if (strcmp($trigger['selector']['Folder'],$arr['selector']['Folder'])!==0){continue;}
 			$matrix[$trigger['trigger name']]=array('Slope'=>$slopeOptions[intval($trigger['risingSlope'])]);
-			if ($trigger['detected event last time']){$style['background-color']='#f00';} else {$style['background-color']='#4f0';}
-			$matrix[$trigger['trigger name']]['Past status']=array('tag'=>'div','style'=>$style,'keep-element-content'=>TRUE);
-			if ($trigger['detected event']){$style['background-color']='#f00';} else {$style['background-color']='#4f0';}
-			$matrix[$trigger['trigger name']]['Current status']=array('tag'=>'div','style'=>$style,'keep-element-content'=>TRUE);
-			if ($trigger['active']){$style['background-color']='#f00';} else {$style['background-color']='#4f0';}
-			$matrix[$trigger['trigger name']]['Active']=array('tag'=>'div','style'=>$style,'keep-element-content'=>TRUE);
+			if ($trigger['detected event last time']){$class='status-on';} else {$class='status-off';}
+			$matrix[$trigger['trigger name']]['Past status']=array('tag'=>'div','class'=>$class,'keep-element-content'=>TRUE);
+			if ($trigger['detected event']){$class='status-on';} else {$class='status-off';}
+			$matrix[$trigger['trigger name']]['Current status']=array('tag'=>'div','class'=>$class,'keep-element-content'=>TRUE);
+			if ($trigger['active']){$class='status-on';} else {$class='status-off';}
+			$matrix[$trigger['trigger name']]['Active']=array('tag'=>'div','class'=>$class,'keep-element-content'=>TRUE);
 			$btnArr=$arr;
 			$btnArr['cmd']='Reset';
 			$btnArr['key']=array('Reset',$triggerId);
@@ -580,12 +580,17 @@ class Calendar{
 	
 	public function getTrigger(){
 		$return=array('options'=>array(''=>'&rArr;'),'trigger'=>array());
-		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
-		if (!isset($vars['trigger'])){$vars['trigger']=array();}
-		foreach($vars['trigger'] as $triggerId=>$trigger){
-			$return['options'][$triggerId]=$trigger['trigger name'];
-			$return['trigger'][$triggerId]=$trigger['active'];
+		$return=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		if (empty($return['trigger'])){
+			$return=array('trigger'=>array(),'options'=>array(),'isActive'=>array());
+		} else {
+			foreach($return['trigger'] as $triggerId=>$trigger){
+				$return['options'][$triggerId]=$trigger['selector']['Source'].' &rarr; '.$trigger['trigger name'];
+				$return['isActive'][$triggerId]=$trigger['active'];
+			}
+			if (isset($return['events'])){unset($return['events']);}
 		}
+		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($return);
 		return $return;
 	}
 	

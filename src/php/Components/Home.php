@@ -73,7 +73,8 @@ private $entryTable;
 		$sectionArr=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Page content');
 		$sectionArr=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($sectionArr,'ALL_R','ADMIN_R');
 		$contentStructure=array('Section title'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Section content'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'Add your section text here...','keep-element-content'=>TRUE,'excontainer'=>TRUE),
+								'Section content'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
+								'Section footer'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								'Section attachment'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
 								);
 		$sectionArr['canvasCallingClass']=$arr['callingFunction'];

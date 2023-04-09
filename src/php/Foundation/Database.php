@@ -58,7 +58,7 @@ class Database{
 	}
 
 	public function resetStatistic(){
-		$_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0);
+		$_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0);
 		return $_SESSION[__CLASS__]['Statistic'];
 	}
 	

@@ -122,6 +122,15 @@ class Access{
 		return FALSE;
 	}
 	
+	public function accessSpecificValue($right,$successValue=TRUE,$failureValue=FALSE,$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE){
+		$accessArr=$this->replaceRightConstant(array('Read'=>$right),'Read');
+		if ($this->access($accessArr,'Read',$user,$isSystemCall,$ignoreOwner)){
+			return $successValue;
+		} else {
+			return $failureValue;
+		}
+	}
+	
 	public function emailId($email){
 		$emailId=md5($email."kjHD1W82IQ9iBS");
 		return $emailId;

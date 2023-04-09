@@ -49,14 +49,17 @@ final class Root{
 		$arr['registered methods']=array();
 		// load all external components
 		$_SESSION['page state']['autoload.php loaded']=FALSE;
-		if (is_dir($GLOBALS['dirs']['vendor'])){
-			$autoloadFile=$GLOBALS['dirs']['vendor'].'autoload.php';
-			if (is_file($autoloadFile)){
-				$_SESSION['page state']['autoload.php loaded']=TRUE;
-				require_once $autoloadFile;
-			}
+		$autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
+		if (is_file($autoloadFile)){
+			$_SESSION['page state']['autoload.php loaded']=TRUE;
+			require_once $autoloadFile;
 		}
 		$this->arr=$arr;
+	}
+	
+	private function registerVendorClasses($arr){
+		
+		return $arr;
 	}
 
 	/**
@@ -97,6 +100,7 @@ final class Root{
 		foreach($orderedInitialization as $dir=>$componentArr){
 			$arr=$this->createComponent($GLOBALS['dirs']['php'],$componentArr['dirname'],$componentArr['component'],$arr);
 		}
+		$arr=$this->registerVendorClasses($arr);
 		// loop through components and invoke the init method
 		foreach($arr['registered methods']['init'] as $classWithNamespace=>$returnArr){$arr=$arr[$classWithNamespace]->init($arr);}
 		//
@@ -138,17 +142,24 @@ final class Root{
 		$class=str_replace('.php','',$component);
 		$classWithNamespace=__NAMESPACE__.'\\'.$dir.'\\'.$class;
 		$arr[$classWithNamespace]=new $classWithNamespace($arr);
-		// get registered methods
-		if (method_exists($arr[$classWithNamespace],'getEntryTable')){
-			$source=$arr[$classWithNamespace]->getEntryTable();
-			$arr['source2class'][$source]=$classWithNamespace;
-		}
+		$arr=$this->addRegisteredMethods($arr,$classWithNamespace);
+		return $arr;
+	}
+	
+	private function addRegisteredMethods($arr,$classWithNamespace){
 		$methods2register=array('init'=>FALSE,
 								'job'=>FALSE,
 								'run'=>TRUE,			// claas ->run() which returns menu definition
 								'unifyEntry'=>FALSE,
-								'dataProcessor'=>TRUE
+								'dataProcessor'=>TRUE,
+								'getTrigger'=>FALSE,
 								);
+		// analyse class structure
+		if (method_exists($arr[$classWithNamespace],'getEntryTable')){
+			$source=$arr[$classWithNamespace]->getEntryTable();
+			$arr['source2class'][$source]=$classWithNamespace;
+		}
+		// get registered methods
 		foreach($methods2register as $method=>$invokeArgs){
 			if (method_exists($arr[$classWithNamespace],$method)){
 				if ($invokeArgs===FALSE){

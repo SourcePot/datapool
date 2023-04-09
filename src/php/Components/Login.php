@@ -174,7 +174,7 @@ class Login{
 						  'Folder'=>'Login links',
 						  'Name'=>$arr['Recovery']['Passphrase'],
 						  'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
-						  'Expires'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime(600)
+						  'Expires'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M')
 						  );
 		$loginEntry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
 		// create message
@@ -183,9 +183,9 @@ class Login{
 						   'psw'=>'<b>'.$arr['Recovery']['Passphrase for user'].'</b>'
 						   );
 		$msg=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a one-time password at {{pageTitle}}.",$placeholder).'<br/>';
+		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a login token at {{pageTitle}}.",$placeholder).'<br/>';
 		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Please use {{psw}} to login.",$placeholder).'<br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("This password can be used only once and it is valid for approx. 10mins.",$placeholder).'<br/><br/>';
+		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("This token can be used only once and it is valid for approx. 10mins.",$placeholder).'<br/><br/>';
 		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Best reagrds,",$placeholder).'<br/>';
 		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Admin",$placeholder);
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>'font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:400;line-height:24px;'));
