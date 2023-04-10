@@ -92,7 +92,7 @@ class CanvasTrigger{
 
 	private function getCanvasTriggerWidget($callingElement){
 		$callingElement['refreshInterval']=60;
-		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Canvas processing','generic',$callingElement,array('method'=>'getCanvasTriggerWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Canvas trigger','generic',$callingElement,array('method'=>'getCanvasTriggerWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getCanvasTriggerWidgetHtml($arr){
