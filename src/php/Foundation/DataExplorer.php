@@ -394,14 +394,15 @@ class DataExplorer{
 	private function exportImportHtml($callingClass){
 		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R')){return '';}
 		//
-		$selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass),
-						 'mapping'=>array('Source'=>'mapentries','Folder'=>$callingClass),
-						 'matching'=>array('Source'=>'matchentries','Folder'=>$callingClass),
-						 'parser'=>array('Source'=>'parseentries','Folder'=>$callingClass),
-						 'calculations'=>array('Source'=>'calcentries','Folder'=>$callingClass),
-						 'delaying'=>array('Source'=>'delayentries','Folder'=>$callingClass),
-						 'processing'=>array('Source'=>'canvasprocessing','Folder'=>$callingClass),
-						 );
+		$selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass));
+		$processingAbsDir=$GLOBALS['dirs']['php'].'/Processing';
+		$processingClasses=scandir($processingAbsDir);
+		foreach($processingClasses as $processingClass){
+			$extensionPos=strpos($processingClass,'.php');
+			if ($extensionPos===FALSE){continue;}
+			$source=strtolower(substr($processingClass,0,$extensionPos));
+			$selectors[$source]=array('Source'=>$source,'Folder'=>$callingClass);
+		}
 		$callingClassName=substr($callingClass,strrpos($callingClass,'\\')+1);
 		$className=substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
 		$result=array();
