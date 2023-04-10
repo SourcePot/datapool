@@ -195,6 +195,7 @@ class MatchEntries{
 			$base[$key][$entry['EntryId']]=$entry;
 			// entry template
 			foreach($entry['Content'] as $contentKey=>$content){
+				if (is_array($content)){continue;}
 				if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
 				$template=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
 				if ($template){$base['entryTemplates'][$content]=$template;}

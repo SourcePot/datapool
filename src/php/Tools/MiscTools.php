@@ -82,7 +82,6 @@ class MiscTools{
 		$boolval=$this->str2bool($value);
 		$element['class']=$value?'status-on':'status-off';
 		if (!isset($element['element-content'])){$element['element-content']=$boolval?'TRUE':'FALSE';}
-		if (!isset($element['keep-element-content'])){$element['keep-element-content']=TRUE;}
 		if (!isset($element['tag'])){$element['tag']='p';}
 		return $element;
 	}

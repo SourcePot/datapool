@@ -375,6 +375,7 @@ class Container{
 					$rowCount--;
 					continue;
 				}
+				//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,__FUNCTION__.'-'.$entry['EntryId']);
 				$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
 				// setting up
 				if (empty($columnOptions)){
