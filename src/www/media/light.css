@@ -63,11 +63,19 @@ body{
 #overlay-title{
 	text-align:center;
 }
-h1,h2,h3,li,ul,div,p.comment,p.comment-footer,div.calendar-sheet-wrapper,embed{
+h1,h2,h3,li,ol,ul,div,p,div.calendar-sheet-wrapper,embed{
 	float:left;
 	clear:both;
+	font-size:inherit;
+	font-style:inherit;
+	line-height:1.6em;
 }
-h1,h2,h3,li,ul{
+ol,ul{
+	margin: 1.2em 0;
+	list-style-type:square;
+	list-style-position:inside;
+}
+h1,h2,h3{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-variant:petite-caps;
 }
@@ -144,7 +152,7 @@ select{
 	max-width:280px;
 	cursor:pointer;
 }
-div.preview,main,div,select,video,img,p,ul,ol,li{
+div.preview,main,div,select,video,img,p{
 	float:left;
 }
 div.preview,video,img{
@@ -185,6 +193,7 @@ ul.menu{
 	list-style-type: none;
 	border-bottom:1px dotted #aaa;
 	background-color:#fff;
+	margin:0;
 }
 li.menu{
 	clear:none;
@@ -275,7 +284,7 @@ p.log{
 article{
 	float: left;
 	clear:none;
-	margin:20px 0;
+	margin:20px 0 0 0;
 	position:relative;
 	width:100%;
 	overflow:auto;
@@ -368,7 +377,7 @@ div.icon{
 	overflow:auto;
 	background-image:url("canvaslightbg.png");
 }
-.canvas-std,.canvas-red,.canvas-green,.canvas-symbol,.canvas-text,.canvas-processor{
+.canvas-std,.canvas-red,.canvas-green,.canvas-symbol,.canvas-text,.canvas-processor,.canvas-trigger,.canvas-dark{
 	position:absolute;
 	margin:0;
 	color:#000;
@@ -382,6 +391,10 @@ button.canvas-processor{
 	color:#fff;
 	background-color:#00f;
 }
+button.canvas-trigger{
+	color:#fff;
+	background-color:#fb0;
+}
 .canvas-std,.canvas-red,.canvas-green{
 	min-width:140px;
 	border:1px solid #000;
@@ -394,6 +407,10 @@ button.canvas-red{
 }
 button.canvas-green{
 	background-color:#cfc;
+}
+button.canvas-dark{
+	color:#fff;
+	background-color:#444;
 }
 .canvas-element-btn{
 	position:absolute;
@@ -423,6 +440,7 @@ p.canvas-info{
 	font-size:10px;
 	background-color:#fff;
 	padding:1px;
+	line-height:1em;
 }
 div.calendar-sheet-wrapper{
 	width:100%;

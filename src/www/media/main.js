@@ -411,7 +411,7 @@ jQuery(document).ready(function(){
 	(function heartbeat(){
     	setTimeout(heartbeat,100);
 		heartbeats++;
-		if (heartbeats%3===0){
+		if (heartbeats%11===0){
 			containerMonitor();
 		} else if (heartbeats%5===0){
 			loadNextEntry();
