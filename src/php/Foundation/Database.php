@@ -652,7 +652,7 @@ class Database{
 			}
 			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']));
 		}
-		return $this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
+		return $this->updateEntry($targetEntry,TRUE);
 	}
 	
 	public function moveEntryByEntryId($entry,$targetSelector){

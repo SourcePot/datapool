@@ -19,7 +19,7 @@ class DataExplorer{
 	private $entryTemplate=array();
 	
 	public $definition=array('Content'=>array('Style'=>array('Text'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-															'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Red','canvas-green'=>'Green','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'processor'),'@default'=>'canvas-std'),
+															'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Red','canvas-green'=>'Green','canvas-dark'=>'Dark','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'processor'),'@default'=>'canvas-std'),
 															'top'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
 															'left'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
 															),
@@ -39,8 +39,8 @@ class DataExplorer{
     
 	private $tags=array('run'=>array('tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'),'showEditMode'=>TRUE,'type'=>'Cntr','Read'=>'ALL_CONTENTADMIN_R'),
 						'edit'=>array('tag'=>'button','element-content'=>'⚙','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'),'showEditMode'=>FALSE,'type'=>'Cntr','Read'=>'ALL_CONTENTADMIN_R'),
-						
-						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R'),
+						'&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'),
+						'&#128337;'=>array('tag'=>'button','element-content'=>'&#128337;','keep-element-content'=>TRUE,'class'=>'canvas-trigger','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Trigger'),
 						'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R'),
 						'Text'=>array('tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R'),
 						'&larr;'=>array('tag'=>'div','element-content'=>'&larr;','keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>'Connectors','Read'=>'ALL_CONTENTADMIN_R'),
@@ -139,6 +139,11 @@ class DataExplorer{
 				$entry['Content']['Selector']['Source']=$this->arr[$entry['Folder']]->getEntryTable();
 				$entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
 			}
+			if (strpos($entry['element-content'],'&#128337;')!==FALSE){
+				$entry['Content']['Selector']['Source']=$this->arr[$entry['Folder']]->getEntryTable();
+				$entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasTrigger';
+			}
+
 		}
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_CONTENTADMIN_R');
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
@@ -252,7 +257,7 @@ class DataExplorer{
 		$elements=array();
 		$selector=$this->canvasSelector($callingClass);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
-			if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0){continue;}
+			if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0 || strcmp($entry['Content']['Style']['Text'],'&#128337;')===0){continue;}
 			$elements[$entry['Content']['Style']['Text']]=$entry;
 		}
 		ksort($elements);
@@ -324,7 +329,7 @@ class DataExplorer{
 			}
 		}
 		// canvas element
-		if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0){
+		if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0 && strcmp($canvasElement['Content']['Style']['Text'],'&#128337;')!==0){
 			$elmentInfo=array('tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')');
 			$text.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($elmentInfo);
 		}

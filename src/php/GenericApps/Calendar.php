@@ -22,6 +22,7 @@ class Calendar{
 								 'End'=>array('index'=>FALSE,'value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
 								 );
 
+	private $slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');
 	private $setting=array();
 
 	private $pageState=array();
@@ -518,7 +519,6 @@ class Calendar{
 	
 	public function getTriggerHtml($arr){
 		$html='';
-		$slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');
 		$eventSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Events');
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
@@ -542,10 +542,11 @@ class Calendar{
 		}
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Event selection','keep-element-content'=>TRUE));
 		// get trigger
+		$triggerInitName='Trigger '.hrtime(TRUE);
 		$eventSelectorString=implode('|',$eventSelector);
-		$contentStructure=array('Trigger name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Trigger name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','value'=>$triggerInitName,'excontainer'=>TRUE),
 								'Event selector'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelectorString,'excontainer'=>TRUE),
-								'Slope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>1,'options'=>$slopeOptions),
+								'Slope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>1,'options'=>$this->slopeOptions),
 								);
 		$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
 		$listArr=$arr['selector'];
@@ -556,19 +557,16 @@ class Calendar{
 		$listArr['callingFunction']=__FUNCTION__;
 		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($listArr);
 		// get current trigger state
+		$btnArr=$arr;
+		$btnArr['cmd']='Reset';
 		$matrix=array();
 		$triggerArr=$this->getTrigger();
 		foreach($triggerArr['trigger'] as $triggerId=>$trigger){
 			if (strcmp($trigger['selector']['Folder'],$arr['selector']['Folder'])!==0){continue;}
-			$matrix[$trigger['trigger name']]=array('Slope'=>$slopeOptions[intval($trigger['risingSlope'])]);
-			if ($trigger['detected event last time']){$class='status-on';} else {$class='status-off';}
-			$matrix[$trigger['trigger name']]['Past status']=array('tag'=>'div','class'=>$class,'keep-element-content'=>TRUE);
-			if ($trigger['detected event']){$class='status-on';} else {$class='status-off';}
-			$matrix[$trigger['trigger name']]['Current status']=array('tag'=>'div','class'=>$class,'keep-element-content'=>TRUE);
-			if ($trigger['active']){$class='status-on';} else {$class='status-off';}
-			$matrix[$trigger['trigger name']]['Active']=array('tag'=>'div','class'=>$class,'keep-element-content'=>TRUE);
-			$btnArr=$arr;
-			$btnArr['cmd']='Reset';
+			$matrix[$trigger['trigger name']]=array('Slope'=>$this->slopeOptions[intval($trigger['risingSlope'])]);
+			$matrix[$trigger['trigger name']]['Past status']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event last time']);
+			$matrix[$trigger['trigger name']]['Current status']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event']);
+			$matrix[$trigger['trigger name']]['Active']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['active']);
 			$btnArr['key']=array('Reset',$triggerId);
 			$matrix[$trigger['trigger name']]['Reset']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
 		}

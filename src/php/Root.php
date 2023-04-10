@@ -158,6 +158,7 @@ final class Root{
 		if (method_exists($arr[$classWithNamespace],'getEntryTable')){
 			$source=$arr[$classWithNamespace]->getEntryTable();
 			$arr['source2class'][$source]=$classWithNamespace;
+			$arr['class2source'][$classWithNamespace]=$source;
 		}
 		// get registered methods
 		foreach($methods2register as $method=>$invokeArgs){
