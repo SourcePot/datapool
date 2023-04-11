@@ -47,14 +47,14 @@ class DelayEntries{
 				if (empty($callingElement)){
 					return TRUE;
 				} else {
-					return $this->runDelayEntries($callingElement,$testRunOnly=FALSE);
+					return $this->runDelayEntries($callingElement,$testRunOnly=0);
 				}
 				break;
 			case 'test':
 				if (empty($callingElement)){
 					return TRUE;
 				} else {
-					return $this->runDelayEntries($callingElement,$testRunOnly=TRUE);
+					return $this->runDelayEntries($callingElement,$testRunOnly=1);
 				}
 				break;
 			case 'widget':
@@ -92,9 +92,11 @@ class DelayEntries{
 		$result=array();
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
-			$result=$this->runDelayEntries($arr['selector'],FALSE);
+			$result=$this->runDelayEntries($arr['selector'],0);
 		} else if (isset($formData['cmd']['test'])){
-			$result=$this->runDelayEntries($arr['selector'],TRUE);
+			$result=$this->runDelayEntries($arr['selector'],1);
+		} else if (isset($formData['cmd']['trigger'])){
+			$result=$this->runDelayEntries($arr['selector'],2);
 		}
 		// build html
 		$btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
@@ -105,6 +107,7 @@ class DelayEntries{
 		$btnArr['value']='Run';
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
+		$matrix['Commands']['Trigger']=array('tag'=>'button','element-content'=>'Manual trigger','key'=>array('trigger'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
 		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delaying widget'));
 		foreach($result as $caption=>$matrix){
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
@@ -182,8 +185,8 @@ class DelayEntries{
 		return $html;
 	}
 		
-	public function runDelayEntries($callingElement,$testRun=TRUE){
-		$base=array('Script start timestamp'=>time());
+	public function runDelayEntries($callingElement,$testRun=1){
+		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -209,8 +212,8 @@ class DelayEntries{
 		$result=$this->checkCondition($base,$callingElement,$result,$testRun);
 		//
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
+		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
 	}
 	
@@ -251,7 +254,13 @@ class DelayEntries{
 			$isFirstRule=FALSE;
 		}
 		// move or send entries
-		if ($result['Delaying statistics']['Condition met']['value']){
+		if ($testRun===2){
+			$testRun=FALSE;
+			$manualTrigger=TRUE;
+		} else {
+			$manualTrigger=FALSE;
+		}
+		if ($result['Delaying statistics']['Condition met']['value'] || $manualTrigger==2){
 			$result=$this->moveEntries($base,$callingElement,$result,$testRun);
 			$result=$this->sentEmail($base,$callingElement,$result,$testRun);
 		}
@@ -262,8 +271,7 @@ class DelayEntries{
 		}
 		$result['Delaying statistics']['Reset trigger']['value']=trim($result['Delaying statistics']['Reset trigger']['value'],' |');
 		// finalize documentation
-		$styleClass=$result['Delaying statistics']['Condition met']['value']?'status-on':'status-off';
-		$result['Delaying statistics']['Condition met']['value']=$result['Delaying statistics']['Condition met']['value']?'<span class="'.$styleClass.'">TRUE</span>':'<span class="'.$styleClass.'">FALSE</span>';
+		$result['Delaying statistics']['Condition met']['value']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($result['Delaying statistics']['Condition met']['value']);
 		if ($isDebugging){
 			$debugArr['trigger2reset']=$trigger2reset;
 			$debugArr['result']=$result;
@@ -274,12 +282,9 @@ class DelayEntries{
 	
 	private function moveEntries($base,$callingElement,$result,$testRun){
 		$params=current($base['delayingparams']);
-		$entryTemplate=$base['entryTemplates'][$params['Content']['Forward to canvas element']];
+		$entry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'action'=>'Enties moved');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
-			$entry=array_replace_recursive($entry,$entryTemplate);
-			if (!$testRun){
-				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entry,FALSE,array('Name'));
-			}
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun);
 			$result['Delaying statistics']['Moved entries']['value']++;
 		}
 		return $result;

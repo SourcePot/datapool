@@ -217,7 +217,7 @@ class ParseEntries{
 	}
 
 	private function runParseEntries($callingElement,$testRun=FALSE){
-		$base=array('Script start timestamp'=>time());
+		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -243,8 +243,8 @@ class ParseEntries{
 			$result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
 		}
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
+		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
 	}
 	
@@ -343,8 +343,8 @@ class ParseEntries{
 																  'Section name'=>$sectionName,
 																  'Match'=>$matchText,
 																  'Removed match'=>$matchRemoved,
-																  'Rule failed'=>($ruleFailed)?'<p style="color:#f00;font-weight:bold;">Failed</p>':'<p style="color:#0f0;">Success</p>',
-																  'Match required'=>($matchRequired)?'<p style="color:#fd0;">Yes</p>':'<p style="color:#0f0;">No</p>'
+																  'Rule failed'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed),
+																  'Match required'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($matchRequired),
 																  );
 				}
 				if (!empty($ruleFailed) && $matchRequired){
@@ -357,21 +357,11 @@ class ParseEntries{
 			$parserFailed='No text to parse';
 			$result['Parser statistics']['No text, skipped']['value']++;
 		}
-		if (!empty($parserFailed)){
-			$result['Parser statistics']['Failed']['value']++;
-			$targetEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Target on failure']]);
-			$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($parserFailed,'| '));
-			if ($testRun){
-				$result['Sample result (failed)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
-			} else {
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
-			}
-		} else {
+		if (empty($parserFailed)){
 			$result['Parser statistics']['Success']['value']++;
-			$selector=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Target on success']]);
-			$targetEntry=array_replace_recursive($sourceEntry,$selector,$targetEntry);
+			$sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
 			// wrapping up
-			foreach($targetEntry as $key=>$value){
+			foreach($sourceEntry as $key=>$value){
 				if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
 				if (!is_array($value)){continue;}
 				foreach($value as $subKey=>$subValue){
@@ -379,14 +369,16 @@ class ParseEntries{
 				}
 				// set order of array values
 				ksort($value);
-				$targetEntry[$key]=implode('|',$value);
+				$sourceEntry[$key]=implode('|',$value);
 			}
-			$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>TRUE);
-			if ($testRun){
-				$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
-			} else {
-				$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));
-			}
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Parsed entry');
+			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Target on success']],TRUE,$testRun);
+			$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+		} else {
+			$result['Parser statistics']['Failed']['value']++;
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($parserFailed,'| '));
+			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
+			$result['Sample result (failure)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		}
 		return $result;
 	}

@@ -638,23 +638,50 @@ class Database{
 		}
 		return FALSE;
 	}
-	
-	public function moveEntryOverwriteTraget($sourceEntry,$targetSelector=FALSE,$relevantKeys=array('Source','Group','Folder','Name')){
-		$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
-		if (!empty($targetSelector)){$targetEntry=array_replace_recursive($sourceEntry,$targetSelector);}
-		$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($sourceEntry,$relevantKeys,'0','',FALSE);
-		$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
-		if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])!==0){
-			if (is_file($sourceFile)){
-				@rename($sourceFile,$targetFile);
-				if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
-				$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$sourceFile,'new'=>$targetFile,'userId'=>$userId));
+		
+	public function moveEntryOverwriteTraget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE){
+		$userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
+		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
+			$targetEntry=array_replace_recursive($sourceEntry,$targetSelector);
+			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+			if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
+				$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'Target and source EntryId identical','userId'=>$userId);
+				if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
+			} else {
+				// move attached file
+				$fileRenameSuccess=TRUE;
+				$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
+				$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+				if (is_file($sourceFile)){
+					if (is_file($targetFile)){
+						if (unlink($targetFile)){
+							$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'success'=>'File detected at target location removed','userId'=>$userId);
+						} else {
+							$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'File detected at target location could not be removed','userId'=>$userId);
+						}
+					}
+					$fileRenameSuccess=@rename($sourceFile,$targetFile);
+				}
+				// move entry
+				if ($fileRenameSuccess){
+					$targetEntry['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$sourceFile,'new'=>$targetFile,'userId'=>$userId));
+					$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'success'=>'Moved from EntryId='.$sourceEntry['EntryId'],'userId'=>$userId);
+					if (!$isTestRun){
+						$this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
+						$targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
+					}			
+				} else {
+					$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'Failed to rename attached file, kept enrtry','userId'=>$userId);
+					if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
+				}
 			}
-			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']));
+		} else {
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'Write access denied','userId'=>$userId);
+			if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
 		}
-		return $this->updateEntry($targetEntry,TRUE);
+		return $targetEntry;
 	}
-	
+
 	public function moveEntryByEntryId($entry,$targetSelector){
 		$entryFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
 		$targetFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetSelector);

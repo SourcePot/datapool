@@ -204,7 +204,7 @@ class MapEntries{
 	}
 
 	private function runMapEntries($callingElement,$testRun=FALSE){
-		$base=array('Script start timestamp'=>time());
+		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -303,8 +303,8 @@ class MapEntries{
 			$this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
 		}
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
+		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
 	}
 	
@@ -335,26 +335,22 @@ class MapEntries{
 			ksort($value);
 			$targetEntry[$key]=implode('|',$value);
 		}
-		unset($sourceEntry['Content']);
-		unset($sourceEntry['Params']);
-		$targetEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$targetEntry);
 		$result['Mapping statistics']['Entries']['value']++;
-		$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'mode'=>$params['Content']['Mode']);
+		$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'mode'=>$params['Content']['Mode']);
 		if ($base['csvRequested'] || $base['zipRequested']){
+			unset($sourceEntry['Content']);
+			unset($sourceEntry['Params']);
+			$targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
 			$targetEntry['Name']=$base['Attachment name'];
 			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
 			if (!$testRun){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);}
 		} else {
-			if (!$testRun){$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($targetEntry,FALSE,array('Name'));}
+			$sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
+			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
 		}
-		if ($testRun){
-			if (isset($result['Sample result'])){
-				if (mt_rand(1,100)>50){$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);}
-			} else {
-				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
-			}
+		if (!isset($result['Sample result']) || mt_rand(0,100)>90){
+			$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		}
-		$result['Target']=array('Source'=>array('value'=>$targetEntry['Source']),'EntryId'=>array('value'=>$targetEntry['EntryId']),'Name'=>array('value'=>$targetEntry['Name']));
 		return $result;
 	}
 	

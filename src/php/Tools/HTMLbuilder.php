@@ -33,6 +33,15 @@ class HTMLbuilder{
 		return $this->arr;
 	}
 	
+	public function traceHtml($msg='This has happend:'){
+		$trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);	
+		$html='<p>'.$msg.'</p><ol>';
+		$html.='<li>1. '.$trace[1]['class'].'::'.$trace[1]['function'].'() '.$trace[0]['line'].'</li>';
+		$html.='<li>2. '.$trace[2]['class'].'::'.$trace[2]['function'].'() '.$trace[1]['line'].'</li>';
+		$html.='<li>3. '.$trace[3]['class'].'::'.$trace[3]['function'].'() '.$trace[2]['line'].'</li></ul>';
+		return $html;
+	}
+	
 	public function element($arr,$returnArr=FALSE){
 		// This function creates an HTML-element based on the arr argument.
 		// Special arr-keys are 
@@ -46,11 +55,7 @@ class HTMLbuilder{
 		// all other keys are attribute-keys of the element.
 		if (!isset($arr['html'])){$arr['html']='';}
 		if (empty($arr['tag'])){
-			$trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,4);
-			$arr['html'].='<br/>Problem: Method "'.__FUNCTION__.'" was called with empty arr["tag"] by...';
-			$arr['html'].='<br/>1. '.$trace[0]['class'].'::'.$trace[0]['function'].'() '.__LINE__;
-			$arr['html'].='<br/>2. '.$trace[1]['class'].'::'.$trace[1]['function'].'() '.$trace[0]['line'];
-			$arr['html'].='<br/>3. '.$trace[2]['class'].'::'.$trace[2]['function'].'() '.$trace[1]['line'].'<br/>';
+			$arr['html']=$this->traceHtml('Problem: Method "'.__FUNCTION__.'" was called with empty arr["tag"] by...');
 		} else {
 			if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 			if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION__;}
@@ -192,10 +197,17 @@ class HTMLbuilder{
 		// 'matrix' ... is the table matrix with the format: arr[matrix][row-index]=array(column-index => column-value, ..., last column-index => last column-value)
 		// 'caption' ... is the table caption
 		// 'skipEmptyRows' ... if TRUE rows with empty cells only will be skipped
-		$hasNoRows=TRUE;
 		$html='';
+		$hasRows=TRUE;
 		$toReplace=array();
-		if (!empty($arr['matrix'])){
+		if (!isset($arr['matrix'])){
+			$msg='<p>'.__CLASS__.'&rarr;'.__FUNCTION__.' called with arr[matrix] missing.</p>';	
+			$html=$this->traceHtml($msg);
+		} else if (!is_array($arr['matrix'])){
+			$msg='<p>'.__CLASS__.'&rarr;'.__FUNCTION__.' called with type arr[matrix] being '.gettype($arr['matrix']).'. should be an array.</p>';
+			$html=$this->traceHtml($msg);
+		} else if (!empty($arr['matrix'])){
+			$hasRows=FALSE;
 			if (empty($arr['style'])){
 				$html.='<table {{class}}>'.PHP_EOL;
 			} else {
@@ -227,22 +239,22 @@ class HTMLbuilder{
 						if (empty($arr['keep-element-content'])){$cell=htmlspecialchars(strval($cell),ENT_QUOTES,'UTF-8');}
 					}
 					if (!empty($cell)){$allCellsEmpty=FALSE;}
-					$toReplace['{{thead}}'].='<th {{class}}>'.$column.'</th>';
+					$toReplace['{{thead}}'].='<th {{class}}>'.ucfirst($column).'</th>';
 					$newRow.='<td {{class}} cell="'.$cellIndex.'-'.$rowIndex.'">'.$cell.'</td>';
 					$cellIndex++;					
 				}
 				$newRow.='</tr>'.PHP_EOL;
 				$toReplace['{{thead}}'].='</tr>'.PHP_EOL;
 				if (!$allCellsEmpty || empty($arr['skipEmptyRows'])){
-					$hasNoRows=FALSE;
+					$hasRows=TRUE;
 					$toReplace['{{tbody}}'].=$newRow;
 				}
 				$rowIndex++;
-			}	
+			}
+			if (empty($hasRows)){$html='';}
+			if (empty($arr['class'])){$toReplace['{{class}}']='';} else {$toReplace['{{class}}']=$arr['class'];}
+			foreach($toReplace as $needle=>$value){$html=str_replace($needle,$value,$html);}
 		}
-		if ($hasNoRows){$html='';}
-		if (empty($arr['class'])){$toReplace['{{class}}']='';} else {$toReplace['{{class}}']=$arr['class'];}
-		foreach($toReplace as $needle=>$value){$html=str_replace($needle,$value,$html);}
 		if ($returnArr){
 			$arr['html']=$html;
 			return $arr;

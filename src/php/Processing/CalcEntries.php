@@ -116,12 +116,12 @@ class CalcEntries{
 		$matrix['Commands']['Run']=$btnArr;
 		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Calculate widget'));
 		foreach($result as $caption=>$matrix){
+			if (!is_array($matrix)){continue;}
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
 		return $arr;
 	}
-
 
 	private function getCalcEntriesSettings($callingElement){
 		$html='';
@@ -202,7 +202,7 @@ class CalcEntries{
 	private function failureRules($callingElement){
 		$addKeys=array('0001'=>'Result 0001','0002'=>'Result 0002','0003'=>'Result 0003','0004'=>'Result 0004','0005'=>'Result 0005','0006'=>'Result 0006','0007'=>'Result 0007','0008'=>'Result 0008','0009'=>'Result 0009');
 		$contentStructure=array('Value'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
-								'Failure if Result...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'stripos','options'=>$this->failureCondition),
+								'Failure if Result...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>$this->failureCondition),
 								'Compare value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['Value']+=$callingElement['Content']['Selector'];
@@ -219,7 +219,7 @@ class CalcEntries{
 	private function conditionalValueRules($callingElement){
 		$addKeys=array('0001'=>'Result 0001','0002'=>'Result 0002','0003'=>'Result 0003','0004'=>'Result 0004','0005'=>'Result 0005','0006'=>'Result 0006','0007'=>'Result 0007','0008'=>'Result 0008','0009'=>'Result 0009');
 		$contentStructure=array('Condition'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
-								'Use value if...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'eq','options'=>$this->conditionalValue),
+								'Use value if...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>$this->conditionalValue),
 								''=>array('htmlBuilderMethod'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
 								'Value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
@@ -238,7 +238,7 @@ class CalcEntries{
 	}
 
 	private function runCalcEntries($callingElement,$testRun=FALSE){
-		$base=array('Script start timestamp'=>time());
+		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -268,8 +268,8 @@ class CalcEntries{
 			$result=$this->calcEntry($base,$sourceEntry,$result,$testRun);
 		}
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
+		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
 	}
 	
@@ -277,7 +277,6 @@ class CalcEntries{
 		$debugArr=array();
 		$log='';
 		$params=current($base['calculationparams']);
-		$targetEntry=array();
 		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
 		// loop through calculation rules
 		if (!empty($base['calculationrules'])){
@@ -310,6 +309,7 @@ class CalcEntries{
 		// loop through conditional value rules
 		if (!empty($base['conditionalvaluerules'])){
 			foreach($base['conditionalvaluerules'] as $ruleEntryId=>$rule){
+				$ruleIndex=substr($ruleEntryId,0,strpos($ruleEntryId,'__'));
 				if (isset($result[$rule['Content']['Condition']])){
 					$value=$result[$rule['Content']['Condition']];
 				} else if (isset($flatSourceEntry[$rule['Content']['Condition']])){
@@ -324,15 +324,20 @@ class CalcEntries{
 					'ne'=>floatval($value)!=0,
 				};
 				if ($conditionMet){
-					$log.='|Value condition '.$ruleEntryId.' met: '.floatval($value).$this->conditionalValue[$rule['Content']['Use value if...']];
+					$log.='|Value condition '.$ruleIndex.' met: '.floatval($value).$this->conditionalValue[$rule['Content']['Use value if...']];
 					$sourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$rule['Content']['Value'];
 				}
+				$result['Conditional value rules'][$ruleIndex]=array('Condition'=>$value,
+																	   'Use value if'=>$this->conditionalValue[$rule['Content']['Use value if...']],
+																	   'Condition met'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet),
+																	   );
 			}
 		}
 		// loop through failurerules rules
 		$failureMet=FALSE;
 		if (!empty($base['failurerules'])){
 			foreach($base['failurerules'] as $ruleEntryId=>$rule){
+				$ruleIndex=substr($ruleEntryId,0,strpos($ruleEntryId,'__'));
 				if (isset($result[$rule['Content']['Value']])){
 					$value=$result[$rule['Content']['Value']];
 				} else if (isset($flatSourceEntry[$rule['Content']['Value']])){
@@ -351,9 +356,15 @@ class CalcEntries{
 					'ne'=>floatval($value)!=floatval($rule['Content']['Compare value']),
 				};
 				if ($failureMet){
-					$log.='|Failure condition '.$ruleEntryId.' met: '.floatval($value).$this->failureCondition[$rule['Content']['Failure if Result...']].floatval($rule['Content']['Compare value']);
+					$log.='|Failure condition '.$ruleIndex.' met: '.floatval($value).$this->failureCondition[$rule['Content']['Failure if Result...']].floatval($rule['Content']['Compare value']);
 					break;
 				}
+				$result['Failure rules'][$ruleIndex]=array('Value'=>$value,
+														   'Failure if Result'=>$this->failureCondition[$rule['Content']['Failure if Result...']],
+														   'Compare value'=>$rule['Content']['Compare value'],
+														   'Condition met'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($failureMet),
+														   );
+			
 			}
 		}
 		// wrapping up
@@ -369,24 +380,20 @@ class CalcEntries{
 		}
 		$result['Calculate statistics']['Entries']['value']++;
 		if ($failureMet){
-			$sourceEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']]);
-			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($log,'| '));
 			$result['Calculate statistics']['Failure']['value']++;
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($log,'| '));
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun);
+				if (!isset($result['Sample result (failure)']) || mt_rand(0,100)>90){
+				$result['Sample result (failure)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
+			}	
 		} else {
-			$sourceEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']]);
-			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>trim($log,'| '));
 			$result['Calculate statistics']['Success']['value']++;
+			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>trim($log,'| '));
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
+				if (!isset($result['Sample result (success)']) || mt_rand(0,100)>90){
+				$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
+			}		
 		}
-		if ($testRun){
-			if (isset($result['Sample result'])){
-				if (mt_rand(1,100)>50){$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);}
-			} else {
-				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
-			}
-		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE);
-		}
-		$result['Target']=array('Source'=>array('value'=>$sourceEntry['Source']),'EntryId'=>array('value'=>$sourceEntry['EntryId']),'Name'=>array('value'=>$sourceEntry['Name']));
 		return $result;
 	}
 	

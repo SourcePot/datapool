@@ -395,12 +395,8 @@ class DataExplorer{
 		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R')){return '';}
 		//
 		$selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass));
-		$processingAbsDir=$GLOBALS['dirs']['php'].'/Processing';
-		$processingClasses=scandir($processingAbsDir);
-		foreach($processingClasses as $processingClass){
-			$extensionPos=strpos($processingClass,'.php');
-			if ($extensionPos===FALSE){continue;}
-			$source=strtolower(substr($processingClass,0,$extensionPos));
+		foreach($this->arr['registered methods']['dataProcessor'] as $classWithNamespace=>$ret){
+			$source=$this->arr['class2source'][$classWithNamespace];
 			$selectors[$source]=array('Source'=>$source,'Folder'=>$callingClass);
 		}
 		$callingClassName=substr($callingClass,strrpos($callingClass,'\\')+1);

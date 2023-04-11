@@ -187,7 +187,7 @@ class MatchEntries{
 	}
 		
 	public function runMatchEntries($callingElement,$testRun=TRUE){
-		$base=array('Script start timestamp'=>time());
+		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -209,7 +209,6 @@ class MatchEntries{
 												 'Skipped entries B'=>array('value'=>0),
 												 'Matched'=>array('value'=>0),
 												 'Failed'=>array('value'=>0),
-												 'Kept entry'=>array('value'=>0),
 												 'Skip rows'=>array('value'=>0),
 												 )
 					 );
@@ -226,8 +225,8 @@ class MatchEntries{
 			$result=$this->matchEntry($base,$entryA,$result,$testRun);
 		}
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
+		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
 	}
 	
@@ -250,33 +249,28 @@ class MatchEntries{
 			$success=TRUE;
 			break;
 		}
-		$doNothing=FALSE;
 		if ($success){
 			$result['Matching statistics']['Matched']['value']++;
+			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Match column "'.$columnToMatch.'" successful');
 			if (isset($base['entryTemplates'][$params['Content']['Match success']])){
-				$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match success']]);
+				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
 			} else {
-				$doNothing=TRUE;
+				$result['Matching statistics']['Kept entry']['value']++;
+			}
+			if (!isset($result['Sample result (match)']) || mt_rand(0,100)>90){
+				$result['Sample result (match)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
 			}
 		} else {
 			$result['Matching statistics']['Failed']['value']++;
+			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Match column "'.$columnToMatch.'" failed');
 			if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
-				$entryA=array_replace_recursive($entryA,$base['entryTemplates'][$params['Content']['Match failure']]);
+				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
 			} else {
-				$doNothing=TRUE;
+				$result['Matching statistics']['Kept entry']['value']++;
 			}
-		}
-		$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'match'=>$success);
-		if ($testRun){
-			if (isset($result['Sample result'])){
-				if (mt_rand(1,100)>50){$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);}
-			} else {
-				$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
+			if (!isset($result['Sample result (failed)']) || mt_rand(0,100)>90){
+				$result['Sample result (failed)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
 			}
-		} else if ($doNothing){
-			$result['Matching statistics']['Kept entry']['value']++;
-		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,FALSE,array('Name'));
 		}
 		return $result;
 	}

@@ -175,7 +175,7 @@ class CanvasTrigger{
 		
 	public function runCanvasTrigger($callingElement,$isTestRun=TRUE){
 		// get canvas processing rules
-		$base=array('Script start timestamp'=>time(),'canvastriggerrules'=>array());
+		$base=array('Script start timestamp'=>hrtime(TRUE),'canvastriggerrules'=>array());
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
@@ -240,8 +240,8 @@ class CanvasTrigger{
 		$triggerEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($triggerEntry,TRUE);
 		//
 		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-		$result['Statistics']['Script start']=array('Value'=>date('Y-m-d H:i:s',$base['Script start timestamp']));
-		$result['Statistics']['Time consumption [sec]']=array('Value'=>time()-$base['Script start timestamp']);
+		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
+		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
 	}
 	
