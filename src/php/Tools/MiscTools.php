@@ -75,12 +75,18 @@ class MiscTools{
 	}
 	
 	public function str2bool($str){
-		return boolval(intval($str));
+		if (is_bool($str)){
+			return $str;
+		} else if (is_numeric($str)){
+			return boolval(intval($str));
+		} else {
+			return !empty($str);
+		}
 	}
 	
 	public function bool2element($value,$element=array()){
 		$boolval=$this->str2bool($value);
-		$element['class']=$value?'status-on':'status-off';
+		$element['class']=$boolval?'status-on':'status-off';
 		if (!isset($element['element-content'])){$element['element-content']=$boolval?'TRUE':'FALSE';}
 		if (!isset($element['tag'])){$element['tag']='p';}
 		return $element;

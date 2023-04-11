@@ -343,8 +343,8 @@ class ParseEntries{
 																  'Section name'=>$sectionName,
 																  'Match'=>$matchText,
 																  'Removed match'=>$matchRemoved,
-																  'Rule failed'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed),
 																  'Match required'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($matchRequired),
+																  'Rule failed'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($ruleFailed) && $matchRequired),
 																  );
 				}
 				if (!empty($ruleFailed) && $matchRequired){
