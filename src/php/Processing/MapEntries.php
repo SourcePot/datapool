@@ -348,6 +348,9 @@ class MapEntries{
 			$sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
 			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
 		}
+		$result['Target']['Source']['value']=$targetEntry['Source'];
+		$result['Target']['EntryId']['value']=$targetEntry['EntryId'];
+		$result['Target']['Name']['value']=$targetEntry['Name'];
 		if (!isset($result['Sample result']) || mt_rand(0,100)>90){
 			$result['Sample result']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		}
