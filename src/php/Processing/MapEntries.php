@@ -346,7 +346,7 @@ class MapEntries{
 			if (!$testRun){$this->arr['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);}
 		} else {
 			$sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
-			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
+			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
 		}
 		$result['Target']['Source']['value']=$targetEntry['Source'];
 		$result['Target']['EntryId']['value']=$targetEntry['EntryId'];

@@ -382,14 +382,14 @@ class CalcEntries{
 		if ($failureMet){
 			$result['Calculate statistics']['Failure']['value']++;
 			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($log,'| '));
-			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun);
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun);
 				if (!isset($result['Sample result (failure)']) || mt_rand(0,100)>90){
 				$result['Sample result (failure)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
 			}	
 		} else {
 			$result['Calculate statistics']['Success']['value']++;
 			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>trim($log,'| '));
-			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
 				if (!isset($result['Sample result (success)']) || mt_rand(0,100)>90){
 				$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
 			}		

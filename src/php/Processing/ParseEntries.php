@@ -372,12 +372,12 @@ class ParseEntries{
 				$sourceEntry[$key]=implode('|',$value);
 			}
 			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Parsed entry');
-			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Target on success']],TRUE,$testRun);
+			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on success']],TRUE,$testRun);
 			$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		} else {
 			$result['Parser statistics']['Failed']['value']++;
 			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($parserFailed,'| '));
-			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
+			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
 			$result['Sample result (failure)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		}
 		return $result;

@@ -253,7 +253,7 @@ class MatchEntries{
 			$result['Matching statistics']['Matched']['value']++;
 			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Match column "'.$columnToMatch.'" successful');
 			if (isset($base['entryTemplates'][$params['Content']['Match success']])){
-				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
+				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
 			} else {
 				$result['Matching statistics']['Kept entry']['value']++;
 			}
@@ -264,7 +264,7 @@ class MatchEntries{
 			$result['Matching statistics']['Failed']['value']++;
 			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Match column "'.$columnToMatch.'" failed');
 			if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
-				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
+				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
 			} else {
 				$result['Matching statistics']['Kept entry']['value']++;
 			}

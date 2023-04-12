@@ -639,7 +639,7 @@ class Database{
 		return FALSE;
 	}
 		
-	public function moveEntryOverwriteTraget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE){
+	public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE){
 		$userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
 			$targetEntry=array_replace_recursive($sourceEntry,$targetSelector);

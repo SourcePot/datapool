@@ -284,7 +284,7 @@ class DelayEntries{
 		$params=current($base['delayingparams']);
 		$entry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'action'=>'Enties moved');
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTraget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun);
 			$result['Delaying statistics']['Moved entries']['value']++;
 		}
 		return $result;
