@@ -262,7 +262,7 @@ class MatchEntries{
 			}
 		} else {
 			$result['Matching statistics']['Failed']['value']++;
-			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Match column "'.$columnToMatch.'" failed');
+			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failure'=>'Match column "'.$columnToMatch.'" failed');
 			if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
 				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
 			} else {
