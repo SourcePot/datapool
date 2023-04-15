@@ -60,7 +60,7 @@ class Forum{
 			$arr=$this->addYearSelector2menu($arr);
 			$entryHtml=$this->newEntryHtml();
 			$entryHtml.=$this->loadForumEntries();
-			$arr['page html']=str_replace('{{content}}',$entryHtml,$arr['page html']);
+			$arr['toReplace']['{{content}}']=$entryHtml;
 			return $arr;
 		}
 	}
@@ -77,7 +77,7 @@ class Forum{
 		for($year=$startYear;$year>$startYear-10;$year--){
 			$options[$year]='Year '.$year;
 		}
-		$arr['toReplace']['{{firstMenuBar}}']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selectedYear,'key'=>array('Year'),'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		$arr['toReplace']['{{firstMenuBarExt}}']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selectedYear,'key'=>array('Year'),'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $arr;
 	}
 	

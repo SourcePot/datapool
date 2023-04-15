@@ -52,7 +52,7 @@ class Settings{
 			$arr=$this->arr['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
 			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
-			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
+			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}

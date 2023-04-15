@@ -49,22 +49,21 @@ class Admin{
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9781;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);
 		} else {
-			$arr=$this->logsArticle($arr);
-			$arr=$this->backupArticle($arr);
-			$arr['page html']=str_replace('{{content}}',$arr['html'],$arr['page html']);
+			$html=$this->logsArticle();
+			$html.=$this->backupArticle();
+			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}
 	
-	public function logsArticle($arr){
-		if (!isset($arr['html'])){$arr['html']='';}
+	public function logsArticle(){
 		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\Logging']->getEntryTable());
-		$arr['html']=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Log entries','entryList',$selector,array(),array());
-		return $arr;
+		$settings=array();
+		$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>'log'),array('Column'=>'Content|[]|Message','Filter'=>''));
+		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Log entries','entryList',$selector,$settings,array());
 	}
 	
-	public function backupArticle($arr){
-		if (!isset($arr['html'])){$arr['html']='';}
+	public function backupArticle(){
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -121,8 +120,7 @@ class Admin{
 		$btnArr['hasCover']=TRUE;
 		$matrix['Recover from file']=array('Input'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileArr),'Cmd'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
 		$tableHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
-		return $arr;
+		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
 	}
 	
 }

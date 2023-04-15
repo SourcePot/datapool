@@ -78,14 +78,13 @@ class Menu{
 		return $arr;
 	}
 		
-	public function menu(){
-		$html='';
-		$html.=$this->firstMenuBar();
-		$html.=$this->secondMenuBar();
-		return $html;
+	public function menu($arr){
+		$arr=$this->firstMenuBar($arr);
+		$arr=$this->secondMenuBar($arr);
+		return $arr;
 	}
 	
-	private function firstMenuBar(){
+	private function firstMenuBar($arr){
 		$options=array();
 		$selected=FALSE;
 		foreach($this->available['Apps'] as $class=>$def){
@@ -98,13 +97,14 @@ class Menu{
 		if (!empty($options)){
 			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selected,'key'=>array('Class'),'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
-		$html.='{{firstMenuBar}}';
+		$html.='{{firstMenuBarExt}}';
 		$html.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu'));
-		return $html;
+		$arr['toReplace']['{{firstMenuBar}}']=$html;
+		return $arr;
 	}
 	
-	private function secondMenuBar(){
+	private function secondMenuBar($arr){
 		$html='';
 		foreach($this->available['Categories'] as $category=>$def){
 			$def['Category']=$category;
@@ -112,7 +112,8 @@ class Menu{
 		}		
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE));
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'second-menu','style'=>'height:0;'));
-		return $html;
+		$arr['toReplace']['{{secondMenuBar}}']=$html;
+		return $arr;
 	}
 
 	private function def2div($def){

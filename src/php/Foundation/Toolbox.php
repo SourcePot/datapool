@@ -64,7 +64,7 @@ class Toolbox{
 		return $html;
 	}
 	
-	public function getToolbox(){
+	public function getToolbox($arr){
 		$menuHtml=$this->getToolboxMenu();
 		if (empty($_SESSION['page state']['toolbox'])){return '';}
 		$toolbox=array('Source'=>$this->entryTable,'EntryId'=>$_SESSION['page state']['toolbox']);
@@ -79,10 +79,12 @@ class Toolbox{
 		$toolboxProviderMethod=$toolbox['Content']['method'];
 		$toolboxProviderArgs=$toolbox['Content']['args'];
 		$toolbox=array('Name'=>'Logs','class'=>__CLASS__,'method'=>'showLogs','args'=>array('maxCount'=>10),'settings'=>array());
-		$arr=array('class'=>'toolbox','icon'=>'+','default-min-width'=>'100%','default-max-width'=>'100%','default-max-height'=>'80px');
-		$arr['html']=$this->arr[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
-		$toolboxHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		return $menuHtml.$toolboxHtml;
+		$appArr=array('class'=>'toolbox','icon'=>'+','default-min-width'=>'100%','default-max-width'=>'100%','default-max-height'=>'80px');
+		$appArr['html']=$this->arr[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
+		$toolboxHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
+		$arr['toReplace']['{{toolbox}}']=$menuHtml.$toolboxHtml;
+		return $arr;
+		
 	}
 }
 ?>

@@ -54,94 +54,83 @@ class Backbone{
 	}
 	
 	public function addHtmlPageBackbone($arr){
+		$arr['formName']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(30);
+		$arr['toReplace']=array('{{head}}'=>'',
+								'{{body}}'=>'',
+								'{{content}}'=>'Page content is missing...',
+								'{{firstMenuBar}}'=>'',
+								'{{firstMenuBarExt}}'=>'',
+								'{{secondMenuBar}}'=>'',
+								'{{explorer}}'=>'',
+								);
+		$arr['page html']='';
 		$arr['page html'].="<!DOCTYPE html>".PHP_EOL;
 		$arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$_SESSION['page state']['lngCode'].'">'.PHP_EOL;
-		$arr['page html'].="{{head}}".PHP_EOL;
-		$arr['page html'].="{{body}}".PHP_EOL;
+		// page header
+		$arr['page html'].='<head>'.PHP_EOL;
+		$arr['page html'].='<meta charset="'.$this->settings['charset'].'">'.PHP_EOL;
+		$arr['page html'].='<meta name="viewport" content="width=device-width, initial-scale=0.8">'.PHP_EOL;
+		$arr['page html'].='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
+		$arr['page html'].='{{head}}'.PHP_EOL;
+		$arr['page html'].='</head>'.PHP_EOL;
+		// page body
+		$arr['page html'].='<body>'.PHP_EOL;
+		$arr['page html'].='<form name="'.$arr['formName'].'" method="post" enctype="multipart/form-data">'.PHP_EOL;
+		$arr['page html'].='{{body}}'.PHP_EOL;
+		$arr['page html'].='</form>'.PHP_EOL;
+		$arr['page html'].='</body>'.PHP_EOL;
 		$arr['page html'].="</html>";
 		return $arr;
 	}
-
+	
 	public function addHtmlPageHeader($arr){
-		$icoFileInclude='';
-		$cssFileInclude='';
-		$jsFileInclude='';
-		if (is_dir($GLOBALS['dirs']['media'])){
-			// add ico file
-			$icoFileInclude='';
-			if (!empty($this->settings['iconFile'])){
-				$href=$this->mediaFile2href($this->settings['iconFile']);
-				if ($href){$icoFileInclude.='<link rel="shortcut icon" href="'.$href.'">'.PHP_EOL;}
-			}
-			// css-files
-			$cssFileInclude='';
-			if (!empty($this->settings['cssFiles'])){
-				foreach($this->settings['cssFiles'] as $fileName){
-					if (strpos($fileName,'://')===FALSE){
-						$href=$this->mediaFile2href($fileName);
-					} else {
-						$href=$fileName;
+		$headerFiles=array('iconFile'=>'<link rel="shortcut icon" href="{{iconFile}}">',
+						   'cssFiles'=>'<link type="text/css" rel="stylesheet" href="{{cssFiles}}">',
+						   'jsFiles'=>'<script src="{{jsFiles}}"></script>',
+						   );
+		foreach($headerFiles as $settingsKey=>$template){
+			if (!empty($headerFiles=$this->settings[$settingsKey])){
+				if (!is_array($headerFiles)){$headerFiles=array($headerFiles);}
+				foreach($headerFiles as $fileName){
+					$href=(strpos($fileName,'://')===FALSE)?$this->mediaFile2href($fileName):$fileName;
+					if ($href){
+						$arr['toReplace']['{{head}}'].=str_replace('{{'.$settingsKey.'}}',$href,$template).PHP_EOL;
 					}
-					if ($href){$cssFileInclude.='<link type="text/css" rel="stylesheet" href="'.$href.'" />'.PHP_EOL;}
 				}
 			}
-			// js-files
-			$jsFileInclude='';
-			if (!empty($this->settings['jsFiles'])){
-				foreach($this->settings['jsFiles'] as $fileName){
-					if (strpos($fileName,'://')===FALSE){	
-						$href=$this->mediaFile2href($fileName);
-					} else {
-						$href=$fileName;
-					}
-					if ($href){$jsFileInclude.='<script src="'.$href.'"></script>'.PHP_EOL;}
-				}
-			}
-		} else {
-			throw new \ErrorException('Function '.__FUNCTION__.': Media dir "'.$GLOBALS['dirs']['media'].'" is missing.',0,E_ERROR,__FILE__,__LINE__);
 		}
-		$head='';
-		$head.='<head>'.PHP_EOL;
-		$head.='<meta charset="'.$this->settings['charset'].'">'.PHP_EOL;
-		$head.='<meta name="viewport" content="width=device-width, initial-scale=0.8">'.PHP_EOL;
-		$head.='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
-		$head.=$icoFileInclude;
-		$head.=$jsFileInclude;
-		$head.=$cssFileInclude;
-		$head.='</head>'.PHP_EOL;
-		$arr['page html']=str_replace('{{head}}',$head,$arr['page html']);
 		return $arr;
 	}
 
 	public function addHtmlPageBody($arr){
-		$mainTagArr=array('tag'=>'main','element-content'=>"{{explorer}}".PHP_EOL."{{content}}".PHP_EOL,'keep-element-content'=>TRUE);
-		if (strcmp($_SESSION['page state']['app']['Category'],'Login')===0){
-			$imageFile=$this->settings['loginBackgroundImageFile'];
+		$imageFile=(strcmp($_SESSION['page state']['app']['Category'],'Login')===0)?$this->settings['loginBackgroundImageFile']:$this->settings['mainBackgroundImageFile'];
+		if ($src=$this->mediaFile2href($imageFile)){
+			$mainStyle=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');
 		} else {
-			$imageFile=$this->settings['mainBackgroundImageFile'];
+			$mainStyle=array();
 		}
-		$src=$this->mediaFile2href($imageFile);
-		if ($src){$mainTagArr['style']=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');}
-		$body=$this->arr['SourcePot\Datapool\Foundation\Menu']->menu().PHP_EOL;
-		$body.='<div class="filler" id="top-filler"></div>'.PHP_EOL;
-		$body.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($mainTagArr);
-		$body.='<div class="filler" id="bottom-filler"></div>'.PHP_EOL;
-		$body.=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->getToolbox().PHP_EOL;
-		$body.='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
-		$body.='<script>jQuery("article").hide();</script>'.PHP_EOL;
-		$name=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(30);;
-		$body='<form name="'.$name.'" method="post" enctype="multipart/form-data">'.PHP_EOL.$body.'</form>'.PHP_EOL;
-		$body='<body>'.PHP_EOL.$body.'</body>'.PHP_EOL;
-		$arr['page html']=str_replace('{{body}}',$body,$arr['page html']);
+		$arr['toReplace']['{{body}}'].='{{firstMenuBar}}'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='{{secondMenuBar}}'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='<div class="filler" id="top-filler"></div>'.PHP_EOL;
+		// main
+		$arr['toReplace']['{{body}}'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'main','style'=>$mainStyle)).PHP_EOL;
+		$arr['toReplace']['{{body}}'].='{{explorer}}'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='{{content}}'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='</main>'.PHP_EOL;
+		// en of page		
+		$arr['toReplace']['{{body}}'].='<div class="filler" id="bottom-filler"></div>'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='{{toolbox}}'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
+		$arr['toReplace']['{{body}}'].='<script>jQuery("article").hide();</script>'.PHP_EOL;
+		$arr=$this->arr['SourcePot\Datapool\Foundation\Menu']->menu($arr);
+		$arr=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->getToolbox($arr);
 		return $arr;
 	}
 	
 	public function finalizePage($arr){
-		// This method is called last
-		if (!isset($arr['toReplace']['{{firstMenuBar}}'])){$arr['toReplace']['{{firstMenuBar}}']='';}
-		if (!isset($arr['toReplace']['{{explorer}}'])){$arr['toReplace']['{{explorer}}']='';}
-		if (!isset($arr['toReplace']['{{content}}'])){$arr['toReplace']['{{content}}']='Page content is missing...';}
-		foreach($arr['toReplace'] as $needle=>$replacement){$arr['page html']=str_replace($needle,$replacement,$arr['page html']);}
+		foreach($arr['toReplace'] as $needle=>$replacement){
+			$arr['page html']=str_replace($needle,$replacement,$arr['page html']);
+		}
 		return $arr;
 	}
 	

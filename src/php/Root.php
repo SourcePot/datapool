@@ -45,7 +45,6 @@ final class Root{
 		if (empty($_SESSION['page state'])){
 			$_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>FALSE,'selected'=>array());
 		}
-		$arr['page html']='';
 		$arr['registered methods']=array();
 		// load all external components
 		$_SESSION['page state']['autoload.php loaded']=FALSE;

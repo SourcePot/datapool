@@ -159,7 +159,7 @@ class Calendar{
 			$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
 			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId'],'refreshInterval'=>300);
 			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
-			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
+			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}

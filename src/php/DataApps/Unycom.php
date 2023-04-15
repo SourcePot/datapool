@@ -59,8 +59,8 @@ class Unycom{
 					$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$pageState,array(),array());
 				}
 			}
-			$arr['page html']=str_replace('{{explorer}}',$explorerArr['explorerHtml'],$arr['page html']);
-			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
+			$arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
+			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}

@@ -37,7 +37,7 @@ class Login{
 		if ($arr===TRUE){
 			return array('Category'=>'Login','Emoji'=>'&#8688;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
 		} else {
-			$arr['page html']=str_replace('{{content}}',$this->getLoginForm(),$arr['page html']);
+			$arr['toReplace']['{{content}}']=$this->getLoginForm();
 			return $arr;
 		}
 	}

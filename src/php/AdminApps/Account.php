@@ -38,7 +38,7 @@ class Account{
 			return array('Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
 		} else {
 			$html=$this->account();
-			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
+			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}
@@ -48,9 +48,15 @@ class Account{
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 			// is admin
 			$user=array('Source'=>$this->entryTable);
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,array(),array());	
+			$settings=array();
+			$settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges','Filter'=>''));
+			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,$settings,array());	
 			$userSelector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($this->arr['source2class'][$user['Source']]);
-			if (isset($userSelector['EntryId'])){$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);} else {$user=array('Source'=>$this->entryTable,'Type'=>'user');}
+			if (isset($userSelector['EntryId'])){
+				$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);
+			} else {
+				$user=array('Source'=>$this->entryTable,'Type'=>'user');
+			}
 		} else {
 			// is non-admin user
 			$user=$_SESSION['currentUser'];

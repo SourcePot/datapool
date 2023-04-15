@@ -35,7 +35,7 @@ class Explorer{
 		$this->formProcessing($callingClass);
 		$this->getGuideEntries($callingClass);
 		$html=$this->getForm($callingClass);
-		$arr['page html']=str_replace('{{explorer}}',$html,$arr['page html']);
+		$arr['toReplace']['{{explorer}}']=$html;
 		return $arr;
 	}
 	

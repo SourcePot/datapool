@@ -62,7 +62,7 @@ private $entryTable;
 			if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 				$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Section administration','generic',$sectionSelector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
 			}
-			$arr['page html']=str_replace('{{content}}',$html,$arr['page html']);
+			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}
