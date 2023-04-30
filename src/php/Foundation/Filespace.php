@@ -406,10 +406,10 @@ class Filespace{
 			// save file content to tmp dir
 			$tmpDir=$this->getTmpDir();
 			$entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
-			$entry['mimeType']=mime_content_type($entry['Params']['File']['Source']);
-			$entry['pathArr']=pathinfo($entry['Params']['File']['Source']);
 			$bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
 			if ($bytes===FALSE){return FALSE;}
+			$entry['mimeType']=mime_content_type($entry['Params']['File']['Source']);
+			$entry['pathArr']=pathinfo($entry['Params']['File']['Source']);
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
 		}
 		$entry['currentUser']=(empty($_SESSION['currentUser']))?array('EntryId'=>'ANONYM','Name'=>'ANONYM'):$_SESSION['currentUser'];

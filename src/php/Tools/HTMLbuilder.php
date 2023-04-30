@@ -598,10 +598,12 @@ class HTMLbuilder{
 		return $html;
 	}
 
+	/**
+	* This method returns an html-table containing a file upload facility as well as the gerenic buttons 'remove' and 'delete'.
+	* $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
+	* @return string
+	*/
 	public function entryControls($arr){
-		// This method returns html with a file upload facility and buttons to 
-		// 'download' an attached file, 'remove' the attached file and 'delete' the entry.
-		// $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
 		if (!isset($arr['selector'])){return 'Selector missing';}
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
 		if (empty($entry)){return 'Entry does not exsist (yet).';}
@@ -808,7 +810,7 @@ class HTMLbuilder{
 				if (isset($_POST[$name])){
 					// process $_POST
 					if (empty($arr['filter'])){$filter=FILTER_DEFAULT;} else {$filter=$arr['filter'];}
-					$newValue=filter_input(INPUT_POST,$name,FILTER_DEFAULT);
+					$newValue=filter_input(INPUT_POST,$name,$filter);
 					if (strcmp(strval($arr['type']),'submit')===0){
 						$result['cmd'][$arr['key']]=$newValue;
 					} else if (strcmp(strval($arr['tag']),'button')===0){
