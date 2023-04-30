@@ -17,7 +17,7 @@ class HTMLbuilder{
 	
 	private $elementAttrWhitelist=array('tag'=>TRUE,'input'=>TRUE,'type'=>TRUE,'class'=>TRUE,'style'=>TRUE,'id'=>TRUE,'name'=>TRUE,'title'=>TRUE,'function'=>TRUE,
 										'method'=>TRUE,'enctype'=>TRUE,'xmlns'=>TRUE,'lang'=>TRUE,'href'=>TRUE,'src'=>TRUE,'value'=>TRUE,'width'=>TRUE,'height'=>TRUE,
-										'rows'=>TRUE,'cols'=>TRUE,'target'=>TRUE,
+										'rows'=>TRUE,'cols'=>TRUE,'target'=>TRUE,'allowfullscreen'=>TRUE,
 										'min'=>TRUE,'max'=>TRUE,'for'=>TRUE,'multiple'=>TRUE,'disabled'=>TRUE,'selected'=>TRUE,'checked'=>TRUE,'controls'=>TRUE,'trigger-id'=>TRUE,
 										'container-id'=>TRUE,'excontainer'=>TRUE,'container'=>TRUE,'cell'=>TRUE,'row'=>TRUE,'source'=>TRUE,'entry-id'=>TRUE,'source'=>TRUE,'index'=>TRUE,
 										'js-status'=>TRUE,'default-min-width'=>TRUE,'default-min-height'=>TRUE,'default-max-width'=>TRUE,'default-max-height'=>TRUE,
@@ -798,6 +798,18 @@ class HTMLbuilder{
 			$row['Buttons']=$this->element(array('tag'=>'div','keep-element-content'=>TRUE,'element-content'=>$row['Buttons'],'style'=>'min-width:150px;'));
 		}
 		return $row;
+	}
+	
+	public function getIframe($html,$arr=array()){
+		if (strlen($html)==strlen(strip_tags($html))){return $html;}
+		$tmpDir=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
+		$htmlFile=$tmpDir.md5($html).'.html';
+		$bytes=file_put_contents($htmlFile,$html);
+		$arr['tag']='iframe';
+		$arr['allowfullscreen']=TRUE;
+		$arr['element-content']='Html content';
+		$arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'],$htmlFile);
+		return $this->element($arr);
 	}
 	
 	public function formProcessing($callingClass,$callingFunction,$resetAfterProcessing=FALSE){

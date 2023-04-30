@@ -14,16 +14,7 @@ namespace SourcePot\Datapool\Foundation;
 class Backbone{
 	
 	private $arr;
-	
-	private $elementAttrWhitelist=array('tag'=>TRUE,'input'=>TRUE,'type'=>TRUE,'class'=>TRUE,'style'=>TRUE,'id'=>TRUE,'name'=>TRUE,'title'=>TRUE,'function'=>TRUE,
-										'method'=>TRUE,'enctype'=>TRUE,'xmlns'=>TRUE,'lang'=>TRUE,'href'=>TRUE,'src'=>TRUE,'value'=>TRUE,'width'=>TRUE,'height'=>TRUE,
-										'rows'=>TRUE,'cols'=>TRUE,'target'=>TRUE,
-										'min'=>TRUE,'max'=>TRUE,'for'=>TRUE,'multiple'=>TRUE,'disabled'=>TRUE,'selected'=>TRUE,'checked'=>TRUE,'controls'=>TRUE,'trigger-id'=>TRUE,
-										'container-id'=>TRUE,'excontainer'=>TRUE,'container'=>TRUE,'cell'=>TRUE,'row'=>TRUE,'source'=>TRUE,'entry-id'=>TRUE,'source'=>TRUE,'index'=>TRUE,
-										'js-status'=>TRUE,'default-min-width'=>TRUE,'default-min-height'=>TRUE,'default-max-width'=>TRUE,'default-max-height'=>TRUE,
-										);
-    private $needsNameAttr=array('input'=>TRUE,'select'=>TRUE,'textarea'=>TRUE,'button'=>TRUE,'fieldset'=>TRUE,'legend'=>TRUE,'output'=>TRUE,'optgroup'=>TRUE);
-	
+		
 	private $settings=array('pageTitle'=>'Datapool',
 							'pageTimeZone'=>'Europe/Berlin',
 							'mainBackgroundImageFile'=>FALSE,

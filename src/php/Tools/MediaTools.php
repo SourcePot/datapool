@@ -57,6 +57,8 @@ class MediaTools{
 				}
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/pdf')===0){
 				$arr=$this->getPdf($arr);
+			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/html')===0){
+				$arr=$this->getHtml($arr);
 			} else if ($this->arr['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
 				$arr['html']='&plusb;';
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
@@ -264,11 +266,29 @@ class MediaTools{
 			$pdfArr['tag']='embed';
 			$pdfArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
 			$pdfArr['type']='application/pdf';
-			$pdfArr['style']['margin']='10px 0 0 5px';
-			$pdfArr['style']['width']='98%';
-			$pdfArr['style']['height']='500px';
-			$pdfArr['style']['border']='1px solid #444';
+			$pdfArr['style']=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($pdfArr);
+		} else {
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
+		}
+		$arr['wrapperSettings']=array('style'=>'width:95%;');
+		return $arr;
+	}	
+	
+	private function getHtml($arr){
+		if (!isset($arr['html'])){$arr['html']='';}
+		$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
+		$tmpDir=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
+		$pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
+		$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$pdfFile);
+		if (is_file($pdfFile)){
+			$htmlArr=$arr;
+			$htmlArr['tag']='iframe';
+			$htmlArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
+			$htmlArr['type']='application/pdf';
+			$htmlArr['element-content']='Html content';
+			$htmlArr['style']=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
+			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($htmlArr);
 		} else {
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
 		}

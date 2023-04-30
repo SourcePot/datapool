@@ -430,7 +430,7 @@ class Container{
 						}
 						foreach($flatEntry as $flatColumnKey=>$value){
 							if (strcmp($flatColumnKey,$cntrArr['Column'])!==0){continue;}
-							$matrix[$rowIndex][$columnIndex]=$value;
+							$matrix[$rowIndex][$columnIndex]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->getIframe($value,array());
 						}
 					}
 				} // end of loop through columns
