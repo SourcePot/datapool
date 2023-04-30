@@ -65,24 +65,26 @@ class Toolbox{
 	}
 	
 	public function getToolbox($arr){
-		$menuHtml=$this->getToolboxMenu();
-		if (empty($_SESSION['page state']['toolbox'])){return '';}
-		$toolbox=array('Source'=>$this->entryTable,'EntryId'=>$_SESSION['page state']['toolbox']);
-		$toolbox=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($toolbox);
-		if (empty($toolbox)){
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$this->entryTable,'Name'=>'Logs','Group'=>'Settings'),TRUE) as $toolbox){
-				$_SESSION['page state']['toolbox']=$toolbox['EntryId'];
+		$arr['toReplace']['{{toolbox}}']=$this->getToolboxMenu();
+		if (!empty($_SESSION['page state']['toolbox'])){
+			$toolbox=array('Source'=>$this->entryTable,'EntryId'=>$_SESSION['page state']['toolbox']);
+			$toolbox=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($toolbox);
+			if (empty($toolbox)){
+				foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$this->entryTable,'Name'=>'Logs','Group'=>'Settings'),TRUE) as $toolbox){
+					$_SESSION['page state']['toolbox']=$toolbox['EntryId'];
+				}
+			}
+			if (!empty($toolbox)){
+				$toolboxProviderClass=$toolbox['Content']['class'];
+				$toolboxProviderMethod=$toolbox['Content']['method'];
+				$toolboxProviderArgs=$toolbox['Content']['args'];
+				$toolbox=array('Name'=>'Logs','class'=>__CLASS__,'method'=>'showLogs','args'=>array('maxCount'=>10),'settings'=>array());
+				$appArr=array('class'=>'toolbox','icon'=>'+','default-min-width'=>'100%','default-max-width'=>'100%','default-max-height'=>'80px');
+				$appArr['html']=$this->arr[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
+				$toolboxHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
+				$arr['toReplace']['{{toolbox}}']=$toolboxHtml;
 			}
 		}
-		if (empty($toolbox)){return $menuHtml;}
-		$toolboxProviderClass=$toolbox['Content']['class'];
-		$toolboxProviderMethod=$toolbox['Content']['method'];
-		$toolboxProviderArgs=$toolbox['Content']['args'];
-		$toolbox=array('Name'=>'Logs','class'=>__CLASS__,'method'=>'showLogs','args'=>array('maxCount'=>10),'settings'=>array());
-		$appArr=array('class'=>'toolbox','icon'=>'+','default-min-width'=>'100%','default-max-width'=>'100%','default-max-height'=>'80px');
-		$appArr['html']=$this->arr[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
-		$toolboxHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
-		$arr['toReplace']['{{toolbox}}']=$menuHtml.$toolboxHtml;
 		return $arr;
 		
 	}
