@@ -82,7 +82,7 @@ class Toolbox{
 				$appArr=array('class'=>'toolbox','icon'=>'+','default-min-width'=>'100%','default-max-width'=>'100%','default-max-height'=>'80px');
 				$appArr['html']=$this->arr[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
 				$toolboxHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
-				$arr['toReplace']['{{toolbox}}']=$toolboxHtml;
+				$arr['toReplace']['{{toolbox}}'].=$toolboxHtml;
 			}
 		}
 		return $arr;

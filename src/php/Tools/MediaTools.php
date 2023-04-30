@@ -229,6 +229,7 @@ class MediaTools{
 			$videoArr['type']=$video['Params']['File']['MIME-Type'];
 			$videoArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
 			$videoArr['element-content']=$arr['selector']['Name'];
+			$videoArr['style']['margin']='0.5em';
 			$videoArr['controls']=TRUE;
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($videoArr);
 		}
@@ -249,6 +250,7 @@ class MediaTools{
 			$audioArr['type']=$audio['Params']['File']['MIME-Type'];
 			$audioArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
 			$audioArr['element-content']=$arr['selector']['Name'];
+			$audioArr['style']['margin']='0.5em';
 			$audioArr['controls']=TRUE;
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($audioArr);
 		}
@@ -257,6 +259,7 @@ class MediaTools{
 
 	private function getPdf($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
+		$style=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
 		$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
 		$tmpDir=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		$pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
@@ -266,7 +269,7 @@ class MediaTools{
 			$pdfArr['tag']='embed';
 			$pdfArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
 			$pdfArr['type']='application/pdf';
-			$pdfArr['style']=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
+			$pdfArr['style']=(isset($pdfArr['style']))?array_merge($style,$pdfArr['style']):$style;
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($pdfArr);
 		} else {
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
@@ -277,6 +280,7 @@ class MediaTools{
 	
 	private function getHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
+		$style=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
 		$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
 		$tmpDir=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		$pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
@@ -287,7 +291,7 @@ class MediaTools{
 			$htmlArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
 			$htmlArr['type']='application/pdf';
 			$htmlArr['element-content']='Html content';
-			$htmlArr['style']=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
+			$htmlArr['style']=(isset($pdfArr['style']))?array_merge($style,$pdfArr['style']):$style;
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($htmlArr);
 		} else {
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));

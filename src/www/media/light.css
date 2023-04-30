@@ -518,6 +518,7 @@ div.user-abstract{
 	margin:5px;
 }
 p.user-abstract{
+	clear:none;
 	font-size:1.5em;
 	margin:5px;
 }
@@ -548,6 +549,7 @@ button:hover,input[type=submit]:hover,a.btn:hover{
 	min-width:100%;
 	min-height:8px;
 	padding:0.1em;
+	text-align:center;
 }
 .status-on{
 	background-color:#f00;
