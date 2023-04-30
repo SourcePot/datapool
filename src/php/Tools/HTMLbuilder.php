@@ -801,6 +801,7 @@ class HTMLbuilder{
 	}
 	
 	public function getIframe($html,$arr=array()){
+		if (!is_string($html)){return $html;}
 		if (strlen($html)==strlen(strip_tags($html))){return $html;}
 		$tmpDir=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		$htmlFile=$tmpDir.md5($html).'.html';

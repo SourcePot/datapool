@@ -52,17 +52,17 @@ class Email{
 	}
 	
 	public function job($vars){
-		if (empty($vars['Inboxes to process'])){
+		if (empty($vars['Inboxes'])){
 			$selector=array('Class'=>__CLASS__);
-			$vars['Inboxes to process']=array();
+			$vars['Inboxes']=array();
 			foreach($this->arr['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
-				$vars['Inboxes to process'][$entry['EntryId']]=$entry;
+				$vars['Inboxes'][$entry['EntryId']]=$entry;
 			}
 		}
-		if (!empty($vars['Inboxes to process'])){
-			$inbox=array_shift($vars['Inboxes to process']);
+		if (!empty($vars['Inboxes'])){
+			$inbox=array_shift($vars['Inboxes']);
 			$vars['Result']=$this->todaysEmails($inbox);	
-			$vars['Inboxes to process']=count($vars['Inboxes to process']);
+			$vars['Inboxes to process']=count($vars['Inboxes']);
 		}
 		return $vars;
 	}

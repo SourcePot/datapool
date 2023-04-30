@@ -592,7 +592,7 @@ class Database{
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated'),FALSE);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
 			$this->updateEntries($selector,$entry,$isSystemCall);
 			$entry=$this->entryById($selector,$isSystemCall,'Write');
 		} else {

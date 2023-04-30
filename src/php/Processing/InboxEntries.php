@@ -133,7 +133,7 @@ class InboxEntries{
 		$arr['html'].=$this->inboxParams($arr['selector']);
 		$dataSourceArr=$arr;
 		$dataSourceArr['callingClass']=$arr['selector']['Folder'];
-		$arr=$this->arr[$this->inboxClass]->dataSource($dataSourceArr,'settingsWidget');
+		if (isset($this->arr[$this->inboxClass])){$arr=$this->arr[$this->inboxClass]->dataSource($dataSourceArr,'settingsWidget');}
 		$arr['html'].=$this->inboxConditionRules($arr['selector']);
 		$arr['html'].=$this->inboxForwardingRules($arr['selector']);
 		return $arr;
@@ -161,7 +161,7 @@ class InboxEntries{
 			$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($callingElement,TRUE);
 		}
 		// load inbox class
-		$this->inboxClass=$inboxParams['Content']['Inbox source'];
+		if (isset($inboxParams['Content']['Inbox source'])){$this->inboxClass=$inboxParams['Content']['Inbox source'];}
 		// get HTML
 		$arr=$inboxParams;
 		$arr['canvasCallingClass']=$callingElement['Folder'];

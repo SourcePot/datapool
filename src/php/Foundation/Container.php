@@ -406,7 +406,7 @@ class Container{
 						// filter text field
 						if ($filterSkipped && !empty($cntrArr['Filter'])){$style=array('background-color'=>'#800');} else {$style=array();}
 						$filterTextField=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'input','type'=>'text','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>array('columns',$columnIndex,'Filter'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-						// order by buttons
+						// "order by"-buttons
 						if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}
 						if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
 						$element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
@@ -426,7 +426,7 @@ class Container{
 							$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$entry,'style'=>array('width'=>'100%','max-width'=>300,'max-height'=>250)));
 							$matrix[$rowIndex][$columnIndex]=$mediaArr['html'];
 						} else {
-							$matrix[$rowIndex][$columnIndex]='?';
+							$matrix[$rowIndex][$columnIndex]='{Nothing here...}';
 						}
 						foreach($flatEntry as $flatColumnKey=>$value){
 							if (strcmp($flatColumnKey,$cntrArr['Column'])!==0){continue;}

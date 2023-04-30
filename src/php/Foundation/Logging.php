@@ -161,6 +161,12 @@ class Logging{
 		$logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
 		$logContent['userId']=(empty($_SESSION['currentUser']['EntryId']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
 		$entry['Params'][$logType][]=$logContent;
+		// remove expired logs
+		foreach($entry['Params'][$logType] as $logIndex=>$logArr){
+			if (!isset($logArr['Expires'])){continue;}
+			$expires=strtotime($logArr['Expires']);
+			if ($expires<time()){unset($entry['Params'][$logType][$logIndex]);}
+		}
 		if ($updateEntry){
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
 		}
