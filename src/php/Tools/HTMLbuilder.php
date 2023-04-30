@@ -494,9 +494,9 @@ class HTMLbuilder{
 	}
 	
 	public function emojis($arr=array()){
-		if (!isset($arr['html'])){$arr['html']='';}
+		if (!isset($arr['html'])){$arr['html']='';}		
 		if (empty($arr['settings']['target'])){
-			$arr['html']='Error: method '.__FUNCTION__.' called without target setting.';
+			$arr['html'].='Error: method '.__FUNCTION__.' called without target setting.';
 			return $arr;
 		}
 		$callingFunction=$arr['settings']['target'];
@@ -543,7 +543,9 @@ class HTMLbuilder{
 		$callingClass=__CLASS__;
 		$callingFunction=__FUNCTION__.$arr['key'];
 		$formData=$this->formProcessing($callingClass,$callingFunction);
-		$saveRequest=isset($formData['cmd'][$arr['key']]['save']);
+		if ($saveRequest=isset($formData['cmd'][$arr['key']]['save'])){
+			//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);
+		}
 		$updatedInteger=0;
 		$matrix=array();
 		if (is_string($integer)){$integer=intval($integer);}
@@ -605,23 +607,72 @@ class HTMLbuilder{
 		if (empty($entry)){return 'Entry does not exsist (yet).';}
 		if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 		if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION____;}
-		$html='';
-		$html.=$this->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-		$html.=$this->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
-		$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
-		$html.=$mediaArr['html'];
-		$btnArr=$arr['selector'];
 		$matrix=array();
+		$matrix['Preview']['Button']=$this->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+		$matrix['Preview']['Button'].=$this->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
+		$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
+		$matrix['Preview']['Button'].=$mediaArr['html'];
+		$btnArr=$arr['selector'];
 		foreach(array('download','remove','delete') as $cmd){
 			$ucfirstCmd=ucfirst($cmd);
 			if (!empty($arr['hide'.$ucfirstCmd])){continue;}
 			$btnArr['cmd']=$cmd;
 			$tag=$this->btn($btnArr);
 			if (!empty($tag)){$matrix[$ucfirstCmd]['Button']=$tag;}
-		
 		}
-		$html.=$this->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
-		$html=$this->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'caption'=>'Entry control elements','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+		return $html;
+	}
+	
+	/**
+	* This method returns an html-table containing an overview of the entry content-, processing- and attachment-logs.
+	* @return string
+	*/
+	public function entryLogs($arr){
+		if (!isset($arr['selector'])){return $this->traceHtml('Problem: Method "'.__FUNCTION__.'" arr[selector] missing.');}
+		if (!isset($arr['selector']['Params'])){return $this->traceHtml('Problem: Method "'.__FUNCTION__.'" arr[selector][Params] missing.');}
+		$matrix=array();
+		$subMatrices=array();
+		$standardKeys=array('timestamp'=>FALSE,'time'=>TRUE,'timezone'=>FALSE,'method_0'=>TRUE,'method_1'=>TRUE,'method_2'=>TRUE,'userId'=>TRUE);
+		$relevantKeys=array('Attachment log','Content log','Processing log');
+		foreach($relevantKeys as $logKey){
+			if (!isset($arr['selector']['Params'][$logKey])){continue;}
+			foreach($arr['selector']['Params'][$logKey] as $logIndex=>$logArr){
+				$matrixIndex=$logArr['timestamp'].$logKey;
+				while(isset($matrix[$matrixIndex])){$matrixIndex.='.';}
+				$matrix[$matrixIndex]['Type']=$logKey;
+				foreach($standardKeys as $property=>$isVisible){
+					if ($isVisible){
+						$label=explode('_',ucfirst($property));
+						if (count($label)>1){
+							$caption=array_shift($label);
+							$label=array_pop($label);
+							$subMatrices[$caption][$label]=(empty($logArr[$property]))?'':$logArr[$property];
+						} else {
+							$label=array_pop($label);
+							$matrix[$matrixIndex][$label]=(empty($logArr[$property]))?'':$logArr[$property];
+							if (strcmp($label,'UserId')===0){
+								$userName=$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract($matrix[$matrixIndex][$label],3);
+								if (!empty($userName)){
+									$matrix[$matrixIndex][$label]=$userName;
+								}
+							}
+						}
+					}
+					unset($arr['selector']['Params'][$logKey][$logIndex][$property]);
+				}
+				$subMatrices['Message']=$arr['selector']['Params'][$logKey][$logIndex];
+				foreach($subMatrices as $caption=>$subMatrix){
+					$matrix[$matrixIndex][$caption]='';
+					foreach($subMatrix as $property=>$propValue){
+						if (is_array($propValue)){$propValue=implode('|',$propValue);}
+						$matrix[$matrixIndex][$caption].=$property.': '.$propValue.'<br/>';
+					}
+				}
+			}
+		}
+		krsort($matrix);
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'caption'=>'Entry logs','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
 		return $html;
 	}
 

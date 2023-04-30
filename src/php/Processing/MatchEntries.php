@@ -251,7 +251,7 @@ class MatchEntries{
 		}
 		if ($success){
 			$result['Matching statistics']['Matched']['value']++;
-			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>'Match column "'.$columnToMatch.'" successful');
+			$entryA=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entryA,'Processing log',array('success'=>'Match column "'.$columnToMatch.'" successful'),FALSE);
 			if (isset($base['entryTemplates'][$params['Content']['Match success']])){
 				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
 			} else {
@@ -262,7 +262,7 @@ class MatchEntries{
 			}
 		} else {
 			$result['Matching statistics']['Failed']['value']++;
-			$entryA['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failure'=>'Match column "'.$columnToMatch.'" failed');
+			$entryA=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entryA,'Processing log',array('failure'=>'Match column "'.$columnToMatch.'" failed'),FALSE);
 			if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
 				$entryA=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
 			} else {
@@ -299,7 +299,7 @@ class MatchEntries{
 
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
+		$type=$this->arr['class2source'][__CLASS__];
 		$type.='|'.$callingFunction;
 		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
 		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}

@@ -290,7 +290,7 @@ class Container{
 				}
 				$label=array_shift($subFlatKeyComps);
 				$matrix[$label]=array('value'=>$valueHtml,'cmd'=>$cmdHtml);
-			}
+			} // loop through flat array
 			if ($level>0 && $entryCanWrite){
 				$flatKey=$settings['selectorKey'];
 				$element=array('tag'=>'input','type'=>'text','key'=>array('newKey'),'value'=>'','style'=>array('color'=>'#fff','background-color'=>'#1b7e2b'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
@@ -304,6 +304,7 @@ class Container{
 			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name']));
 			if ($level==0){
 				$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
+				$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs($arr);
 			}
 		}
 		if ($isDebugging){
@@ -327,7 +328,7 @@ class Container{
 		if (!isset($settings['isSystemCall'])){$settings['isSystemCall']=FALSE;}
 		if (!isset($settings['orderBy'])){$settings['orderBy']='Date';}
 		if (!isset($settings['isAsc'])){$settings['isAsc']=FALSE;}
-		if (!isset($settings['limit'])){$settings['limit']=5;}
+		if (!isset($settings['limit'])){$settings['limit']=10;}
 		if (!isset($settings['offset'])){$settings['offset']=FALSE;}
 		// form processing
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
@@ -422,7 +423,7 @@ class Container{
 						}
 						// table rows
 						if (strcmp($cntrArr['Column'],'preview')===0){
-							$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$entry,'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
+							$mediaArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$entry,'style'=>array('width'=>'100%','max-width'=>300,'max-height'=>250)));
 							$matrix[$rowIndex][$columnIndex]=$mediaArr['html'];
 						} else {
 							$matrix[$rowIndex][$columnIndex]='?';
@@ -436,18 +437,18 @@ class Container{
 			} // end of loop through entries
 			foreach($settings['columns'] as $columnIndex=>$cntrArr){
 				if ($cntrArr['Filter']===FALSE){
-					$matrix['Limit<br/>offset'][$columnIndex]='';
+					$matrix['Limit, offset'][$columnIndex]='';
 				} else if ($columnIndex===0){
 					$max=$rowCount-intval($settings['limit']);
 					if ($max<0){$max=0;}
 					$otions=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200');
-					$matrix['Limit<br/>offset'][$columnIndex]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$otions,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+					$matrix['Limit, offset'][$columnIndex]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$otions,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 					if ($rowCount>intval($settings['limit'])){
 						$element=array('tag'=>'input','type'=>'range','min'=>'0','max'=>$max,'key'=>array('offset'),'value'=>strval(intval($settings['offset'])),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
-						$matrix['Limit<br/>offset'][$columnIndex].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);	
+						$matrix['Limit, offset'][$columnIndex].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($element);	
 					}
 				} else {
-					$matrix['Limit<br/>offset'][$columnIndex]='';
+					$matrix['Limit, offset'][$columnIndex]='';
 				}
 			}
 			$caption=$arr['containerKey'];

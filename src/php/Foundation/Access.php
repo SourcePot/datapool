@@ -56,7 +56,7 @@ class Access{
 	public function init($arr){
 		$this->arr=$arr;
 		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$access=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__,'Content'=>$this->access);
+		$access=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access);
 		$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
 		$this->access=$access['Content'];
 		return $this->arr;

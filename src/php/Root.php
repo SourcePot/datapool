@@ -148,10 +148,11 @@ final class Root{
 	private function addRegisteredMethods($arr,$classWithNamespace){
 		$methods2register=array('init'=>FALSE,
 								'job'=>FALSE,
-								'run'=>TRUE,			// claas ->run() which returns menu definition
+								'run'=>TRUE,			// class->run(), which returns menu definition
 								'unifyEntry'=>FALSE,
 								'dataProcessor'=>TRUE,
-								'getTrigger'=>FALSE,
+								'getTrigger'=>FALSE,	
+								'dataSource'=>TRUE,
 								);
 		// analyse class structure
 		if (method_exists($arr[$classWithNamespace],'getEntryTable')){

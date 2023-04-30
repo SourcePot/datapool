@@ -121,8 +121,8 @@ class DataExplorer{
 		// add data processors
 		$this->processorOptions=array(''=>'&larrhk;');
 		foreach($this->arr['registered methods']['dataProcessor'] as $classWithNamespace=>$defArr){
-			$label=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source($classWithNamespace,TRUE,TRUE);
-			$this->processorOptions[$classWithNamespace]=$label;
+			$label=$this->arr['class2source'][$classWithNamespace];
+			$this->processorOptions[$classWithNamespace]=ucfirst($label);
 		}
 		$this->definition['Content']['Widgets']['Processor']['@options']=$this->processorOptions;
 		// add save button
@@ -231,8 +231,7 @@ class DataExplorer{
 		$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
 		if ($isEditMode){
 			if ($canvasElement){
-				$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($canvasElement);
-				$html.=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$canvasElement);
+				$html.=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($canvasElement);
 			}
 		} else {
 			$html.=$this->getFileUpload($canvasElement);
@@ -273,6 +272,7 @@ class DataExplorer{
 				if (empty($value)){continue;}
 				$selector[$key]=$value;
 			}
+			krsort($selector);
 			return $selector;
 		} else {
 			return array();

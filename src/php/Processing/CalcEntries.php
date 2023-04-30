@@ -381,14 +381,14 @@ class CalcEntries{
 		$result['Calculate statistics']['Entries']['value']++;
 		if ($failureMet){
 			$result['Calculate statistics']['Failure']['value']++;
-			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'failed'=>trim($log,'| '));
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($log,'| ')),FALSE);
 			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun);
 				if (!isset($result['Sample result (failure)']) || mt_rand(0,100)>90){
 				$result['Sample result (failure)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
 			}	
 		} else {
 			$result['Calculate statistics']['Success']['value']++;
-			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'success'=>trim($log,'| '));
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>trim($log,'| ')),FALSE);
 			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
 				if (!isset($result['Sample result (success)']) || mt_rand(0,100)>90){
 				$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
@@ -422,7 +422,7 @@ class CalcEntries{
 	
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
+		$type=$this->arr['class2source'][__CLASS__];
 		$type.='|'.$callingFunction;
 		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
 		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}

@@ -41,7 +41,7 @@ class Backbone{
 	public function init($arr){
 		$this->arr=$arr;
 		// Initialize page settings
-		$settings=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
+		$settings=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
 		$settings['Content']=$this->settings;
 		$settings=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
 		$this->settings=$settings['Content'];

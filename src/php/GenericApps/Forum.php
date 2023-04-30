@@ -21,10 +21,12 @@ class Forum{
 								 );
 	
 	public $definition=array('Content'=>array('Message'=>array('@tag'=>'textarea','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>array('font-size'=>'1.3em')),
+											  '@hideCaption'=>FALSE,
 											 ),
 							 'Attachment'=>array('@tag'=>'input','@type'=>'file','@default'=>''),
 							 'Preview'=>array('@function'=>'preview','@Write'=>'ADMIN_R'),
-							);
+							 '@hideHeader'=>TRUE,'@hideKeys'=>TRUE,
+							 );
 							
 	public function __construct($arr){
 		$this->arr=$arr;
@@ -94,9 +96,7 @@ class Forum{
 		if (empty($forumEntry)){
 			$forumEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
 		} 
-		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($forumEntry);
-		$definition['hideKeys']=TRUE;
-		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$forumEntry);
+		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
 		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','style'=>array('min-width'=>'100%','margin'=>'0')));
 		return $html;

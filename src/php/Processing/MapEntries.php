@@ -336,7 +336,7 @@ class MapEntries{
 			$targetEntry[$key]=implode('|',$value);
 		}
 		$result['Mapping statistics']['Entries']['value']++;
-		$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'time'=>date('Y-m-d H:i:s'),'mode'=>$params['Content']['Mode']);
+		$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('mode'=>$params['Content']['Mode']),FALSE);
 		if ($base['csvRequested'] || $base['zipRequested']){
 			unset($sourceEntry['Content']);
 			unset($sourceEntry['Params']);
@@ -458,7 +458,7 @@ class MapEntries{
 	
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
+		$type=$this->arr['class2source'][__CLASS__];
 		$type.='|'.$callingFunction;
 		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
 		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}

@@ -48,7 +48,6 @@ class Multimedia{
 
 	public function unifyEntry($entry){
 		// This function makes class specific corrections before the entry is inserted or updated.
-		if (empty($entry['Content'])){$entry['Content']=array('Description'=>'Add the description here...','Comments'=>array());}
 		return $entry;
 	}
 
@@ -58,7 +57,8 @@ class Multimedia{
 		} else {
 			$arr=$this->arr['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
 			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
+			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
+			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Multimedia entries','selectedView',$selector,$settings,array());
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}

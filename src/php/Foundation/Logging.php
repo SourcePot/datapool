@@ -149,5 +149,23 @@ class Logging{
 		return $toolbox;
 	}
 	
+	public function addLog2entry($entry,$logType='Content log',$logContent=array(),$updateEntry=FALSE){
+		if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
+		if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
+		$trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);	
+		$logContent['timestamp']=time();
+		$logContent['time']=date('Y-m-d H:i:s');
+		$logContent['timezone']=date_default_timezone_get();
+		$logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
+		$logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
+		$logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
+		$logContent['userId']=(empty($_SESSION['currentUser']['EntryId']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
+		$entry['Params'][$logType][]=$logContent;
+		if ($updateEntry){
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+		}
+		return $entry;
+	}
+	
 }
 ?>

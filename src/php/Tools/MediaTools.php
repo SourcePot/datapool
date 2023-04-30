@@ -224,7 +224,6 @@ class MediaTools{
 			copy($videoFile,$absFile);
 			$videoArr=$arr;
 			$videoArr['tag']='video';
-			$videoArr['style']=array('margin'=>'10px 0 0 5px');
 			$videoArr['type']=$video['Params']['File']['MIME-Type'];
 			$videoArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
 			$videoArr['element-content']=$arr['selector']['Name'];

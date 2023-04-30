@@ -49,6 +49,7 @@ class User{
 							 'Login'=>array('@function'=>'getLoginForm','@class'=>'SourcePot\Datapool\Components\Login'),
 							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@key'=>'Privileges','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
+							 '@hideHeader'=>TRUE,'@hideKeys'=>TRUE,
 							 );
 
 	private $userRols=array('Content'=>array(0=>array('Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'),
@@ -101,7 +102,7 @@ class User{
 	private function userRols(){
 		$entry=$this->userRols;
 		$entry['Class']=__CLASS__;
-		$entry['SettingName']=__FUNCTION__;
+		$entry['EntryId']=__FUNCTION__;
 		$this->userRols=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($entry,TRUE);
 		return $this->userRols;
 	}
@@ -161,7 +162,7 @@ class User{
 			$success=$this->arr['SourcePot\Datapool\Foundation\Database']->insertEntry($admin);
 			if ($success){
 				// Save init admin details
-				$adminFile=array('Class'=>__CLASS__,'SettingName'=>__FUNCTION__);
+				$adminFile=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
 				$adminFile['Content']['Admin email']=$admin['Email'];
 				$adminFile['Content']['Admin password']=$admin['Password'];
 				$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->updateEntry($adminFile,TRUE);
@@ -197,6 +198,7 @@ class User{
 		if (!isset($user['Content'])){
 			if ($template<4){$isSystemCall=TRUE;} else {$isSystemCall=FALSE;}
 			$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,$isSystemCall);
+			if (empty($user)){return '';}
 		}
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if ($template===0){
@@ -230,9 +232,8 @@ class User{
 		$arr=array_merge($template,$arr);
 		if (isset($arr['selector']['EntryId'])){
 			if (!isset($arr['selector']['Type'])){$arr['selector']['Type']='user';}
-			$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($arr['selector']);
 			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
-			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$arr['selector']);
+			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($arr['selector']);
 		}
 		return $arr;
 	}

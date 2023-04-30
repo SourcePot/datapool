@@ -96,6 +96,11 @@ class MiscTools{
 	* String tools
 	*/
 
+	public function startsWithUpperCase($str){
+		$startChr=mb_substr($str,0,1,"UTF-8");
+		return mb_strtolower($startChr,"UTF-8")!=$startChr;
+	}
+
 	public function base64decodeIfEncoded($str){
 		$decoded=base64_decode($str,TRUE);
 		if (empty($decoded)){return $str;}
@@ -200,8 +205,8 @@ class MiscTools{
 	}
 	
 	private function emojiList2file(){
-		$html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
-		//$html=file_get_contents('D:/FullEmojiList.htm');
+		//$html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
+		$html=file_get_contents('D:/Full Emoji List, v15.0.htm');
 		if (empty($html)){return FALSE;}
 		$result=array();
 		$rows=explode('</tr>',$html);

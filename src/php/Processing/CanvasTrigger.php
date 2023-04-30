@@ -36,7 +36,17 @@ class CanvasTrigger{
 	}
 
 	public function job($vars){
-		$vars['Result']=$this->runCanvasTrigger(array('Source'=>'dataexplorer'),FALSE);
+		if (empty($vars['CanvasTrigger to process'])){
+			$selector=array('Source'=>'dataexplorer','Group'=>'Canvas elements','Content'=>'%CanvasTrigger%');
+			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId',TRUE) as $entry){
+				$vars['CanvasTrigger to process'][$entry['EntryId']]=$entry;
+			}
+		}
+		if (!empty($vars['CanvasTrigger to process'])){
+			$callingElement=array_shift($vars['CanvasTrigger to process']);
+			$vars['Result']=$this->runCanvasTrigger($callingElement,FALSE);	
+			$vars['CanvasTrigger to go']=count($vars['CanvasTrigger to process']);
+		}
 		return $vars;
 	}
 
@@ -321,7 +331,12 @@ class CanvasTrigger{
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerEntriesSelector,TRUE,'Read') as $entryId=>$entry){
 			foreach($entry['Content']['trigger'] as $triggerId=>$trigger){
 				$return['trigger'][$triggerId]=$trigger;
-				$return['options'][$triggerId]=$this->arr['class2source'][$entry['Folder']].' &rarr; '.$trigger['trigger name'];
+				if (isset($this->arr['class2source'][$entry['Folder']])){
+					$optionLabel=$this->arr['class2source'][$entry['Folder']];
+				} else {
+					$optionLabel=$entry['Folder'];	
+				}
+				$return['options'][$triggerId]=$optionLabel.' &rarr; '.$trigger['trigger name'];
 				$return['isActive'][$triggerId]=$trigger['active'];
 			}
 		}
@@ -330,7 +345,7 @@ class CanvasTrigger{
 
 	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Foundation\Database']->class2source(__CLASS__,TRUE);
+		$type=$this->arr['class2source'][__CLASS__];
 		$type.='|'.$callingFunction;
 		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
 		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}

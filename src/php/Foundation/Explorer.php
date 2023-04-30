@@ -291,7 +291,7 @@ class Explorer{
 			$formData['val']=array_merge($template['val'],$formData['val']);
 			if (isset($formData['cmd']['send'])){
 				$mail=array_merge($mail,$formData['val']);
-				$this->arr['SourcePot\Datapool\Tools\NetworkTools']->entry2mail($mail);
+				$this->arr['SourcePot\Datapool\Tools\Email']->communicationHub('send',$mail);
 			}
 			foreach($template['filter'] as $key=>$filter){
 				$element=array('tag'=>'input','type'=>'text','value'=>$formData['val'][$key],'key'=>array($key),'filter'=>$filter,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);

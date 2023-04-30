@@ -16,6 +16,7 @@ class Database{
 	private $arr;
 	
 	private $statistic=array();
+	private $toReplace=array();
 
 	private $dbObj;
 	private $dbName=FALSE;
@@ -29,7 +30,7 @@ class Database{
 								 'Group'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
 								 'Folder'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
 								 'Name'=>array('index'=>'NAME_IND','type'=>'VARCHAR(1024)','value'=>'...','Description'=>'Third level ordering criterion'),
-								 'Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'array','Description'=>'This is the data-type of Content'),
+								 'Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Source}}','Description'=>'This is the data-type of Content'),
 								 'Date'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
 								 'Content'=>array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
 								 'Params'=>	array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
@@ -55,6 +56,28 @@ class Database{
 	public function job($vars){
 		$vars['statistics']=$this->deleteExpiredEntries();
 		return $vars;
+	}
+
+	public function enrichToReplace($toReplace=array()){
+		$toReplace['{{NOW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+		$toReplace['{{YESTERDAY}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
+		$toReplace['{{TOMORROW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
+		$toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
+		$toReplace['{{Expires}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
+		$toReplace['{{EntryId}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+		if (!isset($_SESSION['currentUser']['EntryId'])){
+			$toReplace['{{Owner}}']='SYSTEM';
+		} else if (strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
+			$toReplace['{{Owner}}']=$_SESSION['currentUser']['EntryId'];
+		} else {
+			$toReplace['{{Owner}}']='ANONYM';
+		}
+		if (isset($this->arr['SourcePot\Datapool\Tools\HTMLbuilder'])){
+			$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+			$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
+			$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
+		}
+		return $toReplace;
 	}
 
 	public function resetStatistic(){
@@ -103,20 +126,6 @@ class Database{
 	}
 	
 	/**
-	* @return string|FALSE The method returns the table for the provided class with namespace. If the table does not exist, FALSE will be returned.
-	*/
-	public function class2source($class,$toTypeOnly=FALSE,$keepCapitalization=FALSE){
-		$source=explode('\\',$class);
-		$source=array_pop($source);
-		if ($toTypeOnly || isset($GLOBALS['dbInfo'][$source])){
-			if (!$keepCapitalization){$source=strtolower($source);}
-			return $source;
-		} else {
-			return FALSE;
-		}
-	}
-
-	/**
 	* @return array The method returns the entry template array based on the table and template provided. The method completes the class property dbInfo which contains all entry templates for all tables.
 	*/
 	public function getEntryTemplateCreateTable($table,$template=array()){
@@ -131,7 +140,6 @@ class Database{
 	public function unifyEntry($entry,$addEntryDefaults=FALSE){
 		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
 		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
-		$this->resetStatistic();
 		if (isset($this->arr['source2class'][$entry['Source']])){
 			$classWithNamespace=$this->arr['source2class'][$entry['Source']];
 			if (isset($this->arr['registered methods']['unifyEntry'][$classWithNamespace])){
@@ -144,13 +152,17 @@ class Database{
 
 	public function addEntryDefaults($entry,$isDebugging=FALSE){
 		$entryTemplate=$GLOBALS['dbInfo'][$entry['Source']];
+		$this->toReplace['{{Source}}']=$entry['Source'];
 		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry);
 		foreach($entryTemplate as $column=>$defArr){
+			$toReplaceKey='{{'.$column.'}}';
+			$this->toReplace[$toReplaceKey]='';
 			if (!isset($defArr['value'])){continue;}
 			if (!isset($entry[$column]) || ($defArr['value']===TRUE && empty($entry[$column]))){
 				$entry[$column]=$defArr['value'];
 			} // if not set or empty but must not be empty
 			if (is_string($entry[$column])){
+				$this->toReplace[$toReplaceKey]=$entry[$column];
 				$entry[$column]=$this->stdReplacements($entry[$column]);
 			}
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
@@ -160,35 +172,10 @@ class Database{
 		return $entry;
 	}
 
-	public function stdReplacements($str=''){
-		if (is_array($str)){return $str;}
-		$toReplace['{{NOW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-		$toReplace['{{YESTERDAY}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
-		$toReplace['{{TOMORROW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
-		$toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
-		$toReplace['{{Expires}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
-		$toReplace['{{EntryId}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
-		if (!isset($_SESSION['currentUser']['EntryId'])){
-			$toReplace['{{Owner}}']='SYSTEM';
-		} else if (strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
-			$toReplace['{{Owner}}']=$_SESSION['currentUser']['EntryId'];
-		} else {
-			$toReplace['{{Owner}}']='ANONYM';
-		}
-		if (isset($this->arr['SourcePot\Datapool\Tools\HTMLbuilder'])){
-			$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-			$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
-			$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
-		}
-		//
-		if (is_array($str)){
-			throw new \ErrorException('Function '.__FUNCTION__.' called with argument str of type array.',0,E_ERROR,__FILE__,__LINE__);	
-		} else if (is_string($str)){
-			foreach($toReplace as $needle=>$replacement){
-				$str=str_replace($needle,$replacement,$str);
-			}
-		}
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($toReplace);
+	private function stdReplacements($str=''){
+		if (!is_string($str)){return $str;}
+		$this->toReplace=$this->enrichToReplace($this->toReplace);
+		foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
 		return $str;
 	}
 
@@ -225,7 +212,7 @@ class Database{
 		// 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
 		$namespaceComps=explode('\\',__NAMESPACE__);
 		$dbName=strtolower($namespaceComps[0]);
-		$access=array('Class'=>__CLASS__,'SettingName'=>'connect');
+		$access=array('Class'=>__CLASS__,'EntryId'=>'connect');
 		$access['Read']=65535;
 		$access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
 		$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
@@ -590,39 +577,33 @@ class Database{
 		return $entry;
 	}
 
-	public function updateEntry($entry,$isSystemCall=FALSE){
+	public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE){
 		// This function updates the selected entry or inserts a new entry.
 		// The primary key needs to be provided.
 		$existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
 		if (empty($existingEntry['rowCount'])){
+			// insert and return entry
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
 			$entry=$this->insertEntry($entry);
-		} else {
-			// update entry
+		} else if (empty($noUpdateCreateIfMissing)){
+			// update and return entry
 			$selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
 			unset($entry['EntryId']);
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated'),FALSE);
 			$this->updateEntries($selector,$entry,$isSystemCall);
 			$entry=$this->entryById($selector,$isSystemCall,'Write');
+		} else {
+			// only return ex*isting entry
+			$entry=$existingEntry;
 		}
 		return $entry;
 	}
 	
 	public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
-		// This function updates the selected entry or inserts a new entry.
-		// The existing entry is selecvted by kay, i.e. the primary key must to be provided!
-		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-		$existingEntry=$this->hasEntry($entry,$isSystemCall,TRUE);
-		if (empty($existingEntry['rowCount']) && isset($GLOBALS['dbInfo'][$entry['Source']])){
-			$existingEntry=$this->insertEntry($entry);
-		}
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
-			$return=$existingEntry;
-		} else {
-			$return=FALSE;
-		}
-		return $return;
+		return $this->updateEntry($entry,$isSystemCall,TRUE);
 	}
 	
 	public function hasEntry($selector,$isSystemCall=TRUE,$returnMetaOnNoMatch=FALSE){
@@ -639,44 +620,60 @@ class Database{
 		return FALSE;
 	}
 		
-	public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE){
+	public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE){
 		$userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
 		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
+			// write access
+			if ($updateSourceFirst && !$isTestRun){
+				$sourceEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+			}
 			$targetEntry=array_replace_recursive($sourceEntry,$targetSelector);
 			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
 			if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
-				$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'Target and source EntryId identical','userId'=>$userId);
+				$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
 				if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
 			} else {
-				// move attached file
+				// move or copy attached file to tgarget
 				$fileRenameSuccess=TRUE;
 				$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
 				$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
-				if (is_file($sourceFile)){
+				if (is_file($sourceFile) && !$isTestRun){
 					if (is_file($targetFile)){
 						if (unlink($targetFile)){
-							$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'success'=>'File detected at target location removed','userId'=>$userId);
+							$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Removed file detected at target location'),FALSE);
 						} else {
-							$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'File detected at target location could not be removed','userId'=>$userId);
+							$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('failed'=>'Failed to remove file detected at target location'),FALSE);
 						}
 					}
-					$fileRenameSuccess=@rename($sourceFile,$targetFile);
+					if ($keepSource){
+						$fileRenameSuccess=@copy($sourceFile,$targetFile);
+					} else {
+						$fileRenameSuccess=@rename($sourceFile,$targetFile);
+					}
 				}
-				// move entry
+				// create tgarget entry
 				if ($fileRenameSuccess){
-					$targetEntry['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$sourceFile,'new'=>$targetFile,'userId'=>$userId));
-					$targetEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'success'=>'Moved from EntryId='.$sourceEntry['EntryId'],'userId'=>$userId);
+					$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
+					$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId']),FALSE);
 					if (!$isTestRun){
-						$this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
+						if (!$keepSource){
+							$this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
+						}
 						$targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
 					}			
 				} else {
-					$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'Failed to rename attached file, kept enrtry','userId'=>$userId);
-					if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
+					// copying or renaming of attached file failed
+					$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to rename attached file, kept enrtry'),FALSE);
+					if ($isTestRun){
+						$targetEntry=$sourceEntry;
+					} else {
+						$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+					}
 				}
 			}
 		} else {
-			$sourceEntry['Params']['Processing log'][]=array('method'=>__FUNCTION__,'timestamp'=>date('Y-m-d H:i:s'),'failed'=>'Write access denied','userId'=>$userId);
+			// no write access
+			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
 			if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
 		}
 		return $targetEntry;

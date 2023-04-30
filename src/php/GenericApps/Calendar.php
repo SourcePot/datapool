@@ -24,6 +24,7 @@ class Calendar{
 
 	private $slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');
 	private $setting=array();
+	private $toReplace=array();
 
 	private $pageState=array();
 	private $pageStateTemplate=array();
@@ -150,6 +151,15 @@ class Calendar{
 		return $this->entryTemplate;
 	}
 
+	private function stdReplacements($str=''){
+		if (is_array($str)){return $str;}
+		if (isset($this->arr['SourcePot\Datapool\Foundation\Database'])){
+			$this->toReplace=$this->arr['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
+		}
+		foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
+		return $str;
+	}
+
 	public function run($arr=TRUE){
 		if ($arr===TRUE){
 			return array('Category'=>'Apps','Emoji'=>'&#9992;','Label'=>'Calendar','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
@@ -206,11 +216,10 @@ class Calendar{
 		$event=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($this->pageState);
 		if (empty($event)){$event=$this->pageState;}
 		$event=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
-		$definition=$this->arr['SourcePot\Datapool\Foundation\Definitions']->getDefinition($event);
 		if (strcmp($this->pageState['EntryId'],'{{EntryId}}')===0 && empty($this->pageState['addDate'])){
 			$arr['html'].=$this->getEventsOverview($arr);
 		} else {
-			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2form($definition,$event);
+			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
 		}
 		return $arr;		
 	}
@@ -378,7 +387,7 @@ class Calendar{
 	private function calendarStartTimestamp(){
 		if (empty($this->pageState['calendarDate'])){return 0;}
 		$calendarTimezone=new \DateTimeZone($this->setting['Timezone']);
-		$calendarDate=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($this->pageState['calendarDate']);
+		$calendarDate=$this->stdReplacements($this->pageState['calendarDate']);
 		$calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);
 		$date=$calendarDateTime->format('Y-m-d 00:00:00');
 		$calendarDateTime=new \DateTime($date,$calendarTimezone);
@@ -391,7 +400,7 @@ class Calendar{
 		} else {
 			$timezone=new \DateTimeZone($timezone);	
 		}
-		$dateTime=new \DateTime($this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($date),$timezone);
+		$dateTime=new \DateTime($this->stdReplacements($date),$timezone);
 		return floor(($dateTime->getTimestamp()-$this->calendarStartTimestamp())*$this->setting['Day width']/86400);
 	}
 

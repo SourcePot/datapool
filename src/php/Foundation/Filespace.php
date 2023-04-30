@@ -16,10 +16,13 @@ class Filespace{
 	private $arr;
 	
 	private $statistics=array();
+	private $toReplace=array();
 	
 	const ENV_FILE='env.json';
 
-	private $entryTemplate=array('Type'=>array('type'=>'string','value'=>'array','Description'=>'This is the data-type of Content'),
+	private $entryTemplate=array('Class'=>array('type'=>'string','value'=>TRUE,'Description'=>'Class selects the folder within the setup dir space'),
+								 'EntryId'=>array('type'=>'string','value'=>TRUE,'Description'=>'This is the unique id'),
+								 'Type'=>array('type'=>'string','value'=>'{{Class}}','Description'=>'This is the data-type of Content'),
 								 'Date'=>array('type'=>'datetime','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
 								 'Content'=>array('type'=>'json','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
 								 'Read'=>array('type'=>'int','value'=>FALSE,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -29,7 +32,7 @@ class Filespace{
 
 	public function __construct($arr){
 		$this->arr=$arr;
-		$this->resetStatistics();
+		$this->resetStatistic();
 	}
 	
 	public function init($arr){
@@ -74,12 +77,12 @@ class Filespace{
 		return $vars;
 	}
 
-	public function resetStatistics(){
-		$this->statistics=array('matched files'=>0,'updateed files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0);
+	public function resetStatistic(){
+		$this->statistics=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0);
 		return $this->statistics;
 	}
 	
-	public function getStatistics(){
+	public function getStatistic(){
 		return $this->statistics;
 	}
 	
@@ -108,27 +111,45 @@ class Filespace{
 		if (!empty($selector['Source']) && !empty($selector['EntryId'])){
 			$dir=$this->source2dir($selector['Source'],$mkDirIfMissing);	
 			$file=$selector['EntryId'].'.file';
-		} else if (!empty($selector['Class']) && !empty($selector['SettingName'])){
+		} else if (!empty($selector['Class']) && !empty($selector['EntryId'])){
 			$dir=$this->class2dir($selector['Class'],$mkDirIfMissing);	
-			$file=$selector['SettingName'].'.json';
+			$file=$selector['EntryId'].'.json';
 		} else {
-			throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in selector argument, either Source, EntryId  or Class, SettingName',0,E_ERROR,__FILE__,__LINE__);	
+			throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in selector argument, either Source, EntryId  or Class, EntryId',0,E_ERROR,__FILE__,__LINE__);	
 		}
 		return $fileName=$dir.$file;
 	}
 	
-	private function unifyEntry($entry){
+	private function stdReplacements($str=''){
+		if (!is_string($str)){return $str;}
+		if (isset($this->arr['SourcePot\Datapool\Foundation\Database'])){
+			$this->toReplace=$this->arr['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
+		}
+		foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
+		return $str;
+	}
+	
+	public function unifyEntry($entry){
+		if (!isset($entry['Type'])){
+			$classComps=explode('\\',$entry['Class']);
+			$entry['Type']=array_pop($classComps);
+		}
 		// remove all keys from entry, not provided by entryTemplate
 		foreach($entry as $key=>$value){
+			$toReplaceKey='{{'.$key.'}}';
+			if (is_string($value)){
+				$this->toReplace[$toReplaceKey]=$value;
+			} else {
+				$this->toReplace[$toReplaceKey]='';
+			}
 			if (!isset($this->entryTemplate[$key])){unset($entry[$key]);}
 		}
 		// add defaults at missing keys
 		foreach($this->entryTemplate as $key=>$defArr){
 			if (!isset($entry[$key])){$entry[$key]=$defArr['value'];}
-			If (isset($this->arr['SourcePot\Datapool\Foundation\Database'])){
-				$entry[$key]=$this->arr['SourcePot\Datapool\Foundation\Database']->stdReplacements($entry[$key]);
-			}
+			$entry[$key]=$this->stdReplacements($entry[$key]);
 		}
+		$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($this->toReplace);
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		return $entry;
 	}
@@ -145,29 +166,48 @@ class Filespace{
 		return $arr;
 	}
 
+	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read'){
+		$dir=$this->class2dir($selector['Class']);
+		$files=scandir($dir);
+		$selector['rowCount']=count($files)-2;
+		foreach($files as $file){
+			$suffixPos=strrpos($file,'.json');
+			if (empty($suffixPos)){continue;}
+			$selector['EntryId']=substr( $file,0,$suffixPos);
+			$entry=$this->entryById($selector,$isSystemCall,$rightType);
+			yield array_replace_recursive($selector,$entry);
+		}
+		return $entry['rowCount'];
+	}
+
 	public function entryById($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE){
 		// This method returns the entry from a setup-file selected by the selector arguments.
-		// The selector argument is an array which must contain at least the array-keys 'Class' and 'SettingName'.
+		// The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
 		//
 		$entry=array('rowCount'=>0,'rowIndex'=>0,'access'=>'NO ACCESS RESTRICTION');
 		$entry['file']=$this->selector2file($selector);
 		$arr=$this->file2arr($entry['file']);
 		$entry['rowCount']=intval($arr);
-		if (!empty($arr)){
+		if (empty($arr)){
+			// no entry found
+			if (!$returnMetaOnNoMatch){$entry=array();}
+		} else {
+			// entry found
 			$entry['rowCount']=1;
 			if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
 			$entry['access']=$this->arr['SourcePot\Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
 			if ($entry['access']){
-				$entry=array_merge($entry,$arr);
-				return $entry;
+				$entry=array_replace_recursive($selector,$entry,$arr);
+			} else if (!$returnMetaOnNoMatch){
+				$entry=array();
 			}
 		}
-		if ($returnMetaOnNoMatch){return $entry;} else {return FALSE;}
+		return $entry;
 	}
 	
 	private function insertEntry($entry){
-		if (empty($entry['Class']) || empty($entry['SettingName'])){
-			throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in entry argument, i.e. Class and SettingName',0,E_ERROR,__FILE__,__LINE__);		
+		if (empty($entry['Class']) || empty($entry['EntryId'])){
+			throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in entry argument, i.e. Class and EntryId',0,E_ERROR,__FILE__,__LINE__);		
 		}
 		$existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
 		if (empty($existingEntry['rowCount'])){
@@ -184,41 +224,39 @@ class Filespace{
 		}
 	}
 	
-	public function updateEntry($entry,$isSystemCall=FALSE){
+	public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE){
 		// This method updates and returns the entry of setup-file selected by the entry arguments.
-		// The selector argument is an array which must contain at least the array-keys 'Class' and 'SettingName'.
+		// The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
 		// 
-		$insertedEntry=$this->insertEntry($entry);
-		if ($insertedEntry){
-			return $insertedEntry;
-		} else {
-			$existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
+		$existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
+		if (empty($existingEntry['rowCount'])){
+			// insert entry
+			$entry=$this->unifyEntry($entry);
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
+			$this->statistics['inserted files']++;
+		} else if (empty($noUpdateCreateIfMissing)){
 			if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
 			if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
-				// write access update exsisting entry
-				$entry=array_merge($existingEntry,$entry);
-				$dir=$this->class2dir($entry['Class'],TRUE);	
+				// has access to update entry
+				$entry=array_replace_recursive($existingEntry,$entry);
 				$entry=$this->unifyEntry($entry);
 				$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
-				$this->statistics['inserted files']++;
-				return $entry;
-			} else if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
-				// read access only
-				return $existingEntry;
+				$this->statistics['updated files']++;					
 			} else {
-				// no access
-				return array('rowCount'=>1,'rowIndex'=>0,'access'=>FALSE);
+				// failed access to update entry
+				$entry=array('rowCount'=>1,'rowIndex'=>0,'access'=>FALSE);
+				$this->statistics['matched files']++;
 			}
+		} else {
+			// existing entry was not updated
+			$entry=$existingEntry;
+			$this->statistics['matched files']++;
 		}
+		return $entry;
 	}
 	
 	public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
-		$insertedEntry=$this->insertEntry($entry);
-		if ($insertedEntry){
-			return $insertedEntry;
-		} else {
-			return $this->entryById($entry,$isSystemCall,'Read',TRUE);
-		}
+		return $this->updateEntry($entry,$isSystemCall,TRUE);
 	}
 
 	public function entry2fileDownload($entry){
@@ -335,64 +373,79 @@ class Filespace{
 	* This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
 	*/
 	
-	public function file2entries($fileHandle,$entryTemplate,$isDebugging=FALSE){
-		$debugArr=array('fileHandle'=>$fileHandle,'entryTemplate'=>$entryTemplate);
-		if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
-		$entryTemplate['Type']=$entryTemplate['Source'];
-		if (!isset($entryTemplate['Params']['Attachment log'])){$entryTemplate['Params']['Attachment log']=array();}
-		if (!isset($entryTemplate['Params']['Content log'])){$entryTemplate['Params']['Content log']=array();}
-		if (!isset($entryTemplate['Params']['Processing log'])){$entryTemplate['Params']['Processing log']=array();}
-		if (empty($entryTemplate['Owner'])){$entryTemplate['Owner']=$userId;}
+	public function file2entries($fileHandle,$entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
+		$debugArr=array('fileHandle'=>$fileHandle,'entry'=>$entry);
 		if (isset($fileHandle['name']) && isset($fileHandle['tmp_name'])){
 			// uploaded file via html form
-			$entryTemplate['Params']['File']['Source']=$fileHandle['tmp_name'];
-			$pathArr=pathinfo($fileHandle['name']);
-			$mimeType=mime_content_type($fileHandle['tmp_name']);
+			$entry['Params']['File']['Source']=$fileHandle['tmp_name'];
+			$entry['pathArr']=pathinfo($fileHandle['name']);
+			$entry['mimeType']=mime_content_type($fileHandle['tmp_name']);
 			if (empty($mimeType) && !empty($fileHandle['type'])){$mimeType=$fileHandle['type'];}
 			// move uploaded file to tmp dir
 			$tmpDir=$this->getTmpDir();
-			$newSourceFile=$tmpDir.$pathArr['basename'];
+			$newSourceFile=$tmpDir.$entry['pathArr']['basename'];
 			$success=move_uploaded_file($fileHandle['tmp_name'],$newSourceFile);
 			if (!$success){return FALSE;}
-			$entryTemplate['Params']['File']['Source']=$newSourceFile;
-			$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$fileHandle['tmp_name'],'new'=>$entryTemplate['Params']['File']['Source'],'userId'=>$userId));
+			$entry['Params']['File']['Source']=$newSourceFile;
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$fileHandle['tmp_name'],'File source new'=>$entry['Params']['File']['Source']),FALSE);
 		} else if (is_file($fileHandle)){
 			// valid file name with path
-			$entryTemplate['Params']['File']['Source']=$fileHandle;
-			$pathArr=pathinfo($fileHandle);
-			$mimeType=mime_content_type($fileHandle);
-			$entryTemplate['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('new'=>$entryTemplate['Params']['File']['Source'],'userId'=>$userId));
+			$entry['Params']['File']['Source']=$fileHandle;
+			$entry['pathArr']=pathinfo($fileHandle);
+			$entry['mimeType']=mime_content_type($fileHandle);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
 		} else {
 			return FALSE;
 		}
-		$entryTemplate['Params']['File']['Size']=filesize($entryTemplate['Params']['File']['Source']);
-		$entryTemplate['Params']['File']['Name']=$pathArr['basename'];
-		$entryTemplate['Params']['File']['Extension']=$pathArr['extension'];
-		$entryTemplate['Params']['File']['Date (created)']=filectime($entryTemplate['Params']['File']['Source']);
-		if (empty($entryTemplate['Name'])){$entryTemplate['Name']=$pathArr['basename'];}
-		if (!empty($mimeType)){$entryTemplate['Params']['File']['MIME-Type']=$mimeType;}
-		$entry=$entryTemplate;
+		return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
+	}
+	
+	public function fileContent2entries($entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
+		$debugArr=array('entry'=>$entry,'createOnlyIfMissing'=>$createOnlyIfMissing);
+		if (!empty($entry['fileContent']) && !empty($entry['fileName'])){
+			// save file content to tmp dir
+			$tmpDir=$this->getTmpDir();
+			$entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
+			$entry['mimeType']=mime_content_type($entry['Params']['File']['Source']);
+			$entry['pathArr']=pathinfo($entry['Params']['File']['Source']);
+			$bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
+			if ($bytes===FALSE){return FALSE;}
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
+		}
+		$entry['currentUser']=(empty($_SESSION['currentUser']))?array('EntryId'=>'ANONYM','Name'=>'ANONYM'):$_SESSION['currentUser'];
+		$entry['Owner']=(empty($entry['Owner']))?$entry['currentUser']['EntryId']:$entry['Owner'];
+		$entry['Params']['File']['UploaderId']=$entry['currentUser']['EntryId'];
+		$entry['Params']['File']['UploaderName']=$entry['currentUser']['Name'];
+		$entry['Params']['File']['Uploaded']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+		$entry['Params']['File']['Size']=filesize($entry['Params']['File']['Source']);
+		$entry['Params']['File']['Name']=$entry['pathArr']['basename'];
+		$entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
+		$entry['Params']['File']['Date (created)']=filectime($entry['Params']['File']['Source']);
+		if (empty($entry['Name'])){$entry['Name']=$entry['pathArr']['basename'];}
+		if (isset($entry['mimeType'])){$entry['Params']['File']['MIME-Type']=$entry['mimeType'];}
+		$entry=$entry;
 		if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE){
 			// if file is zip-archive, extract all file and create entries seperately 
-			$entry['Params']['Processing log'][]=array('timestamp'=>time(),'msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"');
-			$debugArr['archive2files return']=$this->archive2files($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
+			$debugArr['archive2files return']=$this->archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
 		} else {
 			// save file
+			$this->statistics['inserted files']++;
+			$entry['Params']['File']['Style class']='';
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
 			if (!empty($entry['Params']['File']['MIME-Type'])){	
 				$entry['Type'].=' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
 			}
-			$this->statistics['inserted files']++;
-			$entry['Params']['File']['Style class']='';
-			$entry['Params']['File']['Uploaded']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-			if (isset($_SESSION['currentUser']['EntryId'])){$entry['Params']['File']['UploaderId']=$_SESSION['currentUser']['EntryId'];}
-			if (isset($_SESSION['currentUser']['Name'])){$entry['Params']['File']['UploaderName']=$_SESSION['currentUser']['Name'];}
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
 			$targetFile=$this->selector2file($entry,TRUE);
 			copy($entry['Params']['File']['Source'],$targetFile);
-			$entry['Params']['Attachment log'][]=array('timestamp'=>time(),'Params|File|Source'=>array('old'=>$entry['Params']['File']['Source'],'new'=>$targetFile,'userId'=>$userId));
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$entry['Params']['File']['Source'],'File source new'=>$targetFile),FALSE);
 			$entry=$this->fileUploadPostProcessing($entry);
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+			if ($createOnlyIfMissing){
+				$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
+			} else {
+				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+			}
 			$debugArr['entry updated']=$entry;
 		}
 		if ($isDebugging){
@@ -401,14 +454,14 @@ class Filespace{
 		return $entry;
 	}
 	
-	private function archive2files($entryTemplate){
+	private function archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging){
 		$zipStatistic=array('errors'=>array(),'files'=>array());
 		// extract zip archive to a temporary dir
-		if (is_file($entryTemplate['Params']['File']['Source'])){
+		if (is_file($entry['Params']['File']['Source'])){
 			$zipDir=$GLOBALS['dirs']['tmp'].'/'.$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
 			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
 			$zip=new \ZipArchive;
-			if ($zip->open($entryTemplate['Params']['File']['Source'])===TRUE){
+			if ($zip->open($entry['Params']['File']['Source'])===TRUE){
 				$zip->extractTo($zipDir);
 				$zip->close();
 			} else {
@@ -422,10 +475,9 @@ class Filespace{
 			$file=$zipDir.$file;
 			if (is_dir($file)){continue;}
 			$zipStatistic['files'][]=$file;
-			$entryTemplate['EntryId']='{{EntryId}}';
-			$entryTemplate['Name']='';
-			//$this->file2entries($file,$entryTemplate,count($zipStatistic['files']));
-			$this->file2entries($file,$entryTemplate);
+			$entry['EntryId']='{{EntryId}}';
+			$entry['Name']='';
+			$this->file2entries($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
 		}
 		$this->delDir($zipDir);
 		return $zipStatistic;

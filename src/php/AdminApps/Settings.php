@@ -51,7 +51,9 @@ class Settings{
 		} else {
 			$arr=$this->arr['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
 			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$selector,array(),array());
+			$settings=array();
+			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'Type','Filter'=>''));
+			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Setting entries','selectedView',$selector,$settings,array());
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
