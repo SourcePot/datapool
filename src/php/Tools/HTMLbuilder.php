@@ -543,7 +543,7 @@ class HTMLbuilder{
 		$callingFunction=__FUNCTION__.$arr['key'];
 		$formData=$this->formProcessing($callingClass,$callingFunction);
 		if ($saveRequest=isset($formData['cmd'][$arr['key']]['save'])){
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData,$arr['key']);
+			//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData,$arr['key']);
 		}
 		$updatedInteger=0;
 		$matrix=array();
@@ -593,6 +593,12 @@ class HTMLbuilder{
 			$html=$this->integerEditor($arr);
 		}
 		return $html;
+	}
+	
+	public function setAccessSelector($arr){
+		$arr['selected']=(isset($arr['value']))?$arr['value']:$arr['element-content'];
+		$arr['options']=array_flip($this->arr['SourcePot\Datapool\Foundation\Access']->access);
+		return $this->select($arr);
 	}
 
 	/**
@@ -689,7 +695,12 @@ class HTMLbuilder{
 		$arr['rowCount']=0;
 		$matrix=array();
 		$matrix['New']=$this->entry2row($arr,TRUE,FALSE);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,FALSE,'Read','EntryId',TRUE) as $entry){
+		$selector=array('Source'=>$arr['Source']);
+		$selector['Group']=(!empty($arr['Group']))?$arr['Group']:FALSE;
+		$selector['Folder']=(!empty($arr['Folder']))?$arr['Folder']:FALSE;
+		$selector['Name']=(!empty($arr['Name']))?$arr['Name']:FALSE;
+		$selector['Type']=(!empty($arr['Type']))?$arr['Type']:FALSE;
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $entry){
 			$arr['rowCount']=$entry['rowCount'];
 			$entryArr=$entry;
 			if (isset($arr['canvasCallingClass'])){$entryArr['canvasCallingClass']=$arr['canvasCallingClass'];}

@@ -40,6 +40,7 @@ private $entryTable;
 	}
 
 	public function unifyEntry($entry){
+		$entry['Read']=intval($entry['Content']['Read access']);
 		return $entry;
 	}
 
@@ -71,6 +72,7 @@ private $entryTable;
 								'Section content'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								'Section footer'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								'Section attachment'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
+								'Read access'=>array('htmlBuilderMethod'=>'setAccessSelector','element-content'=>65535,'keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								);
 		$sectionArr['canvasCallingClass']=$arr['callingFunction'];
 		$sectionArr['contentStructure']=$contentStructure;

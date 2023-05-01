@@ -14,7 +14,7 @@ class Access{
 	
 	private $arr;
 
-	private $access=array('NO_R'=>0,'PUBLIC_R'=>1,'REGISTERED_R'=>2,'MEMBER_R'=>4,'CCTV_R'=>1024,'ADMIN_R'=>32768,'ALL_CONTENTADMIN_R'=>49152,'ALL_REGISTERED_R'=>65534,'ALL_MEMBER_R'=>65532,'ALL_R'=>65535);
+	public $access=array('NO_R'=>0,'PUBLIC_R'=>1,'REGISTERED_R'=>2,'MEMBER_R'=>4,'CCTV_R'=>1024,'ADMIN_R'=>32768,'ALL_CONTENTADMIN_R'=>49152,'ALL_REGISTERED_R'=>65534,'ALL_MEMBER_R'=>65532,'ALL_R'=>65535);
 	
 	private $digits=array(array('key'=>'a','sizeScaler'=>1,'font'=>'OpenSansLight.ttf','symbol'=>'?','description'=>'Question mark'),
 						  array('key'=>'b','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>74,'description'=>'Spiral'),

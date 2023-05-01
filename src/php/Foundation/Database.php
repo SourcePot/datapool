@@ -236,7 +236,7 @@ class Database{
 		$debugArr=array('sql'=>$sql,'inputs'=>$inputs);
 		$stmt=$this->dbObj->prepare($sql);
 		foreach($inputs as $bindKey=>$bindValue){
-			if ($debugging){$debugArr['sql']=str_replace($bindKey,$bindValue,$debugArr['sql']);}
+			if ($debugging){$debugArr['sql']=str_replace($bindKey,strval($bindValue),$debugArr['sql']);}
 			$stmt->bindValue($bindKey,$bindValue);
 		}
 		if ($debugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__);}
@@ -444,9 +444,13 @@ class Database{
 		}
 		$sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 		$sqlArr['sql'].=';';
-		//var_dump($sqlArr);
-		//if (strcmp($selector['Source'],'calendar')===0 && !isset($sqlArr['inputs'][':EntryIdEQ'])){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($sqlArr);}
-		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
+		$isDebugging=FALSE;
+		/*
+		if (!empty($selector['Group'])){
+			if (strcmp($selector['Group'],'Homepage')===0){$isDebugging=TRUE;}
+		}
+		*/
+		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
 		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'');
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){

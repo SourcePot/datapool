@@ -136,7 +136,6 @@ class DelayEntries{
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
 		$contentStructure=array('Forward to canvas element'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-								'Forward to email address'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		// get selctorB
@@ -157,7 +156,7 @@ class DelayEntries{
 		$arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
-		$arr['caption']='Move and/or sent entries when condinions are met.';
+		$arr['caption']='Move entries when conditions are met.';
 		$arr['noBtns']=TRUE;
 		$matrix=array('Parameter'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE));
 		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
