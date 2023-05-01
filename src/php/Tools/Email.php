@@ -20,12 +20,19 @@ class Email{
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 );
 
-	public $definition=array('Type'=>array('@tag'=>'p','@default'=>'settings','@Read'=>'NO_R'),
-							 'Content'=>array('Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
+	public $receiverDef=array('Type'=>array('@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'),
+							  'Content'=>array('Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
 											  'User'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
 											  'Password'=>array('@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE),
 											  'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
 											),
+							);
+
+	public $transmitterDef=array('Type'=>array('@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'),
+							  'Content'=>array('Recipient e-mail address'=>array('@tag'=>'input','@type'=>'email','@default'=>'','@excontainer'=>TRUE),
+											   'Subject prefix'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
+											   'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
+											  ),
 							);
 
 	private $msgEntry=array();
@@ -39,7 +46,8 @@ class Email{
 	public function init($arr){
 		$this->arr=$arr;
 		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__,$this->definition);
+		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
+		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
 		return $this->arr;
 	}
 
@@ -95,7 +103,7 @@ class Email{
 
 	private function getReceiverSetting($callingClass){
 		$EntryId=preg_replace('/\W/','_','INBOX-'.$callingClass);
-		$setting=array('Class'=>__CLASS__,'EntryId'=>$EntryId);
+		$setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$EntryId);
 		$setting['Content']=array('Mailbox'=>'{mail.wallenhauer.com:993/imap/ssl/novalidate-cert/user=c@wallenhauer.com}',
 								  'User'=>'c@wallenhauer.com',
 								  'Password'=>'');
@@ -274,7 +282,7 @@ class Email{
 	*/
 	
 	public function dataSink($arr,$action='settingsWidget'){
-		if ($arr===TRUE){return 'Email inbox';}
+		if ($arr===TRUE){return 'Email outbox';}
 		switch($action){
 			case 'settingsWidget':
 				return $this->getTransmitterSettingsWidget($arr);
@@ -282,8 +290,14 @@ class Email{
 			case 'transmitterWidget':
 				return $this->getTransmitterWidget($arr);
 				break;
+			case 'sendEntry':
+				return $this->entry2mail($arr);
+				break;
 			case 'meta':
 				return $this->getTransmitterMeta($arr);
+				break;
+			case 'settings':
+				return $this->getTransmitterSetting($arr['callingClass']);
 				break;
 			case 'selector':
 				return $this->getTransmitterSelector($arr);
@@ -294,14 +308,17 @@ class Email{
 	
 	private function getTransmitterSetting($callingClass){
 		$EntryId=preg_replace('/\W/','_','OUTBOX-'.$callingClass);
-		$setting=array('Class'=>__CLASS__,'EntryId'=>$EntryId);
-		$setting['Content']=array();
+		$setting=array('Class'=>__CLASS__.'-tec','EntryId'=>$EntryId);
+		$setting['Content']=array('Recipient e-mail address'=>'',
+								  'Subject prefix'=>''
+								  );
 		return $this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
 	}
 
 	private function getTransmitterSettingsWidget($arr){
 		$arr['html']=(isset($arr['html']))?$arr['html']:'';
-		$arr['html'].='No settings available';
+		$setting=$this->getTransmitterSetting($arr['callingClass']);
+		$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
 		return $arr;
 	}
 	
@@ -317,9 +334,10 @@ class Email{
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($callingClass,$callingFunction);
 		if (isset($formData['cmd']['Send'])){
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read') as $EntryId=>$entry){
+				$mail=$arr;
 				$mail['selector']=$entry;
 				$mail['selector']['Content']=array_merge($mail['selector']['Content'],$formData['val']);	
-				$this->entry2mail($arr,$mail);
+				$this->entry2mail($mail);
 			}
 		}
 		$matrix=array();
@@ -346,11 +364,11 @@ class Email{
 	private function getTransmitterMeta($arr){
 		$rowCountSelector=$this->getTransmitterSelector($arr);
 		$meta=array();
-		$meta['Sent emails']=$this->arr['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector);
+		$meta['Accumulated emails outbox']=$this->arr['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector);
 		return $meta;
 	}
 
-	private function entry2mail($arr,$mail,$isDebugging=FALSE){
+	private function entry2mail($mail,$isDebugging=FALSE){
 		// This methode converts an entry to an emial address, the $mail-keys are:
 		// 'selector' ... selects the entry
 		// 'To' ... is the recipients emal address, use array for multiple addressees
@@ -382,6 +400,8 @@ class Email{
 			$msgTextPlain='';
 			$msgTextHtml='';
 			foreach($flatContent as $flatContentKey=>$flatContentValue){
+				$flatContentKey=strval($flatContentKey);
+				$flatContentValue=strval($flatContentValue);
 				$flatContentValue=trim($flatContentValue);
 				if (strpos($flatContentValue,'{{')===0){
 					continue;
@@ -438,7 +458,7 @@ class Email{
 				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			}
 			// save message
-			$entry=$this->getTransmitterSelector($arr);
+			$entry=$this->getTransmitterSelector($mail);
 			$entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
 			$entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
 			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
