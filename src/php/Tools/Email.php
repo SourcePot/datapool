@@ -319,7 +319,7 @@ class Email{
 			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read') as $EntryId=>$entry){
 				$mail['selector']=$entry;
 				$mail['selector']['Content']=array_merge($mail['selector']['Content'],$formData['val']);	
-				$this->entry2mail($mail);
+				$this->entry2mail($arr,$mail);
 			}
 		}
 		$matrix=array();
@@ -330,6 +330,9 @@ class Email{
 			$matrix[$key]['value']=$element;
 		}
 		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Email widget'));
+		$containerSelector=$this->getTransmitterSelector($arr);
+		$containerSettings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''));
+		$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Your sent emails (deleted after 1 year)','entryList',$containerSelector,$containerSettings,array());
 		return $arr;
 	}
 	
@@ -347,7 +350,7 @@ class Email{
 		return $meta;
 	}
 
-	private function entry2mail($mail,$isDebugging=FALSE){
+	private function entry2mail($arr,$mail,$isDebugging=FALSE){
 		// This methode converts an entry to an emial address, the $mail-keys are:
 		// 'selector' ... selects the entry
 		// 'To' ... is the recipients emal address, use array for multiple addressees
@@ -420,7 +423,6 @@ class Email{
 			} else {
 				$header['Content-Type']="multipart/alternative; boundary=\"".$textBoundery."\"";
 			}
-			unset($mail['selector']);
 			$mail['message']=$message;
 			// add headers
 			$header['MIMI-Version']='1.0';
@@ -435,14 +437,52 @@ class Email{
 				$logArr=array('msg'=>'Sending email failed.','priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
 				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			}
+			// save message
+			$entry=$this->getTransmitterSelector($arr);
+			$entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
+			$entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
+			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
 		}
 		if ($isDebugging){
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('header'=>$header,'mail'=>$mail));
+			unset($mail['selector']);
+			$debugArr=array('header'=>$header,'mail'=>$mail);
+			if (isset($entry)){$debugArr['entry']=$entry;}
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $success;
 	}
 	
-	
+	private function email2file($entry,$mailArr){
+		$partOrder=array('header'=>TRUE,'From'=>TRUE,'To'=>TRUE,'Date'=>date('r'),'Subject'=>TRUE,'message'=>TRUE);
+		$fileContent='';
+		foreach($partOrder as $part=>$initValue){
+			if (!isset($mailArr[$part])){$mailArr[$part]=$initValue;}
+			if (is_array($mailArr[$part])){
+				foreach($mailArr[$part] as $key=>$value){
+					$fileContent.=$key.': '.$value."\r\n";
+				}
+			} else {
+				if (strcmp($part,'message')===0){
+					$fileContent.="\r\n".$mailArr[$part];
+				} else {
+					$fileContent.=$part.': '.$mailArr[$part]."\r\n";
+				}
+			}
+		}
+		$entry['Name']=iconv_mime_decode($mailArr['Subject']);
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$fileName=date('Y-m-d').' '.preg_replace('/\W/','_',$entry['Name']).'.eml';
+		$pathArr=pathinfo($fileName);
+		$file=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+		file_put_contents($file,$fileContent);
+		$entry['Params']['File']['MIME-Type']='application/octet-stream';
+		$entry['Params']['File']['Size']=filesize($file);
+		$entry['Params']['File']['Name']=$pathArr['basename'];
+		$entry['Params']['File']['Extension']=$pathArr['extension'];
+		$entry['Params']['File']['Date (created)']=date('Y-m-d');
+		$entry['Expires']=date('Y-m-d',time()+31536000);
+		return $entry;
+	}
 
 }
 ?>
