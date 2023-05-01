@@ -279,31 +279,11 @@ class Explorer{
 	}
 
 	private function sendEmail($callingClass,$setKey){
-		$html='';
-		$selector=$this->selectorFromState($callingClass);
-		if (!empty($selector['EntryId'])){
-			$matrix=array();
-			$mail=array('selector'=>$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector));
-			$template=array('val'=>array('To'=>'','Subject'=>'Das wollte ich Dir schicken...','From'=>$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract(FALSE,5)),
-							'filter'=>array('To'=>FILTER_SANITIZE_EMAIL,'Subject'=>'','From'=>FILTER_SANITIZE_EMAIL)
-							);
-			$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
-			$formData['val']=array_merge($template['val'],$formData['val']);
-			if (isset($formData['cmd']['send'])){
-				$mail=array_merge($mail,$formData['val']);
-				$this->arr['SourcePot\Datapool\Tools\Email']->communicationHub('send',$mail);
-			}
-			foreach($template['filter'] as $key=>$filter){
-				$element=array('tag'=>'input','type'=>'text','value'=>$formData['val'][$key],'key'=>array($key),'filter'=>$filter,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$matrix[$key]=array('Value'=>$element);
-			}
-			$element=array('tag'=>'input','type'=>'submit','value'=>'Send','key'=>array('send'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-			$matrix['&rarr;']=array('Value'=>$element);
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Send entry as email'));
-			$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','margin'=>'35px 0 0 0','padding-left'=>'0.5em'));
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
+		$arr=array('html'=>'','callingClass'=>$callingClass,'callingFunction'=>__FUNCTION__,'icon'=>'@');
+		$arr['selector']=$this->selectorFromState($callingClass);
+		if (!empty($arr['selector']['EntryId'])){
+			$arr=$this->arr['SourcePot\Datapool\Tools\Email']->datasink($arr,'transmitterWidget');
 		}
-		$arr=array('html'=>$html,'icon'=>'@');
 		return $arr;
 	}
 	

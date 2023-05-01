@@ -163,7 +163,7 @@ class DataExplorer{
 		if (isset($canvasElement['Content']['Selector'])){$return['selector']=$canvasElement['Content']['Selector'];}
 		$return['contentHtml']='';
 		if (!empty($canvasElement['Content']['Widgets']["Processor"])){
-			$return['contentHtml'].=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('settings',$canvasElement);
+			$return['contentHtml'].=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'settings');
 		}
      	return $return;
 	}
@@ -237,7 +237,7 @@ class DataExplorer{
 			$html.=$this->getFileUpload($canvasElement);
 			$html.=$this->getDeleteBtn($canvasElement);
 			if (!empty($canvasElement['Content']['Widgets']["Processor"])){
-				$html.=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor('widget',$canvasElement);
+				$html.=$this->arr[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'widget');
 			}
 			$html.=$this->exportImportHtml($callingClass);
 		}

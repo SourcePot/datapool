@@ -17,8 +17,6 @@ class CalcEntries{
 	
 	private $arr;
 
-	private $vars=array();
-
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -42,14 +40,13 @@ class CalcEntries{
 	
 	public function getEntryTable(){return $this->entryTable;}
 
-	public function dataProcessor($action='info',$callingElementSelector=array(),$vars=array()){
+	public function dataProcessor($callingElementSelector=array(),$action='info'){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$this->vars=$vars;
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
@@ -98,7 +95,7 @@ class CalcEntries{
 	public function getCalcEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
-		$result=$this->vars;
+		$result=array();
 		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runCalcEntries($arr['selector'],FALSE);

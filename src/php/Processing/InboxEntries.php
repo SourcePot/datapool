@@ -41,7 +41,7 @@ class InboxEntries{
 
 	public function getEntryTable(){return $this->entryTable;}
 	
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($callingElementSelector=array(),$action='info'){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
@@ -131,9 +131,8 @@ class InboxEntries{
 	public function getInboxEntriesSettingsHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->inboxParams($arr['selector']);
-		$dataSourceArr=$arr;
-		$dataSourceArr['callingClass']=$arr['selector']['Folder'];
-		if (isset($this->arr[$this->inboxClass])){$arr=$this->arr[$this->inboxClass]->dataSource($dataSourceArr,'settingsWidget');}
+		$arr['callingClass']=$arr['selector']['Folder'];
+		if (isset($this->arr[$this->inboxClass])){$arr=$this->arr[$this->inboxClass]->dataSource($arr,'settingsWidget');}
 		$arr['html'].=$this->inboxConditionRules($arr['selector']);
 		$arr['html'].=$this->inboxForwardingRules($arr['selector']);
 		return $arr;
@@ -219,11 +218,7 @@ class InboxEntries{
 	}
 
 	public function runInboxEntries($callingElement,$testRun=1){
-		
 		$base=$this->getBaseArr($callingElement);
-		
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($base);
-		
 		$inboxParams=current($base['inboxparams']);
 		$inboxParams=$inboxParams['Content'];
 		$meta=$this->arr[$inboxParams['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'meta');

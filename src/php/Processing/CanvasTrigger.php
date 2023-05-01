@@ -52,7 +52,7 @@ class CanvasTrigger{
 
 	public function getEntryTable(){return $this->entryTable;}
 	
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($callingElementSelector=array(),$action='info'){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.

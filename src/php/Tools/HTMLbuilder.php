@@ -653,9 +653,7 @@ class HTMLbuilder{
 							$matrix[$matrixIndex][$label]=(empty($logArr[$property]))?'':$logArr[$property];
 							if (strcmp($label,'UserId')===0){
 								$userName=$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract($matrix[$matrixIndex][$label],3);
-								if (!empty($userName)){
-									$matrix[$matrixIndex][$label]=$userName;
-								}
+								if (!empty($userName)){$matrix[$matrixIndex][$label]=$userName;}
 							}
 						}
 					}

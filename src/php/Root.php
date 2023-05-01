@@ -153,6 +153,7 @@ final class Root{
 								'dataProcessor'=>TRUE,
 								'getTrigger'=>FALSE,	
 								'dataSource'=>TRUE,
+								'dataSink'=>TRUE,
 								);
 		// analyse class structure
 		if (method_exists($arr[$classWithNamespace],'getEntryTable')){

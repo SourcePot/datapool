@@ -34,7 +34,7 @@ class CanvasProcessing{
 
 	public function getEntryTable(){return $this->entryTable;}
 	
-	public function dataProcessor($action='info',$callingElementSelector=array()){
+	public function dataProcessor($callingElementSelector=array(),$action='info'){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.
@@ -190,7 +190,7 @@ class CanvasProcessing{
 			$canvasElement=array('Source'=>'dataexplorer','EntryId'=>$canvasElement2process['Content']['Process']);
 			$canvasElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
 			$processor=$canvasElement['Content']['Widgets']['Processor'];
-			$result=$this->arr[$processor]->dataProcessor($isTestRun?'test':'run',$canvasElement);
+			$result=$this->arr[$processor]->dataProcessor($canvasElement,$isTestRun?'test':'run');
 			$result['Statistics'][$isTestRun?'Tested':'Processed']=array('Value'=>'Step '.(intval($base['Step count'])-count($base['canvasprocessingrules'])).': '.$canvasElement['Content']['Style']['Text']);
 			$result['Statistics']['Timestamp']=array('Value'=>time());
 			$result['Statistics']['Date']=array('Value'=>date('Y-m-d H:i:s'));
