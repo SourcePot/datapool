@@ -141,8 +141,9 @@ class OutboxEntries{
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
 		$contentStructure=array('Outbox source'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$this->arr['registered methods']['dataSink']),
+								'When done'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Keep entries','Delete sent entries')),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
-							);
+								);
 		// get selctorB
 		$outboxParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);;
 		$outboxParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($outboxParams,'ALL_R','ALL_CONTENTADMIN_R');
@@ -196,6 +197,7 @@ class OutboxEntries{
 			// loop through source entries and parse these entries
 			$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 			$result=array('Outbox statistics'=>array('Emails sent'=>array('value'=>0),
+													 'Entries removed'=>array('value'=>0),
 													 'Emails failed'=>array('value'=>0),
 													 'Entries processed'=>array('value'=>0),
 													)
@@ -216,6 +218,7 @@ class OutboxEntries{
 	private function processEntry($entry,$base,$callingElement,$result,$testRun,$isDebugging=FALSE){
 		$outboxParams=current($base['outboxparams']);
 		$outboxParams=$outboxParams['Content'];
+		$orgEntry=$entry;
 		$entry['Content']=array();
 		$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
 		// process outbox rules
@@ -242,6 +245,12 @@ class OutboxEntries{
 		if ($testRun){
 			$result['Outbox statistics']['Emails sent']['value']++;	
 		} else if ($this->arr[$outboxParams['Outbox source']]->dataSink($mail,'sendEntry')){
+			if (empty(intval($outboxParams['When done']))){
+				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($orgEntry,'Processing log',array('forwarded'=>'By email to "'.$mail['To'].'"'),TRUE);
+			} else {
+				$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($orgEntry,TRUE);
+				$result['Outbox statistics']['Entries removed']['value']++;
+			}
 			$result['Outbox statistics']['Emails sent']['value']++;	
 		} else {
 			$result['Outbox statistics']['Emails failed']['value']++;	
