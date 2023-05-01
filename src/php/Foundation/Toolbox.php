@@ -78,7 +78,7 @@ class Toolbox{
 				$toolboxProviderClass=$toolbox['Content']['class'];
 				$toolboxProviderMethod=$toolbox['Content']['method'];
 				$toolboxProviderArgs=$toolbox['Content']['args'];
-				$toolbox=array('Name'=>'Logs','class'=>__CLASS__,'method'=>'showLogs','args'=>array('maxCount'=>10),'settings'=>array());
+				//$toolbox=array('Name'=>'Logs','class'=>__CLASS__,'method'=>'showLogs','args'=>array('maxCount'=>10),'settings'=>array());
 				$appArr=array('class'=>'toolbox','icon'=>'+','default-min-width'=>'100%','default-max-width'=>'100%','default-max-height'=>'80px');
 				$appArr['html']=$this->arr[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
 				$toolboxHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);

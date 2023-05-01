@@ -149,7 +149,6 @@ class Filespace{
 			if (!isset($entry[$key])){$entry[$key]=$defArr['value'];}
 			$entry[$key]=$this->stdReplacements($entry[$key]);
 		}
-		$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($this->toReplace);
 		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		return $entry;
 	}

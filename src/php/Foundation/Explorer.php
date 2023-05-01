@@ -314,10 +314,9 @@ class Explorer{
 		$writableEntries=0;
 		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write') as $entry){$writableEntries++;}
 		if ($writableEntries===0){return array('html'=>'','icon'=>$icon[0]);}
-		//
 		$h2Arr=array('tag'=>'h3','element-content'=>'Set '.$right.' rights');
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($h2Arr);
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor($this->getGuideEntry(),$right,$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols());
+		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor(array('selector'=>$this->getGuideEntry(),'key'=>$right));
 		$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','margin'=>'35px 0 0 0','padding-left'=>'0.5em'));
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
 		$arr=array('html'=>$html,'icon'=>$icon[0]);

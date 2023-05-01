@@ -283,12 +283,12 @@ class MediaTools{
 		$style=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
 		$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
 		$tmpDir=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-		$pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
-		$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$pdfFile);
-		if (is_file($pdfFile)){
+		$htmlFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
+		$this->arr['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$htmlFile);
+		if (is_file($htmlFile)){
 			$htmlArr=$arr;
 			$htmlArr['tag']='iframe';
-			$htmlArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
+			$htmlArr['src']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->abs2rel($htmlFile);
 			$htmlArr['type']='application/pdf';
 			$htmlArr['element-content']='Html content';
 			$htmlArr['style']=(isset($pdfArr['style']))?array_merge($style,$pdfArr['style']):$style;

@@ -528,23 +528,23 @@ class HTMLbuilder{
 		return $arr;
 	}
 	
-	public function integerEditor($arr,$key=FALSE,$integerDef=array(),$bitCount=16){
+	public function integerEditor($arr){
 		// This function provides the HTML-script for an integer editor for the provided entry argument.
 		// Typical use is for keys 'Read', 'Write' or 'Priviledges'.
 		//
 		if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
-		$template=array('key'=>'Read','integerDef'=>$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>$bitCount);
+		$template=array('key'=>'Read','integerDef'=>$this->arr['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16);
 		$arr=array_replace_recursive($template,$arr);
 		$entry=$arr['selector'];
 		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
-			return $this->element(array('tag'=>'p','element-content'=>'access denied'));
+			//return $this->element(array('tag'=>'p','element-content'=>'access denied'));
 		}
 		$integer=$entry[$arr['key']];
 		$callingClass=__CLASS__;
 		$callingFunction=__FUNCTION__.$arr['key'];
 		$formData=$this->formProcessing($callingClass,$callingFunction);
 		if ($saveRequest=isset($formData['cmd'][$arr['key']]['save'])){
-			//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData,$arr['key']);
 		}
 		$updatedInteger=0;
 		$matrix=array();
@@ -577,9 +577,7 @@ class HTMLbuilder{
 			$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,FALSE);
 			$statistics=$this->arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
-			if ($statistics['updated']>0){
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Key "'.$arr['key'].'" updated for "'.$statistics['updated'].'" entries.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-			}
+			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$arr['key'].'-key processed: '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>FALSE,'hideKeys'=>TRUE,'hideHeader'=>TRUE));
 		return $html;

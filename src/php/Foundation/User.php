@@ -49,7 +49,7 @@ class User{
 							 'Login'=>array('@function'=>'getLoginForm','@class'=>'SourcePot\Datapool\Components\Login'),
 							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@key'=>'Privileges','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
-							 '@hideHeader'=>TRUE,'@hideKeys'=>TRUE,
+							 '@hideHeader'=>TRUE,'@hideKeys'=>FALSE,
 							 );
 
 	private $userRols=array('Content'=>array(0=>array('Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'),

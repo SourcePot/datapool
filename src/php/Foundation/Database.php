@@ -474,7 +474,7 @@ class Database{
 			$sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
 			$sqlArr['sql'].=';';
 			//var_dump($sqlArr);
-		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
+			$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
 			$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source']);
 			$this->addStatistic('matches',$result['rowCount']);
 			$row=$stmt->fetch(\PDO::FETCH_ASSOC);
