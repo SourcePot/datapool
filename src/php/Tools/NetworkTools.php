@@ -2,7 +2,6 @@
 /*
 * This file is part of the Datapool CMS package.
 * @package Datapool
-* @author Carsten Wallenhauer
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
 * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-v3
@@ -42,17 +41,6 @@ class NetworkTools{
 		$_SESSION['page state']['selected'][$callingClass]=$state;
 		return $_SESSION['page state']['selected'][$callingClass];
 	}
-
-	/*
-	public function mergePageState($callingClass,$state){
-		if (isset($_SESSION['page state']['selected'][$callingClass])){
-			$_SESSION['page state']['selected'][$callingClass]=array_merge(	$_SESSION['page state']['selected'][$callingClass],$state);	
-		} else {
-			$_SESSION['page state']['selected'][$callingClass]=$state;
-		}
-		return $_SESSION['page state']['selected'][$callingClass];
-	}
-	*/
 
 	public function setPageStateByKey($callingClass,$key,$value){
 		$_SESSION['page state']['selected'][$callingClass][$key]=$value;

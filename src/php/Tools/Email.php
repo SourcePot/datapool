@@ -2,7 +2,6 @@
 /*
 * This file is part of the Datapool CMS package.
 * @package Datapool
-* @author Carsten Wallenhauer
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
 * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-v3
@@ -61,7 +60,7 @@ class Email{
 	
 	public function job($vars){
 		if (empty($vars['Inboxes'])){
-			$selector=array('Class'=>__CLASS__);
+			$selector=array('Class'=>__CLASS__.'-rec');
 			$vars['Inboxes']=array();
 			foreach($this->arr['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
 				$vars['Inboxes'][$entry['EntryId']]=$entry;
@@ -148,6 +147,10 @@ class Email{
 
 	private function todaysEmails($setting){
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
+			$result=array('Error'=>'Setting "Mailbox" and/or "User" is empty.');
+			return $result;
+		}
 		$result=array('Loading'=>$setting['Content']['Mailbox']);
 		$mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
 		imap_errors();
@@ -367,6 +370,12 @@ class Email{
 		$meta['Accumulated emails outbox']=$this->arr['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector);
 		return $meta;
 	}
+
+	/**
+	* This method converts the argument mail to an email and tries to send the email.
+	* The argument mail is an array which must contain an entry: arr['selector']=entry 
+	* @return boolean
+	*/
 
 	private function entry2mail($mail,$isDebugging=FALSE){
 		// This methode converts an entry to an emial address, the $mail-keys are:

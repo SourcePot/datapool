@@ -2,7 +2,6 @@
 /*
 * This file is part of the Datapool CMS package.
 * @package Datapool
-* @author Carsten Wallenhauer
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
 * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-v3
@@ -180,7 +179,7 @@ class OutboxEntries{
 		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
-		$arr['caption']='Mapping rules: Map selected entry values or constants (Source value) to target entry values';
+		$arr['caption']='Email creation rules';
 		$arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
@@ -219,20 +218,20 @@ class OutboxEntries{
 		$outboxParams=current($base['outboxparams']);
 		$outboxParams=$outboxParams['Content'];
 		$orgEntry=$entry;
-		$entry['Content']=array();
 		$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+		$entry['Content']=array();
 		// process outbox rules
-		
 		if (empty($base['outboxrules'])){
 			$result['Outbox statistics']['Error']['Value']='Outbox rules missing';
 			return $result;
 		}
 		foreach($base['outboxrules'] as $ruleId=>$rule){
+			$flatKeyNeedle=$rule['Content']['use column'];
 			$emailPart=$rule['Content']['Add to'];
 			if (!empty($rule['Content']['Text'])){
 				$entry['Content'][$emailPart]=(isset($entry['Content'][$emailPart]))?$entry['Content'][$emailPart].' '.$rule['Content']['Text']:$rule['Content']['Text'];
-			} else if (!empty($flatEntry[$rule['Content']['use column']])){
-				$entry['Content'][$emailPart]=(isset($entry['Content'][$emailPart]))?$entry['Content'][$emailPart].' '.$flatEntry[$rule['Content']['use column']]:$flatEntry[$rule['Content']['use column']];
+			} else if (!empty($flatEntry[$flatKeyNeedle])){
+				$entry['Content'][$emailPart]=(isset($entry['Content'][$emailPart]))?$entry['Content'][$emailPart].' '.$flatEntry[$flatKeyNeedle]:$flatEntry[$flatKeyNeedle];
 			}
 		}
 		$SubjectPrefix=$base['outBoxSettings']['Content']['Subject prefix'];
@@ -256,11 +255,18 @@ class OutboxEntries{
 			$result['Outbox statistics']['Emails failed']['value']++;	
 		}
 		$result['Outbox statistics']['Entries processed']['value']++;
-		$emailIndex=(isset($result['Content created by outbox rules']))?'Email content '.strval(count($result['Content created by outbox rules'])+1):'Email content 1';
-		$result['Content created by outbox rules'][$emailIndex]=array();
-		if (isset($mail['To'])){$result['Content created by outbox rules'][$emailIndex]['To']=$mail['To'];}
-		if (isset($mail['selector']['Content']['Subject'])){$result['Content created by outbox rules'][$emailIndex]['Subject']=$mail['selector']['Content']['Subject'];}
-		if (isset($mail['selector']['Content']['Message'])){$result['Content created by outbox rules'][$emailIndex]['Message']=$mail['selector']['Content']['Message'];}
+		$emailIndex=(isset($result['Content created by outbox rules']))?count($result['Content created by outbox rules'])+1:1;
+		$emailCaption='Sample '.$emailIndex;
+		if ($emailIndex<4){
+			$result['Content created by outbox rules'][$emailCaption]=array();
+			if (isset($mail['To'])){$result['Content created by outbox rules'][$emailCaption]['To']=$mail['To'];}
+			if (isset($mail['selector']['Content']['Subject'])){$result['Content created by outbox rules'][$emailCaption]['Subject']=$mail['selector']['Content']['Subject'];}
+			if (isset($mail['selector']['Content']['Message'])){$result['Content created by outbox rules'][$emailCaption]['Message']=$mail['selector']['Content']['Message'];}
+		}
+		if ($isDebugging){
+			$debugArr=array('base'=>$base,'entry'=>$orgEntry,'flatEntry'=>$flatEntry,'mail'=>$mail);
+			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+		}
 		return $result;
 	}
 	
