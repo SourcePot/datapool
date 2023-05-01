@@ -58,7 +58,7 @@ class CanvasTrigger{
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -159,8 +159,6 @@ class CanvasTrigger{
 	public function getCanvasTriggerSettingsHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->canvasTriggerRules($arr['selector']);
-		//$selectorMatrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-		//$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for CanvasTrigger'));
 		return $arr;
 	}
 	
@@ -200,11 +198,11 @@ class CanvasTrigger{
 		}
 		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		$result=array('Trigger statistics'=>array('Signals processed'=>array('value'=>0),
-												 'Trigger processed'=>array('value'=>0),
-												 'Trigger activated'=>array('value'=>0),
-												 'Trigger existed'=>array('value'=>0),
-												 'Trigger initialized'=>array('value'=>0),
-												 )
+												  'Trigger processed'=>array('value'=>0),
+												  'Trigger activated'=>array('value'=>0),
+												  'Trigger existed'=>array('value'=>0),
+												  'Trigger initialized'=>array('value'=>0),
+												  )
 					 );
 		$signals=$this->updateTriggerSignals($callingElement);
 		$triggerEntry=array('Source'=>$this->entryTable,'Group'=>'Canvas trigger','Folder'=>$callingElement['Folder'],'Name'=>'Trigger','Type'=>$this->entryTable.' array');

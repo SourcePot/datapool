@@ -40,7 +40,7 @@ class CanvasProcessing{
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
+		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
