@@ -595,12 +595,6 @@ class HTMLbuilder{
 		return $html;
 	}
 	
-	public function setAccessSelector($arr){
-		$arr['selected']=(isset($arr['value']))?$arr['value']:$arr['element-content'];
-		$arr['options']=array_flip($this->arr['SourcePot\Datapool\Foundation\Access']->access);
-		return $this->select($arr);
-	}
-
 	/**
 	* This method returns an html-table containing a file upload facility as well as the gerenic buttons 'remove' and 'delete'.
 	* $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
