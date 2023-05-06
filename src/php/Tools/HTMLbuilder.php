@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Tools;
 class HTMLbuilder{
 	
 	private $arr;
+	private $garbageCollector=array();
 	
 	private $elementAttrWhitelist=array('tag'=>TRUE,'input'=>TRUE,'type'=>TRUE,'class'=>TRUE,'style'=>TRUE,'id'=>TRUE,'name'=>TRUE,'title'=>TRUE,'function'=>TRUE,
 										'method'=>TRUE,'enctype'=>TRUE,'xmlns'=>TRUE,'lang'=>TRUE,'href'=>TRUE,'src'=>TRUE,'value'=>TRUE,'width'=>TRUE,'height'=>TRUE,
@@ -29,6 +30,7 @@ class HTMLbuilder{
 	
 	public function init($arr){
 		$this->arr=$arr;
+		
 		return $this->arr;
 	}
 	
@@ -813,12 +815,13 @@ class HTMLbuilder{
 		return $this->element($arr);
 	}
 	
-	public function formProcessing($callingClass,$callingFunction,$resetAfterProcessing=FALSE){
+	public function formProcessing($callingClass,$callingFunction){
 		// This method returns the result from processing of $_POST and $_FILES.
 		// It returns an array with the old values, the new values, files und commmands.
 		$result=array('cmd'=>array(),'val'=>array(),'valFlat'=>array(),'changed'=>array(),'files'=>array());
 		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if (isset($_SESSION[$callingClass][$callingFunction])){
+			//var_dump($callingClass.'::'.$callingFunction.'='.count($_SESSION[$callingClass][$callingFunction]));
 			foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){
 				if (isset($_POST[$name])){
 					// process $_POST
@@ -856,8 +859,8 @@ class HTMLbuilder{
 					$result['files']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['files']);
 					foreach($result['file errors'] as $fileIndex=>$error){unset($result['files'][$arr['key']][$fileIndex]);}
 				}
+				$this->garbageCollector[]=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'name'=>$name);
 			}
-			if ($resetAfterProcessing){$_SESSION[$callingClass][$callingFunction]=array();}
 		}
 		$result['valFlat']=$result['val'];
 		$result['cmd']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['cmd']);
@@ -865,6 +868,13 @@ class HTMLbuilder{
 		$result['changed']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($result['changed']);
 		//if (!empty($_FILES)){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($result);}
 		return $result;
+	}
+	
+	public function clearFormProcessingCache(){
+		//var_dump('garbageCollector: '.count($this->garbageCollector));
+		foreach($this->garbageCollector as $garbage){
+			unset($_SESSION[$garbage['callingClass']][$garbage['callingFunction']][$garbage['name']]);
+		}
 	}
 
 	private function fileErrorCode2str($code){

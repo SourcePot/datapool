@@ -86,7 +86,7 @@ final class Root{
 									 );
 		$dirs=scandir($GLOBALS['dirs']['php']);
 		foreach($dirs as $dirIndex=>$dirname){
-			if (strlen($dirname)<3 || strpos($dirname,'Traits')!==FALSE || strpos($dirname,'.php')!==FALSE){continue;}
+			if (strlen($dirname)<3 || strpos($dirname,'Traits')!==FALSE || strpos($dirname,'Interfaces')!==FALSE || strpos($dirname,'.php')!==FALSE){continue;}
 			$dir=$GLOBALS['dirs']['php'].'/'.$dirname.'/';
 			$Components=scandir($dir);
 			// loop through all components found in $dir
@@ -115,13 +115,14 @@ final class Root{
 			$arr=$arr[$_SESSION['page state']['app']['Class']]->run($arr);
 			$arr=$arr['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
 			// add page statistic for the web page called by a user
+			$arr['SourcePot\Datapool\Tools\HTMLbuilder']->clearFormProcessingCache();
 			$this->addPageStatistic($arr,$type);
 		} else if (strpos($type,'js.php')>0){
 			// js-call Processing
 			$arr=$arr['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
 		} else if (strpos($type,'job.php')>0){
 			// job Processing
-			$arr=$this->runJob($arr);
+			$arr=$arr['SourcePot\Datapool\Foundation\Job']->trigger($arr);
 		} else {
 			// invalid
 		}
@@ -174,68 +175,7 @@ final class Root{
 		if (stripos($classWithNamespace,'logging')!==FALSE){$GLOBALS['logging class']=$classWithNamespace;}
 		return $arr;
 	}
-	
-	/**
-	* @return array The method runs the most overdue job, updates the job setting, adds generated webpage refrenced by the key "page html" to the provided array and returns the completed array.
-	*/
-	private function runJob($arr){
-		// all jobs settings - remove non-existing job methods and add new job methods
-		$jobs=array('due'=>array(),'undue'=>array());
-		$allJobsSettingInitContent=array('Last run'=>time(),'Last run date'=>date('Y-m-d H:i:s'),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
-		$allJobsSetting=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Type'=>'array setting');
-		$allJobsSetting=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
-		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
-		$allJobsSetting=$arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($allJobsSetting,TRUE);
-		$allJobsSettingContent=$allJobsSetting['Content'];
-		$allJobsSetting['Content']=array();
-		foreach($arr['registered methods']['job'] as $class=>$initContent){
-			$initContent=array_merge($allJobsSettingInitContent,$initContent);
-			if (isset($allJobsSettingContent[$class])){
-				$allJobsSetting['Content'][$class]=$allJobsSettingContent[$class];
-			} else {
-				$allJobsSetting['Content'][$class]=$initContent;
-			}
-			$dueTime=time()-($allJobsSetting['Content'][$class]['Last run']+$allJobsSetting['Content'][$class]['Min time in sec between each run']);
-			if ($dueTime>0){$jobs['due'][$class]=$dueTime;} else {$jobs['undue'][$class]=$dueTime;}
-		}
-		// get most overdue job
-		$arr['page html']=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Job processing triggered'));
-		if (empty($jobs['due'])){
-			$matrix=$arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobs);
-			$arr['page html'].=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE));	
-		} else {
-			arsort($jobs['due']);
-			reset($jobs['due']);
-			$dueJob=key($jobs['due']);
-			$dueMethod=$allJobsSetting['Content'][$dueJob]['method'];
-			// job var space and run job
-			$jobVars=array('Source'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
-						   'Group'=>'Job processing','Folder'=>'Var space',
-						   'Name'=>$dueJob,
-						   'Type'=>$arr['SourcePot\Datapool\AdminApps\Settings']->getEntryTable()
-						   );
-			$jobVars=$arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
-			$jobVars=$arr['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
-			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($jobVars,TRUE);
-			$jobStartTime=hrtime(TRUE);
-			$arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-			$jobVars['Content']=$arr[$dueJob]->$dueMethod($jobVars['Content']);
-			$jobStatistic=$arr['SourcePot\Datapool\Foundation\Database']->getStatistic();
-			$allJobsSetting['Content'][$dueJob]['Last run']=time();
-			$allJobsSetting['Content'][$dueJob]['Last run date']=date('Y-m-d H:i:s');
-			$allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]']=round((hrtime(TRUE)-$jobStartTime)/1000000);
-			// update job vars
-			$jobVars=$arr['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);
-			// show results
-			$matrix=$arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($allJobsSetting['Content'][$dueJob]);
-			$arr['page html'].=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job done','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
-			$matrix=$arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobStatistic);
-			$arr['page html'].=$arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job statistic','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
-		}
-		$arr['SourcePot\Datapool\Foundation\Database']->updateEntry($allJobsSetting,TRUE);
-		return $arr;
-	}
-	
+		
 	/**
 	* @return array An entry as associative array with all statistic data at the end when the web page was created. The entry is added to the database logging table.
 	*/

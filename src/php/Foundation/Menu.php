@@ -42,7 +42,7 @@ class Menu{
 			$this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
 		}
 		// get app from form
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'firstMenuBar');
+		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
 		if (!empty($formData['val']['Class'])){
 			$app=$formData['val']['Class'];
 			if (method_exists($app,'run')){
