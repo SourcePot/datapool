@@ -398,12 +398,12 @@ class DataExplorer{
 				$this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);
 			}
 		}
-		$btnArr=array('tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('float'=>'left','clear'=>'both','margin'=>'30px 10px 0 0;'));
+		$btnArr=array('tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('float'=>'left','clear'=>'both','margin'=>'0.5em 5px;'));
 		$html='';
 		$btnArr['element-content']='Download backup';
 		$btnArr['key']=array($btnArr['element-content']);
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-		$element=array('tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>array('import files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>'float:left;clear:left;margin:30px 10px 0 0;');
+		$element=array('tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>array('import files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>'float:left;clear:left;margin:0.5em 5px;');
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
 		$btnArr['element-content']='Import';
 		$btnArr['key']=array($btnArr['element-content']);

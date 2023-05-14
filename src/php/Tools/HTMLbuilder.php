@@ -346,7 +346,8 @@ class HTMLbuilder{
 		$arr['icon']=(isset($arr['icon']))?$arr['icon']:'?';
 		$arr['style']=(isset($arr['style']))?$arr['style']:array();
 		$arr['class']=(isset($arr['class']))?$arr['class']:'app';
-		$summaryArr=array('tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'class'=>$arr['class']);
+		$arr['title']=(isset($arr['title']))?$arr['title']:'';
+		$summaryArr=array('tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']);
 		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($summaryArr);
 		$detailsArr=array('tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']);
 		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($detailsArr);
@@ -428,20 +429,20 @@ class HTMLbuilder{
 			if (isset($arr['integerDef'][$bitIndex]['Name'])){$label=$arr['integerDef'][$bitIndex]['Name'];} else {$label=$bitIndex;}
 			$bitIndex=strval($bitIndex);
 			$id=md5($callingClass.$callingFunction.$bitIndex);
-			$cellHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
-			$cellHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
-			$matrix[$bitIndex]['Current value']=$cellHtml;
+			$matrix[$bitIndex]['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
+			$matrix[$bitIndex]['Status']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
 		}
 		$updateBtn=array('tag'=>'button','key'=>array($arr['key'],'save'),'value'=>'save','element-content'=>'💾','callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
-		$matrix['Cmd']['Current value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
+		$matrix['Cmd']['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
+		$matrix['Cmd']['Status']='';
 		if ($saveRequest){
 			$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-			$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry['selector']);
+			$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
 			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,FALSE);
 			$statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$arr['key'].'-key processed: '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
-		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>FALSE,'hideKeys'=>TRUE,'hideHeader'=>TRUE));
+		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>TRUE,'hideHeader'=>TRUE));
 		return $html;
 	}
 	

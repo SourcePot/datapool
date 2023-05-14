@@ -270,6 +270,7 @@ class MiscTools{
 		$selector=array();
 		foreach($defaultValues as $key=>$defaultValue){
 			$selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
+			$selector[$key]=(strcmp(strval($selector[$key]),'__SKIP__')===0)?FALSE:$selector[$key];
 		}
 		return $selector;
 	}
