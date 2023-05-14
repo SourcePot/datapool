@@ -49,13 +49,13 @@ private $entryTable;
 		} else {
 			$html='';
 			// Add content
-			$sectionSelector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
-			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sectionSelector) as $section){
+			$selector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $section){
 				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'selectedView',$section,array(),array());
 			}
 			// Add admin section
 			if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section administration','generic',$sectionSelector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section administration','generic',$selector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
 			}
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
