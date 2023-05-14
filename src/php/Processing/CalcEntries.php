@@ -15,6 +15,7 @@ class CalcEntries{
 	use \SourcePot\Datapool\Traits\Conversions;
 	
 	private $arr;
+	private $ruleOptions=array();
 
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -47,6 +48,7 @@ class CalcEntries{
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
 		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
+		// get action
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -95,7 +97,7 @@ class CalcEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runCalcEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -128,6 +130,16 @@ class CalcEntries{
 	}
 	
 	public function getCalcEntriesSettingsHtml($arr){
+		// initialize rule options
+		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$arr['selector']['EntryId']);
+		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+			if (strpos($entry['Type'],'rules')===FALSE || strpos($entry['Type'],'|')===FALSE){continue;}
+			$typeComps=explode('|',$entry['Type']);
+			$rulePrefix=str_replace('rules',' rule',$typeComps[1]);
+			$ruleIndex=$this->ruleId2ruleIndex($entry['EntryId'],ucfirst($rulePrefix));
+			$this->ruleOptions[$typeComps[1]][$ruleIndex]=$ruleIndex;
+		}
+		// get html
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->calculationParams($arr['selector']);
 		$arr['html'].=$this->calculationRules($arr['selector']);
@@ -144,39 +156,34 @@ class CalcEntries{
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		// get selctor
-		$calculationParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);
-		if (empty($calculationParams)){return '';}
-		$calculationParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($calculationParams,'ALL_R','ALL_CONTENTADMIN_R');
-		$calculationParams['Content']=array();
-		$calculationParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($calculationParams,TRUE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+		$arr['selector']['Content']=array();
+		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
-			$calculationParams['Content']=$formData['val'][$elementId]['Content'];
-			$calculationParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($calculationParams,TRUE);
+			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
+			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// get HTML
-		$arr=$calculationParams;
 		$arr['canvasCallingClass']=$callingElement['Folder'];
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Calculation control';
 		$arr['noBtns']=TRUE;
 		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-		if (empty($calculationParams['Content'])){$row['setRowStyle']='background-color:#a00;';}
+		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
 		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 	
 	private function calculationRules($callingElement){
-		$addKeys=array('0001'=>'Result 0001','0002'=>'Result 0002','0003'=>'Result 0003','0004'=>'Result 0004','0005'=>'Result 0005','0006'=>'Result 0006','0007'=>'Result 0007','0008'=>'Result 0008','0009'=>'Result 0009');
+		$addKeys=(isset($this->ruleOptions[strtolower(__FUNCTION__)]))?$this->ruleOptions[strtolower(__FUNCTION__)]:array();
 		$contentStructure=array('"A" selected by...'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
-								'or value "A"'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Default value "A"'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Operation'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array('+'=>'+','-'=>'-','*'=>'*','/'=>'/')),
 								'"B" selected by...'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
-								'or value "B"'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Default value "B"'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								''=>array('htmlBuilderMethod'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
 								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
 								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
@@ -185,36 +192,32 @@ class CalcEntries{
 		$contentStructure['"A" selected by...']+=$callingElement['Content']['Selector'];
 		$contentStructure['"B" selected by...']+=$callingElement['Content']['Selector'];
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Calculation rules';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 
 	private function failureRules($callingElement){
-		$addKeys=array('0001'=>'Result 0001','0002'=>'Result 0002','0003'=>'Result 0003','0004'=>'Result 0004','0005'=>'Result 0005','0006'=>'Result 0006','0007'=>'Result 0007','0008'=>'Result 0008','0009'=>'Result 0009');
-		$contentStructure=array('Value'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
+		$addKeys=(isset($this->ruleOptions['calculationrules']))?$this->ruleOptions['calculationrules']:array();
+		$contentStructure=array('Value'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
 								'Failure if Result...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>$this->failureCondition),
 								'Compare value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['Value']+=$callingElement['Content']['Selector'];
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Failure rules';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 
 	private function conditionalValueRules($callingElement){
-		$addKeys=array('0001'=>'Result 0001','0002'=>'Result 0002','0003'=>'Result 0003','0004'=>'Result 0004','0005'=>'Result 0005','0006'=>'Result 0006','0007'=>'Result 0007','0008'=>'Result 0008','0009'=>'Result 0009');
-		$contentStructure=array('Condition'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
+		$addKeys=(isset($this->ruleOptions['calculationrules']))?$this->ruleOptions['calculationrules']:array();
+		$contentStructure=array('Condition'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
 								'Use value if...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>$this->conditionalValue),
 								''=>array('htmlBuilderMethod'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
 								'Value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
@@ -223,12 +226,10 @@ class CalcEntries{
 								);
 		$contentStructure['Condition']+=$callingElement['Content']['Selector'];
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Conditional value rules';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
@@ -275,92 +276,94 @@ class CalcEntries{
 		$params=current($base['calculationparams']);
 		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
 		// loop through calculation rules
+		$ruleResults=array();
 		if (!empty($base['calculationrules'])){
 			foreach($base['calculationrules'] as $ruleEntryId=>$rule){
-				$ruleIndex=substr($ruleEntryId,0,strpos($ruleEntryId,'__'));
+				$calculationRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Calculation rule');
 				foreach(array('A','B') as $index){
 					$key=$rule['Content']['"'.$index.'" selected by...'];
-					$debugArr[]=array('ruleEntryId'=>$ruleIndex,'key'=>$key);
+					$debugArr[]=array('ruleEntryId'=>$calculationRuleIndex,'key'=>$key);
 					if (strcmp($key,'useValue')===0){
-						$value[$index]=$rule['Content']['or value "'.$index.'"'];
-					} else if (isset($result[$key])){
-						$value[$index]=$result[$key];
+						$value[$index]=floatval($rule['Content']['Default value "'.$index.'"']);
+					} else if (isset($ruleResults[$key])){
+						$value[$index]=floatval($ruleResults[$key]);
 					} else if (isset($flatSourceEntry[$key])){
-						$value[$index]=$flatSourceEntry[$key];
+						$value[$index]=floatval($flatSourceEntry[$key]);
 					} else {
-						$value[$index]='{{Key missing}}';
+						$value[$index]=floatval($rule['Content']['Default value "'.$index.'"']);
 					}
 				}
-				$result[$ruleIndex]=match($rule['Content']['Operation']){
-					'+'=>floatval($value['A'])+floatval($value['B']),
-					'-'=>floatval($value['A'])-floatval($value['B']),
-					'*'=>floatval($value['A'])*floatval($value['B']),
-					'/'=>(floatval($value['B'])===0)?'NaN':floatval($value['A'])/floatval($value['B']),
-					'%'=>(floatval($value['B'])===0)?'NaN':floatval($value['A'])%floatval($value['B']),
+				$ruleResults[$calculationRuleIndex]=match($rule['Content']['Operation']){
+						'+'=>$value['A']+$value['B'],
+						'-'=>$value['A']-$value['B'],
+						'*'=>$value['A']*$value['B'],
+						'/'=>($value['B']==0)?FALSE:($value['A']/$value['B']),
+						'%'=>($value['B']==0)?FALSE:($value['A']%$value['B']),
 				};
-				$sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$result[$ruleIndex],$rule['Content']['Target data type']);
-				$result['Calc rule'][$ruleIndex]=array('A'=>$value['A'],'Operation'=>$rule['Content']['Operation'],'B'=>$value['B'],'Result'=>$result[$ruleIndex]);
+				$sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$ruleResults[$calculationRuleIndex],$rule['Content']['Target data type']);
+				$result['Calc rule'][$calculationRuleIndex]=array('A'=>$value['A'],'Operation'=>$rule['Content']['Operation'],'B'=>$value['B'],'Result'=>$ruleResults[$calculationRuleIndex]);
 			}
 		}
 		// loop through conditional value rules
 		if (!empty($base['conditionalvaluerules'])){
 			foreach($base['conditionalvaluerules'] as $ruleEntryId=>$rule){
-				$ruleIndex=substr($ruleEntryId,0,strpos($ruleEntryId,'__'));
-				if (isset($result[$rule['Content']['Condition']])){
-					$value=$result[$rule['Content']['Condition']];
+				$conditionalvalueRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Conditionalvalue rule');
+				if (isset($ruleResults[$rule['Content']['Condition']])){
+					$value=$ruleResults[$rule['Content']['Condition']];
 				} else if (isset($flatSourceEntry[$rule['Content']['Condition']])){
 					$value=$flatSourceEntry[$rule['Content']['Condition']];
 				} else {
-					$value='{{Key missing}}';
+					$ruleResults[$conditionalvalueRuleIndex]=FALSE;
 				}
-				$conditionMet=match($rule['Content']['Use value if...']){
-					'lt'=>floatval($value)<0,
-					'gt'=>floatval($value)>0,
-					'eq'=>floatval($value)==0,
-					'ne'=>floatval($value)!=0,
-				};
-				if ($conditionMet){
-					$log.='|Value condition '.$ruleIndex.' met: '.floatval($value).$this->conditionalValue[$rule['Content']['Use value if...']];
+				if (!isset($ruleResults[$conditionalvalueRuleIndex])){
+					$ruleResults[$conditionalvalueRuleIndex]=match($rule['Content']['Use value if...']){
+						'lt'=>floatval($value)<0,
+						'gt'=>floatval($value)>0,
+						'eq'=>intval($value)==0,
+						'ne'=>intval($value)!=0,
+					};
+				}
+				$log.='|'.$conditionalvalueRuleIndex.' = '.intval($ruleResults[$conditionalvalueRuleIndex]);
+				if ($ruleResults[$conditionalvalueRuleIndex]){
 					$sourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$rule['Content']['Value'];
 				}
-				$result['Conditional value rules'][$ruleIndex]=array('Condition'=>$value,
+				$result['Conditional value rules'][$conditionalvalueRuleIndex]=array('Condition'=>$value,
 																	   'Use value if'=>$this->conditionalValue[$rule['Content']['Use value if...']],
-																	   'Condition met'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet),
+																	   'Condition met'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleResults[$conditionalvalueRuleIndex]),
 																	   );
 			}
 		}
 		// loop through failurerules rules
-		$failureMet=FALSE;
+		$isFailure=FALSE;
 		if (!empty($base['failurerules'])){
 			foreach($base['failurerules'] as $ruleEntryId=>$rule){
-				$ruleIndex=substr($ruleEntryId,0,strpos($ruleEntryId,'__'));
-				if (isset($result[$rule['Content']['Value']])){
-					$value=$result[$rule['Content']['Value']];
+				$failureRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Failure rule');
+				if (isset($ruleResults[$rule['Content']['Value']])){
+					$value=$ruleResults[$rule['Content']['Value']];
 				} else if (isset($flatSourceEntry[$rule['Content']['Value']])){
 					$value=$flatSourceEntry[$rule['Content']['Value']];
 				} else {
-					$value='{{Key missing}}';
+					$ruleResults[$failureRuleIndex]=FALSE;
 				}
-				$failureMet=match($rule['Content']['Failure if Result...']){
-					'stripos'=>stripos($value,$rule['Content']['Compare value'])!==FALSE,
-					'stripos!'=>stripos($value,$rule['Content']['Compare value'])===FALSE,
-					'lt'=>floatval($value)<floatval($rule['Content']['Compare value']),
-					'le'=>floatval($value)<=floatval($rule['Content']['Compare value']),
-					'gt'=>floatval($value)>floatval($rule['Content']['Compare value']),
-					'ge'=>floatval($value)>=floatval($rule['Content']['Compare value']),
-					'eq'=>floatval($value)==floatval($rule['Content']['Compare value']),
-					'ne'=>floatval($value)!=floatval($rule['Content']['Compare value']),
-				};
-				if ($failureMet){
-					$log.='|Failure condition '.$ruleIndex.' met: '.floatval($value).$this->failureCondition[$rule['Content']['Failure if Result...']].floatval($rule['Content']['Compare value']);
-					break;
+				if (!isset($ruleResults[$failureRuleIndex])){
+					$ruleResults[$failureRuleIndex]=match($rule['Content']['Failure if Result...']){
+						'stripos'=>stripos($value,$rule['Content']['Compare value'])!==FALSE,
+						'stripos!'=>stripos($value,$rule['Content']['Compare value'])===FALSE,
+						'lt'=>floatval($value)<floatval($rule['Content']['Compare value']),
+						'le'=>floatval($value)<=floatval($rule['Content']['Compare value']),
+						'gt'=>floatval($value)>floatval($rule['Content']['Compare value']),
+						'ge'=>floatval($value)>=floatval($rule['Content']['Compare value']),
+						'eq'=>floatval($value)==floatval($rule['Content']['Compare value']),
+						'ne'=>floatval($value)!=floatval($rule['Content']['Compare value']),
+					};
 				}
-				$result['Failure rules'][$ruleIndex]=array('Value'=>$value,
+				$log.='|'.$failureRuleIndex.' = '.intval($ruleResults[$failureRuleIndex]);
+				if ($ruleResults[$failureRuleIndex]){$isFailure=TRUE;}
+				$result['Failure rules'][$failureRuleIndex]=array('Value'=>$value,
 														   'Failure if Result'=>$this->failureCondition[$rule['Content']['Failure if Result...']],
 														   'Compare value'=>$rule['Content']['Compare value'],
-														   'Condition met'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($failureMet),
+														   'Condition met'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleResults[$failureRuleIndex]),
 														   );
-			
 			}
 		}
 		// wrapping up
@@ -375,7 +378,7 @@ class CalcEntries{
 			$sourceEntry[$key]=implode('|',$value);
 		}
 		$result['Calculate statistics']['Entries']['value']++;
-		if ($failureMet){
+		if ($isFailure){
 			$result['Calculate statistics']['Failure']['value']++;
 			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($log,'| ')),FALSE);
 			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun);
@@ -416,15 +419,24 @@ class CalcEntries{
 		return $entry;
 	}
 	
-	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
-		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['class2source'][__CLASS__];
-		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
-		return $entrySelector;
-
+	private function ruleId2ruleIndex($ruleId,$ruleType='Calc rule'){
+		$ruleIndex=substr($ruleId,0,strpos($ruleId,'__'));
+		$ruleIndex=$ruleType.' '.$ruleIndex;
+		return $ruleIndex;
 	}
+	
+	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
+		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
+		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
+		$type.='|'.$callingFunction;
+		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry['Content']=array();
+		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
+		return $arr;
+	}
+
 
 }
 ?>

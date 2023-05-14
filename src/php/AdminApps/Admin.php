@@ -12,59 +12,53 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Admin{
 	
-	private $arr;
+	private $oc;
+	private $entryTable='';
 	
-	private $entryTable;
-	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
-								 );
-    
-	public function __construct($arr){
-		$this->arr=$arr;
-		$table=str_replace(__NAMESPACE__,'',__CLASS__);
-		$this->entryTable=strtolower(trim($table,'\\'));
+	public function __construct($oc){
+		$this->oc=$oc;
+		$this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logging']->getEntryTable();
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
-	}
-
-	public function getEntryTable(){
-		return $this->entryTable;
-	}
-	
-	public function getEntryTemplate(){
-		return $this->entryTemplate;
+	public function init($oc){
+		$this->oc=$oc;
 	}
 
 	public function run($arr=TRUE){
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9781;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);
 		} else {
-			$html=$this->logsArticle();
+			$arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
+			$html='';
+			$html.=$this->tableViewer();
 			$html.=$this->backupArticle();
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
 	}
 	
-	public function logsArticle(){
-		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\Logging']->getEntryTable());
-		$settings=array();
-		$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>'log'),array('Column'=>'Content|[]|Message','Filter'=>''));
-		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Log entries','entryList',$selector,$settings,array());
+	public function tableViewer(){
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+		$html='';
+		if (empty($selector['Source'])){
+			$element=array('tag'=>'p','element-content'=>'Nothing selected, so there is nothing to show here...');
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+		} else {
+			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
+			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(ucfirst($selector['Source']).' entries','selectedView',$selector,$settings,array());
+		}
+		return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+		return $html;
 	}
 	
 	public function backupArticle(){
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
-		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (isset($formData['cmd']['export'])){
 			$selectors=array($formData['val']);
-			$dumpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors,FALSE,$formData['val']['Size']);
+			$dumpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors,FALSE,$formData['val']['Size']);
 			if (is_file($dumpFile)){
 				header('Content-Type: application/zip');
 				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' '.$formData['val']['Source'].' dump.zip"');
@@ -72,12 +66,12 @@ class Admin{
 				readfile($dumpFile);
 			}	
 		} else if (isset($formData['cmd']['import'])){
-			$tmpFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
+			$tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
 			if (!empty($formData['files']['import'])){
 				$success=move_uploaded_file($formData['files']['import'][0]['tmp_name'],$tmpFile);
-				if ($success){$this->arr['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);}
+				if ($success){$this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);}
 			} else {
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 		}
 		// export html
@@ -90,32 +84,35 @@ class Admin{
 									   10000000000=>'Skip files if >10 GB'
 									   );
 		$tables=array(''=>'none');
-		$entryTemplates=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate();
+		$entryTemplates=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate();
 		foreach($entryTemplates as $table=>$entryTemplate){
 			$tables[$table]=ucfirst($table);
 		}
-		$btnArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('float'=>'left','clear'=>'both'));
+		$btnArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'tag'=>'button','keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both'),'excontainer'=>TRUE);
 		$tableSelect=$btnArr;
+		$tableSelect['style']=array('margin'=>'0.4em 0.2em');
 		$tableSelect['key']=array('Source');
 		$tableSelect['options']=$tables;
 		$sizeSelect=$btnArr;
 		$sizeSelect['key']=array('Size');
 		$sizeSelect['selected']=10000000;
 		$sizeSelect['options']=$attachedFileSizeOptions;
-		$btnArr['cmd']='export';
-		$matrix['Backup to file']=array('Input'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
-								'Cmd'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
+		$btnArr['key']=array('export');
+		$btnArr['element-content']='Export';
+		$matrix['Backup to file']=array('Input'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
+								'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
 		// import html		
 		$fileArr=$btnArr;
+		unset($fileArr['element-content']);
 		$fileArr['tag']='input';
 		$fileArr['type']='file';
 		$fileArr['multiple']=TRUE;
-		$fileArr['key']=array('import');
-		$btnArr['cmd']='import';
+		$fileArr['key']=$btnArr['key']=array('import');
+		$btnArr['element-content']='Import';
 		$btnArr['hasCover']=TRUE;
-		$matrix['Recover from file']=array('Input'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileArr),'Cmd'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
-		$tableHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
-		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
+		$matrix['Recover from file']=array('Input'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr),'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
+		$tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
+		return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
 	}
 	
 }

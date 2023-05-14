@@ -12,20 +12,19 @@ namespace SourcePot\Datapool\Components;
 
 class Login{
 	
-	private $arr;
+	private $oc;
 	
 	private $pageSettings=array();
 	
 	const MIN_PASSPHRASDE_LENGTH=4;
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->pageSettings=$oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 	}
 
 	public function run($arr=TRUE){
@@ -38,8 +37,8 @@ class Login{
 	}
 	
 	public function getLoginForm(){
-		$loginArr=$this->arr['SourcePot\Datapool\Tools\LoginForms']->getLoginForm();
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($loginArr['result'],hrtime(TRUE).'-'.__FUNCTION__);
+		$loginArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getLoginForm();
+		//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($loginArr['result'],hrtime(TRUE).'-'.__FUNCTION__);
 		if (strcmp($loginArr['result']['cmd'],'Login')===0){
 			$this->loginRequest($loginArr['result']);
 		} else if (strcmp($loginArr['result']['cmd'],'Register')===0){
@@ -54,15 +53,15 @@ class Login{
 	
 	private function loginRequest($arr){
 		if (empty($arr['Passphrase']) || empty($arr['Email'])){return 'Password and/or email password were empty';}
-		$user['Source']=$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable();
-		$user['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
-		$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
+		$user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
+		$user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
+		$user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 		if (empty($user)){return 'Please register';}
 		// reset session | keep page state
 		$_SESSION=array('page state'=>$_SESSION['page state']);
 		session_regenerate_id(TRUE);
 		// login check
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
 			$this->loginSuccess($user);
 		} else {
 			// check one-time password
@@ -70,7 +69,7 @@ class Login{
 			if (empty($loginEntry)){
 				$this->loginFailed($user);
 			} else if (strcmp($loginEntry['Name'],$arr['Passphrase'])===0){
-				$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
+				$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
 				$this->loginSuccess($user);
 			} else {
 				$this->loginFailed($user);
@@ -79,83 +78,83 @@ class Login{
 	}
 	
 	private function loginSuccess($user){
-		$this->arr['SourcePot\Datapool\Foundation\User']->loginUser($user);
-		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login successful.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-		header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
+		$this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
+		$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login successful.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
 		exit;
 	}
 
 	private function loginFailed($user){
 		sleep(5);
-		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-		header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
+		$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
 		exit;
 	}
 
 	private function registerRequest($arr){
 		$err=FALSE;
 		if (empty($arr['Passphrase']) || empty($arr['Email'])){
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Password and/or email password were empty','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Password and/or email password were empty','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			$err='Password and/or email password were empty';
 		} else {
-			$user['Source']=$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable();
-			$user['Params']['User registration']=array('Email'=>$arr['Email'],'Date'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime());
+			$user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
+			$user['Params']['User registration']=array('Email'=>$arr['Email'],'Date'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime());
 			$user['Email']=$arr['Email'];
-			$user['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
-			$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
+			$user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
+			$existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 			if ($existingUser){
 				$err='You are registered already, try to login.';
 			} else {
-				$user['LoginId']=$this->arr['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);
-				$user=$this->arr['SourcePot\Datapool\Foundation\User']->newlyRegisteredUserLogin($user);
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
+				$user['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);
+				$user=$this->oc['SourcePot\Datapool\Foundation\User']->newlyRegisteredUserLogin($user);
+				$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
 			}
 		}
 		if (empty($err)){
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'You have been registered as user.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-			header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'You have been registered as user.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
 			exit;	
 		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$err,'priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$err,'priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		return $err;
 	}
 
 	private function updateRequest($arr){
-		$user=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-					'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
+		$user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
+					'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
 					);
-		$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
+		$existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
 		if ($existingUser){
 			if (strlen($arr['Passphrase'])<self::MIN_PASSPHRASDE_LENGTH){
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Passphrase with '.strlen($arr['Passphrase']).' characters is too short (min. '.self::MIN_PASSPHRASDE_LENGTH.' characters), passphrase update failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Passphrase with '.strlen($arr['Passphrase']).' characters is too short (min. '.self::MIN_PASSPHRASDE_LENGTH.' characters), passphrase update failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 			} else {
-				$existingUser['LoginId']=$this->arr['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);			
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($existingUser);
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Passphrase updated.','priority'=>1,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$existingUser['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);			
+				$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($existingUser);
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Passphrase updated.','priority'=>1,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User not found, passphrase update failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User not found, passphrase update failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 	}
 
 	private function pswRequest($arr){
 		// check if email is valid
 		if (empty($arr['Email'])){
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Please provide your email address.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Please provide your email address.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			return 'Failed: invalid email address';
 		}
 		// check if user exists
-		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
-		$existingUser=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
+		$selector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
+		$existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
 		if (empty($existingUser)){
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login-link request for an unknown email.','priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login-link request for an unknown email.','priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			return 'Failed: unknown email.';
 		}
 		// create login entry and send email
 		$msg=$this->sendOneTimePsw($arr,$existingUser);
-		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-		header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
+		$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
 		exit;
 	}
 	
@@ -164,34 +163,34 @@ class Login{
 			return 'Nothing was sent. Please use the password you have already received before.';	
 		}
 		// create login entry
-		$loginEntry=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),
+		$loginEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
 						  'Group'=>$this->pageSettings['pageTitle'],
 						  'Folder'=>'Login links',
 						  'Name'=>$arr['Recovery']['Passphrase'],
-						  'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
-						  'Expires'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M')
+						  'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
+						  'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M')
 						  );
-		$loginEntry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
+		$loginEntry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
 		// create message
 		$placeholder=array('firstName'=>$user['Content']['Contact details']['First name'],
 						   'pageTitle'=>$this->pageSettings['pageTitle'],
 						   'psw'=>'<b>'.$arr['Recovery']['Passphrase for user'].'</b>'
 						   );
-		$msg=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a login token at {{pageTitle}}.",$placeholder).'<br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Please use {{psw}} to login.",$placeholder).'<br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("This token can be used only once and it is valid for approx. 10mins.",$placeholder).'<br/><br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Best reagrds,",$placeholder).'<br/>';
-		$msg.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Admin",$placeholder);
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>'font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:400;line-height:24px;'));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'html','element-content'=>$html,'keep-element-content'=>TRUE));
+		$msg=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';
+		$msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a login token at {{pageTitle}}.",$placeholder).'<br/>';
+		$msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Please use {{psw}} to login.",$placeholder).'<br/>';
+		$msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("This token can be used only once and it is valid for approx. 10mins.",$placeholder).'<br/><br/>';
+		$msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Best reagrds,",$placeholder).'<br/>';
+		$msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Admin",$placeholder);
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>'font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:400;line-height:24px;'));
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'html','element-content'=>$html,'keep-element-content'=>TRUE));
 		$loginEntry['Content']=array('Message'=>$html);
-		$loginEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($loginEntry,TRUE);
+		$loginEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loginEntry,TRUE);
 		// send email
 		$mail=array('To'=>$arr['Email'],'From'=>$this->pageSettings['emailWebmaster'],'selector'=>$loginEntry);
-		$mail['Subject']=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngText("Your one-time password for {{pageTitle}}",$placeholder);
-		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}
-		if ($this->arr['SourcePot\Datapool\Tools\NetworkTools']->entry2mail($mail)){
+		$mail['Subject']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Your one-time password for {{pageTitle}}",$placeholder);
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}
+		if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->entry2mail($mail)){
 			return 'The email was sent, please check your emails.';	
 		} else {
 			return 'Request failed.';
@@ -199,10 +198,10 @@ class Login{
 	}
 	
 	private function getOneTimeEntry($email){
-		$entry=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-					 'EntryId'=>$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink'
+		$entry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
+					 'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink'
 					 );
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($entry,TRUE);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry,TRUE);
 		return $entry;
 	}
 

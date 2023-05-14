@@ -17,15 +17,13 @@ class Account{
 	private $entryTable;
 	private $entryTemplate=array();
     
-	public function __construct($arr){
-		$this->entryTable=$arr['SourcePot\Datapool\Foundation\User']->getEntryTable();
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\User']->getEntryTemplate();
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->entryTable=$oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\User']->getEntryTemplate();
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
 	}
 	
 	public function run($arr=TRUE){
@@ -40,15 +38,16 @@ class Account{
 	
 	private function account(){
 		$html='';
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 			// is admin
 			$user=array('Source'=>$this->entryTable);
 			$settings=array();
 			$settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges','Filter'=>''));
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,$settings,array());	
-			$userSelector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($this->arr['source2class'][$user['Source']]);
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,$settings,array());	
+			$class=$this->oc['SourcePot\Datapool\Root']->source2class($user['Source']);
+			$userSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
 			if (isset($userSelector['EntryId'])){
-				$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);
+				$user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);
 			} else {
 				$user=array('Source'=>$this->entryTable,'Type'=>'user');
 			}
@@ -56,7 +55,7 @@ class Account{
 			// is non-admin user
 			$user=$_SESSION['currentUser'];
 		}
-		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());	
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());	
 		return $html;
 	}
 	

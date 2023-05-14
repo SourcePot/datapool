@@ -35,7 +35,7 @@ interface Sender{
 
 	public function getSenderMeta(array $arr):array;
 
-	public function send(array $arr):boolean;
+	public function send(array $arr):bool;
 	
 }
 ?>

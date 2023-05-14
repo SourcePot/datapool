@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class Email{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -36,18 +36,17 @@ class Email{
 
 	private $msgEntry=array();
 
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
+		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
 	}
 
 	public function getEntryTable(){
@@ -62,7 +61,7 @@ class Email{
 		if (empty($vars['Inboxes'])){
 			$selector=array('Class'=>__CLASS__.'-rec');
 			$vars['Inboxes']=array();
-			foreach($this->arr['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
 				$vars['Inboxes'][$entry['EntryId']]=$entry;
 			}
 		}
@@ -106,13 +105,13 @@ class Email{
 		$setting['Content']=array('Mailbox'=>'{mail.wallenhauer.com:993/imap/ssl/novalidate-cert/user=c@wallenhauer.com}',
 								  'User'=>'c@wallenhauer.com',
 								  'Password'=>'');
-		return $this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
+		return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
 	}
 
 	private function getReceiverSettingsWidget($arr){
 		$arr['html']=(isset($arr['html']))?$arr['html']:'';
 		$setting=$this->getReceiverSetting($arr['callingClass']);
-		$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
 		return $arr;
 	}
 	
@@ -138,7 +137,7 @@ class Email{
 						'Recent'=>$check->Recent,
 						'Unread'=>$check->Unread,
 						'Deleted'=>$check->Deleted,
-						'Size'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->float2str($check->Size),
+						'Size'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($check->Size),
 						);
 			imap_close($mbox);
 		}
@@ -146,7 +145,7 @@ class Email{
 	}
 
 	private function todaysEmails($setting){
-		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
 			$result=array('Error'=>'Setting "Mailbox" and/or "User" is empty.');
 			return $result;
@@ -169,18 +168,18 @@ class Email{
 					} else {
 						$entry['Content']=array('Html'=>$entry['htmlmsg']);
 					}
-					$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
+					$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
 					if (empty($entry['attachments'])){
-						$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
-						$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
+						$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
+						$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
 					} else {
 						foreach($entry['attachments'] as $attName=>$attContent){
 							$entry['pathArr']=pathinfo($attName);
 							$entry['Name'].=' ('.$attName.')';
-							$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
+							$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
 							$entry['fileContent']=$attContent;
 							$entry['fileName']=$attName;
-							$this->arr['SourcePot\Datapool\Foundation\Filespace']->fileContent2entries($entry,TRUE,TRUE,FALSE);
+							$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entries($entry,TRUE,TRUE,FALSE);
 						} // loop through attachmentzs
 					}
 				} // loop through messages
@@ -315,28 +314,28 @@ class Email{
 		$setting['Content']=array('Recipient e-mail address'=>'',
 								  'Subject prefix'=>''
 								  );
-		return $this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
+		return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
 	}
 
 	private function getTransmitterSettingsWidget($arr){
 		$arr['html']=(isset($arr['html']))?$arr['html']:'';
 		$setting=$this->getTransmitterSetting($arr['callingClass']);
-		$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
 		return $arr;
 	}
 	
 	private function getTransmitterWidget($arr){
 		$arr['html']=(isset($arr['html']))?$arr['html']:'';
 		$form=array('To'=>array('tag'=>'input','type'=>'email','value'=>'','filter'=>FILTER_SANITIZE_EMAIL),
-					'From'=>array('tag'=>'input','type'=>'email','value'=>$this->arr['SourcePot\Datapool\Foundation\User']->userAbtract(FALSE,7),'filter'=>FILTER_SANITIZE_EMAIL),
+					'From'=>array('tag'=>'input','type'=>'email','value'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbtract(FALSE,7),'filter'=>FILTER_SANITIZE_EMAIL),
 					'Subject'=>array('tag'=>'input','type'=>'text','value'=>''),
 					'Send'=>array('tag'=>'button','value'=>'send','element-content'=>'Send'),
 					);
 		$callingClass=__CLASS__;
 		$callingFunction=md5(__FUNCTION__.$arr['callingClass']);
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($callingClass,$callingFunction);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
 		if (isset($formData['cmd']['Send'])){
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read') as $EntryId=>$entry){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read') as $EntryId=>$entry){
 				$mail=$arr;
 				$mail['selector']=$entry;
 				$mail['selector']['Content']=array_merge($mail['selector']['Content'],$formData['val']);	
@@ -345,15 +344,15 @@ class Email{
 		}
 		$matrix=array();
 		foreach($form as $key=>$element){
-			$element['key']=$key;
+			$element['key']=array($key);
 			$element['callingClass']=$callingClass;
 			$element['callingFunction']=$callingFunction;
 			$matrix[$key]['value']=$element;
 		}
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Email widget'));
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Email widget'));
 		$containerSelector=$this->getTransmitterSelector($arr);
 		$containerSettings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-		$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Your sent emails (deleted after 1 year)','entryList',$containerSelector,$containerSettings,array());
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Your sent emails (deleted after 1 year)','entryList',$containerSelector,$containerSettings,array());
 		return $arr;
 	}
 	
@@ -367,7 +366,7 @@ class Email{
 	private function getTransmitterMeta($arr){
 		$rowCountSelector=$this->getTransmitterSelector($arr);
 		$meta=array();
-		$meta['Accumulated emails outbox']=$this->arr['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector);
+		$meta['Accumulated emails outbox']=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector);
 		return $meta;
 	}
 
@@ -382,14 +381,14 @@ class Email{
 		// 'selector' ... selects the entry
 		// 'To' ... is the recipients emal address, use array for multiple addressees
 		$header=array();
-		$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+		$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		$mailKeyTypes=array('mail'=>array('To'=>'','Subject'=>$mail['selector']['Name']),
 							'header'=>array('From'=>$pageSettings['emailWebmaster'],'Cc'=>FALSE,'Bcc'=>FALSE,'Reply-To'=>FALSE)
 							);
 		$success=FALSE;
 		if (empty($mail['selector'])){
 			$logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);	
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);	
 		} else {
 			// copy email settings from mail[selector][Content] to mail and unset these settings
 			foreach($mailKeyTypes as $keyType=>$mailKeys){
@@ -405,7 +404,7 @@ class Email{
 				}
 			}
 			// get message parts
-			$flatContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($mail['selector']['Content']);
+			$flatContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($mail['selector']['Content']);
 			$msgTextPlain='';
 			$msgTextHtml='';
 			foreach($flatContent as $flatContentKey=>$flatContentValue){
@@ -434,7 +433,7 @@ class Email{
 			$message.="\r\n\r\n--".$textBoundery."--\r\n";
 			// get attched file			
 			$mixedBoundery='multipart-'.md5($mail['selector']['EntryId']);
-			$file=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($mail['selector']);
+			$file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($mail['selector']);
 			if (is_file($file)){
 				$msgPrefix='--'.$mixedBoundery."\r\n".$msgPrefix;
 				// get file content
@@ -461,22 +460,22 @@ class Email{
 			$success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
 			if ($success){
 				$logArr=array('msg'=>'Email sent...','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			} else {
 				$logArr=array('msg'=>'Sending email failed.','priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			}
 			// save message
 			$entry=$this->getTransmitterSelector($mail);
 			$entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
 			$entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
 		}
 		if ($isDebugging){
 			unset($mail['selector']);
 			$debugArr=array('header'=>$header,'mail'=>$mail);
 			if (isset($entry)){$debugArr['entry']=$entry;}
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $success;
 	}
@@ -499,10 +498,10 @@ class Email{
 			}
 		}
 		$entry['Name']=iconv_mime_decode($mailArr['Subject']);
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
 		$fileName=date('Y-m-d').' '.preg_replace('/\W/','_',$entry['Name']).'.eml';
 		$pathArr=pathinfo($fileName);
-		$file=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+		$file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
 		file_put_contents($file,$fileContent);
 		$entry['Params']['File']['MIME-Type']='application/octet-stream';
 		$entry['Params']['File']['Size']=filesize($file);

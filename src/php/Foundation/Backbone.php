@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Backbone{
 	
-	private $arr;
+	private $oc;
 		
 	private $settings=array('pageTitle'=>'Datapool',
 							'pageTimeZone'=>'Europe/Berlin',
@@ -24,19 +24,19 @@ class Backbone{
 							'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
 							'emailWebmaster'=>'admin@datapool.info');
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
+	public function init($oc){
+		$this->oc=$oc;
 		// Initialize page settings
 		$settings=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
 		$settings['Content']=$this->settings;
-		$settings=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
+		$settings=$oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
 		$this->settings=$settings['Content'];
 		$this->settings['cssFiles'][]=$_SESSION['page state']['cssFile'];
-		return $this->arr;
+		return $this->oc;
 	}
 	
 	public function getSettings(){
@@ -44,7 +44,7 @@ class Backbone{
 	}
 	
 	public function addHtmlPageBackbone($arr){
-		$arr['formName']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(30);
+		$arr['formName']=md5($this->settings['pageTitle']);
 		$arr['toReplace']=array('{{head}}'=>'',
 								'{{body}}'=>'',
 								'{{content}}'=>'Page content is missing...',
@@ -95,7 +95,7 @@ class Backbone{
 	public function addHtmlPageBody($arr){
 		$imageFile=(strcmp($_SESSION['page state']['app']['Category'],'Login')===0)?$this->settings['loginBackgroundImageFile']:$this->settings['mainBackgroundImageFile'];
 		if ($src=$this->mediaFile2href($imageFile)){
-			$mainStyle=array('background-size'=>'cover','background-image'=>'url("'.$src.'")');
+			$mainStyle=array('background-size'=>'cover','background-image'=>'url('.$src.')');
 		} else {
 			$mainStyle=array();
 		}
@@ -103,7 +103,7 @@ class Backbone{
 		$arr['toReplace']['{{body}}'].='{{secondMenuBar}}'.PHP_EOL;
 		$arr['toReplace']['{{body}}'].='<div class="filler" id="top-filler"></div>'.PHP_EOL;
 		// main
-		$arr['toReplace']['{{body}}'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'main','style'=>$mainStyle)).PHP_EOL;
+		$arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'main','style'=>$mainStyle)).PHP_EOL;
 		$arr['toReplace']['{{body}}'].='{{explorer}}'.PHP_EOL;
 		$arr['toReplace']['{{body}}'].='{{content}}'.PHP_EOL;
 		$arr['toReplace']['{{body}}'].='</main>'.PHP_EOL;
@@ -112,8 +112,8 @@ class Backbone{
 		$arr['toReplace']['{{body}}'].='{{toolbox}}'.PHP_EOL;
 		$arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
 		$arr['toReplace']['{{body}}'].='<script>jQuery("article").hide();</script>'.PHP_EOL;
-		$arr=$this->arr['SourcePot\Datapool\Foundation\Menu']->menu($arr);
-		$arr=$this->arr['SourcePot\Datapool\Foundation\Toolbox']->getToolbox($arr);
+		$arr=$this->oc['SourcePot\Datapool\Foundation\Menu']->menu($arr);
+		$arr=$this->oc['SourcePot\Datapool\Foundation\Toolbox']->getToolbox($arr);
 		return $arr;
 	}
 	

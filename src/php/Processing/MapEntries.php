@@ -104,7 +104,7 @@ class MapEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runMapEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -152,28 +152,22 @@ class MapEntries{
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		// get selctor
-		$mappingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);
-		if (empty($mappingParams)){return '';}
-		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($mappingParams,'ALL_R','ALL_CONTENTADMIN_R');
-		$mappingParams['Content']=array();
-		$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($mappingParams,TRUE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
-			$mappingParams['Content']=$formData['val'][$elementId]['Content'];
-			$mappingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($mappingParams,TRUE);
+			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
+			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// get HTML
-		$arr=$mappingParams;
 		$arr['canvasCallingClass']=$callingElement['Folder'];
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Mapping control: Select mapping target and type';
 		$arr['noBtns']=TRUE;
 		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-		if (empty($mappingParams['Content'])){$row['setRowStyle']='background-color:#a00;';}
+		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
 		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
@@ -189,12 +183,10 @@ class MapEntries{
 								);
 		$contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Mapping rules: Map selected entry values or constants (Source value) to target entry values';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
@@ -452,14 +444,16 @@ class MapEntries{
 		return $return;
 	}
 	
-	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
+	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['class2source'][__CLASS__];
+		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
 		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
-		return $entrySelector;
-
+		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry['Content']=array();
+		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
+		return $arr;
 	}
 
 }

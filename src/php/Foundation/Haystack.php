@@ -12,13 +12,13 @@ namespace SourcePot\Datapool\Foundation;
 
 class Haystack{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array();
     
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}

@@ -266,6 +266,14 @@ class MiscTools{
 
 	public function getSeparator(){return self::ONEDIMSEPARATOR;}
 	
+	public function arr2selector($arr,$defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE)){
+		$selector=array();
+		foreach($defaultValues as $key=>$defaultValue){
+			$selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
+		}
+		return $selector;
+	}
+	
 	public function arr2file($inArr,$fileName=FALSE,$addDateTime=FALSE){
 		/*	This function converts t$inArr to json format and saves the json data to a file. 
 		*	If the fileName argument is empty, it will be created from the name of the calling class and function.

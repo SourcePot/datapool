@@ -12,17 +12,16 @@ namespace SourcePot\Datapool\Tools;
 
 class NetworkTools{
 	
-	private $arr;
+	private $oc;
 	private $pageSettings=array();
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 	}
 
 	public function href($arr){
@@ -50,7 +49,7 @@ class NetworkTools{
 	public function getPageState($callingClass,$initState=array()){
 		if (empty($_SESSION['page state']['selected'][$callingClass])){$_SESSION['page state']['selected'][$callingClass]=$initState;}
 		if (method_exists($callingClass,'getEntryTable')){
-			$_SESSION['page state']['selected'][$callingClass]['Source']=$this->arr[$callingClass]->getEntryTable();
+			$_SESSION['page state']['selected'][$callingClass]['Source']=$this->oc[$callingClass]->getEntryTable();
 		} else if (!isset($_SESSION['page state']['selected'][$callingClass]['Source'])){
 			$_SESSION['page state']['selected'][$callingClass]['Source']=FALSE;
 		}
@@ -71,7 +70,7 @@ class NetworkTools{
 		$requestArr['url']=trim($requestArr['url'],'/');
 		$requestArr['url']=$requestArr['url'].'/'.$requestArr['resource'];
 		if (!empty($requestArr['query'])){$requestArr['url']=$requestArr['url'].'?'.http_build_query($requestArr['query']);}
-		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
 		return $requestArr;
 	}
 	
@@ -86,16 +85,16 @@ class NetworkTools{
 			$header[]=$key.': '.$value;
 		}
 		$requestArr['header']=$header;
-		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
 		return $requestArr;
 	}
 	
 	private function requestDecodeResponse($requestArr){
 		foreach($requestArr['response'] as $index=>$response){
-			$json=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
+			$json=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
 			if (stripos(trim($response),'<?xml ')===0){
 				// is xml encoded
-				$requestArr['response'][$index]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response);
+				$requestArr['response'][$index]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response);
 			} else if (!empty($json)){
 				// json encoded
 				$requestArr['response'][$index]=$json;
@@ -156,9 +155,9 @@ class NetworkTools{
 		
 		$response=curl_exec($curl);
 		if ($response===false){
-			if (isset($this->arr['SourcePot\Datapool\Foundation\Logging'])){
+			if (isset($this->oc['SourcePot\Datapool\Foundation\Logging'])){
 				$logArr=array('msg'=>'CURL error '.curl_error($curl).' '.curl_errno($curl),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			}
 			$requestArr['response']=array('error'=>curl_error($curl),'no'=>curl_errno($curl));
 		} else {
@@ -167,7 +166,7 @@ class NetworkTools{
 			$requestArr['response']['status']=(int)curl_getinfo($curl,\CURLINFO_HTTP_CODE);
 			curl_close($curl);
 		}
-		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
 		return $requestArr;
 	}
 

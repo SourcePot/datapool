@@ -58,28 +58,6 @@ jQuery(document).ready(function(){
 		});
 	}
 
-// html-app management
-	addAppEvent();
-	function addAppEvent(){
-		jQuery('[id*=app-icon-]').unbind('click');
-		jQuery('[id*=app-icon-]').bind('click',appClick);
-	}
-	function appClick(element){
-		let parent=jQuery(this).parent('[id*=app-content-]'),status=jQuery(parent).attr('js-status');
-		let defaultMinWidth=jQuery(parent).attr('default-min-width');
-		let defaultMinHeight=jQuery(parent).attr('default-min-height');
-		let defaultMaxWidth=jQuery(parent).attr('default-max-width');
-		let defaultMaxHeight=jQuery(parent).attr('default-max-height');
-		if (status=='maximized'){
-			var newWidth=defaultMinWidth,newHeight=defaultMinHeight;	
-			jQuery(parent).attr({'js-status':'minimized'});
-		} else {
-			var newWidth=defaultMaxWidth,newHeight=defaultMaxHeight;	
-			jQuery(parent).attr({'js-status':'maximized'});
-		}
-		if (newHeight.includes('px')){jQuery(parent).animate({'height':newHeight},100);} else {jQuery(parent).css({'height':newHeight});}
-		if (newWidth.includes('px')){jQuery(parent).animate({'width':newWidth},100);} else {jQuery(parent).css({'width':newWidth});}
-	}
 // emoji processing
 	addEmojiEvent();
 	function addEmojiEvent(){
@@ -435,7 +413,6 @@ jQuery(document).ready(function(){
 		adjustMainHeight();
 		addSafetyCoverEvent();
 		addEmojiEvent();
-		addAppEvent();
 		addSymbolLoginEvents();
 		loadImageData();
 	}

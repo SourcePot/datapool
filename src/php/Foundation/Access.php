@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Access{
 	
-	private $arr;
+	private $oc;
 
 	public $access=array('NO_R'=>0,'PUBLIC_R'=>1,'REGISTERED_R'=>2,'MEMBER_R'=>4,'CCTV_R'=>1024,'ADMIN_R'=>32768,'ALL_CONTENTADMIN_R'=>49152,'ALL_REGISTERED_R'=>65534,'ALL_MEMBER_R'=>65532,'ALL_R'=>65535);
 	
@@ -42,29 +42,20 @@ class Access{
 						  array('key'=>'x','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>65,'description'=>''),
 						  array('key'=>'9','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>53,'description'=>'Cloud'),
 						);
-	
-	private $entryTable;
-	private $entryTemplate=array();
     
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+	public function init($oc){
+		$this->oc=$oc;
 		$access=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access);
-		$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
+		$access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
 		$this->access=$access['Content'];
-		return $this->arr;
 	}
-	
-	public function getEntryTable(){return $this->entryTable;}
-
-	public function getEntryTemplate(){return $this->entryTemplate;}
-	
+		
 	public function accessString2int($string='ADMIN_R',$setNoRightsIfMissing=TRUE){
 		if (isset($this->access[$string])){
 			return $this->access[$string];
@@ -146,7 +137,7 @@ class Access{
 		$emailId=$this->emailId($email);
 		$userPass=$password.$emailId;
 		if (password_verify($userPass,$loginId)===TRUE){
-			$this->rehashPswIfNeeded(array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$emailId),$userPass,$loginId);
+			$this->rehashPswIfNeeded(array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$emailId),$userPass,$loginId);
 			return TRUE;
 		} else {
 			return FALSE;
@@ -156,8 +147,8 @@ class Access{
 	private function rehashPswIfNeeded($user,$userPass,$loginId){
 		if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
 			$user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User account login id for "'.$user['EntryId'].'" was rehashed.','priority'=>41,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User account login id for "'.$user['EntryId'].'" was rehashed.','priority'=>41,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			return TRUE;
 		} else {
 			return FALSE;
@@ -199,7 +190,7 @@ class Access{
 		foreach ($this->digits as $digitIndex => $digitDef){
 			$layersHtml='';
 			for ($layer=0;$layer<10;$layer++){ 
-				$imgTmpHash=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
+				$imgTmpHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 				$image=imagecreate($arr['symbolSize'],$arr['symbolSize']);
 				$bg=imagecolorallocatealpha($image,255,255,255,0);
 				$fg=imagecolorallocate($image,0,0,0);
@@ -217,7 +208,7 @@ class Access{
 				$imgAngleMin=-20;
 				$imgAngle=mt_rand($imgAngleMin,$imgAngleMax);
 				$symbol=(is_int($digitDef['symbol']))?chr($digitDef['symbol']):$digitDef['symbol'];
-				$fontFile=$this->arr['env']['dirs']['fonts'].$digitDef['font'];
+				$fontFile=$GLOBALS['dirs']['fonts'].$digitDef['font'];
 				imagettftext($image,$imgSize,$imgAngle,$imgX,$imgY,$fg,$fontFile,$symbol);
 				ob_start();
 				imagepng($image);
@@ -226,22 +217,22 @@ class Access{
 				$imgArr['src']='data:image/png;base64,'.base64_encode($imagedata);
 				$aArr['id']=$imgTmpHash.'_loginSymbol';
 				$aArr['title']='Login symbol';
-				$aArr['element-content']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($imgArr);
-				$layersHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($aArr);
+				$aArr['element-content']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($imgArr);
+				$layersHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($aArr);
 				$hashSymbolArr[$imgTmpHash]=array('digit'=>$digitDef['key']);
 			}
 			$layersDivArr['element-content']=$layersHtml;
 			if ($digitIndex%$arr['symbolColumnCount']===0 && $digitIndex>0){$layersDivArr['style']['clear']='both';} else {$layersDivArr['style']['clear']='none';}
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($layersDivArr);
+			$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($layersDivArr);
 		}
 		// add hidden input and passphrase preview
 		$previewArr=array('tag'=>'div','element-content'=>'','class'=>'phrase-preview');
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($previewArr);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($previewArr);
 		$phraseArr=array('tag'=>'input','type'=>'hidden','key'=>array('Login','Password'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'element-content'=>'','class'=>'pass-phrase');
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($phraseArr);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($phraseArr);
 		
 		// save state
-		$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
+		$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
 		echo $arr['html'];
 		return $arr;
 	}

@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Forum{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'),
@@ -27,19 +27,18 @@ class Forum{
 							 '@hideHeader'=>TRUE,'@hideKeys'=>TRUE,
 							 );
 							
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		// complete defintion
-		$this->definition['Send']=array('@tag'=>'button','@key'=>'save','@element-content'=>'Send');
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
-		return $this->arr;
+		$this->definition['Send']=array('@tag'=>'button','@key'=>array('save'),'@element-content'=>'Send');
+		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 	}
 
 	public function job($vars){
@@ -67,10 +66,10 @@ class Forum{
 	}
 	
 	private function addYearSelector2menu($arr){
-		$selectedYear=$arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['select'])){
-			$selectedYear=$arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Year',$formData['val']['Year']);
+			$selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Year',$formData['val']['Year']);
 		}
 		// get selector
 		$options=array(''=>'All');
@@ -78,7 +77,7 @@ class Forum{
 		for($year=$startYear;$year>$startYear-10;$year--){
 			$options[$year]='Year '.$year;
 		}
-		$arr['toReplace']['{{firstMenuBarExt}}']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selectedYear,'key'=>array('Year'),'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		$arr['toReplace']['{{firstMenuBarExt}}']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selectedYear,'key'=>array('Year'),'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $arr;
 	}
 	
@@ -88,26 +87,26 @@ class Forum{
 						  'Type'=>$this->entryTable.' entry',
 						  'Owner'=>$_SESSION['currentUser']['EntryId'],
 						  );
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
 			if ($entry['isSkipRow']){continue;}
 			$forumEntry=$entry;
 		}
 		if (empty($forumEntry)){
-			$forumEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
+			$forumEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
 		} 
-		$html=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
-		$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','style'=>array('min-width'=>'100%','margin'=>'0')));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','class'=>'forum'));
 		return $html;
 	}
 	
 	private function loadForumEntries(){
 		$forumSelector=array('Source'=>$this->entryTable,'Folder'=>'Sent');
-		$selectedYear=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
+		$selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
 		if (!empty($selectedYear)){$forumSelector['Date']=$selectedYear.'-%';}
 		$html='';
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum'));
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$entry['Date'],'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum'));
 		}
 		return $html;
 	}
@@ -115,7 +114,7 @@ class Forum{
 	public function unifyEntry($forumEntry){
 		$forumEntry['Group']=$_SESSION['currentUser']['Privileges'];
 		$forumEntry['Folder']='Sent';
-		$forumEntry['Date']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+		$forumEntry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 		$forumEntry['Name']=substr($forumEntry['Content']['Message'],0,30);
 		return $forumEntry;
 	}

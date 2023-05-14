@@ -12,21 +12,20 @@ namespace SourcePot\Datapool\Foundation;
 
 class Definitions{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array();
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 	
 	public function getEntryTable(){return $this->entryTable;}
@@ -38,8 +37,9 @@ class Definitions{
 	* @return string
 	*/
 	private function class2name($class){
-		if (isset($this->arr['class2source'][$class])){
-			return $this->arr['class2source'][$class];
+		$source=$this->oc['SourcePot\Datapool\Root']->class2source($class);
+		if ($source){
+			return $source;
 		} else {
 			$classComps=explode('\\',$class);
 			return array_pop($classComps);
@@ -57,7 +57,7 @@ class Definitions{
 		$entry=array('Source'=>$this->entryTable,'Group'=>'Templates','Folder'=>$callingClass,'Name'=>$this->class2name($callingClass),'Type'=>'definition','Owner'=>'SYSTEM');
 		$entry['EntryId']=md5(json_encode($entry));
 		$entry['Content']=$definition;
-		return $this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
+		return $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
 	}
 	
 	/**
@@ -76,11 +76,11 @@ class Definitions{
 			throw new \ErrorException('Function '.__FUNCTION__.': Entry missing Type- or Class-key.',0,E_ERROR,__FILE__,__LINE__);
 		}
 		$arr=array('entry'=>$entry,'selector'=>$selector,'definition'=>array());
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
 			$arr['definition']=$entry;
 			break;
 		}
-		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);}
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);}
 		return $arr['definition'];
 	}
 	
@@ -91,9 +91,9 @@ class Definitions{
 	*/
 	public function definition2entry($definition,$entry=array(),$isDebugging=FALSE){
 		$debugArr=array('definition'=>$definition,'entry_in'=>$entry);
-		$flatArrayKeySeparator=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-		$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
-		$flatDefinition=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition);
+		$flatArrayKeySeparator=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+		$flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+		$flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition);
 		$defaultArrKeys2remove=array();
 		$defaultArr=array();
 		foreach($flatDefinition as $definitionKey=>$definitionValue){
@@ -114,12 +114,12 @@ class Definitions{
 			}
 		}
 		$flatEntry=$flatEntry+$defaultArr;
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
 		if ($isDebugging){
 			$debugArr['defaultArrKeys2remove']=$defaultArrKeys2remove;
 			$debugArr['entry_out']=$entry;
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $entry;
 	}
@@ -134,19 +134,19 @@ class Definitions{
 	public function selectorKey2element($entry,$flatSelectorKey,$value=NULL,$callingClass=FALSE,$callingFunction=FALSE){
 		$value=strval($value);
 		$definition=$this->getDefinition($entry);	
-		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+		$S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		$selectorKeyComps=explode($S,$flatSelectorKey);
-		$element=$entry;
+		$element=array();
 		if (empty($definition)){
-			if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Write')){
+			if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write')){
 				$element=array('tag'=>'input','type'=>'text','value'=>$value,'key'=>$selectorKeyComps);
-			} else if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($entry,'Read')){
+			} else if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Read')){
 				$element=array('tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE);
 			} else {
 				$element=array('tag'=>'p','element-content'=>'access denied','keep-element-content'=>TRUE);
 			}
 		} else {
-			$flatDefinition=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
+			$flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
 			foreach($flatDefinition as $definitionKey=>$definitionValue){
 				$definitionKeyComps=explode('@',$definitionKey);
 				if (count($definitionKeyComps)!==2){
@@ -167,7 +167,9 @@ class Definitions{
 					}
 				}
 			}
-			foreach($element as $definitionAttr=>$definitionValue){$element[$definitionAttr]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definitionValue);}
+			foreach($element as $definitionAttr=>$definitionValue){
+				$element[$definitionAttr]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definitionValue);
+			}
 			$element['key']=$selectorKeyComps;
 			$element['callingClass']=$callingClass;
 			$element['callingFunction']=$callingFunction;
@@ -185,9 +187,9 @@ class Definitions{
 		if (empty($callingClass)){$callingClass=__CLASS__;}
 		if (empty($callingFunction)){$callingFunction=__FUNCTION__;}
 		// flatten arrays
-		$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
-		$flatDefinition=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
-		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+		$flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+		$flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
+		$S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		$entryArr=array();
 		foreach($flatDefinition as $definitionKey=>$definitionValue){
 			$definitionKeyComps=explode('@',$definitionKey);
@@ -211,7 +213,7 @@ class Definitions{
 			if (!isset($settings[$caption])){$settings[$caption]=array();}
 			if (isset($defArr['tag']) || isset($defArr['function'])){
 				$defArr=array_merge($flatEntry,$defArr);
-				$defArr=$this->arr['SourcePot\Datapool\Tools\MiscTools']->flat2arr($defArr);
+				$defArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($defArr);
 				$defArr['callingClass']=$callingClass;
 				$defArr['callingFunction']=$callingFunction;
 				if (empty($defArr['key'])){$defArr['key']=$keyArr;}
@@ -239,12 +241,12 @@ class Definitions{
 		foreach($matrices as $caption=>$matrix){
 			$tableArr=array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption);
 			$tableArr=array_replace_recursive($globSetting,$settings[$caption],$tableArr);
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table($tableArr);
+			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($tableArr);
 		}
 		if ($isDebugging){
 			$debugArr['callingClass']=$callingClass;
 			$debugArr['callingFunction']=$callingFunction;
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $html;
 	}
@@ -254,9 +256,9 @@ class Definitions{
 		$debugArr=array('definition'=>$definition,'entry_in'=>$entry,'entry_updated'=>array());
 		$html='';
 		if (empty($definition)){
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->traceHtml('Problem: Method "'.__FUNCTION__.'" no definition found for the provided entry.');
+			$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->traceHtml('Problem: Method "'.__FUNCTION__.'" no definition found for the provided entry.');
 		} else {
-			if ($this->arr['SourcePot\Datapool\Tools\MiscTools']->startsWithUpperCase($definition['Name'])){
+			if ($this->oc['SourcePot\Datapool\Tools\MiscTools']->startsWithUpperCase($definition['Name'])){
 				// entry is stored in setup dirspace
 				$dataStorageClass='SourcePot\Datapool\Foundation\Filespace';
 			} else {
@@ -264,46 +266,49 @@ class Definitions{
 				$dataStorageClass='SourcePot\Datapool\Foundation\Database';	
 			}
 			if (empty($entry)){
-				$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>'Called '.__FUNCTION__.' with empty entry.'));
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Called '.__FUNCTION__.' with empty entry.'));
 			} else {
 				// form processing
-				$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+				$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 				$debugArr['formData']=$formData;
 				if (isset($formData['cmd']['delete'])){
-					$this->arr[$dataStorageClass]->deleteEntries($entry);
+					$this->oc[$dataStorageClass]->deleteEntries($entry);
 				} else if (!empty($formData['cmd'])){
 					$entry['entryIsUpdated']=TRUE;
 					$entry=array_replace_recursive($entry,$formData['val']);
-					if (empty(current($formData['files']))){
-						$entry=$this->arr[$dataStorageClass]->unifyEntry($entry);
-						$debugArr['entry_updated']=$this->arr[$dataStorageClass]->updateEntry($entry);
+					if ($formData['hasValidFiles']){
+						$flatFile=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files']);
+						$fileArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatFile);
+						if ($fileArr['error']==0){
+							$debugArr['entry_updated']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
+						}
 					} else {
-						$fileArr=current(current($formData['files']));
-						$entry=$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
+						$entry=$this->oc[$dataStorageClass]->unifyEntry($entry);
+						$debugArr['entry_updated']=$this->oc[$dataStorageClass]->updateEntry($entry);
 					}
-					$statistics=$this->arr[$dataStorageClass]->getStatistic();
-					if (isset($this->arr['SourcePot\Datapool\Foundation\Logging'])){
+					$statistics=$this->oc[$dataStorageClass]->getStatistic();
+					if (isset($this->oc['SourcePot\Datapool\Foundation\Logging'])){
 						$entryType=(isset($entry['Source']))?ucfirst(strval($entry['Source'])):$entry['Class'];
-						$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$entryType.'-entry processed: '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+						$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$entryType.'-entry processed: '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 					}
 				}
-				if (isset($this->arr['SourcePot\Datapool\Tools\MediaTools'])){
-					$iconArr=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$entry));
+				if (isset($this->oc['SourcePot\Datapool\Tools\MediaTools'])){
+					$iconArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$entry));
 					$html.=$iconArr['html'];
 				}
 				$html.=$this->definition2html($definition,$entry,__CLASS__,__FUNCTION__,$isDebugging);
 			}
 		}
 		if ($isDebugging){
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $html;
 	}
 	
 	private function elementDef2element($element,$outputStr=NULL){
-		$element=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($element);
+		$element=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($element);
 		// check access
-		if (!$this->arr['SourcePot\Datapool\Foundation\Access']->access($element,'Read')){
+		if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read')){
 			return array();
 			return array('tag'=>'p','element-content'=>'Read access denied');
 		}
@@ -324,7 +329,7 @@ class Definitions{
 		}
 		$outputStr=strval($outputStr);
 		// compile tag
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($element,'Write')){
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Write')){
 			// write access
 			if (!isset($element['tag'])){
 				$element['tag']='input';
@@ -349,7 +354,7 @@ class Definitions{
 			} else {
 				$element['tag']='div';
 				if (isset($element['style'])){unset($element['style']);}
-				$element['class']='gen_'.$this->arr['SourcePot\Datapool\Tools\MiscTools']->getHash($element['key'],TRUE);
+				$element['class']='gen_'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($element['key'],TRUE);
 				if (empty($outputStr)){$element=array();} else {$element['element-content']=$outputStr;}
 			}
 		}
@@ -363,17 +368,17 @@ class Definitions{
 		if (method_exists($class,$function)){
 			$defArr['keep-element-content']=TRUE;
 			$defArr['selector']=array();
-			$selectorKeys=$this->arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($defArr['Source']);
+			$selectorKeys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($defArr['Source']);
 			$selectorKeys+=array('Source'=>array());
 			foreach($selectorKeys as $selectorKey=>$templateArr){
 				if (isset($defArr[$selectorKey])){$defArr['selector'][$selectorKey]=$defArr[$selectorKey];}
 				if (strcmp($selectorKey,'Read')!==0 && strcmp($selectorKey,'Write')!==0){unset($defArr[$selectorKey]);}
 			}
-			$return=$this->arr[$class]->$function($defArr);
+			$return=$this->oc[$class]->$function($defArr);
 			if (is_array($return)){$html=$return['html'];} else {$html=$return;}
 		} else {
 			$errArr=array('tag'=>'p','element-content'=>'Function '.$function.'() not found.');
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($errArr);
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($errArr);
 		}
 		return $html;
 	}

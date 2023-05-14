@@ -94,7 +94,7 @@ class ParseEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runParseEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -143,28 +143,22 @@ class ParseEntries{
 								);
 		$contentStructure['Source column']+=$callingElement['Content']['Selector'];
 		// get selector
-		$parserParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);
-		if (empty($parserParams)){return '';}
-		$parserParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($parserParams,'ALL_R','ALL_CONTENTADMIN_R');
-		$parserParams['Content']=array();
-		$parserParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($parserParams,TRUE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
+		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
-			$parserParams['Content']=$formData['val'][$elementId]['Content'];
-			$parserParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($parserParams,TRUE);
+			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
+			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// get HTML
-		$arr=$parserParams;
 		$arr['canvasCallingClass']=$callingElement['Folder'];
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Parser control: Select parser target and type';
 		$arr['noBtns']=TRUE;
 		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-		if (empty($parserParams['Content'])){$row['setRowStyle']='background-color:#a00;';}
+		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
 		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
@@ -173,12 +167,10 @@ class ParseEntries{
 		$contentStructure=array('Regular expression'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Section name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Provide rules to divide the text into sections.';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
@@ -202,12 +194,10 @@ class ParseEntries{
 								'Match required'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
 								);
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Parser rules: Parse selected entry and copy result to target entry';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
@@ -402,14 +392,16 @@ class ParseEntries{
 		return $entry;
 	}
 	
-	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
+	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['class2source'][__CLASS__];
+		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
 		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
-		return $entrySelector;
-
+		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry['Content']=array();
+		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
+		return $arr;
 	}
 
 }

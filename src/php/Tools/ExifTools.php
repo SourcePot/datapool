@@ -12,15 +12,14 @@ namespace SourcePot\Datapool\Tools;
 
 class ExifTools{
 	
-	private $arr;
+	private $oc;
     
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
 	}
 
 	public function addExif2entry($entry,$file){
@@ -87,7 +86,7 @@ class ExifTools{
 		}
 		// get address if location has been updated
 		if ($entry['Params']['Geo']['lat']!=$oldGeo['lat'] || $entry['Params']['Geo']['lon']!=$oldGeo['lon']){
-			$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->location2address($entry,'Address');
+			$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry,'Address');
 		}
 		return $entry;
 	}
@@ -101,7 +100,7 @@ class ExifTools{
 			} else {
 				$exifDateTime.=' 12:00:00';
 			}
-			$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+			$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 			$dateTime=\DateTime::createFromFormat('Y-m-d H:i:s',$exifDateTime,new \DateTimeZone('UTC'));
 			$dateTime->setTimeZone(new \DateTimeZone($pageSettings['pageTimeZone']));
 			$entry['Date']=$dateTime->format('Y-m-d H:i:s');

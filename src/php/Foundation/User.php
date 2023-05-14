@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class User{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array('Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'user','Description'=>'This is the data-type of Content'),
@@ -75,23 +75,22 @@ class User{
 	
 	private $pageSettings=array();
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$this->pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		$this->userRols();
 		// check database user entry definition 
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 		$this->getCurrentUser();
 		//
 		$this->initAdminAccount();
-		return $this->arr;
 	}
 	
 	public function getEntryTable(){return $this->entryTable;}
@@ -102,7 +101,7 @@ class User{
 		$entry=$this->userRols;
 		$entry['Class']=__CLASS__;
 		$entry['EntryId']=__FUNCTION__;
-		$this->userRols=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($entry,TRUE);
+		$this->userRols=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($entry,TRUE);
 		return $this->userRols;
 	}
 	
@@ -129,11 +128,11 @@ class User{
 		if (!empty($entry['Email'])){$entry['Content']['Contact details']['Email']=$entry['Email'];}
 		if (empty($entry['Params']['User registration']['Email'])){$entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];}
 		$entry['Name']=$this->userAbtract(array('selector'=>$entry),3);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		$entry['Group']=$this->pageSettings['pageTitle'];
 		$entry['Folder']=$this->getUserRolsString($entry);
-		$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);	
+		$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);	
 		return $entry;
 	}
 	
@@ -142,7 +141,7 @@ class User{
 		$user['Owner']='ANONYM';
 		$user['LoginId']=mt_rand(1,10000000);
 		$user['Expires']=date('Y-m-d H:i:s',time()+600);
-		$user=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
+		$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']=1;
 		$user=$this->unifyEntry($user);
 		$this->loginUser($user);
@@ -150,22 +149,22 @@ class User{
 	}
 	
 	private function initAdminAccount(){
-		$noAdminAccountFound=empty($this->arr['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
+		$noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
 		if ($noAdminAccountFound){
 			$admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R','Email'=>$this->pageSettings['emailWebmaster'],'Password'=>bin2hex(random_bytes(16)),'Owner'=>'SYSTEM');
-			$admin['EntryId']=$this->arr['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
-			$admin['LoginId']=$this->arr['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
+			$admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
+			$admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
 			$admin['Content']['Contact details']['First name']='Admin';
 			$admin['Content']['Contact details']['Family name']='Admin';
 			$admin=$this->unifyEntry($admin);
-			$success=$this->arr['SourcePot\Datapool\Foundation\Database']->insertEntry($admin);
+			$success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin);
 			if ($success){
 				// Save init admin details
 				$adminFile=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
 				$adminFile['Content']['Admin email']=$admin['Email'];
 				$adminFile['Content']['Admin password']=$admin['Password'];
-				$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->updateEntry($adminFile,TRUE);
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+				$access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($adminFile,TRUE);
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 				return TRUE;
 			}
 		}
@@ -175,7 +174,7 @@ class User{
 	public function newlyRegisteredUserLogin($user){
 		$user['Owner']=$user['EntryId'];
 		$user['LoginId']=$user['LoginId'];
-		$user=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
+		$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']='REGISTERED_R';
 		$user=$this->unifyEntry($user);
 		$this->loginUser($user);
@@ -196,10 +195,10 @@ class User{
 		}
 		if (!isset($user['Content'])){
 			if ($template<4){$isSystemCall=TRUE;} else {$isSystemCall=FALSE;}
-			$user=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($user,$isSystemCall);
+			$user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,$isSystemCall);
 			if (empty($user)){return '';}
 		}
-		$S=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+		$S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		if ($template===0){
 			$abtract='{{Content'.$S.'Contact details'.$S.'First name}}';
 		} else if ($template===1){
@@ -217,13 +216,13 @@ class User{
 		} else if ($template===7){
 			$abtract='{{Content'.$S.'Contact details'.$S.'Email}}';
 		}
-		$user['ICON']=$this->arr['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$user,'returnHtmlOnly'=>TRUE));
-		$abtract=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,array('class'=>'user-abstract'));
+		$user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$user,'returnHtmlOnly'=>TRUE));
+		$abtract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,array('class'=>'user-abstract'));
 		if (!empty($arr['wrapResult'])){
 			$wrapper=$arr['wrapResult'];
 			$wrapper['element-content']=$abtract;
 			$wrapper['keep-element-content']=TRUE;
-			$abtract=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
+			$abtract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
 		}
 		return $abtract;
 	}
@@ -233,8 +232,8 @@ class User{
 		$arr=array_merge($template,$arr);
 		if (isset($arr['selector']['EntryId'])){
 			if (!isset($arr['selector']['Type'])){$arr['selector']['Type']='user';}
-			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
-			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($arr['selector']);
+			$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
+			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($arr['selector']);
 		}
 		return $arr;
 	}
@@ -242,7 +241,7 @@ class User{
 	public function loginUser($user){
 		$_SESSION['currentUser']=$user;
 		if (strcmp($user['Owner'],'ANONYM')!==0){
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User login '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User login '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 		}
 	}
 

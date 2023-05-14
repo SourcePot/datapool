@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Menu{
 	
-	private $arr;
+	private $oc;
 	
 	private $categories=array('Home'=>array('Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home'),
 							  'Login'=>array('Emoji'=>'&#8688;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login'),
@@ -26,11 +26,11 @@ class Menu{
 	
 	private $requested=array('Category'=>'Home');
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 	}
 		
-	public function init($arr){
+	public function init($oc){
 		// get category from input
 		$this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_UNSAFE_RAW);
 		if (!isset($this->categories[$this->requested['Category']])){
@@ -42,7 +42,7 @@ class Menu{
 			$this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
 		}
 		// get app from form
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
 		if (!empty($formData['val']['Class'])){
 			$app=$formData['val']['Class'];
 			if (method_exists($app,'run')){
@@ -52,16 +52,17 @@ class Menu{
 		}
 		// reset $_SESSION['page state']['app']
 		$homeApp=$this->categories['Home']['Class'];
-		$_SESSION['page state']['app']=$arr['registered methods']['run'][$homeApp];
+		$registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run');
+		$_SESSION['page state']['app']=$registeredRunMethods[$homeApp];
 		// get available and selected categories and apps
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-		foreach($arr['registered methods']['run'] as $classWithNamespace=>$menuDef){
+		foreach($registeredRunMethods as $classWithNamespace=>$menuDef){
 			// check access rights
 			if (empty($this->categories[$menuDef['Category']])){
 				throw new \ErrorException('Function '.__FUNCTION__.': Menu category {'.$menuDef['Category'].'} set in {'.$classWithNamespace.'} has no definition in this class {'.__CLASS__.'}',0,E_ERROR,__FILE__,__LINE__);
 			}
-			$menuDef=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef);
-			if (empty($this->arr['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){continue;}
+			$menuDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef);
+			if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){continue;}
 			// get categories
 			$this->available['Categories'][$menuDef['Category']]=$this->categories[$menuDef['Category']];
 			if (strcmp($menuDef['Category'],$this->requested['Category'])===0){
@@ -74,7 +75,6 @@ class Menu{
 				}
 			}
 		}
-		return $arr;
 	}
 		
 	public function menu($arr){
@@ -92,13 +92,13 @@ class Menu{
 		}
 		$categoryEmoji=$this->categories[$this->requested['Category']]['Emoji'];
 		$categoryTitle=$this->categories[$this->requested['Category']]['Label'];
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','element-content'=>$categoryEmoji,'href'=>'#','title'=>$categoryTitle,'class'=>'first-menu','keep-element-content'=>TRUE));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>$categoryEmoji,'href'=>'#','title'=>$categoryTitle,'class'=>'first-menu','keep-element-content'=>TRUE));
 		if (!empty($options)){
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selected,'key'=>array('Class'),'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selected,'key'=>array('Class'),'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		$html.='{{firstMenuBarExt}}';
-		$html.=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu'));
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu'));
 		$arr['toReplace']['{{firstMenuBar}}']=$html;
 		return $arr;
 	}
@@ -109,8 +109,8 @@ class Menu{
 			$def['Category']=$category;
 			$html.=$this->def2div($def);	
 		}		
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'second-menu','style'=>'height:0;'));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'second-menu','style'=>'height:0;'));
 		$arr['toReplace']['{{secondMenuBar}}']=$html;
 		return $arr;
 	}
@@ -119,12 +119,12 @@ class Menu{
 		$href='?'.http_build_query(array('category'=>$def['Category']));
 		$style='';
 		if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}
-		$def['Label']=$arr['element-content']=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);
+		$def['Label']=$arr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);
 		$html='';
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE));
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'a','element-content'=>$html,'href'=>$href,'class'=>'menu','keep-element-content'=>TRUE));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'li','element-content'=>$html,'style'=>$style,'class'=>'menu','keep-element-content'=>TRUE));
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE));
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>$html,'href'=>$href,'class'=>'menu','keep-element-content'=>TRUE));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'li','element-content'=>$html,'style'=>$style,'class'=>'menu','keep-element-content'=>TRUE));
 		
 		return $html;
 	}

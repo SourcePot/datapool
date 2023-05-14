@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Multimedia{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -20,17 +20,16 @@ class Multimedia{
 
 	public $definition=array('EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
 
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 	}
 
 	public function job($vars){
@@ -54,10 +53,10 @@ class Multimedia{
 		if ($arr===TRUE){
 			return array('Category'=>'Apps','Emoji'=>'&#10063;','Label'=>'Multimedia','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
-			$arr=$this->arr['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
-			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+			$arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
+			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
-			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Multimedia entries','selectedView',$selector,$settings,array());
+			$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Multimedia entries','selectedView',$selector,$settings,array());
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}

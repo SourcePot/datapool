@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Database{
 
-	private $arr;
+	private $oc;
 	
 	private $statistic=array();
 	private $toReplace=array();
@@ -39,17 +39,16 @@ class Database{
 								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$this->resetStatistic();
-		$arr=$this->connect($arr);
+		$this->connect();
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
+	public function init($oc){
+		$this->oc=$oc;
 		$this->collectDatabaseInfo();
 		$this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
 	}
 	
 	public function job($vars){
@@ -58,12 +57,12 @@ class Database{
 	}
 
 	public function enrichToReplace($toReplace=array()){
-		$toReplace['{{NOW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-		$toReplace['{{YESTERDAY}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
-		$toReplace['{{TOMORROW}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
+		$toReplace['{{NOW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+		$toReplace['{{YESTERDAY}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
+		$toReplace['{{TOMORROW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
 		$toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
-		$toReplace['{{Expires}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
-		$toReplace['{{EntryId}}']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+		$toReplace['{{Expires}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
+		$toReplace['{{EntryId}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
 		if (!isset($_SESSION['currentUser']['EntryId'])){
 			$toReplace['{{Owner}}']='SYSTEM';
 		} else if (strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
@@ -71,8 +70,8 @@ class Database{
 		} else {
 			$toReplace['{{Owner}}']='ANONYM';
 		}
-		if (isset($this->arr['SourcePot\Datapool\Tools\HTMLbuilder'])){
-			$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+		if (isset($this->oc['SourcePot\Datapool\Tools\HTMLbuilder'])){
+			$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 			$toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
 			$toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
 		}
@@ -139,13 +138,13 @@ class Database{
 	public function unifyEntry($entry,$addEntryDefaults=FALSE){
 		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
 		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
-		if (isset($this->arr['source2class'][$entry['Source']])){
-			$classWithNamespace=$this->arr['source2class'][$entry['Source']];
-			if (isset($this->arr['registered methods']['unifyEntry'][$classWithNamespace])){
-				$entry=$this->arr[$classWithNamespace]->unifyEntry($entry);
-			}
+		$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($entry['Source']);
+		$registeredMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('unifyEntry');
+		if (isset($registeredMethods[$classWithNamespace])){
+			$entry=$this->oc[$classWithNamespace]->unifyEntry($entry);
+		} else if ($addEntryDefaults){
+			$entry=$this->addEntryDefaults($entry);
 		}
-		if ($addEntryDefaults){$entry=$this->addEntryDefaults($entry);}
 		return $entry;	
 	}
 
@@ -164,10 +163,10 @@ class Database{
 				$this->toReplace[$toReplaceKey]=$entry[$column];
 				$entry[$column]=$this->stdReplacements($entry[$column]);
 			}
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
 		} // loop throug entry-template-array
 		$debugArr['entry out']=$entry;
-		if ($isDebugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);}
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);}
 		return $entry;
 	}
 
@@ -205,7 +204,7 @@ class Database{
 		return $result;
 	}
 
-	private function connect($arr){
+	private function connect(){
 		// This function establishes the database connection and saves the PDO-object in dbObj.
 		// The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
 		// 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
@@ -214,11 +213,11 @@ class Database{
 		$access=array('Class'=>__CLASS__,'EntryId'=>'connect');
 		$access['Read']=65535;
 		$access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
-		$access=$this->arr['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
+		$access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
 		$this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
 		$this->dbObj->exec("SET CHARACTER SET 'utf8'");
 		$this->dbName=$access['Content']['dbName'];
-		return $arr;
+		return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
 	}
 	
 	private function collectDatabaseInfo(){
@@ -239,9 +238,9 @@ class Database{
 			if ($debugging){$debugArr['sql']=str_replace($bindKey,strval($bindValue),$debugArr['sql']);}
 			$stmt->bindValue($bindKey,$bindValue);
 		}
-		if ($debugging){$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__);}
+		if ($debugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__);}
 		$stmt->execute();
-		if (isset($this->arr['SourcePot\Datapool\Foundation\Haystack'])){$this->arr['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);}
+		if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){$this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);}
 		return $stmt;
 	}
 	
@@ -296,11 +295,11 @@ class Database{
 			if ($value===FALSE){continue;}
 			preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
 			if (!empty($match[2])){$operator=$match[2];} else {$operator='=';}
-			$column=explode($this->arr['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
+			$column=explode($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
 			$column=trim($column[0],' <>=!');
 			if (!isset($entryTemplate[$column])){continue;}
 			$placeholder=':'.$column.$opAlias[$operator];
-			if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+			if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 			if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards($value)){
 				$column='`'.$column.'`';
 				if (empty($value)){
@@ -365,7 +364,7 @@ class Database{
 		if (!isset($entryTemplate[$column]['value'])){
 			$result[$column]=$value;
 		} else if (is_array($entryTemplate[$column]['value'])){
-			$result[$column]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($value);
+			$result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($value);
 		} else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
 			$result[$column]=intval($value);
 		} else if (strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
@@ -378,13 +377,14 @@ class Database{
 	
 	private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-		$sqlArr=$this->selector2sql($selector,);
+		$sqlArr=$this->selector2sql($selector);
 		$sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
 		$sqlArr=$this->addSuffix2sql($sqlArr,$GLOBALS['dbInfo'][$selector['Source']],$orderBy,$isAsc,$limit,$offset);
 		return $sqlArr;
 	}
 	
 	public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
+		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
 		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
 		$selectExprSQL='';
 		$sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
@@ -396,11 +396,11 @@ class Database{
 	}
 	
 	public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
-		$selector=array('Source'=>$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable());
+		$selector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable());
 		if ($returnPrimaryKeyOnly){$return='EntryId';} else {$return='*';}
-		$rights=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights(array(),$right,$right);
+		$rights=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights(array(),$right,$right);
 		$right=intval($rights['Read']);
-		$sql="SELECT ".$return." FROM `".$this->arr['SourcePot\Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
+		$sql="SELECT ".$return." FROM `".$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
 		$stmt=$this->executeStatement($sql);
 		$entries=array();
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
@@ -413,28 +413,41 @@ class Database{
 	}
 	
 	public function getDistinct($selector,$column,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE){
+		$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>'');
 		$column=trim($column,'!');
-		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit=FALSE,$offset=FALSE);
-		$selectExprSQL='';
-		$sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
-		$sqlArr['sql'].=';';
-		//var_dump($sqlArr);
-		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-		$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
-		$this->addStatistic('matches',$result['rowCount']);
-		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
-			foreach($row as $column=>$value){
-				$result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
+		if (strcmp($column,'Source')===0){
+			foreach($GLOBALS['dbInfo'] as $table=>$tableInfoArr){
+				$result['Source']=$table;
+				
+				yield $result;
+				
+				$result['rowIndex']++;
 			}
-			yield $result;
-			$result['isFirst']=FALSE;
-			$result['rowIndex']++;
+		} else if (!isset($GLOBALS['dbInfo'][$selector['Source']])){
+			// selected table does not exist
+		} else {	
+			$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit=FALSE,$offset=FALSE);
+			$selectExprSQL='';
+			$sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
+			$sqlArr['sql'].=';';
+			//var_dump($sqlArr);
+			$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
+			$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
+			$this->addStatistic('matches',$result['rowCount']);
+			while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
+				foreach($row as $column=>$value){
+					$result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
+				}
+				yield $result;
+				$result['isFirst']=FALSE;
+				$result['rowIndex']++;
+			}
 		}
 		return $result;
 	}
 	
 	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array()){
-		if (empty($selector['Source'])){return FALSE;}
+		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return array();}
 		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
 		if (empty($selectExprArr)){
 			$selectExprSQL=$selector['Source'].'.*';
@@ -516,7 +529,7 @@ class Database{
 				if (strcmp($column,'Source')===0){continue;}
 				$sqlPlaceholder=':'.$column;
 				$valueSql.="`".$column."`=".$sqlPlaceholder.",";
-				if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+				if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 				$inputs[$sqlPlaceholder]=strval($value);
 			}
 			$sql="UPDATE `".$selector['Source']."` SET ".trim($valueSql,',')." ".$entryList['sql'].";";
@@ -527,7 +540,7 @@ class Database{
 	}
 	
 	public function deleteEntriesOnly($selector,$isSystemCall=FALSE){
-		if (empty($selector['Source'])){return FALSE;}
+		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return FALSE;}
 		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write');
 		$sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
 		//var_dump($sqlArr);
@@ -542,7 +555,7 @@ class Database{
 		if (empty($entryList['primaryKeys'])){return FALSE;}
 		foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
 			$entrySelector=array('Source'=>$selector['Source'],$entryList['primaryKey']=>$primaryKeyValue);
-			$fileToDelete=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
+			$fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
 			if (is_file($fileToDelete)){
 				$this->addStatistic('removed',1);
 				unlink($fileToDelete);
@@ -571,7 +584,7 @@ class Database{
 			$sqlPlaceholder=':'.$column;
 			$columns.='`'.$column.'`,';
 			$values.=$sqlPlaceholder.',';
-			if (is_array($value)){$value=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+			if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
 			$inputs[$sqlPlaceholder]=strval($value);
 		}
 		$sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
@@ -580,22 +593,24 @@ class Database{
 		return $entry;
 	}
 
-	public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE){
+	public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE,$addLog=FALSE){
 		// This function updates the selected entry or inserts a new entry.
 		// The primary key needs to be provided.
 		$existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
 		if (empty($existingEntry['rowCount'])){
 			// insert and return entry
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
 			$entry=$this->insertEntry($entry);
 		} else if (empty($noUpdateCreateIfMissing)){
 			// update and return entry
 			$selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
 			unset($entry['EntryId']);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
+			if ($addLog){
+				$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
+			}
 			$this->updateEntries($selector,$entry,$isSystemCall);
 			$entry=$this->entryById($selector,$isSystemCall,'Write');
 		} else {
@@ -625,27 +640,27 @@ class Database{
 		
 	public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE){
 		$userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
 			// write access
 			if ($updateSourceFirst && !$isTestRun){
 				$sourceEntry=$this->updateEntry($sourceEntry,$isSystemCall);
 			}
 			$targetEntry=array_replace_recursive($sourceEntry,$targetSelector);
-			$targetEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+			$targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
 			if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
-				$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
+				$sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
 				if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
 			} else {
 				// move or copy attached file to tgarget
 				$fileRenameSuccess=TRUE;
-				$sourceFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
-				$targetFile=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+				$sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
+				$targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
 				if (is_file($sourceFile) && !$isTestRun){
 					if (is_file($targetFile)){
 						if (unlink($targetFile)){
-							$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Removed file detected at target location'),FALSE);
+							$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Removed file detected at target location'),FALSE);
 						} else {
-							$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('failed'=>'Failed to remove file detected at target location'),FALSE);
+							$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('failed'=>'Failed to remove file detected at target location'),FALSE);
 						}
 					}
 					if ($keepSource){
@@ -656,8 +671,8 @@ class Database{
 				}
 				// create tgarget entry
 				if ($fileRenameSuccess){
-					$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
-					$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId']),FALSE);
+					$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
+					$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId']),FALSE);
 					if (!$isTestRun){
 						if (!$keepSource){
 							$this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
@@ -666,7 +681,7 @@ class Database{
 					}			
 				} else {
 					// copying or renaming of attached file failed
-					$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to rename attached file, kept enrtry'),FALSE);
+					$sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to rename attached file, kept enrtry'),FALSE);
 					if ($isTestRun){
 						$targetEntry=$sourceEntry;
 					} else {
@@ -676,19 +691,19 @@ class Database{
 			}
 		} else {
 			// no write access
-			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
+			$sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
 			if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
 		}
 		return $targetEntry;
 	}
 
 	public function moveEntryByEntryId($entry,$targetSelector){
-		$entryFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-		$targetFileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetSelector);
+		$entryFileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+		$targetFileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetSelector);
 		// backup an existing entry file with EntryId equal to $targetSelector at the tmp dir 
 		$return=$this->entryById($targetSelector);
 		if (!empty($return)){
-			$return['File']=$this->arr['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().__FUNCTION__.'.file';
+			$return['File']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().__FUNCTION__.'.file';
 			@rename($targetFileName,$return['File']);
 		}
 		// move entry
@@ -704,7 +719,7 @@ class Database{
 		$entryB=$this->moveEntryByEntryId($entryA,$entryB);
 		if (!empty($entryB)){
 			$entryB['EntryId']=$entryA['EntryId'];
-			$entryBfileName=$this->arr['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
+			$entryBfileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
 			@rename($entryB['File'],$entryBfileName);
 			$this->updateEntry($entryB,TRUE);
 		}
@@ -755,7 +770,7 @@ class Database{
 		}
 		if ($isDebugging){
 			if (isset($_SESSION[__CLASS__][__FUNCTION__]['callCount'])){$_SESSION[__CLASS__][__FUNCTION__]['callCount']++;} else {$_SESSION[__CLASS__][__FUNCTION__]['callCount']=1;}
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,'DebugArr '.__FUNCTION__.'-'.$_SESSION[__CLASS__][__FUNCTION__]['callCount'].'-');
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,'DebugArr '.__FUNCTION__.'-'.$_SESSION[__CLASS__][__FUNCTION__]['callCount'].'-');
 		}
 		return TRUE;
 	}

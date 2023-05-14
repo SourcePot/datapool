@@ -12,25 +12,24 @@ namespace SourcePot\Datapool\DataApps;
 
 class Sap{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array();
 
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 
 	public function job($vars){
-		$vars=$this->arr['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__,FALSE);
+		$vars=$this->oc['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__,FALSE);
 		return $vars;
 	}
 
@@ -47,14 +46,13 @@ class Sap{
 		if ($arr===TRUE){
 			return array('Category'=>'Data','Emoji'=>'&#9868;','Label'=>'SAP','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
-			$explorerArr=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
+			$explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
 			$html.=$explorerArr['contentHtml'];
-			if (isset($explorerArr['selector']['Source'])){
-				if (isset($this->arr['source2class'][$explorerArr['selector']['Source']])){
-					$classWithNamespace=$this->arr['source2class'][$explorerArr['selector']['Source']];
-					$pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
-					$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',$pageState,array(),array());
-				}
+			if (isset($explorerArr['canvasElement']['Content']['Selector']['Source'])){
+				$explorerSelector=$explorerArr['canvasElement']['Content']['Selector'];
+				$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($explorerSelector['Source']);
+				$pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',array_merge($explorerSelector,$pageStateSelector),array(),array());
 			}
 			$arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
 			$arr['toReplace']['{{content}}']=$html;

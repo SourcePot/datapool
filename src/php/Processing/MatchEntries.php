@@ -89,7 +89,7 @@ class MatchEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runMatchEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -141,26 +141,24 @@ class MatchEntries{
 							);
 		$contentStructure['Column to match']+=$callingElement['Content']['Selector'];
 		// get selctorB
-		$matchingParams=$this->callingElement2selector(__FUNCTION__,$callingElement,TRUE);;
-		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($matchingParams,'ALL_R','ALL_CONTENTADMIN_R');
-		$matchingParams['Content']=array('Column to match'=>'Name');
-		$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($matchingParams,TRUE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
+		$arr['selector']['Content']=array('Column to match'=>'Name');
+		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
-			$matchingParams['Content']=$formData['val'][$elementId]['Content'];
-			$matchingParams=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($matchingParams,TRUE);
+			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
+			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// get HTML
-		$arr=$matchingParams;
 		$arr['canvasCallingClass']=$callingElement['Folder'];
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Select column to match and the success/failure targets';
 		$arr['noBtns']=TRUE;
-		$matrix=array('Parameter'=>$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE));
+		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
+		$matrix=array('Parameter'=>$row);
 		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 
@@ -172,12 +170,10 @@ class MatchEntries{
 								);
 		$contentStructure['Column']+=$callingElement['Content']['Selector'];
 		if (empty($callingElement['Content']['Selector']['Source'])){return $html;}
-		$arr=$this->callingElement2selector(__FUNCTION__,$callingElement,FALSE);
+		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Filter-rules: Skip entries if one of the conditions is met';
-		$arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
 		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
@@ -293,16 +289,17 @@ class MatchEntries{
 		return $skip;
 	}
 
-	public function callingElement2selector($callingFunction,$callingElement,$selectsUniqueEntry=FALSE){
+	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['class2source'][__CLASS__];
+		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
 		$type.='|'.$callingFunction;
-		$entrySelector=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		if ($selectsUniqueEntry){$entrySelector=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entrySelector,array('Group','Folder','Name','Type'),0);}
-		return $entrySelector;
-
+		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry['Content']=array();
+		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
+		return $arr;
 	}
-
 
 }
 ?>

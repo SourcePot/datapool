@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Calendar{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array('Group'=>array('index'=>FALSE,'value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
@@ -83,36 +83,35 @@ class Calendar{
 										'Content|[]|Settings|[]|Recurrence id'=>'Content|[]|Event|[]|Recurrence id'
 										);
 
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 		//
 	}
 
-	public function init($arr){
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->definition['Content']['Event']['Start timezone']['@options']=$this->options['Timezone'];
 		$this->definition['Content']['Event']['End timezone']['@options']=$this->options['Timezone'];
 		$this->definition['Content']['Event']['Recurrence']['@options']=$this->options['Recurrence'];
-		$arr['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 		// get settings
-		$currentUser=$arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+		$currentUser=$oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
 		if (strcmp($currentUser['Owner'],'ANONYM')===0){$settingKey='ANONYM';} else {$settingKey=$currentUser['EntryId'];}
 		$this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>date_default_timezone_get());
-		$this->setting=$arr['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
+		$this->setting=$oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
 		// get page state
 		$this->pageStateTemplate=array('Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
-		$this->pageState=$arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
-		$this->arr=$arr;
-		return $this->arr;
+		$this->pageState=$oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
 	}
 
 	public function job($vars){
 		$events=$this->getEvents(time(),TRUE);
 		$trigger=array();
 		$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger');
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read') as $triggerId=>$entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read') as $triggerId=>$entry){
 			$triggerId=$entry['Source'].'|'.$entry['EntryId'];
 			$trigger[$triggerId]=array('detected event last time'=>$vars['trigger'][$triggerId]['detected event']??FALSE,
 									   'detected event'=>FALSE,
@@ -152,8 +151,8 @@ class Calendar{
 
 	private function stdReplacements($str=''){
 		if (is_array($str)){return $str;}
-		if (isset($this->arr['SourcePot\Datapool\Foundation\Database'])){
-			$this->toReplace=$this->arr['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
+		if (isset($this->oc['SourcePot\Datapool\Foundation\Database'])){
+			$this->toReplace=$this->oc['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
 		}
 		foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
 		return $str;
@@ -164,10 +163,10 @@ class Calendar{
 			return array('Category'=>'Apps','Emoji'=>'&#9992;','Label'=>'Calendar','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
 			$html='';
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
-			$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
+			$currentUser=$this->oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
 			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId'],'refreshInterval'=>300);
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
@@ -184,7 +183,7 @@ class Calendar{
 			$entry['Content']['Event']['Description']='';
 			$entry['Content']['Event']['Type']='event';
 		}
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);		
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);		
 		if (!empty($entry['Content']['Event']['Start']) && !empty($entry['Content']['Event']['Start timezone']) && 
 			!empty($entry['Content']['Event']['End']) && !empty($entry['Content']['Event']['End timezone'])){
 			$entry['Folder']=$entry['Content']['Event']['Type'];
@@ -193,7 +192,7 @@ class Calendar{
 			$entry['End']=$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],date_default_timezone_get());
 			if (!empty($entry['entryIsUpdated'])){$entry=$this->updateCalendarEventEntry($entry,TRUE);}
 		}
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
 		return $entry;
 	}
 	
@@ -212,30 +211,31 @@ class Calendar{
 	private function getCalendarEntry($arr=array()){
 		$template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
 		$arr=array_merge($template,$arr);
-		$event=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($this->pageState);
+		$event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($this->pageState);
 		if (empty($event)){$event=$this->pageState;}
-		$event=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
+		$event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
 		if (strcmp($this->pageState['EntryId'],'{{EntryId}}')===0 && empty($this->pageState['addDate'])){
 			$arr['html'].=$this->getEventsOverview($arr);
 		} else {
-			$arr['html'].=$this->arr['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
+			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
 		}
 		return $arr;		
 	}
 	
 	private function getCalendarSettings($arr=array()){
 		$template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+		$btnTemplate=array('style'=>array('font-size'=>'20px','line-height'=>'15px','width'=>'50px'),'tag'=>'button','keep-element-content'=>'TRUE','excontainer'=>FALSE);
 		$arr=array_merge($template,$arr);
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (isset($formData['cmd']['Home'])){
 			$this->pageState['EntryId']='{{EntryId}}';
 			$this->pageState['calendarDate']='{{YESTERDAY}}';
 			$this->pageState['addDate']='';
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
+			$this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
 		} else if (!empty($formData['cmd'])){
 			$newPageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
-			$this->pageState=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
-			$this->setting=$this->arr['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$_SESSION['currentUser']['EntryId'],$formData['val']['setting'],'Calendar',FALSE);
+			$this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
+			$this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$_SESSION['currentUser']['EntryId'],$formData['val']['setting'],'Calendar',FALSE);
 		}
 		$calendarDate=new \DateTime('@'.$this->calendarStartTimestamp());
 		$calendarDate->setTimezone(new \DateTimeZone($this->setting['Timezone']));
@@ -245,32 +245,31 @@ class Calendar{
 		$calendarDateArr['title']='Press enter to select';
 		$calendarDateArr['value']=$calendarDate->format('Y-m-d');
 		$calendarDateArr['key']=array('pageState','calendarDate');
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($calendarDateArr);
-		$btnArr=$arr;
-		$btnArr['style']=array('font-size'=>'20px','line-height'=>'15px','width'=>'50px');
-		$btnArr['cmd']='Set';
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($calendarDateArr);
+		$btnArr=array_replace_recursive($btnTemplate,$arr);
+		$btnArr['key']=array('Set');
 		$btnArr['title']='Set';
 		$btnArr['element-content']='&#10022;';
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
-		$btnArr['cmd']='Home';
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+		$btnArr['key']=array('Home');
 		$btnArr['title']='Home';
 		$btnArr['element-content']='&#9750;';
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
 		$timezoneArr=$arr;
 		$timezoneArr['selected']=$this->setting['Timezone'];
 		$timezoneArr['options']=$this->options['Timezone'];
 		$timezoneArr['key']=array('setting','Timezone');
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($timezoneArr);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($timezoneArr);
 		$daysToShowArr=$arr;
 		$daysToShowArr['selected']=$this->setting['Days to show'];
 		$daysToShowArr['options']=$this->options['Days to show'];
 		$daysToShowArr['key']=array('setting','Days to show');
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($daysToShowArr);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($daysToShowArr);
 		$dayWidthArr=$arr;
 		$dayWidthArr['selected']=$this->setting['Day width'];
 		$dayWidthArr['options']=$this->options['Day width'];
 		$dayWidthArr['key']=array('setting','Day width');
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($dayWidthArr);
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($dayWidthArr);
 		return $arr;
 	}
 	
@@ -286,7 +285,7 @@ class Calendar{
 		}
 		$html='';
 		foreach($matrices as $caption=>$matrix){
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$caption,'hideKeys'=>TRUE));
+			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$caption,'hideKeys'=>TRUE));
 		}
 		return $html;
 	}
@@ -295,7 +294,7 @@ class Calendar{
 		$template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
 		$arr=array_merge($template,$arr);
 		$style=array('left'=>$this->date2pos());
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-timeline','style'=>$style));
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-timeline','style'=>$style));
 			
 		$lastDayPos=0;
 		$dayInterval=\DateInterval::createFromDateString('1 days');
@@ -305,39 +304,39 @@ class Calendar{
 			//var_dump($calendarDateTime->format('Y-m-d H:i:s'));
 			$weekDay=$calendarDateTime->format('D');
 			$date=$calendarDateTime->format('Y-m-d');
-			$dayContent=$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng('Week').' '.intval($calendarDateTime->format('W')).', '.$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($weekDay).'<br/>';
+			$dayContent=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Week').' '.intval($calendarDateTime->format('W')).', '.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($weekDay).'<br/>';
 			$dayContent.=$date;
 			$calendarDateTime->add($dayInterval);
 			$newDayPos=$this->date2pos($calendarDateTime->format('Y-m-d H:i:s'));
 			$dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
 			if (strcmp($date,$this->pageState['addDate'])===0){$dayStyle['background-color']='#f008';}
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle));
+			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle));
 			$dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
 			if (strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0){$dayStyle['background-color']='#af6';}
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$dayContent,'keep-element-content'=>TRUE,'key'=>array('Add',$date),'title'=>'Click here to open a new event','callingClass'=>__CLASS__,'callingFunction'=>'addEvents','class'=>'calendar-day','style'=>$dayStyle));
+			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>$dayContent,'keep-element-content'=>TRUE,'key'=>array('Add',$date),'title'=>'Click here to open a new event','callingClass'=>__CLASS__,'callingFunction'=>'addEvents','class'=>'calendar-day','style'=>$dayStyle));
 			$arr['html'].=$this->timeLineHtml($date);
 			$lastDayPos=$newDayPos;
 		}
 		$arr=$this->addEvents($arr);
 		$wrapperStyle=array('width'=>$this->getCalendarWidth(),'height'=>$arr['calendarSheetHeight']);
-		$arr['html']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'class'=>'calendar-sheet','style'=>$wrapperStyle));
-		$arr['html']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'class'=>'calendar-sheet-wrapper'));
+		$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'class'=>'calendar-sheet','style'=>$wrapperStyle));
+		$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'class'=>'calendar-sheet-wrapper'));
 		return $arr;
 	}
 	
 	private function eventsFormProcessing(){
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,'addEvents');
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEvents');
 		if (isset($formData['cmd']['EntryId'])){
 			$selector=$this->pageState;
 			$selector['EntryId']=key($formData['cmd']['EntryId']);
-			$event=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-			$this->pageState['EntryId']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',key($formData['cmd']['EntryId']));
-			$this->pageState['calendarDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',$event['Start']);
-			$this->pageState['addDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
+			$event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+			$this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',key($formData['cmd']['EntryId']));
+			$this->pageState['calendarDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',$event['Start']);
+			$this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
 		} else if (isset($formData['cmd']['Add'])){
-			$this->pageState['EntryId']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId','{{EntryId}}');
-			$this->pageState['calendarDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',key($formData['cmd']['Add']));
-			$this->pageState['addDate']=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate',key($formData['cmd']['Add']));
+			$this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId','{{EntryId}}');
+			$this->pageState['calendarDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',key($formData['cmd']['Add']));
+			$this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate',key($formData['cmd']['Add']));
 		}
 		return $formData;
 	}
@@ -361,7 +360,7 @@ class Calendar{
 			$title=$event['Name']."\n";
 			$title.=str_replace('T',' ',$event['Content']['Event']['Start']).' ('.$event['Content']['Event']['Start timezone'].")\n";
 			$title.=str_replace('T',' ',$event['Content']['Event']['End']).' ('.$event['Content']['Event']['End timezone'].')';
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'button','element-content'=>$event['Name'],'title'=>$title,'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>$class,'style'=>$style));
+			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>$event['Name'],'title'=>$title,'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>$class,'style'=>$style));
 		}
 		return $arr;
 	}
@@ -376,8 +375,8 @@ class Calendar{
 			if ($newPos-$lastPos<30){continue;}
 			$content=strval($h);
 			$contentPos=round($newPos-(strlen($content)*10)/2);
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>$content,'class'=>'calendar-hour','style'=>array('left'=>$contentPos)));
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>'','class'=>'calendar-hour','style'=>array('left'=>$newPos)));
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$content,'class'=>'calendar-hour','style'=>array('left'=>$contentPos)));
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'','class'=>'calendar-hour','style'=>array('left'=>$newPos)));
 			$lastPos=$newPos;
 		}
 		return $html;
@@ -440,7 +439,7 @@ class Calendar{
 		$selectors['Finnishing event']=array('Source'=>$this->entryTable,'Group'=>'Events','End>='=>$viewStart,'End<='=>$viewEnd);
 		$selectors['Upcomming event']=array('Source'=>$this->entryTable,'Group'=>'Events','Start>='=>$viewStart,'Start<='=>$viewEnd);
 		foreach($selectors as $state=>$selector){
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Start') as $entry){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Start') as $entry){
 				$key=$entry['EntryId'];
 				$eventStartTimestamp=strtotime($entry['Start']);
 				if (strcmp($state,'Finnishing event')===0){
@@ -493,17 +492,17 @@ class Calendar{
 			$value=$interval->format('%'.$index);
 			if (intval($value)===1){$label=rtrim($label,'s');}
 			if (intval($value)===0 && $nonZeroDetected===FALSE){continue;} else {$nonZeroDetected=TRUE;}
-			$str.=$value.' '.$this->arr['SourcePot\Datapool\Foundation\Dictionary']->lng($label).', ';
+			$str.=$value.' '.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($label).', ';
 		}
 		return trim($str,', ');
 	}
 	
 	private function updateCalendarEventEntry($entry){
-		$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
+		$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
 		if (empty($entry['Content']['Event']['Recurrence id'])){$entry['Content']['Event']['Recurrence id']=$entry['EntryId'];}
 		// delete all related entries
 		$toDeleteSelector=array('Source'=>$entry['Source'],'Content'=>'%'.$entry['Content']['Event']['Recurrence id'].'%');
-		$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
+		$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
 		// create recurring entries
 		$startSourceTimezone=new \DateTimeZone($entry['Content']['Event']['Start timezone']);
 		$endSourceTimezone=new \DateTimeZone($entry['Content']['Event']['End timezone']);
@@ -512,7 +511,7 @@ class Calendar{
 		$intervallRecurrence=\DateInterval::createFromDateString(trim($entry['Content']['Event']['Recurrence'],'+'));
 		$loopEntry=$entry;
 		for($loop=1;$loop<=$entry['Content']['Event']['Recurrence times'];$loop++){
-			$loopEntry['EntryId']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+			$loopEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
 			$startDateTime->add($intervallRecurrence);
 			$loopEntry['Content']['Event']['Start']=$startDateTime->format('Y-m-d H:i:s');
 			$endDateTime->add($intervallRecurrence);
@@ -520,7 +519,7 @@ class Calendar{
 			$loopEntry['Start']=$this->getTimezoneDate($loopEntry['Content']['Event']['Start'],$loopEntry['Content']['Event']['Start timezone'],date_default_timezone_get());
 			$loopEntry['End']=$this->getTimezoneDate($loopEntry['Content']['Event']['End'],$loopEntry['Content']['Event']['End timezone'],date_default_timezone_get());
 			$loopEntry['Content']['Event']['Recurrence index']=$loop;
-			$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($loopEntry);
+			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loopEntry);
 		}
 		return $entry;
 	}
@@ -529,7 +528,7 @@ class Calendar{
 		$html='';
 		$eventSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Events');
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (isset($formData['cmd']['Reset'])){
 			$this->resetTrigger(key($formData['cmd']['Reset']));
 		}
@@ -542,13 +541,13 @@ class Calendar{
 			$selectArr['key']=array($column);
 			$selectArr['options']=array(''=>'&larrhk;');
 			if (isset($eventSelector[$column])){$selectArr['selected']=$eventSelector[$column];}
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDistinct($eventSelector,$column,FALSE,'Read',$column) as $row){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($eventSelector,$column,FALSE,'Read',$column) as $row){
 				$selectArr['options'][$row[$column]]=ucfirst($row[$column]);
 			}
-			$matrix['Selector'][$column]=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
+			$matrix['Selector'][$column]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
 			if (empty($selectArr['selected'])){break;}
 		}
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Event selection','keep-element-content'=>TRUE));
+		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Event selection','keep-element-content'=>TRUE));
 		// get trigger
 		$triggerInitName='Trigger '.hrtime(TRUE);
 		$eventSelectorString=implode('|',$eventSelector);
@@ -556,42 +555,41 @@ class Calendar{
 								'Event selector'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelectorString,'excontainer'=>TRUE),
 								'Slope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>1,'options'=>$this->slopeOptions),
 								);
-		$currentUser=$this->arr['SourcePot\Datapool\Foundation\User']->getCurrentUser();
-		$listArr=$arr['selector'];
+		$currentUser=$this->oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+		$listArr=$arr;
 		$listArr['canvasCallingClass']=__CLASS__;
 		$listArr['contentStructure']=$contentStructure;
 		$listArr['caption']='Event trigger';
 		$listArr['callingClass']=__CLASS__;
 		$listArr['callingFunction']=__FUNCTION__;
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($listArr);
+		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($listArr);
 		// get current trigger state
-		$btnArr=$arr;
-		$btnArr['cmd']='Reset';
+		$btnArr=array_replace_recursive($arr,array('tag'=>'button','element-content'=>'Reset','keep-element-content'=>TRUE));
 		$matrix=array();
 		$triggerArr=$this->getTrigger();
 		foreach($triggerArr['trigger'] as $triggerId=>$trigger){
 			if (strcmp($trigger['selector']['Folder'],$arr['selector']['Folder'])!==0){continue;}
 			$matrix[$trigger['trigger name']]=array('Slope'=>$this->slopeOptions[intval($trigger['risingSlope'])]);
-			$matrix[$trigger['trigger name']]['Past status']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event last time']);
-			$matrix[$trigger['trigger name']]['Current status']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event']);
-			$matrix[$trigger['trigger name']]['Active']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['active']);
+			$matrix[$trigger['trigger name']]['Past status']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event last time']);
+			$matrix[$trigger['trigger name']]['Current status']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event']);
+			$matrix[$trigger['trigger name']]['Active']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['active']);
 			$btnArr['key']=array('Reset',$triggerId);
-			$matrix[$trigger['trigger name']]['Reset']=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+			$matrix[$trigger['trigger name']]['Reset']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
 		}
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Trigger status','keep-element-content'=>TRUE));
+		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Trigger status','keep-element-content'=>TRUE));
 		$arr['html']=$html;
 		return $arr;
 	}
 	
 	public function resetTrigger($triggerId){
-		$vars=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		$vars=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
 		$vars['trigger'][$triggerId]['active']=FALSE;
-		return $this->arr['SourcePot\Datapool\AdminApps\Settings']->setVars(__CLASS__,$vars,TRUE);
+		return $this->oc['SourcePot\Datapool\AdminApps\Settings']->setVars(__CLASS__,$vars,TRUE);
 	}
 	
 	public function getTrigger(){
 		$return=array('options'=>array(''=>'&rArr;'),'trigger'=>array());
-		$return=$this->arr['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
+		$return=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
 		if (empty($return['trigger'])){
 			$return=array('trigger'=>array(),'options'=>array(),'isActive'=>array());
 		} else {
@@ -601,7 +599,7 @@ class Calendar{
 			}
 			if (isset($return['events'])){unset($return['events']);}
 		}
-		//$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($return);
+		//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($return);
 		return $return;
 	}
 	

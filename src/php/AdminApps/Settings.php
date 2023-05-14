@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Settings{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -20,16 +20,16 @@ class Settings{
 								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
     
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+		return $this->oc;
 	}
 
 	public function getEntryTable(){
@@ -44,11 +44,11 @@ class Settings{
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
 		} else {
-			$arr=$this->arr['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
-			$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+			$arr=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
+			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			$settings=array();
 			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'Type','Filter'=>''));
-			$html=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Setting entries','selectedView',$selector,$settings,array());
+			$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','selectedView',$selector,$settings,array());
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
@@ -57,19 +57,19 @@ class Settings{
 	public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
 		if ($isSystemCall){$entry['Owner']='SYSTEM';}
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
 		$entry['Content']=$setting;
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
 		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
 	}
 	
 	public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE){
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
 		if ($isSystemCall){$entry['Owner']='SYSTEM';}
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
 		$entry['Content']=$initSetting;
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
 		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
 	}
 	

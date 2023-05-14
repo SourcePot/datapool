@@ -12,27 +12,26 @@ namespace SourcePot\Datapool\Components;
 
 class Logout{
 	
-	private $arr;
+	private $oc;
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
 	}
 
 	public function run($arr=TRUE){
 		if ($arr===TRUE){
 			return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
 		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User logout '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User logout '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 			// reset session | keep page state
 			$_SESSION=array('page state'=>$_SESSION['page state']);
 			session_regenerate_id(TRUE);
 			// load Home-app
-			header("Location: ".$this->arr['SourcePot\Datapool\Tools\NetworkTools']->href(array('app'=>'SourcePot\Datapool\Components\Home')));
+			header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('app'=>'SourcePot\Datapool\Components\Home')));
 			exit;
 			return $arr;
 		}

@@ -12,295 +12,268 @@ namespace SourcePot\Datapool\Foundation;
 
 class Explorer{
 	
-	private $arr;
+	private $oc;
 	
-	private $varSpaceKey='';
-	
+	private $selectorTemplate=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);
+	private $settingsTemplate=array('Source'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
+									'Group'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
+									'Folder'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
+									'EntryId'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE)
+									);
+									
 	private $state=array();
 	private $guideEntries=array();
 	
-	public function __construct($arr){
-		$this->arr=$arr;	
+	public function __construct($oc){
+		$this->oc=$oc;	
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
 	}
-	
-	public function getExplorer($arr,$callingClass){
-		$state=$this->session2state($callingClass);
-		$this->getGuideEntries($callingClass);
-		$this->formProcessing($callingClass);
-		$this->getGuideEntries($callingClass);
-		$html=$this->getForm($callingClass);
-		$arr['toReplace']['{{explorer}}']=$html;
-		return $arr;
-	}
-	
-	private function initStateArr(){
-		$this->state=array('Source'=>array('Label'=>'Source','Selected'=>FALSE,'orderBy'=>'Source','isAsc'=>TRUE),
-						   'Group'=>array('Label'=>'Group','Selected'=>FALSE,'orderBy'=>'Group','isAsc'=>TRUE),
-						   'Folder'=>array('Label'=>'Folder','Selected'=>FALSE,'orderBy'=>'Folder','isAsc'=>TRUE),
-						   'EntryId'=>array('Label'=>'Name','Selected'=>FALSE,'orderBy'=>'Name','isAsc'=>TRUE)
-						  );
-		return $this->state;
-	}
-	
-	private function session2state($callingClass){
-		// This function copies the page state to the class state var.
-		$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-		if (!empty($selector['EntryId'])){
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-			if (!empty($entry)){$selector=$entry;}
-		}
-		$this->initStateArr();
-		foreach($this->state as $column=>$state){
-			if (isset($selector[$column])){$this->state[$column]['Selected']=$selector[$column];}
-		}
-		return $this->state;
-	}
-	
-	private function getGuideEntries($callingClass){
-		$this->guideEntries=array();
-		$prevGuideEntry=array();
-		$guideEntry=array('Source'=>'__SKIP__','Group'=>'__SKIP__','Folder'=>'__SKIP__','Name'=>'&larrhk;');
-		foreach($this->state as $column=>$stateArr){
-			if (empty($stateArr['Selected'])){
-				break;
-			} else {
-				$guideEntry[$column]=$stateArr['Selected'];
-				$guideEntry['Type']='__'.$column.'__';
-			}
-			$guideEntry=$this->completeGuideEntry($callingClass,$guideEntry,$prevGuideEntry);
-			$this->guideEntries[$column]=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($guideEntry,TRUE);
-			$prevGuideEntry=$this->guideEntries[$column];
-		}	
-		return $this->guideEntries;
-	}
-		
-	private function completeGuideEntry($callingClass,$guideEntry,$prevGuideEntry){
-		$keysToSet=array('Read','Write','Owner');
-		if (empty($prevGuideEntry)){
-			$entryTemplate=$this->arr[$callingClass]->getEntryTemplate();
-			$prevGuideEntry=array('Read'=>$entryTemplate['Read']['value'],'Write'=>$entryTemplate['Write']['value'],'Owner'=>$entryTemplate['Owner']['value']);
-		} else {
-			$prevGuideEntry['Owner']=$_SESSION['currentUser']['EntryId'];
-		}
-		foreach($keysToSet as $keyIndex=>$key){
-			$guideEntry[$key]=$this->arr['SourcePot\Datapool\Foundation\Access']->accessString2int($prevGuideEntry[$key],FALSE);
-		}
-		if (isset($guideEntry['EntryId'])){unset($guideEntry['EntryId']);}
-		$guideEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($guideEntry,array('Source','Group','Folder'),0,'-guideEntry');
-		return $guideEntry;
-	}
-			
-	private function formProcessing($callingClass){
-		// form processing
-		$selector=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-		$formData=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->formProcessing(__CLASS__,__FUNCTION__);
-		if (isset($formData['cmd']['select'])){
-			$stateKey=$formData['cmd']['select'];
-			// set selector value
-			$hadMatch=FALSE;
-			$resetKeyRequest=FALSE;
-			foreach($this->state as $column=>$state){
-				if (isset($formData['val'][$column])){$value=$formData['val'][$column];} else {$value=$state['Selected'];}
-				if ($hadMatch){$value=FALSE;}
-				if (strcmp($column,$stateKey)===0){
-					$hadMatch=TRUE;
-					if (strpos($value,'__')!==FALSE){	
-						$value=FALSE;
-						$selector=$this->setSelectorByKey($callingClass,'EntryId',FALSE);
-					}
-				}
-				$selector=$this->setSelectorByKey($callingClass,$column,$value);	
-			}
-		} else if (isset($formData['cmd']['update file']) || isset($formData['cmd']['add files'])){
-			$key=key($formData['cmd']);
-			foreach($formData['files'][$key] as $fileIndex=>$fileArr){
-				$this->arr['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$this->getEntryTemplate($callingClass));
-			}
-		} else if (isset($formData['cmd']['add'])){
-			$column=$formData['cmd']['add'];
-			$selector[$column]=$formData['val']['add'][$column];
-			$selector['currentKey']=$column;
-			$selector=$this->setSelectorByKey($callingClass,$column,$formData['val']['add'][$column]);
-		} else if (isset($formData['cmd']['edit'])){
-			$column=$formData['cmd']['edit'];
-			if (strlen(current($formData['val']['edit']))>2){
-				$entry=$formData['val']['edit'];
-				if (strcmp(key($entry),$column)===0){$newSelectedValue=$entry[$column];} else {$newSelectedValue=$selector[$column];}
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$entry);
-				$selector=$this->setSelectorByKey($callingClass,$column,$newSelectedValue);
-			} else {
-				$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Too short entry provided, changes were discarded.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
-			}
-		} else if (isset($formData['cmd']['delete'])){
-			$selectedColumn=key($formData['cmd']['delete']);
-			$this->arr['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
-			$selector=$this->setSelectorByKey($callingClass,$selectedColumn,FALSE);
-		} else if (isset($formData['cmd']['download'])){
-			$this->arr['SourcePot\Datapool\Foundation\Filespace']->entry2fileDownload($selector);
-		}
-	}
-	
-	private function setSelectorByKey($callingClass,$key,$value){
-		$this->state[$key]['Selected']=$value;
-		$selector[$key]=$value;
-		return $this->arr['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey($callingClass,$key,$value);
-	}
-	
-	private function getForm($callingClass){
+
+	public function getExplorer($callingClass){
+		$this->appProcessing($callingClass);
 		$html='';
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>ucfirst(strval($this->state['Source']['Selected']))));
-		// add explorer components
-		$result=$this->addSelector($callingClass);
-		$html.=$result['html'];
-		$arr=$this->addEntry($callingClass,$result['stateKey']);
-		$appHtml=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		$arr=$this->editEntry($callingClass,$result['setKey']);
-		$appHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		$arr=$this->miscToolsEntry($callingClass,$result['setKey']);
-		$appHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		$arr=$this->sendEmail($callingClass,$result['setKey']);
-		$appHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		$arr=$this->setRightsEntry($callingClass,'Read');
-		$appHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		$arr=$this->setRightsEntry($callingClass,'Write');
-		$appHtml.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','element-content'=>$appHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','padding'=>'5px','margin'=>'0.5em')));
-		// add wrapper
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+		$html.=$this->getSelectors($callingClass);
 		return $html;
 	}
 
-	private function addSelector($callingClass){
+	private function getSelectors($callingClass){
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		$stateKeys=array('selectedKey'=>key($selector),'nextKey'=>key($selector));
 		$html='';
-		$setKey='Source';
-		foreach($this->state as $stateKey=>$state){
-			$html.=$this->getSelector($callingClass,$stateKey);
-			if ($state['Selected']===FALSE){break;}
-			$setKey=$stateKey;
-		}	
-		$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both'));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
-		return array('html'=>$html,'stateKey'=>$stateKey,'setKey'=>$setKey);
-	}
-	
-	private function getSelector($callingClass,$stateKey){
-		$html='';
-		if (strcmp($stateKey,'Source')===0){
-			//$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h2','element-content'=>$this->state[$stateKey]['Selected']));
-		} else {
-			$selector=array();
-			foreach($this->state as $selectorStateKey=>$selectorState){
-				$column=$selectorStateKey;
-				$label=$selectorState['Label'];
-				$orderBy=$selectorState['orderBy'];
-				$isAsc=$selectorState['isAsc'];
-				if (strcmp($selectorStateKey,$stateKey)===0){break;}
-				$selector[$selectorStateKey]=$selectorState['Selected'];
-			}
-			$options=array('__'.$column.'__'=>'&larrhk;');
-			if (strcmp($column,'EntryId')===0){$selector['Name!']='&larrhk;';} else {$selector[$column.'!']='__SKIP__';}
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$orderBy,$isAsc) as $row){
-				if (!isset($row[$label])){$row=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($row);}
+		$selector=array_merge($this->selectorTemplate,$selector);
+		foreach($this->selectorTemplate as $column=>$initValue){
+			$selected=(isset($selector[$column]))?$selector[$column]:$initValue;
+			$selectorHtml='';
+			$options=array('__RESET__'=>'&larrhk;');
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
+				if (strcmp($column,'EntryId')===0){
+					$entrySelector=array_merge($selector,array('EntryId'=>$row['EntryId']));
+					$row=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entrySelector);
+					$label='Name';
+				} else {
+					$label=$column;
+				}
+				if (strcmp($row[$label],'__SKIP__')===0){continue;}
 				$options[$row[$column]]=$row[$label];
 			}
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>$column,'value'=>$this->state[$column]['Selected'],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','class'=>'explorer'));
-			$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$html,'keep-element-content'=>TRUE));
+			$selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
+			$selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE));
+			$html.=$selectorHtml;
+			
+			
+			$stateKeys['nextKey']=$column;
+			if ($selected===FALSE){break;} else {$stateKeys['selectedKey']=$column;}
 		}
+		$html.=$this->addApps($callingClass,$stateKeys);
+		return $html;
+	}
+
+	private function addApps($callingClass,$stateKeys){
+		$html='';
+		$arr=$this->addEntry($callingClass,$stateKeys);
+		$appHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+		$arr=$this->editEntry($callingClass,$stateKeys);
+		$appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+		$arr=$this->miscToolsEntry($callingClass,$stateKeys);
+		$appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+		$arr=$this->sendEmail($callingClass,$stateKeys);
+		$appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+		$arr=$this->setRightsEntry($callingClass,$stateKeys,'Read');
+		$appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+		$arr=$this->setRightsEntry($callingClass,$stateKeys,'Write');
+		$appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$appHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','padding'=>'5px','margin'=>'0.5em')));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
 		return $html;
 	}
 	
-	private function addEntry($callingClass,$stateKey){
-		$h2Arr=array('tag'=>'h3','element-content'=>'Add');
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($h2Arr);
-		if (strcmp($stateKey,'EntryId')===0){
-			if (empty($this->state['EntryId']['Selected'])){
+	private function deleteGuideEntry($selector){
+		$entry=$this->getGuideEntry($selector);
+		$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry,TRUE);
+		return $entry;
+	}
+	
+	private function getGuideEntry($selector,$templateB=array()){
+		if (!empty($selector['EntryId'])){
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+		} else {
+			$unseledtedDetected=FALSE;
+			$selector=array_merge($this->selectorTemplate,$selector);
+			$templateA=array('Name'=>'__SKIP__','Type'=>'GUIDEENTRY','Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+			$entry=array_replace_recursive($templateA,$templateB);
+			foreach($selector as $column=>$selected){
+				if (empty($selected)){$unseledtedDetected=TRUE;}
+				$entry[$column]=($unseledtedDetected)?'__SKIP__':$selected;
+			}
+			$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0','-guideEntry',FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
+		}
+		return $entry;
+	}
+	
+	private function appProcessing($callingClass){
+		// process selectors
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getSelectors');
+		if (isset($formData['cmd']['select'])){
+			$resetFromHere=FALSE;
+			foreach($formData['val']['selector'] as $column=>$selected){
+				if (strcmp($selected,'__RESET__')===0){$resetFromHere=TRUE;}
+				$newSelector[$column]=$resetFromHere?FALSE:$selected;
+				if (isset($selector[$column])){
+					if ($newSelector[$column]!=$selector[$column]){$resetFromHere=TRUE;}
+				}
+			}
+			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
+		}
+		// add entry app
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
+		if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
+			$selector=array_merge($selector,$formData['val']);
+			$this->getGuideEntry($selector);
+			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
+		} else if (isset($formData['cmd']['add files'])){
+			if ($formData['hasValidFiles']){
+				foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
+					if ($fileArr['error']){continue;}
+					$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$selector);
+				}
+			}		
+		} else if (isset($formData['cmd']['update file'])){
+			if ($formData['hasValidFiles']){
+				foreach($formData['files']['update file'] as $fileIndex=>$fileArr){
+					if ($fileArr['error']){continue;}
+					$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$selector);
+				}
+			}	
+		}
+		// editEntry
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'editEntry');
+		if (isset($formData['cmd']['edit'])){
+			$oldGuideEntry=$this->deleteGuideEntry($selector);
+			$newSelector=array_merge($selector,$formData['val']);
+			$this->getGuideEntry($newSelector,array('Read'=>$oldGuideEntry['Read'],'Write'=>$oldGuideEntry['Write'],'Owner'=>$oldGuideEntry['Owner']));
+			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
+			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
+		}
+		
+	}
+	
+	private function addEntry($callingClass,$stateKeys){
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		if (strcmp($stateKeys['nextKey'],'Source')===0){
+			return array('html'=>'','icon'=>'&#10010;');
+		} else {
+			$h2Arr=array('tag'=>'h3','element-content'=>'Add');
+			$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($h2Arr);
+			if (strcmp($stateKeys['selectedKey'],'Folder')===0){
 				$key=array('add files');
 				$label='Add file(s)';
-				$fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
-			} else {
+				$fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
+			} else if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
 				$key=array('update file');
 				$label='Update entry file';
-				$fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
-			}	
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileElement);
-		} else {
-			$key=array('add');
-			$label='Add '.$stateKey;
-			$fileElement=array('tag'=>'input','type'=>'text','key'=>array('add',$stateKey),'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileElement);
-			
+				$fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
+			} else {
+				$key=array('add');
+				$label='Add '.$stateKeys['nextKey'];
+				$fileElement=array('tag'=>'input','type'=>'text','key'=>array($stateKeys['nextKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
+				
+			}
+			$addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('font-size'=>'1.15em'));
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
 		}
-		$addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKey,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','style'=>array('font-size'=>'1.15em'));
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($addBtn);
-		$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','margin'=>'35px 0.5em 0 0'));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
 		$arr=array('html'=>$html,'icon'=>'&#10010;','style'=>array('clear'=>'left'));
 		return $arr;
 	}
 
-	private function editEntry($callingClass,$setKey){
-		if (strcmp($setKey,'Source')===0){return array('html'=>'','icon'=>'&#9998;');}
+	private function editEntry($callingClass,$stateKeys){
+		if (strcmp($stateKeys['selectedKey'],'Source')===0){return array('html'=>'','icon'=>'&#9998;');}
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		$h2Arr=array('tag'=>'h3','element-content'=>'Edit');
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($h2Arr);
-		$btnKey=$setKey;
-		if (strcmp($setKey,'EntryId')===0){
-			$selector=array('Source'=>$this->state['Source']['Selected'],'EntryId'=>$this->state['EntryId']['Selected']);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-			if (!empty($entry)){$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,array(),array());}
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($h2Arr);
+		if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
+			$selector=array('Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+			if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,array(),array());}
 		} else {
-			$value=$this->state[$setKey]['Selected'];
-			$fileElement=array('tag'=>'input','type'=>'text','value'=>$value,'key'=>array('edit',$setKey),'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileElement);
-			$addBtn=array('tag'=>'button','element-content'=>'Edit '.$setKey,'key'=>array('edit'),'value'=>$btnKey,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing','style'=>array('font-size'=>'1.15em'));
-			$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($addBtn);
+			
+			$fileElement=array('tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>array($stateKeys['selectedKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
+			$addBtn=array('tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>array('edit'),'value'=>$stateKeys['selectedKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('font-size'=>'1.15em'));
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
 		}
-		$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>'float:left;clear:both;margin:35px 0 0 0;padding-left:0.5em;');
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
 		$arr=array('html'=>$html,'icon'=>'&vellip;');
 		return $arr;
 	}
 	
-	private function miscToolsEntry($callingClass,$setKey){
+	private function miscToolsEntry($callingClass,$stateKeys){
 		$html='';
-		$fileElement=array('tag'=>'button','element-content'=>'&#8892;','key'=>array('download',$setKey),'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileElement);
-		$fileElement=array('tag'=>'button','element-content'=>'&xcup;','key'=>array('delete',$setKey),'keep-element-content'=>TRUE,'title'=>'Delete selected...','hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>'formProcessing');
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($fileElement);
-		$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','margin'=>'35px 0 0 0','padding-left'=>'0.5em'));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		$guideEntry=$this->getGuideEntry($selector);
+		$selector['Read']=$guideEntry['Read'];
+		$selector['Write']=$guideEntry['Write'];
+		$btnArr=array('selector'=>$selector);
+		foreach(array('download all','delete') as $cmd){
+			$btnArr['cmd']=$cmd;
+			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+		}
+		$wrapperElement=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'title'=>'Delete selected...','style'=>array('clear'=>'both'));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperElement);
 		$arr=array('html'=>$html,'icon'=>'...');
 		return $arr;
 	}
 
-	private function sendEmail($callingClass,$setKey){
+	private function sendEmail($callingClass,$setKeys){
 		$arr=array('html'=>'','callingClass'=>$callingClass,'callingFunction'=>__FUNCTION__,'icon'=>'@');
-		$arr['selector']=$this->selectorFromState($callingClass);
+		$arr['selector']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		if (!empty($arr['selector']['EntryId'])){
-			$arr=$this->arr['SourcePot\Datapool\Tools\Email']->datasink($arr,'transmitterWidget');
+			$arr=$this->oc['SourcePot\Datapool\Tools\Email']->datasink($arr,'transmitterWidget');
 		}
 		return $arr;
 	}
 	
-	private function setRightsEntry($callingClass,$right){
+	private function setRightsEntry($callingClass,$stateKeys,$right){
 		$icon=ucfirst($right);
-		$selector=$this->selectorFromState($callingClass);
-		if (strcmp($selector['currentKey'],'Source')===0){return array('html'=>'','icon'=>$icon[0]);}
+		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		if (strcmp($stateKeys['selectedKey'],'Source')===0){return array('html'=>'','icon'=>$icon[0]);}
+		// check if there are any entries with write access
 		$writableEntries=0;
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write') as $entry){$writableEntries++;}
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write') as $entry){$writableEntries++;}
 		if ($writableEntries===0){return array('html'=>'','icon'=>$icon[0]);}
+		// create html
+		$entry=$this->getGuideEntry($selector);
 		$h2Arr=array('tag'=>'h3','element-content'=>'Set '.$right.' rights');
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($h2Arr);
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor(array('selector'=>$this->getGuideEntry(),'key'=>$right));
-		$wrapper=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','margin'=>'35px 0 0 0','padding-left'=>'0.5em'));
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($h2Arr);
+		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor(array('selector'=>$entry,'key'=>$right));
 		$arr=array('html'=>$html,'icon'=>$icon[0]);
 		return $arr;
 	}
+	
+	private function guideEntry2selector($entry){
+		$selector=array();
+		$selectorTemplate=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE);
+		foreach($selectorTemplate as $column=>$initValue){
+			if (!isset($entry[$column])){
+				$selector[$column]=$initValue;
+			} else if (strcmp(strval($entry[$column]),'__SKIP__')===0){
+				$selector[$column]=FALSE;
+			} else {
+				$selector[$column]=$entry[$column];
+			}
+		}
+		return $selector;
+	}
+	
+	/*
 	
 	private function selectorFromState($callingClass){
 		$selector=array('currentKey'=>'Source');
@@ -314,7 +287,7 @@ class Explorer{
 	}
 	
 	private function getEntryTemplate($callingClass){
-		$entryTemplate=$this->arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		$entryTemplate=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		if (empty($entryTemplate['EntryId'])){
 			$entryTemplate=$this->getGuideEntry();
 			unset($entryTemplate['Name']);
@@ -340,7 +313,7 @@ class Explorer{
 		}
 		return $selector;
 	}
-
+	*/
 	
 }
 ?>

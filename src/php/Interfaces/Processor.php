@@ -23,7 +23,7 @@ interface Processor{
 	
 	public function getProcessorWidget(array $callingElement):string;
 	
-	public function run(array $callingElement, boolean $isTestOnly=TRUE):array;
+	public function run(array $callingElement, bool $isTestOnly):array;
 	
 }
 ?>

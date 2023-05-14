@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Filespace{
 
-	private $arr;
+	private $oc;
 	
 	private $statistics=array();
 	private $toReplace=array();
@@ -29,15 +29,14 @@ class Filespace{
 								 'Owner'=>array('type'=>'string','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
 								 );
 
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$this->resetStatistic();
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
+	public function init($oc){
+		$this->oc=$oc;
 		$this->removeTmpDir();
-		return $this->arr;
 	}
 		
 	public function getEntryTemplate(){
@@ -60,16 +59,16 @@ class Filespace{
 			if (empty($extensionPos)){continue;}
 			$entryId=substr($fileInfo->getFilename(),0,$extensionPos);
 			$sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
-			$stmt=$this->arr['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
+			$stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
 			if (empty($stmt->fetchAll())){
 				if (is_file($file)){
 					if (unlink($file)){
-						$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
+						$this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
 					} else {
-						$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
+						$this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
 					}
 				}
-				$this->arr['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
+				$this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
 			}
 		}
 		$vars['Last processed dir']=$dir2process['absDir'];
@@ -121,8 +120,8 @@ class Filespace{
 	
 	private function stdReplacements($str=''){
 		if (!is_string($str)){return $str;}
-		if (isset($this->arr['SourcePot\Datapool\Foundation\Database'])){
-			$this->toReplace=$this->arr['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
+		if (isset($this->oc['SourcePot\Datapool\Foundation\Database'])){
+			$this->toReplace=$this->oc['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
 		}
 		foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
 		return $str;
@@ -148,7 +147,7 @@ class Filespace{
 			if (!isset($entry[$key])){$entry[$key]=$defArr['value'];}
 			$entry[$key]=$this->stdReplacements($entry[$key]);
 		}
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		return $entry;
 	}
 	
@@ -193,7 +192,7 @@ class Filespace{
 			// entry found
 			$entry['rowCount']=1;
 			if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-			$entry['access']=$this->arr['SourcePot\Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
+			$entry['access']=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
 			if ($entry['access']){
 				$entry=array_replace_recursive($selector,$entry,$arr);
 			} else if (!$returnMetaOnNoMatch){
@@ -212,7 +211,7 @@ class Filespace{
 			// insert entry
 			$dir=$this->class2dir($entry['Class'],TRUE);	
 			$entry=$this->unifyEntry($entry);
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
 			$this->statistics['inserted files']++;
 			return $entry;
 		} else {
@@ -230,15 +229,15 @@ class Filespace{
 		if (empty($existingEntry['rowCount'])){
 			// insert entry
 			$entry=$this->unifyEntry($entry);
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
 			$this->statistics['inserted files']++;
 		} else if (empty($noUpdateCreateIfMissing)){
 			if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-			if ($this->arr['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
+			if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
 				// has access to update entry
 				$entry=array_replace_recursive($existingEntry,$entry);
 				$entry=$this->unifyEntry($entry);
-				$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
+				$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
 				$this->statistics['updated files']++;					
 			} else {
 				// failed access to update entry
@@ -264,7 +263,7 @@ class Filespace{
 			$zip = new \ZipArchive;
 			$zip->open($zipFile,\ZipArchive::CREATE);
 			$selector=$entry;
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
 				$file=$this->selector2file($entry);
 				if (!is_file($file)){continue;}
 				$zip->addFile($file,str_replace('_', '-',basename($entry['Params']['File']['Name'])));
@@ -273,7 +272,7 @@ class Filespace{
 			$entry=array('Params'=>array('File'=>array('Extension'=>'zip','Name'=>$zipName)));
 			$fileForDownload=$zipFile;
 		} else {
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($entry);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry);
 			$fileForDownload=$this->selector2file($entry);
 		}
 		if (is_file($fileForDownload)){
@@ -283,13 +282,13 @@ class Filespace{
 			readfile($fileForDownload);
 			exit;
 		} else {
-			$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No file found to download.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No file found to download.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 	}
 	
 	public function getTmpDir(){
 		if (!isset($_SESSION[__CLASS__]['tmpDir'])){
-			$_SESSION[__CLASS__]['tmpDir']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
+			$_SESSION[__CLASS__]['tmpDir']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 			$_SESSION[__CLASS__]['tmpDir'].='/';
 		}
 		$tmpDir=$GLOBALS['dirs']['tmp'].'/'.$_SESSION[__CLASS__]['tmpDir'];
@@ -370,7 +369,6 @@ class Filespace{
 	/**
 	* This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
 	*/
-	
 	public function file2entries($fileHandle,$entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
 		$debugArr=array('fileHandle'=>$fileHandle,'entry'=>$entry);
 		if (isset($fileHandle['name']) && isset($fileHandle['tmp_name'])){
@@ -385,14 +383,15 @@ class Filespace{
 			$success=move_uploaded_file($fileHandle['tmp_name'],$newSourceFile);
 			if (!$success){return FALSE;}
 			$entry['Params']['File']['Source']=$newSourceFile;
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$fileHandle['tmp_name'],'File source new'=>$entry['Params']['File']['Source']),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$fileHandle['tmp_name'],'File source new'=>$entry['Params']['File']['Source']),FALSE);
 		} else if (is_file($fileHandle)){
 			// valid file name with path
 			$entry['Params']['File']['Source']=$fileHandle;
 			$entry['pathArr']=pathinfo($fileHandle);
 			$entry['mimeType']=mime_content_type($fileHandle);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
 		} else {
+			if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);}
 			return FALSE;
 		}
 		return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
@@ -408,13 +407,13 @@ class Filespace{
 			if ($bytes===FALSE){return FALSE;}
 			$entry['mimeType']=mime_content_type($entry['Params']['File']['Source']);
 			$entry['pathArr']=pathinfo($entry['Params']['File']['Source']);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
 		}
 		$entry['currentUser']=(empty($_SESSION['currentUser']))?array('EntryId'=>'ANONYM','Name'=>'ANONYM'):$_SESSION['currentUser'];
 		$entry['Owner']=(empty($entry['Owner']))?$entry['currentUser']['EntryId']:$entry['Owner'];
 		$entry['Params']['File']['UploaderId']=$entry['currentUser']['EntryId'];
 		$entry['Params']['File']['UploaderName']=$entry['currentUser']['Name'];
-		$entry['Params']['File']['Uploaded']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+		$entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
 		$entry['Params']['File']['Size']=filesize($entry['Params']['File']['Source']);
 		$entry['Params']['File']['Name']=$entry['pathArr']['basename'];
 		$entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
@@ -424,30 +423,30 @@ class Filespace{
 		$entry=$entry;
 		if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE){
 			// if file is zip-archive, extract all file and create entries seperately 
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
 			$debugArr['archive2files return']=$this->archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
 		} else {
 			// save file
 			$this->statistics['inserted files']++;
 			$entry['Params']['File']['Style class']='';
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
 			if (!empty($entry['Params']['File']['MIME-Type'])){	
 				$entry['Type'].=' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
 			}
 			$targetFile=$this->selector2file($entry,TRUE);
 			copy($entry['Params']['File']['Source'],$targetFile);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$entry['Params']['File']['Source'],'File source new'=>$targetFile),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$entry['Params']['File']['Source'],'File source new'=>$targetFile),FALSE);
 			$entry=$this->fileUploadPostProcessing($entry);
 			if ($createOnlyIfMissing){
-				$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
+				$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
 			} else {
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+				$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 			}
 			$debugArr['entry updated']=$entry;
 		}
 		if ($isDebugging){
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
 		}
 		return $entry;
 	}
@@ -456,7 +455,7 @@ class Filespace{
 		$zipStatistic=array('errors'=>array(),'files'=>array());
 		// extract zip archive to a temporary dir
 		if (is_file($entry['Params']['File']['Source'])){
-			$zipDir=$GLOBALS['dirs']['tmp'].'/'.$this->arr['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
+			$zipDir=$GLOBALS['dirs']['tmp'].'/'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
 			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
 			$zip=new \ZipArchive;
 			if ($zip->open($entry['Params']['File']['Source'])===TRUE){
@@ -483,8 +482,8 @@ class Filespace{
 	
 	private function fileUploadPostProcessing($entry){
 		$file=$this->selector2file($entry,TRUE);
-		$entry=$this->arr['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
-		$entry=$this->arr['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
+		$entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
+		$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
 		// if pdf parse content
 		if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
 			$pdfFileContent=$this->parsePdfFile($file);
@@ -499,7 +498,7 @@ class Filespace{
 		$text=FALSE;
 		if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
 			$fileContent=file_get_contents($file);
-			$fileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
+			$fileContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
 			if ($this->pdfOK($fileContent)){				
 				// parser configuration
 				$config=new \Smalot\PdfParser\Config();
@@ -532,7 +531,7 @@ class Filespace{
 	public function exportEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000){
 		$statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>array(),'Errors'=>array());
 		if (isset($selectors['Source'])){$selectors=array($selectors);}
-		$pageSettings=$this->arr['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+		$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 		$fileName=preg_replace('/\W+/','_',$pageSettings['pageTitle']).' dump.zip';
 		$dir=$this->getTmpDir();
 		$dumpFile=$dir.$fileName;
@@ -541,14 +540,14 @@ class Filespace{
 		$zip = new \ZipArchive;
 		$zip->open($dumpFile,\ZipArchive::CREATE);
 		foreach($selectors as $index=>$selector){
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall) as $entry){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall) as $entry){
 				$attachedFileName=$entry['Source'].'~'.$entry['EntryId'].'.file';
 				$attachedFile=$this->selector2file($entry);
 				if (is_file($attachedFile)){
 					$statistics['Attached filesize']+=filesize($attachedFile);
 					$attachedFiles[]=array('attachedFile'=>$attachedFile,'attachedFileName'=>$attachedFileName);
 				}
-				$jsonFileContent=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry);
+				$jsonFileContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry);
 				$jsonFileName=$entry['Source'].'~'.$entry['EntryId'].'.json';
 				$zip->addFromString($jsonFileName,$jsonFileContent);
 				$statistics['added entries']++;
@@ -564,9 +563,9 @@ class Filespace{
 			$statistics['Errors'][]='Attached files were skipped do to their size. Use FTP to back them up!';
 		}
 		$zip->close();
-		$statistics['Attached filesize']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->float2str($statistics['Attached filesize'],2,1024);
-		$msg='Export resulted in '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
-		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		$statistics['Attached filesize']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($statistics['Attached filesize'],2,1024);
+		$msg='Export resulted in '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
+		$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $dumpFile;
 	}
 	
@@ -583,13 +582,13 @@ class Filespace{
 				if (!is_file($file)){continue;}
 				if (strpos($fileName,'.json')===FALSE){continue;}
 				$fileContent=file_get_contents($file);
-				$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->json2arr($fileContent);
+				$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($fileContent);
 				if (!$entry){
 					$statistics['json decode errors']++;
 					continue;
 				}
 				$statistics['entries updated']++;
-				$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+				$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
 				$source=$dir.$entry['Source'].'~'.$entry['EntryId'].'.file';
 				$target=$this->selector2file($entry);
 				if (is_file($source)){
@@ -600,8 +599,8 @@ class Filespace{
 		} else {
 			$statistics['zip errors']++;
 		}
-		$msg='Import resulted in '.$this->arr['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
-		$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		$msg='Import resulted in '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
+		$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $statistics;
 	}
 	

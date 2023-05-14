@@ -12,23 +12,22 @@ namespace SourcePot\Datapool\Components;
 
 class Home{
 	
-	private $arr;
+	private $oc;
 	
 private $entryTable;
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
 								 );
     
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 
 	public function getEntryTable(){
@@ -51,12 +50,12 @@ private $entryTable;
 			$html='';
 			// Add content
 			$sectionSelector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
-			foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($sectionSelector) as $section){
-				$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'selectedView',$section,array(),array());
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sectionSelector) as $section){
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'selectedView',$section,array(),array());
 			}
 			// Add admin section
-			if ($this->arr['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-				$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Section administration','generic',$sectionSelector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
+			if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section administration','generic',$sectionSelector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
 			}
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
@@ -66,20 +65,20 @@ private $entryTable;
 	public function adminHtml($arr){
 		$html='';
 		// section control
-		$sectionArr=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Page content');
-		$sectionArr=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($sectionArr,'ALL_R','ADMIN_R');
+		$sectionArr['selector']=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Page content');
+		$sectionArr['selector']=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($sectionArr['selector'],'ALL_R','ADMIN_R');
 		$contentStructure=array('Section title'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'Section content'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								'Section footer'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								'Section attachment'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
-								'Read access'=>array('htmlBuilderMethod'=>'select','selected'=>65535,'options'=>array_flip($this->arr['SourcePot\Datapool\Foundation\Access']->access),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
+								'Read access'=>array('htmlBuilderMethod'=>'select','selected'=>65535,'options'=>array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->access),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								);
 		$sectionArr['canvasCallingClass']=$arr['callingFunction'];
 		$sectionArr['contentStructure']=$contentStructure;
 		$sectionArr['caption']='Web page administration: Each entry/row will be compiled into a section.';
 		$sectionArr['callingClass']=__CLASS__;
 		$sectionArr['callingFunction']=__FUNCTION__;
-		$html.=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($sectionArr);
+		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($sectionArr);
 		$arr['html']=$html;
 		return $arr;
 	}
