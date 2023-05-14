@@ -139,7 +139,7 @@ class Database{
 		// This function selects the $entry-specific unifyEntry() function based on $entry['Source']
 		// If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
 		$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($entry['Source']);
-		$registeredMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('unifyEntry');
+		$registeredMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('unifyEntry');	
 		if (isset($registeredMethods[$classWithNamespace])){
 			$entry=$this->oc[$classWithNamespace]->unifyEntry($entry);
 		} else if ($addEntryDefaults){
@@ -150,58 +150,38 @@ class Database{
 
 	public function addEntryDefaults($entry,$isDebugging=FALSE){
 		$entryTemplate=$GLOBALS['dbInfo'][$entry['Source']];
-		$this->toReplace['{{Source}}']=$entry['Source'];
-		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry);
+		$toReplace=$this->getReplacmentArr($entry,$entryTemplate);
+		$debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry,'toReplace'=>$toReplace);
 		foreach($entryTemplate as $column=>$defArr){
-			$toReplaceKey='{{'.$column.'}}';
-			$this->toReplace[$toReplaceKey]='';
-			if (!isset($defArr['value'])){continue;}
-			if (!isset($entry[$column]) || ($defArr['value']===TRUE && empty($entry[$column]))){
+			if (!isset($defArr['value'])){
+				continue;
+			} else if (!isset($entry[$column])){
 				$entry[$column]=$defArr['value'];
-			} // if not set or empty but must not be empty
-			if (is_string($entry[$column])){
-				$this->toReplace[$toReplaceKey]=$entry[$column];
-				$entry[$column]=$this->stdReplacements($entry[$column]);
+			} else if ($defArr['value']===TRUE && empty($entry[$column])){
+				$entry[$column]=$defArr['value'];
+			} else if (!empty($defArr['value']) && $entry[$column]===FALSE){
+				$entry[$column]=$defArr['value'];
 			}
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
+			if (is_string($entry[$column])){
+				$entry[$column]=strtr($entry[$column],$toReplace);
+			}
 		} // loop throug entry-template-array
 		$debugArr['entry out']=$entry;
 		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);}
 		return $entry;
 	}
 
-	private function stdReplacements($str=''){
-		if (!is_string($str)){return $str;}
-		$this->toReplace=$this->enrichToReplace($this->toReplace);
-		foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
-		return $str;
-	}
-
-	public function arrStdReplacements($arr,$flatKeyMapping=array(),$isDebugging=FALSE){
-		// This method maps array-keys found in flatKeyMapping-argument to new array-keys.
-		// On array-values class 'Datapool\Tools\MiscTools' method 'stdReplacements' will be called
-		// If different source keys mapped on the same target key, the string-value will be added to the end of the existing string-value with a space character in between.
-		// The structur of argument flatKeyMapping is:
-		// array({1. flat source key}=>{1. flat target key} or FALSE,{2. flat source key}=>{2. flat target key} or FALSE,....)
-		// If FALSE is used instead of a valid flat target key, the key-value will be removed from the result.
-		$debugArr=array('arr'=>$arr,'flatKeyMapping'=>$flatKeyMapping);
-		$result=array();
-		$flatArr=$this->arr2flat($arr);
-		foreach($flatArr as $flatKey=>$value){
-			if (isset($flatKeyMapping[$flatKey])){$flatResultKey=$flatKeyMapping[$flatKey];} else {$flatResultKey=$flatKey;}
-			if ($flatResultKey===FALSE){continue;}
-			if (empty($result[$flatResultKey])){
-				$result[$flatResultKey]=$this->stdReplacements($value);
-			} else {
-				$result[$flatResultKey].=' '.$this->stdReplacements($value);
-			}
+	private function getReplacmentArr($entry,$entryTemplate=array()){
+		$toReplace=array();
+		foreach($entry as $column=>$value){
+			if (is_array($value)){continue;}
+			$value=strval($value);
+			if (empty($value) && !empty($entryTemplate[$column]['value'])){$value=strval($entryTemplate[$column]['value']);}
+			$toReplace['{{'.$column.'}}']=$value;
 		}
-		$result=$this->flat2arr($result);
-		if ($isDebugging){
-			$debugArr['result']=$result;
-			$this->arr2file($debugArr);
-		}
-		return $result;
+		$toReplace=$this->enrichToReplace($toReplace);
+		return $toReplace;
 	}
 
 	private function connect(){

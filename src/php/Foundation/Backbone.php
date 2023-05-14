@@ -119,7 +119,7 @@ class Backbone{
 	
 	public function finalizePage($arr){
 		foreach($arr['toReplace'] as $needle=>$replacement){
-			$arr['page html']=str_replace($needle,$replacement,$arr['page html']);
+			$arr['page html']=strtr($arr['page html'],array($needle=>$replacement));
 		}
 		return $arr;
 	}

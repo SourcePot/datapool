@@ -287,9 +287,7 @@ class MiscTools{
 			} else if (strcmp(strval($selector[$column]),'__SKIP__')===0){
 				$unselectedColumnSelected=TRUE;
 			}
-			if (strcmp($lastColumn,'Source')!==0 && $unselectedColumnSelected){
-				$selector[$lastColumn]=FALSE;
-			}
+			if (strcmp($lastColumn,'Source')!==0 && $unselectedColumnSelected){$selector[$lastColumn]=FALSE;}
 			$lastColumn=$column;
 		}
 		return $selector;
@@ -481,7 +479,7 @@ class MiscTools{
 	}
 	
 	/**
-	* @return array This method adds the values with the same key of multiple arrays.
+	* @return array This method adds the values (if numeric mathmatically, if string ) with the same key of multiple arrays.
 	*/
 	public function addArrValuesKeywise(...$arrays){
 		// Example: Arguments "array('deleted'=>2,'inserted'=>1,'steps'=>'Open web page','done'=>FALSE)" and "array('deleted'=>0,'inserted'=>4,'steps'=>'Close web page','done'=>TRUE)"

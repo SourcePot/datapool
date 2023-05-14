@@ -113,7 +113,10 @@ class Filespace{
 			$dir=$this->class2dir($selector['Class'],$mkDirIfMissing);	
 			$file=$selector['EntryId'].'.json';
 		} else {
-			throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in selector argument, either Source, EntryId  or Class, EntryId',0,E_ERROR,__FILE__,__LINE__);	
+			$source=(empty($selector['Source']))?'EMPTY':'OK';
+			$entryId=(empty($selector['EntryId']))?'EMPTY':'OK';
+			$class=(empty($selector['Class']))?'EMPTY':'OK';
+			throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in selector argument, either Source='.$source.', EntryId='.$entryId.'  or Class='.$class.', EntryId='.$entryId,0,E_ERROR,__FILE__,__LINE__);	
 		}
 		return $fileName=$dir.$file;
 	}
