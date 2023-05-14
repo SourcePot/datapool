@@ -15,10 +15,10 @@ class Explorer{
 	private $oc;
 	
 	private $selectorTemplate=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);
-	private $settingsTemplate=array('Source'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
-									'Group'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
-									'Folder'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
-									'EntryId'=>array('orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE)
+	private $settingsTemplate=array('Source'=>array('orderBy'=>'Source','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
+									'Group'=>array('orderBy'=>'Group','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
+									'Folder'=>array('orderBy'=>'Folder','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
+									'EntryId'=>array('orderBy'=>'Name','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE)
 									);
 									
 	private $state=array();
@@ -62,7 +62,10 @@ class Explorer{
 			}
 			$selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
 			$selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE));
-			$html.=$selectorHtml;
+			if (strcmp($column,'Source')!==0 || strcmp($callingClass,'SourcePot\Datapool\AdminApps\Admin')===0){
+				// non-Admin pages should not provide the Source-selector
+				$html.=$selectorHtml;
+			}
 			$stateKeys['nextKey']=$column;
 			if ($selected===FALSE){break;} else {$stateKeys['selectedKey']=$column;}
 		}

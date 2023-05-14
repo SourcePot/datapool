@@ -395,11 +395,11 @@ class Database{
 		$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>'');
 		$column=trim($column,'!');
 		if (strcmp($column,'Source')===0){
+			$tableArr=$GLOBALS['dbInfo'];
+			if ($isAsc){ksort($tableArr);} else {krsort($tableArr);}
 			foreach($GLOBALS['dbInfo'] as $table=>$tableInfoArr){
 				$result['Source']=$table;
-				
 				yield $result;
-				
 				$result['rowIndex']++;
 			}
 		} else if (!isset($GLOBALS['dbInfo'][$selector['Source']])){
