@@ -62,7 +62,7 @@ body{
 #overlay-title{
 	text-align:center;
 }
-h1,h2,h3,li,ol,ul,div,p,div.calendar-sheet-wrapper,embed{
+h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed{
 	float:left;
 	clear:both;
 	font-size:inherit;
@@ -89,9 +89,6 @@ h2{
 h3{
 	font-size:1.1em;
 	margin:0 0 0.2em 0.5em;
-}
-label{
-	margin-top:-1.5em;
 }
 main,#top-filler{
 	position:relative;
@@ -255,6 +252,9 @@ caption{
 	font-size:1.3em;
 	font-variant:petite-caps;
 }
+label{
+	line-height:initial;
+}
 tr:hover{
 	color:#000;
 	background-color:#ccc;
@@ -304,15 +304,16 @@ div.container-busy{
 	opacity:0.7;
 	z-index:60;
 }
-details.app,details.forum{
+details{
 	position:relative;
 	float:left;
 	clear:none;
 	overflow:hidden;
+	padding:0.5em 1em 0 5px;
 }
 details.forum,details.toolbox{
 	width:100%;
-	margin:0;
+	padding:0;
 }
 details.toolbox{
 	position:fixed;
@@ -320,19 +321,18 @@ details.toolbox{
 	z-index:2;
 	max-height:80px;
 }
-summary.app,summary.forum,summary.toolbox{
+summary{
 	float:left;
 	clear:none;
-	margin:0.5em 1em 0.5em 0;
 	min-width:3em;
-	font-size:1.1em;
-	font-weight:bold;
+	width:100%;
+	font-size:1.4em;
+	color:#444;
 	border-bottom:1px solid #444;
 }
 summary.forum,summary.toolbox{
 	width:100%;
 	margin:0;
-	padding:0.5em 0;
 }
 summary.app:hover,summary.forum:hover,summary.toolbox{
 	cursor:pointer;
@@ -340,12 +340,11 @@ summary.app:hover,summary.forum:hover,summary.toolbox{
 }
 div.explorer{
 	clear:none;
-	padding-top:1.6em;
-	margin:0 0 0 0.5em;
+	padding:2em 0.5em 1em 5px;
 }
 label.explorer{
 	float:left;
-	clear:none;	
+	margin:-2em -2em 0 0;
 }
 div.icon{
 	clear:none;
