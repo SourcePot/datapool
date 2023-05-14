@@ -237,9 +237,11 @@ class Definitions{
 			$globSetting=array();
 		}
 		// create html
+		$hideHeader=(isset($definition['hideHeader']))?$definition['hideHeader']:TRUE;
+		$hideKeys=(isset($definition['hideKeys']))?$definition['hideKeys']:TRUE;
 		$html='';
 		foreach($matrices as $caption=>$matrix){
-			$tableArr=array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption);
+			$tableArr=array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideHeader'=>$hideHeader,'hideKeys'=>$hideKeys);
 			$tableArr=array_replace_recursive($globSetting,$settings[$caption],$tableArr);
 			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($tableArr);
 		}

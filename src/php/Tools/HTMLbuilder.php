@@ -445,7 +445,15 @@ class HTMLbuilder{
 			$statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$arr['key'].'-key processed: '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
-		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>TRUE,'hideHeader'=>TRUE));
+		$hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
+		$hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
+		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>$hideKeys,'hideHeader'=>$hideHeader));
+		// present as App if requested
+		if (!empty($arr['isApp'])){
+			$app=array('html'=>$html,'icon'=>$arr['key'][0],'title'=>'Setting "'.$arr['key'].'" access right');
+			$html=$this->app($app);
+			
+		}
 		return $html;
 	}
 	
@@ -476,7 +484,7 @@ class HTMLbuilder{
 		$matrix=array();
 		$matrix['Preview']['Button']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 		$matrix['Preview']['Button'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
-		$mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('width'=>'100%','max-height'=>100,'max-height'=>100)));
+		$mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('max-height'=>600,'max-height'=>600)));
 		$matrix['Preview']['Button'].=$mediaArr['html'];
 		$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
 		foreach(array('download','remove','delete') as $cmd){
@@ -486,7 +494,16 @@ class HTMLbuilder{
 			$arr['cmd']=$cmd;
 			$matrix[$ucfirstCmd]['Button']=$this->btn($arr);
 		}
-		return $this->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'caption'=>'Entry control elements','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+		$hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
+		$hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:FALSE;
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$hideHeader,'hideKeys'=>$hideKeys,'caption'=>'Entry control elements','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+		// present as App if requested
+		if (!empty($arr['isApp'])){
+			$app=array('html'=>$html,'icon'=>'&#128736;','title'=>'Add and remove files, delete the whole entry');
+			$html=$this->app($app);
+			
+		}
+		return $html;
 	}
 	
 	/**
@@ -601,11 +618,11 @@ class HTMLbuilder{
 		$row=array();
 		if ($isNewRow){
 			$arr['selector']['Content']=array();
-			if (!$singleRowOnly){
-				$newIndex=(isset($arr['selector']['rowCount']))?$arr['selector']['rowCount']+1:1;
-				$arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],$newIndex);
-				$this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector']);
-			}
+			$arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],$relevantKeys=array('Source','Group','Folder','Name','Type'),'0','',TRUE);
+			$newIndex=(isset($arr['selector']['rowCount']))?$arr['selector']['rowCount']+1:1;
+			$arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],$newIndex);
+			$this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector']);
+			
 		}
 		foreach($arr['contentStructure'] as $contentKey=>$elementArr){
 			if (!isset($elementArr['htmlBuilderMethod'])){array('error'=>'arr["contentStructure" key "htmlBuilderMethod" missing in '.__FUNCTION__);}

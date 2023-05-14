@@ -21,7 +21,6 @@ class User{
 								 );
 	
 	public $definition=array('Type'=>array('@tag'=>'p','@default'=>'user','@Read'=>'NO_R'),
-							 'Icon'=>array('@function'=>'entryControls','@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 'Content'=>array('Contact details'=>array('Title'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
 																 'First name'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
 																 'Middle name'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
@@ -46,7 +45,8 @@ class User{
 																),
 											  ),
 							 'Login'=>array('@function'=>'getLoginForm','@class'=>'SourcePot\Datapool\Components\Login'),
-							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@key'=>'Privileges','@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Icon etc.'=>array('@function'=>'entryControls','@isApp'=>TRUE,'@hideHeader'=>TRUE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
 							 '@hideHeader'=>TRUE,'@hideKeys'=>FALSE,
 							 );
