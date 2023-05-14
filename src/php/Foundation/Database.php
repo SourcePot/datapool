@@ -280,7 +280,7 @@ class Database{
 		return preg_match('/[^\\\\][%_]{1}/',$string);
 	}
 	
-	private function selector2sql($selector){
+	private function selector2sql($selector,$removeGuideEntries=TRUE){
 		// This function creates a sql-query from a selector.
 		// For types VARCHAR and BLOB the mysql keyword LIKE is used, for all other datatypes math operators will be used.
 		// f no operator is provided the '=' operator will be applied. Use '!' operator for 'NOT EQUAL'.
@@ -288,6 +288,7 @@ class Database{
 		// e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
 		// If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
 		// e.g. 'Date|[]|Start' -> refers to column 'Date'.
+		if ($removeGuideEntries){$selector['Type=!']='GUIDEENTRY';}
 		$entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
 		$opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
 		$sqlArr=array('sql'=>array(),'inputs'=>array());			
@@ -375,21 +376,19 @@ class Database{
 		return $result;	
 	}
 	
-	private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
+	private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
-		$sqlArr=$this->selector2sql($selector);
+		$sqlArr=$this->selector2sql($selector,$removeGuideEntries);
 		$sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
 		$sqlArr=$this->addSuffix2sql($sqlArr,$GLOBALS['dbInfo'][$selector['Source']],$orderBy,$isAsc,$limit,$offset);
 		return $sqlArr;
 	}
 	
-	public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
+	public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
 		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
-		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
-		$selectExprSQL='';
-		$sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
-		$sqlArr['sql'].=';';
-		//var_dump($sqlArr);
+		// count all selected rows
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
+		$sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
 		$rowCount=current(current($stmt->fetchAll()));
 		return $rowCount;
@@ -412,7 +411,7 @@ class Database{
 		return $entries;
 	}
 	
-	public function getDistinct($selector,$column,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE){
+	public function getDistinct($selector,$column,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=FALSE){
 		$result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>'');
 		$column=trim($column,'!');
 		if (strcmp($column,'Source')===0){
@@ -426,7 +425,7 @@ class Database{
 		} else if (!isset($GLOBALS['dbInfo'][$selector['Source']])){
 			// selected table does not exist
 		} else {	
-			$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit=FALSE,$offset=FALSE);
+			$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
 			$selectExprSQL='';
 			$sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 			$sqlArr['sql'].=';';
@@ -446,9 +445,16 @@ class Database{
 		return $result;
 	}
 	
-	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array()){
+	public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=TRUE,$isDebugging=FALSE){
 		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return array();}
-		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset);
+		// debugging trigger
+		/*
+		if (strcmp($selector['Source'],'multimedia')===0){
+			$isDebugging=TRUE;
+		}
+		*/
+		//		
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
 		if (empty($selectExprArr)){
 			$selectExprSQL=$selector['Source'].'.*';
 		} else {
@@ -457,16 +463,11 @@ class Database{
 		}
 		$sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
 		$sqlArr['sql'].=';';
-		$isDebugging=FALSE;
-		/*
-		if (!empty($selector['Group'])){
-			if (strcmp($selector['Group'],'Homepage')===0){$isDebugging=TRUE;}
-		}
-		*/
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
-		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'');
+		$result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>-1,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'');
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
+			$result['rowIndex']++;
 			if (strpos($row['EntryId'],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
 			foreach($row as $column=>$value){
 				$result['hash']=crc32($result['hash'].$value);
@@ -475,7 +476,6 @@ class Database{
 			$result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
 			yield $result;
 			$result['isFirst']=FALSE;
-			$result['rowIndex']++;
 		}
 		return $result;
 	}
@@ -504,19 +504,18 @@ class Database{
 		}
 		return $result;
 	}
-
-	private function sqlEntryIdListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
-		$result=array('primaryKeys'=>array(),'sql'=>'');
-		foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,array('EntryId')) as $row){
+	private function sqlEntryIdListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array('EntryId'),$removeGuideEntries=FALSE,$isDebugging=FALSE){
+		$result=array('primaryKeys'=>array(),'sql'=>'','primaryKey'=>'EntryId');
+		foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging) as $row){
 			$result['sql'].=",'".$row['EntryId']."'";
 			$result['primaryKeys'][]=$row['EntryId'];
 		}
 		$result['sql']='WHERE `'.'EntryId'.'` IN('.trim($result['sql'],',').')';
 		return $result;
 	}	
-	
-	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$isDebugging=FALSE){
-		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Write');
+		
+	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE){
+		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging);
 		$entryTemplate=$this->getEntryTemplate($selector['Source']);
 		if (empty($entryList['primaryKeys'])){
 			return FALSE;
@@ -541,9 +540,8 @@ class Database{
 	
 	public function deleteEntriesOnly($selector,$isSystemCall=FALSE){
 		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return FALSE;}
-		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write');
+		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write',FALSE,TRUE,FALSE,FALSE,FALSE);
 		$sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-		//var_dump($sqlArr);
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
 		$this->addStatistic('deleted',$stmt->rowCount());
 	}
@@ -551,10 +549,10 @@ class Database{
 	public function deleteEntries($selector,$isSystemCall=FALSE){
 		$this->deleteEntriesOnly($selector,$isSystemCall);
 		// delete files
-		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE);
+		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE,FALSE);
 		if (empty($entryList['primaryKeys'])){return FALSE;}
 		foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
-			$entrySelector=array('Source'=>$selector['Source'],$entryList['primaryKey']=>$primaryKeyValue);
+			$entrySelector=array('Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue);
 			$fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
 			if (is_file($fileToDelete)){
 				$this->addStatistic('removed',1);
@@ -629,7 +627,7 @@ class Database{
 			throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);	
 		}
 		if (empty($selector['EntryId'])){
-			foreach($this->entryIterator($selector,$isSystemCall,'Read',FALSE,TRUE,1) as $entry){
+			foreach($this->entryIterator($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE) as $entry){
 				return $entry;
 			}
 		} else {

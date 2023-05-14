@@ -371,10 +371,6 @@ class Container{
 			$columnOptions=array();
 			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
 				$rowIndex=$entry['rowIndex']+intval($settings['offset'])+1;
-				if ($entry['isSkipRow']){
-					$rowCount--;
-					continue;
-				}
 				//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,__FUNCTION__.'-'.$entry['EntryId']);
 				$flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
 				// setting up
@@ -439,14 +435,9 @@ class Container{
 				if ($cntrArr['Filter']===FALSE){
 					$matrix['Limit, offset'][$columnIndex]='';
 				} else if ($columnIndex===0){
-					$max=$rowCount-intval($settings['limit']);
-					if ($max<0){$max=0;}
-					$otions=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200');
-					$matrix['Limit, offset'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$otions,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-					if ($rowCount>intval($settings['limit'])){
-						$element=array('tag'=>'input','type'=>'range','min'=>'0','max'=>$max,'key'=>array('offset'),'value'=>strval(intval($settings['offset'])),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
-						$matrix['Limit, offset'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);	
-					}
+					$options=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200');
+					$matrix['Limit, offset'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+					$matrix['Limit, offset'][$columnIndex].=$this->getOffsetSelector($arr,$settings,$rowCount);
 				} else {
 					$matrix['Limit, offset'][$columnIndex]='';
 				}
@@ -461,6 +452,20 @@ class Container{
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $arr;		
+	}
+	
+	private function getOffsetSelector($arr,$settings,$rowCount){
+		$limit=intval($settings['limit']);
+		if ($rowCount<$limit){return '';}
+		$options=array();
+		$optionCount=ceil($rowCount/$limit);
+		for($index=0;$index<$optionCount;$index++){
+			$offset=$index*$limit;
+			$upperOffset=$offset+$limit;
+			$options[$offset]=strval($offset+1).'...'.strval(($upperOffset>$rowCount)?$rowCount:$upperOffset);
+		}
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'key'=>array('offset'),'value'=>$settings['offset'],'title'=>'Offset from which rows will be shown','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+		return $html;
 	}
 
 	private function selectorFromSetting($selector,$settings,$resetFilter=FALSE){

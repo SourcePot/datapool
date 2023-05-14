@@ -275,6 +275,26 @@ class MiscTools{
 		return $selector;
 	}
 	
+	public function selectorAfterDeletion($selector,$columns=array('Source','Group','Folder','Name','EntryId','Type')){
+		$unselectedColumnSelected=FALSE;
+		$lastColumn='Source';
+		$selector=array();
+		foreach($columns as $column){
+			if (!isset($selector[$column])){
+				$unselectedColumnSelected=TRUE;
+			} else if ($selector[$column]===FALSE){
+				$unselectedColumnSelected=TRUE;
+			} else if (strcmp(strval($selector[$column]),'__SKIP__')===0){
+				$unselectedColumnSelected=TRUE;
+			}
+			if (strcmp($lastColumn,'Source')!==0 && $unselectedColumnSelected){
+				$selector[$lastColumn]=FALSE;
+			}
+			$lastColumn=$column;
+		}
+		return $selector;
+	}	
+	
 	public function arr2file($inArr,$fileName=FALSE,$addDateTime=FALSE){
 		/*	This function converts t$inArr to json format and saves the json data to a file. 
 		*	If the fileName argument is empty, it will be created from the name of the calling class and function.

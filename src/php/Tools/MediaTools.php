@@ -86,8 +86,8 @@ class MediaTools{
 	
 	public function getIcon($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		if (!isset($arr['newHeight'])){$arr['newHeight']=50;}
-		if (!isset($arr['newWidth'])){$arr['newWidth']=50;}
+		if (!isset($arr['newHeight'])){$arr['newHeight']=40;}
+		if (!isset($arr['newWidth'])){$arr['newWidth']=40;}
 		if (!isset($arr['selector']['Params']['File']['MIME-Type'])){$arr['selector']['Params']['File']['MIME-Type']='text';}
 		if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
 			$arr['returnImgFileOnly']=TRUE;

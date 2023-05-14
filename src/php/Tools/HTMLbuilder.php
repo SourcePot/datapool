@@ -323,6 +323,9 @@ class HTMLbuilder{
 				$this->oc['SourcePot\Datapool\Foundation\Filespace']->entry2fileDownload($selector);
 			} else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
 				$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
+				$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
+				$selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
+				$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);	
 			} else if (isset($formData['cmd']['remove'])){
 				$entry=$formData['selector'];
 				if (!empty($entry['EntryId'])){
@@ -438,7 +441,7 @@ class HTMLbuilder{
 		if ($saveRequest){
 			$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 			$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
-			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,FALSE);
+			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
 			$statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
 			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$arr['key'].'-key processed: '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
