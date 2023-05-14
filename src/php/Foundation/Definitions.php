@@ -206,13 +206,14 @@ class Definitions{
 		$tableCntrArr=array();
 		foreach($entryArr as $key=>$defArr){
 			// get key components
+			$debugArr['defArr'][$key]=$defArr;
 			$keyComps=explode($S,$key);
 			$keyArr=$keyComps;
 			$key=array_pop($keyComps);
 			if (empty($keyComps)){$caption=$key;} else {$caption=implode(' &rarr; ',$keyComps);}
 			if (!isset($settings[$caption])){$settings[$caption]=array();}
 			if (isset($defArr['tag']) || isset($defArr['function'])){
-				$defArr=array_merge($flatEntry,$defArr);
+				$defArr=array_replace_recursive($flatEntry,$defArr);
 				$defArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($defArr);
 				$defArr['callingClass']=$callingClass;
 				$defArr['callingFunction']=$callingFunction;
@@ -248,11 +249,13 @@ class Definitions{
 				$app=array('html'=>$tableHtml,'icon'=>$tableCntr['isApp'],'title'=>$caption);
 				$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($app);
 			}
-		}
-		if ($isDebugging){
-			$debugArr['callingClass']=$callingClass;
-			$debugArr['callingFunction']=$callingFunction;
-			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			// debugging
+			if ($isDebugging){
+				$fileName=preg_replace('/[^0-9\-\_a-zA-Z]/','_',$caption);
+				$debugArr['callingClass']=$callingClass;
+				$debugArr['callingFunction']=$callingFunction;
+				$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$fileName);
+			}
 		}
 		return $html;
 	}
@@ -313,13 +316,18 @@ class Definitions{
 	
 	private function elementDef2element($element,$outputStr=NULL){
 		$element=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($element);
-		// check access
-		if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read')){
+		// check read access
+		$access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read');
+		if (!$access){
 			return array();
 			return array('tag'=>'p','element-content'=>'Read access denied');
 		}
 		// check if element requests method
-		if (!empty($element['function'])){return $this->defArr2html($element);}
+		if (!empty($element['function'])){
+			$html=$this->defArr2html($element);
+			//$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Access:'.$access,'style'=>array('font-size'=>'0.4em')));
+			return $html;
+		}
 		// get output string
 		if (isset($outputStr)){
 			// nothing to do

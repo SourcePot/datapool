@@ -396,14 +396,14 @@ class HTMLbuilder{
 	
 	public function integerEditor($arr){
 		// This function provides the HTML-script for an integer editor for the provided entry argument.
-		// Typical use is for keys 'Read', 'Write' or 'Priviledges'.
+		// Typical use is for keys 'Read', 'Write' or 'Privileges'.
 		//
 		if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
 		$template=array('key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16);
 		$arr=array_replace_recursive($template,$arr);
 		$entry=$arr['selector'];
-		if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,$ignoreOwner=TRUE)){
-			//return $this->element(array('tag'=>'p','element-content'=>'access denied'));
+		if (strcmp($arr['key'],'Privileges')===0 && !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,TRUE)){
+			return '';
 		}
 		$integer=$entry[$arr['key']];
 		$callingClass=__CLASS__;

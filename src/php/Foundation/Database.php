@@ -495,6 +495,12 @@ class Database{
 	}	
 		
 	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE){
+		// only the Admin has the right to change data in the Privileges column
+		if (!empty($entry['Privileges']) && empty($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin($user=FALSE))){
+			unset($entry['Privileges']);
+		}
+		if (empty($entry)){return FALSE;}
+		//
 		$entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging);
 		$entryTemplate=$this->getEntryTemplate($selector['Source']);
 		if (empty($entryList['primaryKeys'])){
@@ -572,8 +578,12 @@ class Database{
 	}
 
 	public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE,$addLog=FALSE){
-		// This function updates the selected entry or inserts a new entry.
-		// The primary key needs to be provided.
+		// only the Admin has the right to update the data in the Privileges column
+		if (!empty($entry['Privileges']) && empty($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin($user=FALSE))){
+			unset($entry['Privileges']);
+		}
+		if (empty($entry)){return FALSE;}
+		//
 		$existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
 		if (empty($existingEntry['rowCount'])){
 			// insert and return entry
