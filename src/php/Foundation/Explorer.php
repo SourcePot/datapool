@@ -97,7 +97,9 @@ class Explorer{
 	}
 	
 	private function getGuideEntry($selector,$templateB=array()){
-		if (!empty($selector['EntryId'])){
+		if (empty($selector['Source'])){
+			return array('Read'=>0,'Write'=>0);
+		} else if (!empty($selector['EntryId'])){
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
 		} else {
 			$unseledtedDetected=FALSE;
