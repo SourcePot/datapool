@@ -202,8 +202,8 @@ class Definitions{
 			$entryArr[$definitionKey][$definitionKeyAttr]=$definitionValue;
 		}
 		// create matrices
-		$settings=array();
 		$matrices=array();
+		$tableCntrArr=array();
 		foreach($entryArr as $key=>$defArr){
 			// get key components
 			$keyComps=explode($S,$key);
@@ -217,6 +217,10 @@ class Definitions{
 				$defArr['callingClass']=$callingClass;
 				$defArr['callingFunction']=$callingFunction;
 				if (empty($defArr['key'])){$defArr['key']=$keyArr;}
+				$tableCntrArr[$caption]['isApp']=(empty($defArr['isApp']))?FALSE:$defArr['isApp'];
+				$tableCntrArr[$caption]['hideCaption']=(empty($defArr['hideCaption']))?FALSE:$defArr['hideCaption'];
+				$tableCntrArr[$caption]['hideHeader']=(empty($defArr['hideHeader']))?TRUE:$defArr['hideHeader'];
+				$tableCntrArr[$caption]['hideKeys']=(empty($defArr['hideKeys']))?FALSE:$defArr['hideKeys'];
 				$value=$this->elementDef2element($defArr);
 				$debugArr['elements'][$key]=array('defArr'=>$defArr,'value'=>$value);
 				if (empty($value)){
@@ -226,24 +230,24 @@ class Definitions{
 					$matrices[$caption][$key]['Value']=$value;
 				}
 			} else {
-				$settings[$caption]=$defArr;
+				// unknown tags
 			}
 		}
-		$debugArr['settings']=$settings;
-		if (isset($settings[''])){
-			$globSetting=$settings[''];
-			unset($settings['']);
-		} else {
-			$globSetting=array();
-		}
+		$debugArr['tableCntrArr']=$tableCntrArr;
 		// create html
 		$hideHeader=(isset($definition['hideHeader']))?$definition['hideHeader']:TRUE;
 		$hideKeys=(isset($definition['hideKeys']))?$definition['hideKeys']:TRUE;
 		$html='';
 		foreach($matrices as $caption=>$matrix){
-			$tableArr=array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideHeader'=>$hideHeader,'hideKeys'=>$hideKeys);
-			$tableArr=array_replace_recursive($globSetting,$settings[$caption],$tableArr);
-			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($tableArr);
+			$tableCntr=$tableCntrArr[$caption];
+			$tableArr=array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideCaption'=>$tableCntr['hideCaption'],'hideHeader'=>$tableCntr['hideHeader'],'hideKeys'=>$tableCntr['hideKeys']);
+			$tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($tableArr);
+			if (empty($tableCntr['isApp'])){
+				$html.=$tableHtml;
+			} else {
+				$app=array('html'=>$tableHtml,'icon'=>$tableCntr['isApp'],'title'=>$caption);
+				$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($app);
+			}
 		}
 		if ($isDebugging){
 			$debugArr['callingClass']=$callingClass;

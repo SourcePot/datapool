@@ -51,9 +51,9 @@ class Calendar{
 																 'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
 																 ),
 											),
-							 'Misc'=>array('@function'=>'entryControls','@isApp'=>TRUE,'@hideHeader'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-							 'Read'=>array('@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>TRUE,'@hideHeader'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-							 'Write'=>array('@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>TRUE,'@hideHeader'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Misc'=>array('@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Read'=>array('@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Write'=>array('@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 );
 
 	private $options=array('Type'=>array('event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'),

@@ -113,7 +113,7 @@ class HTMLbuilder{
 				$arr['style']=is_array($arr['style'])?$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2style($arr['style']):$arr['style'];
 				$html.='<table {{class}} style="'.$arr['style'].'">'.PHP_EOL;	
 			}
-			if (!empty($arr['caption'])){$html.='<caption {{class}}>'.PHP_EOL.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['caption']).'</caption>'.PHP_EOL;}
+			if (!empty($arr['caption']) && empty($arr['hideCaption'])){$html.='<caption {{class}}>'.PHP_EOL.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['caption']).'</caption>'.PHP_EOL;}
 			if (empty($arr['hideHeader'])){$html.='<thead {{class}}>'.PHP_EOL.'{{thead}}</thead>'.PHP_EOL;}
 			$html.='<tbody {{class}}>'.PHP_EOL.'{{tbody}}</tbody>'.PHP_EOL;
 			$html.='</table>'.PHP_EOL;
@@ -448,12 +448,6 @@ class HTMLbuilder{
 		$hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
 		$hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
 		$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>$hideKeys,'hideHeader'=>$hideHeader));
-		// present as App if requested
-		if (!empty($arr['isApp'])){
-			$app=array('html'=>$html,'icon'=>$arr['key'][0],'title'=>'Setting "'.$arr['key'].'" access right');
-			$html=$this->app($app);
-			
-		}
 		return $html;
 	}
 	
@@ -482,27 +476,23 @@ class HTMLbuilder{
 		if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
 		if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION____;}
 		$matrix=array();
-		$matrix['Preview']['Button']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-		$matrix['Preview']['Button'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
+		$matrix['Preview']['Key']='Preview';
+		$matrix['Preview']['Content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+		$matrix['Preview']['Content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
 		$mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('max-height'=>600,'max-height'=>600)));
-		$matrix['Preview']['Button'].=$mediaArr['html'];
+		$matrix['Preview']['Content'].=$mediaArr['html'];
 		$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
 		foreach(array('download','remove','delete') as $cmd){
 			$ucfirstCmd=ucfirst($cmd);
 			if (!empty($arr['hide'.$ucfirstCmd])){continue;}
 			$arr['excontainer']=TRUE;
 			$arr['cmd']=$cmd;
-			$matrix[$ucfirstCmd]['Button']=$this->btn($arr);
+			$matrix[$ucfirstCmd]['Key']=$ucfirstCmd;
+			$matrix[$ucfirstCmd]['Content']=$this->btn($arr);
 		}
 		$hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
 		$hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:FALSE;
-		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$hideHeader,'hideKeys'=>$hideKeys,'caption'=>'Entry control elements','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
-		// present as App if requested
-		if (!empty($arr['isApp'])){
-			$app=array('html'=>$html,'icon'=>'&#128736;','title'=>'Add and remove files, delete the whole entry');
-			$html=$this->app($app);
-			
-		}
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$hideHeader,'hideKeys'=>$hideKeys,'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
 		return $html;
 	}
 	

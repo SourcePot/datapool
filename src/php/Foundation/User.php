@@ -44,11 +44,10 @@ class User{
 																 'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
 																),
 											  ),
-							 'Login'=>array('@function'=>'getLoginForm','@class'=>'SourcePot\Datapool\Components\Login'),
-							 'Icon etc.'=>array('@function'=>'entryControls','@isApp'=>TRUE,'@hideHeader'=>TRUE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Login'=>array('@function'=>'getLoginForm','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'),
+							 'Icon etc.'=>array('@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
+							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
-							 '@hideHeader'=>TRUE,'@hideKeys'=>FALSE,
 							 );
 
 	private $userRols=array('Content'=>array(0=>array('Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'),
