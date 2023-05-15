@@ -343,10 +343,10 @@ class Container{
 				$key2remove=key($formData['cmd']['removeColumn']);
 				unset($settings['columns'][$key2remove]);
 			} else if (isset($formData['cmd']['desc'])){
-				$settings['orderBy']=$formData['cmd']['desc'];
+				$settings['orderBy']=key($formData['cmd']['desc']);
 				$settings['isAsc']=FALSE;
 			} else if (isset($formData['cmd']['asc'])){
-				$settings['orderBy']=$formData['cmd']['asc'];
+				$settings['orderBy']=key($formData['cmd']['asc']);
 				$settings['isAsc']=TRUE;
 			}
 			$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$settings;
@@ -406,11 +406,11 @@ class Container{
 						// "order by"-buttons
 						if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}
 						if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
-						$element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
+						$element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
 						$matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
 						$matrix[$filterKey][$columnIndex].=$filterTextField;
 						if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
-						$element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc'),'value'=>$column,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
+						$element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
 						$matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
 						// remove column button
 						$matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
