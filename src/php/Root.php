@@ -80,7 +80,6 @@ final class Root{
 		} else {
 			// invalid
 		}
-		$this->arr=$arr;
 		return $arr;
 	}
 	

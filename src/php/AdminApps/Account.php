@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Account{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable;
 	private $entryTemplate=array();

@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
 	
-	private $arr;
+	private $oc;
 	
 	private $alias=array('Number'=>'House number','Street number'=>'House number','House_number'=>'House number','House number'=>'House number',
 						 'Road'=>'Street','Street'=>'Street',
