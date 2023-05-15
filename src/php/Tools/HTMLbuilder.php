@@ -30,6 +30,7 @@ class HTMLbuilder{
 					    'save'=>array('key'=>array('save'),'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE),
 					    'download'=>array('key'=>array('download'),'title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE),
 					    'download all'=>array('key'=>array('download all'),'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
+					    'export'=>array('key'=>array('export'),'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
 					    'select'=>array('key'=>array('select'),'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE),
 					    'delete'=>array('key'=>array('delete'),'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array('float'=>'left')),
 					    'remove'=>array('key'=>array('remove'),'title'=>'Remove file','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array('float'=>'left')),
@@ -339,6 +340,11 @@ class HTMLbuilder{
 			} else if (isset($formData['cmd']['select'])){
 				$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
 				$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
+			} else if (isset($formData['cmd']['export'])){
+				$selectors=array($selector);
+				$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+				$fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
+				$this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,FALSE,10000000000,$fileName);
 			}
 		}
 		return $html;

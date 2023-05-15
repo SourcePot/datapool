@@ -543,7 +543,7 @@ class Filespace{
 		$zip = new \ZipArchive;
 		$zip->open($dumpFile,\ZipArchive::CREATE);
 		foreach($selectors as $index=>$selector){
-			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall) as $entry){
+			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE,array(),FALSE,FALSE) as $entry){
 				$attachedFileName=$entry['Source'].'~'.$entry['EntryId'].'.file';
 				$attachedFile=$this->selector2file($entry);
 				if (is_file($attachedFile)){
@@ -570,6 +570,18 @@ class Filespace{
 		$msg='Export resulted in '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
 		$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		return $dumpFile;
+	}
+	
+	public function downloadExportedEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000,$fileName=FALSE){
+		$dumpFile=$this->exportEntries($selectors,$isSystemCall,$maxAttachedFilesize);
+		if (is_file($dumpFile)){
+			$pathArr=pathinfo($dumpFile);
+			if (empty($fileName)){$fileName=$pathArr['filename'];}
+			header('Content-Type: application/zip');
+			header('Content-Disposition: attachment; filename="'.$fileName.'"');
+			header('Content-Length: '.fileSize($dumpFile));
+			readfile($dumpFile);
+		}
 	}
 	
 	public function importEntries($dumpFile,$isSystemCall=FALSE){

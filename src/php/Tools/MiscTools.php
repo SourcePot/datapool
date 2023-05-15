@@ -302,7 +302,7 @@ class MiscTools{
 		if (empty($fileName)){
 			$trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2);
 			$fileName='';
-			if ($addDateTime){$fileName.=date('Y-m-d h_m_s').' ';}
+			if ($addDateTime){$fileName.=date('Y-m-d H_i_s').' ';}
 			$fileName.=$trace[1]['class'].' '.$trace[1]['function'];
 			$fileName=mb_ereg_replace("[^A-Za-z0-9\-\_ ]",'_', $fileName);
 			$file=$GLOBALS['dirs']['debugging'].'/'.$fileName.'.json';

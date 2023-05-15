@@ -302,6 +302,7 @@ class Container{
 			}
 			$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name']));
 			if ($level==0){
+				$arr['hideKeys']=TRUE;
 				$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
 				$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs($arr);
 			}

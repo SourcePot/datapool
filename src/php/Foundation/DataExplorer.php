@@ -383,13 +383,8 @@ class DataExplorer{
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
 		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (isset($formData['cmd']['Download backup'])){
-			$dumpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors);
-			if (is_file($dumpFile)){
-				header('Content-Type: application/zip');
-				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' '.$className.' '.$callingClassName.' dump.zip"');
-				header('Content-Length: '.fileSize($dumpFile));
-				readfile($dumpFile);
-			}	
+			$exportFileName=date('Y-m-d').' '.$className.' '.$callingClassName.' dump.zip';
+			$this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$exportFileName);
 		} else if (isset($formData['cmd']['Import'])){
 			$tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
 			$success=move_uploaded_file($formData["files"]["import files"][0]['tmp_name'],$tmpFile);

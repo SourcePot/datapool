@@ -236,7 +236,7 @@ class Explorer{
 		$selector['Write']=$guideEntry['Write'];
 		$btnHtml='';
 		$btnArr=array('selector'=>$selector);
-		foreach(array('download all','delete') as $cmd){
+		foreach(array('download all','export','delete') as $cmd){
 			$btnArr['cmd']=$cmd;
 			$btnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
 		}

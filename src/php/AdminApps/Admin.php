@@ -58,13 +58,9 @@ class Admin{
 		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		if (isset($formData['cmd']['export'])){
 			$selectors=array($formData['val']);
-			$dumpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->exportEntries($selectors,FALSE,$formData['val']['Size']);
-			if (is_file($dumpFile)){
-				header('Content-Type: application/zip');
-				header('Content-Disposition: attachment; filename="'.date('Y-m-d').' '.$formData['val']['Source'].' dump.zip"');
-				header('Content-Length: '.fileSize($dumpFile));
-				readfile($dumpFile);
-			}	
+			$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+			$fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
+			$this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,FALSE,$formData['val']['Size'],$fileName);	
 		} else if (isset($formData['cmd']['import'])){
 			$tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
 			if (!empty($formData['files']['import'])){
@@ -100,7 +96,7 @@ class Admin{
 		$btnArr['key']=array('export');
 		$btnArr['element-content']='Export';
 		$matrix['Backup to file']=array('Input'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
-								'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
+										'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr));
 		// import html		
 		$fileArr=$btnArr;
 		unset($fileArr['element-content']);
@@ -110,7 +106,8 @@ class Admin{
 		$fileArr['key']=$btnArr['key']=array('import');
 		$btnArr['element-content']='Import';
 		$btnArr['hasCover']=TRUE;
-		$matrix['Recover from file']=array('Input'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr),'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr));
+		$matrix['Recover from file']=array('Input'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr),
+										   'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr));
 		$tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
 		return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
 	}
