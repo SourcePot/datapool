@@ -402,16 +402,16 @@ class HTMLbuilder{
 		$template=array('key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16);
 		$arr=array_replace_recursive($template,$arr);
 		$entry=$arr['selector'];
+		// only the Admin has access to the method if columns 'Privileges' is selected
 		if (strcmp($arr['key'],'Privileges')===0 && !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,TRUE)){
 			return '';
 		}
+		//
 		$integer=$entry[$arr['key']];
 		$callingClass=__CLASS__;
 		$callingFunction=__FUNCTION__.$arr['key'];
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
-		if ($saveRequest=isset($formData['cmd'][$arr['key']]['save'])){
-			//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData,$arr['key']);
-		}
+		$saveRequest=isset($formData['cmd'][$arr['key']]['save']);
 		$updatedInteger=0;
 		$matrix=array();
 		if (is_string($integer)){$integer=intval($integer);}

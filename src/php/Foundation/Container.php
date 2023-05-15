@@ -456,7 +456,7 @@ class Container{
 	
 	private function getOffsetSelector($arr,$settings,$rowCount){
 		$limit=intval($settings['limit']);
-		if ($rowCount<$limit){return '';}
+		if ($rowCount<=$limit){return '';}
 		$options=array();
 		$optionCount=ceil($rowCount/$limit);
 		for($index=0;$index<$optionCount;$index++){

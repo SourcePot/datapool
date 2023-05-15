@@ -21,8 +21,8 @@ class Explorer{
 									'EntryId'=>array('orderBy'=>'Name','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE)
 									);
 									
+	const GUIDEINDICATOR='!GUIDE';
 	private $state=array();
-	private $guideEntries=array();
 	
 	public function __construct($oc){
 		$this->oc=$oc;	
@@ -48,7 +48,7 @@ class Explorer{
 		foreach($this->selectorTemplate as $column=>$initValue){
 			$selected=(isset($selector[$column]))?$selector[$column]:$initValue;
 			$selectorHtml='';
-			$options=array('__RESET__'=>'&larrhk;');
+			$options=array(self::GUIDEINDICATOR=>'&larrhk;');
 			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
 				if (strcmp($column,'EntryId')===0){
 					$entrySelector=array_merge($selector,array('EntryId'=>$row['EntryId']));
@@ -57,7 +57,7 @@ class Explorer{
 				} else {
 					$label=$column;
 				}
-				if (strcmp($row[$label],'__SKIP__')===0){continue;}
+				if (strcmp($row[$label],self::GUIDEINDICATOR)===0){continue;}
 				$options[$row[$column]]=$row[$label];
 			}
 			$selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
@@ -105,13 +105,13 @@ class Explorer{
 		} else {
 			$unseledtedDetected=FALSE;
 			$selector=array_merge($this->selectorTemplate,$selector);
-			$templateA=array('Name'=>'__SKIP__','Type'=>'GUIDEENTRY','Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+			$templateA=array('Name'=>self::GUIDEINDICATOR,'Type'=>$selector['Source'].' '.self::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
 			$entry=array_replace_recursive($templateA,$templateB);
 			foreach($selector as $column=>$selected){
 				if (empty($selected)){$unseledtedDetected=TRUE;}
-				$entry[$column]=($unseledtedDetected)?'__SKIP__':$selected;
+				$entry[$column]=($unseledtedDetected)?self::GUIDEINDICATOR:$selected;
 			}
-			$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0','-guideEntry',FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',self::GUIDEINDICATOR,FALSE);
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
@@ -119,14 +119,25 @@ class Explorer{
 		return $entry;
 	}
 	
+	private function selector2guideEntry($selector){
+		foreach($selector as $key=>$value){
+			if ($value===FALSE){
+				$selector[$key]=self::GUIDEINDICATOR;
+			}
+		}
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
+		return $entry;
+	}
+	
 	private function appProcessing($callingClass){
 		// process selectors
 		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+		$guideEntry=$this->selector2guideEntry($selector);
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getSelectors');
 		if (isset($formData['cmd']['select'])){
 			$resetFromHere=FALSE;
 			foreach($formData['val']['selector'] as $column=>$selected){
-				if (strcmp($selected,'__RESET__')===0){$resetFromHere=TRUE;}
+				if (strcmp($selected,self::GUIDEINDICATOR)===0){$resetFromHere=TRUE;}
 				$newSelector[$column]=$resetFromHere?FALSE:$selected;
 				if (isset($selector[$column])){
 					if ($newSelector[$column]!=$selector[$column]){$resetFromHere=TRUE;}
@@ -138,10 +149,12 @@ class Explorer{
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
 		if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
 			$selector=array_merge($selector,$formData['val']);
-			$this->getGuideEntry($selector);
+			$guideEntry=$this->getGuideEntry($selector);
 			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
 		} else if (isset($formData['cmd']['add files'])){
 			if ($formData['hasValidFiles']){
+				if (isset($guideEntry['Read'])){$selector['Read']=$guideEntry['Read'];}
+				if (isset($guideEntry['Write'])){$selector['Write']=$guideEntry['Write'];}
 				foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
 					if ($fileArr['error']){continue;}
 					$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$selector);

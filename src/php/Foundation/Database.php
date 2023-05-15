@@ -20,7 +20,8 @@ class Database{
 	private $dbObj;
 	private $dbName=FALSE;
 	
-	public const ADMIN_R=32768;
+	const ADMIN_R=32768;
+	const GUIDEINDICATOR='!GUIDE';
 	
 	private $entryTable='settings';
 	private $entryTemplate=array();
@@ -268,7 +269,7 @@ class Database{
 		// e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
 		// If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
 		// e.g. 'Date|[]|Start' -> refers to column 'Date'.
-		if ($removeGuideEntries){$selector['Type=!']='GUIDEENTRY';}
+		if ($removeGuideEntries){$selector['EntryId=!']='%'.self::GUIDEINDICATOR;}
 		$entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
 		$opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
 		$sqlArr=array('sql'=>array(),'inputs'=>array());			
@@ -448,7 +449,7 @@ class Database{
 		$this->addStatistic('matches',$result['rowCount']);
 		while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
 			$result['rowIndex']++;
-			if (strpos($row['EntryId'],'-guideEntry')===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
+			if (strpos($row['EntryId'],self::GUIDEINDICATOR)===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
 			foreach($row as $column=>$value){
 				$result['hash']=crc32($result['hash'].$value);
 				$result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
@@ -617,11 +618,11 @@ class Database{
 			throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);	
 		}
 		if (empty($selector['EntryId'])){
-			foreach($this->entryIterator($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE) as $entry){
+			foreach($this->entryIterator($selector,$isSystemCall,'Read',$returnMetaOnNoMatch,FALSE,FALSE,FALSE,array(),FALSE) as $entry){
 				return $entry;
 			}
 		} else {
-			return $this->entryById($selector,TRUE,'Read',$returnMetaOnNoMatch);
+			return $this->entryById($selector,$isSystemCall,'Read',$returnMetaOnNoMatch);
 		}
 		return FALSE;
 	}

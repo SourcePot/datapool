@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Tools;
 class MiscTools{
 
 	const ONEDIMSEPARATOR='|[]|';
+	const GUIDEINDICATOR='!GUIDE';
 
 	public $emojis=array();
 	private $emojiFile='';
@@ -270,7 +271,7 @@ class MiscTools{
 		$selector=array();
 		foreach($defaultValues as $key=>$defaultValue){
 			$selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
-			$selector[$key]=(strcmp(strval($selector[$key]),'__SKIP__')===0)?FALSE:$selector[$key];
+			$selector[$key]=(strpos(strval($selector[$key]),self::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
 		}
 		return $selector;
 	}
@@ -284,7 +285,7 @@ class MiscTools{
 				$unselectedColumnSelected=TRUE;
 			} else if ($selector[$column]===FALSE){
 				$unselectedColumnSelected=TRUE;
-			} else if (strcmp(strval($selector[$column]),'__SKIP__')===0){
+			} else if (strcmp(strval($selector[$column]),self::GUIDEINDICATOR)===0){
 				$unselectedColumnSelected=TRUE;
 			}
 			if (strcmp($lastColumn,'Source')!==0 && $unselectedColumnSelected){$selector[$lastColumn]=FALSE;}
