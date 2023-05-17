@@ -229,16 +229,6 @@ class Element{
 		$html.=$this->element($coverArrP);
 		$coverArrDiv=array('tag'=>'div','title'=>$arr['title'],'class'=>'cover-wrapper','id'=>'cover-wrapper','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>$arr['style']);
 		$html=$this->element($coverArrDiv);
-		
-		/*
-		$title=;
-		$html.='<p id="cover-'.hrtime(TRUE).'" class="cover" title="'.$title.'">Sure?</p>';
-		if (empty($arr['style'])){
-			$html='<div class="cover-wrapper" title="'.$title.'">'.$html.'</div>';
-		} else {
-			$html='<div class="cover-wrapper" style="'.$arr['style'].'" title="'.$title.'">'.$html.'</div>';
-		}
-		*/
 		return $html;
 	}
 

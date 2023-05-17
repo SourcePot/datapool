@@ -134,9 +134,12 @@ class HTMLbuilder{
 				foreach($rowArr as $column=>$cell){
 					if (is_array($column)){$column=$this->oc['SourcePot\Datapool\Foundation\Element']->element($column);} else {$column=htmlEntities(strval($column),ENT_QUOTES);}
 					if (is_array($cell)){
+						$cell['tag']=(isset($cell['tag']))?$cell['tag']:'p';
 						$cell=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
 					} else {
-						if (empty($arr['keep-element-content'])){$cell=htmlspecialchars(strval($cell),ENT_QUOTES,'UTF-8');}
+						if (empty($arr['keep-element-content'])){
+							$cell=htmlspecialchars(strval($cell),ENT_QUOTES,'UTF-8');
+						}
 					}
 					if (!empty($cell)){$allCellsEmpty=FALSE;}
 					$toReplace['{{thead}}'].='<th {{class}}>'.ucfirst($column).'</th>';
@@ -585,7 +588,7 @@ class HTMLbuilder{
 			$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 			if (isset($formData['cmd']['add']) || isset($formData['cmd']['save'])){
 				$entry=$arr['selector'];
-				$entry['EntryId']=$formData['cmd'][key($formData['cmd'])];
+				$entry['EntryId']=key(current($formData['cmd']));
 				$entry['Content']=$formData['val'][$entry['EntryId']]['Content'];
 				$file=FALSE;
 				if (isset($formData['files'][$entry['EntryId']])){
@@ -600,13 +603,13 @@ class HTMLbuilder{
 					$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
 				}
 			} else if (isset($formData['cmd']['delete'])){
-				$selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$formData['cmd']['delete']);
+				$selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
 				$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
 			} else if (isset($formData['cmd']['moveUp'])){
-				$selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$formData['cmd']['moveUp']);
+				$selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
 				$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE);
 			} else if (isset($formData['cmd']['moveDown'])){
-				$selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$formData['cmd']['moveDown']);
+				$selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
 				$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE);
 			}
 			if ($commandProcessingOnly){return array();}
@@ -618,7 +621,6 @@ class HTMLbuilder{
 			$newIndex=(isset($arr['selector']['rowCount']))?$arr['selector']['rowCount']+1:1;
 			$arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],$newIndex);
 			$this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector']);
-			
 		}
 		foreach($arr['contentStructure'] as $contentKey=>$elementArr){
 			if (!isset($elementArr['htmlBuilderMethod'])){array('error'=>'arr["contentStructure" key "htmlBuilderMethod" missing in '.__FUNCTION__);}
@@ -647,22 +649,26 @@ class HTMLbuilder{
 		}
 		if (empty($arr['noBtns'])){
 			$row['Buttons']='';
-			$arr['value']=$arr['selector']['EntryId'];
 			if (empty($isNewRow)){
 				$btnArr=array_replace_recursive($arr,$this->btns['save']);
+				$btnArr['key'][]=$arr['selector']['EntryId'];
 				$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);	
 				$btnArr=array_replace_recursive($arr,$this->btns['delete']);
+				$btnArr['key'][]=$arr['selector']['EntryId'];
 				$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);	
 				if (empty($arr['selector']['isLast'])){
 					$btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
+					$btnArr['key'][]=$arr['selector']['EntryId'];
 					$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);	
 				}
 				if (empty($arr['selector']['isFirst'])){
 					$btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
+					$btnArr['key'][]=$arr['selector']['EntryId'];
 					$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);	
 				}
 			} else {
 				$btnArr=array_replace_recursive($arr,$this->btns['add']);
+				$btnArr['key'][]=$arr['selector']['EntryId'];
 				$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
 			}
 			$row['Buttons']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','keep-element-content'=>TRUE,'element-content'=>$row['Buttons'],'style'=>'min-width:150px;'));

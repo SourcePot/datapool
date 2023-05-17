@@ -201,7 +201,7 @@ class CSVtools{
 		return $result;
 	}
 	
-	public function csvEditor($arr,$isDebugging=TRUE){
+	public function csvEditor($arr,$isDebugging=FALSE){
 		if (!isset($arr['html'])){$arr['html']='';}
 		if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
 		$settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];

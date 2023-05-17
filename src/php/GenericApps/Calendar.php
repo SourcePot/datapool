@@ -525,6 +525,13 @@ class Calendar{
 	}
 	
 	public function getTriggerHtml($arr){
+		$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Signal A',mt_rand(1,100));
+		$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Signal B',mt_rand(1,100));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerWidget(__CLASS__,__FUNCTION__);
+		return array('html'=>$html);
+	}
+	
+	public function _getTriggerHtml($arr){
 		$html='';
 		$eventSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Events');
 		// form processing

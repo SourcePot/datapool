@@ -280,6 +280,7 @@ class CalcEntries{
 		if (!empty($base['calculationrules'])){
 			foreach($base['calculationrules'] as $ruleEntryId=>$rule){
 				$calculationRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Calculation rule');
+				$result['Calc rule'][$calculationRuleIndex]=array('A'=>0,'Operation'=>'','B'=>0,'Result'=>'');
 				foreach(array('A','B') as $index){
 					$key=$rule['Content']['"'.$index.'" selected by...'];
 					$debugArr[]=array('ruleEntryId'=>$calculationRuleIndex,'key'=>$key);
@@ -292,6 +293,7 @@ class CalcEntries{
 					} else {
 						$value[$index]=floatval($rule['Content']['Default value "'.$index.'"']);
 					}
+					$result['Calc rule'][$calculationRuleIndex][$index]=$value[$index];
 				}
 				$ruleResults[$calculationRuleIndex]=match($rule['Content']['Operation']){
 						'+'=>$value['A']+$value['B'],
@@ -299,9 +301,10 @@ class CalcEntries{
 						'*'=>$value['A']*$value['B'],
 						'/'=>($value['B']==0)?FALSE:($value['A']/$value['B']),
 						'%'=>($value['B']==0)?FALSE:($value['A']%$value['B']),
-				};
+						};
 				$sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$ruleResults[$calculationRuleIndex],$rule['Content']['Target data type']);
-				$result['Calc rule'][$calculationRuleIndex]=array('A'=>$value['A'],'Operation'=>$rule['Content']['Operation'],'B'=>$value['B'],'Result'=>$ruleResults[$calculationRuleIndex]);
+				$result['Calc rule'][$calculationRuleIndex]['Operation']=$rule['Content']['Operation'];
+				$result['Calc rule'][$calculationRuleIndex]['Result']=$ruleResults[$calculationRuleIndex];
 			}
 		}
 		// loop through conditional value rules

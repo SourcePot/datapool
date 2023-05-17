@@ -600,7 +600,7 @@ class Database{
 			if ($addLog){
 				$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
 			}
-			$this->updateEntries($selector,$entry,$isSystemCall);
+			$this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
 			$entry=$this->entryById($selector,$isSystemCall,'Write');
 		} else {
 			// only return ex*isting entry
