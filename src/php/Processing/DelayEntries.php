@@ -12,23 +12,22 @@ namespace SourcePot\Datapool\Processing;
 
 class DelayEntries{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
 								 );
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 
 	public function getEntryTable(){return $this->entryTable;}
@@ -40,7 +39,7 @@ class DelayEntries{
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
+		$callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -82,14 +81,14 @@ class DelayEntries{
 	}
 
 	private function getDelayEntriesWidget($callingElement){
-		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Delaying','generic',$callingElement,array('method'=>'getDelayEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying','generic',$callingElement,array('method'=>'getDelayEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getDelayEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runDelayEntries($arr['selector'],0);
 		} else if (isset($formData['cmd']['test'])){
@@ -107,9 +106,9 @@ class DelayEntries{
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
 		$matrix['Commands']['Trigger']=array('tag'=>'button','element-content'=>'Manual trigger','key'=>array('trigger'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delaying widget'));
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delaying widget'));
 		foreach($result as $caption=>$matrix){
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+			$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
 		return $arr;
@@ -117,8 +116,8 @@ class DelayEntries{
 
 	private function getDelayEntriesSettings($callingElement){
 		$html='';
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Delaying entries settings','generic',$callingElement,array('method'=>'getDelayEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying entries settings','generic',$callingElement,array('method'=>'getDelayEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
 		}
 		return $html;
 	}
@@ -127,8 +126,8 @@ class DelayEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->delayingParams($arr['selector']);
 		$arr['html'].=$this->delayingRules($arr['selector']);
-		//$selectorMatrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-		//$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Delaying'));
+		//$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
+		//$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Delaying'));
 		return $arr;
 	}
 	
@@ -136,38 +135,34 @@ class DelayEntries{
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
 		$contentStructure=array('Forward to canvas element'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
+								'Reset all trigger when condition is met'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		// get selctorB
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
 		$arr['selector']['Content']=array('Column to delay'=>'Name');
-		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
+		$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
+			$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// get HTML
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Move entries when conditions are met.';
 		$arr['noBtns']=TRUE;
-		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+		$row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
 		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
-		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+		return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 
 	private function delayingRules($callingElement){
-		$triggerOptions=array(''=>'...');
-		foreach($this->arr['SourcePot\Datapool\Root']->getRegisteredMethods('getTrigger') as $classWithNamespace=>$classArr){
-			$trigger=$this->arr[$classWithNamespace]->getTrigger();
-			$triggerOptions+=$trigger['options'];
-		}
-		$contentStructure=array('Inverse'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>array('Keep','Invert')),
-								'Trigger'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions),
+		$triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
+		$contentStructure=array('Trigger'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions),
 								'Reset trigger'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
 								'Combine with next row'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>array('or'=>'OR','and'=>'AND','xor'=>'XOR',)),
 								);
@@ -175,14 +170,14 @@ class DelayEntries{
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Delay ends if all rules combined are TRUE.';
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 		
 	public function runDelayEntries($callingElement,$testRun=1){
 		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
 			$key=array_pop($key);
 			$base[$key][$entry['EntryId']]=$entry;
@@ -190,22 +185,22 @@ class DelayEntries{
 			foreach($entry['Content'] as $contentKey=>$content){
 				if (is_array($content)){continue;}
 				if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-				$template=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
+				$template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
 				if ($template){$base['entryTemplates'][$content]=$template;}
 			}
 		}
 		// loop through source entries and parse these entries
-		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		$result=array('Delaying statistics'=>array('Condition'=>array('value'=>''),
 												 'Condition met'=>array('value'=>0),
-												 'Reset trigger'=>array('value'=>''),
+												 'Reset trigger'=>array('value'=>0),
 												 'Moved entries'=>array('value'=>0),
 												 'Sent by email'=>array('value'=>''),
 												 )
 					 );
 		$result=$this->checkCondition($base,$callingElement,$result,$testRun);
 		//
-		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+		$result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
 		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
 		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
@@ -214,20 +209,18 @@ class DelayEntries{
 	private function checkCondition($base,$callingElement,$result,$testRun,$isDebugging=FALSE){
 		$params=current($base['delayingparams']);
 		$debugArr=array('params'=>$params,'rules'=>$base['delayingrules'],'selector'=>$callingElement,'testRun'=>$testRun);
-		$trigger2reset=array();
 		$isFirstRule=TRUE;
 		$lastOparation='or';
+		$trigger2reset=array();
+		$triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
 		foreach($base['delayingrules'] as $ruleId=>$rule){
-			$triggerComps=explode('|',$rule['Content']['Trigger']);
-			$triggerClass=$this->arr['source2class'][$triggerComps[0]];
-			$trigger=$this->arr[$triggerClass]->getTrigger();
 			// calculate new 'Condition met'
-			$isInverse=boolval(intval($rule['Content']['Inverse']));
-			$triggerValue=!empty($trigger['isActive'][$rule['Content']['Trigger']]);
+			$triggerValue=$this->oc['SourcePot\Datapool\Foundation\Signals']->isActiveTrigger($rule['Content']['Trigger'],TRUE);
 			if ($triggerValue && !empty($rule['Content']['Reset trigger'])){
-				$trigger2reset[$rule['Content']['Trigger']]=$triggerClass;
+				$trigger2reset[$rule['Content']['Trigger']]=TRUE;
+			} else {
+				$trigger2reset[$rule['Content']['Trigger']]=FALSE;
 			}
-			$triggerValue=$isInverse?!$triggerValue:$triggerValue;
 			$spanOpen=$triggerValue?'<span class="status-on">':'<span class="status-off">';
 			$invSpanOpen=$triggerValue?'<span class="status-off">':'<span class="status-on">';
 			$lastValue=$result['Delaying statistics']['Condition met']['value'];
@@ -241,8 +234,8 @@ class DelayEntries{
 			if (!$isFirstRule){
 				$result['Delaying statistics']['Condition']['value'].='<b>'.$lastOparation.'</b>';
 			}
-			$triggerName=$trigger['options'][$rule['Content']['Trigger']];
-			$result['Delaying statistics']['Condition']['value'].=$isInverse?' '.$spanOpen.'inv('.$invSpanOpen.$triggerName.'</span>)</span>':' '.$spanOpen.$triggerName.'</span>';
+			$triggerName=$triggerOptions[$rule['Content']['Trigger']];
+			$result['Delaying statistics']['Condition']['value'].=' '.$spanOpen.$triggerName.'</span>';
 			$result['Delaying statistics']['Condition']['value'].=' ';
 			$lastOparation=$rule['Content']['Combine with next row'];
 			$isFirstRule=FALSE;
@@ -254,38 +247,43 @@ class DelayEntries{
 		} else {
 			$manualTrigger=FALSE;
 		}
+		// move entries and send emails
 		if ($result['Delaying statistics']['Condition met']['value'] || $manualTrigger==2){
 			$result=$this->moveEntries($base,$callingElement,$result,$testRun);
 			$result=$this->sentEmail($base,$callingElement,$result,$testRun);
 		}
-		// rest trigger
-		foreach($trigger2reset as $triggerId=>$triggerClass){
-			$result['Delaying statistics']['Reset trigger']['value'].=' | '.$trigger['options'][$triggerId];
-			if (!$testRun){$this->arr[$triggerClass]->resetTrigger($triggerId);}
+		// reset trigger
+		foreach($trigger2reset as $triggerEntryId=>$toReset){
+			$toReset=(!empty($params['Content']['Reset all trigger when condition is met']) && $result['Delaying statistics']['Condition met']['value'])?TRUE:$toReset;
+			if ($toReset){
+				if (empty($testRun)){
+					$this->oc['SourcePot\Datapool\Foundation\Signals']->resetTrigger($triggerEntryId,TRUE);
+				}
+				$result['Delaying statistics']['Reset trigger']['value']++;
+			}
 		}
-		$result['Delaying statistics']['Reset trigger']['value']=trim($result['Delaying statistics']['Reset trigger']['value'],' |');
 		// finalize documentation
-		$result['Delaying statistics']['Condition met']['value']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($result['Delaying statistics']['Condition met']['value']);
+		$result['Delaying statistics']['Condition met']['value']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($result['Delaying statistics']['Condition met']['value']);
 		if ($isDebugging){
 			$debugArr['trigger2reset']=$trigger2reset;
 			$debugArr['result']=$result;
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $result;
 	}
 	
 	private function moveEntries($base,$callingElement,$result,$testRun){
 		$params=current($base['delayingparams']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('action'=>'Enties moved'),FALSE);
-			$entry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun);
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('action'=>'Enties moved'),FALSE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun);
 			$result['Delaying statistics']['Moved entries']['value']++;
 		}
 		return $result;
 	}
 	
 	private function sentEmail($base,$callingElement,$result,$testRun){
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
 			
 		}
 		return $result;
@@ -293,11 +291,11 @@ class DelayEntries{
 
 	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
+		$type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
 		$type.='|'.$callingFunction;
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
 		$entry['Content']=array();
 		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
 		return $arr;

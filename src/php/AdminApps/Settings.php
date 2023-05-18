@@ -44,11 +44,11 @@ class Settings{
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
 		} else {
-			$arr=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer($arr,__CLASS__);
+			$html=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
 			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			$settings=array();
 			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'Type','Filter'=>''));
-			$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','selectedView',$selector,$settings,array());
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','selectedView',$selector,$settings,array());
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}

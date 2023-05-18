@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class InboxEntries{
 	
-	private $arr;
+	private $oc;
 	
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -26,16 +26,15 @@ class InboxEntries{
 							 'stripos!'=>'does not contain',
 							);
 
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 
 	public function getEntryTable(){return $this->entryTable;}
@@ -47,7 +46,7 @@ class InboxEntries{
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
+		$callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -89,14 +88,14 @@ class InboxEntries{
 	}
 
 	private function getInboxEntriesWidget($callingElement){
-		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Inbox','generic',$callingElement,array('method'=>'getInboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox','generic',$callingElement,array('method'=>'getInboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getInboxEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runInboxEntries($arr['selector'],0);
 		} else if (isset($formData['cmd']['test'])){
@@ -111,9 +110,9 @@ class InboxEntries{
 		$btnArr['value']='Run';
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Inbox widget'));
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Inbox widget'));
 		foreach($result as $caption=>$matrix){
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+			$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
 		return $arr;
@@ -121,8 +120,8 @@ class InboxEntries{
 
 	private function getInboxEntriesSettings($callingElement){
 		$html='';
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Inbox entries settings','generic',$callingElement,array('method'=>'getInboxEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox entries settings','generic',$callingElement,array('method'=>'getInboxEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
 		}
 		return $html;
 	}
@@ -131,7 +130,7 @@ class InboxEntries{
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->inboxParams($arr['selector']);
 		$arr['callingClass']=$arr['selector']['Folder'];
-		if (isset($this->arr[$this->inboxClass])){$arr=$this->arr[$this->inboxClass]->dataSource($arr,'settingsWidget');}
+		if (isset($this->oc[$this->inboxClass])){$arr=$this->oc[$this->inboxClass]->dataSource($arr,'settingsWidget');}
 		$arr['html'].=$this->inboxConditionRules($arr['selector']);
 		$arr['html'].=$this->inboxForwardingRules($arr['selector']);
 		return $arr;
@@ -140,23 +139,23 @@ class InboxEntries{
 	private function inboxParams($callingElement){
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-		$options=$this->arr['SourcePot\Datapool\Root']->getRegisteredMethods('dataSource');
+		$options=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataSource');
 		$contentStructure=array('Inbox source'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
 								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		// get selctorB
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
 		$arr['selector']['Content']=array('Column to delay'=>'Name');
-		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
+		$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
+			$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 			// synchronize with data source
-			$callingElement['Content']['Selector']=$this->arr[$arr['selector']['Content']['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'selector');
-			$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($callingElement,TRUE);
+			$callingElement['Content']['Selector']=$this->oc[$arr['selector']['Content']['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'selector');
+			$callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($callingElement,TRUE);
 		}
 		// load inbox class
 		if (isset($arr['selector']['Content']['Inbox source'])){$this->inboxClass=$arr['selector']['Content']['Inbox source'];}
@@ -165,10 +164,10 @@ class InboxEntries{
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Forward entries from inbox';
 		$arr['noBtns']=TRUE;
-		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+		$row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
 		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
-		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+		return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 
 	private function inboxConditionRules($callingElement){
@@ -183,7 +182,7 @@ class InboxEntries{
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Define conditions';
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 		
@@ -207,7 +206,7 @@ class InboxEntries{
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Forwarding conditions';
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 
@@ -215,20 +214,20 @@ class InboxEntries{
 		$base=$this->getBaseArr($callingElement);
 		$inboxParams=current($base['inboxparams']);
 		$inboxParams=$inboxParams['Content'];
-		$meta=$this->arr[$inboxParams['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'meta');
+		$meta=$this->oc[$inboxParams['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'meta');
 		// loop through source entries and parse these entries
-		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		$result=array('Inbox statistics'=>array('Items processed'=>array('value'=>0),
 												'Itmes forwarded'=>array('value'=>0),
 												'Itmes already processed and skipped'=>array('value'=>0),
 												)
 					 );
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read','Date',FALSE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read','Date',FALSE) as $entry){
 			$result=$this->processEntry($entry,$base,$callingElement,$result,$testRun);
 			$result['Inbox statistics']['Items processed']['value']++;
 		}
-		if ($testRun){$result[$inboxParams['Inbox source']]=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);}
-		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+		if ($testRun){$result[$inboxParams['Inbox source']]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);}
+		$result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
 		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
 		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
@@ -237,7 +236,7 @@ class InboxEntries{
 	private function processEntry($entry,$base,$callingElement,$result,$testRun,$isDebugging=FALSE){
 		$userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
 		$params=current($base['inboxparams']);
-		$flatEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+		$flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
 		// process condition rules
 		if (empty($base['inboxconditionrules'])){
 			$result['Statistics']['Error']['value']='Condition rules missing';
@@ -257,7 +256,7 @@ class InboxEntries{
 				};
 				if ($conditionMet[$ruleId]){break;}
 			}
-			$ruleArr['Condition rule '.$ruleIndex]['Failed']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet[$ruleId]===FALSE);
+			$ruleArr['Condition rule '.$ruleIndex]['Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet[$ruleId]===FALSE);
 		}
 		// process forwarding rules
 		if (empty($base['inboxforwardingrules'])){
@@ -274,7 +273,7 @@ class InboxEntries{
 					break;
 				}
 			}
-			$ruleArr['Forward rule '.$ruleIndex]['Failed']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($forward[$ruleId]===FALSE);
+			$ruleArr['Forward rule '.$ruleIndex]['Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($forward[$ruleId]===FALSE);
 			if ($forward[$ruleId]){$forward[$ruleId]=$rule['Content']['Forward to'];}
 		}
 		// forward relevant entries
@@ -286,11 +285,11 @@ class InboxEntries{
 				$statisticsKey='Forwarding rule '.$ruleIndex.' success';
 				$targetSelector=$base['entryTemplates'][$forwardTo];
 				$processingLogText='Rule "'.$ruleId.'" condition met, forwarded entry to "'.implode(' &rarr; ',$targetSelector).'"';
-				$inboxEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('forwarded'=>$processingLogText),FALSE);
+				$inboxEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('forwarded'=>$processingLogText),FALSE);
 				if ($this->itemAlreadyProcessed($entry,$processingLogText)){
 					$result['Inbox statistics']['Itmes already processed and skipped']['value']++;
 				} else {
-					$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($inboxEntry,$targetSelector,TRUE,$testRun,TRUE,TRUE);
+					$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($inboxEntry,$targetSelector,TRUE,$testRun,TRUE,TRUE);
 					$result['Inbox statistics']['Itmes forwarded']['value']++;
 				}
 			} else {
@@ -312,7 +311,7 @@ class InboxEntries{
 		}
 		if ($isDebugging){
 			$debugArr['result']=$result;
-			$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $result;
 	}
@@ -330,11 +329,11 @@ class InboxEntries{
 	
 	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
+		$type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
 		$type.='|'.$callingFunction;
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
 		$entry['Content']=array();
 		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
 		return $arr;
@@ -343,7 +342,7 @@ class InboxEntries{
 	private function getBaseArr($callingElement){
 		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
 			$key=array_pop($key);
 			$base[$key][$entry['EntryId']]=$entry;
@@ -351,7 +350,7 @@ class InboxEntries{
 			foreach($entry['Content'] as $contentKey=>$content){
 				if (is_array($content)){continue;}
 				if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-				$template=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
+				$template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
 				if ($template){$base['entryTemplates'][$content]=$template;}
 			}
 		}

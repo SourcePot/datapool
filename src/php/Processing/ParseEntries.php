@@ -14,7 +14,7 @@ class ParseEntries{
 	
 	use \SourcePot\Datapool\Traits\Conversions;
 	
-	private $arr;
+	private $oc;
 
 	private $entryTable='';
 	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -24,16 +24,15 @@ class ParseEntries{
 	private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
 	private $sections=array(0=>'all sections');
 	
-	public function __construct($arr){
-		$this->arr=$arr;
+	public function __construct($oc){
+		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($arr){
-		$this->arr=$arr;	
-		$this->entryTemplate=$arr['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->arr;
+	public function init($oc){
+		$this->oc=$oc;	
+		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 	
 	public function getEntryTable(){return $this->entryTable;}
@@ -45,7 +44,7 @@ class ParseEntries{
 		// $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
 		// If the requested action does not exist the method returns FALSE and 
 		// TRUE, a value or an array otherwise.
-		$callingElement=$this->arr['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
+		$callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
 		switch($action){
 			case 'run':
 				if (empty($callingElement)){
@@ -87,14 +86,14 @@ class ParseEntries{
 	}
 
 	private function getParseEntriesWidget($callingElement){
-		return $this->arr['SourcePot\Datapool\Foundation\Container']->container('Parsing','generic',$callingElement,array('method'=>'getParseEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing','generic',$callingElement,array('method'=>'getParseEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
 	}
 	
 	public function getParseEntriesWidgetHtml($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
 		// command processing
 		$result=array();
-		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		if (isset($formData['cmd']['run'])){
 			$result=$this->runParseEntries($arr['selector'],FALSE);
 		} else if (isset($formData['cmd']['test'])){
@@ -109,9 +108,9 @@ class ParseEntries{
 		$btnArr['value']='Run';
 		$btnArr['key']=array('run');
 		$matrix['Commands']['Run']=$btnArr;
-		$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Parsing widget'));
+		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Parsing widget'));
 		foreach($result as $caption=>$matrix){
-			$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+			$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
 		}
 		$arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
 		return $arr;
@@ -119,8 +118,8 @@ class ParseEntries{
 
 	private function getParseEntriesSettings($callingElement){
 		$html='';
-		if ($this->arr['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-			$html.=$this->arr['SourcePot\Datapool\Foundation\Container']->container('Parsing entries settings','generic',$callingElement,array('method'=>'getParseEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing entries settings','generic',$callingElement,array('method'=>'getParseEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
 		}
 		return $html;
 	}
@@ -130,8 +129,8 @@ class ParseEntries{
 		$arr['html'].=$this->parserParams($arr['selector']);
 		$arr['html'].=$this->parserSectionRules($arr['selector']);
 		$arr['html'].=$this->parserRules($arr['selector']);
-		//$selectorMatrix=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-		//$arr['html'].=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for parsing'));
+		//$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
+		//$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for parsing'));
 		return $arr;
 	}
 
@@ -144,23 +143,23 @@ class ParseEntries{
 		$contentStructure['Source column']+=$callingElement['Content']['Selector'];
 		// get selector
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
-		$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
+		$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
 		// form processing
-		$formData=$this->arr['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
 		$elementId=key($formData['val']);
 		if (isset($formData['cmd'][$elementId])){
 			$arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-			$arr['selector']=$this->arr['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
+			$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// get HTML
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Parser control: Select parser target and type';
 		$arr['noBtns']=TRUE;
-		$row=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+		$row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
 		if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
 		$matrix=array('Parameter'=>$row);
-		return $this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+		return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
 	}
 	
 	private function parserSectionRules($callingElement){
@@ -171,14 +170,14 @@ class ParseEntries{
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Provide rules to divide the text into sections.';
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 
 	private function parserRules($callingElement){
 		// complete section selector
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Type'=>'%|parsersectionrules');
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
 		}
 		//
@@ -198,14 +197,14 @@ class ParseEntries{
 		$arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Parser rules: Parse selected entry and copy result to target entry';
-		$html=$this->arr['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $html;
 	}
 
 	private function runParseEntries($callingElement,$testRun=FALSE){
 		$base=array('Script start timestamp'=>hrtime(TRUE));
 		$entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
 			$key=explode('|',$entry['Type']);
 			$key=array_pop($key);
 			$base[$key][$entry['EntryId']]=$entry;
@@ -213,14 +212,14 @@ class ParseEntries{
 			foreach($entry['Content'] as $contentKey=>$content){
 				if (is_array($content)){continue;}
 				if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-				$template=$this->arr['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
+				$template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
 				if ($template){$base['entryTemplates'][$content]=$template;}
 			}
 		}
 		// loop through source entries and parse these entries
-		$this->arr['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 		$result=array('Parser statistics'=>array('Entries'=>array('value'=>0),'Success'=>array('value'=>0),'Failed'=>array('value'=>0),'No text, skipped'=>array('value'=>0),'Skip rows'=>array('value'=>0)));
-		foreach($this->arr['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
 			if ($entry['isSkipRow']){
 				$result['Parser statistics']['Skip rows']['value']++;
 				continue;
@@ -228,7 +227,7 @@ class ParseEntries{
 			$result['Parser statistics']['Entries']['value']++;
 			$result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
 		}
-		$result['Statistics']=$this->arr['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+		$result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
 		$result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
 		$result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
 		return $result;
@@ -238,7 +237,7 @@ class ParseEntries{
 		$params=current($base['parserparams']);
 		$params=$params['Content'];
 		// get source text
-		$flatSourceEntry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
+		$flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
 		$parserFailed='';
 		if (isset($flatSourceEntry[$params['Source column']])){
 			$fullText=$flatSourceEntry[$params['Source column']];
@@ -329,8 +328,8 @@ class ParseEntries{
 																  'Section name'=>$sectionName,
 																  'Match'=>$matchText,
 																  'Removed match'=>$matchRemoved,
-																  'Match required'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element($matchRequired),
-																  'Rule failed'=>$this->arr['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($ruleFailed) && $matchRequired),
+																  'Match required'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($matchRequired),
+																  'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($ruleFailed) && $matchRequired),
 																  );
 				}
 				if (!empty($ruleFailed) && $matchRequired){
@@ -357,14 +356,14 @@ class ParseEntries{
 				ksort($value);
 				$sourceEntry[$key]=implode('|',$value);
 			}
-			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
-			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on success']],TRUE,$testRun);
-			$result['Sample result (success)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+			$sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
+			$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on success']],TRUE,$testRun);
+			$result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		} else {
 			$result['Parser statistics']['Failed']['value']++;
-			$sourceEntry=$this->arr['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($parserFailed,'| ')),FALSE);
-			$targetEntry=$this->arr['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
-			$result['Sample result (failure)']=$this->arr['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+			$sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($parserFailed,'| ')),FALSE);
+			$targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
+			$result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
 		}
 		return $result;
 	}
@@ -394,11 +393,11 @@ class ParseEntries{
 	
 	public function callingElement2arr($callingClass,$callingFunction,$callingElement){
 		if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-		$type=$this->arr['SourcePot\Datapool\Root']->class2source(__CLASS__);
+		$type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
 		$type.='|'.$callingFunction;
 		$entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-		$entry=$this->arr['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-		$entry=$this->arr['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
 		$entry['Content']=array();
 		$arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
 		return $arr;

@@ -269,6 +269,7 @@ class DataExplorer{
 				$rowCountSelector=$canvasElement['Content']['Selector'];
 				if (!empty($rowCountSelector['Type'])){$rowCountSelector['Type'].='%';}
 				$rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE);
+				$this->oc['SourcePot\Datapool\Foundation\Signals']->canvasElement2signal($canvasElement,$rowCount);
 			}
 		}
 		// canvas element

@@ -109,35 +109,7 @@ class Calendar{
 
 	public function job($vars){
 		$events=$this->getEvents(time(),TRUE);
-		$trigger=array();
-		$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger');
-		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read') as $triggerId=>$entry){
-			$triggerId=$entry['Source'].'|'.$entry['EntryId'];
-			$trigger[$triggerId]=array('detected event last time'=>$vars['trigger'][$triggerId]['detected event']??FALSE,
-									   'detected event'=>FALSE,
-									   'risingSlope'=>boolval($entry['Content']['Slope']),
-									   'trigger name'=>$entry['Content']['Trigger name'],
-									   'selector'=>array('Source'=>$entry['Source'],'Group'=>$entry['Group'],'Folder'=>$entry['Folder'],'EntryId'=>$entry['EntryId']),
-									   'active'=>$vars['trigger'][$triggerId]['active']??FALSE
-									   );
-			foreach($events as $event){
-				if (strcmp($event['State'],'Finnishing event')!==0){continue;}
-				if (empty($entry['Content']['Event folder']) || strcmp($event['Folder'],$entry['Content']['Event folder'])===0){
-					if (empty($entry['Content']['Event name']) || strcmp($event['Name'],$entry['Content']['Event name'])===0){
-						$trigger[$triggerId]['detected event']=TRUE;
-						break;
-					}
-				}
-			}
-		}
-		foreach($trigger as $triggerId=>$triggerArr){
-			if ($triggerArr['risingSlope']){
-				if (!$triggerArr['detected event last time'] && $triggerArr['detected event']){$trigger[$triggerId]['active']=TRUE;}
-			} else {
-				if ($triggerArr['detected event last time'] && !$triggerArr['detected event']){$trigger[$triggerId]['active']=TRUE;}
-			}
-		}
-		$vars['trigger']=$trigger;
+		$this->oc['SourcePot\Datapool\Foundation\Signals']->event2signal(__CLASS__,__FUNCTION__,$events);
 		return $vars;
 	}
 
@@ -165,8 +137,6 @@ class Calendar{
 			$html='';
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$currentUser=$this->oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
-			$triggerSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Trigger','Folder'=>$currentUser['EntryId'],'refreshInterval'=>300);
-			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger '.__FUNCTION__,'generic',$triggerSelector,array('method'=>'getTriggerHtml','classWithNamespace'=>__CLASS__),array('style'=>array()));
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
@@ -351,6 +321,7 @@ class Calendar{
 			if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
 			$style['left']=$event['x0'];
 			$style['width']=$event['x1']-$event['x0']-2;
+			if ($style['width']<10){$style['width']=10;}
 			$class='calendar-event';
 			if (!empty($this->pageState['EntryId'])){
 				if (strcmp($EntryId,$this->pageState['EntryId'])===0){
@@ -523,93 +494,6 @@ class Calendar{
 		}
 		return $entry;
 	}
-	
-	public function getTriggerHtml($arr){
-		$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Signal A',mt_rand(1,100));
-		$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Signal B',mt_rand(1,100));
-		$html=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerWidget(__CLASS__,__FUNCTION__);
-		return array('html'=>$html);
-	}
-	
-	public function _getTriggerHtml($arr){
-		$html='';
-		$eventSelector=array('Source'=>$this->getEntryTable(),'Group'=>'Events');
-		// form processing
-		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-		if (isset($formData['cmd']['Reset'])){
-			$this->resetTrigger(key($formData['cmd']['Reset']));
-		}
-		if (isset($formData['changed']['Folder'])){$formData['val']['Name']='';}
-		$eventSelector=array_merge($eventSelector,$formData['val']);
-		// get selector
-		$matrix=array();
-		$selectArr=array('hasSelectBtn'=>FALSE,'excontainer'=>FALSE,'keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
-		foreach(array('Folder','Name') as $column){
-			$selectArr['key']=array($column);
-			$selectArr['options']=array(''=>'&larrhk;');
-			if (isset($eventSelector[$column])){$selectArr['selected']=$eventSelector[$column];}
-			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($eventSelector,$column,FALSE,'Read',$column) as $row){
-				$selectArr['options'][$row[$column]]=ucfirst($row[$column]);
-			}
-			$matrix['Selector'][$column]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-			if (empty($selectArr['selected'])){break;}
-		}
-		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Event selection','keep-element-content'=>TRUE));
-		// get trigger
-		$triggerInitName='Trigger '.hrtime(TRUE);
-		$eventSelectorString=implode('|',$eventSelector);
-		$contentStructure=array('Trigger name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','value'=>$triggerInitName,'excontainer'=>TRUE),
-								'Event selector'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'hidden','value'=>$eventSelectorString,'excontainer'=>TRUE),
-								'Slope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>1,'options'=>$this->slopeOptions),
-								);
-		$currentUser=$this->oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
-		$listArr=$arr;
-		$listArr['canvasCallingClass']=__CLASS__;
-		$listArr['contentStructure']=$contentStructure;
-		$listArr['caption']='Event trigger';
-		$listArr['callingClass']=__CLASS__;
-		$listArr['callingFunction']=__FUNCTION__;
-		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($listArr);
-		// get current trigger state
-		$btnArr=array_replace_recursive($arr,array('tag'=>'button','element-content'=>'Reset','keep-element-content'=>TRUE));
-		$matrix=array();
-		$triggerArr=$this->getTrigger();
-		foreach($triggerArr['trigger'] as $triggerId=>$trigger){
-			if (strcmp($trigger['selector']['Folder'],$arr['selector']['Folder'])!==0){continue;}
-			$matrix[$trigger['trigger name']]=array('Slope'=>$this->slopeOptions[intval($trigger['risingSlope'])]);
-			$matrix[$trigger['trigger name']]['Past status']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event last time']);
-			$matrix[$trigger['trigger name']]['Current status']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['detected event']);
-			$matrix[$trigger['trigger name']]['Active']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($trigger['active']);
-			$btnArr['key']=array('Reset',$triggerId);
-			$matrix[$trigger['trigger name']]['Reset']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-		}
-		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Trigger status','keep-element-content'=>TRUE));
-		$arr['html']=$html;
-		return $arr;
-	}
-	
-	public function resetTrigger($triggerId){
-		$vars=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
-		$vars['trigger'][$triggerId]['active']=FALSE;
-		return $this->oc['SourcePot\Datapool\AdminApps\Settings']->setVars(__CLASS__,$vars,TRUE);
-	}
-	
-	public function getTrigger(){
-		$return=array('options'=>array(''=>'&rArr;'),'trigger'=>array());
-		$return=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getVars(__CLASS__,array(),TRUE);
-		if (empty($return['trigger'])){
-			$return=array('trigger'=>array(),'options'=>array(),'isActive'=>array());
-		} else {
-			foreach($return['trigger'] as $triggerId=>$trigger){
-				$return['options'][$triggerId]=$trigger['selector']['Source'].' &rarr; '.$trigger['trigger name'];
-				$return['isActive'][$triggerId]=$trigger['active'];
-			}
-			if (isset($return['events'])){unset($return['events']);}
-		}
-		//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($return);
-		return $return;
-	}
-	
 
 }
 ?>
