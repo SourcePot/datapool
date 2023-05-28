@@ -310,13 +310,15 @@ jQuery(document).ready(function(){
 
 // entry shuffle
 	var entryShuffleEntries={};
-	jQuery("div.preview").each(function(entryIndex){
-		var id=jQuery(this).attr('id');
-		var containerId=id.split('-').pop();
-		if (containerId in entryShuffleEntries===false){entryShuffleEntries[containerId]= new Map();}
-		entryShuffleEntries[containerId].set(id,jQuery(this).css('z-index'));
-		//entryShuffleEntries[containerId][id]=jQuery(this).css('z-index');
-	});
+	initShuffleEntriesMap();
+	function initShuffleEntriesMap(){
+		jQuery("div.preview").each(function(entryIndex){
+			var id=jQuery(this).attr('id');
+			var containerId=id.split('-').pop();
+			if (containerId in entryShuffleEntries===false){entryShuffleEntries[containerId]= new Map();}
+			entryShuffleEntries[containerId].set(id,jQuery(this).css('z-index'));
+		});
+	}
 	
 	function entryShuffleEntriesPrev(containerId){
 		var toResetId=false,toSetId=false,firstId=false;
@@ -349,17 +351,21 @@ jQuery(document).ready(function(){
 	}
 		
 // js button
-	jQuery('.js-button').on('click',function(e){
-		var idCmps=jQuery(this).attr('id').split('-');
-		var cmd=idCmps.pop(),containerId=idCmps.pop(),method=idCmps.pop();
-		if (method.localeCompare('getImageShuffle')===0){
-			if (cmd.localeCompare('next')){
-				entryShuffleEntriesNext(containerId);
-			} else if (cmd.localeCompare('prev')){
-				entryShuffleEntriesPrev(containerId);
+	initJsButtonEvents();
+	function initJsButtonEvents(){
+		jQuery('.js-button').unbind('click');
+		jQuery('.js-button').on('click',function(e){
+			var idCmps=jQuery(this).attr('id').split('-');
+			var cmd=idCmps.pop(),containerId=idCmps.pop(),method=idCmps.pop();
+			if (method.localeCompare('getImageShuffle')===0){
+				if (cmd.localeCompare('next')){
+					entryShuffleEntriesNext(containerId);
+				} else if (cmd.localeCompare('prev')){
+					entryShuffleEntriesPrev(containerId);
+				}
 			}
-		}
-	});
+		});
+	}
 	
 // canvas interactivity
 	initDraggable();
@@ -468,6 +474,8 @@ jQuery(document).ready(function(){
 		addEmojiEvent();
 		addSymbolLoginEvents();
 		loadImageData();
+		initShuffleEntriesMap();
+		initJsButtonEvents();
 	}
 	
 });
