@@ -308,6 +308,59 @@ jQuery(document).ready(function(){
 		});
 	}
 
+// entry shuffle
+	var entryShuffleEntries={};
+	jQuery("div.preview").each(function(entryIndex){
+		var id=jQuery(this).attr('id');
+		var containerId=id.split('-').pop();
+		if (containerId in entryShuffleEntries===false){entryShuffleEntries[containerId]= new Map();}
+		entryShuffleEntries[containerId].set(id,jQuery(this).css('z-index'));
+		//entryShuffleEntries[containerId][id]=jQuery(this).css('z-index');
+	});
+	
+	function entryShuffleEntriesPrev(containerId){
+		var toResetId=false,toSetId=false,firstId=false;
+		for (let keyValueArr of Array.from(entryShuffleEntries[containerId]).reverse()){
+			var key=keyValueArr[0],value=parseInt(keyValueArr[1]);
+			if (firstId===false){firstId=key;}
+			if (toResetId!==false && toSetId===false){toSetId=key;}
+			if (value>1){toResetId=key;}
+		}
+		if (toSetId===false){toSetId=firstId;}
+		jQuery('#'+toResetId).css('z-index','1');
+		entryShuffleEntries[containerId].set(toResetId,1);
+		jQuery('#'+toSetId).css('z-index','2');
+		entryShuffleEntries[containerId].set(toSetId,2);
+	}
+
+	function entryShuffleEntriesNext(containerId){
+		var toResetId=false,toSetId=false,firstId=false;
+		for (let keyValueArr of Array.from(entryShuffleEntries[containerId])){
+			var key=keyValueArr[0],value=parseInt(keyValueArr[1]);
+			if (firstId===false){firstId=key;}
+			if (toResetId!==false && toSetId===false){toSetId=key;}
+			if (value>1){toResetId=key;}
+		}
+		if (toSetId===false){toSetId=firstId;}
+		jQuery('#'+toResetId).css('z-index','1');
+		entryShuffleEntries[containerId].set(toResetId,1);
+		jQuery('#'+toSetId).css('z-index','2');
+		entryShuffleEntries[containerId].set(toSetId,2);
+	}
+		
+// js button
+	jQuery('.js-button').on('click',function(e){
+		var idCmps=jQuery(this).attr('id').split('-');
+		var cmd=idCmps.pop(),containerId=idCmps.pop(),method=idCmps.pop();
+		if (method.localeCompare('getImageShuffle')===0){
+			if (cmd.localeCompare('next')){
+				entryShuffleEntriesNext(containerId);
+			} else if (cmd.localeCompare('prev')){
+				entryShuffleEntriesPrev(containerId);
+			}
+		}
+	});
+	
 // canvas interactivity
 	initDraggable();
 	function initDraggable(){

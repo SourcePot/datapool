@@ -527,5 +527,25 @@ class Container{
 		return $arr;
 	}
 
+	public function getImageShuffle($arr){
+		if (!isset($arr['html'])){$arr['html']='';}
+		$settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'Date','isAsc'=>TRUE,'limit'=>20,'offset'=>0,'maxDim'=>'320px');
+		$settings=array_merge($settingsTemplate,$arr['settings']);
+		$entrySelector=$arr['selector'];
+		$entrySelector['Type']='%image%';
+		$arr['wrapperStyle']=array('cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'width'=>$settings['maxDim'],'height'=>$settings['maxDim'],'background-color'=>'#fff','z-index'=>2);
+		$arr['style']=array('float'=>'none','display'=>'block','margin'=>'0 auto');
+		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entrySelector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
+			$arr['selector']=$entry;
+			$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
+			if ($arr['wrapperStyle']['z-index']===2){$arr['wrapperStyle']['z-index']=1;}
+		}
+		$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$settings['maxDim'],'height'=>$settings['maxDim'])));
+		$btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'<<','id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>array('clear'=>'left')));
+		$btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'>>','id'=>__FUNCTION__.'-'.$arr['containerId'].'-next','class'=>'js-button','style'=>array('float'=>'right')));
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$settings['maxDim'])));
+		return $arr;
+	}
+
 }
 ?>

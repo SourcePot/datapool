@@ -132,7 +132,7 @@ input[type=submit].bottom-menu:hover{
 	color:#c00;
 	background:none;
 }
-button,input,textarea,select,a.btn{
+button,input,textarea,select,a.btn,.js-button{
 	float:left;
 	padding:0.4em;
 	margin: 0 0.2em;
@@ -327,12 +327,16 @@ summary{
 	min-width:3em;
 	width:100%;
 	font-size:1.4em;
+	line-height:1.8em;
 	color:#444;
 	border-bottom:1px solid #444;
 }
 summary.forum,summary.toolbox{
-	width:100%;
 	margin:0;
+}
+summary.toolbox{
+	margin:0;
+	line-height:initial;
 }
 summary.app:hover,summary.forum:hover,summary.toolbox{
 	cursor:pointer;
@@ -532,7 +536,7 @@ a.emoji{
 	font-size:2em;
 	color:#000;
 }
-button:hover,input[type=submit]:hover,a.btn:hover{
+button:hover,input[type=submit]:hover,a.btn:hover,.js-button:hover{
 	cursor:pointer;
 	color:#fff;
 	background-color:#000;

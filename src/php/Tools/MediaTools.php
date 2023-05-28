@@ -40,9 +40,10 @@ class MediaTools{
 				$arr=$this->getVideo($arr);
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
 				$imageHtml=$this->getImage($arr);
-				$id=md5('wrapper'.$arr['selector']['Source'].$arr['selector']['EntryId']);
+				$id='img-'.md5($arr['selector']['EntryId']);
+				if (isset($arr['containerId'])){$id.='-'.$arr['containerId'];}
 				$imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'class'=>'preview','id'=>$id,'source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
-				$imageArr['style']=array('cursor'=>'pointer','padding'=>'3px');
+				$imageArr['style']=(isset($arr['wrapperStyle']))?$arr['wrapperStyle']:array('cursor'=>'pointer','padding'=>'3px');
 				$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
 				if ($isSmallPreview){
