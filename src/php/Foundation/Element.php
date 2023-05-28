@@ -18,7 +18,10 @@ class Element{
 								 'dir'=>FALSE,'draggable'=>FALSE,'enterkeyhint'=>FALSE,'hidden'=>FALSE,'id'=>FALSE,'inert'=>FALSE,'inputmode'=>FALSE,'is'=>FALSE,
 								 'itemid'=>FALSE,'itemprop'=>FALSE,'itemref'=>FALSE,'itemscope'=>FALSE,'itemtype'=>FALSE,'lang'=>FALSE,'nonce'=>FALSE,'part'=>FALSE,
 								 'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,'translate'=>FALSE,
-								 'virtualkeyboardpolicy'=>FALSE),
+								 'virtualkeyboardpolicy'=>FALSE,
+								 'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,'font'=>FALSE,'clip-path'=>FALSE,
+								 'version'=>FALSE,'xmlns'=>FALSE,
+								),
 					   // Forms
 					   'button'=>array('name'=>TRUE),
 					   'datalist'=>array('name'=>TRUE),
@@ -62,10 +65,16 @@ class Element{
 					   'object'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'script'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-					   'svg'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
+					   'svg'=>array('src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'video'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'source'=>array('src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					  
+					   'path'=>array('d'=>TRUE),
+					   'circle'=>array('r'=>3,'cx'=>TRUE,'cy'=>TRUE),
+					   'text'=>array('x'=>TRUE,'y'=>TRUE),
+					   'rect'=>array('x'=>TRUE,'y'=>TRUE,'width'=>TRUE,'height'=>TRUE),
+					   'clipPath'=>array(),
+					   'use'=>array(),
 					   );
 	
 	private $specialAttr=array('function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'excontainer'=>FALSE,'container'=>FALSE,'cell'=>FALSE,

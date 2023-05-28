@@ -32,6 +32,7 @@ class Admin{
 			$html='';
 			$html.=$this->tableViewer();
 			$html.=$this->backupArticle();
+			$html.=$this->adminChart();
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}
@@ -112,5 +113,9 @@ class Admin{
 		return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
 	}
 	
+	private function adminChart(){
+		$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test cahrt','generic',array('refreshInterval'=>10),array('classWithNamespace'=>'SourcePot\Datapool\Foundation\LinearChart','method'=>'getTestChart'),array());	
+		return $html;
+	}
 }
 ?>

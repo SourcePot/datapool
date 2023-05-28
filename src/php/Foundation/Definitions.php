@@ -170,6 +170,9 @@ class Definitions{
 			foreach($element as $definitionAttr=>$definitionValue){
 				$element[$definitionAttr]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definitionValue);
 			}
+			$element['Read']=(isset($entry['Read']))?$entry['Read']:'ADMIN_R';
+			$element['Write']=(isset($entry['Write']))?$entry['Write']:'ADMIN_R';
+			$element['Owner']=(isset($entry['Owner']))?$entry['Owner']:'ANONYM';
 			$element['key']=$selectorKeyComps;
 			$element['callingClass']=$callingClass;
 			$element['callingFunction']=$callingFunction;
@@ -319,8 +322,7 @@ class Definitions{
 		// check read access
 		$access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read');
 		if (!$access){
-			return array();
-			return array('tag'=>'p','element-content'=>'Read access denied');
+			return array('tag'=>'p','element-content'=>'&#128274;','keep-element-content'=>TRUE);
 		}
 		// check if element requests method
 		if (!empty($element['function'])){

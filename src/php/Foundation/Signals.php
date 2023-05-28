@@ -213,7 +213,6 @@ class Signals{
 			$this->updateSignal($callingClass,$callingFunction,$event['Name'],$isActive,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');			
 		}
 		// set value of past events
-		$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($currentEventNames);
 		$signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction);
 		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,FALSE,'Read','Name') as $signal){
 			if (isset($currentEventNames[$signal['Name']])){continue;}
