@@ -510,6 +510,10 @@ class MediaTools{
 	}
 	
 	private function resetScaleImage($arr){
+		$arr['width']='auto';
+		$arr['height']='auto';
+		if (isset($arr['newWidth'])){unset($arr['newWidth']);}
+		if (isset($arr['newHeight'])){unset($arr['newHeight']);}
 		if (isset($arr['minDim'])){unset($arr['minDim']);}
 		if (isset($arr['maxDim'])){unset($arr['maxDim']);}
 		if (isset($arr['style']['max-width'])){unset($arr['style']['max-width']);}

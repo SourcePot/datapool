@@ -55,8 +55,14 @@ class Multimedia{
 		} else {
 			$arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
 			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
-			$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Multimedia entries','selectedView',$selector,$settings,array());
+			if (empty($selector['Group'])){
+				$wrapperSetting=array('style'=>array('padding'=>'10px'));
+				$setting=array('width'=>320,'height'=>300);
+				$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
+			} else {
+				$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
+				$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Multimedia entries','selectedView',$selector,$settings,array());
+			}
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}

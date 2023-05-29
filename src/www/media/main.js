@@ -333,6 +333,8 @@ jQuery(document).ready(function(){
 				animateImage(this,'marginLeft',0,width['wrapper']-width['img'],imageWidth,triggerNext[containerId]);
 			} else if (height['img']>height['wrapper']){
 				animateImage(this,'marginTop',0,height['wrapper']-height['img'],imageWidth,triggerNext[containerId]);
+			} else {
+				animateImage(this,'marginTop',0,-50,imageWidth,triggerNext[containerId]);
 			}
 			triggerNext[containerId]=false;
 		});

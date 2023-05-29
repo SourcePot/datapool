@@ -48,9 +48,6 @@ private $entryTable;
 			return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
 		} else {
 			$html='';
-			// Add image shuffle
-			//$selector=array('Source'=>'multimedia','Type'=>'%image%');
-			//$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,array('A'=>'Test A'),array('B'=>'Test B'));
 			// Add content
 			$selector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
 			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $section){
