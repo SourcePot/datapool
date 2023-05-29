@@ -143,6 +143,7 @@ button,input,textarea,select,a.btn,.js-button{
 	border-top:1px solid #888;
 	border-right:1px solid #555;
 	border-bottom:1px solid #555;
+	text-align:center;
 }
 select{
 	max-width:280px;

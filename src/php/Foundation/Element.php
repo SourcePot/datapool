@@ -97,31 +97,6 @@ class Element{
 		$this->oc=$oc;
 	}
 
-	public function testing($arr){
-		$this->formProcessing(__CLASS__,__FUNCTION__);
-		$html=$this->element(array('tag'=>'input','type'=>'file','key'=>array('Content','Files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('margin'=>'50px 10px'),'multiple'=>TRUE));
-		$html.=$this->element(array('tag'=>'input','type'=>'text','key'=>array('Content','Text A'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('margin'=>'50px 10px')));
-		$html.=$this->element(array('tag'=>'input','type'=>'text','key'=>array('Content','Text B'),'value'=>'Hallo','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('margin'=>'50px 10px')));
-		$element=array('tag'=>'textarea','element-content'=>'Textarea...','key'=>array('Content','Long text'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('margin'=>'50px 10px'));
-		$html.=$this->element($element);
-		
-		$options=array('\C\a\r\s\t\e\n'=>'Carsten','\K\l\a\u\s'=>'Klaus');
-		$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>'\K\l\a\u\s','key'=>array('Content','Name'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-		
-		
-		
-		$element=array('tag'=>'button','element-content'=>'S<i>av</i>e','keep-element-content'=>TRUE,'key'=>array('Content','Button','1234'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('margin'=>'50px 10px'));
-		$element['hasCover']=TRUE;
-		$element['Source']='user';
-		$element['EntryId']='84632jhgj4h234j2';
-		$html.=$this->element($element);
-		$html=$this->element(array('tag'=>'form','element-content'=>$html,'keep-element-content'=>TRUE));
-		
-		$arr['toReplace']['{{body}}']=$html;
-		
-		return $arr;
-	}
-	
 	public function element($arr):string{
 		if (empty($arr['tag'])){
 			//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);

@@ -527,25 +527,43 @@ class Container{
 		return $arr;
 	}
 
-	public function getImageShuffle($arr){
+	public function getImageShuffle($arr,$isDebugging=FALSE){
 		if (!isset($arr['html'])){$arr['html']='';}
-		$settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'Date','isAsc'=>TRUE,'limit'=>20,'offset'=>0,'maxDim'=>'320px');
+		$settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'Date','isAsc'=>FALSE,'limit'=>20,'offset'=>0,'width'=>600,'height'=>400,'autoShuffle'=>TRUE);
 		$settings=array_merge($settingsTemplate,$arr['settings']);
+		$debugArr=array('arr'=>$arr,'settings'=>$settings);
 		$entrySelector=$arr['selector'];
 		$entrySelector['Type']='%image%';
-		$arr['wrapperStyle']=array('cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'width'=>$settings['maxDim'],'height'=>$settings['maxDim'],'background-color'=>'#fff','z-index'=>2);
+		$arr['wrapperStyle']=array('cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'width'=>$settings['width'],'height'=>$settings['height'],'background-color'=>'#fff','z-index'=>2);
 		$arr['style']=array('float'=>'none','display'=>'block','margin'=>'0 auto');
+		$entry=array('rowCount'=>0,'rowIndex'=>0);
 		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entrySelector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
 			$arr['selector']=$entry;
+			$imgFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+			if ($settings['autoShuffle']){
+				$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToCover($arr,$imgFile,$settings);
+			} else {
+				$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToContain($arr,$imgFile,$settings);
+			}
 			$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
 			if ($arr['wrapperStyle']['z-index']===2){$arr['wrapperStyle']['z-index']=1;}
 		}
-		$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$settings['maxDim'],'height'=>$settings['maxDim'])));
-		$btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'<<','id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>array('clear'=>'left')));
-		$btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'>>','id'=>__FUNCTION__.'-'.$arr['containerId'].'-next','class'=>'js-button','style'=>array('float'=>'right')));
-		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$settings['maxDim'])));
+		if (!empty($entry['rowCount'])){
+			$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$settings['width'],'height'=>$settings['height'])));
+			// button div
+			$btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>array('clear'=>'left','min-width'=>'8em','padding'=>'3px 0')));
+			$btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>' ','id'=>__FUNCTION__.'-'.$arr['containerId'].'-info','style'=>array('clear'=>'none')));
+			$btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10095;&#10095;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-next','class'=>'js-button','style'=>array('float'=>'right','min-width'=>'8em','padding'=>'3px 0')));
+			$btnWrapper=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$settings['width'],'margin'=>'10px 0'));
+			if ($settings['autoShuffle']){$btnWrapper['style']['display']='none';}
+			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
+		}
+		if ($isDebugging){
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+		}
+		
 		return $arr;
 	}
-
+	
 }
 ?>

@@ -23,11 +23,7 @@ class ExifTools{
 	}
 
 	public function addExif2entry($entry,$file){
-		if (!is_file($file)){return $entry;}
-		if (!function_exists('exif_read_data')){return $entry;}
-		$exif=@exif_read_data($file,'IFD0');
-		if (empty($exif)){return $entry;}
-		$entry['exif']=$exif;
+		$entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addExif2entry($entry,$file);
 		$entry=$this->addMimeType($entry);
 		$entry=$this->addOrientation($entry);
 		$entry=$this->addCamera($entry);

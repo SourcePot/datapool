@@ -320,7 +320,42 @@ jQuery(document).ready(function(){
 		});
 	}
 	
+	initShuffleImages();
+	function initShuffleImages(){
+		var triggerNext={};
+		jQuery("img[function=getImageShuffle]").each(function(entryIndex){
+			var id=jQuery(this).attr('id'),imageWidth=jQuery(this).width();
+			var width={'wrapper':jQuery(this).parent().width(),'img':jQuery(this).width()};
+			var height={'wrapper':jQuery(this).parent().height(),'img':jQuery(this).height()};
+			var containerId=jQuery(this).attr('container-id');
+			if (!(containerId in triggerNext)){triggerNext[containerId]=true;}
+			if (width['img']>width['wrapper']){
+				animateImage(this,'marginLeft',0,width['wrapper']-width['img'],imageWidth,triggerNext[containerId]);
+			} else if (height['img']>height['wrapper']){
+				animateImage(this,'marginTop',0,height['wrapper']-height['img'],imageWidth,triggerNext[containerId]);
+			}
+			triggerNext[containerId]=false;
+		});
+	}
+	
+	function animateImage(selector,property,start,end,width,triggerNext){
+		jQuery(selector).animate(
+			{[property]:(end+'px'),'width':1.1*width},
+			{'duration':7000,
+			 'easing':"linear",
+			 'complete':function(){
+							if (triggerNext){
+								var nextBtnSelector='#getImageShuffle-'+jQuery(selector).attr('container-id')+'-next';
+								jQuery(nextBtnSelector).click();
+							}
+							jQuery(selector).css({[property]:(start+'px'),'width':width});
+							animateImage(selector,property,start,end,width,triggerNext);
+						}
+			});
+	}
+	
 	function entryShuffleEntriesPrev(containerId){
+		if (!(containerId in entryShuffleEntries)){return false;}
 		var toResetId=false,toSetId=false,firstId=false;
 		for (let keyValueArr of Array.from(entryShuffleEntries[containerId]).reverse()){
 			var key=keyValueArr[0],value=parseInt(keyValueArr[1]);
@@ -333,9 +368,13 @@ jQuery(document).ready(function(){
 		entryShuffleEntries[containerId].set(toResetId,1);
 		jQuery('#'+toSetId).css('z-index','2');
 		entryShuffleEntries[containerId].set(toSetId,2);
+		var infoSelector='#getImageShuffle-'+containerId+'-info';
+		jQuery(infoSelector).text(jQuery('#'+toSetId).attr('title'));
+		return true;
 	}
 
 	function entryShuffleEntriesNext(containerId){
+		if (!(containerId in entryShuffleEntries)){return false;}
 		var toResetId=false,toSetId=false,firstId=false;
 		for (let keyValueArr of Array.from(entryShuffleEntries[containerId])){
 			var key=keyValueArr[0],value=parseInt(keyValueArr[1]);
@@ -348,6 +387,9 @@ jQuery(document).ready(function(){
 		entryShuffleEntries[containerId].set(toResetId,1);
 		jQuery('#'+toSetId).css('z-index','2');
 		entryShuffleEntries[containerId].set(toSetId,2);
+		var infoSelector='#getImageShuffle-'+containerId+'-info';
+		jQuery(infoSelector).text(jQuery('#'+toSetId).attr('title'));
+		return true;
 	}
 		
 // js button

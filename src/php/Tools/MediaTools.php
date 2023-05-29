@@ -24,7 +24,7 @@ class MediaTools{
 
 	public function getPreview($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		if (isset($arr['maxDim'])){
+		if (!empty($arr['maxDim'])){
 			$arr['style']['max-width']=$arr['maxDim'];
 			$arr['style']['max-height']=$arr['maxDim'];
 		}
@@ -40,10 +40,13 @@ class MediaTools{
 				$arr=$this->getVideo($arr);
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
 				$imageHtml=$this->getImage($arr);
-				$id='img-'.md5($arr['selector']['EntryId']);
-				if (isset($arr['containerId'])){$id.='-'.$arr['containerId'];}
-				$imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'class'=>'preview','id'=>$id,'source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
-				$imageArr['style']=(isset($arr['wrapperStyle']))?$arr['wrapperStyle']:array('cursor'=>'pointer','padding'=>'3px');
+				// get wrapper div
+				$wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer','padding'=>'3px');
+				$arr['wrapperStyle']=(isset($arr['wrapperStyle']))?$arr['wrapperStyle']:array();
+				$imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'title'=>$arr['selector']['Name'],'class'=>'preview','source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
+				$imageArr['id']='img-'.md5($arr['selector']['EntryId']);
+				if (isset($arr['containerId'])){$imageArr['id'].='-'.$arr['containerId'];}
+				$imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapperStyle']);
 				$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
 			} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
 				if ($isSmallPreview){
@@ -332,8 +335,8 @@ class MediaTools{
 						  'orgRot'=>$transformArr['deg'],
 						  'orgFlipped'=>$transformArr['flip'],
 						  'newSize'=>(isset($arr['newSize']))?$arr['newSize']:FALSE,
-						  'newWidth'=>(isset($arr['newWidth']))?$arr['newWidth']:300,
-						  'newHeight'=>(isset($arr['newHeight']))?$arr['newHeight']:300,
+						  'newWidth'=>(isset($arr['newWidth']))?$arr['newWidth']:FALSE,
+						  'newHeight'=>(isset($arr['newHeight']))?$arr['newHeight']:FALSE,
 						  'maxDim'=>(isset($arr['maxDim']))?$arr['maxDim']:FALSE,
 						  'minDim'=>(isset($arr['minDim']))?$arr['minDim']:FALSE,
 						  'quality'=>90,
@@ -403,6 +406,8 @@ class MediaTools{
 			$imageTagArr=$arr;
 			$imageTagArr['tag']='img';
 			$imageTagArr['title']=$arr['selector']['Params']['File']['Name'];
+			$imageTagArr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr);
+			if (isset($arr['containerId'])){$imageTagArr['container-id']=$arr['containerId'];}
 			if (empty($arr['encodeBase64'])){
 				imagejpeg($newImage,$arr['targetFile'],$imgArr['quality']);
 				chmod($arr['targetFile'],0774);
@@ -450,6 +455,94 @@ class MediaTools{
 			return FALSE;
 		}
 	}
+
+	public function scaleImageToCover($arr,$imgFile,$boxStyleArr){
+		$imgPropArr=$this->getImgPropArr($imgFile);
+		$arr=$this->resetScaleImage($arr);
+		if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
+			$variant='A';
+			$arr['minDim']=$boxStyleArr['width'];
+		} else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
+			$variant='B';
+			$arr['minDim']=$boxStyleArr['height'];
+		} else {
+			$variant='C,D';	// not tested
+			// scale image width to match box width
+			$newImgHeight=$imgPropArr['height']*$boxStyleArr['width']/$imgPropArr['width'];
+			if ($newImgHeight>$boxStyleArr['height']){
+				// height > box
+				$arr['newWidth']=$boxStyleArr['width'];
+				$arr['newHeight']=$newImgHeight;
+			} else {
+				// height < box
+				$newImgWidth=$imgPropArr['width']*$boxStyleArr['height']/$imgPropArr['height'];
+				$arr['newHeight']=$boxStyleArr['height'];
+				$arr['newWidth']=$newImgWidth;
+			}
+		}
+		return $arr;
+	}	
+
+	public function scaleImageToContain($arr,$imgFile,$boxStyleArr){
+		$imgPropArr=$this->getImgPropArr($imgFile);
+		$arr=$this->resetScaleImage($arr);
+		if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
+			$variant='C';	// OK
+			$arr['style']['max-height']='100%';
+		} else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
+			$variant='D';	// OK
+			$arr['style']['max-width']='100%';
+		} else {
+			// scale image width to match box width
+			$newImgHeight=$imgPropArr['height']*$boxStyleArr['width']/$imgPropArr['width'];
+			$newImgWidth=$imgPropArr['width']*$boxStyleArr['height']/$imgPropArr['height'];
+			if ($newImgHeight>$boxStyleArr['height']){
+				// height > box
+				$arr['newWidth']=$newImgWidth;
+				$arr['newHeight']=$boxStyleArr['height'];
+			} else {
+				// height > box
+				$arr['newWidth']=$boxStyleArr['width'];
+				$arr['newHeight']=$newImgHeight;
+			}
+		}
+		return $arr;
+	}
 	
+	private function resetScaleImage($arr){
+		if (isset($arr['minDim'])){unset($arr['minDim']);}
+		if (isset($arr['maxDim'])){unset($arr['maxDim']);}
+		if (isset($arr['style']['max-width'])){unset($arr['style']['max-width']);}
+		if (isset($arr['style']['max-height'])){unset($arr['style']['max-height']);}
+		return $arr;
+	}
+	
+	private function getImgPropArr($imgFile){
+		$exif=$this->addExif2entry(array(),$imgFile);
+		$exif=current($exif);
+		$imgPropArr=getimagesize($imgFile);
+		if (isset($exif['Orientation'])){
+			if (intval($exif['Orientation'])>4){
+				$imgPropArr['width']=$imgPropArr[1];
+				$imgPropArr['height']=$imgPropArr[0];
+			} else {
+				$imgPropArr['width']=$imgPropArr[0];
+				$imgPropArr['height']=$imgPropArr[1];
+			}
+		} else {
+			$imgPropArr['width']=$imgPropArr[0];
+			$imgPropArr['height']=$imgPropArr[1];
+		}
+		return $imgPropArr;
+	}
+	
+	public function addExif2entry($entry,$file){
+		if (!is_file($file)){return $entry;}
+		if (!function_exists('exif_read_data')){return $entry;}
+		$exif=@exif_read_data($file,'IFD0');
+		$entry['exif']=(empty($exif))?array():$exif;
+		return $entry;
+	}
+
 }
 ?>
