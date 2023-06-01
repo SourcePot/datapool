@@ -46,9 +46,21 @@ class Settings{
 		} else {
 			$html=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
 			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			$settings=array();
-			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'Type','Filter'=>''));
-			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','selectedView',$selector,$settings,array());
+			if (empty($selector['Group'])){
+				$settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());	
+			} else {
+				if (strcmp($selector['Group'],'Entry presentation')===0){
+					$selector['Type']='entryKeys';
+				}
+				if (strcmp($selector['Group'],'Entry presentation')===0 && !empty($selector['EntryId'])){
+					$settings=array('method'=>'getEntryPresentationSetting','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+					$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation settings','generic',$selector,$settings,array());
+				} else {
+					$settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+					$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());
+				}
+			}
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;
 		}

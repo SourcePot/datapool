@@ -327,7 +327,7 @@ class Email{
 	private function getTransmitterWidget($arr){
 		$arr['html']=(isset($arr['html']))?$arr['html']:'';
 		$form=array('To'=>array('tag'=>'input','type'=>'email','value'=>'','filter'=>FILTER_SANITIZE_EMAIL),
-					'From'=>array('tag'=>'input','type'=>'email','value'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbtract(FALSE,7),'filter'=>FILTER_SANITIZE_EMAIL),
+					'From'=>array('tag'=>'input','type'=>'email','value'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(FALSE,7),'filter'=>FILTER_SANITIZE_EMAIL),
 					'Subject'=>array('tag'=>'input','type'=>'text','value'=>''),
 					'Send'=>array('tag'=>'button','value'=>'send','element-content'=>'Send'),
 					);

@@ -53,15 +53,18 @@ class Multimedia{
 		if ($arr===TRUE){
 			return array('Category'=>'Apps','Emoji'=>'&#10063;','Label'=>'Multimedia','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {
+			$html='';
 			$arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
 			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			if (empty($selector['Group'])){
 				$wrapperSetting=array('style'=>array('padding'=>'10px'));
-				$setting=array('width'=>320,'height'=>300);
-				$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
+				$setting=array('width'=>500,'height'=>400,'autoShuffle'=>TRUE);
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
+			} else if (empty($selector['Group']) || empty($selector['EntryId'])){
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,array(),array());
 			} else {
-				$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
-				$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Multimedia entries','selectedView',$selector,$settings,array());
+				$selector['presentEntry']=__CLASS__.'::'.__FUNCTION__;
+				$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('selector'=>$selector,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			}
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;

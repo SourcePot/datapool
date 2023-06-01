@@ -51,7 +51,9 @@ private $entryTable;
 			// Add content
 			$selector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
 			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $section){
-				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'selectedView',$section,array(),array());
+				$section['presentEntry']=__CLASS__.'::'.__FUNCTION__;
+				$settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'generic',$section,$settings,array('style'=>array('margin'=>'0')));
 			}
 			// Add admin section
 			if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){

@@ -232,8 +232,8 @@ class Explorer{
 		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
 		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		$guideEntry=$this->getGuideEntry($selector);
-		$selector['Read']=$guideEntry['Read'];
-		$selector['Write']=$guideEntry['Write'];
+		$selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';
+		$selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ADMIN_R';
 		$btnHtml='';
 		$btnArr=array('selector'=>$selector);
 		foreach(array('download all','export','delete') as $cmd){

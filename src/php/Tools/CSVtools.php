@@ -92,7 +92,7 @@ class CSVtools{
 	private function csvSetting(){
 		$csvSettings=array();
 		foreach($this->csvSettings as $settingKey=>$settingValueIndex){
-			if (strcmp($settingKey,'offset')===0 || strcmp($settingKey,'limit')===0 || strcmp($settingKey,'mode')===0){continue;}
+			if (!isset($this->csvAlias[$settingValueIndex])){continue;}
 			$csvSettings[$settingKey]=$this->csvAlias[$settingValueIndex]['chr'];
 		}
 		return $csvSettings;

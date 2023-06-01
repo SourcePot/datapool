@@ -31,7 +31,7 @@ class Container{
 				$jsAnswer['arr']=array('isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']);
 			} else if (strcmp($_POST['function'],'loadEntry')===0){
 				$selector=array('Source'=>$_POST['Source'],'EntryId'=>$_POST['EntryId']);
-				$jsAnswer['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['EntryId'],'selectedView',$selector,array());
+				$jsAnswer['html']=$this->oc['SourcePot\Datapool\GenericApps\Forum']->loadForumEntry($selector);
 			} else if (strcmp($_POST['function'],'setCanvasElementPosition')===0){
 				$jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementPosition($_POST['arr']);
 			} else {
@@ -143,48 +143,6 @@ class Container{
 			$arr=$this->oc[$arr['settings']['classWithNamespace']]->$method($arr);
 		} else {
 			$arr['html'].='Generic container called with with invalid method setting. Check container settings "classWithNamespace" and/or "method".';	
-		}
-		return $arr;
-	}
-
-	private function selectedView($arr){
-		if (!isset($arr['html'])){$arr['html']='';}
-		if (empty($arr['selector']['Source'])){
-			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Nothing to show here. Entry-source missing.'));
-		} else {
-			// get setting
-			$setting=array('Show entry list'=>TRUE,
-						   'Show entry editor'=>TRUE,
-						   'Show comments editor'=>TRUE,
-						   'Show tools'=>TRUE,
-						   'Show entry viewer'=>TRUE,
-						   'Show map'=>TRUE,
-						   'Show userAbstract'=>TRUE,
-						   'Show getPreview'=>TRUE,
-						   'Key tags'=>array(),
-						   'wrapperSettings'=>array('style'=>array('max-width'=>'none','width'=>'100%','padding'=>'0','margin'=>'0','border-left'=>'0','border-right'=>'0'))
-						   );
-			$arr['setting']=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,__FUNCTION__,$setting,$arr['selector']['Source'],TRUE);
-			// compile html
-			if (empty($arr['selector']['EntryId'])){
-				if (!empty($setting['Show entry list'])){$arr=$this->entryList($arr);}
-			} else {
-				$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-				if (empty($arr['selector'])){
-					$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Nothing to show here. Entry does not exist.'));
-				} else {
-					if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){$arr=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvEditor($arr);}
-					$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->presentEntry($arr);
-					if (!empty($arr['settingNeedsUpdate'])){
-						$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,__FUNCTION__,$arr['setting'],$arr['selector']['Source'],TRUE);
-					}
-					if (!empty($arr['setting']['Show comments editor'])){$arr=$this->comments($arr);}
-					if (empty($arr['setting']['Show tools'])){$arr=$this->tools($arr);}
-					if (!empty($arr['setting']['Show map'])){$arr=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getMapHtml($arr,FALSE);}
-				}
-			}
-			$arr=array_merge($arr,$arr['setting']);
-			unset($arr['setting']);
 		}
 		return $arr;
 	}
@@ -487,16 +445,17 @@ class Container{
 		if (!isset($arr['html'])){$arr['html']='';}
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (isset($formData['cmd']['Add comment'])){
-			//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);
-			$timestamp=$formData['cmd']['Add comment'];
-			$arr['selector']['Content']['Comments'][$timestamp]=array('Comment'=>$formData['val']['comment'],'Author'=>$_SESSION['currentUser']['EntryId']);
+			$arr['selector']['Source']=key($formData['cmd']['Add comment']);
+			$arr['selector']['EntryId']=key($formData['cmd']['Add comment'][$arr['selector']['Source']]);
+			$arr['selector']['timeStamp']=current($formData['cmd']['Add comment'][$arr['selector']['Source']]);
+			$arr['selector']['Content']['Comments'][$arr['selector']['timeStamp']]=array('Comment'=>$formData['val']['comment'],'Author'=>$_SESSION['currentUser']['EntryId']);
 			$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
 		}
 		if (isset($arr['selector']['Content']['Comments'])){$Comments=$arr['selector']['Content']['Comments'];} else {$Comments=array();}
 		$commentsHtml='';
 		foreach($Comments as $creationTimestamp=>$comment){
 			$footer=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-			$footer.=' '.$this->oc['SourcePot\Datapool\Foundation\User']->userAbtract($comment['Author'],3);
+			$footer.=' '.$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($comment['Author'],3);
 			$commentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$comment['Comment'],'class'=>'comment'));
 			$commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$footer,'keep-element-content'=>TRUE,'class'=>'comment-footer'));
 			$commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>'comment'));
@@ -507,7 +466,7 @@ class Container{
 			$newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'New comment','style'=>array('float'=>'left','clear'=>'both','margin'=>'30px 0 5px 5px')));
 			$newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'...','key'=>array('comment'),'id'=>$targetId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 			$newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$arr['callingFunction'],'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$targetId));
-			$newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment'),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+			$newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 			$newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$newComment,'icon'=>'&#9998;','style'=>array('clear'=>'both','margin'=>'3px 5px')));
 		}
 		$arr['html'].=$commentsHtml.$newComment;

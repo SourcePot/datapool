@@ -340,6 +340,7 @@ class DataExplorer{
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
 		if (isset($formData['cmd']['uplaod'])){
 			foreach($formData['files']['files'] as $fileIndex=>$fileArr){
+				if (empty($fileArr["tmp_name"])){continue;}
 				$entry=$canvasElement['Content']['Selector'];
 				$entry['EntryId']=hash_file('md5',$fileArr["tmp_name"]);
 				if (empty($entry['Folder'])){$entry['Folder']='Upload';}

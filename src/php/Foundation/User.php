@@ -126,7 +126,7 @@ class User{
 		// This function makes class specific corrections before the entry is inserted or updated.
 		if (!empty($entry['Email'])){$entry['Content']['Contact details']['Email']=$entry['Email'];}
 		if (empty($entry['Params']['User registration']['Email'])){$entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];}
-		$entry['Name']=$this->userAbtract(array('selector'=>$entry),3);
+		$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
 		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		$entry['Group']=$this->pageSettings['pageTitle'];
 		$entry['Folder']=$this->getUserRolsString($entry);
@@ -180,7 +180,7 @@ class User{
 		return $user;
 	}
 	
-	public function userAbtract($arr=FALSE,$template=0){
+	public function userAbstract($arr=FALSE,$template=0){
 		// This method returns formated html text from an entry based on predefined templates.
 		// 	
 		if (empty($arr)){
@@ -224,6 +224,17 @@ class User{
 			$abtract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
 		}
 		return $abtract;
+	}
+	
+	public function ownerAbstract($arr){
+		$template=(isset($arr['selector']['template']))?$arr['selector']['template']:2;
+		$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
+		$html=$this->userAbstract($arr['selector']['Owner'],$template);
+		$arr['tag']='div';
+		$arr['element-content']=$html;
+		$arr['keep-element-content']=TRUE;
+		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($arr);
+		return $html;
 	}
 	
 	public function userAccountForm($arr){

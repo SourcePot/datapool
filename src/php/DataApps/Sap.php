@@ -52,7 +52,13 @@ class Sap{
 				$explorerSelector=$explorerArr['canvasElement']['Content']['Selector'];
 				$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($explorerSelector['Source']);
 				$pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
-				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry or entries','selectedView',array_merge($explorerSelector,$pageStateSelector),array(),array());
+				$arr['selector']=array_merge($explorerSelector,$pageStateSelector);
+				if (empty($arr['selector']['EntryId'])){
+					$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$arr['selector'],array(),array());
+				} else {
+					$arr['selector']['presentEntry']=__CLASS__.'::'.__FUNCTION__;
+					$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$arr['selector']));
+				}
 			}
 			$arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
 			$arr['toReplace']['{{content}}']=$html;

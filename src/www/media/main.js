@@ -295,14 +295,19 @@ jQuery(document).ready(function(){
 		html=html+imgBtn;
 		let htmlObj=$(html);
 		jQuery('#overlay').html(htmlObj).fadeIn(500);
+		jQuery('#overlay').on('click',function(e){
+			jQuery('#overlay').hide();
+		});
 		jQuery('#overlay-image').on('click',function(e){
 			jQuery('#overlay').hide();
 		});
 		jQuery('#prev-img-btn').on('click',function(e){
+			e.stopPropagation();
 			if (index==0){index=lastIndex;} else {{index--;}}
 			loadImage(index);
 		});
 		jQuery('#next-img-btn').on('click',function(e){
+			e.stopPropagation();
 			if (index>=lastIndex){index=0;} else {{index++;}}
 			loadImage(index);
 		});
@@ -332,9 +337,9 @@ jQuery(document).ready(function(){
 			if (width['img']>width['wrapper']){
 				animateImage(this,'marginLeft',0,width['wrapper']-width['img'],imageWidth,triggerNext[containerId]);
 			} else if (height['img']>height['wrapper']){
-				animateImage(this,'marginTop',0,height['wrapper']-height['img'],imageWidth,triggerNext[containerId]);
+				animateImage(this,'marginTop',height['wrapper']-height['img'],0,imageWidth,triggerNext[containerId]);
 			} else {
-				animateImage(this,'marginTop',0,-50,imageWidth,triggerNext[containerId]);
+				//
 			}
 			triggerNext[containerId]=false;
 		});
@@ -342,7 +347,7 @@ jQuery(document).ready(function(){
 	
 	function animateImage(selector,property,start,end,width,triggerNext){
 		jQuery(selector).animate(
-			{[property]:(end+'px'),'width':1.1*width},
+			{[property]:(end+'px'),'width':1.2*width},
 			{'duration':7000,
 			 'easing':"linear",
 			 'complete':function(){

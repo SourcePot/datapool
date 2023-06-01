@@ -124,28 +124,26 @@ class GeoTools{
 		return $query;
 	}
 
-	public function getMapHtml($arr,$hasWrapper=TRUE,$width=360,$height=400,$dL=0.001,$style=''){
+	public function getMapHtml($arr){
 		// This method returns the html-code for a map.
 		// The map is based on the data provided by $entry['Params']['Geo'], if $entry is empty the current user obj will be used
 		//
+		$template=array('style'=>array(),'class'=>'ep-std','dL'=>0.001);
+		$arr=array_replace_recursive($template,$arr);
 		if (!isset($arr['html'])){$arr['html']='';}
 		if (empty($arr['selector'])){return $arr;}
 		$entry=$arr['selector'];
 		if (empty($entry['Params']['Geo']['lat'])){return $arr;}
 		$entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
 		$entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
-		$bbLat1=$entry['Params']['Geo']['lat']-$dL;
-		$bbLat2=$entry['Params']['Geo']['lat']+$dL;
-		$bbLon1=$entry['Params']['Geo']['lon']-$dL;
-		$bbLon2=$entry['Params']['Geo']['lon']+$dL;
-		$style.='width:'.($width+50).'px;height:'.($height+60).'px';
-		if ($hasWrapper){$arr['html'].='<div class="whiteBoard" style="'.$style.'">';}
+		$bbLat1=$entry['Params']['Geo']['lat']-$arr['dL'];
+		$bbLat2=$entry['Params']['Geo']['lat']+$arr['dL'];
+		$bbLon1=$entry['Params']['Geo']['lon']-$arr['dL'];
+		$bbLon2=$entry['Params']['Geo']['lon']+$arr['dL'];
 		$arr['html'].='<h3 class="whiteBoard">'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Location').'</h3>';
-		if ($hasWrapper){$arr['html'].='<div class="whiteBoard" style="width:'.$width.'px;height:'.$height.'px;">';}
-		$arr['html'].='<iframe class="whiteBoard" style="margin:3px;width:98%;height:'.($height-45).'px;"';
-  		$arr['html'].='src="https://www.openstreetmap.org/export/embed.html?bbox='.$bbLon1.','.$bbLat1.','.$bbLon2.','.$bbLat2.'&amp;';
-  		$arr['html'].='marker='.$entry['Params']['Geo']['lat'].','.$entry['Params']['Geo']['lon'].'&amp;layer=mapnik">';
-		$arr['html'].='</iframe>';
+		$elementArr=array('tag'=>'iframe','element-content'=>'','style'=>$arr['style'],'class'=>$arr['class']);
+		$elementArr['src']='https://www.openstreetmap.org/export/embed.html?bbox='.$bbLon1.','.$bbLat1.','.$bbLon2.','.$bbLat2.'&marker='.$entry['Params']['Geo']['lat'].','.$entry['Params']['Geo']['lon'].'&layer=mapnik';
+		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
 		$arr['html'].=$this->getMapLink($entry);
 		return $arr;
 	}
