@@ -18,7 +18,7 @@
 	},
 	"autoload":{
 		"psr-4": {
-			"SourcePot\\Datapool\\":"src"
+			"SourcePot\\Datapool\\":"src\php"
 		}
 	}
 }
