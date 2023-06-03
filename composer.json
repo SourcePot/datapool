@@ -14,7 +14,6 @@
 	"require":{
 		"php":">=8.0",
 		"smalot/pdfparser":">=v2.0",
-		"webklex/php-imap":">=v4.0"
 	},
 	"autoload":{
 		"psr-4": {
