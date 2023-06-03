@@ -19,10 +19,10 @@ namespace SourcePot\Datapool\Interfaces;
 interface Receiver{
 	
 	/**
-     * Initializes the instance that implments the interface. The $arr-argument contains all references to instances of datappol classes, e.g.
-	 * instances that provide database access, filespace access, html-templates etc. The $arr-argument is returned by the method.
-	 */
-    public function init(array $arr):array;
+    * Initializes the instance that implments the interface. The $oc-argument contains instantiated classes of datappol, e.g.
+	* instances that provide database access, filespace access, html-templates etc.
+	*/
+    public function init(array $oc):array;
 	
 	public function getReceiverSettingsWidget(array $arr):string;
 	

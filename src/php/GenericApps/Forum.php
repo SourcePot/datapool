@@ -111,12 +111,6 @@ class Forum{
 		return $html;
 	}
 	
-	public function loadForumEntry($selector){
-		$selector['presentEntry']=__CLASS__.'::'.__FUNCTION__;
-		$settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Forum entry '.$selector['EntryId'],'generic',$selector,$settings,array('style'=>array('margin'=>'0')));
-	}	
-		
 	public function unifyEntry($forumEntry){
 		$forumEntry['Group']=$_SESSION['currentUser']['Privileges'];
 		$forumEntry['Folder']='Sent';

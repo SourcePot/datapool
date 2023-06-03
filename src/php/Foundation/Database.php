@@ -334,6 +334,8 @@ class Database{
 		if (!empty($orderBy) && isset($entryTemplate[$orderBy])){
 			$sqlArr['sql'].=' ORDER BY `'.$orderBy.'`';
 			if ($isAsc===TRUE){$sqlArr['sql'].=' ASC';} else {$sqlArr['sql'].=' DESC';}
+		} else if ($orderBy=='rand()' || $orderBy=='RAND()'){
+			$sqlArr['sql'].=' ORDER BY rand()';	
 		}
 		$limit=intval($limit);
 		if (!empty($limit)){$sqlArr['sql'].=' LIMIT '.$limit;}

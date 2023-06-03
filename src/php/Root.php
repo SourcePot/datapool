@@ -15,8 +15,24 @@ final class Root{
 
 	private $oc=array();
     private $structure=array('registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
-    	
+    
+	/**
+	* @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
+	* This method can be used to add external objects to the Datapool object collection. 
+	*/
+	private function registerVendorClasses($oc){
+		//$classWithNamespace='Enter the vendor class here'
+		//$oc[$classWithNamespace]=new $classWithNamespace($oc);
+		//$this->updateStructure($oc,$classWithNamespace);
+		return $oc;
+	}
+	
 	public function __construct(){
+		$GLOBALS['script start time']=hrtime(TRUE);
+		session_start();
+		// set exeption handler and initialize directories
+		$this->initDirs();
+		$this->initExceptionHandler();
 		// iterate through the directory template and create all package directories
 		foreach($GLOBALS['relDirs'] as $dirName=>$relDir){
 			if (!is_dir($relDir)){
@@ -46,23 +62,19 @@ final class Root{
 		}
 		$this->oc=$this->registerVendorClasses($this->oc);
 	}
-	
-	private function registerVendorClasses($arr){
-		return $arr;
-	}
-	
+		
 	/**
-	* @return array An associative array that contains the full generated webpage refrenced by the key "page html" as well as all objects.
+	* @return array An associative array that contains the full generated webpage referenced by the key "page html".
 	*/
-	public function run($callingWWWscript){
-		$this->structure['callingWWWscript']=$callingWWWscript;
+	public function run(){
+		$this->structure['callingWWWscript']=$_SERVER['PHP_SELF'];
 		// get current temp dir
 		$GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		// process all buttons
 		$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn();
 		// add "page html" to the return array
 		$arr=array();
-		if (strpos($callingWWWscript,'index.php')>0){
+		if (strpos($_SERVER['PHP_SELF'],'index.php')>0){
 			// build webpage
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
@@ -71,10 +83,10 @@ final class Root{
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
 			// add page statistic for the web page called by a user
 			//$this->addPageStatistic($arr,$callingWWWscript);
-		} else if (strpos($callingWWWscript,'js.php')>0){
+		} else if (strpos($_SERVER['PHP_SELF'],'js.php')>0){
 			// js-call Processing
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
-		} else if (strpos($callingWWWscript,'job.php')>0){
+		} else if (strpos($_SERVER['PHP_SELF'],'job.php')>0){
 			// job Processing
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
 		} else {
@@ -109,6 +121,10 @@ final class Root{
 		}
 	}
 
+	/**
+	* This method creates the ../src/setup/objectList.csv file that contains row by row all objects that make-up the Datapool object collection.
+	* The objects will be initiated row by row. If a different order is required, the file needs to be edited accordingly.
+	*/
 	private function createObjList($objListFile){
 		$orderedInitialization=array('MiscTools.php'=>'301|',
 									 'Access.php'=>'302|',
@@ -207,29 +223,92 @@ final class Root{
 		if (stripos($classWithNamespace,'logging')!==FALSE){$GLOBALS['logging class']=$classWithNamespace;}
 		return $this->structure;
 	}
-
-	/*	
-	private function addPageStatistic($arr,$calledBy){
-		//if (mt_rand(0,1000)<950){return FALSE;}	// only save sample
-		$userId=(isset($_SESSION['currentUser']['EntryId']))?$_SESSION['currentUser']['EntryId']:'ANONYM';
-		$statistic=array('Source'=>$arr[$GLOBALS['logging class']]->getEntryTable(),'Group'=>$userId,'Name'=>'Page statistic type '.$calledBy,'Type'=>'statistic');
-		if (isset($_SESSION['page state']['app'])){$statistic['Folder']=$_SESSION['page state']['app']['Class'];} else {$statistic['Folder']='No app call';}
-		$statistic['EntryId']=$arr['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
-		$statistic['Date']=$arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-		$statistic['Expires']=$arr['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
-		$statistic['Owner']='SYSTEM';
-		$statistic=$arr['SourcePot\Datapool\Foundation\Access']->addRights($statistic,'ALL_MEMBER_R','ALL_MEMBER_R');
-		$statistic['Content']=array('app'=>$_SESSION['page state']['app']);
-		$statistic['Content']['selected']=$arr['SourcePot\Datapool\Tools\NetworkTools']->getPageState($_SESSION['page state']['app']['Class']);
-		$timeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
-		$statistic['Content']['Script time consumption [ms]']=$timeConsumption;
-		$arr['SourcePot\Datapool\Foundation\Database']->insertEntry($statistic);
-		if ($timeConsumption>900){
-			$msg='Page performance warning: Page creation took '.$timeConsumption.'ms.';
-			$arr['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+	
+	private function initDirs(){
+		$thisDir='/src/php';
+		$fromRelPath=strtr(realpath('./'),array('\\'=>'/'));
+		$fromAbsPath=strtr(__DIR__,array('\\'=>'/'));
+		$fromAbsPathRoot=str_replace($thisDir,'',$fromAbsPath);
+		if (strlen($fromAbsPath)===strlen($fromRelPath)){
+			$diff=FALSE;
+		} else {
+			$diff=str_replace($fromRelPath,'',$fromAbsPathRoot);
 		}
-		return $statistic;
+		$GLOBALS['dirSuffix']=array('root'=>'../../',
+									'vendor'=>'../../vendor',
+									'src'=>'../',
+									'setup'=>'../setup',
+									'filespace'=>'../filespace',
+									'debugging'=>'../debugging',
+									'ftp'=>'../ftp',
+									'fonts'=>'../fonts',
+									'php'=>'./',
+									'traits'=>'../php/Traits',
+									'public'=>'../www',
+									'media'=>'../www/media',
+									'tmp'=>'../www/tmp'
+									);
+		$GLOBALS['dirs']=array();
+		foreach($GLOBALS['dirSuffix'] as $dirName=>$suffix){
+			if (strpos($suffix,'../../')===0){
+				$prefix='/';
+			} else if (strpos($suffix,'../')===0){
+				$prefix='/src/';
+			} else {
+				$prefix=$thisDir.'/';
+			}
+			$suffix=trim($suffix,'/');
+			$cleanSuffix=trim($suffix,'./');
+			if (empty($diff)){
+				$GLOBALS['relDirs'][$dirName]=$suffix.'/';
+			} else {
+				$GLOBALS['relDirs'][$dirName]='.'.$diff.$prefix;		
+				if (!empty($cleanSuffix)){$GLOBALS['relDirs'][$dirName].=$cleanSuffix.'/';}
+			}
+			$suffix=trim($suffix,'./');
+			$GLOBALS['dirs'][$dirName]=$fromAbsPathRoot.$prefix.$cleanSuffix;
+		}
+		return $GLOBALS['dirs'];
 	}
-	*/
+
+	private function initExceptionHandler(){
+		// error handling
+		set_exception_handler(function(\Throwable $e){
+			// logging
+			if (!is_dir($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);}
+			$err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
+			$logFileContent=json_encode($err);
+			$logFileName=$GLOBALS['dirs']['debugging'].'/'.time().'_exceptionsLog.json';
+			file_put_contents($logFileName,$logFileContent);
+			//fallback page
+			$html='';
+			if (strpos($_SERVER['PHP_SELF'],'js.php')!==FALSE){
+				$html.='Have run into a problem, please check debugging dir...';
+			} else {
+				$html.='<!DOCTYPE html>';
+				$html.='<html xmlns="http://www.w3.org/1999/xhtml" lang="en">';
+				$html.='<head>';
+				$html.='</head>';
+				$html.='<body style="color:#fff;background-color:#444;font-family: Verdana, Arial, Helvetica, sans-serif;font-size:20px;">';
+				$html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
+				$html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
+				if (strpos($err['message'],'Access denied')===FALSE){
+					$html.='<p style="width:fit-content;margin: 20px auto;">But some improvements might take a while.</p>';
+				} else {
+					$html.='<p style="width:fit-content;margin: 20px auto;">The problem is: '.$err['message'].'</p>';
+				}
+				$html.='<p style="width:fit-content;margin: 20px auto;">The Admin <span style="font-size:2em;">👷</span></p>';
+				$html.='</body>';
+				$html.='</html>';
+			}
+			echo $html;
+			exit;
+		});
+		set_error_handler(function($errno,$errstr,$errfile,$errline){
+			if (!(error_reporting() && $errno)){return;}
+			throw new \ErrorException($errstr,$errno,0,$errfile,$errline);
+		},E_ALL & ~E_WARNING & ~E_NOTICE & ~E_USER_NOTICE);
+	}
+
 }
 ?>

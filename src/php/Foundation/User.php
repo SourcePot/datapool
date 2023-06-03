@@ -228,7 +228,6 @@ class User{
 	
 	public function ownerAbstract($arr){
 		$template=(isset($arr['selector']['template']))?$arr['selector']['template']:2;
-		$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
 		$html=$this->userAbstract($arr['selector']['Owner'],$template);
 		$arr['tag']='div';
 		$arr['element-content']=$html;

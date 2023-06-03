@@ -34,7 +34,7 @@ class MediaTools{
 		if (!is_file($file)){return $arr;}
 		if (!isset($arr['selector']['Params']['File']['MIME-Type'])){
 			// attached file has unknown file type
-			$arr['html']='🗒';
+			$arr['html']='';
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'audio')===0){
 			$arr=$this->getAudio($arr);
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'video')===0){
@@ -63,7 +63,13 @@ class MediaTools{
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/html')===0){
 			$arr=$this->getHtml($arr);
 		} else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
-			$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
+			if (strcmp(isset($arr['callingFunction'])?$arr['callingFunction']:'','entryList')===0){
+				$arr['html']='&#9783;';
+			} else {
+				$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
+			}
+		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/zip')===0){
+			$arr['html'].='&#10066;';	
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
 			$text=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($file);
 			$arr=$this->addPreviewTextStyle($arr);
@@ -308,11 +314,11 @@ class MediaTools{
 		if (stripos($arr['selector']['Params']['File']['MIME-Type'],'/svg')!==FALSE){
 			return $this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($sourceFile);
 		}
-		//target file saved in the tmp directory
+		// target file saved in the tmp directory
 		$arr['targetFile']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		$arr['targetFile'].=$arr['selector']['EntryId'].'.'.$arr['selector']['Params']['File']['Extension'];
 		$arr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['targetFile']);
-		//-- resampling will destroy exif data, rotation and flipping required
+		// resampling will destroy exif data, rotation and flipping required
 		$tmpArr=@getimagesize($sourceFile);
 		if (empty($tmpArr)){
 			// is not an image
@@ -398,10 +404,10 @@ class MediaTools{
 				imagecopyresampled($newImage,$orgImage,0,0,0,0,$imgArr['newWidth'],$imgArr['newHeight'],$imgArr['orgWidth'],$imgArr['orgHeight']);
 			}
 			imagealphablending($newImage,TRUE); 
-			//-- rotate and image
+			// rotate and image
 			if ($imgArr['orgRot']!==0){$newImage=imagerotate($newImage,-$imgArr['orgRot'],0);}
 			if ($imgArr['orgFlipped']!==FALSE){imageflip($newImage,$imgArr['orgFlipped']);}
-			//-- save to target
+			// save to target
 			$imageTagArr=$arr;
 			$imageTagArr['tag']='img';
 			$imageTagArr['title']=$arr['selector']['Params']['File']['Name'];
@@ -487,10 +493,12 @@ class MediaTools{
 		$arr=$this->resetScaleImage($arr);
 		if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
 			$variant='C';	// OK
-			$arr['style']['max-height']='100%';
+			//$arr['style']['max-height']='100%';
+			$arr['newHeight']=$boxStyleArr['height'];
 		} else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
 			$variant='D';	// OK
-			$arr['style']['max-width']='100%';
+			//$arr['style']['max-width']='100%';
+			$arr['newWidth']=$boxStyleArr['width'];
 		} else {
 			// scale image width to match box width
 			$newImgHeight=$imgPropArr['height']*$boxStyleArr['width']/$imgPropArr['width'];
@@ -509,8 +517,10 @@ class MediaTools{
 	}
 	
 	private function resetScaleImage($arr){
-		$arr['width']='auto';
-		$arr['height']='auto';
+		if (isset($arr['width'])){unset($arr['width']);}
+		if (isset($arr['height'])){unset($arr['height']);}
+		if (isset($arr['newWidth'])){unset($arr['newWidth']);}
+		if (isset($arr['newHeight'])){unset($arr['newHeight']);}
 		if (isset($arr['newWidth'])){unset($arr['newWidth']);}
 		if (isset($arr['newHeight'])){unset($arr['newHeight']);}
 		if (isset($arr['minDim'])){unset($arr['minDim']);}

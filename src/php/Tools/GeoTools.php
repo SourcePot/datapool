@@ -128,7 +128,7 @@ class GeoTools{
 		// This method returns the html-code for a map.
 		// The map is based on the data provided by $entry['Params']['Geo'], if $entry is empty the current user obj will be used
 		//
-		$template=array('style'=>array(),'class'=>'ep-std','dL'=>0.001);
+		$template=array('style'=>array('float'=>'left','clear'=>'both'),'class'=>'ep-std','dL'=>0.001);
 		$arr=array_replace_recursive($template,$arr);
 		if (!isset($arr['html'])){$arr['html']='';}
 		if (empty($arr['selector'])){return $arr;}
@@ -153,7 +153,7 @@ class GeoTools{
 		$href='http://www.openstreetmap.org/';
 		$href.='?lat='.$entry['Params']['Geo']['lat'].'&amp;lon='.$entry['Params']['Geo']['lon'];
 		$href.='&amp;zoom=16&amp;layers=M&amp;mlat='.$entry['Params']['Geo']['lat'].'&amp;mlon='.$entry['Params']['Geo']['lon'];
-		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Map','target'=>'_blank'));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Map','target'=>'_blank','style'=>array('clear'=>'left')));
 		$href='https://www.google.de/maps/@'.$entry['Params']['Geo']['lat'].','.$entry['Params']['Geo']['lon'].',16z';
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Google Maps','target'=>'_blank'));
 		$href='https://www.taxifarefinder.com';

@@ -44,13 +44,14 @@ class Admin{
 		if (empty($selector['Source'])){
 			$element=array('tag'=>'p','element-content'=>'Nothing selected, so there is nothing to show here...');
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-		} else {
-			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'preview','Filter'=>''));
+		} else if (empty($selector['EntryId'])){
 			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(ucfirst($selector['Source']).' entries','selectedView',$selector,$settings,array());
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,$settings,array());		
+		} else {
+			$selector['presentEntry']=__CLASS__.'::'.__FUNCTION__;
+			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('selector'=>$selector,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 		return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
-		return $html;
 	}
 	
 	public function backupArticle(){

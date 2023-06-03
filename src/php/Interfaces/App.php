@@ -10,13 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Interfaces;
 
-/**
- * Receiver interface.
- * Sevice classes for datapool such as email-sender or SMS-sender should implement this interface.
- *
- * @author Carsten Wallenhauer <admin@datapool.info>
- */
-interface Sender{
+interface Processor{
 	
 	/**
     * Initializes the instance that implments the interface. The $oc-argument contains instantiated classes of datappol, e.g.
@@ -24,17 +18,7 @@ interface Sender{
     */
     public function init(array $oc):array;
 	
-	public function getSenderSettingsWidget(array $arr):string;
-	
-	public function getSenderWidget(array $arr):string;
-	
-	public function getSenderSettings(array $arr):array;
-
-	public function getSenderSelector(array $arr):array;
-
-	public function getSenderMeta(array $arr):array;
-
-	public function send(array $arr):bool;
+	public function run(array $arr):array;
 	
 }
 ?>

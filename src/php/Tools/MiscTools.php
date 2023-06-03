@@ -95,7 +95,7 @@ class MiscTools{
 	/******************************************************************************************************************************************
 	* String tools
 	*/
-
+	
 	public function startsWithUpperCase($str){
 		$startChr=mb_substr($str,0,1,"UTF-8");
 		return mb_strtolower($startChr,"UTF-8")!=$startChr;

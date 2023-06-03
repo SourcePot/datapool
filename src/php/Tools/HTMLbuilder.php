@@ -688,8 +688,12 @@ class HTMLbuilder{
 		return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
 	}
 	
-	// entry presentation
+	public function loadEntry($arr){
+		$arr['settings']=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Forum entry '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('margin'=>'0','border'=>'none')));
+	}		
 	
+	// entry presentation
 	public function presentEntry($arr,$isDebugging=FALSE){
 		$this->getEntryKeyOptions($arr);
 		// get presentation keys setting -> compile html
@@ -830,7 +834,7 @@ class HTMLbuilder{
 				$entryKeysSetting['Content'][$flatKey]=time();	
 			}
 		}
-		// remove expired and irrelevant flat keys, create options
+		// remove expired and irrelevant flat keys
 		$maxAge=31536000;
 		foreach($entryKeysSetting['Content'] as $flatKey=>$timeStamp){
 			if ($maxAge<time()-$timeStamp){
