@@ -41,11 +41,11 @@ final class Root{
 		return $oc;
 	}
 	
-	public function __construct(){
+	public function __construct($relPath='./'){
 		$GLOBALS['script start time']=hrtime(TRUE);
 		session_start();
 		// set exeption handler and initialize directories
-		$this->initDirs();
+		$this->initDirs($relPath);
 		$this->initExceptionHandler();
 		// iterate through the directory template and create all package directories
 		foreach($GLOBALS['relDirs'] as $dirName=>$relDir){
@@ -75,6 +75,10 @@ final class Root{
 		foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
 			$this->oc[$classWithNamespace]->init($this->oc);
 		}
+	}
+	
+	public function getOc(){
+		return $this->oc;
 	}
 		
 	/**
@@ -238,9 +242,9 @@ final class Root{
 		return $this->structure;
 	}
 	
-	private function initDirs(){
+	private function initDirs($relPath='./'){
 		$thisDir='/src/php';
-		$fromRelPath=strtr(realpath('./'),array('\\'=>'/'));
+		$fromRelPath=strtr(realpath($relPath),array('\\'=>'/'));
 		$fromAbsPath=strtr(__DIR__,array('\\'=>'/'));
 		$fromAbsPathRoot=str_replace($thisDir,'',$fromAbsPath);
 		if (strlen($fromAbsPath)===strlen($fromRelPath)){
