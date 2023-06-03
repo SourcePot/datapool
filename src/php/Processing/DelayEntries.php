@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Processing;
 
-class DelayEntries{
+class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	
 	private $oc;
 	
@@ -25,14 +25,14 @@ class DelayEntries{
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 	
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 
-	public function getEntryTable(){return $this->entryTable;}
+	public function getEntryTable():string{return $this->entryTable;}
 	
-	public function dataProcessor($callingElementSelector=array(),$action='info'){
+	public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
 		// This method is the interface of this data processing class
 		// The Argument $action selects the method to be invoked and
 		// argument $callingElementSelector$ provides the entry which triggerd the action.

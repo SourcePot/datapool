@@ -465,16 +465,10 @@ class Database{
 	
 	public function entryById($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE){
 		$result=array();
-		if (empty($selector['Source'])){return $result;}
-		// if selector contains entry -> return this entry
-		if (isset($arr['selector']['Group']) &&	isset($arr['selector']['Folder']) && isset($arr['selector']['Name']) && isset($arr['selector']['EntryId']) &&
-			isset($arr['selector']['Type']) && isset($arr['selector']['Date']) && isset($arr['selector']['Content']) && isset($arr['selector']['Params'])){
-			$arr['selector']['isFirst']=TRUE;
-			$arr['rowIndex']=0;
-			$arr['rowCount']=1;
-			$arr['primaryKey']='EntryId';
-			$arr['primaryValue']=$arr['selector']['EntryId'];
-			return $arr['selector'];
+		if (empty($selector['Source'])){
+			return $result;
+		} else if (strcmp($selector['Source'],'!GUIDE')===0){
+			return $result;
 		}
 		// get entry
 		if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}

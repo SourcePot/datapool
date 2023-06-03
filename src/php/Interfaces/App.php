@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Interfaces;
 
-interface Processor{
+interface App{
 	
 	/**
     * Initializes the instance that implments the interface. The $oc-argument contains instantiated classes of datappol, e.g.

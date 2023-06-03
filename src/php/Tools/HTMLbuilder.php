@@ -689,9 +689,20 @@ class HTMLbuilder{
 	}
 	
 	public function loadEntry($arr){
-		$arr['settings']=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Forum entry '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('margin'=>'0','border'=>'none')));
+		$settungsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+		$arr['settings']=array_merge($arr['settings'],$settungsTemplate);
+		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('padding'=>'0','margin'=>'0','border'=>'none')));
 	}		
+	
+	public function getLogo($width=360){
+		$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+		$src=$this->oc['SourcePot\Datapool\Foundation\Backbone']->mediaFile2href($pageSettings['logoFile']);
+		$imgArr=array('tag'=>'img','src'=>$src,'class'=>'logo','style'=>array('width'=>$width));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imgArr);
+		$divArr=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'logo','style'=>array('text-align'=>'center'));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($divArr);
+		return $html;
+	}
 	
 	// entry presentation
 	public function presentEntry($arr,$isDebugging=FALSE){
@@ -737,13 +748,14 @@ class HTMLbuilder{
 			}
 		}
 		if (!isset($flatKey)){
-			$html.='Setting missing for '.$arr['selector']['presentEntry'];
+			$html.='Setting missing for '.$arr['settings']['presentEntry'];
 		}
 		if ($isDebugging){
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		if (isset($arr['containerId'])){
 			$arr['html']=$html;
+			$arr['wrapperSettings']['hideReloadBtn']=TRUE;
 			return $arr;
 		} else {
 			return $html;
@@ -767,8 +779,8 @@ class HTMLbuilder{
 	}
 	
 	private function entryPresentationTemplate($arr,$isEntryKeyOptions=TRUE){
-		if (!empty($arr['selector']['presentEntry'])){
-			$folder=$arr['selector']['presentEntry'];
+		if (!empty($arr['settings']['presentEntry'])){
+			$folder=$arr['settings']['presentEntry'];
 		} else if (!empty($arr['selector']['Folder'])){
 			$folder=$arr['selector']['Folder'];
 		}

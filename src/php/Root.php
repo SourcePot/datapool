@@ -20,10 +20,23 @@ final class Root{
 	* @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
 	* This method can be used to add external objects to the Datapool object collection. 
 	*/
-	private function registerVendorClasses($oc){
-		//$classWithNamespace='Enter the vendor class here'
-		//$oc[$classWithNamespace]=new $classWithNamespace($oc);
-		//$this->updateStructure($oc,$classWithNamespace);
+	private function registerVendorClasses($oc,$isDebugging=TRUE){
+		// instantiate OPS add-on
+		$classesWithNamespace=array('\SourcePot\Ops\OpsEntries');
+		$debugArr=array('classesWithNamespace'=>$classesWithNamespace);
+		foreach($classesWithNamespace as $classIndex=>$classWithNamespace){
+			if (class_exists($classWithNamespace)){
+				$oc[$classWithNamespace]=new $classWithNamespace($oc);
+				$oc[$classWithNamespace]->dataProcessor(array(),'info');
+				$this->updateStructure($oc,$classWithNamespace);			 
+				$debugArr['Successful class instantiations'][$classIndex]=$classWithNamespace;
+			} else {
+				$debugArr['Failed class instantiations'][$classIndex]=$classWithNamespace;
+			}
+		}
+		if ($isDebugging){
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+		}
 		return $oc;
 	}
 	
@@ -198,7 +211,7 @@ final class Root{
 								'job'=>FALSE,
 								'run'=>TRUE,			// class->run(), which returns menu definition
 								'unifyEntry'=>FALSE,
-								'dataProcessor'=>TRUE,
+								'dataProcessor'=>array(),
 								'getTrigger'=>FALSE,	
 								'dataSource'=>TRUE,
 								'dataSink'=>TRUE,

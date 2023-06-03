@@ -33,21 +33,20 @@ class MediaTools{
 		$file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
 		if (!is_file($file)){return $arr;}
 		if (!isset($arr['selector']['Params']['File']['MIME-Type'])){
-			// attached file has unknown file type
-			$arr['html']='';
+			$arr['html']='MIME-type missing';
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'audio')===0){
 			$arr=$this->getAudio($arr);
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'video')===0){
 			$arr=$this->getVideo($arr);
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
 			$imageHtml=$this->getImage($arr);
-			// get wrapper div
-			$wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer','padding'=>'3px');
-			$arr['wrapperStyle']=(isset($arr['wrapperStyle']))?$arr['wrapperStyle']:array();
+			// add wrapper div
+			$wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer');
+			$arr['wrapper']['style']=(isset($arr['wrapper']['style']))?$arr['wrapper']['style']:array();
 			$imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'title'=>$arr['selector']['Name'],'class'=>'preview','source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
 			$imageArr['id']='img-'.md5($arr['selector']['EntryId']);
 			if (isset($arr['containerId'])){$imageArr['id'].='-'.$arr['containerId'];}
-			$imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapperStyle']);
+			$imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapper']['style']);
 			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
 		} else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
 			if ($isSmallPreview){

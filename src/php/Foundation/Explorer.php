@@ -32,6 +32,10 @@ class Explorer{
 		$this->oc=$oc;
 	}
 
+	public function getGuideIndicator(){
+		return self::GUIDEINDICATOR;
+	}
+
 	public function getExplorer($callingClass){
 		$this->appProcessing($callingClass);
 		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Database explorer'));

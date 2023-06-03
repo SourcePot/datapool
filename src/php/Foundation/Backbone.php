@@ -19,6 +19,7 @@ class Backbone{
 							'mainBackgroundImageFile'=>FALSE,
 							'loginBackgroundImageFile'=>'main-login.jpg',
 							'iconFile'=>'main.ico',
+							'logoFile'=>'logo.svg',
 							'charset'=>'utf-8',
 							'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','entry-presentation.css'),
 							'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
@@ -124,7 +125,7 @@ class Backbone{
 		return $arr;
 	}
 	
-	private function mediaFile2href($mediaFile,$throwException=FALSE){
+	public function mediaFile2href($mediaFile,$throwException=FALSE){
 		$mediaFileAbs=$GLOBALS['dirs']['media'].'/'.$mediaFile;
 		if (is_file($mediaFileAbs)){
 			return $GLOBALS['relDirs']['media'].$mediaFile;

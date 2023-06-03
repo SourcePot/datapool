@@ -57,14 +57,16 @@ class Multimedia{
 			$arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
 			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
 			if (empty($selector['Group'])){
-				$wrapperSetting=array('style'=>array('padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'10px','border'=>'1px dotted #999;','background-color'=>'#eee'));
-				$setting=array('width'=>500,'height'=>400,'autoShuffle'=>FALSE);
+				$wrapperSetting=array('style'=>array('padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'10px','border'=>'1px dotted #999;'));
+				$setting=array('style'=>array('width'=>500,'height'=>400,'background-color'=>'#fff'),'autoShuffle'=>FALSE,'getImageShuffle'=>'multimedia');
 				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
 			} else if (empty($selector['Group']) || empty($selector['EntryId'])){
 				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,array(),array());
 			} else {
-				$selector['presentEntry']=__CLASS__.'::'.__FUNCTION__;
-				$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('selector'=>$selector,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+				$presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+				$presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
+				$presentArr['selector']=$selector;
+				$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
 			}
 			$arr['toReplace']['{{content}}']=$html;
 			return $arr;

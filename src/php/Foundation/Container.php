@@ -76,6 +76,7 @@ class Container{
 		}
 		if (isset($return['settings'])){$_SESSION['container store'][$containerId]=array_merge($_SESSION['container store'][$containerId],$return['settings']);}
 		$reloadBtnStyle=array('position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'3px','border'=>'none','background-color'=>'#ccc');
+		if (!empty($wrapperSettings['hideReloadBtn'])){$reloadBtnStyle['display']='none';}
 		$reloadBtnArr=array('tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>array('reloadBtnArr'),'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE);
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($reloadBtnArr);
 		// add wrappers
@@ -487,43 +488,44 @@ class Container{
 
 	public function getImageShuffle($arr,$isDebugging=FALSE){
 		if (!isset($arr['html'])){$arr['html']='';}
-		$settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>10,'offset'=>0,'width'=>600,'height'=>400,'autoShuffle'=>FALSE,'presentEntry'=>TRUE);
-		$settings=array_merge($settingsTemplate,$arr['settings']);
+		$settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>10,'offset'=>0,'autoShuffle'=>FALSE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
+		$settingsTemplate['style']=array('width'=>600,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
+		$settings=array_replace_recursive($settingsTemplate,$arr['settings']);
+		$arr['wrapper']=array('style'=>$settings['style']);
 		$debugArr=array('arr'=>$arr,'settings'=>$settings);
 		$entrySelector=$arr['selector'];
 		$entrySelector['Type']='%image%';
-		$arr['wrapperStyle']=array('cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'width'=>$settings['width'],'height'=>$settings['height'],'z-index'=>2);
-		$arr['wrapperStyle']['background-color']=(isset($arr['wrapperSettings']['style']['background-color']))?$arr['wrapperSettings']['style']['background-color']:'#fff';
 		$arr['style']=array('float'=>'none','display'=>'block','margin'=>'0 auto');
 		$entry=array('rowCount'=>0,'rowIndex'=>0);
 		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entrySelector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
 			$arr['selector']=$entry;
 			$imgFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+			if (!is_file($imgFile)){continue;}
 			if ($settings['autoShuffle']){
-				$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToCover($arr,$imgFile,$settings);
+				$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToCover($arr,$imgFile,$settings['style']);
 			} else {
-				$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToContain($arr,$imgFile,$settings);
+				$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToContain($arr,$imgFile,$settings['style']);
 			}
 			$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
-			if ($arr['wrapperStyle']['z-index']===2){$arr['wrapperStyle']['z-index']=1;}
+			if ($arr['wrapper']['style']['z-index']===2){$arr['wrapper']['style']['z-index']=1;}
 		}
 		if (!empty($entry['rowCount'])){
-			$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['width'],'height'=>$settings['height'])));
+			$arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'height'=>$settings['style']['height'])));
 			// button div
 			$btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>array('clear'=>'left','min-width'=>'8em','padding'=>'3px 0')));
 			$btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10095;&#10095;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-next','class'=>'js-button','style'=>array('float'=>'right','min-width'=>'8em','padding'=>'3px 0')));
-			$btnWrapper=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'id'=>'btns-'.$arr['containerId'].'-wrapper','style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['width'],'margin'=>'10px 0'));
+			$btnWrapper=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'id'=>'btns-'.$arr['containerId'].'-wrapper','style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'10px 0'));
 			if ($settings['autoShuffle']){$btnWrapper['style']['display']='none';}
 			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
 		}
 		if (!empty($settings['presentEntry'])){
-			$entryPlaceholder=array('tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['width'],'margin'=>'0'));	
+			$entryPlaceholder=array('tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','title'=>$settings['getImageShuffle'],'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'0'));	
 			$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($entryPlaceholder);
 		}
 		if ($isDebugging){
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
-		
+		$arr['wrapperSettings']['hideReloadBtn']=TRUE;
 		return $arr;
 	}
 	

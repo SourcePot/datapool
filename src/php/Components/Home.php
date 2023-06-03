@@ -51,9 +51,17 @@ private $entryTable;
 			// Add content
 			$selector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
 			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $section){
-				$section['presentEntry']=__CLASS__.'::'.__FUNCTION__;
-				$settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+				$settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
 				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'generic',$section,$settings,array('style'=>array('margin'=>'0')));
+			}
+			if (empty($section['rowCount'])){
+				$width=360;
+				$height=400;
+				$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getLogo($width);
+				$wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width,'margin'=>'10px auto','border'=>'1px dotted #999;'));
+				$setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
+				$selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
+				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
 			}
 			// Add admin section
 			if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
