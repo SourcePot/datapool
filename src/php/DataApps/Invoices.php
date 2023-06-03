@@ -56,8 +56,10 @@ class Invoices{
 				if (empty($arr['selector']['EntryId'])){
 					$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$arr['selector'],array(),array());
 				} else {
-					$arr['selector']['presentEntry']=__CLASS__.'::'.__FUNCTION__;
-					$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$arr['selector']));
+					$presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+					$presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
+					$presentArr['selector']=$arr['selector'];
+					$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
 				}
 			}
 			$arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];

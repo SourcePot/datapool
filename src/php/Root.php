@@ -20,7 +20,7 @@ final class Root{
 	* @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
 	* This method can be used to add external objects to the Datapool object collection. 
 	*/
-	private function registerVendorClasses($oc,$isDebugging=TRUE){
+	private function registerVendorClasses($oc,$isDebugging=FALSE){
 		// instantiate OPS add-on
 		$classesWithNamespace=array('\SourcePot\Ops\OpsEntries');
 		$debugArr=array('classesWithNamespace'=>$classesWithNamespace);
@@ -31,6 +31,7 @@ final class Root{
 				$this->updateStructure($oc,$classWithNamespace);			 
 				$debugArr['Successful class instantiations'][$classIndex]=$classWithNamespace;
 			} else {
+				$isDebugging=TRUE;
 				$debugArr['Failed class instantiations'][$classIndex]=$classWithNamespace;
 			}
 		}
@@ -70,10 +71,10 @@ final class Root{
 		// initilize object collection, create objects and invoke init methods
 		$oc=array(__CLASS__=>$this);
 		$this->oc=$this->getInstantiatedObjectCollection($oc);
+		$this->oc=$this->registerVendorClasses($this->oc);
 		foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
 			$this->oc[$classWithNamespace]->init($this->oc);
 		}
-		$this->oc=$this->registerVendorClasses($this->oc);
 	}
 		
 	/**
