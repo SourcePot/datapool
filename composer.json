@@ -18,7 +18,7 @@
 	},
 	"autoload":{
 		"psr-4": {
-			"sourcepot\\datapool\\":"src"
+			"SourcePot\\Datapool\\":"src"
 		}
 	}
 }
