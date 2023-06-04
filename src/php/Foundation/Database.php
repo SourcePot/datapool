@@ -373,7 +373,7 @@ class Database{
 		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
 		$sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
 		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-		$rowCount=current(current($stmt->fetchAll()));
+		$rowCount=current($stmt->fetch());
 		return $rowCount;
 	}
 	
