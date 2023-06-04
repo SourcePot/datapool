@@ -19,7 +19,7 @@ class MiscTools{
 	private $emojiFile='';
 	
 	public function __construct(){
-		$this->emojiFile=$GLOBALS['dirs']['setup'].'/emoji.json';
+		$this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
 		$this->loadEmojis($this->emojiFile);
 	}
 		

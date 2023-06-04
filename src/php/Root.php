@@ -41,22 +41,12 @@ final class Root{
 		return $oc;
 	}
 	
-	public function __construct($relPath='./'){
+	public function __construct(){
 		$GLOBALS['script start time']=hrtime(TRUE);
 		session_start();
 		// set exeption handler and initialize directories
-		$this->initDirs($relPath);
+		$this->initDirs();
 		$this->initExceptionHandler();
-		// iterate through the directory template and create all package directories
-		foreach($GLOBALS['relDirs'] as $dirName=>$relDir){
-			if (!is_dir($relDir)){
-				if (strcmp($dirName,'public')===0 || strcmp($dirName,'tmp')===0 || strcmp($dirName,'media')===0){
-					mkdir($relDir,0775,TRUE);
-				} else {
-					mkdir($relDir,0770,TRUE);		
-				}
-			}
-		}
 		// inititate the web page state
 		if (empty($_SESSION['page state'])){
 			$_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>FALSE,'selected'=>array());
@@ -189,7 +179,7 @@ final class Root{
 	}
 	
 	private function getInstantiatedObjectCollection($oc=array()){
-		$objListFile=$GLOBALS['relDirs']['setup'].'/objectList.csv';
+		$objListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
 		if (!is_file($objListFile)){$this->createObjList($objListFile);}
 		$headerArr=array();
 		if (($handle=fopen($objListFile,"r"))!==FALSE){
@@ -242,49 +232,38 @@ final class Root{
 		return $this->structure;
 	}
 	
-	private function initDirs($relPath='./'){
-		$thisDir='/src/php';
-		$fromRelPath=strtr(realpath($relPath),array('\\'=>'/'));
-		$fromAbsPath=strtr(__DIR__,array('\\'=>'/'));
-		$fromAbsPathRoot=str_replace($thisDir,'',$fromAbsPath);
-		if (strlen($fromAbsPath)===strlen($fromRelPath)){
-			$diff=FALSE;
-		} else {
-			$diff=str_replace($fromRelPath,'',$fromAbsPathRoot);
-		}
-		$GLOBALS['dirSuffix']=array('root'=>'../../',
-									'vendor'=>'../../vendor',
-									'src'=>'../',
-									'setup'=>'../setup',
-									'filespace'=>'../filespace',
-									'debugging'=>'../debugging',
-									'ftp'=>'../ftp',
-									'fonts'=>'../fonts',
-									'php'=>'./',
-									'traits'=>'../php/Traits',
-									'public'=>'../www',
-									'media'=>'../www/media',
-									'tmp'=>'../www/tmp'
+	private function initDirs(){
+		$relThisDirSuffix='/src/php';
+		$wwwDirIndicator='/src/www';
+		// relative dirs from root
+		$GLOBALS['dirDefs']=array('root'=>array('relPath'=>'.','permissions'=>0770),
+									'vendor'=>array('relPath'=>'./vendor','permissions'=>0770),
+									'src'=>array('relPath'=>'./src','permissions'=>0770),
+									'setup'=>array('relPath'=>'./src/setup','permissions'=>0770),
+									'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
+									'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
+									'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
+									'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),
+									'php'=>array('relPath'=>'./src/php','permissions'=>0770),
+									'traits'=>array('relPath'=>'./src/php/Traits','permissions'=>0770),
+									'public'=>array('relPath'=>'./src/www','permissions'=>0775),
+									'media'=>array('relPath'=>'./src/www/media','permissions'=>0775),
+									'tmp'=>array('relPath'=>'./src/www/tmp','permissions'=>0775),
 									);
+		$absRootPath=strtr(__DIR__,array('\\'=>'/'));
+		$absRootPath=strtr($absRootPath,array($relThisDirSuffix=>''));
+		// get absolute dirs
 		$GLOBALS['dirs']=array();
-		foreach($GLOBALS['dirSuffix'] as $dirName=>$suffix){
-			if (strpos($suffix,'../../')===0){
-				$prefix='/';
-			} else if (strpos($suffix,'../')===0){
-				$prefix='/src/';
-			} else {
-				$prefix=$thisDir.'/';
+		$GLOBALS['relDirs']=array();
+		foreach($GLOBALS['dirDefs'] as $label=>$def){
+			$GLOBALS['dirs'][$label]=str_replace('.',$absRootPath,$def['relPath']).'/';
+			$relDirComps=explode($wwwDirIndicator,$def['relPath']);
+			if (count($relDirComps)===2){
+				$GLOBALS['relDirs'][$label]='.'.$relDirComps[1];
 			}
-			$suffix=trim($suffix,'/');
-			$cleanSuffix=trim($suffix,'./');
-			if (empty($diff)){
-				$GLOBALS['relDirs'][$dirName]=$suffix.'/';
-			} else {
-				$GLOBALS['relDirs'][$dirName]='.'.$diff.$prefix;		
-				if (!empty($cleanSuffix)){$GLOBALS['relDirs'][$dirName].=$cleanSuffix.'/';}
-			}
-			$suffix=trim($suffix,'./');
-			$GLOBALS['dirs'][$dirName]=$fromAbsPathRoot.$prefix.$cleanSuffix;
+			if (!is_dir($GLOBALS['dirs'][$label])){
+				mkdir($GLOBALS['dirs'][$label],$def['permissions'],TRUE);
+			}	
 		}
 		return $GLOBALS['dirs'];
 	}

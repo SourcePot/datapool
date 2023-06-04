@@ -126,9 +126,9 @@ class Backbone{
 	}
 	
 	public function mediaFile2href($mediaFile,$throwException=FALSE){
-		$mediaFileAbs=$GLOBALS['dirs']['media'].'/'.$mediaFile;
+		$mediaFileAbs=$GLOBALS['dirs']['media'].$mediaFile;
 		if (is_file($mediaFileAbs)){
-			return $GLOBALS['relDirs']['media'].$mediaFile;
+			return $GLOBALS['relDirs']['media'].'/'.$mediaFile;
 		} else {
 			if ($throwException){
 				throw new \ErrorException('Function '.__FUNCTION__.': Could not open file '.$mediaFileAbs,0,E_ERROR,__FILE__,__LINE__);

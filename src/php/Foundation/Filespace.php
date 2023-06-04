@@ -45,14 +45,14 @@ class Filespace{
 	
 	public function job($vars){
 		if (empty($vars['Dirs to process'])){
-			$dirs=scandir($GLOBALS['relDirs']['filespace']);
+			$dirs=scandir($GLOBALS['dirs']['filespace']);
 			foreach($dirs as $dir){
 				if (strcmp($dir,'.')===0 || strcmp($dir,'..')===0){continue;}
-				$vars['Dirs to process'][$dir]=array('absDir'=>$GLOBALS['dirs']['filespace'].'/'.$dir,'table'=>$dir);
+				$vars['Dirs to process'][$dir]=array('absDir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir);
 			}
 		}
 		$dir2process=array_shift($vars['Dirs to process']);
-		$files=scandir($GLOBALS['relDirs']['filespace']);
+		$files=scandir($GLOBALS['dirs']['filespace']);
 		foreach(new \DirectoryIterator($dir2process['absDir']) as $fileInfo){
 			$file=$dir2process['absDir'].'/'.$fileInfo->getFilename();
 			$extensionPos=strpos($fileInfo->getFilename(),'.file');
@@ -87,7 +87,7 @@ class Filespace{
 	private function class2dir($class,$mkDirIfMissing=FALSE){
 		$classComps=explode('\\',$class);
 		$class=array_pop($classComps);
-		$dir=$GLOBALS['relDirs']['setup'].$class.'/';
+		$dir=$GLOBALS['dirs']['setup'].$class.'/';
 		if (!is_dir($dir) && $mkDirIfMissing){
 			mkdir($dir,0750,TRUE);
 		}
@@ -98,7 +98,7 @@ class Filespace{
 		// This function returns the filespace directory based on the tablename provided.
 		$source=explode('\\',$source);
 		$source=array_pop($source);
-		$dir=$GLOBALS['relDirs']['filespace'].$source.'/';
+		$dir=$GLOBALS['dirs']['filespace'].$source.'/';
 		if (!is_dir($dir) && $mkDirIfMissing){
 			mkdir($dir,0750,TRUE);
 		}
