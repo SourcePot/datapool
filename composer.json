@@ -13,7 +13,8 @@
 	],
 	"require":{
 		"php":">=8.0",
-		"smalot/pdfparser":">=v2.0"
+		"smalot/pdfparser":">=v2.0",
+		"sourcepot/ops":">=v0.2.0"
 	},
 	"autoload":{
 		"psr-4": {
