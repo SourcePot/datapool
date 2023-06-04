@@ -300,6 +300,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 						foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$matchText){
 							if (count($matches[$rule['Content']['Match index']])>1 && $rule['Content']['Allow multiple hits']){
 								$targetKey=$rule['Content']['Target key'].' '.$hitIndex;
+							} else if ($rule['Content']['Allow multiple hits']){
+								$targetKey=$rule['Content']['Target key'].' 0';
 							} else {
 								$targetKey=$rule['Content']['Target key'];
 							}
