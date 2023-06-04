@@ -66,82 +66,29 @@ class NetworkTools{
 	*
 	*/
 	
-	private function requestUrl($requestArr,$isDebugging=FALSE){
-		$requestArr['url']=trim($requestArr['url'],'/');
-		$requestArr['url']=$requestArr['url'].'/'.$requestArr['resource'];
-		if (!empty($requestArr['query'])){$requestArr['url']=$requestArr['url'].'?'.http_build_query($requestArr['query']);}
-		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
-		return $requestArr;
-	}
-	
-	private function requestHeader($requestArr,$isDebugging=FALSE){
-		//$template=array('Accept'=>'application/json','Content-Type'=>'multipart/form-data','Accept-Charset'=>'utf-8','Authorization'=>'AccessKey ...');
-		$template=array('Accept'=>'application/json','Content-Type'=>'multipart/form-data','Accept-Charset'=>'utf-8');
-		$requestArr['header']=array_merge($template,$requestArr['header']);
-		if (empty($requestArr['header']['User-agent'])){$requestArr['header']['User-agent']=$this->pageSettings['pageTitle'];}
-		$requestArr['contentType']=$requestArr['header']['Content-Type'];
-		$header=array();
-		foreach($requestArr['header'] as $key=>$value){
-			$header[]=$key.': '.$value;
-		}
-		$requestArr['header']=$header;
-		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
-		return $requestArr;
-	}
-	
-	private function requestDecodeResponse($requestArr){
-		foreach($requestArr['response'] as $index=>$response){
-			$json=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
-			if (stripos(trim($response),'<?xml ')===0){
-				// is xml encoded
-				$requestArr['response'][$index]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response);
-			} else if (!empty($json)){
-				// json encoded
-				$requestArr['response'][$index]=$json;
-			} else {
-				// text
-				$lines=explode("\r\n",$response);
-				if (count($lines)>1){
-					$requestArr['response'][$index]=array();
-					foreach($lines as $line){
-						$keyValue=explode(':',$line);
-						(isset($keyValue[1]))?$requestArr['response'][$index][$keyValue[0]]=trim($keyValue[1]):$requestArr['response'][$index][]=trim($keyValue[0]);
-					}
-				}
-			} 
-		}
-		return $requestArr;
-	}
-	
-	public function performRequest($method='GET',$url="https://rest.messagebird.com/",$resource='balance',$query=array(),$header=array(),$data=array(),$options=array(),$isDebugging=FALSE){
-		$requestArr=array('method'=>$method,'url'=>$url,'resource'=>$resource,'query'=>$query,'header'=>$header,'data'=>$data);
-		$requestArr=$this->requestUrl($requestArr);
-		$requestArr=$this->requestHeader($requestArr);
-		// post data encoding
-		if (!is_array($requestArr['data'])){
-			if (is_file($requestArr['data'])){
-				$mime=mime_content_type($requestArr['data']);
-				if ($mime){$data=['name'=>new \CurlFile($requestArr['data'],$mime,basename($data))];}
-			}
-		} else if (stripos($requestArr['contentType'],'json')!==FALSE){
-			$requestArr['data']=json_encode($requestArr['data']);
-		}
-		// curl processing
+	public function request($request,$isDebugging=FALSE){
+		$requestTemplate=array('method'=>'POST','url'=>'https://ops.epo.org/3.2','resource'=>'auth/accesstoken','query'=>array(),'header'=>array(),'data'=>array(),'options'=>array(),'dataType'=>'application/x-www-form-urlencoded');
+		$request=array_merge($requestTemplate,$request);
+		$request=$this->requestUrl($request);
+		$request=$this->requestHeader($request);
+		$request=$this->requestData($request);
 		$curl=curl_init();
-		curl_setopt($curl,\CURLOPT_HTTPHEADER,$requestArr['header']);
+		curl_setopt($curl,\CURLOPT_HTTPHEADER,$request['header']);
         curl_setopt($curl,\CURLOPT_HEADER,TRUE);
-        curl_setopt($curl,\CURLOPT_URL,$requestArr['url']);
+        curl_setopt($curl,\CURLOPT_URL,$request['url']);
         curl_setopt($curl,\CURLOPT_RETURNTRANSFER,TRUE);
         curl_setopt($curl,\CURLOPT_TIMEOUT,10);
         curl_setopt($curl,\CURLOPT_CONNECTTIMEOUT,2);
-        foreach($options as $option=>$value){curl_setopt($curl,$option,$value);}
-		switch(strtoupper($method)){
+        foreach($request['options'] as $option=>$value){
+			curl_setopt($curl,$option,$value);
+		}
+		switch(strtoupper($request['method'])){
 			case 'GET':
 				curl_setopt($curl,\CURLOPT_HTTPGET,TRUE);
 				break;
 			case 'POST':
 				curl_setopt($curl,\CURLOPT_POST,TRUE);
-				curl_setopt($curl,\CURLOPT_POSTFIELDS,$data);
+				curl_setopt($curl,\CURLOPT_POSTFIELDS,$request['data']);
         		break;
 			case 'DELETE':
 				curl_setopt($curl,\CURLOPT_CUSTOMREQUEST,'DELETE');
@@ -150,24 +97,87 @@ class NetworkTools{
 				curl_setopt($curl,\CURLOPT_HTTPGET,TRUE);
 				break;
 		}
-		
 		//curl_setopt($curl,\CURLOPT_CAINFO,$certificateFile); <---------------------	
-		
 		$response=curl_exec($curl);
-		if ($response===false){
-			if (isset($this->oc['SourcePot\Datapool\Foundation\Logging'])){
-				$logArr=array('msg'=>'CURL error '.curl_error($curl).' '.curl_errno($curl),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
-			}
-			$requestArr['response']=array('error'=>curl_error($curl),'no'=>curl_errno($curl));
-		} else {
-			$requestArr['response']=explode("\r\n\r\n",$response);
-			$requestArr=$this->requestDecodeResponse($requestArr);
-			$requestArr['response']['status']=(int)curl_getinfo($curl,\CURLINFO_HTTP_CODE);
-			curl_close($curl);
+		$response=$this->decodeResponse($response);
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('request'=>$request,'response'=>$response));}
+		return $response;
+	}
+
+	private function requestUrl($request,$isDebugging=FALSE){
+		$request['url']=trim($request['url'],'/');
+		$request['url']=$request['url'].'/'.$request['resource'];
+		if (!empty($request['query'])){$request['url']=$request['url'].'?'.http_build_query($request['query']);}
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($request);}
+		return $request;
+	}
+	
+	private function requestHeader($request,$isDebugging=FALSE){
+		$template=array('Accept'=>'application/json','Content-Type'=>'multipart/form-data','Accept-Charset'=>'utf-8');
+		$request['header']=array_merge($template,$request['header']);
+		if (empty($request['header']['User-agent'])){
+			$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+			$request['header']['User-agent']=$pageSettings['pageTitle'];
 		}
-		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($requestArr);}
-		return $requestArr;
+		$request['contentType']=$request['header']['Content-Type'];
+		$header=array();
+		foreach($request['header'] as $key=>$value){
+			$header[]=$key.': '.$value;
+		}
+		$request['header']=$header;
+		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($request);}
+		return $request;
+	}
+
+	private function requestData($request,$isDebugging=FALSE){
+		if (is_string($request['data'])){
+			if (is_file($request['data'])){
+				$mime=mime_content_type($request['data']);
+				if ($mime){$request['data']=['name'=>new \CurlFile($request['data'],$mime,basename($request['data']))];}
+			}
+		}
+		if (strpos($request['dataType'],'json')!==FALSE){
+			$request['data']=json_encode($request['data']);
+		} else if (strpos($request['dataType'],'urlencoded')!==FALSE){
+			$request['data']=http_build_query($request['data']);
+		}
+		return $request;
+	}
+	
+	private function decodeResponse($response){
+		$arr=array('header'=>array(),'data'=>array());
+		$strChnuks=explode("\r\n",$response);
+		// get header
+		while($strChunk=array_shift($strChnuks)){
+			if (empty($strChunk)){break;}
+			$keyEndPos=strpos($strChunk,':');
+			if ($keyEndPos===FALSE){
+				$key=$strChunk;
+				$value=TRUE;
+			} else {
+				$key=substr($strChunk,0,$keyEndPos);
+				$value=trim(substr($strChunk,$keyEndPos+1));
+			}
+			$arr['header'][$key]=$value;
+		}
+		// get data
+		if (isset($arr['header']['Content-Type'])){
+			$contentType=$arr['header']['Content-Type'];
+		} else {
+			$contentType='string';
+		}
+		foreach($strChnuks as $strChunk){
+			if (strpos($contentType,'json')!==FALSE){
+				$tmpArr=json_decode($strChunk,TRUE);
+				if ($tmpArr){$arr['data']=array_replace_recursive($arr['data'],$tmpArr);}
+			} else if (strpos($contentType,'xml')!==FALSE){
+				$tmpArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($strChunk);
+				if ($tmpArr){$arr['data']=array_replace_recursive($arr['data'],$tmpArr);}
+			} else {
+				parse_str($strChunk,$arr['data']);
+			}
+		}
+		return $arr;
 	}
 
 }
