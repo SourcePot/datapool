@@ -22,12 +22,12 @@ final class Root{
 	*/
 	private function registerVendorClasses($oc,$isDebugging=FALSE){
 		// instantiate OPS add-on
-		$classesWithNamespace=array('\SourcePot\Ops\OpsEntries');
+		$classesWithNamespace=array('SourcePot\Ops\OpsEntries');
 		$debugArr=array('classesWithNamespace'=>$classesWithNamespace);
 		foreach($classesWithNamespace as $classIndex=>$classWithNamespace){
 			if (class_exists($classWithNamespace)){
 				$oc[$classWithNamespace]=new $classWithNamespace($oc);
-				$oc[$classWithNamespace]->dataProcessor(array(),'info');
+				//$oc[$classWithNamespace]->dataProcessor(array(),'info');
 				$this->updateStructure($oc,$classWithNamespace);			 
 				$debugArr['Successful class instantiations'][$classIndex]=$classWithNamespace;
 			} else {
