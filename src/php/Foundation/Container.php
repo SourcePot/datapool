@@ -140,7 +140,11 @@ class Container{
 			$arr['html'].='Generic container called without required settings "method" or "classWithNamespace".';
 		} else if (method_exists($arr['settings']['classWithNamespace'],$arr['settings']['method'])){
 			$method=$arr['settings']['method'];
-			$arr=$this->oc[$arr['settings']['classWithNamespace']]->$method($arr);
+			if (isset($this->oc[$arr['settings']['classWithNamespace']])){
+				$arr=$this->oc[$arr['settings']['classWithNamespace']]->$method($arr);
+			} else {
+				$arr['html'].='Method '.__FUNCTION__.' failed to call '.$arr['settings']['classWithNamespace'].'::'.$method.'(arr). Maybe objectList.csv is not up-to-date.';
+			}
 		} else {
 			$arr['html'].='Generic container called with with invalid method setting. Check container settings "classWithNamespace" and/or "method".';	
 		}

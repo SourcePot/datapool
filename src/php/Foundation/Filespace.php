@@ -48,7 +48,7 @@ class Filespace{
 			$dirs=scandir($GLOBALS['dirs']['filespace']);
 			foreach($dirs as $dir){
 				if (strcmp($dir,'.')===0 || strcmp($dir,'..')===0){continue;}
-				$vars['Dirs to process'][$dir]=array('absDir'=>$GLOBALS['dirs']['filespace'].'/'.$dir,'table'=>$dir);
+				$vars['Dirs to process'][$dir]=array('absDir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir);
 			}
 		}
 		$dir2process=array_shift($vars['Dirs to process']);
