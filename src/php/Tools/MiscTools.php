@@ -62,6 +62,20 @@ class MiscTools{
 		return $arr;
 	}
 	
+	public function arr2xml($arr,$rootElement=NULL,$xml=NULL){
+		if ($xml===NULL){
+			$xml=new \SimpleXMLElement($rootElement===NULL?'<root/>':$rootElement);
+		}
+		foreach($arr as $key=>$value){
+			if (is_array($value)){
+				$this->arr2xml($value,$key,$xml->addChild($key));
+			} else {
+				$xml->addChild($key,$value);
+			}
+		}
+		return $xml->asXML();
+	}
+	
 	public function containsTags($str){
 		if (strlen($str)===strlen(strip_tags($str))){return FALSE;} else {return TRUE;}
 	}

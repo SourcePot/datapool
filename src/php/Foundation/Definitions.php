@@ -384,7 +384,13 @@ class Definitions{
 		if (method_exists($class,$function)){
 			$defArr['keep-element-content']=TRUE;
 			$defArr['selector']=array();
-			$selectorKeys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($defArr['Source']);
+			if (isset($defArr['Source'])){
+				// entry is stored in the database
+				$selectorKeys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($defArr['Source']);
+			} else {
+				// entry is stored in filespace
+				$selectorKeys=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getEntryTemplate();
+			}
 			$selectorKeys+=array('Source'=>array());
 			foreach($selectorKeys as $selectorKey=>$templateArr){
 				if (isset($defArr[$selectorKey])){$defArr['selector'][$selectorKey]=$defArr[$selectorKey];}

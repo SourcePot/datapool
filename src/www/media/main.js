@@ -1,8 +1,7 @@
 jQuery(document).ready(function(){
 	
-// basic content adjustments
+/** BASIC PAGE CONTENT STYLING **/
 	jQuery('article').fadeIn(300);
-
 	adjustMainHeight();
 	function adjustMainHeight(){
 		let mainHeight=jQuery(window).height();
@@ -18,7 +17,6 @@ jQuery(document).ready(function(){
 			jQuery('div.second-menu').css({'height':'auto'});
 		}
 	});
-
 	addSafetyCoverEvent();
 	function addSafetyCoverEvent(){
 		jQuery('p.cover').unbind('click');
@@ -29,20 +27,21 @@ jQuery(document).ready(function(){
 		jQuery(this).animate({'top':height},500).delay(5000).animate({'top':0},200);
 	}
 
-// step-by-step entry presentation
+
+
+/** STEP-BY-STEP  ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]').first();
 		if (isVisible(obj)===true && busyLoadingEntry===false){
-			let arr={'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id'),'presentEntry':'Forum'},
-								 'function':jQuery(obj).attr('function'),
-								 'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
-								 };
-			console.log(arr);
+			let arr={'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id')},
+					 'settings':{'presentEntry':'Forum'},
+					 'function':jQuery(obj).attr('function'),
+					 'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
+					};
 			loadNextSelectedView(arr);
 		}
 	}
-	
 	const loadNextSelectedView=function(arr){
 		busyLoadingEntry=true;
 		jQuery.ajax({
@@ -66,7 +65,8 @@ jQuery(document).ready(function(){
 		});
 	}
 
-// emoji processing
+
+/** EMOJI PROCESSING **/
 	addEmojiEvent();
 	function addEmojiEvent(){
 		jQuery('a.emoji').unbind('click');
@@ -80,7 +80,8 @@ jQuery(document).ready(function(){
 		jQuery(selector).val(text);
 	}
 
-// html-container management	
+
+/** HTML-CONTAINER MANAGEMENT **/	
 	initTriggerIds();
 	function initTriggerIds(){
 		jQuery('[trigger-id]').each(function(i){
@@ -92,7 +93,6 @@ jQuery(document).ready(function(){
 			jQuery(btnSelector).hide();
 		});
 	}
-	
 	function containerBusy(containerId,isBusy){
 		if (isBusy===true){
 			jQuery('div[busy-id=busy-'+containerId+']').show();
@@ -100,10 +100,9 @@ jQuery(document).ready(function(){
 			jQuery('div[busy-id=busy-'+containerId+']').hide();
 		}
 	}
-	
 	const containerMonitor=function(){
 		jQuery('article[container-id]').each(function(containerIndex){
-			// loop through container
+			// loop through all containers present on the page
 			let containerId=jQuery(this).attr('container-id');
 			jQuery.ajax({
 				method:"POST",
@@ -124,7 +123,6 @@ jQuery(document).ready(function(){
 			});
 		});
 	}
-
 	let attachedEvents={};
 	attachMissingContainerEvents()
 	function attachMissingContainerEvents(){
@@ -136,7 +134,6 @@ jQuery(document).ready(function(){
 			}
 		});
 	}
-	
 	function attachEventsToContainer(containerId){
 		let wrapper=jQuery('article[container-id='+containerId+']');
 		jQuery(wrapper).find('[type=submit],button').each(function(i){
@@ -157,7 +154,6 @@ jQuery(document).ready(function(){
 				});
 			}
 		});
-		
 		jQuery(wrapper).find('[type=range]').each(function(i){
 			if (jQuery(this).attr('excontainer')===undefined){
 				jQuery(this).unbind('change');
@@ -166,7 +162,6 @@ jQuery(document).ready(function(){
 				});
 			}
 		});
-		
 		jQuery(wrapper).find('[type=date],[type=datetime-local]').each(function(i){
 			if (jQuery(this).attr('excontainer')===undefined){
 				jQuery(this).unbind('keypress');
@@ -179,7 +174,6 @@ jQuery(document).ready(function(){
 				});
 			}
 		});
-		
 		jQuery(wrapper).find('select').each(function(i){
 			if (jQuery(this).attr('excontainer')===undefined){
 				jQuery(this).unbind('change');
@@ -191,14 +185,12 @@ jQuery(document).ready(function(){
 			}
 		});
 	}
-	
 	function reloadContainer(containerId,data){
 		var formData=new FormData();
 		formData.append('function','container');
 		formData.append('container-id',containerId);
 		postRequest(containerId,formData);
 	}
-	
 	function submitForm(trigger,containerId){
 		containerBusy(containerId,true);
 		var formData=new FormData($('form')[0]);
@@ -207,7 +199,6 @@ jQuery(document).ready(function(){
 		formData.append('container-id',containerId);
 		postRequest(containerId,formData);
 	}
-
 	function postRequest(containerId,data){
 		containerBusy(containerId,true);
 		$.ajax({
@@ -253,7 +244,8 @@ jQuery(document).ready(function(){
 		});	
 	}
 
-// image-overlay
+
+/** IMAGE VIEWER **/
 	let imgs={};
 	let imgId2index={};
 	loadImageData();
@@ -269,7 +261,6 @@ jQuery(document).ready(function(){
 			index++;
 		});	
 	}
-	
 	function loadImage(item){
 		let index;
 		if (typeof(item)==='object'){
@@ -291,7 +282,6 @@ jQuery(document).ready(function(){
 			console.log(data);
 		});
 	}
-	
 	function addImageToOverlay(img){
 		let index=parseInt(img['index']);
 		let lastIndex=Object.keys(imgs).length-1,page=index+1,lastPage=lastIndex+1;
@@ -321,18 +311,19 @@ jQuery(document).ready(function(){
 		});
 	}
 
-// entry shuffle
+
+/** IMAGE SHUFFLE **/
 	var entryShuffleEntries={};
 	initShuffleEntriesMap();
 	function initShuffleEntriesMap(){
 		jQuery("div.preview").each(function(entryIndex){
-			var id='#'+jQuery(this).attr('id');
+			var id='#'+jQuery(this).attr('id'),zIndex=parseInt(jQuery(this).css('z-index'));
 			var containerId=id.split('-').pop();
 			if (containerId in entryShuffleEntries===false){entryShuffleEntries[containerId]= new Map();}
-			entryShuffleEntries[containerId].set(id,jQuery(this).css('z-index'));
+			entryShuffleEntries[containerId].set(id,zIndex);
+			if (zIndex>1){presentEntry(containerId,id);}
 		});
 	}
-	
 	initShuffleImages();
 	function initShuffleImages(){
 		var triggerNext={};
@@ -355,7 +346,6 @@ jQuery(document).ready(function(){
 			});
 		});
 	}
-	
 	function animateImage(selector,property,start,end,width,triggerNext){
 		jQuery(selector).animate(
 			{[property]:(end+'px'),'width':1.2*width},
@@ -371,7 +361,6 @@ jQuery(document).ready(function(){
 				}
 			});
 	}
-	
 	function entryShuffleEntriesStep(containerId,isRev){
 		if (!(containerId in entryShuffleEntries)){return false;}
 		var toResetId=false,toSetId=false,firstId=false;
@@ -391,15 +380,20 @@ jQuery(document).ready(function(){
 		entryShuffleEntries[containerId].set(toResetId,1);
 		jQuery(toSetId).css('z-index','2');
 		entryShuffleEntries[containerId].set(toSetId,2);
-		let arr={'selector':{'Source':jQuery(toSetId).attr('source'),'EntryId':jQuery(toSetId).attr('entry-id'),'presentEntry':'Image shuffle '+jQuery(toSetId).attr('source')},
-							 'function':'loadEntry',
-							 'htmlSelector':'#present-'+containerId+'-entry','presentEntry':'Image shuffle'
-							 };
-		loadNextSelectedView(arr);
+		presentEntry(containerId,toSetId);
 		return true;
 	}
+	function presentEntry(containerId,selector){
+		var presentEntrySelector='#present-'+containerId+'-entry';
+		let arr={'selector':{'Source':jQuery(selector).attr('source'),'EntryId':jQuery(selector).attr('entry-id')},
+				 'settings':{'presentEntry':'Image shuffle '+jQuery(presentEntrySelector).attr('title')},
+				 'function':'loadEntry',
+				 'htmlSelector':presentEntrySelector
+				};
+		loadNextSelectedView(arr);
+	}
 		
-// js button
+/** JS-BUTTONS **/
 	initJsButtonEvents();
 	function initJsButtonEvents(){
 		jQuery('.js-button').unbind('click');
@@ -415,8 +409,10 @@ jQuery(document).ready(function(){
 			}
 		});
 	}
-	
-// canvas interactivity
+
+
+
+/** CANVAS INTERACTIVITY **/
 	initDraggable();
 	function initDraggable(){
 		jQuery("div[class^='canvas-']").each(function(containerIndex){
@@ -434,7 +430,6 @@ jQuery(document).ready(function(){
 			}
 		});
 	}
-	
 	function setCanvasElementPosition(arr){
 		let data={'function':'setCanvasElementPosition','arr':arr};
 		jQuery.ajax({
@@ -452,14 +447,14 @@ jQuery(document).ready(function(){
 		});
 	}
 
-// symbol login
-	
+
+
+/** SYMBOL LOGIN FORM **/
 	addSymbolLoginEvents();
 	function addSymbolLoginEvents(){
 		jQuery('[id*=_loginSymbol]').unbind('click');
 		jQuery('[id*=_loginSymbol]').bind('click',loginSymbolClick);
 	}
-	
 	function loginSymbolClick(){
 		let symbol=jQuery(this).html();
 		let symbolIds=jQuery(this).attr('id').split('_');
@@ -471,13 +466,11 @@ jQuery(document).ready(function(){
 		addSymbol(symbolId)
 		if (Math.random()>0.5){addScrambledSymbol();}	
 	}
-	
 	function addSymbol(symbolId){
 		let pass=jQuery('.pass-phrase').val();
 		if (pass.length>0){pass=pass+'|'+symbolId;} else {pass=symbolId;}
 		jQuery('.pass-phrase').val(pass);
 	}
-	
 	function addScrambledSymbol(){
 		let symbols=jQuery('.pass-phrase').val().split('|');
 		if (symbols.length==0){return false;}
@@ -492,7 +485,9 @@ jQuery(document).ready(function(){
 		if (charArr.join('').localeCompare(newSymbolId)==0){return false;}
 		addSymbol(newSymbolId);
 	}
-// misc-helper methods
+	
+	
+/** MISC-HELPERS **/
 	let heartbeats=0;
 	(function heartbeat(){
     	setTimeout(heartbeat,100);
@@ -503,7 +498,6 @@ jQuery(document).ready(function(){
 			loadNextEntry();
 		}
 	})();
-
 	function isVisible(obj){
 		if (obj.length==0){return false;}
 		let element={'top':jQuery(obj).offset().top};
@@ -516,14 +510,12 @@ jQuery(document).ready(function(){
 			return true;
 		}
 	}
-	
 	function resetAll(){
 		adjustMainHeight();
 		addSafetyCoverEvent();
 		addEmojiEvent();
 		addSymbolLoginEvents();
 		loadImageData();
-		initShuffleEntriesMap();
 		initJsButtonEvents();
 	}
 	

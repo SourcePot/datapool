@@ -13,6 +13,7 @@ namespace SourcePot\Datapool;
 
 final class Root{
 
+	private $currentScript='';
 	private $oc=array();
     private $structure=array('registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
     
@@ -44,6 +45,7 @@ final class Root{
 	public function __construct(){
 		$GLOBALS['script start time']=hrtime(TRUE);
 		session_start();
+		$this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
 		// set exeption handler and initialize directories
 		$this->initDirs();
 		$this->initExceptionHandler();
@@ -75,14 +77,14 @@ final class Root{
 	* @return array An associative array that contains the full generated webpage referenced by the key "page html".
 	*/
 	public function run(){
-		$this->structure['callingWWWscript']=$_SERVER['PHP_SELF'];
+		$this->structure['callingWWWscript']=$this->currentScript;
 		// get current temp dir
 		$GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
 		// process all buttons
 		$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn();
 		// add "page html" to the return array
 		$arr=array();
-		if (strpos($_SERVER['PHP_SELF'],'index.php')>0){
+		if (strpos($this->currentScript,'index.php')>0){
 			// build webpage
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
@@ -91,12 +93,15 @@ final class Root{
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
 			// add page statistic for the web page called by a user
 			//$this->addPageStatistic($arr,$callingWWWscript);
-		} else if (strpos($_SERVER['PHP_SELF'],'js.php')>0){
+		} else if (strpos($this->currentScript,'js.php')>0){
 			// js-call Processing
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
-		} else if (strpos($_SERVER['PHP_SELF'],'job.php')>0){
+		} else if (strpos($this->currentScript,'job.php')>0){
 			// job Processing
 			$arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
+		} else if (strpos($this->currentScript,'resource.php')>0){
+			// client request processing
+			$arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
 		} else {
 			// invalid
 		}
@@ -279,7 +284,7 @@ final class Root{
 			file_put_contents($logFileName,$logFileContent);
 			//fallback page
 			$html='';
-			if (strpos($_SERVER['PHP_SELF'],'js.php')!==FALSE){
+			if (strpos($this->currentScript,'js.php')!==FALSE){
 				$html.='Have run into a problem, please check debugging dir...';
 			} else {
 				$html.='<!DOCTYPE html>';

@@ -12,67 +12,12 @@ body{
 	background-repeat:repeat;
 	background-attachment:fixed;
 }
-#overlay{
-	position:fixed;
-	float:unset;
-	top:0;
-	left:0;
-	width:100%;
-	height:100%;
-	cursor:pointer;
-	background-color:#fff;
-	z-index:20;
-}
-#overlay-image{
-	display:block;
-	max-width:95%;
-	max-height:95%;
-	margin:0 auto;
-	cursor:pointer;
-	background-color:#fff;
-	background-image:url("busy.gif");
-	background-repeat:no-repeat;
-	background-position:center;
-}
-#img-index{
-	wiodth:100%;
-	text-align:center;
-	cursor:pointer;
-	font-size:1.5em;
-}
-#prev-img-btn,#next-img-btn{
-	position:absolute;
-	top:0;
-	padding:3em 0.5em;
-	text-align:center;
-	height:100%;
-	min-width:5%;
-	cursor:pointer;
-	font-size:3em;
-}
-#prev-img-btn:hover,#next-img-btn:hover{
-	background-color:#aaa8;
-}
-#prev-img-btn{
-	left:0;
-}
-#next-img-btn{
-	right:0;
-}
-#overlay-title{
-	text-align:center;
-}
 h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed{
 	float:left;
 	clear:both;
 	font-size:inherit;
 	font-style:inherit;
 	line-height:1.6em;
-}
-ol,ul{
-	margin: 1.2em 0;
-	list-style-type:square;
-	list-style-position:inside;
 }
 h1,h2,h3{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -90,47 +35,10 @@ h3{
 	font-size:1.1em;
 	margin:0 0 0.2em 0.5em;
 }
-main,#top-filler{
-	position:relative;
-	width:100%;
-	background-color:#fff;
-	z-index:3;
-}
-#top-filler{
-	height:33px;
-}
-#bottom-filler{
-	position:relative;
-	width:100%;
-	height:80px;
-	z-index:1;
-	border-top:1px solid #333;
-}
-#bottom-menu{
-	position:fixed;
-	bottom:0;
-	left:0;
-	width:100%;
-	height:80px;
-	background:none;
-	z-index:2;
-}
-div.bottom-wrapper{
-	float:none;
-	width:fit-content;
-	margin:5px auto;
-}
-input[type=submit].bottom-menu{
-	float:none;
-	font-size:1.25em;
-	margin:0 25px;
-	border:none;
-	background:none;
-	transition: 0.2s;
-}
-input[type=submit].bottom-menu:hover{
-	color:#c00;
-	background:none;
+ol,ul{
+	margin: 1.2em 0;
+	list-style-type:square;
+	list-style-position:inside;
 }
 button,input,textarea,select,a.btn,.js-button{
 	float:left;
@@ -144,6 +52,11 @@ button,input,textarea,select,a.btn,.js-button{
 	border-right:1px solid #555;
 	border-bottom:1px solid #555;
 	text-align:center;
+}
+button:hover,input[type=submit]:hover,a.btn:hover,.js-button:hover{
+	cursor:pointer;
+	color:#fff;
+	background-color:#000;
 }
 select{
 	max-width:280px;
@@ -171,73 +84,6 @@ p.cover{
 	background-color:#f88a;
 	text-align:center;
 	cursor:pointer;
-}
-div.first-menu,div.second-menu{
-	position:fixed;
-	top:0;
-	left:0;
-	width:100%;
-	height:33px;
-	z-index:10;
-	border-bottom:1px dotted #000;
-	background-color:#0005;
-	overflow:hidden;
-}
-div.second-menu{
-	top:34px;
-}
-ul.menu{
-	list-style-type: none;
-	border-bottom:1px dotted #aaa;
-	background-color:#fff;
-	margin:0;
-}
-li.menu{
-	clear:none;
-	width:6em;
-	background:none;
-	border-right:1px solid #aaa;
-	overflow:hidden;
-}
-li.menu:hover{
-	border-bottom:4px solid #000;	
-}
-a.menu,a.first-menu,p.first-menu{
-	display:block;
-	color:#aaa;
-	text-align:center;
-}
-a.first-menu,p.first-menu{
-	float:left;
-	clear:none;
-	font-size:20px;
-	font-weight:bold;
-	line-height:33px;
-	width:50px;
-	border-right:1px solid #bbb;
-}
-
-select.menu{
-	font-size:16px;
-	padding:7px;
-}
-a.first-menu{
-	color:#000;
-	background-color:#fff;
-	margin:1px 0 0 1px;
-}
-div.menu-item-emoji,div.menu-item-label{
-	float:inherit;
-	text-align:center;
-	width:100%;
-}
-div.menu-item-emoji{
-	font-size:24px;
-	height:30px;
-}
-select.lng-selector{
-	float:right;
-	clear:none;
 }
 p.standard{
 	padding:2px;
@@ -306,6 +152,196 @@ div.container-busy{
 	opacity:0.7;
 	z-index:60;
 }
+div.explorer{
+	clear:none;
+	padding:2em 0.5em 1em 5px;
+}
+label.explorer{
+	float:left;
+	margin:-2em -2em 0 0;
+}
+div.icon{
+	clear:none;
+	display: block;
+	overflow:hidden;
+	margin:3px;
+	background-size:cover;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    -o-border-radius: 50%;
+    border-radius: 50%;  
+}
+.logo{
+	float:none;
+	margin:10px auto;
+}
+
+
+/** IMAGE VIEWER **/
+#overlay{
+	position:fixed;
+	float:unset;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	cursor:pointer;
+	background-color:#fff;
+	z-index:20;
+}
+#overlay-image{
+	display:block;
+	max-width:95%;
+	max-height:95%;
+	margin:0 auto;
+	cursor:pointer;
+	background-color:#fff;
+	background-image:url("busy.gif");
+	background-repeat:no-repeat;
+	background-position:center;
+}
+#img-index{
+	wiodth:100%;
+	text-align:center;
+	cursor:pointer;
+	font-size:1.5em;
+}
+#prev-img-btn,#next-img-btn{
+	position:absolute;
+	top:0;
+	padding:3em 0.5em;
+	text-align:center;
+	height:100%;
+	min-width:5%;
+	cursor:pointer;
+	font-size:3em;
+}
+#prev-img-btn:hover,#next-img-btn:hover{
+	background-color:#aaa8;
+}
+#prev-img-btn{
+	left:0;
+}
+#next-img-btn{
+	right:0;
+}
+#overlay-title{
+	text-align:center;
+}
+
+
+/** MENUs **/
+main,#top-filler{
+	position:relative;
+	width:100%;
+	background-color:#fff;
+	z-index:3;
+}
+#top-filler{
+	height:33px;
+}
+#bottom-filler{
+	position:relative;
+	width:100%;
+	height:80px;
+	z-index:1;
+	border-top:1px solid #333;
+}
+#bottom-menu{
+	position:fixed;
+	bottom:0;
+	left:0;
+	width:100%;
+	height:80px;
+	background:none;
+	z-index:2;
+}
+div.bottom-wrapper{
+	float:none;
+	width:fit-content;
+	margin:5px auto;
+}
+input[type=submit].bottom-menu{
+	float:none;
+	font-size:1.25em;
+	margin:0 25px;
+	border:none;
+	background:none;
+	transition: 0.2s;
+}
+input[type=submit].bottom-menu:hover{
+	color:#c00;
+	background:none;
+}
+div.first-menu,div.second-menu{
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	height:33px;
+	z-index:10;
+	border-bottom:1px dotted #000;
+	background-color:#0005;
+	overflow:hidden;
+}
+div.second-menu{
+	top:34px;
+}
+ul.menu{
+	list-style-type: none;
+	border-bottom:1px dotted #aaa;
+	background-color:#fff;
+	margin:0;
+}
+li.menu{
+	clear:none;
+	width:6em;
+	background:none;
+	border-right:1px solid #aaa;
+	overflow:hidden;
+}
+li.menu:hover{
+	border-bottom:4px solid #000;	
+}
+a.menu,a.first-menu,p.first-menu{
+	display:block;
+	color:#aaa;
+	text-align:center;
+}
+a.first-menu,p.first-menu{
+	float:left;
+	clear:none;
+	font-size:20px;
+	font-weight:bold;
+	line-height:33px;
+	width:50px;
+	border-right:1px solid #bbb;
+}
+select.menu{
+	font-size:16px;
+	padding:7px;
+}
+a.first-menu{
+	color:#000;
+	background-color:#fff;
+	margin:1px 0 0 1px;
+}
+div.menu-item-emoji,div.menu-item-label{
+	float:inherit;
+	text-align:center;
+	width:100%;
+}
+div.menu-item-emoji{
+	font-size:24px;
+	height:30px;
+}
+select.lng-selector{
+	float:right;
+	clear:none;
+}
+
+/** DETAILS, SUMMARY, APPs **/
 details{
 	position:relative;
 	float:left;
@@ -344,26 +380,9 @@ summary.app:hover,summary.forum:hover,summary.toolbox{
 	cursor:pointer;
 	background-color:#ccc;
 }
-div.explorer{
-	clear:none;
-	padding:2em 0.5em 1em 5px;
-}
-label.explorer{
-	float:left;
-	margin:-2em -2em 0 0;
-}
-div.icon{
-	clear:none;
-	display: block;
-	overflow:hidden;
-	margin:3px;
-	background-size:cover;
-    -webkit-border-radius: 50%;
-    -moz-border-radius: 50%;
-    -ms-border-radius: 50%;
-    -o-border-radius: 50%;
-    border-radius: 50%;  
-}
+
+
+/** CANVAS **/
 #canvas{
 	position:relative;
 	width:100%;
@@ -442,6 +461,9 @@ p.canvas-info{
 	padding:1px;
 	line-height:1em;
 }
+
+
+/** CALENDAR **/
 div.calendar-sheet-wrapper{
 	width:100%;
 	margin:5px 0;
@@ -500,6 +522,23 @@ button.calendar-event,.calendar-event-selected{
 .calendar-event-selected{
 	border:2px solid #f00;
 }
+
+
+/** STATUS **//
+.status-on,.status-off{
+	background-color:#2a0;
+	color:#fff;
+	min-width:100%;
+	min-height:8px;
+	padding:0.1em;
+	text-align:center;
+}
+.status-on{
+	background-color:#f00;
+}
+
+
+/** COMMENTS etc. **/
 p.comment{
 	font-size:1.2em;
 	color:#a80;
@@ -537,20 +576,4 @@ a.emoji{
 	clear:none;
 	font-size:2em;
 	color:#000;
-}
-button:hover,input[type=submit]:hover,a.btn:hover,.js-button:hover{
-	cursor:pointer;
-	color:#fff;
-	background-color:#000;
-}
-.status-on,.status-off{
-	background-color:#2a0;
-	color:#fff;
-	min-width:100%;
-	min-height:8px;
-	padding:0.1em;
-	text-align:center;
-}
-.status-on{
-	background-color:#f00;
 }

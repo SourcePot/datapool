@@ -116,8 +116,7 @@ class NetworkTools{
 		$template=array('Accept'=>'application/json','Content-Type'=>'multipart/form-data','Accept-Charset'=>'utf-8');
 		$request['header']=array_merge($template,$request['header']);
 		if (empty($request['header']['User-agent'])){
-			$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-			$request['header']['User-agent']=$pageSettings['pageTitle'];
+			$request['header']['User-agent']=$this->pageSettings['pageTitle'];
 		}
 		$request['contentType']=$request['header']['Content-Type'];
 		$header=array();
@@ -158,11 +157,11 @@ class NetworkTools{
 				$key=substr($strChunk,0,$keyEndPos);
 				$value=trim(substr($strChunk,$keyEndPos+1));
 			}
-			$arr['header'][$key]=$value;
+			$arr['header'][strtolower($key)]=$value;
 		}
 		// get data
-		if (isset($arr['header']['Content-Type'])){
-			$contentType=$arr['header']['Content-Type'];
+		if (isset($arr['header']['content-type'])){
+			$contentType=$arr['header']['content-type'];
 		} else {
 			$contentType='string';
 		}
@@ -179,6 +178,38 @@ class NetworkTools{
 		}
 		return $arr;
 	}
-
+	
+	public function answer($header,$data,$dataType='application/json',$charset='UTF-8'){
+		if (strpos($dataType,'json')>0){
+			$data=json_encode($data);
+		} else if (strpos($dataType,'xml')>0){
+			$data=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2xml($data);
+		}
+		$headerTemplate=array('HTTP/1.1 404 Not Found'=>FALSE,
+							  'Access-Control-Allow-Credentials'=>'true',
+							  'Access-Control-Allow-Headers'=>'Authorization',
+							  'Access-Control-Allow-Methods'=>'POST',
+							  'Access-Control-Allow-Origin'=>'*',
+							  'Cache-Control'=>'no-cache,must-revalidate',
+							  'Expires'=>'Sat, 26 Jul 1997 05:00:00 GMT',
+							  'Connection'=>'keep-alive',
+							  'Content-Language'=>'en',
+							  'Content-Type'=>$dataType.';charset='.$charset,
+							  'Content-Length'=>mb_strlen($data,$charset),
+							  'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
+							  'X-API'=>$this->pageSettings['pageTitle']
+							  );
+		$header=array_merge($headerTemplate,$header);
+		foreach($header as $key=>$value){
+			if ($value===FALSE){
+				$header=$key;
+			} else {
+				$header=$key.': '.$value;
+			}
+			header($header);
+		}
+		echo $data;
+	}
+	
 }
 ?>
