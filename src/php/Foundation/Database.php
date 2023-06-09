@@ -29,7 +29,7 @@ class Database{
 	private $rootEntryTemplate=array('EntryId'=>array('index'=>'PRIMARY','type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0),
 								 'Group'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
 								 'Folder'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-								 'Name'=>array('index'=>'NAME_IND','type'=>'VARCHAR(1024)','value'=>'...','Description'=>'Third level ordering criterion'),
+								 'Name'=>array('index'=>'NAME_IND','type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
 								 'Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Source}}','Description'=>'This is the data-type of Content'),
 								 'Date'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
 								 'Content'=>array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
@@ -504,7 +504,7 @@ class Database{
 		
 	public function updateEntries($selector,$entry,$isSystemCall=FALSE,$rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE){
 		// only the Admin has the right to change data in the Privileges column
-		if (!empty($entry['Privileges']) && empty($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin($user=FALSE))){
+		if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
 			unset($entry['Privileges']);
 		}
 		if (empty($entry)){return FALSE;}
@@ -587,7 +587,7 @@ class Database{
 
 	public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE,$addLog=FALSE){
 		// only the Admin has the right to update the data in the Privileges column
-		if (!empty($entry['Privileges']) && empty($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin($user=FALSE))){
+		if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
 			unset($entry['Privileges']);
 		}
 		if (empty($entry)){return FALSE;}

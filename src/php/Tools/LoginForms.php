@@ -75,7 +75,7 @@ class LoginForms{
 	public function getLoginForm($arr=array()){
 		$arr['result']=$this->formData();
 		//
-		$email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
+		$email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('width'=>'100%','margin'=>'0','padding'=>'0','line-height'=>'2em'));
 		$updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
 		$loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
 		$registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('float'=>'right'));
@@ -115,9 +115,9 @@ class LoginForms{
 		$arr=array_merge($template,$arr);
 		$recovery=array('Passphrase'=>'','Passphrase for user'=>'');
 		$hashSymbolArr=array();
-		$aArr=array('tag'=>'a','href'=>'#','style'=>array('position'=>'absolute','top'=>'0','left'=>'0','padding'=>'0'),'class'=>'imgPassLink','keep-element-content'=>TRUE);
+		$aArr=array('tag'=>'a','href'=>'#','class'=>'keypad','keep-element-content'=>TRUE);
 		$imgArr=array('tag'=>'img');
-		$layersDivArr=array('tag'=>'div','keep-element-content'=>TRUE,'style'=>array('position'=>'relative','width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px','margin'=>'1px'));
+		$layersDivArr=array('tag'=>'div','keep-element-content'=>TRUE,'style'=>array('width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px'),'class'=>'keypad');
 		shuffle($this->digits);
 		$html=$arr['html'];
 		foreach ($this->digits as $digitIndex => $digitDef){
@@ -153,6 +153,7 @@ class LoginForms{
 				$imagedata=ob_get_contents();
 				ob_end_clean();
 				$imgArr['src']='data:image/png;base64,'.base64_encode($imagedata);
+				$imgArr['class']='keypad';
 				$aArr['id']=$imgTmpHash.'_loginSymbol';
 				$aArr['title']='Login symbol';
 				//$aArr['title']=$digitDef['description'];
@@ -167,6 +168,8 @@ class LoginForms{
 		// add hidden input and passphrase preview
 		$previewArr=array('tag'=>'div','element-content'=>'','class'=>'phrase-preview');
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($previewArr);
+		$previewBtn=array('tag'=>'a','element-content'=>'Clear','href'=>'#','class'=>'phrase-preview');
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($previewBtn);
 		$phraseArr=array('tag'=>'input','type'=>'hidden','key'=>array('Passphrase'),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','element-content'=>'','class'=>'pass-phrase');
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($phraseArr);
 		// save state

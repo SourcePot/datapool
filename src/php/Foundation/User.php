@@ -47,7 +47,7 @@ class User{
 							 'Login'=>array('@function'=>'getLoginForm','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'),
 							 'Icon etc.'=>array('@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
 							 'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-							 'App credentials'=>array('@function'=>'clientAppCredentialsForm','@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'),
+							 'App credentials'=>array('@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'),
 							 'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>array('width'=>360,'height'=>400)),
 							 );
 
@@ -124,15 +124,13 @@ class User{
 	
 	public function unifyEntry($entry){
 		$entry['Source']=$this->entryTable;
-		// This function makes class specific corrections before the entry is inserted or updated.
-		if (!empty($entry['Email'])){$entry['Content']['Contact details']['Email']=$entry['Email'];}
-		if (empty($entry['Params']['User registration']['Email'])){$entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];}
-		$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
+		$entry['Content']['Contact details']['Email']=(empty($entry['Email']))?'':$entry['Email'];
 		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		$entry['Group']=$this->pageSettings['pageTitle'];
 		$entry['Folder']=$this->getUserRolsString($entry);
 		$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
-		$entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);	
+		$entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);	
+		$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
 		return $entry;
 	}
 	
@@ -141,9 +139,10 @@ class User{
 		$user['Owner']='ANONYM';
 		$user['LoginId']=mt_rand(1,10000000);
 		$user['Expires']=date('Y-m-d H:i:s',time()+600);
-		$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
+		//$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']=1;
 		$user=$this->unifyEntry($user);
+		$user=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
 		$this->loginUser($user);
 		return $user;
 	}
@@ -174,9 +173,10 @@ class User{
 	public function newlyRegisteredUserLogin($user){
 		$user['Owner']=$user['EntryId'];
 		$user['LoginId']=$user['LoginId'];
-		$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
+		//$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']='REGISTERED_R';
 		$user=$this->unifyEntry($user);
+		$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
 		$this->loginUser($user);
 		return $user;
 	}

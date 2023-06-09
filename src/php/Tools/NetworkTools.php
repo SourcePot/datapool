@@ -185,7 +185,7 @@ class NetworkTools{
 		} else if (strpos($dataType,'xml')>0){
 			$data=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2xml($data);
 		}
-		$headerTemplate=array('HTTP/1.1 404 Not Found'=>FALSE,
+		$headerTemplate=array(''=>'HTTP/1.1 200 OK',
 							  'Access-Control-Allow-Credentials'=>'true',
 							  'Access-Control-Allow-Headers'=>'Authorization',
 							  'Access-Control-Allow-Methods'=>'POST',
@@ -201,8 +201,8 @@ class NetworkTools{
 							  );
 		$header=array_merge($headerTemplate,$header);
 		foreach($header as $key=>$value){
-			if ($value===FALSE){
-				$header=$key;
+			if (empty($key)){
+				$header=$value;
 			} else {
 				$header=$key.': '.$value;
 			}

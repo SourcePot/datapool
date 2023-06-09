@@ -107,7 +107,6 @@ class Login{
 			} else {
 				$user['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);
 				$user=$this->oc['SourcePot\Datapool\Foundation\User']->newlyRegisteredUserLogin($user);
-				$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
 			}
 		}
 		if (empty($err)){

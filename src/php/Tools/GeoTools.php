@@ -66,7 +66,7 @@ class GeoTools{
 		return $entry;
 	}
 	
-	public function address2location($entry,$isDebugging=TRUE){
+	public function address2location($entry,$isDebugging=FALSE){
 		$debugArr=array('entry_in'=>$entry);
 		if (!empty($entry['Content']['Address'])){
 			$address=$entry['Content']['Address'];

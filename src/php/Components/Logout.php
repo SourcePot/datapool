@@ -33,7 +33,6 @@ class Logout{
 			// load Home-app
 			header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('app'=>'SourcePot\Datapool\Components\Home')));
 			exit;
-			return $arr;
 		}
 	}
 

@@ -454,17 +454,22 @@ jQuery(document).ready(function(){
 	function addSymbolLoginEvents(){
 		jQuery('[id*=_loginSymbol]').unbind('click');
 		jQuery('[id*=_loginSymbol]').bind('click',loginSymbolClick);
+		jQuery('a.phrase-preview').unbind('click');
+		jQuery('a.phrase-preview').bind('click',clearPhrasePreview);
 	}
 	function loginSymbolClick(){
 		let symbol=jQuery(this).html();
 		let symbolIds=jQuery(this).attr('id').split('_');
 		symbolId=symbolIds.shift();
 		jQuery(this).remove();
-		symbol='<span class="symbol-preview">'+symbol+'<span/>';
-		jQuery('.phrase-preview').append(symbol);
+		jQuery('div.phrase-preview').append(symbol);
 		if (Math.random()>0.5){addScrambledSymbol();}
 		addSymbol(symbolId)
 		if (Math.random()>0.5){addScrambledSymbol();}	
+	}
+	function clearPhrasePreview(){
+		jQuery('div.phrase-preview').html('');
+		jQuery('input.pass-phrase').val('');
 	}
 	function addSymbol(symbolId){
 		let pass=jQuery('.pass-phrase').val();

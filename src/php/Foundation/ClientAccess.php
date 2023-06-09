@@ -207,6 +207,8 @@ class ClientAccess{
 	}
 	
 	public function clientAppCredentialsForm($arr){
+		$arr['html']=(isset($arr['html']))?$arr['html']:'';
+		if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',FALSE,FALSE,TRUE)){return $arr;}
 		$contentStructure=array('scope'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()),
 								'client_app'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								'client_id'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),

@@ -19,12 +19,12 @@ class Forum{
 								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'),
 								 );
 	
-	public $definition=array('Content'=>array('Message'=>array('@tag'=>'textarea','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>array('font-size'=>'1.3em')),
-											  '@hideCaption'=>FALSE,
+	public $definition=array('Content'=>array('Message'=>array('@tag'=>'textarea','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>array('font-size'=>'1.8em')),
+											  '@hideCaption'=>FALSE
 											 ),
-							 'Attachment'=>array('@tag'=>'input','@type'=>'file','@default'=>''),
-							 'Preview'=>array('@function'=>'preview','@Write'=>'ADMIN_R'),
-							 '@hideHeader'=>TRUE,'@hideKeys'=>TRUE,
+							 'Attachment'=>array('@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE),
+							 'Preview'=>array('@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE),
+							 '@hideHeader'=>TRUE,
 							 );
 							
 	public function __construct($oc){
@@ -37,7 +37,7 @@ class Forum{
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		// complete defintion
-		$this->definition['Send']=array('@tag'=>'button','@key'=>array('save'),'@element-content'=>'Send');
+		$this->definition['Send']=array('@tag'=>'button','@key'=>array('save'),'@element-content'=>'Send','@hideKeys'=>TRUE);
 		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
 	}
 
@@ -95,7 +95,7 @@ class Forum{
 			$forumEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
 		} 
 		$html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
-		$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin-top'=>'50px;')));
+		$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin'=>'15px 5px;','border'=>'none')));
 		$html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','class'=>'forum'));
 		return $html;
 	}
