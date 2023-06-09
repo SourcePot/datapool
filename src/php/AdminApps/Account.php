@@ -41,7 +41,7 @@ class Account{
 		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 			// is admin
 			$user=array('Source'=>$this->entryTable);
-			$settings=array();
+			$settings=array('orderBy'=>'Privileges','isAsc'=>FALSE);
 			$settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges','Filter'=>''));
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,$settings,array());	
 			$class=$this->oc['SourcePot\Datapool\Root']->source2class($user['Source']);
@@ -56,6 +56,9 @@ class Account{
 			$user=$_SESSION['currentUser'];
 		}
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());	
+		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
+			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs(array('selector'=>$user));
+		}
 		return $html;
 	}
 	

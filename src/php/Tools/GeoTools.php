@@ -46,22 +46,29 @@ class GeoTools{
 		}
 	}
 
-	public function location2address($entry,$targetKey='Address'){
-		// This method adds['reverseGeoLoc'] to $entry['Params']
-		if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){	// 0,0 will be skipped
+	public function location2address($entry,$targetKey='Address',$isDebugging=FALSE){
+		$debugArr=array('entry_in'=>$entry);
+		if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
 			$entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
 			$entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
-			$query=$entry['Params']['Geo'];
+			$query=array('lat'=>$entry['Params']['Geo']['lat'],'lon'=>$entry['Params']['Geo']['lon']);
 			$requestArr=array('method'=>'GET','url'=>'https://nominatim.openstreetmap.org','resource'=>'reverse','query'=>$query,'header'=>$this->requestHeader);
 			$response=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->request($requestArr,FALSE);
+			$debugArr['requestArr']=$requestArr;
+			$debugArr['response']=$response;
 			if (isset($response['data']['addressparts'])){
 				$entry['Params'][$targetKey]=$this->normalizeAddress($response['data']['addressparts']);
+				if (isset($entry['Content'][$targetKey])){$entry['Content'][$targetKey]=$entry['Params'][$targetKey];}
 				if (isset($response['data']['result'])){
 					$entry['Params'][$targetKey]['display_name']=$response['data']['result'];
 				} else {
 					$entry['Params'][$targetKey]['display_name']=implode(', ',$response['data']['addressparts']);
-				}				
+				}
 			}
+			$debugArr['entry_out']=$entry;
+		}
+		if ($isDebugging){
+			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $entry;
 	}
@@ -75,20 +82,24 @@ class GeoTools{
 		} else {
 			$address=array();
 		}
+		$debugArr['address']=$address;
 		if (!empty($address)){
 			$query=$this->getRequestAddress($address);
+			$debugArr['query']=$query;
 			if ($query){
 				$requestArr=array('method'=>'GET','url'=>'https://nominatim.openstreetmap.org','resource'=>'search','query'=>$query,'header'=>$this->requestHeader);
+				$debugArr['requestArr']=$requestArr;
 				$response=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->request($requestArr,FALSE);
-				//$response=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->request('GET',"https://nominatim.openstreetmap.org/",'search',$query,$this->requestHeader);
-				if (isset($response['response'][1][0])){$entry['Params']['Geo']=$response['response'][1][0];}
+				$debugArr['response']=$response;
+				if (isset($response['data']['0'])){
+					$entry['Params']['Geo']=$response['data']['0'];
+					$entry['Params']['Address']=$address;
+					$debugArr['entry_out']=$entry;
+				}
 			}
+			
 		}
 		if ($isDebugging){
-			$debugArr['address']=$address;
-			if (isset($query)){$debugArr['query']=$query;}
-			if (isset($response)){$debugArr['response']=$response;}
-			$debugArr['entry_out']=$entry;
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $entry;	

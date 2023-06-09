@@ -27,7 +27,7 @@ class ExifTools{
 		$entry=$this->addMimeType($entry);
 		$entry=$this->addOrientation($entry);
 		$entry=$this->addCamera($entry);
-		$entry=$this->addGPS($entry);
+		if (empty($entry['Content']['Address']['Town'])){$entry=$this->addGPS($entry);}
 		$entry=$this->addDateTime($entry);
 		unset($entry['exif']);
 		return $entry;

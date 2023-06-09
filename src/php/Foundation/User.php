@@ -40,7 +40,9 @@ class User{
 																 'House number'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
 																 'Town'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
 																 'Zip'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
+																 'State'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
 																 'Country'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
+																 'Country code'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
 																 'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'),
 																),
 											  ),
@@ -124,10 +126,17 @@ class User{
 	
 	public function unifyEntry($entry){
 		$entry['Source']=$this->entryTable;
+		if (!isset($entry['Content']['Address'])){$entry['Content']['Address']=array();}
 		$entry['Content']['Contact details']['Email']=(empty($entry['Email']))?'':$entry['Email'];
+		if (!empty($entry['Params']['User registration']['Email']) && empty($entry['Content']['Contact details']['Email'])){
+			$entry['Content']['Contact details']['Email']=$entry['Params']['User registration']['Email'];
+		}
 		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		$entry['Group']=$this->pageSettings['pageTitle'];
 		$entry['Folder']=$this->getUserRolsString($entry);
+		
+		$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry);
+		
 		$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
 		$entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);	
 		$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
@@ -139,7 +148,6 @@ class User{
 		$user['Owner']='ANONYM';
 		$user['LoginId']=mt_rand(1,10000000);
 		$user['Expires']=date('Y-m-d H:i:s',time()+600);
-		//$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']=1;
 		$user=$this->unifyEntry($user);
 		$user=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
@@ -173,7 +181,6 @@ class User{
 	public function newlyRegisteredUserLogin($user){
 		$user['Owner']=$user['EntryId'];
 		$user['LoginId']=$user['LoginId'];
-		//$user=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$user,FALSE);
 		$user['Privileges']='REGISTERED_R';
 		$user=$this->unifyEntry($user);
 		$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
