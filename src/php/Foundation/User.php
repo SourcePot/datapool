@@ -134,9 +134,6 @@ class User{
 		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
 		$entry['Group']=$this->pageSettings['pageTitle'];
 		$entry['Folder']=$this->getUserRolsString($entry);
-		
-		$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry);
-		
 		$entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
 		$entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);	
 		$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
