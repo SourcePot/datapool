@@ -354,7 +354,7 @@ select.lng-selector{
 details{
 	position:relative;
 	float:left;
-	clear:left;
+	clear:none;
 	overflow:hidden;
 	padding:0.5em 1em 0 5px;
 }
@@ -385,7 +385,7 @@ summary.toolbox{
 	margin:0;
 	line-height:initial;
 }
-summary.app:hover,summary.forum:hover,summary.toolbox{
+summary:hover{
 	cursor:pointer;
 	background-color:#ccc;
 }

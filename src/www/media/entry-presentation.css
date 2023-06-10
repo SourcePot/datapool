@@ -38,3 +38,17 @@ iframe.ep-std{
 	background-color:#eee;
 	border-top:1px solid #444;
 }
+details.ep-comment{
+	clear:left;
+}
+div.ep-comment{
+	padding:3px 5px;
+}
+p.ep-comment{
+	font-size:1.2em;
+	color:#a80;
+}
+.ep-comment-footer{
+	font-size:0.8em;
+	font-weight:bold;
+}
