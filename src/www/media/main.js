@@ -12,11 +12,21 @@ jQuery(document).ready(function(){
 	jQuery('div.second-menu').css({'height':0,'overflow':'hidden'});
 	jQuery('a.first-menu').on('click',function(e){
 		if (jQuery('div.second-menu').css('height').length>3){
-			jQuery('div.second-menu').css({'height':'auto'}).animate({'height':0},200);
+			collapseMenu(true);
 		} else {
 			jQuery('div.second-menu').css({'height':'auto'});
 		}
 	});
+	jQuery('select.menu,ul.menu').on('click',function(e){
+		collapseMenu(false);
+	});
+	function collapseMenu(animate){
+		if (animate){
+			jQuery('div.second-menu').css({'height':'auto'}).animate({'height':0},200);
+		} else {
+			jQuery('div.second-menu').css({'height':0});
+		}
+	}
 	addSafetyCoverEvent();
 	function addSafetyCoverEvent(){
 		jQuery('p.cover').unbind('click');

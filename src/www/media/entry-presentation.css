@@ -22,8 +22,8 @@ iframe.ep-std{
 	font-size:1.6em;
 }
 .ep-message{
-	clear:none;
-	margin:10px 0 0 0;
+	clear:right;
+	margin:10px 0 0 5px;
 	font-size:1.5em;
 }
 .ep-footer{
@@ -35,6 +35,6 @@ iframe.ep-std{
 .ep-header-wrapper{
 	margin:0;
 	width:100%;
-	background-color:#ddd;
-	border-bottom:1px solid #aaa;
+	background-color:#eee;
+	border-top:1px solid #444;
 }

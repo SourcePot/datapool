@@ -354,7 +354,7 @@ select.lng-selector{
 details{
 	position:relative;
 	float:left;
-	clear:none;
+	clear:left;
 	overflow:hidden;
 	padding:0.5em 1em 0 5px;
 }
@@ -376,7 +376,7 @@ summary{
 	font-size:1.4em;
 	line-height:1.8em;
 	color:#444;
-	border-bottom:1px solid #444;
+	border-bottom:1px dotted #000;
 }
 summary.forum,summary.toolbox{
 	margin:0;
