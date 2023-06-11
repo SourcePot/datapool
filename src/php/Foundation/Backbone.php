@@ -20,7 +20,7 @@ class Backbone{
 							'mainBackgroundImageFile'=>FALSE,
 							'loginBackgroundImageFile'=>'main-login.jpg',
 							'iconFile'=>'main.ico',
-							'logoFile'=>'logo.svg',
+							'logoFile'=>'logo.jpg',
 							'charset'=>'utf-8',
 							'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','ep.css'),
 							'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
