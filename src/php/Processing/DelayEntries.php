@@ -134,9 +134,9 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	private function delayingParams($callingElement){
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-		$contentStructure=array('Forward to canvas element'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-								'Reset all trigger when condition is met'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
-								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Forward to canvas element'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
+								'Reset all trigger when condition is met'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
+								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		// get selctorB
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
@@ -162,9 +162,9 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
 	private function delayingRules($callingElement){
 		$triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
-		$contentStructure=array('Trigger'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions),
-								'Reset trigger'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
-								'Combine with next row'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>array('or'=>'OR','and'=>'AND','xor'=>'XOR',)),
+		$contentStructure=array('Trigger'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions),
+								'Reset trigger'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
+								'Combine with next row'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>array('or'=>'OR','and'=>'AND','xor'=>'XOR',)),
 								);
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];

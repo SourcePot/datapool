@@ -145,10 +145,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 
 	private function mappingParams($callingElement){
-		$contentStructure=array('Target'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Mode'=>array('htmlBuilderMethod'=>'select','value'=>'entries','excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
-								'Run...'=>array('htmlBuilderMethod'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>array(0=>'when triggered',86400=>'once a day',604800=>'once a week',2592000=>'once every 30 days')),
-								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+								'Mode'=>array('method'=>'select','value'=>'entries','excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
+								'Run...'=>array('method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>array(0=>'when triggered',86400=>'once a day',604800=>'once a week',2592000=>'once every 30 days')),
+								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		// get selctor
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -172,13 +172,13 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 	
 	private function mappingRules($callingElement){
-		$contentStructure=array('Target value or...'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'...value selected by'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>array('Linked file'=>'Linked file')),
-								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
-								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
-								'Target key'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Use rule if Compare value'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>$this->skipCondition),
-								'Compare value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Target value or...'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'...value selected by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>array('Linked file'=>'Linked file')),
+								'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
+								'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
+								'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Use rule if Compare value'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>$this->skipCondition),
+								'Compare value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];

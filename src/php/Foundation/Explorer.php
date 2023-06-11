@@ -41,6 +41,7 @@ class Explorer{
 		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Database explorer'));
 		$selectorsHtml=$this->getSelectors($callingClass);
 		$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
 		return $html;
 	}
 
@@ -262,10 +263,13 @@ class Explorer{
 	}
 	
 	private function comments($callingClass,$setKeys){
-		$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
-		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-		$arr=array('selector'=>$this->getGuideEntry($selector),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'comment');
-		$arr=$this->oc['SourcePot\Datapool\Foundation\Container']->comments($arr);
+		$arr=array('html'=>'');
+		if (strcmp($setKeys['selectedKey'],'EntryId')!==0){
+			$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
+			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+			$arr=array('selector'=>$this->getGuideEntry($selector),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'comment');
+			$arr=$this->oc['SourcePot\Datapool\Foundation\Container']->comments($arr);
+		}
 		return $arr;
 	}
 	

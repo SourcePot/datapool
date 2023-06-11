@@ -14,7 +14,8 @@ class LoginForms{
 	
 	private $oc;
 
-	public $formType=0;
+	private $formType=0;
+	private $pageSettings=array();
 	
 	private $digits=array(array('key'=>'a','sizeScaler'=>1,'font'=>'OpenSansLight.ttf','symbol'=>'?','description'=>'Question mark'),
 						  array('key'=>'b','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>74,'description'=>'Spiral'),
@@ -48,6 +49,8 @@ class LoginForms{
 	}
 	
 	public function init($oc){
+		$this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+		$this->formType=intval($this->pageSettings['loginForm']);
 		$this->oc=$oc;
 	}
 	
@@ -97,7 +100,7 @@ class LoginForms{
 			$matrix['Recover']=array('Value'=>$loginLinkBtn);
 		}
 		$formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Login'));
-		$formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'none','margin'=>'2em auto','width'=>'fit-content','padding'=>'1em')));
+		$formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'none','margin'=>'5em auto','width'=>'fit-content','padding'=>'1em','background-color'=>'#fffb')));
 		if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
 		return $arr;
 	}
@@ -111,7 +114,7 @@ class LoginForms{
 	}
 	
 	private function getSymbolKeypad($arr=array()){
-		$template=array('symbolSize'=>50,'html'=>'','symbolColumnCount'=>5);
+		$template=array('symbolSize'=>40,'html'=>'','symbolColumnCount'=>5);
 		$arr=array_merge($template,$arr);
 		$recovery=array('Passphrase'=>'','Passphrase for user'=>'');
 		$hashSymbolArr=array();

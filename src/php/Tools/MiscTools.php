@@ -83,7 +83,7 @@ class MiscTools{
 	public function wrapUTF8($str){
 		preg_match_all("/[\x{1f000}-\x{1ffff}]/u",$str,$matches);
 		foreach($matches[0] as $matchIndex=>$match){
-			$str=str_replace($match,'<span style="font-size:1.5em;">'.$match.'</span>',$str);
+			$str=str_replace($match,'<span class="emoji">'.$match.'</span>',$str);
 		}
 		return $str;
 	}

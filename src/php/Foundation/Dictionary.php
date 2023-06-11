@@ -172,7 +172,7 @@ class Dictionary{
 	}
 	
 	public function dictToolbox($arr=array()){
-		$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('style'=>'float:left;clear:both;padding:0 10px;margin:0px;'));
+		$html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('style'=>array('height'=>'80px','padding'=>'10px 0 0 0','margin'=>'0')));
 		return $html;
 	}
 	

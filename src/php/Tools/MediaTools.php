@@ -93,8 +93,6 @@ class MediaTools{
 	
 	public function getIcon($arr){
 		if (!isset($arr['html'])){$arr['html']='';}
-		if (!isset($arr['newHeight'])){$arr['newHeight']=60;}
-		if (!isset($arr['newWidth'])){$arr['newWidth']=60;}
 		if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
 		if (!isset($arr['selector']['Params']['File']['MIME-Type'])){$arr['selector']['Params']['File']['MIME-Type']='text';}
 		if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
@@ -104,7 +102,7 @@ class MediaTools{
 			$iconArr=array('tag'=>'p','element-content'=>$text,'class'=>'icon');
 			$iconHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($iconArr);
 		}
-		$imageArr=array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'class'=>'icon','style'=>array('width'=>$arr['newWidth'],'height'=>$arr['newHeight']));
+		$imageArr=array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'class'=>'icon');
 		$imageArr['title']=$text;
 		if (isset($iconHtml)){$imageArr['element-content']=$iconHtml;}
 		if (isset($iconSrc)){

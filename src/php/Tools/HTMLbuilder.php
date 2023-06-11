@@ -559,7 +559,7 @@ class HTMLbuilder{
 		// Each entry is a row in the table and the data stored under the key Content of every entry can be updated and entries can be added or deleted.
 		// $arr must contain the key 'contentStructure' which defines the html-elements used in order to show and edit the entry content.
 		// Important keys are:
-		// 'contentStructure' ... array([Content key]=>array('htmlBuilderMethod'=>[HTMLbuilder method to be used],'class'=>[Style class],....))
+		// 'contentStructure' ... array([Content key]=>array('method'=>[HTMLbuilder method to be used],'class'=>[Style class],....))
 		// 'callingClass','callingFunction' ... are used for the form processing
 		// 'caption' ... sets the table caption
 		if (empty($arr['caption'])){$arr['caption']='Please provide a caption';}
@@ -622,28 +622,31 @@ class HTMLbuilder{
 			$this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector']);
 		}
 		foreach($arr['contentStructure'] as $contentKey=>$elementArr){
-			if (!isset($elementArr['htmlBuilderMethod'])){array('error'=>'arr["contentStructure" key "htmlBuilderMethod" missing in '.__FUNCTION__);}
-			$htmlBuilderMethod=$elementArr['htmlBuilderMethod'];
-			if (!method_exists(__NAMESPACE__,$htmlBuilderMethod)){array('error'=>'arr["contentStructure" requests method '.$htmlBuilderMethod.' which does not exist in '.__FUNCTION__);}
-			if (isset($arr['selector']['Content'][$contentKey])){
-				if (isset($elementArr['element-content'])){
-					$elementArr['element-content']=$arr['selector']['Content'][$contentKey];
-					if (!empty($elementArr['value'])){
-						$elementArr['value']=$elementArr['value'];
+			$classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
+			$method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];
+			if (method_exists($classWithNamespace,$method)){
+				// if classWithNamespace::method() exists
+				if (isset($arr['selector']['Content'][$contentKey])){
+					if (isset($elementArr['element-content'])){
+						$elementArr['element-content']=$arr['selector']['Content'][$contentKey];
+						if (!empty($elementArr['value'])){$elementArr['value']=$elementArr['value'];}
+					} else {
+						$elementArr['value']=$arr['selector']['Content'][$contentKey];
 					}
-				} else {
-					$elementArr['value']=$arr['selector']['Content'][$contentKey];
 				}
-			}
-			$elementArr['callingClass']=$arr['callingClass'];
-			$elementArr['callingFunction']=$arr['callingFunction'];
-			$elementArr['key']=array($arr['selector']['EntryId'],'Content',$contentKey);
-			if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
-			$row[$contentKey]=$this->$htmlBuilderMethod($elementArr);
-			if (isset($elementArr['type']) && isset($elementArr['value'])){
-				if (strcmp($elementArr['type'],'hidden')===0){
-					$row[$contentKey].=$elementArr['value'];
-				}
+				$elementArr['callingClass']=$arr['callingClass'];
+				$elementArr['callingFunction']=$arr['callingFunction'];
+				$elementArr['key']=array($arr['selector']['EntryId'],'Content',$contentKey);
+				if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
+				$row[$contentKey]=$this->oc[$classWithNamespace]->$method($elementArr);
+				if (isset($elementArr['type']) && isset($elementArr['value'])){
+					if (strcmp($elementArr['type'],'hidden')===0){
+						$row[$contentKey].=$elementArr['value'];
+					}
+				}				
+			} else {
+				// if classWithNamespace::method() does not exists
+				$row[$contentKey]=$this->traceHtml('Not found: '.$classWithNamespace.'::'.$method.'(arr)');
 			}
 		}
 		if (empty($arr['noBtns'])){
@@ -689,9 +692,18 @@ class HTMLbuilder{
 	}
 	
 	public function loadEntry($arr){
-		$settungsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-		$arr['settings']=array_merge($arr['settings'],$settungsTemplate);
-		return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('padding'=>'0','margin'=>'0','border'=>'none')));
+		if (empty($arr['selector'])){return '';}
+		if (empty($arr['excontainer'])){
+			$settingsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+			$arr['settings']=array_merge($arr['settings'],$settingsTemplate);
+			return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('padding'=>'0','margin'=>'0','border'=>'none')));
+		} else {
+			
+			
+			$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
+			$arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
+			return $arr['html'];
+		}
 	}		
 	
 	public function getLogo($width=360){
@@ -729,7 +741,8 @@ class HTMLbuilder{
 				$elementArr['tag']='div';
 				$elementArr['element-content']=$elementContent;
 				$elementArr['keep-element-content']=TRUE;
-				$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+				$elementHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+				$html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($elementHtml);
 			} else if (isset($this->appOptions[$flatKey])){
 				$classMethod=explode('|',$flatKey);
 				$class=array_shift($classMethod);
@@ -795,14 +808,14 @@ class HTMLbuilder{
 		$debugArr=array('arr'=>$arr);
 		$entryKeyOptions=$this->getEntryKeyOptions($arr);
 		$styleClassOptions=$this->getStyleClassOptions($arr);
-		$contentStructure=array('Entry key'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE),
-								'Style class'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE),
-								'maxDim'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'minDim'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'width'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'height'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'clear'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Show key'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+		$contentStructure=array('Entry key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE),
+								'Style class'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE),
+								'maxDim'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'minDim'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'width'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'height'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'clear'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Show key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
 								);
 		$arr['selector']=$this->entryPresentationTemplate($arr,FALSE);
 		$arr['contentStructure']=$contentStructure;
@@ -817,7 +830,7 @@ class HTMLbuilder{
 	}
 	
 	private function getStyleClassOptions($arr){
-		$entryPresentationCss=$GLOBALS['dirs']['media'].'/entry-presentation.css';
+		$entryPresentationCss=$GLOBALS['dirs']['media'].'/ep.css';
 		$entryPresentationCss=file_get_contents($entryPresentationCss);
 		preg_match_all('/(\.)([a-z0-9\-]+)([\{\,\:]+)/',$entryPresentationCss,$matches);
 		$options=array();

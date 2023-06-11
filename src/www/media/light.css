@@ -36,8 +36,7 @@ h3{
 	margin:0 0 0.2em 0.5em;
 }
 ol,ul{
-	margin: 1.2em 0;
-	list-style-type:square;
+	margin: 0 10px;
 	list-style-position:inside;
 }
 button,input,textarea,select,a.btn,a.phrase-preview,.js-button{
@@ -92,10 +91,11 @@ table{
 	float:left;
 	clear:none;
 	width:fit-content;
-	margin:0 2em 2em 0;
+	margin:10px;
+	background-color:#eee;
 }
 caption{
-	margin:1.5em 0 1em 0;
+	margin:5px 0;
 	font-size:1.3em;
 	font-variant:petite-caps;
 }
@@ -131,11 +131,11 @@ p.log{
 article{
 	float: left;
 	clear:none;
-	margin:20px 0 0 0;
+	margin:15px 0 0 0;
 	position:relative;
 	width:100%;
 	overflow:auto;
-	background-color:#fffb;
+	background-color:#fff;
 	border-bottom:1px solid #555;
 }
 div.container-busy{
@@ -164,7 +164,9 @@ div.icon{
 	clear:none;
 	display: block;
 	overflow:hidden;
-	margin:3px;
+	height:60px;
+	width:60px;
+	margin:0 3px;
 	background-size:cover;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -358,6 +360,9 @@ details{
 	overflow:hidden;
 	padding:0.5em 1em 0 5px;
 }
+details.comment{
+	clear:both;
+}
 details.forum,details.toolbox{
 	width:100%;
 	padding:0;
@@ -367,6 +372,7 @@ details.toolbox{
 	bottom:0;
 	z-index:2;
 	max-height:80px;
+	background-color:#a00;
 }
 summary{
 	float:left;
@@ -382,7 +388,7 @@ summary.forum,summary.toolbox{
 	margin:0;
 }
 summary.toolbox{
-	margin:0;
+	color:#fff;
 	line-height:initial;
 }
 summary:hover{
@@ -505,7 +511,7 @@ button.calendar-day{
 p.calendar-hour,div.calendar-hour{
 	position:absolute;
 	color:#000;
-	top:50px;
+	top:45px;
 	width:0;
 }
 div.calendar-hour{
@@ -568,7 +574,10 @@ div.user-abstract{
 p.user-abstract{
 	clear:none;
 	font-size:1.5em;
-	margin:5px;
+	line-height:60px;
+}
+span.emoji{
+	font-size:1.3em;
 }
 a.emoji{
 	float:left;

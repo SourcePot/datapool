@@ -131,12 +131,12 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	private function matchingParams($callingElement){
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-		$contentStructure=array('Column to match'=>array('htmlBuilderMethod'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
-							  'Match with'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-							  'Match failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-							  'Match success'=>array('htmlBuilderMethod'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-							  'Combine content'=>array('htmlBuilderMethod'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('No','Yes')),
-							  'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Column to match'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
+							  'Match with'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+							  'Match failure'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
+							  'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
+							  'Combine content'=>array('method'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('No','Yes')),
+							  'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		$contentStructure['Column to match']+=$callingElement['Content']['Selector'];
 		// get selctorB
@@ -162,10 +162,10 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 
 	private function matchingRules($callingElement){
-		$contentStructure=array('Operation'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'strcmp','options'=>array('skipIfFound'=>'Skip entry if needle found','skipIfNotFound'=>'Skip entry if needle is not found')),
-								 'Entry'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'strcmp','options'=>array('Entry A'=>'Entry A','Entry B'=>'Entry B')),
-								 'Column'=>array('htmlBuilderMethod'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
-								 'Needle'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Operation'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'strcmp','options'=>array('skipIfFound'=>'Skip entry if needle found','skipIfNotFound'=>'Skip entry if needle is not found')),
+								 'Entry'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'strcmp','options'=>array('Entry A'=>'Entry A','Entry B'=>'Entry B')),
+								 'Column'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
+								 'Needle'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['Column']+=$callingElement['Content']['Selector'];
 		if (empty($callingElement['Content']['Selector']['Source'])){return $html;}

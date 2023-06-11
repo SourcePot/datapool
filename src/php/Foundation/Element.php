@@ -39,7 +39,7 @@ class Element{
 					   'select'=>array('name'=>TRUE),
 					   'textarea'=>array('name'=>TRUE),
 					   
-					   'a'=>array('href'=>FALSE),
+					   'a'=>array('href'=>FALSE,'target'=>FALSE),
 					   
 					   'main'=>array(),
 					   
@@ -66,7 +66,7 @@ class Element{
 					   'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'script'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'svg'=>array('src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-					   'video'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
+					   'video'=>array('src'=>FALSE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					   'source'=>array('src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE),
 					  
 					   'path'=>array('d'=>TRUE),

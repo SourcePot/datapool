@@ -150,9 +150,9 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 
 	private function calculationParams($callingElement){
-		$contentStructure=array('Target on success'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Target on failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+								'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		// get selctor
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -178,15 +178,15 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	
 	private function calculationRules($callingElement){
 		$addKeys=(isset($this->ruleOptions[strtolower(__FUNCTION__)]))?$this->ruleOptions[strtolower(__FUNCTION__)]:array();
-		$contentStructure=array('"A" selected by...'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
-								'Default value "A"'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Operation'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array('+'=>'+','-'=>'-','*'=>'*','/'=>'/')),
-								'"B" selected by...'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
-								'Default value "B"'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								''=>array('htmlBuilderMethod'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
-								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
-								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
-								'Target key'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('"A" selected by...'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
+								'Default value "A"'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Operation'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array('+'=>'+','-'=>'-','*'=>'*','/'=>'/')),
+								'"B" selected by...'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
+								'Default value "B"'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								''=>array('method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
+								'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
+								'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
+								'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['"A" selected by...']+=$callingElement['Content']['Selector'];
 		$contentStructure['"B" selected by...']+=$callingElement['Content']['Selector'];
@@ -201,9 +201,9 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
 	private function failureRules($callingElement){
 		$addKeys=(isset($this->ruleOptions['calculationrules']))?$this->ruleOptions['calculationrules']:array();
-		$contentStructure=array('Value'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
-								'Failure if Result...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>$this->failureCondition),
-								'Compare value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Value'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
+								'Failure if Result...'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>$this->failureCondition),
+								'Compare value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['Value']+=$callingElement['Content']['Selector'];
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
@@ -216,12 +216,12 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
 	private function conditionalValueRules($callingElement){
 		$addKeys=(isset($this->ruleOptions['calculationrules']))?$this->ruleOptions['calculationrules']:array();
-		$contentStructure=array('Condition'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
-								'Use value if...'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>$this->conditionalValue),
-								''=>array('htmlBuilderMethod'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
-								'Value'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
-								'Target key'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Condition'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
+								'Use value if...'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>$this->conditionalValue),
+								''=>array('method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
+								'Value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
+								'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['Condition']+=$callingElement['Content']['Selector'];
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];

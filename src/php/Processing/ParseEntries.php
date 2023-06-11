@@ -135,10 +135,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 
 	private function parserParams($callingElement){
-		$contentStructure=array('Source column'=>array('htmlBuilderMethod'=>'keySelect','value'=>'useValue','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
-								'Target on success'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Target on failure'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
-								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Source column'=>array('method'=>'keySelect','value'=>'useValue','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
+								'Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+								'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		$contentStructure['Source column']+=$callingElement['Content']['Selector'];
 		// get selector
@@ -163,8 +163,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 	
 	private function parserSectionRules($callingElement){
-		$contentStructure=array('Regular expression'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Section name'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Section name'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
 		$arr['canvasCallingClass']=$callingElement['Folder'];
@@ -181,16 +181,16 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 			$this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
 		}
 		//
-		$contentStructure=array('Rule relevant on section'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections),
-								'Constant or...'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'regular expression'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Match index'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
-								'Target data type'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
-								'Target column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
-								'Target key'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Allow multiple hits'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
-								'Remove match'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
-								'Match required'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+		$contentStructure=array('Rule relevant on section'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections),
+								'Constant or...'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Match index'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
+								'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
+								'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
+								'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Allow multiple hits'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+								'Remove match'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+								'Match required'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
 								);
 		$contentStructure['Target column']+=$callingElement['Content']['Selector'];
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);

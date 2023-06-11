@@ -139,9 +139,9 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
 		$options=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataSink');
-		$contentStructure=array('Outbox source'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
-								'When done'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Keep entries','Delete sent entries')),
-								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Outbox source'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
+								'When done'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Keep entries','Delete sent entries')),
+								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
 		// get selctorB
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
@@ -168,10 +168,10 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 
 	private function outboxRules($callingElement){
-		$contentStructure=array('Text'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-								' '=>array('htmlBuilderMethod'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'),
-								'use column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE),
-								'Add to'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Subject'=>'Subject','Message'=>'Message')),
+		$contentStructure=array('Text'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
+								' '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'),
+								'use column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE),
+								'Add to'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Subject'=>'Subject','Message'=>'Message')),
 								);
 		$contentStructure['use column']+=$callingElement['Content']['Selector'];
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);

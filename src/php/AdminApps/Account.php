@@ -41,7 +41,7 @@ class Account{
 		if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
 			// is admin
 			$user=array('Source'=>$this->entryTable);
-			$settings=array('orderBy'=>'Privileges','isAsc'=>FALSE);
+			$settings=array('orderBy'=>'Privileges','isAsc'=>FALSE,'limit'=>5);
 			$settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges','Filter'=>''));
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,$settings,array());	
 			$class=$this->oc['SourcePot\Datapool\Root']->source2class($user['Source']);

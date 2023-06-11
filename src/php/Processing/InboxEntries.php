@@ -140,8 +140,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
 		$options=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataSource');
-		$contentStructure=array('Inbox source'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
-								'Save'=>array('htmlBuilderMethod'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+		$contentStructure=array('Inbox source'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
+								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 							);
 		// get selctorB
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
@@ -171,11 +171,11 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	}
 
 	private function inboxConditionRules($callingElement){
-		$contentStructure=array('Column'=>array('htmlBuilderMethod'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
-								'Condition'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$this->conditions),
-								'Value A'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								' '=>array('htmlBuilderMethod'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'),
-								'Value B'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+		$contentStructure=array('Column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
+								'Condition'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$this->conditions),
+								'Value A'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								' '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'),
+								'Value B'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
 								);
 		$contentStructure['Column']+=$callingElement['Content']['Selector'];
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
@@ -195,12 +195,12 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 				$conditionRuleOptions[$ruleId]='Rule '.$ruleIndex;
 			}
 		}
-		$contentStructure=array('Condition A'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
-								' '=>array('htmlBuilderMethod'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'AND'),
-								'Condition B'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
-								'  '=>array('htmlBuilderMethod'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'AND'),
-								'Condition C'=>array('htmlBuilderMethod'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
-								'Forward to'=>array('htmlBuilderMethod'=>'canvasElementSelect','excontainer'=>TRUE),
+		$contentStructure=array('Condition A'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
+								' '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'AND'),
+								'Condition B'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
+								'  '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'AND'),
+								'Condition C'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
+								'Forward to'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
 								);
 		$arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
 		$arr['canvasCallingClass']=$callingElement['Folder'];

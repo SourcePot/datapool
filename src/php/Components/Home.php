@@ -77,11 +77,11 @@ private $entryTable;
 		// section control
 		$sectionArr['selector']=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Page content');
 		$sectionArr['selector']=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($sectionArr['selector'],'ALL_R','ADMIN_R');
-		$contentStructure=array('Section title'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-								'Section content'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-								'Section footer'=>array('htmlBuilderMethod'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-								'Section attachment'=>array('htmlBuilderMethod'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
-								'Read access'=>array('htmlBuilderMethod'=>'select','selected'=>65535,'options'=>array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->access),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
+		$contentStructure=array('Section title'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+								'Section content'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
+								'Section footer'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
+								'Section attachment'=>array('method'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
+								'Read access'=>array('method'=>'select','selected'=>65535,'options'=>array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->access),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
 								);
 		$sectionArr['canvasCallingClass']=$arr['callingFunction'];
 		$sectionArr['contentStructure']=$contentStructure;

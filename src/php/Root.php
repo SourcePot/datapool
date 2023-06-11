@@ -22,8 +22,10 @@ final class Root{
 	* This method can be used to add external objects to the Datapool object collection. 
 	*/
 	private function registerVendorClasses($oc,$isDebugging=FALSE){
-		// instantiate OPS add-on
-		$classesWithNamespace=array('SourcePot\Ops\OpsEntries');
+		// instantiate external classes
+		$classesWithNamespace=array('SourcePot\Ops\OpsEntries',
+									'SourcePot\MediaPlayer\MediaPlayer',
+									);
 		$debugArr=array('classesWithNamespace'=>$classesWithNamespace);
 		foreach($classesWithNamespace as $classIndex=>$classWithNamespace){
 			if (class_exists($classWithNamespace)){
@@ -148,7 +150,11 @@ final class Root{
 									 'Dictionary.php'=>'307|',
 									 'HTMLbuilder.php'=>'308|',
 									 'Logging.php'=>'309|',
-									 'User.php'=>'310|'
+									 'User.php'=>'310|',
+									 'Home.php'=>'701|',
+									 'Account.php'=>'702|',
+									 'Login.php'=>'901|',
+									 'Logout.php'=>'902|',
 									 );
 		$fileIndex=0;
 		$objectsArr=array('000|Header|'.$fileIndex=>array('class','classWithNamespace','file','type'));
@@ -157,7 +163,13 @@ final class Root{
 		$dirs=scandir($dir);
 		foreach($dirs as $dirIndex=>$dirName){
 			if (strpos($dirName,'.php')!==FALSE || empty(trim($dirName,'.'))){continue;}
-			$type=match($dirName){'Traits'=>'100|Trait','Interfaces'=>'200|Interface','Foundation'=>'400|Kernal object','Tools'=>'500|Kernal object','Processing'=>'600|Kernal object',default=>'700|Application object'};
+			$type=match($dirName){'Traits'=>'100|Trait',
+								  'Interfaces'=>'200|Interface',
+								  'Foundation'=>'400|Kernal object',
+								  'Tools'=>'500|Kernal object',
+								  'Processing'=>'600|Kernal object',
+								  default=>'800|Application object'
+								 };
 			// scan files
 			$subDir=$dir.'/'.$dirName.'/';
 			$files=scandir($subDir);

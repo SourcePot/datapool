@@ -294,7 +294,7 @@ class Filespace{
 			$_SESSION[__CLASS__]['tmpDir']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
 			$_SESSION[__CLASS__]['tmpDir'].='/';
 		}
-		$tmpDir=$GLOBALS['dirs']['tmp'].'/'.$_SESSION[__CLASS__]['tmpDir'];
+		$tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
 		if (!is_dir($tmpDir)){
 			$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775,TRUE));
 		}
@@ -306,7 +306,7 @@ class Filespace{
 		if (is_dir($GLOBALS['dirs']['tmp'])){
 			$allDirs=scandir($GLOBALS['dirs']['tmp']);
 			foreach($allDirs as $dirIndex=>$dir){
-				$fullDir=$GLOBALS['dirs']['tmp'].'/'.$dir;
+				$fullDir=$GLOBALS['dirs']['tmp'].$dir;
 				if (!is_dir($fullDir) || strlen($dir)<4){continue;}
 				$age=time()-filemtime($fullDir);
 				if ($age>$maxAge){
@@ -458,7 +458,7 @@ class Filespace{
 		$zipStatistic=array('errors'=>array(),'files'=>array());
 		// extract zip archive to a temporary dir
 		if (is_file($entry['Params']['File']['Source'])){
-			$zipDir=$GLOBALS['dirs']['tmp'].'/'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
+			$zipDir=$GLOBALS['dirs']['tmp'].$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
 			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
 			$zip=new \ZipArchive;
 			if ($zip->open($entry['Params']['File']['Source'])===TRUE){
