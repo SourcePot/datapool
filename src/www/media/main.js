@@ -38,7 +38,6 @@ jQuery(document).ready(function(){
 	}
 
 
-
 /** STEP-BY-STEP  ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;
 	function loadNextEntry(){
@@ -303,10 +302,7 @@ jQuery(document).ready(function(){
 		html=html+imgBtn;
 		let htmlObj=$(html);
 		jQuery('#overlay').html(htmlObj).fadeIn(500);
-		jQuery('#overlay').on('click',function(e){
-			jQuery('#overlay').hide();
-		});
-		jQuery('#overlay-image').on('click',function(e){
+		jQuery('#overlay,#overlay-image').on('click',function(e){
 			jQuery('#overlay').hide();
 		});
 		jQuery('#prev-img-btn').on('click',function(e){
@@ -320,6 +316,21 @@ jQuery(document).ready(function(){
 			loadImage(index);
 		});
 	}
+	document.addEventListener("keydown",function(e){
+		if (e.key=="ArrowLeft"){
+			if (jQuery('#overlay').is(":visible")){
+				jQuery('#prev-img-btn').click();
+			} else {
+				jQuery("[id^='getImageShuffle']").filter("[id$='-next']").click();
+			}
+		} else if (e.key=="ArrowRight"){
+			if (jQuery('#overlay').is(":visible")){
+				jQuery('#next-img-btn').click();
+			} else {
+				jQuery("[id^='getImageShuffle']").filter("[id$='-prev']").click();
+			}
+		}
+	});
 
 
 /** IMAGE SHUFFLE **/
