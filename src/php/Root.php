@@ -25,7 +25,7 @@ final class Root{
 		// instantiate external classes
 		$classesWithNamespace=array('SourcePot\Ops\OpsEntries',
 									'SourcePot\MediaPlayer\MediaPlayer',
-									'SourcePot\MediaPlayer\PIview',
+									'SourcePot\PIview\PIview',
 									);
 		$debugArr=array('classesWithNamespace'=>$classesWithNamespace);
 		foreach($classesWithNamespace as $classIndex=>$classWithNamespace){
