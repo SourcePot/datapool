@@ -268,8 +268,8 @@ class DataExplorer{
 				$style['box-sizing']='content-box';
 				$rowCountSelector=$canvasElement['Content']['Selector'];
 				if (!empty($rowCountSelector['Type'])){$rowCountSelector['Type'].='%';}
-				$rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE);
-				$this->oc['SourcePot\Datapool\Foundation\Signals']->canvasElement2signal($canvasElement,$rowCount);
+                $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,FALSE);
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->canvasElement2signal($canvasElement,$rowCount);
 			}
 		}
 		// canvas element

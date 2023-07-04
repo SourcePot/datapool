@@ -61,6 +61,12 @@ class Account{
 		}
 		return $html;
 	}
+    
+    public function clientAccessTest($arr){
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('_FILES'=>$_FILES,'arr'=>$arr));
+        $arr=array('console'=>'Datapool timestamp: '.time());
+        return $arr;
+    }
 	
 	
 }

@@ -2,7 +2,7 @@
 /*
 * This file is part of the Datapool CMS package.
 * This class provides client acces to a resource. 
-* Security is provided through basic OAuth authorization and limited scopes defined as part of the user credentials.
+* Security is provided through Basic Authentication and limited scopes defined as part of the user credentials.
 * @package Datapool
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
@@ -47,18 +47,30 @@ class ClientAccess{
 	* @param array arr
 	* @return array arr
 	*/
-	public function request($arr){
-		$header=array();
-		if (isset($_SERVER['HTTPS'])){
+	public function request($arr,$isDebugging=FALSE){
+        $debugArr=array('arr in'=>$arr);
+        $header=array();
+        $whitelist=array('127.0.0.1','::1');
+       if (isset($_SERVER['HTTPS']) || in_array($_SERVER['REMOTE_ADDR'],$whitelist)){
 			// process the request if https is confirmed
 			$data=$this->globals2data();
-			$data=$this->request2data($data);
-		} else {
+		    $headers=apache_request_headers();
+            if (isset($headers['Authorization'])){
+                $data['Authorization']=$headers['Authorization'];
+            }
+            $debugArr['headers in']=$headers;
+        	$data=$this->request2data($data);
+        } else {
 			// client requests must use HTTPS
 			$data['answer']=array('error'=>'https is required');
 		}
-		$this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
-		return $arr;
+		$data=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
+        $arr['data']=$data;
+		if ($isDebugging){
+        	$debugArr['arr out']=$arr;
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+		}
+        return $arr;
 	}
 
 	/**
@@ -78,13 +90,13 @@ class ClientAccess{
 	}
 	
 	/**
-	* This methed compiles the answer from the request and adds it to the data argument.
+	* This method compiles the answer from the request and adds it to the data argument.
 	* There are two request types: a request for an new access token and a request to invoke the method stated in the request.
 	* The scope of the request is the object (class with namespace) provided by the "Client credentials"-entry.
 	* @param array data
 	* @return array data
 	*/
-	private function request2data($data){
+	private function request2data($data,$isDebugging=FALSE){
 		$this->deleteExpiredEntries();
 		$data['grant_type']=(isset($data['grant_type']))?$data['grant_type']:'';
 		$data['Authorization']=(isset($data['Authorization']))?$data['Authorization']:'';
@@ -99,16 +111,26 @@ class ClientAccess{
 				$class=$data['answer']['scope'];
 				$method=$data['method'];
 				if (method_exists($this->oc[$class],$method)){
-					$data['answer']=$this->oc[$class]->$method($data['answer']);
+                    unset($data['Authorization']);
+                    unset($data['method']);
+					unset($data['answer']);
+					unset($data['grant_type']);
+					$data['answer']=$this->oc[$class]->$method($data);
 				} else {
 					$data['answer']['error']='Method '.$class.'::'.$method.'() does not exist';
 				}
-			}
+			} else {
+                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Access token failed: '.$data['answer']['error'],'priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            }
 		} else {
 			// authorization missing
 			$data['answer']['error']='invalid_request';
 		}
-		return $data;
+        if ($isDebugging){
+            $debugArr['data']=$data;
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+		}
+        return $data;
 	}
 	
 	/**
@@ -119,20 +141,24 @@ class ClientAccess{
 	*/
 	private function newToken($data){
 		$authorizationArr=$this->decodeAuthorization($data['Authorization']);
-		// get credentials entry and try match
+        // get credentials entry and try match
 		$authorizationEntry=FALSE;
 		if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
 			$credentialsSelector=array('Source'=>$this->entryTable,'Type'=>$this->entryTable.' credentials','Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%');
-			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
-				if (strcmp($entry['Content']['client_id'],$authorizationArr['client_id'])===0 && strcmp($entry['Content']['client_secret'],$authorizationArr['client_secret'])===0){
+		    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
+            	if (strcmp($entry['Content']['client_id'],$authorizationArr['client_id'])===0 && strcmp($entry['Content']['client_secret'],$authorizationArr['client_secret'])===0){
 					$authorizationEntry=$entry;
 					break;
 				}
 			}
 		}
-		if (empty($authorizationEntry)){
+        if (empty($authorizationEntry)){
 			// no matching credentials entry found
 			$data['answer']['error']='invalid_client';
+            $msg='Client authorization request failed';
+            $msg.=(empty($authorizationArr['scope']))?'':' scope:'.$authorizationArr['scope'];
+        	$msg.=(empty($authorizationArr['client_id']))?'':' client_id:'.$authorizationArr['client_id'];
+        	$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 		} else {
 			// create new token
 			$expires=time()+$this->authorizationLifespan;
@@ -147,6 +173,7 @@ class ClientAccess{
 			$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($authorizationEntry);
 			// return new token
 			$data['answer']=$authorizationEntry['Content'];
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Client authorization success','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 		}
 		return $data;
 	}

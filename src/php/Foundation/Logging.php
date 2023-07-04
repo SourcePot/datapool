@@ -18,7 +18,7 @@ class Logging{
 								1=>array('Name'=>'Info','Lifespan'=>864000,'Callback'=>FALSE,'style'=>'color:#000;'),
 								2=>array('Name'=>'Warning','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#840;'),
 								3=>array('Name'=>'Warning','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#840;'),
-								4=>array('Name'=>'Error','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#a80;'),
+								4=>array('Name'=>'Error','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#a80;'),
 								5=>array('Name'=>'Error','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#a80;'),
 								6=>array('Name'=>'Threat','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#a00;'),
 								7=>array('Name'=>'Threat','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#a00;'),
@@ -71,7 +71,7 @@ class Logging{
 		$logEntry['Content']['User name']=$_SESSION['currentUser']['Name'];
 		$logEntry['Content']['Priority']=$arr['priority'];
 		$logEntry['Content']['Level']=$level;
-		if ($level>5){$logEntry['Content']['IP']=$this->getIP(FALSE);} else {$logEntry['Content']['IP']=$this->getIP(TRUE);}
+		if ($level>=4){$logEntry['Content']['IP']=$this->getIP(FALSE);} else {$logEntry['Content']['IP']=$this->getIP(TRUE);}
 		// set log visibility based on log priority
 		if ($arr['priority']<10){
 			$readR='ALL_R';

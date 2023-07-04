@@ -50,7 +50,7 @@ class Database{
 		$this->oc=$oc;
 		$this->collectDatabaseInfo();
 		$this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-	}
+    }
 	
 	public function job($vars){
 		$vars['statistics']=$this->deleteExpiredEntries();
@@ -367,12 +367,12 @@ class Database{
 		return $sqlArr;
 	}
 	
-	public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
+	public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE,$isDebugging=FALSE){
 		if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
 		// count all selected rows
 		$sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
 		$sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
+		$stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
 		$rowCount=current($stmt->fetch());
 		return $rowCount;
 	}
