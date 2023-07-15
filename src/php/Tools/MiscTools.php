@@ -353,19 +353,19 @@ class MiscTools{
 	/**
 	* @return arr This method converts an array to the corresponding flat array.
 	*/
-	public function arr2flat($arr){
+	public function arr2flat($arr,$S=self::ONEDIMSEPARATOR){
 		if (!is_array($arr)){return $arr;}
 		$flat=array();
-		$this->arr2flatHelper($arr,$flat);
+		$this->arr2flatHelper($arr,$flat,'',$S);
 		return $flat;
 	}
 	
-	private function arr2flatHelper($arr,&$flat,$oldKey=''){
+	private function arr2flatHelper($arr,&$flat,$oldKey='',$S=self::ONEDIMSEPARATOR){
 		$result=array();
 		foreach ($arr as $key=>$value){
-			if (strlen(strval($oldKey))===0){$newKey=$key;} else {$newKey=$oldKey.self::ONEDIMSEPARATOR.$key;}
+			if (strlen(strval($oldKey))===0){$newKey=$key;} else {$newKey=$oldKey.$S.$key;}
 			if (is_array($value)){
-				$result[$newKey]=$this->arr2flatHelper($value,$flat,$newKey); 
+				$result[$newKey]=$this->arr2flatHelper($value,$flat,$newKey,$S); 
 			} else {
 				$result[$newKey]=$value;
 				$flat[$newKey]=$value;
@@ -377,18 +377,18 @@ class MiscTools{
 	/**
 	* @return arr This method converts a flat array to the corresponding array.
 	*/
-	public function flat2arr($arr){
+	public function flat2arr($arr,$S=self::ONEDIMSEPARATOR){
 		if (!is_array($arr)){return $arr;}
 		$result=array();
 		foreach($arr as $key=>$value){
-			$result=array_replace_recursive($result,$this->flatKey2arr($key,$value));
+			$result=array_replace_recursive($result,$this->flatKey2arr($key,$value,$S));
 		}
 		return $result;
 	}
 	
-	private function flatKey2arr($key,$value){
+	private function flatKey2arr($key,$value,$S=self::ONEDIMSEPARATOR){
 		if (!is_string($key)){return array($key=>$value);}
-		$k=explode(self::ONEDIMSEPARATOR,$key);
+		$k=explode($S,$key);
 		while(count($k)>0){
 			$subKey=array_pop($k);
 			$value=array($subKey=>$value);
@@ -422,17 +422,17 @@ class MiscTools{
 	/**
 	* @return string This method returns a string representing the provided flat key for a web page.
 	*/
-	public function flatKey2label($key){
-		return str_replace(self::ONEDIMSEPARATOR,' &rarr; ',$key);
+	public function flatKey2label($key,$S=self::ONEDIMSEPARATOR){
+		return str_replace($S,' &rarr; ',$key);
 	}
 	
 	/**
 	* @return array This method returns an array representing last subkey value pairs
 	*/
-	public function flatArrLeaves($flatArr){
+	public function flatArrLeaves($flatArr,$S=self::ONEDIMSEPARATOR){
 		$leaves=array();
 		foreach($flatArr as $flatKey=>$flatValue){
-			$leafKey=explode(self::ONEDIMSEPARATOR,$flatKey);
+			$leafKey=explode($S,$flatKey);
 			$leafKey=array_pop($leafKey);
 			$leaves[$leafKey]=$flatValue;
 		}
@@ -458,13 +458,13 @@ class MiscTools{
 	/**
 	* @return array This method returns an array which is a matrix used to create an html-table and a representation of the provided array.
 	*/
-	public function arr2matrix($arr){
+	public function arr2matrix($arr,$S=self::ONEDIMSEPARATOR){
 		$matrix=array();
 		$rowIndex=0;
 		$rows=array();
 		$maxColumnCount=0;
 		foreach($this->arr2flat($arr) as $flatKey=>$value){
-			$columns=explode(self::ONEDIMSEPARATOR,$flatKey);
+			$columns=explode($S,$flatKey);
 			$columnCount=count($columns);
 			$rows[$rowIndex]=array('columns'=>$columns,'value'=>$value);
 			if ($columnCount>$maxColumnCount){$maxColumnCount=$columnCount;}

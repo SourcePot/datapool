@@ -297,7 +297,7 @@ class Filespace{
 		$tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
 		if (!is_dir($tmpDir)){
 			$this->statistics['added dirs']+=intval(mkdir($tmpDir,0775,TRUE));
-		}
+        }
 		return $tmpDir;
 	}
 	

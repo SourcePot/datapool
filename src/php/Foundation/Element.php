@@ -278,7 +278,7 @@ class Element{
 		//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($result);
 		return $result;
 	}
-
+    
 	private function arrKeys2arr($keys,$value){
 		$arr=$value;
 		while(count($keys)>0){
@@ -288,7 +288,7 @@ class Element{
 		return $arr;
 	}
 
-	private function fileErrorCode2str($code){
+	public function fileErrorCode2str($code){
 		$codeArr=array(0=>'There is no error, the file uploaded with success',
 					   1=>'The uploaded file exceeds the upload_max_filesize directive in php.ini',
 					   2=>'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',

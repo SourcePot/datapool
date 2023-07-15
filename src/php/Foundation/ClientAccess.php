@@ -25,6 +25,8 @@ class ClientAccess{
 								 'Privileges'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'),
 								 );
 
+    private $methodBlackList=array('run','init');
+    
 	public function __construct($oc){
 		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -64,9 +66,9 @@ class ClientAccess{
 			// client requests must use HTTPS
 			$data['answer']=array('error'=>'https is required');
 		}
-		$data=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
         $arr['data']=$data;
-		if ($isDebugging){
+		$this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
+        if ($isDebugging){
         	$debugArr['arr out']=$arr;
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
@@ -110,7 +112,10 @@ class ClientAccess{
 			if (empty($data['answer']['error'])){
 				$class=$data['answer']['scope'];
 				$method=$data['method'];
-				if (method_exists($this->oc[$class],$method)){
+                if (in_array($method,$this->methodBlackList)){
+                    $data['answer']['error']='Access '.$class.'::'.$method.'() blocked';
+                    $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$data['answer']['error'],'priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+                } else if (method_exists($this->oc[$class],$method)){
                     unset($data['Authorization']);
                     unset($data['method']);
 					unset($data['answer']);

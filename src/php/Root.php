@@ -82,7 +82,9 @@ final class Root{
 	public function run(){
 		$this->structure['callingWWWscript']=$this->currentScript;
 		// get current temp dir
-		$GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
+        if (strpos($this->currentScript,'resource.php')===FALSE && strpos($this->currentScript,'job.php')===FALSE){
+            $GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
+        }
 		// process all buttons
 		$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn();
 		// add "page html" to the return array

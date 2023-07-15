@@ -209,7 +209,7 @@ class NetworkTools{
 			header($header);
 		}
 		echo $data;
-	}
+    }
 	
 }
 ?>
