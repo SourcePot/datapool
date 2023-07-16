@@ -24,6 +24,7 @@ final class Root{
 	private function registerVendorClasses($oc,$isDebugging=FALSE){
 		// instantiate external classes
 		$classesWithNamespace=array('SourcePot\Ops\OpsEntries',
+									'SourcePot\Ops\Patents',
 									'SourcePot\MediaPlayer\MediaPlayer',
 									'SourcePot\PIview\PIview',
 									);

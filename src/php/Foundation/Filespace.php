@@ -312,7 +312,7 @@ class Filespace{
 	}
 	
 	public function removeTmpDirs(){
-        $tmpDirs=array($GLOBALS['dirs']['tmp']=>86400,$GLOBALS['dirs']['privat tmp']=>5);
+        $tmpDirs=array($GLOBALS['dirs']['tmp']=>86400,$GLOBALS['dirs']['privat tmp']=>30);
 		foreach($tmpDirs as $tmpDir=>$maxAge){
             if (is_dir($tmpDir)){
                 $allDirs=scandir($tmpDir);
