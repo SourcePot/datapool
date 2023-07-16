@@ -131,9 +131,11 @@ class Definitions{
 	* If the definition exsists, the webpaghe element will be created based on this definition. 
 	* @return array
 	*/
-	public function selectorKey2element($entry,$flatSelectorKey,$value=NULL,$callingClass=FALSE,$callingFunction=FALSE){
+	public function selectorKey2element($entry,$flatSelectorKey,$value=NULL,$callingClass=FALSE,$callingFunction=FALSE,$skipKeysWithNoDefintion=FALSE,$definition=FALSE){
 		$value=strval($value);
-		$definition=$this->getDefinition($entry);	
+		if (empty($definition)){
+            $definition=$this->getDefinition($entry);
+        }
 		$S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
 		$selectorKeyComps=explode($S,$flatSelectorKey);
 		$element=array();
@@ -154,7 +156,9 @@ class Definitions{
 				}
 				$definitionKey=array_shift($definitionKeyComps);
 				$definitionKey=trim($definitionKey,$S.'*');
-				if (strpos($flatSelectorKey,$definitionKey)!==FALSE){
+				if (strpos($flatSelectorKey,$definitionKey)===FALSE){
+                    // not the correct definition key
+                } else {
 					$definitionAttr=array_pop($definitionKeyComps);
 					$sPos=strpos($definitionAttr,$S);
 					if ($sPos!==FALSE){
@@ -167,6 +171,9 @@ class Definitions{
 					}
 				}
 			}
+            if (empty($element) && $skipKeysWithNoDefintion){
+                return $element;
+            }
 			foreach($element as $definitionAttr=>$definitionValue){
 				$element[$definitionAttr]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definitionValue);
 			}
@@ -176,7 +183,7 @@ class Definitions{
 			$element['key']=$selectorKeyComps;
 			$element['callingClass']=$callingClass;
 			$element['callingFunction']=$callingFunction;
-			$element=$this->elementDef2element($element,$value);
+            $element=$this->elementDef2element($element,$value);
 		}
 		return $element;
 	}

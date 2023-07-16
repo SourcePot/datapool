@@ -761,7 +761,7 @@ class HTMLbuilder{
 			}
 		}
 		if (!isset($flatKey)){
-			$html.='Setting missing for '.$arr['settings']['presentEntry'];
+			$html.='Method "'.__FUNCTION__.'": Setting missing for '.$arr['settings']['presentEntry'];
 		}
 		if ($isDebugging){
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
