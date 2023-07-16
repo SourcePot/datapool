@@ -261,6 +261,7 @@ final class Root{
 									'src'=>array('relPath'=>'./src','permissions'=>0770),
 									'setup'=>array('relPath'=>'./src/setup','permissions'=>0770),
 									'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
+									'privat tmp'=>array('relPath'=>'./src/tmp','permissions'=>0770),
 									'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
 									'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
 									'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),

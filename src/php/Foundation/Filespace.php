@@ -36,7 +36,7 @@ class Filespace{
 	
 	public function init($oc){
 		$this->oc=$oc;
-		$this->removeTmpDir();
+		$this->removeTmpDirs();
 	}
 		
 	public function getEntryTemplate(){
@@ -288,6 +288,16 @@ class Filespace{
 			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No file found to download.','priority'=>12,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 		}
 	}
+
+	public function getPrivatTmpDir(){
+        $ip=$this->oc['SourcePot\Datapool\Foundation\Logging']->getIP($hashOnly=TRUE);
+        
+		$tmpDir=$GLOBALS['dirs']['privat tmp'].$ip.'/';
+		if (!is_dir($tmpDir)){
+			$this->statistics['added dirs']+=intval(mkdir($tmpDir,0770,TRUE));
+        }
+		return $tmpDir;
+	}
 	
 	public function getTmpDir(){
 		if (!isset($_SESSION[__CLASS__]['tmpDir'])){
@@ -301,19 +311,21 @@ class Filespace{
 		return $tmpDir;
 	}
 	
-	public function removeTmpDir(){
-		$maxAge=86400;
-		if (is_dir($GLOBALS['dirs']['tmp'])){
-			$allDirs=scandir($GLOBALS['dirs']['tmp']);
-			foreach($allDirs as $dirIndex=>$dir){
-				$fullDir=$GLOBALS['dirs']['tmp'].$dir;
-				if (!is_dir($fullDir) || strlen($dir)<4){continue;}
-				$age=time()-filemtime($fullDir);
-				if ($age>$maxAge){
-					$this->delDir($fullDir);
-				}
-			}
-		}
+	public function removeTmpDirs(){
+        $tmpDirs=array($GLOBALS['dirs']['tmp']=>86400,$GLOBALS['dirs']['privat tmp']=>5);
+		foreach($tmpDirs as $tmpDir=>$maxAge){
+            if (is_dir($tmpDir)){
+                $allDirs=scandir($tmpDir);
+                foreach($allDirs as $dirIndex=>$dir){
+                    $fullDir=$tmpDir.$dir;
+                    if (!is_dir($fullDir) || strlen($dir)<4){continue;}
+                    $age=time()-filemtime($fullDir);
+                    if ($age>$maxAge){
+                        $this->delDir($fullDir);
+                    }
+                }
+            }
+        }
 		return $this->statistics;
 	}
 	
@@ -381,7 +393,7 @@ class Filespace{
 			$entry['mimeType']=mime_content_type($fileHandle['tmp_name']);
 			if (empty($mimeType) && !empty($fileHandle['type'])){$mimeType=$fileHandle['type'];}
 			// move uploaded file to tmp dir
-			$tmpDir=$this->getTmpDir();
+			$tmpDir=$this->getPrivatTmpDir();
 			$newSourceFile=$tmpDir.$entry['pathArr']['basename'];
 			$success=move_uploaded_file($fileHandle['tmp_name'],$newSourceFile);
 			if (!$success){return FALSE;}
@@ -404,7 +416,7 @@ class Filespace{
 		$debugArr=array('entry'=>$entry,'createOnlyIfMissing'=>$createOnlyIfMissing);
 		if (!empty($entry['fileContent']) && !empty($entry['fileName'])){
 			// save file content to tmp dir
-			$tmpDir=$this->getTmpDir();
+			$tmpDir=$this->getPrivatTmpDir();
 			$entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
 			$bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
 			if ($bytes===FALSE){return FALSE;}

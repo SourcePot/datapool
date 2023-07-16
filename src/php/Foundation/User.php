@@ -120,7 +120,9 @@ class User{
 	}
 	
 	public function getCurrentUser(){
-		if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges'])){$this->anonymousUserLogin();}
+		if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges'])){
+            $this->anonymousUserLogin();
+        }
 		return $_SESSION['currentUser'];
 	}
 	

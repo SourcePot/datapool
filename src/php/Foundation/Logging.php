@@ -92,7 +92,7 @@ class Logging{
 		return $logEntry;
 	}
 	
-	private function getIP($hashOnly=TRUE){
+	public function getIP($hashOnly=TRUE){
 		if (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER)){
 			$ip=$_SERVER["HTTP_X_FORWARDED_FOR"];
 		} else if (array_key_exists('REMOTE_ADDR',$_SERVER)){
@@ -103,7 +103,7 @@ class Logging{
 		if (empty($ip)){
 			return 'empty';
 		} else if ($hashOnly){
-			$ip=password_hash($ip,PASSWORD_DEFAULT);
+			$ip=md5($ip);
 		}
 		return $ip;
 	}

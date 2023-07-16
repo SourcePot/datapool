@@ -194,6 +194,7 @@ class ClientAccess{
 		$tokenSelector=array('Source'=>$this->entryTable,'Name'=>substr($data['Authorization'],7));
 		foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tokenSelector,TRUE) as $token){
 			$data['answer']=$token['Content'];
+            $_SESSION['currentUser']['Privileges']=$token['Privileges'];
 			unset($data['answer']['access_token']);
 			unset($data['answer']['error']);
 			$data['answer']['expires_in']=$data['answer']['expires']-time();
