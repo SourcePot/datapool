@@ -45,8 +45,9 @@ class Admin{
 			$element=array('tag'=>'p','element-content'=>'Nothing selected, so there is nothing to show here...');
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
 		} else if (empty($selector['EntryId'])){
+            $selector['disableAutoRefresh']=TRUE;
 			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,$settings,array());		
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Table entries','entryList',$selector,$settings,array());		
 		} else {
 			$selector['presentEntry']=__CLASS__.'::'.__FUNCTION__;
 			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('selector'=>$selector,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));

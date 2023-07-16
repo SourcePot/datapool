@@ -146,7 +146,7 @@ class User{
 		$user=array('Source'=>$this->entryTable,'Type'=>'user');
 		$user['Owner']='ANONYM';
 		$user['LoginId']=mt_rand(1,10000000);
-		$user['Expires']=date('Y-m-d H:i:s',time()+600);
+		$user['Expires']=date('Y-m-d H:i:s',time()+300);
 		$user['Privileges']=1;
 		$user=$this->unifyEntry($user);
 		$user=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);

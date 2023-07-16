@@ -107,7 +107,7 @@ class Container{
 				$_SESSION['container monitor'][$containerId]['containerId']=$containerId;
 				$_SESSION['container monitor'][$containerId]['hash']=$newHash;
 				$_SESSION['container monitor'][$containerId]['refreshed']=time();
-				return FALSE;
+				return !empty($_SESSION['container monitor'][$containerId]['selector']['disableAutoRefresh']);
 			}
 		} else {
 			// register the the selector

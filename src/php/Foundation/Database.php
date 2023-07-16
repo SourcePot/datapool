@@ -783,16 +783,16 @@ class Database{
 			if (strcmp($entry['EntryId'],$selector['EntryId'])!==0){continue;}
 			$currentIndex=$this->getOrderedListIndexFromEntryId($entry['EntryId']);
 			if ($moveUp){
-				if ($currentIndex<$entry['rowCount']){$targetIndex=$currentIndex+1;} else {return TRUE;}
+				if ($currentIndex<$entry['rowCount']){$targetIndex=$currentIndex+1;} else {return $entry['EntryId'];}
 			} else {
-				if ($currentIndex>1){$targetIndex=$currentIndex-1;} else {return TRUE;}
+				if ($currentIndex>1){$targetIndex=$currentIndex-1;} else {return $entry['EntryId'];}
 			}
 			$key=$this->getOrderedListKeyFromEntryId($entry['EntryId']);
 			$targetSelector=array('Source'=>$selector['Source']);
 			$targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($key,$targetIndex);
 			$this->swapEntriesByEntryId($entry,$targetSelector);
 		}
-		return TRUE;
+		return $targetSelector['EntryId'];
 	}
 
 }
