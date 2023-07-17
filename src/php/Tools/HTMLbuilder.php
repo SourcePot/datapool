@@ -667,13 +667,13 @@ class HTMLbuilder{
 				if (empty($arr['selector']['isLast'])){
 					$btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
 					$btnArr['key'][]=$arr['selector']['EntryId'];
-                    if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#f88a');}
+                    if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
 					$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);	
 				}
 				if (empty($arr['selector']['isFirst'])){
 					$btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
 					$btnArr['key'][]=$arr['selector']['EntryId'];
-				    if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#f88a');}
+				    if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
 					$row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);	
 				}
 			} else {
