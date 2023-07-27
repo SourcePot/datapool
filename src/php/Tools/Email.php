@@ -79,7 +79,6 @@ class Email{
 	* 'callingClass' ... arr-property selects the inbox
 	* 
 	*/
-
 	public function dataSource($arr,$action='settingsWidget'){
 		if ($arr===TRUE){return 'Email inbox';}
 		switch($action){
@@ -282,7 +281,6 @@ class Email{
 	* 'callingClass' ... arr-property selects the outbox
 	* 
 	*/
-	
 	public function dataSink($arr,$action='settingsWidget'){
 		if ($arr===TRUE){return 'Email outbox';}
 		switch($action){
@@ -375,7 +373,6 @@ class Email{
 	* The argument mail is an array which must contain an entry: arr['selector']=entry 
 	* @return boolean
 	*/
-
 	private function entry2mail($mail,$isDebugging=FALSE){
 		// This methode converts an entry to an emial address, the $mail-keys are:
 		// 'selector' ... selects the entry

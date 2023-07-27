@@ -385,7 +385,7 @@ class Filespace{
 	* This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
 	*/
 	public function file2entries($fileHandle,$entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
-		$debugArr=array('fileHandle'=>$fileHandle,'entry'=>$entry);
+		$debugArr=array('fileHandle'=>$fileHandle,'entry_in'=>$entry,'error'=>'');
 		if (isset($fileHandle['name']) && isset($fileHandle['tmp_name'])){
 			// uploaded file via html form
 			$entry['Params']['File']['Source']=$fileHandle['tmp_name'];
@@ -396,20 +396,31 @@ class Filespace{
 			$tmpDir=$this->getPrivatTmpDir();
 			$newSourceFile=$tmpDir.$entry['pathArr']['basename'];
 			$success=move_uploaded_file($fileHandle['tmp_name'],$newSourceFile);
-			if (!$success){return FALSE;}
-			$entry['Params']['File']['Source']=$newSourceFile;
-			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$fileHandle['tmp_name'],'File source new'=>$entry['Params']['File']['Source']),FALSE);
+			if ($success){
+                $entry['Params']['File']['Source']=$newSourceFile;
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$fileHandle['tmp_name'],'File source new'=>$entry['Params']['File']['Source']),FALSE);
+		    } else {
+                $debugArr['error']='Error: failed to move file from tmp dir to '.$newSourceFile;
+            }
 		} else if (is_file($fileHandle)){
 			// valid file name with path
-			$entry['Params']['File']['Source']=$fileHandle;
+            $entry['Params']['File']['Source']=$fileHandle;
 			$entry['pathArr']=pathinfo($fileHandle);
 			$entry['mimeType']=mime_content_type($fileHandle);
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
 		} else {
-			if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);}
-			return FALSE;
-		}
-		return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
+			$debugArr['error']='Error: no valid file provided.';
+        }
+        // further processing if valid file was found or return FALSE
+        if ($isDebugging){
+            $debugArr['entry_out']=$entry;
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+        }
+		if ($debugArr['error']){
+            return FALSE;
+        } else {
+            return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
+        }
 	}
 	
 	public function fileContent2entries($entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
@@ -433,10 +444,13 @@ class Filespace{
 		$entry['Params']['File']['Name']=$entry['pathArr']['basename'];
 		$entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
 		$entry['Params']['File']['Date (created)']=filectime($entry['Params']['File']['Source']);
-		if (empty($entry['Name'])){$entry['Name']=$entry['pathArr']['basename'];}
-		if (isset($entry['mimeType'])){$entry['Params']['File']['MIME-Type']=$entry['mimeType'];}
-		$entry=$entry;
-		if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE){
+		if (empty($entry['Name'])){
+            $entry['Name']=$entry['pathArr']['basename'];
+        }
+		if (isset($entry['mimeType'])){
+            $entry['Params']['File']['MIME-Type']=$entry['mimeType'];
+        }
+        if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE){
 			// if file is zip-archive, extract all file and create entries seperately 
 			$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
 			$debugArr['archive2files return']=$this->archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
@@ -461,7 +475,7 @@ class Filespace{
 			$debugArr['entry updated']=$entry;
 		}
 		if ($isDebugging){
-			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
 		}
 		return $entry;
 	}
@@ -470,11 +484,20 @@ class Filespace{
 		$zipStatistic=array('errors'=>array(),'files'=>array());
 		// extract zip archive to a temporary dir
 		if (is_file($entry['Params']['File']['Source'])){
-			$zipDir=$GLOBALS['dirs']['tmp'].$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20).'/';
-			$this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
-			$zip=new \ZipArchive;
+			$zipDir=$this->getPrivatTmpDir();
+            if (!is_dir($zipDir)){
+                $this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
+			}
+            $zip=new \ZipArchive;
 			if ($zip->open($entry['Params']['File']['Source'])===TRUE){
-				$zip->extractTo($zipDir);
+                for($i=0;$i<$zip->numFiles;$i++){
+                    $file=$zipDir.preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$zip->getNameIndex($i));
+                    $fileContent=$zip->getFromIndex($i);
+                    if (empty($fileContent)){continue;}
+                    $zipStatistic['files'][$i]=$file;
+                    file_put_contents($file,$fileContent);
+                }
+				//$zip->extractTo($zipDir);
 				$zip->close();
 			} else {
 				$zipStatistic['errors'][]='Failed to open zip archive';
@@ -482,16 +505,16 @@ class Filespace{
 		} else {
 			$zipStatistic['errors'][]='Zip archive is not a file';
 		}
-		$files=scandir($zipDir);
-		foreach($files as $file){
-			$file=$zipDir.$file;
+        foreach($zipStatistic['files'] as $file){
 			if (is_dir($file)){continue;}
-			$zipStatistic['files'][]=$file;
 			$entry['EntryId']='{{EntryId}}';
 			$entry['Name']='';
-			$this->file2entries($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
+            $this->file2entries($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
 		}
-		$this->delDir($zipDir);
+        $this->delDir($zipDir);
+		if ($isDebugging){
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($zipStatistic);
+		}
 		return $zipStatistic;
 	}
 	
