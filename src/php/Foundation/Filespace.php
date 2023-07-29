@@ -497,7 +497,6 @@ class Filespace{
                     $zipStatistic['files'][$i]=$file;
                     file_put_contents($file,$fileContent);
                 }
-				//$zip->extractTo($zipDir);
 				$zip->close();
 			} else {
 				$zipStatistic['errors'][]='Failed to open zip archive';
@@ -505,12 +504,14 @@ class Filespace{
 		} else {
 			$zipStatistic['errors'][]='Zip archive is not a file';
 		}
-        foreach($zipStatistic['files'] as $file){
+        // add extracted files as entries
+        foreach($zipStatistic['files'] as $i=>$file){
 			if (is_dir($file)){continue;}
-			$entry['EntryId']='{{EntryId}}';
+			$entry['EntryId']=md5($i.'|'.$file);
 			$entry['Name']='';
             $this->file2entries($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
 		}
+        // wrapping up
         $this->delDir($zipDir);
 		if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($zipStatistic);

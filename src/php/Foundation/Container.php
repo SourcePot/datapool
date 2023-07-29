@@ -278,20 +278,19 @@ class Container{
 	}
 	
 	private function entryList($arr,$isDebugging=FALSE){
-		if (!isset($arr['html'])){$arr['html']='';}
-		if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
-		$settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
-		$debugArr=array('arr'=>$arr,'settings in'=>$settings);
-		$S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-		// get settings
-		if (!isset($settings['columns'])){
-			$settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Date','Filter'=>''),array('Column'=>'preview','Filter'=>''));
-		}
-		if (!isset($settings['isSystemCall'])){$settings['isSystemCall']=FALSE;}
-		if (!isset($settings['orderBy'])){$settings['orderBy']='Date';}
-		if (!isset($settings['isAsc'])){$settings['isAsc']=FALSE;}
-		if (!isset($settings['limit'])){$settings['limit']=10;}
-		if (!isset($settings['offset'])){$settings['offset']=FALSE;}
+        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $SettingsTemplate=array('columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Date','Filter'=>'')),
+                                'isSystemCall'=>FALSE,
+                                'orderBy'=>'Date',
+                                'isAsc'=>FALSE,
+                                'limit'=>10,
+                                'offset'=>FALSE
+                                );
+		$arr['html']=(isset($arr['html']))?$arr['html']:'';
+		$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=(isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]))?$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]:$arr['settings'];
+        // get settings
+		$debugArr=array('arr'=>$arr,'settings in'=>$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]);
+        $settings=array_replace_recursive($SettingsTemplate,$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]);
 		// form processing
 		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (!empty($formData['cmd'])){
@@ -352,14 +351,11 @@ class Container{
 						// add column button
 						$matrix['Columns'][$columnIndex]=$cntrArr['Column'];
 						$matrix[$filterKey][$columnIndex]='';
-						$btnArr=$arr;
-						$btnArr['selector']=$entry;
-						$btnArr['cmd']='select';
-						$matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
-						$btnArr['cmd']='download';
-						$matrix[$rowIndex][$columnIndex].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
-						$btnArr['cmd']='delete';
-						$matrix[$rowIndex][$columnIndex].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+                        $cntrArr=$arr;
+						$cntrArr['selector']=$entry;
+                        $cntrArr['hideUpload']=TRUE;
+                        $cntrArr['previewStyle']=array('max-height'=>100,'max-height'=>100);
+                        $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($cntrArr);
 					} else {
 						$matrix[$filterKey][$columnIndex]='';
 						// filter text field
@@ -377,7 +373,7 @@ class Container{
 						// remove column button
 						$matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
 						if ($columnIndex>0){
-							$element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'sytle'=>array('font-size'=>'1.5em'),'title'=>'remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+							$element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
 							$matrix['Columns'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
 						}
 						// table rows

@@ -207,9 +207,9 @@ class Element{
 	}
 
 	private function addCover($arr,$html){
-		$arr['title']=(isset($arr['title']))?$arr['title']:'Safety cover..';
-		$arr['style']=(isset($arr['style']))?$arr['style']:array();
-		$coverArrP=array('tag'=>'p','title'=>'Safety cover..','class'=>'cover','id'=>'cover-'.hrtime(TRUE),'element-content'=>'Sure?');
+        $arr['title']=(isset($arr['title']))?$arr['title']:'Safety cover..';
+		$arr['style']=array('margin'=>'0 0.2em');
+		$coverArrP=array('tag'=>'p','title'=>$arr['title'],'class'=>'cover','id'=>'cover-'.hrtime(TRUE),'element-content'=>'Sure?');
 		$html.=$this->element($coverArrP);
 		$coverArrDiv=array('tag'=>'div','title'=>$arr['title'],'class'=>'cover-wrapper','id'=>'cover-wrapper','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>$arr['style']);
 		$html=$this->element($coverArrDiv);

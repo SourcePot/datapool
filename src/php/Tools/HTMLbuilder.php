@@ -18,6 +18,7 @@ class HTMLbuilder{
 					    'run'=>array('key'=>array('run'),'title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE),
 					    'add'=>array('key'=>array('add'),'title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE),
 					    'save'=>array('key'=>array('save'),'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE),
+					    'upload'=>array('key'=>array('upload'),'title'=>'Upload file','hasCover'=>FALSE,'element-content'=>'Upload','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>TRUE),
 					    'download'=>array('key'=>array('download'),'title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE),
 					    'download all'=>array('key'=>array('download all'),'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
 					    'export'=>array('key'=>array('export'),'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
@@ -300,7 +301,7 @@ class HTMLbuilder{
 			$arr['key']=array($arr['cmd']);
 			$arr['value']=(isset($arr['value']))?$arr['value']:((isset($arr['selector']['EntryId']))?$arr['selector']['EntryId']:$arr['id']);
 			$btnFailed=FALSE;
-			if (isset($this->btns[$arr['cmd']])){
+            if (isset($this->btns[$arr['cmd']])){
 				$arr=array_replace_recursive($defaultValues,$arr,$setValues,$this->btns[$arr['cmd']]);
 				if (!empty($arr['requiredRight'])){
 					$hasAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],$arr['requiredRight']);
@@ -314,7 +315,17 @@ class HTMLbuilder{
 				$btnFailed='Button defintion missing';
 			}
 			if (empty($btnFailed)){
-				$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
+                if (isset($arr['selector']['Content'])){unset($arr['selector']['Content']);}
+                if (isset($arr['selector']['Params'])){unset($arr['selector']['Params']);}
+                if (strcmp($arr['cmd'],'upload')===0){
+                    $arr['key'][]=$arr['selector']['EntryId'];
+                    $fileArr=$arr;
+                    if (isset($fileArr['element-content'])){unset($fileArr['element-content']);}
+                    $fileArr['tag']='input';
+                    $fileArr['type']='file';
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr);
+                }
+            	$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
 			}
 		} else {
 			// button command processing
@@ -323,6 +334,11 @@ class HTMLbuilder{
 			//if (!empty($formData['cmd'])){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);}
 			if (isset($formData['cmd']['download']) || isset($formData['cmd']['download all'])){
 				$this->oc['SourcePot\Datapool\Foundation\Filespace']->entry2fileDownload($selector);
+			} else if (isset($formData['cmd']['upload'])){
+                $key=key($formData['cmd']['upload']);
+                $fileArr=current($formData['files']['upload'][$key]);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
 			} else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
 				$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
 				$classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
@@ -479,27 +495,27 @@ class HTMLbuilder{
 	public function entryControls($arr){
 		if (!isset($arr['selector'])){return 'Selector missing';}
 		$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-		if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
-		if (!isset($arr['callingClass'])){$arr['callingClass']=__CLASS__;}
-		if (!isset($arr['callingFunction'])){$arr['callingFunction']=__FUNCTION__;}
-		$matrix=array();
-		$matrix['Preview']['Key']='Preview';
-		$matrix['Preview']['Content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','key'=>array('Upload'),'style'=>array('clear'=>'left'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-		$matrix['Preview']['Content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Upload','key'=>array('Upload'),'style'=>array('clear'=>'right'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE));
-		$mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>array('max-height'=>600,'max-height'=>600)));
-		$matrix['Preview']['Content'].=$mediaArr['html'];
-		$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
-		foreach(array('download','remove','delete') as $cmd){
+        if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
+		$template=array('callingClass'=>__CLASS__,
+                        'callingFunction'=>__FUNCTION__,
+                        'hideHeader'=>TRUE,
+                        'hideKeys'=>TRUE,
+                        'previewStyle'=>array('max-height'=>300,'max-height'=>300),
+                        );
+		$arr=array_replace_recursive($template,$arr);
+		$matrix=array('Preview'=>array('Value'=>''),'Btns'=>array('Value'=>''));
+        if (empty($arr['hidePreview'])){
+            $mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>$arr['previewStyle']));
+            $matrix['Preview']['Value'].=$mediaArr['html'];
+		}
+        foreach(array('select','download','remove','delete','upload') as $cmd){
 			$ucfirstCmd=ucfirst($cmd);
 			if (!empty($arr['hide'.$ucfirstCmd])){continue;}
 			$arr['excontainer']=TRUE;
 			$arr['cmd']=$cmd;
-			$matrix[$ucfirstCmd]['Key']=$ucfirstCmd;
-			$matrix[$ucfirstCmd]['Content']=$this->btn($arr);
+			$matrix['Btns']['Value'].=$this->btn($arr);
 		}
-		$hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
-		$hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:FALSE;
-		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$hideHeader,'hideKeys'=>$hideKeys,'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
 		return $html;
 	}
 	
