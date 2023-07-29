@@ -12,12 +12,12 @@ body{
 	background-repeat:repeat;
 	background-attachment:fixed;
 }
-h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed{
+h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button{
 	float:left;
 	clear:both;
 	font-size:inherit;
 	font-style:inherit;
-	line-height:2em;
+	line-height:1.5em;
 }
 h1,h2,h3{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -41,6 +41,7 @@ ol,ul{
 }
 button,input,textarea,select,a.btn,a.phrase-preview,.js-button{
 	float:left;
+	clear:none;
 	padding:0.4em;
 	margin: 0 0.2em;
 	color:#000;
@@ -415,7 +416,7 @@ summary:hover{
 	margin:0;
 	color:#000;
 	padding:5px;
-	font-size:17px;
+	text-align:center;
 }
 .canvas-std,.canvas-red,.canvas-green,.canvas-dark{
 	min-width:140px;
@@ -460,7 +461,6 @@ button.canvas{
 	clear:none;
 	font-weight:bold;
 	width:1.8em;
-	line-height:1em;
 	margin: 0.15em 0.15em 0em 0em;
 }
 div.canvas{

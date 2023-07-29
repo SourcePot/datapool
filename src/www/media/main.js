@@ -109,27 +109,34 @@ jQuery(document).ready(function(){
 			jQuery('div[busy-id=busy-'+containerId+']').hide();
 		}
 	}
-	const containerMonitor=function(){
-		jQuery('article[container-id]').each(function(containerIndex){
-			// loop through all containers present on the page
+    var containerMonitorBusy={};
+    const containerMonitor=function(){
+        jQuery('article[container-id]').each(function(containerIndex){
+            // loop through all containers present on the page
 			let containerId=jQuery(this).attr('container-id');
-			jQuery.ajax({
-				method:"POST",
-				url:'js.php',
-				context:document.body,
-				data:{'function':'containerMonitor','container-id':containerId},
-				dataType: "json"
-			}).done(function(data){
-				if (!data['arr']['isUp2date']){
-					containerId=data['arr']['container-id'];
-					data=jQuery(data).serializeArray();
-					reloadContainer(containerId,data);
-				}
-			}).fail(function(data){
-				console.log(data);	
-			}).always(function(){
-
-			});
+            if (typeof containerMonitorBusy[containerId]==="undefined"){
+                containerMonitorBusy[containerId]=false;
+            }
+            if (containerMonitorBusy[containerId]===false){
+                containerMonitorBusy[containerId]=true;
+                jQuery.ajax({
+                    method:"POST",
+                    url:'js.php',
+                    context:document.body,
+                    data:{'function':'containerMonitor','container-id':containerId},
+                    dataType: "json"
+                }).done(function(data){
+                    if (!data['arr']['isUp2date']){
+                        containerId=data['arr']['container-id'];
+                        data=jQuery(data).serializeArray();
+                        reloadContainer(containerId,data);
+                    }
+                }).fail(function(data){
+                    console.log(data);	
+                }).always(function(){
+                    containerMonitorBusy[containerId]=false;
+                });
+            }
 		});
 	}
 	let attachedEvents={};
