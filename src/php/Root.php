@@ -111,7 +111,7 @@ final class Root{
 		} else {
 			// invalid
 		}
-		return $arr;
+        return $arr;
 	}
 	
 	public function getRegisteredMethods($method=FALSE){

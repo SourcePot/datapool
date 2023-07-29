@@ -274,8 +274,7 @@ class Element{
 					}
 				}
 			}
-		}
-		//$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($result);
+        }
 		return $result;
 	}
     

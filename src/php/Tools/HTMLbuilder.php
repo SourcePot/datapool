@@ -494,6 +494,7 @@ class HTMLbuilder{
 	*/
 	public function entryControls($arr){
 		if (!isset($arr['selector'])){return 'Selector missing';}
+        $arr['html']='';
 		$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
 		$template=array('callingClass'=>__CLASS__,
@@ -505,8 +506,10 @@ class HTMLbuilder{
 		$arr=array_replace_recursive($template,$arr);
 		$matrix=array('Preview'=>array('Value'=>''),'Btns'=>array('Value'=>''));
         if (empty($arr['hidePreview'])){
-            $mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('selector'=>$arr['selector'],'style'=>$arr['previewStyle']));
-            $matrix['Preview']['Value'].=$mediaArr['html'];
+            $previewArr=$arr;
+            $previewArr['style']=$arr['previewStyle'];
+            $previewArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
+            $matrix['Preview']['Value'].=$previewArr['html'];
 		}
         foreach(array('select','download','remove','delete','upload') as $cmd){
 			$ucfirstCmd=ucfirst($cmd);
