@@ -42,6 +42,7 @@ class Element{
 					   'a'=>array('href'=>FALSE,'target'=>FALSE),
 					   
 					   'main'=>array(),
+					   'html'=>array(),
 					   
 					   'details'=>array(),
 					   'summary'=>array(),

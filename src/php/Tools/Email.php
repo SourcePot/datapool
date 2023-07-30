@@ -315,7 +315,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
 	* The argument mail is an array which must contain an entry: arr['selector']=entry 
 	* @return boolean
 	*/
-	private function entry2mail($mail,$isDebugging=FALSE){
+	public function entry2mail($mail,$isDebugging=FALSE){
 		// This methode converts an entry to an emial address, the $mail-keys are:
 		// 'selector' ... selects the entry
 		// 'To' ... is the recipients emal address, use array for multiple addressees
@@ -364,11 +364,13 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
 			$msgPrefix="Content-Type: multipart/alternative; boundary=\"".$textBoundery."\"\r\n";
 			$message.="\r\n\r\n--".$textBoundery."\r\n";
 			$message.="Content-Type: text/plain; charset=UTF-8\r\n\r\n";
-			$message.=chunk_split($msgTextPlain);
+			//$message.=chunk_split($msgTextPlain);
+			$message.=$msgTextPlain;
 			$message.="\r\n--".$textBoundery."\r\n";
 			$message.="Content-Type: text/html; charset=UTF-8\n";
 			$message.="Content-Transfer-Encoding: quoted-printable\r\n\r\n";
-			$message.=chunk_split($msgTextHtml);
+			//$message.=chunk_split($msgTextHtml);
+			$message.=$msgTextHtml;
 			$message.="\r\n\r\n--".$textBoundery."--\r\n";
 			// get attched file			
 			$mixedBoundery='multipart-'.md5($mail['selector']['EntryId']);

@@ -186,10 +186,12 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 		$loginEntry['Content']=array('Message'=>$html);
 		$loginEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loginEntry,TRUE);
 		// send email
-		$mail=array('To'=>$arr['Email'],'From'=>$this->pageSettings['emailWebmaster'],'selector'=>$loginEntry);
-		$mail['Subject']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Your one-time password for {{pageTitle}}",$placeholder);
-		if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}
-		if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->entry2mail($mail)){
+        $loginEntry['Content']['To']=$arr['Email'];
+        $loginEntry['Content']['From']=$this->pageSettings['emailWebmaster'];
+        $loginEntry['Content']['Subject']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Your one-time password for {{pageTitle}}",$placeholder);
+        $mail=array('selector'=>$loginEntry);
+        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}
+		if ($this->oc['SourcePot\Datapool\Tools\Email']->entry2mail($mail)){
 			return 'The email was sent, please check your emails.';	
 		} else {
 			return 'Request failed.';
