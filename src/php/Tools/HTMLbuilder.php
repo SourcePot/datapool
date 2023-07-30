@@ -789,8 +789,9 @@ class HTMLbuilder{
 		}
 		if (!isset($flatKey)){
             $whatIsMissing=(isset($arr['settings']['presentEntry']))?$arr['settings']['presentEntry']:'"is undefined: arr[settings][presentEntry]"';
-			$html.='Method "'.__FUNCTION__.'": Setting missing for '.$whatIsMissing;
-		}
+			$msg='Method "'.__FUNCTION__.'": Setting is missing. Go to <b>Admin &#10132; Settings</b> and select (Group, Folder, Name) <b>Entry presentation &#10132; '.$whatIsMissing.' &#10132; Key options</b>. Add the missing settings there in the table.';
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>array('margin'=>'1em')));
+        }
 		if ($isDebugging){
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}

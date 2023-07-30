@@ -518,6 +518,7 @@ class Container{
         $selectArr['value']=(isset($arr['selector']['Content']['Subject']))?$arr['selector']['Content']['Subject']:$arr['selector']['Name'];
         $selectArr['key']=array('selector','Content','Subject');
         $matrix['Subject']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($selectArr);
+        $selectArr['excontainer']=FALSE;
         $selectArr['type']='submit';
         $selectArr['value']='Send';
         $selectArr['hasCover']=TRUE;

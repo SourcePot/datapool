@@ -14,7 +14,17 @@ class Access{
 	
 	private $oc;
 
-	public $access=array('NO_R'=>0,'PUBLIC_R'=>1,'REGISTERED_R'=>2,'MEMBER_R'=>4,'CCTV_R'=>1024,'ADMIN_R'=>32768,'ALL_CONTENTADMIN_R'=>49152,'ALL_REGISTERED_R'=>65534,'ALL_MEMBER_R'=>65532,'ALL_R'=>65535);
+	public $access=array('NO_R'=>0,
+                         'PUBLIC_R'=>1,
+                         'REGISTERED_R'=>2,
+                         'MEMBER_R'=>4,
+                         'CCTV_R'=>1024,
+                         'ADMIN_R'=>32768,
+                         'ALL_CONTENTADMIN_R'=>49152,
+                         'ALL_REGISTERED_R'=>65534,
+                         'ALL_MEMBER_R'=>65532,
+                         'ALL_R'=>65535
+                         );
 		
 	public function __construct($oc){
 		$this->oc=$oc;
@@ -38,8 +48,8 @@ class Access{
 	}
 
 	public function addRights($entry,$Read=FALSE,$Write=FALSE,$Privileges=FALSE){
-		//	This function adds named rights to $entry based on the rights constants names or, if this fails, 
-		//  it changes existing right of entry Read and/or Write key if these contain a named right.
+		//	This function adds named rights to an entry based on the rights constants names or, if this fails, 
+		//  it changes the existing right of entry Read and/or Write key if these contain a named right.
 		//
 		$rigthTypes=array('Read'=>'MEMBER_R','Write'=>'MEMBER_R','Privileges'=>'PUBLIC_R');
 		foreach($rigthTypes as $type=>$default){

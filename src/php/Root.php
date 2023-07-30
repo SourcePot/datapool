@@ -153,6 +153,8 @@ final class Root{
 	/**
 	* This method creates the ../src/setup/objectList.csv file that contains row by row all objects that make-up the Datapool object collection.
 	* The objects will be initiated row by row. If a different order is required, the file needs to be edited accordingly.
+    * In each class the Datapool object collection array can be accessed by $this->oc[...],
+    * with "..." being the classWithNamespace which refers to the intantiated object of this class.
 	*/
 	private function createObjList($objListFile){
 		$orderedInitialization=array('MiscTools.php'=>'301|',
@@ -209,6 +211,10 @@ final class Root{
 		fclose($fileHandler);
 	}
 	
+	/**
+	* This method returns the Datapool object collection from the object list file.
+	* If the object list file does not exist, it will be created.
+	*/
 	private function getInstantiatedObjectCollection($oc=array()){
 		$objListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
 		if (!is_file($objListFile)){$this->createObjList($objListFile);}
@@ -260,6 +266,7 @@ final class Root{
 				}
 			}
 		}
+        // get classes with implemented interfaces
         foreach(class_implements($classWithNamespace) as $interface){
             if (in_array($interface,class_implements($classWithNamespace))){
                 $this->structure['implemented interfaces'][$interface][$classWithNamespace]=$classWithNamespace;
