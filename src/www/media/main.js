@@ -206,6 +206,7 @@ jQuery(document).ready(function(){
 		formData.append('function','container');
 		formData.append('container-id',containerId);
 		postRequest(containerId,formData);
+        checkToolboxUpdate(containerId);
 	}
 	function submitForm(trigger,containerId){
 		containerBusy(containerId,true);
@@ -420,7 +421,8 @@ jQuery(document).ready(function(){
 				};
 		loadNextSelectedView(arr);
 	}
-		
+
+	
 /** JS-BUTTONS **/
 	initJsButtonEvents();
 	function initJsButtonEvents(){
@@ -437,7 +439,6 @@ jQuery(document).ready(function(){
 			}
 		});
 	}
-
 
 
 /** CANVAS INTERACTIVITY **/
@@ -474,7 +475,6 @@ jQuery(document).ready(function(){
 
 		});
 	}
-
 
 
 /** SYMBOL LOGIN FORM **/
@@ -520,6 +520,14 @@ jQuery(document).ready(function(){
 	}
 	
 	
+/** TOOLBOX **/
+    function checkToolboxUpdate(containerId){
+        var needsUpdate=jQuery('details.toolbox').children('[container-id="'+containerId+'"]').length;
+        if (needsUpdate>0){
+            jQuery('details.toolbox').css({'z-index':'100'}).prop("open",true);
+        }
+    }
+
 /** MISC-HELPERS **/
 	let heartbeats=0;
 	(function heartbeat(){
