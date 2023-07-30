@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Invoices{
+class Invoices implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -23,7 +23,7 @@ class Invoices{
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
@@ -41,7 +41,7 @@ class Invoices{
 		return $this->entryTemplate;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		$html='';
 		if ($arr===TRUE){
 			return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);

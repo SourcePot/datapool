@@ -61,14 +61,14 @@ class LinearChart{
 		return $trace;
 	}
 
-	private function chartSvg($arr){
+	public function chartSvg($arr){
 		// chart background settings
-		$template=array('show'=>TRUE,'tag'=>'rect','x'=>'0','y'=>0,'width'=>$arr['chart']['width'],'height'=>$arr['chart']['height'],'fill'=>'white','stroke'=>'gray');
+        $template=array('show'=>TRUE,'tag'=>'rect','x'=>'0','y'=>0,'width'=>$arr['chart']['width'],'height'=>$arr['chart']['height'],'fill'=>'white','stroke'=>'gray');
 		$arr['background']=(isset($arr['background']))?$arr['background']:array();
 		$arr['background']=array_replace_recursive($template,$arr['background']);
 		$arr['svg']['background']=$this->getSvgElement($arr['background']);
 		// caption settings
-		$template=array('show'=>TRUE,'tag'=>'text','x'=>10,'y'=>10,'element-content'=>'Caption missing','style'=>array('font'=>'16px Verdana, Helvetica, Arial, sans-serif'));
+		$template=array('show'=>TRUE,'tag'=>'text','x'=>10,'y'=>10,'element-content'=>'','style'=>array('font'=>'16px Verdana, Helvetica, Arial, sans-serif'));
 		$arr['caption']=(isset($arr['caption']))?$arr['caption']:array();
 		$arr['caption']=array_replace_recursive($template,$arr['caption']);
 		$captionFontSize=intval(preg_replace('/\D+/','',$arr['caption']['style']['font']))*0.55;
@@ -96,7 +96,7 @@ class LinearChart{
 		return $chartSvg;
 	}
 	
-	private function addTrace($arr,$trace){
+	public function addTrace($arr,$trace){
 		// chart settings
 		if (!isset($arr['svg']['background'])){$arr['svg']['background']='';}
 		if (!isset($arr['svg']['caption'])){$arr['svg']['caption']='';}
@@ -251,7 +251,7 @@ class LinearChart{
 		$dateMin=new \DateTime('@'.$arr['timeStampMin'],$timeZone);
 		$arr['dateTimeMin']=$dateMin->format('Y-m-d H:i:s');
 		$arr['dateTimeMax']=$dateMax->format('Y-m-d H:i:s');
-		$arr['dateTimeScaleMin']=explode('|',$dateMin->format('Y|m|d|H|i|s'));
+        $arr['dateTimeScaleMin']=preg_split('/[^0-9]+/',$arr['dateTimeMin']);
 		$arr['dateTimeScaleMin']=array_combine($dateTemplate,$arr['dateTimeScaleMin']);
 		$diff=$dateMin->diff($dateMax);
 		$arr['dateTimeRange']=array($diff->format('%Y'),$diff->format('%m'),$diff->format('%d'),$diff->format('%H'),$diff->format('%i'),$diff->format('%s'));
@@ -352,7 +352,11 @@ class LinearChart{
 	}
 	
 	private function decRangeMappingScaler($rangeIn,$targetRange=1000){
-		$scaler=$targetRange/$rangeIn;
+        if (empty($rangeIn)){
+            $scaler=PHP_INT_MAX;
+        } else {
+            $scaler=$targetRange/$rangeIn;
+        }
 		$scaler=pow(10,floor(log10($scaler)));
 		return $scaler;
 	}

@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Components;
 
-class Home{
+class Home implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -25,7 +25,7 @@ private $entryTable;
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
@@ -43,7 +43,7 @@ private $entryTable;
 		return $entry;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
 		} else {

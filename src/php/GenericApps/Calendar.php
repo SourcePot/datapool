@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Calendar{
+class Calendar implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -90,7 +90,7 @@ class Calendar{
 		//
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		$this->definition['Content']['Event']['Start timezone']['@options']=$this->options['Timezone'];
@@ -130,7 +130,7 @@ class Calendar{
 		return $str;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Apps','Emoji'=>'&#9992;','Label'=>'Calendar','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {

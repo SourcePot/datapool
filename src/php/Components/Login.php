@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Components;
 
-class Login{
+class Login implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -22,12 +22,12 @@ class Login{
 		$this->oc=$oc;
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->pageSettings=$oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Login','Emoji'=>'&#8688;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
 		} else {

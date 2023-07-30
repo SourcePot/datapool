@@ -329,7 +329,7 @@ class Definitions{
 		// check read access
 		$access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read');
 		if (!$access){
-			return array('tag'=>'p','element-content'=>'&#128274;','keep-element-content'=>TRUE);
+			return array('tag'=>'p','element-content'=>'&#10074;&#10074;','keep-element-content'=>TRUE,'style'=>array());
 		}
 		// check if element requests method
 		if (!empty($element['function'])){

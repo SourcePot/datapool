@@ -25,7 +25,9 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	private $conditions=array('stripos'=>'contains',
 							 'stripos!'=>'does not contain',
 							);
-
+    
+    private $recipientOptions=array();
+	
 	public function __construct($oc){
 		$this->oc=$oc;
 		$table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -34,6 +36,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	
 	public function init(array $oc){
 		$this->oc=$oc;
+        $this->recipientOptions=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions();
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
 
@@ -130,7 +133,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 		if (!isset($arr['html'])){$arr['html']='';}
 		$arr['html'].=$this->outboxParams($arr['selector']);
 		$arr['callingClass']=$arr['selector']['Folder'];
-		if (isset($this->oc[$this->outboxClass])){$arr=$this->oc[$this->outboxClass]->dataSink($arr,'settingsWidget');}
+		if (isset($this->oc[$this->outboxClass])){$arr['html']=$this->oc[$this->outboxClass]->transmitterPluginHtml($arr);}
 		$arr['html'].=$this->outboxRules($arr['selector']);
 		return $arr;
 	}
@@ -138,8 +141,8 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 	private function outboxParams($callingElement){
 		$return=array('html'=>'','Parameter'=>array(),'result'=>array());
 		if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-		$options=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataSink');
-		$contentStructure=array('Outbox source'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
+		$contentStructure=array('Outbox class'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')),
+								'Recipient'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions),
 								'When done'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Keep entries','Delete sent entries')),
 								'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
 								);
@@ -155,9 +158,9 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 			$arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
 		}
 		// load outbox class
-		if (isset($arr['selector']['Content']['Outbox source'])){$this->outboxClass=$arr['selector']['Content']['Outbox source'];}
+		if (isset($arr['selector']['Content']['Outbox class'])){$this->outboxClass=$arr['selector']['Content']['Outbox class'];}
 		// get HTML
-		$arr['canvasCallingClass']=$callingElement['Folder'];
+        $arr['canvasCallingClass']=$callingElement['Folder'];
 		$arr['contentStructure']=$contentStructure;
 		$arr['caption']='Forward entries from outbox';
 		$arr['noBtns']=TRUE;
@@ -186,9 +189,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 		$base=$this->getBaseArr($callingElement);
 		$outboxParams=current($base['outboxparams']);
 		$outboxParams=$outboxParams['Content'];
-		if (isset($this->oc[$outboxParams['Outbox source']])){
-			$outBoxMeta=$this->oc[$outboxParams['Outbox source']]->dataSink(array('callingClass'=>$callingElement['Folder']),'meta');
-			$base['outBoxSettings']=$this->oc[$outboxParams['Outbox source']]->dataSink(array('callingClass'=>$callingElement['Folder']),'settings');
+		if (isset($this->oc[$outboxParams['Outbox class']])){
 			// loop through source entries and parse these entries
 			$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
 			$result=array('Outbox statistics'=>array('Emails sent'=>array('value'=>0),
@@ -200,7 +201,6 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read','Date',FALSE) as $entry){
 				$result=$this->processEntry($entry,$base,$callingElement,$result,$testRun);
 			}
-			$result[$outboxParams['Outbox source']]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($outBoxMeta);
 		} else {
 			$result=array('Outbox statistics'=>array('Error'=>array('value'=>'Please select the outbox.')));
 		}
@@ -230,18 +230,13 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 				$entry['Content'][$emailPart]=(isset($entry['Content'][$emailPart]))?$entry['Content'][$emailPart].' '.$flatEntry[$flatKeyNeedle]:$flatEntry[$flatKeyNeedle];
 			}
 		}
-		$SubjectPrefix=$base['outBoxSettings']['Content']['Subject prefix'];
 		$entry['Content']['Subject']=(empty($entry['Content']['Subject']))?$entry['Name']:$entry['Content']['Subject'];
-		$entry['Content']['Subject']=(empty($SubjectPrefix))?$entry['Content']['Subject']:$SubjectPrefix.': '.$entry['Content']['Subject'];
 		// create email
-		$mail=array('selector'=>$entry);
-		$mail['To']=$base['outBoxSettings']['Content']['Recipient e-mail address'];
-		$mail['callingClass']=$callingElement['Folder'];
 		if ($testRun){
 			$result['Outbox statistics']['Emails sent']['value']++;	
-		} else if ($this->oc[$outboxParams['Outbox source']]->dataSink($mail,'sendEntry')){
+		} else if ($this->oc[$outboxParams['Outbox class']]->send($outboxParams['Recipient'],$entry)){
 			if (empty(intval($outboxParams['When done']))){
-				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($orgEntry,'Processing log',array('forwarded'=>'By email to "'.$mail['To'].'"'),TRUE);
+				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($orgEntry,'Processing log',array('forwarded'=>'By email to user "'.$this->recipientOptions[$outboxParams['Recipient']].'"'),TRUE);
 			} else {
 				$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($orgEntry,TRUE);
 				$result['Outbox statistics']['Entries removed']['value']++;
@@ -250,17 +245,16 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 		} else {
 			$result['Outbox statistics']['Emails failed']['value']++;	
 		}
-		$result['Outbox statistics']['Entries processed']['value']++;
-		$emailIndex=(isset($result['Content created by outbox rules']))?count($result['Content created by outbox rules'])+1:1;
+        $result['Outbox statistics']['Entries processed']['value']++;
+		$emailIndex=(isset($result['Sample emails']))?count($result['Sample emails'])+1:1;
 		$emailCaption='Sample '.$emailIndex;
 		if ($emailIndex<2 || mt_rand(0,100)>80){
-			$result['Content created by outbox rules'][$emailCaption]=array();
-			if (isset($mail['To'])){$result['Content created by outbox rules'][$emailCaption]['To']=$mail['To'];}
-			if (isset($mail['selector']['Content']['Subject'])){$result['Content created by outbox rules'][$emailCaption]['Subject']=$mail['selector']['Content']['Subject'];}
-			if (isset($mail['selector']['Content']['Message'])){$result['Content created by outbox rules'][$emailCaption]['Message']=$mail['selector']['Content']['Message'];}
+            $result['Sample emails'][$emailCaption]=array('To'=>$this->recipientOptions[$outboxParams['Recipient']]);
+			if (isset($entry['Content']['Subject'])){$result['Sample emails'][$emailCaption]['Subject']=$entry['Content']['Subject'];}
+			if (isset($entry['Content']['Message'])){$result['Sample emails'][$emailCaption]['Message']=$entry['Content']['Message'];}
 		}
 		if ($isDebugging){
-			$debugArr=array('base'=>$base,'entry'=>$orgEntry,'flatEntry'=>$flatEntry,'mail'=>$mail);
+			$debugArr=array('base'=>$base,'entry'=>$orgEntry,'flatEntry'=>$flatEntry,'entry_out'=>$entry);
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
 		}
 		return $result;

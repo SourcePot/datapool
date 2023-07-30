@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Forum{
+class Forum implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -33,7 +33,7 @@ class Forum{
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 		// complete defintion
@@ -53,7 +53,7 @@ class Forum{
 		return $this->entryTemplate;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
 		} else {

@@ -260,6 +260,17 @@ class User{
 			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User login '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));	
 		}
 	}
+    
+    public function getUserOptions($selector=array(),$contactDetailsSubkey='Email'){
+        $selector['Source']=$this->entryTable;
+        $selector['Privileges>']=1;
+        $options=array();
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
+            $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'].' ('.$user['Content']['Contact details'][$contactDetailsSubkey].')';
+        }
+        asort($options);
+        return $options;
+    }
 
 }
 ?>

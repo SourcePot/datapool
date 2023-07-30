@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\AdminApps;
 
-class Account{
+class Account implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -22,11 +22,11 @@ class Account{
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\User']->getEntryTemplate();
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 	}
 	
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
 		} else {

@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\AdminApps;
 
-class Admin{
+class Admin implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	private $entryTable='';
@@ -20,11 +20,11 @@ class Admin{
 		$this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logging']->getEntryTable();
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Admin','Emoji'=>'&#9781;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);
 		} else {
@@ -40,7 +40,7 @@ class Admin{
 	
 	public function tableViewer(){
 		$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-		$html='';
+        $html='';
 		if (empty($selector['Source'])){
 			$element=array('tag'=>'p','element-content'=>'Nothing selected, so there is nothing to show here...');
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
@@ -49,8 +49,8 @@ class Admin{
 			$settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));
 			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Table entries','entryList',$selector,$settings,array());		
 		} else {
-			$selector['presentEntry']=__CLASS__.'::'.__FUNCTION__;
-			$html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry(array('selector'=>$selector,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
+			$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry','generic',$selector,$settings,array('style'=>array('margin'=>'0')));
 		}
 		return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
 	}

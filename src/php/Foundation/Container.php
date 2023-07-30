@@ -490,6 +490,42 @@ class Container{
 		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'...'));
 		return $arr;
 	}
+    
+    public function sendEntry($arr){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+		if (!empty($formData['cmd'])){
+            $arr['settings']=array_merge($arr['settings'],$formData['val']['settings']);
+            $arr['selector']['Content']=array_merge($arr['selector']['Content'],$formData['val']['selector']['Content']);
+            if (isset($formData['cmd']['send'])){
+                $this->oc[$arr['settings']['Recipient mode']]->send($arr['settings']['Recipient'],$arr['selector']);
+            }
+        }
+        $matrix=array();
+        $selectArr=array('callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>FALSE);
+		$selectArr['options']=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
+        $selectArr['key']=array('settings','Recipient mode');
+        $selectArr['selected']=(isset($arr['settings']['Recipient mode']))?$arr['settings']['Recipient mode']:'SourcePot\Datapool\Tools\Email';
+        $matrix['Recipient mode']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
+        $selectArr['options']=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions();
+        $selectArr['key']=array('settings','Recipient');
+        $selectArr['selected']=(isset($arr['settings']['Recipient']))?$arr['settings']['Recipient']:'';
+        $matrix['Recipient']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
+        $selectArr['excontainer']=TRUE;
+        $selectArr['tag']='input';
+        $selectArr['type']='text';
+        $selectArr['value']=(isset($arr['selector']['Content']['Subject']))?$arr['selector']['Content']['Subject']:$arr['selector']['Name'];
+        $selectArr['key']=array('selector','Content','Subject');
+        $matrix['Subject']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($selectArr);
+        $selectArr['type']='submit';
+        $selectArr['value']='Send';
+        $selectArr['hasCover']=TRUE;
+        $selectArr['key']=array('send');
+        $matrix['']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($selectArr);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE));
+        return $arr;
+    }    
 
 	public function getImageShuffle($arr,$isDebugging=FALSE){
 		if (!isset($arr['html'])){$arr['html']='';}

@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Tools;
 
-class Email{
+class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
 	
 	private $oc;
 	
@@ -275,98 +275,40 @@ class Email{
 		}
 	}
 	
-	/******************************************************************************************************************************************
-	* DATASINK: Email transmitter 
-	*
-	* 'callingClass' ... arr-property selects the outbox
-	* 
+    /******************************************************************************************************************************************
+	* TRANSMITTER: Email transmitter 
 	*/
-	public function dataSink($arr,$action='settingsWidget'){
-		if ($arr===TRUE){return 'Email outbox';}
-		switch($action){
-			case 'settingsWidget':
-				return $this->getTransmitterSettingsWidget($arr);
-				break;
-			case 'transmitterWidget':
-				return $this->getTransmitterWidget($arr);
-				break;
-			case 'sendEntry':
-				return $this->entry2mail($arr);
-				break;
-			case 'meta':
-				return $this->getTransmitterMeta($arr);
-				break;
-			case 'settings':
-				return $this->getTransmitterSetting($arr['callingClass']);
-				break;
-			case 'selector':
-				return $this->getTransmitterSelector($arr);
-				break;
-		}
-		return $arr;
-	}
+    public function send(string $recipient,array $entry):int{
+        $sentEntriesCount=0;
+        if (empty($entry['Content']['Subject'])){
+        	$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: subject was empty','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        } else {
+            $userEntryTable=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
+            $recipient=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$recipient),TRUE);
+            $sender=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$_SESSION['currentUser']['EntryId']),TRUE);
+            $entry['Content']['To']=$recipient['Content']['Contact details']['Email'];
+            $entry['Content']['From']=$sender['Content']['Contact details']['Email'];
+            if (empty($entry['Content']['To'])){
+                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: recipient emal address missing','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            } else {
+                $mail=array('selector'=>$entry);
+                $sentEntriesCount+=intval($this->entry2mail($mail));
+            }
+        }
+        return $sentEntriesCount;
+    }
 	
-	private function getTransmitterSetting($callingClass){
-		$EntryId=preg_replace('/\W/','_','OUTBOX-'.$callingClass);
-		$setting=array('Class'=>__CLASS__.'-tec','EntryId'=>$EntryId);
-		$setting['Content']=array('Recipient e-mail address'=>'',
-								  'Subject prefix'=>''
-								  );
-		return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
-	}
-
-	private function getTransmitterSettingsWidget($arr){
-		$arr['html']=(isset($arr['html']))?$arr['html']:'';
-		$setting=$this->getTransmitterSetting($arr['callingClass']);
-		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
-		return $arr;
-	}
-	
-	private function getTransmitterWidget($arr){
-		$arr['html']=(isset($arr['html']))?$arr['html']:'';
-		$form=array('To'=>array('tag'=>'input','type'=>'email','value'=>'','filter'=>FILTER_SANITIZE_EMAIL),
-					'From'=>array('tag'=>'input','type'=>'email','value'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(FALSE,7),'filter'=>FILTER_SANITIZE_EMAIL),
-					'Subject'=>array('tag'=>'input','type'=>'text','value'=>''),
-					'Send'=>array('tag'=>'button','value'=>'send','element-content'=>'Send'),
-					);
-		$callingClass=__CLASS__;
-		$callingFunction=md5(__FUNCTION__.$arr['callingClass']);
-		$formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
-		if (isset($formData['cmd']['Send'])){
-			foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read') as $EntryId=>$entry){
-				$mail=$arr;
-				$mail['selector']=$entry;
-				$mail['selector']['Content']=array_merge($mail['selector']['Content'],$formData['val']);	
-				$this->entry2mail($mail);
-			}
-		}
-		$matrix=array();
-		foreach($form as $key=>$element){
-			$element['key']=array($key);
-			$element['callingClass']=$callingClass;
-			$element['callingFunction']=$callingFunction;
-			$matrix[$key]['value']=$element;
-		}
-		$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Email widget'));
-		$containerSelector=$this->getTransmitterSelector($arr);
-		$containerSettings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Your sent emails (deleted after 1 year)','entryList',$containerSelector,$containerSettings,array());
-		return $arr;
-	}
-	
-	private function getTransmitterSelector($arr){
-		$setting=$this->getTransmitterSetting($arr['callingClass']);
-		$selector=array('Source'=>$this->entryTable,'Group'=>$setting['EntryId']);
-		$selector['Folder']=(empty($_SESSION['currentUser']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
-		return $selector;
-	}
-	
-	private function getTransmitterMeta($arr){
-		$rowCountSelector=$this->getTransmitterSelector($arr);
-		$meta=array();
-		$meta['Accumulated emails outbox']=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector);
-		return $meta;
-	}
+	public function transmitterPluginHtml(array $arr):string{
+        $arr['html']=(isset($arr['html']))?$arr['html']:'';
+        $arr['html'].='I am the email plugin...';
+        return $arr['html'];
+    }
+    
+    public function getRelevantFlatUserContentKey():string{
+        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+		$flatUserContentKey='Content'.$S.'Contact details'.$S.'Email';
+        return $flatUserContentKey;
+    }
 
 	/**
 	* This method converts the argument mail to an email and tries to send the email.
@@ -463,10 +405,11 @@ class Email{
 				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
 			}
 			// save message
-			$entry=$this->getTransmitterSelector($mail);
-			$entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
+            $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{NOW}}');
+            $entry['Type']= $entry['Source'].' '.(($success)?'success':'failure');
+            $entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
 			$entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
-			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
 		}
 		if ($isDebugging){
 			unset($mail['selector']);

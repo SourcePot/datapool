@@ -24,7 +24,7 @@ class HTMLbuilder{
 					    'export'=>array('key'=>array('export'),'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
 					    'select'=>array('key'=>array('select'),'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE),
 					    'delete'=>array('key'=>array('delete'),'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array(),'excontainer'=>FALSE),
-					    'remove'=>array('key'=>array('remove'),'title'=>'Remove file','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array(),'excontainer'=>FALSE),
+					    'remove'=>array('key'=>array('remove'),'title'=>'Remove file','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array(),'excontainer'=>FALSE),
 					    'delete all'=>array('key'=>array('delete all'),'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>array(),'excontainer'=>FALSE),
 					    'delete all entries'=>array('key'=>array('delete all entries'),'title'=>'Delete all selected entries excluding attched files','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>array(),'excontainer'=>FALSE),
 					    'moveUp'=>array('key'=>array('moveUp'),'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write'),
@@ -511,17 +511,17 @@ class HTMLbuilder{
             $previewArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
             $matrix['Preview']['Value'].=$previewArr['html'];
 		}
-        foreach(array('select','download','remove','delete','upload') as $cmd){
+        foreach(array('select','remove','delete','download','upload') as $cmd){
 			$ucfirstCmd=ucfirst($cmd);
 			if (!empty($arr['hide'.$ucfirstCmd])){continue;}
 			$arr['excontainer']=TRUE;
 			$arr['cmd']=$cmd;
 			$matrix['Btns']['Value'].=$this->btn($arr);
 		}
-		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+		$html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none','margin'=>'0')));
 		return $html;
 	}
-	
+    
 	/**
 	* This method returns an html-table containing an overview of the entry content-, processing- and attachment-logs.
 	* @return string
@@ -788,7 +788,8 @@ class HTMLbuilder{
 			}
 		}
 		if (!isset($flatKey)){
-			$html.='Method "'.__FUNCTION__.'": Setting missing for '.$arr['settings']['presentEntry'];
+            $whatIsMissing=(isset($arr['settings']['presentEntry']))?$arr['settings']['presentEntry']:'"is undefined: arr[settings][presentEntry]"';
+			$html.='Method "'.__FUNCTION__.'": Setting missing for '.$whatIsMissing;
 		}
 		if ($isDebugging){
 			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
@@ -818,13 +819,13 @@ class HTMLbuilder{
 		return $arr;
 	}
 	
-	private function entryPresentationTemplate($arr,$isEntryKeyOptions=TRUE){
+	private function entryPresentationTemplate($arr,$isEntryKeyOptions=FALSE){
 		if (!empty($arr['settings']['presentEntry'])){
 			$folder=$arr['settings']['presentEntry'];
 		} else if (!empty($arr['selector']['Folder'])){
 			$folder=$arr['selector']['Folder'];
 		}
-		$entry=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Entry presentation','Folder'=>$folder);
+        $entry=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Entry presentation','Folder'=>$folder);
 		$entry['Type']=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable().' array';
 		$entry['Name']=($isEntryKeyOptions)?'Key options':'Presentation setting';
 		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);

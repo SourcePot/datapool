@@ -257,10 +257,10 @@ class Explorer{
 		$arr=array('html'=>'','callingClass'=>$callingClass,'callingFunction'=>__FUNCTION__,'icon'=>'@','title'=>'Send entry as email','class'=>'explorer');
 		$arr['selector']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
 		if (!empty($arr['selector']['EntryId'])){
-			$arr=$this->oc['SourcePot\Datapool\Tools\Email']->datasink($arr,'transmitterWidget');
-		}
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Send entry','sendEntry',$arr['selector'],array(),array());
+        }
 		return $arr;
-	}
+	} 
 	
 	private function comments($callingClass,$setKeys){
 		$arr=array('html'=>'');

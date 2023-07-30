@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Components;
 
-class Logout{
+class Logout implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -18,11 +18,11 @@ class Logout{
 		$this->oc=$oc;
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		if ($arr===TRUE){
 			return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
 		} else {

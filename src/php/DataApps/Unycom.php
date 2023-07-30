@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Unycom{
+class Unycom implements \SourcePot\Datapool\Interfaces\App{
 	
 	private $oc;
 	
@@ -25,7 +25,7 @@ class Unycom{
 		$this->entryTable=strtolower(trim($table,'\\'));
 	}
 
-	public function init($oc){
+	public function init(array $oc){
 		$this->oc=$oc;
 		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
 	}
@@ -43,7 +43,7 @@ class Unycom{
 		return $this->entryTemplate;
 	}
 
-	public function run($arr=TRUE){
+	public function run(array|bool $arr=TRUE):array{
 		$html='';
 		if ($arr===TRUE){
 			return array('Category'=>'Data','Emoji'=>'€','Label'=>'UNYCOM','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);

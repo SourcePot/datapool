@@ -15,7 +15,7 @@ final class Root{
 
 	private $currentScript='';
 	private $oc=array();
-    private $structure=array('registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
+    private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
     
 	/**
 	* @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
@@ -124,6 +124,16 @@ final class Root{
 		}
 	}
 
+	public function getImplementedInterfaces($interface=FALSE){
+		if (empty($interface)){
+			return $this->structure['implemented interfaces'];
+		} else if (isset($this->structure['implemented interfaces'][$interface])){
+			return $this->structure['implemented interfaces'][$interface];
+		} else {
+			throw new \ErrorException('Function '.__FUNCTION__.': Argument interface = "'.$interface.'" is invalid.',0,E_ERROR,__FILE__,__LINE__);
+		}
+	}
+
 	public function source2class($source){
 		if (isset($this->structure['source2class'][$source])){
 			return $this->structure['source2class'][$source];
@@ -223,7 +233,8 @@ final class Root{
 	}
 	
 	private function updateStructure($oc,$classWithNamespace){
-		$methods2register=array('init'=>FALSE,
+		$interfaces=array('App','Processor','Transmitter');
+        $methods2register=array('init'=>FALSE,
 								'job'=>FALSE,
 								'run'=>TRUE,			// class->run(), which returns menu definition
 								'unifyEntry'=>FALSE,
@@ -249,6 +260,11 @@ final class Root{
 				}
 			}
 		}
+        foreach(class_implements($classWithNamespace) as $interface){
+            if (in_array($interface,class_implements($classWithNamespace))){
+                $this->structure['implemented interfaces'][$interface][$classWithNamespace]=$classWithNamespace;
+            }
+        }
 		if (stripos($classWithNamespace,'logging')!==FALSE){$GLOBALS['logging class']=$classWithNamespace;}
 		return $this->structure;
 	}
