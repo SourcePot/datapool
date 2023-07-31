@@ -11,6 +11,7 @@
 		"smalot/pdfparser":">=v2.0",
 		"sourcepot/ops":">=v0.2.7",
 		"sourcepot/mediaplayer":"*",
+		"sourcepot/sms":"*",
 		"sourcepot/piview":"*"
 	},
 	"autoload":{
