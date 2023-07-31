@@ -27,6 +27,7 @@ final class Root{
 									'SourcePot\Ops\Patents',
 									'SourcePot\MediaPlayer\MediaPlayer',
 									'SourcePot\PIview\PIview',
+									'SourcePot\Sms\Sms',
 									);
 		$debugArr=array('classesWithNamespace'=>$classesWithNamespace);
 		foreach($classesWithNamespace as $classIndex=>$classWithNamespace){
