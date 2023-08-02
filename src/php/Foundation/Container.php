@@ -493,24 +493,34 @@ class Container{
     
     public function sendEntry($arr){
         if (!isset($arr['html'])){$arr['html']='';}
+        // init settings
+        $availableTransmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
+        $arr['settings']['Transmitter']=(isset($arr['settings']['Transmitter']))?$arr['settings']['Transmitter']:current($availableTransmitter);
+        $arr['settings']['relevantFlatUserContentKey']=$this->oc[$arr['settings']['Transmitter']]->getRelevantFlatUserContentKey();
+        // get entry
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
+        // process form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
 		if (!empty($formData['cmd'])){
             $arr['settings']=array_merge($arr['settings'],$formData['val']['settings']);
+            $arr['settings']['relevantFlatUserContentKey']=$this->oc[$arr['settings']['Transmitter']]->getRelevantFlatUserContentKey();
             $arr['selector']['Content']=array_merge($arr['selector']['Content'],$formData['val']['selector']['Content']);
             if (isset($formData['cmd']['send'])){
-                $this->oc[$arr['settings']['Recipient mode']]->send($arr['settings']['Recipient'],$arr['selector']);
+                $this->oc[$arr['settings']['Transmitter']]->send($arr['settings']['Recipient'],$arr['selector']);
             }
         }
+        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions(array(),$arr['settings']['relevantFlatUserContentKey']);
+        $arr['settings']['Recipient']=(isset($arr['settings']['Recipient']))?$arr['settings']['Recipient']:current($availableRecipients);
+        // create form
         $matrix=array();
         $selectArr=array('callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>FALSE);
-		$selectArr['options']=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
-        $selectArr['key']=array('settings','Recipient mode');
-        $selectArr['selected']=(isset($arr['settings']['Recipient mode']))?$arr['settings']['Recipient mode']:'SourcePot\Datapool\Tools\Email';
-        $matrix['Recipient mode']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $selectArr['options']=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions();
+		$selectArr['options']=$availableTransmitter;
+        $selectArr['key']=array('settings','Transmitter');
+        $selectArr['selected']=$arr['settings']['Transmitter'];
+        $matrix['Transmitter']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
+        $selectArr['options']=$availableRecipients;
         $selectArr['key']=array('settings','Recipient');
-        $selectArr['selected']=(isset($arr['settings']['Recipient']))?$arr['settings']['Recipient']:'';
+        $selectArr['selected']=$arr['settings']['Recipient'];
         $matrix['Recipient']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         $selectArr['excontainer']=TRUE;
         $selectArr['tag']='input';

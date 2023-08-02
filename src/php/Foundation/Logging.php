@@ -14,16 +14,16 @@ class Logging{
 	
 	private $oc;
 	
-	private $logLevelCntr=array(0=>array('Name'=>'Info','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#000;'),
-								1=>array('Name'=>'Info','Lifespan'=>864000,'Callback'=>FALSE,'style'=>'color:#000;'),
-								2=>array('Name'=>'Warning','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#840;'),
-								3=>array('Name'=>'Warning','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#840;'),
-								4=>array('Name'=>'Error','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#a80;'),
-								5=>array('Name'=>'Error','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#a80;'),
-								6=>array('Name'=>'Threat','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#a00;'),
-								7=>array('Name'=>'Threat','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#a00;'),
-								8=>array('Name'=>'Breach','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#f00;'),
-								9=>array('Name'=>'Breach','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#f00;'),
+	private $logLevelCntr=array(0=>array('Name'=>'Info','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#ccc;'),
+								1=>array('Name'=>'Info','Lifespan'=>864000,'Callback'=>FALSE,'style'=>'color:#ccc;'),
+								2=>array('Name'=>'Warning','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#f99;'),
+								3=>array('Name'=>'Warning','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#f99;'),
+								4=>array('Name'=>'Error','Lifespan'=>600,'Callback'=>FALSE,'style'=>'color:#f90;'),
+								5=>array('Name'=>'Error','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#f90;'),
+								6=>array('Name'=>'Threat','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#a99;'),
+								7=>array('Name'=>'Threat','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#a99;'),
+								8=>array('Name'=>'Breach','Lifespan'=>2592000,'Callback'=>FALSE,'style'=>'color:#f99;'),
+								9=>array('Name'=>'Breach','Lifespan'=>25920000,'Callback'=>FALSE,'style'=>'color:#f99;'),
 								);
 	
 	private $entryTable;

@@ -52,7 +52,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 	}
 	
 	private function loginRequest($arr){
-		if (empty($arr['Passphrase']) || empty($arr['Email'])){return 'Password and/or email password were empty';}
+		if (empty($arr['Passphrase']) || empty($arr['Email'])){
+        	$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login failed, password and/or email were empty','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+		    return 'Password and/or email password were empty';
+        }
 		$user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
 		$user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
 		$user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
@@ -94,7 +97,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 	private function registerRequest($arr){
 		$err=FALSE;
 		if (empty($arr['Passphrase']) || empty($arr['Email'])){
-			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Password and/or email password were empty','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Registration failed, password and/or email were empty','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
 			$err='Password and/or email password were empty';
 		} else {
 			$user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();

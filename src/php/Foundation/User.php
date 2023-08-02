@@ -261,12 +261,18 @@ class User{
 		}
 	}
     
-    public function getUserOptions($selector=array(),$contactDetailsSubkey='Email'){
+    public function getUserOptions($selector=array(),$flatContactDetailsKey=FALSE){
         $selector['Source']=$this->entryTable;
         $selector['Privileges>']=1;
         $options=array();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
-            $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'].' ('.$user['Content']['Contact details'][$contactDetailsSubkey].')';
+            $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'];
+            if (!empty($flatContactDetailsKey)){
+                $flatUser=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($user);
+                if (!empty($flatUser[$flatContactDetailsKey])){
+                    $options[$user['EntryId']].=' ('.$flatUser[$flatContactDetailsKey].')';
+                }
+            }
         }
         asort($options);
         return $options;
