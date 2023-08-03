@@ -11,29 +11,29 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Foundation;
 
 class Haystack{
-	
-	private $oc;
-	
-	private $entryTable;
-	private $entryTemplate=array();
     
-	public function __construct($oc){
-		$this->oc=$oc;
-		$table=str_replace(__NAMESPACE__,'',__CLASS__);
-		$this->entryTable=strtolower(trim($table,'\\'));
-	}
-	
-	public function init($oc){
-		$this->oc=$oc;
-		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-	}
-	
-	public function getEntryTable(){return $this->entryTable;}
+    private $oc;
+    
+    private $entryTable;
+    private $entryTemplate=array();
+    
+    public function __construct($oc){
+        $this->oc=$oc;
+        $table=str_replace(__NAMESPACE__,'',__CLASS__);
+        $this->entryTable=strtolower(trim($table,'\\'));
+    }
+    
+    public function init($oc){
+        $this->oc=$oc;
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+    }
+    
+    public function getEntryTable(){return $this->entryTable;}
 
-	public function getEntryTemplate(){return $this->entryTemplate;}
-	
-	public function processSQLquery($sql,$inputs){
-		
-	}
+    public function getEntryTemplate(){return $this->entryTemplate;}
+    
+    public function processSQLquery($sql,$inputs){
+        
+    }
 }
 ?>

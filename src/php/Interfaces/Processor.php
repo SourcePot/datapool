@@ -11,16 +11,16 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Interfaces;
 
 interface Processor{
-	
-	/**
+    
+    /**
     * Initializes the instance that implments the interface. The $oc-argument contains instantiated classes of datappol, e.g.
-	* instances that provide database access, filespace access, html-templates etc.
+    * instances that provide database access, filespace access, html-templates etc.
     */
-	public function init(array $oc);
+    public function init(array $oc);
 
-	public function getEntryTable():string;
-	
-	public function dataProcessor(array $callingElementSelector,string $action='info');
+    public function getEntryTable():string;
+    
+    public function dataProcessor(array $callingElementSelector,string $action='info');
 
 }
 ?>

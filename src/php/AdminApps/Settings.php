@@ -11,87 +11,87 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\AdminApps;
 
 class Settings implements \SourcePot\Datapool\Interfaces\App{
-	
-	private $oc;
-	
-	private $entryTable;
-	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
-								 );
     
-	public function __construct($oc){
-		$this->oc=$oc;
-		$table=str_replace(__NAMESPACE__,'',__CLASS__);
-		$this->entryTable=strtolower(trim($table,'\\'));
-	}
+    private $oc;
+    
+    private $entryTable;
+    private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
+                                 );
+    
+    public function __construct($oc){
+        $this->oc=$oc;
+        $table=str_replace(__NAMESPACE__,'',__CLASS__);
+        $this->entryTable=strtolower(trim($table,'\\'));
+    }
 
-	public function init(array $oc){
-		$this->oc=$oc;
-		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		return $this->oc;
-	}
+    public function init(array $oc){
+        $this->oc=$oc;
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        return $this->oc;
+    }
 
-	public function getEntryTable(){
-		return $this->entryTable;
-	}
-	
-	public function getEntryTemplate(){
-		return $this->entryTemplate;
-	}
+    public function getEntryTable(){
+        return $this->entryTable;
+    }
+    
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
+    }
 
-	public function run(array|bool $arr=TRUE):array{
-		if ($arr===TRUE){
-			return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
-		} else {
-			$html=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
-			$selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-			if (empty($selector['Group'])){
-				$settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-				$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());	
-			} else {
-				if (strcmp($selector['Group'],'Entry presentation')===0){
-					$selector['Type']='entryKeys';
-				}
-				if (strcmp($selector['Group'],'Entry presentation')===0 && !empty($selector['EntryId'])){
-					$settings=array('method'=>'getEntryPresentationSetting','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-					$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation settings','generic',$selector,$settings,array());
-				} else {
-					$settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-					$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());
-				}
-			}
-			$arr['toReplace']['{{content}}']=$html;
-			return $arr;
-		}
-	}
+    public function run(array|bool $arr=TRUE):array{
+        if ($arr===TRUE){
+            return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
+        } else {
+            $html=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
+            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+            if (empty($selector['Group'])){
+                $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());    
+            } else {
+                if (strcmp($selector['Group'],'Entry presentation')===0){
+                    $selector['Type']='entryKeys';
+                }
+                if (strcmp($selector['Group'],'Entry presentation')===0 && !empty($selector['EntryId'])){
+                    $settings=array('method'=>'getEntryPresentationSetting','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation settings','generic',$selector,$settings,array());
+                } else {
+                    $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());
+                }
+            }
+            $arr['toReplace']['{{content}}']=$html;
+            return $arr;
+        }
+    }
 
-	public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
-		$entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
-		if ($isSystemCall){$entry['Owner']='SYSTEM';}
-		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
-		$entry['Content']=$setting;
-		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
-		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
-	}
-	
-	public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE){
-		$entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
-		if ($isSystemCall){$entry['Owner']='SYSTEM';}
-		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
-		$entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
-		$entry['Content']=$initSetting;
-		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
-		if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
-	}
-	
-	public function getVars($class,$initVars=array(),$isSystemCall=FALSE){
-		return $this->getSetting('Job processing','Var space',$initVars,$class,$isSystemCall);
-	}
+    public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
+        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
+        if ($isSystemCall){$entry['Owner']='SYSTEM';}
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+        $entry['Content']=$setting;
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+        if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
+    }
+    
+    public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE){
+        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
+        if ($isSystemCall){$entry['Owner']='SYSTEM';}
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
+        $entry['Content']=$initSetting;
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
+        if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
+    }
+    
+    public function getVars($class,$initVars=array(),$isSystemCall=FALSE){
+        return $this->getSetting('Job processing','Var space',$initVars,$class,$isSystemCall);
+    }
 
-	public function setVars($class,$vars=array(),$isSystemCall=FALSE){
-		return $this->setSetting('Job processing','Var space',$vars,$class,$isSystemCall);
-	}
-	
+    public function setVars($class,$vars=array(),$isSystemCall=FALSE){
+        return $this->setSetting('Job processing','Var space',$vars,$class,$isSystemCall);
+    }
+    
 }
 ?>

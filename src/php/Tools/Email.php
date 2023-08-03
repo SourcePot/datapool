@@ -11,279 +11,279 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
-	
-	private $oc;
-	
-	private $entryTable='';
-	private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-								 );
+    
+    private $oc;
+    
+    private $entryTable='';
+    private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 );
 
-	public $receiverDef=array('Type'=>array('@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'),
-							  'Content'=>array('Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-											  'User'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
-											  'Password'=>array('@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE),
-											  'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
-											),
-							);
+    public $receiverDef=array('Type'=>array('@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'),
+                              'Content'=>array('Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
+                                              'User'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
+                                              'Password'=>array('@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE),
+                                              'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
+                                            ),
+                            );
 
-	public $transmitterDef=array('Type'=>array('@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'),
-							  'Content'=>array('Recipient e-mail address'=>array('@tag'=>'input','@type'=>'email','@default'=>'','@excontainer'=>TRUE),
-											   'Subject prefix'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
-											   'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
-											  ),
-							);
+    public $transmitterDef=array('Type'=>array('@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'),
+                              'Content'=>array('Recipient e-mail address'=>array('@tag'=>'input','@type'=>'email','@default'=>'','@excontainer'=>TRUE),
+                                               'Subject prefix'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
+                                               'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
+                                              ),
+                            );
 
-	private $msgEntry=array();
+    private $msgEntry=array();
     private $pageSettings=array();
  
-	public function __construct($oc){
-		$this->oc=$oc;
-		$table=str_replace(__NAMESPACE__,'',__CLASS__);
-		$this->entryTable=strtolower(trim($table,'\\'));
-	}
-	
-	public function init($oc){
-		$this->oc=$oc;
-	    $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-		$this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
-		$oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
-	}
+    public function __construct($oc){
+        $this->oc=$oc;
+        $table=str_replace(__NAMESPACE__,'',__CLASS__);
+        $this->entryTable=strtolower(trim($table,'\\'));
+    }
+    
+    public function init($oc){
+        $this->oc=$oc;
+        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
+        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
+    }
 
-	public function getEntryTable(){
-		return $this->entryTable;
-	}
-	
-	public function getEntryTemplate(){
-		return $this->entryTemplate;
-	}
-	
-	public function job($vars){
-		if (empty($vars['Inboxes'])){
-			$selector=array('Class'=>__CLASS__.'-rec');
-			$vars['Inboxes']=array();
-			foreach($this->oc['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
-				$vars['Inboxes'][$entry['EntryId']]=$entry;
-			}
-		}
-		if (!empty($vars['Inboxes'])){
-			$inbox=array_shift($vars['Inboxes']);
-			$vars['Result']=$this->todaysEmails($inbox);	
-			$vars['Inboxes to process']=count($vars['Inboxes']);
-		}
-		return $vars;
-	}
-	
-	/******************************************************************************************************************************************
-	* DATASOURCE: Email receiver
-	*
-	* 'callingClass' ... arr-property selects the inbox
-	* 
-	*/
-	public function dataSource($arr,$action='settingsWidget'){
-		if ($arr===TRUE){return 'Email inbox';}
-		switch($action){
-			case 'settingsWidget':
-				return $this->getReceiverSettingsWidget($arr);
-				break;
-			case 'receiverWidget':
-				return $this->getReceiverWidget($arr);
-				break;
-			case 'meta':
-				return $this->getReceiverMeta($arr);
-				break;
-			case 'selector':
-				return $this->getReceiverSelector($arr);
-				break;
-		}
-		return $arr;
-	}
-
-	private function getReceiverSetting($callingClass){
-		$EntryId=preg_replace('/\W/','_','INBOX-'.$callingClass);
-		$setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$EntryId);
-		$setting['Content']=array('Mailbox'=>'{mail.wallenhauer.com:993/imap/ssl/novalidate-cert/user=c@wallenhauer.com}',
-								  'User'=>'c@wallenhauer.com',
-								  'Password'=>'');
-		return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
-	}
-
-	private function getReceiverSettingsWidget($arr){
-		$arr['html']=(isset($arr['html']))?$arr['html']:'';
-		$setting=$this->getReceiverSetting($arr['callingClass']);
-		$arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
-		return $arr;
-	}
-	
-	private function getReceiverSelector($arr){
-		$setting=$this->getReceiverSetting($arr['callingClass']);
-		return array('Source'=>$this->entryTable,'Group'=>$setting['EntryId']);
-	}
-	
-	private function getReceiverMeta($arr){
-		//$mbox=imap_open("{mail.wallenhauer.com}INBOX",'c@wallenhauer.com','Hu8wl3PyT62tVV1');
-		$meta=array();
-		$setting=$this->getReceiverSetting($arr['callingClass']);
-		$mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
-		imap_errors();
-		imap_alerts();
-		if (empty($mbox)){
-			$meta['Error']=imap_last_error();
-		} else {
-			$check=imap_mailboxmsginfo($mbox);
-			$meta=array('Driver'=>$check->Driver,
-						'Mailbox'=>$check->Mailbox,
-						'Messages'=>$check->Nmsgs,
-						'Recent'=>$check->Recent,
-						'Unread'=>$check->Unread,
-						'Deleted'=>$check->Deleted,
-						'Size'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($check->Size),
-						);
-			imap_close($mbox);
-		}
-		return $meta;
-	}
-
-	private function todaysEmails($setting){
-		$this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-		if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
-			$result=array('Error'=>'Setting "Mailbox" and/or "User" is empty.');
-			return $result;
-		}
-		$result=array('Loading'=>$setting['Content']['Mailbox']);
-		$mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
-		imap_errors();
-		imap_alerts();
-		if (empty($mbox)){
-			$result['Error']=imap_last_error();
-		} else {
-			$messages=imap_search($mbox,'SINCE "'.date('d-M-Y').'"');
-			if ($messages){
-				foreach($messages as $mid){
-					$entry=$this->getMsg($mbox,$mid);
-					$entry['Source']=$this->entryTable;
-					$entry['Group']=$setting['EntryId'];
-					if (empty($entry['htmlmsg'])){
-						$entry['Content']=array('Plain'=>$entry['plainmsg']);
-					} else {
-						$entry['Content']=array('Html'=>$entry['htmlmsg']);
-					}
-					$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
-					if (empty($entry['attachments'])){
-						$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
-						$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
-					} else {
-						foreach($entry['attachments'] as $attName=>$attContent){
-							$entry['pathArr']=pathinfo($attName);
-							$entry['Name'].=' ('.$attName.')';
-							$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
-							$entry['fileContent']=$attContent;
-							$entry['fileName']=$attName;
-							$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entries($entry,TRUE,TRUE,FALSE);
-						} // loop through attachmentzs
-					}
-				} // loop through messages
-			}
-			imap_close($mbox);
-		}
-		return $result;
-	}
-
-	private function getMsg($mbox,$mid){
-		// input $mbox = IMAP stream, $mid = message id
-		// output all the following:
-		$this->msgEntry['charset']='';
-		$this->msgEntry['htmlmsg']='';
-		$this->msgEntry['plainmsg']='';
-		$this->msgEntry['attachments']=array();
-		// HEADER
-		$h=\imap_headerinfo($mbox,$mid);
-		$this->msgEntry['Name']=iconv_mime_decode($h->subject,0,'utf-8');
-		$mailingDate=new \DateTime('@'.$h->udate);
-		$this->msgEntry['Date']=$mailingDate->format('Y-m-d H:i:s');
-		$this->msgEntry['Folder']=htmlspecialchars(iconv_mime_decode($h->senderaddress,0,'utf-8'));
-		$s=\imap_fetchstructure($mbox,$mid);
-		if (!isset($s->parts)){
-			// simple
-			$this->getPart($mbox,$mid,$s,0);  // pass 0 as part-number
-		} else {  
-			// multipart: cycle through each part
-			foreach ($s->parts as $partno0=>$p){
-				$this->getPart($mbox,$mid,$p,$partno0+1);
-			}
-		}
-		return $this->msgEntry;
-	}
-
-	private function getPart($mbox,$mid,$p,$partno){
-		// $partno='1', '2', '2.1', '2.1.3', etc for multipart, 0 if simple
-		// DECODE DATA
-		$data=($partno)?
-			\imap_fetchbody($mbox,$mid,strval($partno)):  // multipart
-			\imap_body($mbox,$mid);  // simple
-		// Any part may be encoded, even plain text messages, so check everything.
-		if ($p->encoding==4){
-			$data=quoted_printable_decode($data);
-		} else if ($p->encoding==3){
-			$data=base64_decode($data);
-		}
-		// PARAMETERS
-		// get all parameters, like charset, filenames of attachments, etc.
-		$params=array();
-		if ($p->parameters){
-			foreach ($p->parameters as $x){
-				$params[strtolower($x->attribute)]=$x->value;
-			}
-		}
-		if (isset($p->dparameters)){
-			foreach ($p->dparameters as $x){
-				$params[strtolower($x->attribute)]=$x->value;
-			}
-		}
-		// ATTACHMENT
-		// Any part with a filename is an attachment,
-		// so an attached text file (type 0) is not mistaken as the message.
-		if (!empty($params['filename']) || !empty($params['name'])){
-			// filename may be given as 'Filename' or 'Name' or both
-			$filename=($params['filename'])?$params['filename']:$params['name'];
-			// filename may be encoded, so see imap_mime_header_decode()
-			$this->msgEntry['attachments'][$filename]=$data;  // this is a problem if two files have same name
-		}
-		// TEXT
-		if ($p->type==0 && $data){
-			// Messages may be split in different parts because of inline attachments,
-			// so append parts together with blank row.
-			if (strtolower($p->subtype)=='plain'){
-				$this->msgEntry['plainmsg'].=trim($data) ."\n\n";
-			} else {
-				$this->msgEntry['htmlmsg'].=$data ."<br><br>";
-			}
-			$this->msgEntry['charset']=$params['charset'];  // assume all parts are same charset
-		} else if ($p->type==2 && $data){
-			// EMBEDDED MESSAGE
-			// Many bounce notifications embed the original message as type 2,
-			// but AOL uses type 1 (multipart), which is not handled here.
-			// There are no PHP functions to parse embedded messages,
-			// so this just appends the raw source to the main message.
-			$this->msgEntry['plainmsg'].=$data."\n\n";
-		}
-
-		// SUBPART RECURSION
-		if (isset($p->parts)){
-			foreach ($p->parts as $partno0=>$p2){
-			   $this-> getPart($mbox,$mid,$p2,$partno.'.'.($partno0+1));  // 1.2, 1.2.1, etc.
-			}
-		}
-	}
-	
+    public function getEntryTable(){
+        return $this->entryTable;
+    }
+    
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
+    }
+    
+    public function job($vars){
+        if (empty($vars['Inboxes'])){
+            $selector=array('Class'=>__CLASS__.'-rec');
+            $vars['Inboxes']=array();
+            foreach($this->oc['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
+                $vars['Inboxes'][$entry['EntryId']]=$entry;
+            }
+        }
+        if (!empty($vars['Inboxes'])){
+            $inbox=array_shift($vars['Inboxes']);
+            $vars['Result']=$this->todaysEmails($inbox);    
+            $vars['Inboxes to process']=count($vars['Inboxes']);
+        }
+        return $vars;
+    }
+    
     /******************************************************************************************************************************************
-	* TRANSMITTER: Email transmitter 
-	*/
+    * DATASOURCE: Email receiver
+    *
+    * 'callingClass' ... arr-property selects the inbox
+    * 
+    */
+    public function dataSource($arr,$action='settingsWidget'){
+        if ($arr===TRUE){return 'Email inbox';}
+        switch($action){
+            case 'settingsWidget':
+                return $this->getReceiverSettingsWidget($arr);
+                break;
+            case 'receiverWidget':
+                return $this->getReceiverWidget($arr);
+                break;
+            case 'meta':
+                return $this->getReceiverMeta($arr);
+                break;
+            case 'selector':
+                return $this->getReceiverSelector($arr);
+                break;
+        }
+        return $arr;
+    }
+
+    private function getReceiverSetting($callingClass){
+        $EntryId=preg_replace('/\W/','_','INBOX-'.$callingClass);
+        $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$EntryId);
+        $setting['Content']=array('Mailbox'=>'{mail.wallenhauer.com:993/imap/ssl/novalidate-cert/user=c@wallenhauer.com}',
+                                  'User'=>'c@wallenhauer.com',
+                                  'Password'=>'');
+        return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
+    }
+
+    private function getReceiverSettingsWidget($arr){
+        $arr['html']=(isset($arr['html']))?$arr['html']:'';
+        $setting=$this->getReceiverSetting($arr['callingClass']);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
+        return $arr;
+    }
+    
+    private function getReceiverSelector($arr){
+        $setting=$this->getReceiverSetting($arr['callingClass']);
+        return array('Source'=>$this->entryTable,'Group'=>$setting['EntryId']);
+    }
+    
+    private function getReceiverMeta($arr){
+        //$mbox=imap_open("{mail.wallenhauer.com}INBOX",'c@wallenhauer.com','Hu8wl3PyT62tVV1');
+        $meta=array();
+        $setting=$this->getReceiverSetting($arr['callingClass']);
+        $mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
+        imap_errors();
+        imap_alerts();
+        if (empty($mbox)){
+            $meta['Error']=imap_last_error();
+        } else {
+            $check=imap_mailboxmsginfo($mbox);
+            $meta=array('Driver'=>$check->Driver,
+                        'Mailbox'=>$check->Mailbox,
+                        'Messages'=>$check->Nmsgs,
+                        'Recent'=>$check->Recent,
+                        'Unread'=>$check->Unread,
+                        'Deleted'=>$check->Deleted,
+                        'Size'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($check->Size),
+                        );
+            imap_close($mbox);
+        }
+        return $meta;
+    }
+
+    private function todaysEmails($setting){
+        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+        if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
+            $result=array('Error'=>'Setting "Mailbox" and/or "User" is empty.');
+            return $result;
+        }
+        $result=array('Loading'=>$setting['Content']['Mailbox']);
+        $mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
+        imap_errors();
+        imap_alerts();
+        if (empty($mbox)){
+            $result['Error']=imap_last_error();
+        } else {
+            $messages=imap_search($mbox,'SINCE "'.date('d-M-Y').'"');
+            if ($messages){
+                foreach($messages as $mid){
+                    $entry=$this->getMsg($mbox,$mid);
+                    $entry['Source']=$this->entryTable;
+                    $entry['Group']=$setting['EntryId'];
+                    if (empty($entry['htmlmsg'])){
+                        $entry['Content']=array('Plain'=>$entry['plainmsg']);
+                    } else {
+                        $entry['Content']=array('Html'=>$entry['htmlmsg']);
+                    }
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
+                    if (empty($entry['attachments'])){
+                        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
+                        $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
+                    } else {
+                        foreach($entry['attachments'] as $attName=>$attContent){
+                            $entry['pathArr']=pathinfo($attName);
+                            $entry['Name'].=' ('.$attName.')';
+                            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
+                            $entry['fileContent']=$attContent;
+                            $entry['fileName']=$attName;
+                            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entries($entry,TRUE,TRUE,FALSE);
+                        } // loop through attachmentzs
+                    }
+                } // loop through messages
+            }
+            imap_close($mbox);
+        }
+        return $result;
+    }
+
+    private function getMsg($mbox,$mid){
+        // input $mbox = IMAP stream, $mid = message id
+        // output all the following:
+        $this->msgEntry['charset']='';
+        $this->msgEntry['htmlmsg']='';
+        $this->msgEntry['plainmsg']='';
+        $this->msgEntry['attachments']=array();
+        // HEADER
+        $h=\imap_headerinfo($mbox,$mid);
+        $this->msgEntry['Name']=iconv_mime_decode($h->subject,0,'utf-8');
+        $mailingDate=new \DateTime('@'.$h->udate);
+        $this->msgEntry['Date']=$mailingDate->format('Y-m-d H:i:s');
+        $this->msgEntry['Folder']=htmlspecialchars(iconv_mime_decode($h->senderaddress,0,'utf-8'));
+        $s=\imap_fetchstructure($mbox,$mid);
+        if (!isset($s->parts)){
+            // simple
+            $this->getPart($mbox,$mid,$s,0);  // pass 0 as part-number
+        } else {  
+            // multipart: cycle through each part
+            foreach ($s->parts as $partno0=>$p){
+                $this->getPart($mbox,$mid,$p,$partno0+1);
+            }
+        }
+        return $this->msgEntry;
+    }
+
+    private function getPart($mbox,$mid,$p,$partno){
+        // $partno='1', '2', '2.1', '2.1.3', etc for multipart, 0 if simple
+        // DECODE DATA
+        $data=($partno)?
+            \imap_fetchbody($mbox,$mid,strval($partno)):  // multipart
+            \imap_body($mbox,$mid);  // simple
+        // Any part may be encoded, even plain text messages, so check everything.
+        if ($p->encoding==4){
+            $data=quoted_printable_decode($data);
+        } else if ($p->encoding==3){
+            $data=base64_decode($data);
+        }
+        // PARAMETERS
+        // get all parameters, like charset, filenames of attachments, etc.
+        $params=array();
+        if ($p->parameters){
+            foreach ($p->parameters as $x){
+                $params[strtolower($x->attribute)]=$x->value;
+            }
+        }
+        if (isset($p->dparameters)){
+            foreach ($p->dparameters as $x){
+                $params[strtolower($x->attribute)]=$x->value;
+            }
+        }
+        // ATTACHMENT
+        // Any part with a filename is an attachment,
+        // so an attached text file (type 0) is not mistaken as the message.
+        if (!empty($params['filename']) || !empty($params['name'])){
+            // filename may be given as 'Filename' or 'Name' or both
+            $filename=($params['filename'])?$params['filename']:$params['name'];
+            // filename may be encoded, so see imap_mime_header_decode()
+            $this->msgEntry['attachments'][$filename]=$data;  // this is a problem if two files have same name
+        }
+        // TEXT
+        if ($p->type==0 && $data){
+            // Messages may be split in different parts because of inline attachments,
+            // so append parts together with blank row.
+            if (strtolower($p->subtype)=='plain'){
+                $this->msgEntry['plainmsg'].=trim($data) ."\n\n";
+            } else {
+                $this->msgEntry['htmlmsg'].=$data ."<br><br>";
+            }
+            $this->msgEntry['charset']=$params['charset'];  // assume all parts are same charset
+        } else if ($p->type==2 && $data){
+            // EMBEDDED MESSAGE
+            // Many bounce notifications embed the original message as type 2,
+            // but AOL uses type 1 (multipart), which is not handled here.
+            // There are no PHP functions to parse embedded messages,
+            // so this just appends the raw source to the main message.
+            $this->msgEntry['plainmsg'].=$data."\n\n";
+        }
+
+        // SUBPART RECURSION
+        if (isset($p->parts)){
+            foreach ($p->parts as $partno0=>$p2){
+               $this-> getPart($mbox,$mid,$p2,$partno.'.'.($partno0+1));  // 1.2, 1.2.1, etc.
+            }
+        }
+    }
+    
+    /******************************************************************************************************************************************
+    * TRANSMITTER: Email transmitter 
+    */
     public function send(string $recipient,array $entry):int{
         $sentEntriesCount=0;
         if (empty($entry['Content']['Subject'])){
-        	$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: subject was empty','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: subject was empty','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         } else {
             $userEntryTable=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
             $recipient=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$recipient),TRUE);
@@ -306,8 +306,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
         }
         return $sentEntriesCount;
     }
-	
-	public function transmitterPluginHtml(array $arr):string{
+    
+    public function transmitterPluginHtml(array $arr):string{
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         $arr['html'].='I am the email plugin...';
         return $arr['html'];
@@ -315,153 +315,153 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
     
     public function getRelevantFlatUserContentKey():string{
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-		$flatUserContentKey='Content'.$S.'Contact details'.$S.'Email';
+        $flatUserContentKey='Content'.$S.'Contact details'.$S.'Email';
         return $flatUserContentKey;
     }
 
-	/**
-	* This method converts the argument mail to an email and tries to send the email.
-	* The argument mail is an array which must contain an entry: arr['selector']=entry 
-	* @return boolean
-	*/
-	public function entry2mail($mail,$isDebugging=FALSE){
-		// This methode converts an entry to an emial address, the $mail-keys are:
-		// 'selector' ... selects the entry
-		// 'To' ... is the recipients emal address, use array for multiple addressees
-		$header=array();
-		$pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-		$mailKeyTypes=array('mail'=>array('To'=>'','Subject'=>$mail['selector']['Name']),
-							'header'=>array('From'=>$pageSettings['emailWebmaster'],'Cc'=>FALSE,'Bcc'=>FALSE,'Reply-To'=>FALSE)
-							);
-		$success=FALSE;
-		if (empty($mail['selector'])){
-			$logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-			$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);	
-		} else {
-			// copy email settings from mail[selector][Content] to mail and unset these settings
-			foreach($mailKeyTypes as $keyType=>$mailKeys){
-				foreach($mailKeys as $mailKey=>$initValue){
-					if (empty($mail[$mailKey])){
-						if (empty($mail['selector']['Content'][$mailKey])){
-							if ($initValue!==FALSE){$$keyType[$mailKey]=$initValue;}
-						} else {
-							$$keyType[$mailKey]=$mail['selector']['Content'][$mailKey];
-						}
-					}
-					if (isset($mail['selector']['Content'][$mailKey])){unset($mail['selector']['Content'][$mailKey]);}
-				}
-			}
-			// get message parts
-			$flatContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($mail['selector']['Content']);
-			$msgTextPlain='';
-			$msgTextHtml='';
-			foreach($flatContent as $flatContentKey=>$flatContentValue){
-				$flatContentKey=strval($flatContentKey);
-				$flatContentValue=strval($flatContentValue);
-				$flatContentValue=trim($flatContentValue);
-				if (strpos($flatContentValue,'{{')===0){
-					continue;
-				} else if (strpos($flatContentValue,'<')!==0){
-					$flatContentValue='<p>'.$flatContentValue.'</p>';
-				}
-				$msgTextPlain=strip_tags($flatContentValue)."\r\n";
-				$msgTextHtml.=$flatContentValue;
-			}
-			// create text part of the message
-			$textBoundery='text-'.md5($mail['selector']['EntryId']);
-			$message='';
-			$msgPrefix="Content-Type: multipart/alternative; boundary=\"".$textBoundery."\"\r\n";
-			$message.="\r\n\r\n--".$textBoundery."\r\n";
-			$message.="Content-Type: text/plain; charset=UTF-8\r\n\r\n";
-			//$message.=chunk_split($msgTextPlain);
-			$message.=$msgTextPlain;
-			$message.="\r\n--".$textBoundery."\r\n";
-			$message.="Content-Type: text/html; charset=UTF-8\n";
-			$message.="Content-Transfer-Encoding: quoted-printable\r\n\r\n";
-			//$message.=chunk_split($msgTextHtml);
-			$message.=$msgTextHtml;
-			$message.="\r\n\r\n--".$textBoundery."--\r\n";
-			// get attched file			
-			$mixedBoundery='multipart-'.md5($mail['selector']['EntryId']);
-			$file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($mail['selector']);
-			if (is_file($file)){
-				$msgPrefix='--'.$mixedBoundery."\r\n".$msgPrefix;
-				// get file content
-				$msgFile=file_get_contents($file);
-				$msgFile=base64_encode($msgFile);
-				// attach to message
-				$message.="\r\n\r\n--".$mixedBoundery."\r\n";
-				$message.="Content-Type: ".mime_content_type($file)."; name=\"".$mail['selector']['Params']['File']['Name']."\"\n";
-				$message.="Content-Transfer-Encoding: base64\n";
-				$message.="Content-Disposition: attachment; filename=\"".$mail['selector']['Params']['File']['Name']."\"\r\n\r\n";
-				$message.=chunk_split($msgFile);
-				$message.="\r\n\r\n--".$mixedBoundery."--\r\n";
-				$message=$msgPrefix.$message;
-				$header['Content-Type']="multipart/mixed; boundary=\"".$mixedBoundery."\"";
-			} else {
-				$header['Content-Type']="multipart/alternative; boundary=\"".$textBoundery."\"";
-			}
-			$mail['message']=$message;
-			// add headers
-			$header['MIMI-Version']='1.0';
-			$mail['To']=addcslashes(mb_encode_mimeheader($mail['To'],"UTF-8"),'"');
-			$mail['Subject']=addcslashes(mb_encode_mimeheader($mail['Subject'],"UTF-8"),'"');
-			$header['From']=addcslashes(mb_encode_mimeheader($header['From'],"UTF-8"),'"');
-			$success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
-			if ($success){
-				$logArr=array('msg'=>'Email sent...','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
-			} else {
-				$logArr=array('msg'=>'Sending email failed.','priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-				$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
-			}
-			// save message
+    /**
+    * This method converts the argument mail to an email and tries to send the email.
+    * The argument mail is an array which must contain an entry: arr['selector']=entry 
+    * @return boolean
+    */
+    public function entry2mail($mail,$isDebugging=FALSE){
+        // This methode converts an entry to an emial address, the $mail-keys are:
+        // 'selector' ... selects the entry
+        // 'To' ... is the recipients emal address, use array for multiple addressees
+        $header=array();
+        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        $mailKeyTypes=array('mail'=>array('To'=>'','Subject'=>$mail['selector']['Name']),
+                            'header'=>array('From'=>$pageSettings['emailWebmaster'],'Cc'=>FALSE,'Bcc'=>FALSE,'Reply-To'=>FALSE)
+                            );
+        $success=FALSE;
+        if (empty($mail['selector'])){
+            $logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);    
+        } else {
+            // copy email settings from mail[selector][Content] to mail and unset these settings
+            foreach($mailKeyTypes as $keyType=>$mailKeys){
+                foreach($mailKeys as $mailKey=>$initValue){
+                    if (empty($mail[$mailKey])){
+                        if (empty($mail['selector']['Content'][$mailKey])){
+                            if ($initValue!==FALSE){$$keyType[$mailKey]=$initValue;}
+                        } else {
+                            $$keyType[$mailKey]=$mail['selector']['Content'][$mailKey];
+                        }
+                    }
+                    if (isset($mail['selector']['Content'][$mailKey])){unset($mail['selector']['Content'][$mailKey]);}
+                }
+            }
+            // get message parts
+            $flatContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($mail['selector']['Content']);
+            $msgTextPlain='';
+            $msgTextHtml='';
+            foreach($flatContent as $flatContentKey=>$flatContentValue){
+                $flatContentKey=strval($flatContentKey);
+                $flatContentValue=strval($flatContentValue);
+                $flatContentValue=trim($flatContentValue);
+                if (strpos($flatContentValue,'{{')===0){
+                    continue;
+                } else if (strpos($flatContentValue,'<')!==0){
+                    $flatContentValue='<p>'.$flatContentValue.'</p>';
+                }
+                $msgTextPlain=strip_tags($flatContentValue)."\r\n";
+                $msgTextHtml.=$flatContentValue;
+            }
+            // create text part of the message
+            $textBoundery='text-'.md5($mail['selector']['EntryId']);
+            $message='';
+            $msgPrefix="Content-Type: multipart/alternative; boundary=\"".$textBoundery."\"\r\n";
+            $message.="\r\n\r\n--".$textBoundery."\r\n";
+            $message.="Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+            //$message.=chunk_split($msgTextPlain);
+            $message.=$msgTextPlain;
+            $message.="\r\n--".$textBoundery."\r\n";
+            $message.="Content-Type: text/html; charset=UTF-8\n";
+            $message.="Content-Transfer-Encoding: quoted-printable\r\n\r\n";
+            //$message.=chunk_split($msgTextHtml);
+            $message.=$msgTextHtml;
+            $message.="\r\n\r\n--".$textBoundery."--\r\n";
+            // get attched file            
+            $mixedBoundery='multipart-'.md5($mail['selector']['EntryId']);
+            $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($mail['selector']);
+            if (is_file($file)){
+                $msgPrefix='--'.$mixedBoundery."\r\n".$msgPrefix;
+                // get file content
+                $msgFile=file_get_contents($file);
+                $msgFile=base64_encode($msgFile);
+                // attach to message
+                $message.="\r\n\r\n--".$mixedBoundery."\r\n";
+                $message.="Content-Type: ".mime_content_type($file)."; name=\"".$mail['selector']['Params']['File']['Name']."\"\n";
+                $message.="Content-Transfer-Encoding: base64\n";
+                $message.="Content-Disposition: attachment; filename=\"".$mail['selector']['Params']['File']['Name']."\"\r\n\r\n";
+                $message.=chunk_split($msgFile);
+                $message.="\r\n\r\n--".$mixedBoundery."--\r\n";
+                $message=$msgPrefix.$message;
+                $header['Content-Type']="multipart/mixed; boundary=\"".$mixedBoundery."\"";
+            } else {
+                $header['Content-Type']="multipart/alternative; boundary=\"".$textBoundery."\"";
+            }
+            $mail['message']=$message;
+            // add headers
+            $header['MIMI-Version']='1.0';
+            $mail['To']=addcslashes(mb_encode_mimeheader($mail['To'],"UTF-8"),'"');
+            $mail['Subject']=addcslashes(mb_encode_mimeheader($mail['Subject'],"UTF-8"),'"');
+            $header['From']=addcslashes(mb_encode_mimeheader($header['From'],"UTF-8"),'"');
+            $success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
+            if ($success){
+                $logArr=array('msg'=>'Email sent...','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+            } else {
+                $logArr=array('msg'=>'Sending email failed.','priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
+            }
+            // save message
             $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{NOW}}');
             $entry['Type']= $entry['Source'].' '.(($success)?'success':'failure');
             $entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
-			$entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
-			$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
-		}
-		if ($isDebugging){
-			unset($mail['selector']);
-			$debugArr=array('header'=>$header,'mail'=>$mail);
-			if (isset($entry)){$debugArr['entry']=$entry;}
-			$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-		}
-		return $success;
-	}
-	
-	private function email2file($entry,$mailArr){
-		$partOrder=array('header'=>TRUE,'From'=>TRUE,'To'=>TRUE,'Date'=>date('r'),'Subject'=>TRUE,'message'=>TRUE);
-		$fileContent='';
-		foreach($partOrder as $part=>$initValue){
-			if (!isset($mailArr[$part])){$mailArr[$part]=$initValue;}
-			if (is_array($mailArr[$part])){
-				foreach($mailArr[$part] as $key=>$value){
-					$fileContent.=$key.': '.$value."\r\n";
-				}
-			} else {
-				if (strcmp($part,'message')===0){
-					$fileContent.="\r\n".$mailArr[$part];
-				} else {
-					$fileContent.=$part.': '.$mailArr[$part]."\r\n";
-				}
-			}
-		}
-		$entry['Name']=iconv_mime_decode($mailArr['Subject']);
-		$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-		$fileName=date('Y-m-d').' '.preg_replace('/\W/','_',$entry['Name']).'.eml';
-		$pathArr=pathinfo($fileName);
-		$file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-		file_put_contents($file,$fileContent);
-		$entry['Params']['File']['MIME-Type']='application/octet-stream';
-		$entry['Params']['File']['Size']=filesize($file);
-		$entry['Params']['File']['Name']=$pathArr['basename'];
-		$entry['Params']['File']['Extension']=$pathArr['extension'];
-		$entry['Params']['File']['Date (created)']=date('Y-m-d');
-		$entry['Expires']=date('Y-m-d',time()+31536000);
-		return $entry;
-	}
+            $entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
+        }
+        if ($isDebugging){
+            unset($mail['selector']);
+            $debugArr=array('header'=>$header,'mail'=>$mail);
+            if (isset($entry)){$debugArr['entry']=$entry;}
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+        }
+        return $success;
+    }
+    
+    private function email2file($entry,$mailArr){
+        $partOrder=array('header'=>TRUE,'From'=>TRUE,'To'=>TRUE,'Date'=>date('r'),'Subject'=>TRUE,'message'=>TRUE);
+        $fileContent='';
+        foreach($partOrder as $part=>$initValue){
+            if (!isset($mailArr[$part])){$mailArr[$part]=$initValue;}
+            if (is_array($mailArr[$part])){
+                foreach($mailArr[$part] as $key=>$value){
+                    $fileContent.=$key.': '.$value."\r\n";
+                }
+            } else {
+                if (strcmp($part,'message')===0){
+                    $fileContent.="\r\n".$mailArr[$part];
+                } else {
+                    $fileContent.=$part.': '.$mailArr[$part]."\r\n";
+                }
+            }
+        }
+        $entry['Name']=iconv_mime_decode($mailArr['Subject']);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+        $fileName=date('Y-m-d').' '.preg_replace('/\W/','_',$entry['Name']).'.eml';
+        $pathArr=pathinfo($fileName);
+        $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+        file_put_contents($file,$fileContent);
+        $entry['Params']['File']['MIME-Type']='application/octet-stream';
+        $entry['Params']['File']['Size']=filesize($file);
+        $entry['Params']['File']['Name']=$pathArr['basename'];
+        $entry['Params']['File']['Extension']=$pathArr['extension'];
+        $entry['Params']['File']['Date (created)']=date('Y-m-d');
+        $entry['Expires']=date('Y-m-d',time()+31536000);
+        return $entry;
+    }
 
 }
 ?>
