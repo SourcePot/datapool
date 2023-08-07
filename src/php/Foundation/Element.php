@@ -19,8 +19,8 @@ class Element{
                                  'itemid'=>FALSE,'itemprop'=>FALSE,'itemref'=>FALSE,'itemscope'=>FALSE,'itemtype'=>FALSE,'lang'=>FALSE,'nonce'=>FALSE,'part'=>FALSE,
                                  'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,'translate'=>FALSE,
                                  'virtualkeyboardpolicy'=>FALSE,
-                                 'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,'font'=>FALSE,'clip-path'=>FALSE,
-                                 'version'=>FALSE,'xmlns'=>FALSE,
+                                 'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
+                                 'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,
                                 ),
                        // Forms
                        'button'=>array('name'=>TRUE),
@@ -56,6 +56,7 @@ class Element{
                        'h4'=>array(),
                        'p'=>array(),
                        'article'=>array(),
+                       'span'=>array(),
                        
                        'audio'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'canvas'=>array('height'=>FALSE,'width'=>FALSE),
@@ -73,9 +74,12 @@ class Element{
                        'path'=>array('d'=>TRUE),
                        'circle'=>array('r'=>3,'cx'=>TRUE,'cy'=>TRUE),
                        'text'=>array('x'=>TRUE,'y'=>TRUE),
+                       'line'=>array('x1'=>TRUE,'x2'=>TRUE,'y1'=>TRUE,'y2'=>TRUE),
                        'rect'=>array('x'=>TRUE,'y'=>TRUE,'width'=>TRUE,'height'=>TRUE),
+                       'tspan'=>array('x'=>FALSE,'y'=>FALSE,'dx'=>FALSE,'dy'=>FALSE),
                        'clipPath'=>array(),
                        'use'=>array(),
+                       'defs'=>array(),
                        );
     
     private $specialAttr=array('function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'excontainer'=>FALSE,'container'=>FALSE,'cell'=>FALSE,
@@ -303,7 +307,7 @@ class Element{
     }
     
     private function escapeAttrName($attrName):string{
-        $attrName=preg_replace('/[^a-zA-Z\-]/','',$attrName);
+        $attrName=preg_replace('/[^a-zA-Z0-9\-]/','',$attrName);
         return $attrName;
     }
     

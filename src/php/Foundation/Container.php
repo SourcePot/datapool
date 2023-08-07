@@ -581,5 +581,36 @@ class Container{
         return $arr;
     }
     
+    public function getChart($arr,$isDebugging=FALSE){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $settingsTemplate=array('traces'=>array(),'width'=>800,'height'=>300);
+        $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
+        
+        $chart=new \SourcePot\Datapool\Foundation\Charts\Chart($this->oc,$arr['settings']);
+        for($traceIndex=1;$traceIndex<5;$traceIndex++){
+            if ($traceIndex<2){
+                $def=array('x'=>array('label'=>'Date','dataType'=>'dateTime','range'=>array()),
+                           'y'=>array('label'=>'Random'.$traceIndex,'dataType'=>'float','range'=>array(-1500000,1500000)),
+                           );
+            } else {
+                $def=array('x'=>array('label'=>'Index','dataType'=>'int','range'=>array()),
+                           'y'=>array('label'=>'Sin'.$traceIndex,'dataType'=>'float','range'=>array(-1.2,1.2)),
+                           );
+            }
+            $trace=new \SourcePot\Datapool\Foundation\Charts\Trace($this->oc,$def['x'],$def['y']);
+            for($x=0;$x<360;$x++){
+                if ($traceIndex<2){
+                    $trace->addDatapoint(array('x'=>date('Y-m-d H:i:s',time()+3600*$x),'y'=>mt_rand(-1000000,1000000)));
+                } else {
+                    $trace->addDatapoint(array('x'=>$x,'y'=>sin($traceIndex*($x+45*$traceIndex)*pi()/180)));
+                }
+            }
+            $trace->done();
+            $chart->addTrace($trace);
+        }
+        $arr['html'].=$chart->getChart('Überschrift');
+        return $arr;
+    }
+    
 }
 ?>
