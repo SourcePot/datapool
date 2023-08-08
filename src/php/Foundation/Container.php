@@ -587,20 +587,20 @@ class Container{
         $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
         
         $chart=new \SourcePot\Datapool\Foundation\Charts\Chart($this->oc,$arr['settings']);
-        for($traceIndex=1;$traceIndex<5;$traceIndex++){
+        for($traceIndex=1;$traceIndex<4;$traceIndex++){
             if ($traceIndex<2){
                 $def=array('x'=>array('label'=>'Date','dataType'=>'dateTime','range'=>array()),
-                           'y'=>array('label'=>'Random'.$traceIndex,'dataType'=>'float','range'=>array(-1500000,1500000)),
+                           'y'=>array('label'=>'Random_'.$traceIndex,'dataType'=>'float','range'=>array(-2000000,2000000)),
                            );
             } else {
                 $def=array('x'=>array('label'=>'Index','dataType'=>'int','range'=>array()),
-                           'y'=>array('label'=>'Sin'.$traceIndex,'dataType'=>'float','range'=>array(-1.2,1.2)),
+                           'y'=>array('label'=>'Sin_'.$traceIndex,'dataType'=>'float','range'=>array(-1.2,1.2)),
                            );
             }
             $trace=new \SourcePot\Datapool\Foundation\Charts\Trace($this->oc,$def['x'],$def['y']);
             for($x=0;$x<360;$x++){
                 if ($traceIndex<2){
-                    $trace->addDatapoint(array('x'=>date('Y-m-d H:i:s',time()+3600*$x),'y'=>mt_rand(-1000000,1000000)));
+                    $trace->addDatapoint(array('x'=>date('Y-m-d H:i:s',time()+3600*$x),'y'=>mt_rand(-300000,300000)));
                 } else {
                     $trace->addDatapoint(array('x'=>$x,'y'=>sin($traceIndex*($x+45*$traceIndex)*pi()/180)));
                 }

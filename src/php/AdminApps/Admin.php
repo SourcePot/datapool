@@ -116,7 +116,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     }
     
     private function adminChart(){
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test chart','generic',array('refreshInterval'=>30),array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Container','method'=>'getChart'),array());    
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test chart','generic',array('refreshInterval'=>10),array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Container','method'=>'getChart'),array());    
         return $html;
     }
 }

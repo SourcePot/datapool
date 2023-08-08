@@ -12,7 +12,7 @@ body{
 	background-repeat:repeat;
 	background-attachment:fixed;
 }
-h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button{
+h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button,svg{
 	float:left;
 	clear:both;
 	font-size:inherit;
@@ -138,6 +138,10 @@ article{
 	overflow:auto;
 	background-color:#fff;
 	border-bottom:1px solid #555;
+}
+article.toolbox{
+    color:#ccc;
+    background-color:#000;
 }
 div.container-busy{
 	display:none;
@@ -373,7 +377,8 @@ details.toolbox{
 	bottom:0;
 	z-index:2;
 	max-height:80px;
-	background-color:#a00;
+    color:#fff;
+	background-color:#444;
 }
 summary{
 	float:left;
@@ -394,6 +399,7 @@ summary.toolbox{
 }
 summary:hover{
 	cursor:pointer;
+    color:#000;
 	background-color:#ccc;
 }
 

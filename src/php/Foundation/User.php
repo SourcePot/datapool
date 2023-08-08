@@ -250,6 +250,8 @@ class User{
             if (!isset($arr['selector']['Type'])){$arr['selector']['Type']='user';}
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($arr['selector']);
+        } else {
+            $arr['html'].='Please select a user...';
         }
         return $arr;
     }

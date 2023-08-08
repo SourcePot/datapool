@@ -50,8 +50,7 @@ class Chart{
         $yAxisHidden=(isset($this->yAxisHashes[$yAxisHash]))?TRUE:FALSE;
         $this->yAxisHashes[$yAxisHash]=TRUE;
         // get color
-        $traceHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(array($dataset['x']['label'],$dataset['y']['label']));
-        $rgb='rgb('.(2*ord($traceHash[0])-50).','.(2*ord($traceHash[1])-50).','.(2*ord($traceHash[2])-50).')';
+        $rgb=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2color(array($dataset['x']['label'],$dataset['y']['label']),3,FALSE,FALSE);
         // add trace
         $props=array('bar'=>array('element'=>array('fill'=>$rgb,'stroke'=>$rgb)),
                      'path'=>array('element'=>array('fill'=>$rgb,'stroke'=>$rgb)),

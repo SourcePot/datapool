@@ -272,7 +272,29 @@ class MiscTools{
         // Thanks to "c0x at mail dot ru" based on https://www.php.net/manual/en/function.log.php
         $e=array('a','f','p','n','u','m','','k','M','G','T','P','E');
         $p=min(max(floor(log(abs($float), $base)),-6),6);
-        return round((float)$float/pow($base,$p),$prec).' '.$e[$p+6];
+        $value=round((float)$float/pow($base,$p),$prec);
+        if ($value==0){
+            return $value;
+        } else {
+            return $value.' '.$e[$p+6];
+        }
+    }
+    
+    public function var2color($var,$colorScheme=0,$light=FALSE,$decimal=TRUE){
+        $colorArr=array();
+        $hash=$this->getHash($var);
+        $colorValuesArr=str_split($hash,2);
+        for($index=0;$index<3;$index++){
+            $colorArr[$index]=$colorValuesArr[$index+$colorScheme];
+            $colorArr[$index]=intval(0.6*hexdec($colorArr[$index]));
+            if ($light){$colorArr[$index]=255-$colorArr[$index];}
+            if (!$decimal){$colorArr[$index]=dechex($colorArr[$index]);}
+        }
+        if ($decimal){
+            return 'rgb('.implode(',',$colorArr).')';
+        } else {
+            return '#'.implode('',$colorArr);    
+        }
     }
 
     /******************************************************************************************************************************************

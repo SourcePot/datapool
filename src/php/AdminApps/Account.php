@@ -49,7 +49,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
             if (isset($userSelector['EntryId'])){
                 $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);
             } else {
-                $user=array('Source'=>$this->entryTable,'Type'=>'user');
+                $user=$_SESSION['currentUser'];
             }
         } else {
             // is non-admin user
@@ -57,7 +57,11 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         }
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());    
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs(array('selector'=>$user));
+            if (isset($user['Params'])){
+                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs(array('selector'=>$user));
+            } else {
+                $html.='Please select a user...';
+            }
         }
         return $html;
     }

@@ -118,7 +118,7 @@ class Trace{
     public function getTrace(Axis $axisX,Axis $axisY,$props=array()){
         $propsTemplate=array('bar'=>array('barWidth'=>0.7,'element'=>array('tag'=>'rect','stroke'=>'#000','fill'=>'#00f','fill-opacity'=>"0.4",'clip-path'=>'url(#plotarea)')),
                              'path'=>array('element'=>array('tag'=>'path','stroke'=>'#000','fill'=>'#00f','fill-opacity'=>"0.25",'clip-path'=>'url(#plotarea)')),
-                             'circle'=>array('element'=>array('tag'=>'circle','r'=>4,'stroke'=>'#00f','fill'=>'#f00','clip-path'=>'url(#plotarea)','style'=>array('display'=>'none'))),
+                             'circle'=>array('element'=>array('tag'=>'circle','r'=>4,'stroke'=>'#000','stroke-width'=>'2','fill'=>'none','clip-path'=>'url(#plotarea)','style'=>array('display'=>'none'))),
                              'xAxis'=>array('hidden'=>FALSE,'shift'=>0,'element'=>array('stroke'=>'#000')),
                              'yAxis'=>array('hidden'=>FALSE,'shift'=>0,'element'=>array('stroke'=>'#000')),
                             );
