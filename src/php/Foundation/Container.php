@@ -608,7 +608,7 @@ class Container{
             $trace->done();
             $chart->addTrace($trace);
         }
-        $arr['html'].=$chart->getChart('Überschrift');
+        $arr['html'].=$chart->getChart('Ueberschrift');
         return $arr;
     }
     

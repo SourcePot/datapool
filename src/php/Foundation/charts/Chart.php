@@ -88,8 +88,19 @@ class Chart{
         $chartArr['element-content']=$svg;
         $chartArr['viewBox']='0 0 '.$props['chart']['element']['width'].' '.$props['chart']['element']['height'];
         $svg=$this->oc['SourcePot\Datapool\Foundation\Element']->element($chartArr);
+        // download chart
+        $callingFunction=md5($caption);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,$callingFunction);
+        if (isset($formData['cmd']['download'])){
+            header('Content-Type: image/svg+xml');
+            header('Content-Disposition: attachment; filename="'.preg_replace('/[^a-zA-Z0-9]/','_',$caption).'.svg"');
+            header('Content-Length: '.strlen($svg));
+            echo $svg;
+            exit;
+        }
         // add legend
         $html.=$svg;
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'&#8892;','keep-element-content'=>TRUE,'key'=>array('download'),'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>TRUE));
         $html.=$plot->getLegend($this->tracesArr);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
         return $html;
