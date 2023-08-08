@@ -85,8 +85,8 @@ class Axis{
     }
     
     public function getAxis($type='x',$props=array()){
-        $propsTemplate=array('tick'=>array('count'=>5,'halfLength'=>4,'element'=>array('tag'=>'line','stroke'=>'black','stroke-width'=>2,'stroke-linecap'=>'butt')),
-                             'axis'=>array('shift'=>50,'hidden'=>FALSE,'element'=>array('tag'=>'line','stroke'=>'black','stroke-width'=>1,'stroke-linecap'=>'butt')),
+        $propsTemplate=array('tick'=>array('count'=>5,'halfLength'=>4,'element'=>array('tag'=>'line','stroke'=>'black','stroke-width'=>1,'stroke-linecap'=>'butt')),
+                             'axis'=>array('shift'=>50,'hidden'=>FALSE,'element'=>array('tag'=>'line','stroke'=>'black','stroke-width'=>2,'stroke-linecap'=>'butt')),
                              'tickLabel'=>array('margin'=>10,'fontSize'=>12,'element'=>array('style'=>array('font'=>"{{tickLableFontSize}}px sans-serif"),'tag'=>'text','keep-element-content'=>TRUE)),
                              );
         $props=array_replace_recursive($propsTemplate,$props);
@@ -109,7 +109,7 @@ class Axis{
             $pos=round($this->scale($value));
             $this->tickPosArr[]=$pos;
             $coord=array($type.'1'=>$pos,$type.'2'=>$pos,$invType.'1'=>$props['axis']['shift']-$props['tick']['halfLength'],$invType.'2'=>$props['axis']['shift']+$props['tick']['halfLength']);
-            $tickArr=array_merge($props['axis']['element'],$coord);
+            $tickArr=array_merge($props['tick']['element'],$coord);
             $svg.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tickArr);
             // draw tick label
             $elementContent=$this->oTools->value2label($value,$this->dataType,$this->tickLabelAlias);
