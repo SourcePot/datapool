@@ -30,6 +30,11 @@ class Chart{
         $this->id='chart-'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(8);
         $propsTemplate=array('width'=>1000,'height'=>800,'margin'=>array(25,50,60,90));
         $this->props=array_merge($propsTemplate,$props);
+        //
+        require_once(__DIR__.'/Axis.php');
+        require_once(__DIR__.'/Plot.php');
+        require_once(__DIR__.'/Tools.php');
+        require_once(__DIR__.'/Trace.php');
     }
 
     public function addTrace($trace,$axisMargin=20){

@@ -586,6 +586,7 @@ class Container{
         $settingsTemplate=array('traces'=>array(),'width'=>800,'height'=>300);
         $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
         
+        require_once(__DIR__.'/charts/Chart.php');
         $chart=new \SourcePot\Datapool\Foundation\Charts\Chart($this->oc,$arr['settings']);
         for($traceIndex=1;$traceIndex<4;$traceIndex++){
             if ($traceIndex<2){
@@ -602,7 +603,7 @@ class Container{
                 if ($traceIndex<2){
                     $trace->addDatapoint(array('x'=>date('Y-m-d H:i:s',time()+3600*$x),'y'=>mt_rand(-300000,300000)));
                 } else {
-                    $trace->addDatapoint(array('x'=>$x,'y'=>sin($traceIndex*($x+45*$traceIndex)*pi()/180)));
+                    $trace->addDatapoint(array('x'=>$x,'y'=>sin(($traceIndex-1)*($x+45*$traceIndex)*pi()/180)));
                 }
             }
             $trace->done();
