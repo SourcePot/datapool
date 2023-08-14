@@ -27,6 +27,16 @@ class Signals{
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
 
+    public function job($vars){
+        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+        $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Name') as $signal){
+            $this->updateTrigger($signal);
+        }
+        $vars=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
+        return $vars;
+    }
+    
     public function getEntryTable(){return $this->entryTable;}
 
     public function updateSignal($callingClass,$callingFunction,$name,$value,$dataType='int',$read='ADMIN_R',$write='ADMIN_R'){
@@ -194,6 +204,7 @@ class Signals{
             $classEndPos=strpos($entry['Folder'],'::');
             $options[$entry['EntryId']]=substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
         }
+        asort($options);
         return $options;
     }
 
