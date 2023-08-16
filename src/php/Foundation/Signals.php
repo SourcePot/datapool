@@ -26,38 +26,29 @@ class Signals{
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
-
-    public function job($vars){
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal');
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Name') as $signal){
-            $this->updateTrigger($signal);
-        }
-        $vars=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-        return $vars;
-    }
     
     public function getEntryTable(){return $this->entryTable;}
+    
+    private function getSignalSelector($callingClass,$callingFunction,$name){
+        $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction,'Name'=>$name);
+        return $signalSelector;
+    }
 
     public function updateSignal($callingClass,$callingFunction,$name,$value,$dataType='int',$read='ADMIN_R',$write='ADMIN_R'){
         $newContent=array('value'=>$value,'dataType'=>$dataType,'timeStamp'=>time());
         // create entry template
-        $signalType=$this->entryTable.' '.$dataType;
-        $signal=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction,'Name'=>$name,'Type'=>$signalType,'Read'=>$read,'Write'=>$write);
+        $signal=$this->getSignalSelector($callingClass,$callingFunction,$name);
+        $signal['Type']=$this->entryTable.' '.$dataType;
+        $signal['Read']=$read;
+        $signal['Write']=$write;
         $signal=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signal,array('Source','Group','Folder','Name','Type'),'0','',TRUE);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($signal);
-        // get existing entry
-        $lastSignal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signal,TRUE);
-        if (isset($lastSignal['Content'])){
-            if (count($lastSignal['Content'])>3){
-                array_pop($lastSignal['Content']);
-            }
-            $signal['Content']=$lastSignal['Content'];
-        } else {
-            $signal['Content']=array($newContent);
-        }
-        array_unshift($signal['Content'],$newContent);
+        $signal['Content']=array('signal'=>array());
+        // get entry and update the entry
+        $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
+        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,20);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
+        // update attached trigger
         $this->updateTrigger($signal);
         return $signal;
     }
@@ -80,11 +71,13 @@ class Signals{
 
     private function updateTrigger($signal){
         $triggerSelector=array('Source'=>$this->entryTable,'Group'=>'trigger','Content'=>'%'.$signal['EntryId'].'%');
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,FALSE,'Read','Name') as $trigger){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read','Name') as $trigger){
             $trigger['Read']=$signal['Read'];
             $trigger['Write']=$signal['Write'];
-            $trigger['Content']['signal']=$signal['Content'];
+            if (!isset($trigger['Content']['trigger'])){$trigger['Content']['trigger']=array();}
+            $trigger['Content']['signal']=$signal['Content']['signal'];
             $trigger['Content']['isActive']=$this->slopDetector($trigger,$signal);
+            $trigger['Content']['trigger']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($trigger['Content']['trigger'],array('timeStamp'=>time(),'value'=>intval($trigger['Content']['isActive'])),20);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($trigger,TRUE);
         }
         return TRUE;
@@ -92,7 +85,7 @@ class Signals{
     
     private function slopDetector($trigger,$signal){
         $arr=array();
-        foreach($signal['Content'] as $index=>$signalArr){
+        foreach($signal['Content']['signal'] as $index=>$signalArr){
             if (strcmp($signalArr['dataType'],'int')===0 || strcmp($signalArr['dataType'],'bool')===0){
                 $arr['values'][$index]=intval($signalArr['value']);
             } else if (strcmp($signalArr['dataType'],'float')===0){
@@ -128,7 +121,7 @@ class Signals{
             $this->resetTrigger($trigger['EntryId']);
         } else if (isset($formData['cmd']['Delete'])){
             $trigger['EntryId']=key(current($formData['cmd']));
-            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($trigger);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries(array('Source'=>$trigger['Source'],'EntryId'=>$trigger['EntryId']));
         }
         // get trigger rows
         $matrix=array('New'=>$this->getTriggerRow());
@@ -172,14 +165,13 @@ class Signals{
             $row['Cmd']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'key'=>array('Save',$trigger['EntryId']),'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE));
             $row['Cmd'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'&coprod;','keep-element-content'=>TRUE,'hasCover'=>TRUE,'key'=>array('Delete',$trigger['EntryId']),'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE));
         }
-        for($index=2;$index>=0;$index--){
-            $elementArr=array('tag'=>'p');
-            if (isset($trigger['Content']['signal'][$index])){
-                $elementArr['element-content']=intval($trigger['Content']['signal'][$index]['value']);
-            } else {
-                if ($isNewRow){$elementArr['element-content']='';} else {$elementArr['element-content']='-';}
+        if (isset($trigger['Content']['signal'])){
+            ksort($trigger['Content']['signal']);
+            foreach($trigger['Content']['signal'] as $signalIndex=>$signal){
+                if ($signalIndex>5){break;}
+                $elementArr=array('tag'=>'p','element-content'=>intval($signal['value']));
+                $row[$signalIndex]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
             }
-            $row[$index]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
         }
         $row['isActive']=$isActive;
         $row['Reset']=$reset;
@@ -216,21 +208,27 @@ class Signals{
     }
 
     public function event2signal($callingClass,$callingFunction,$events){
-        // set value of current and up-comming events
-        $currentEventNames=array();
+        $setEvents=array();
+        // set value of upcomming and current event signal
         foreach($events as $EntryId=>$event){
-            $currentEventNames[$event['Name']]=TRUE;
-            $isActive=(strcmp($event['State'],'Finnishing event')===0)?TRUE:FALSE;
-            $this->updateSignal($callingClass,$callingFunction,$event['Name'],$isActive,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
+            $eventName=$event['Name'];
+            if (strcmp($event['State'],'Finnishing event')===0){
+                $setEvents[$eventName]=TRUE;
+                $signal=$this->updateSignal($callingClass,$callingFunction,$eventName,1,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
+            } else if (!isset($setEvents[$eventName])){
+                $setEvents[$eventName]=FALSE;
+                $signal=$this->updateSignal($callingClass,$callingFunction,$eventName,0,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
+            }
         }
-        // set value of past events
-        $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,FALSE,'Read','Name') as $signal){
-            if (isset($currentEventNames[$signal['Name']])){continue;}
-            $this->updateSignal($callingClass,$callingFunction,$signal['Name'],FALSE,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
+        // set value of old event signals
+        $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,'%');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Name') as $signal){
+            if (isset($setEvents[$signal['Name']])){continue;}
+            $setEvents[$eventName]=FALSE;
+            $signal=$this->updateSignal($callingClass,$callingFunction,$signal['Name'],0,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
         }
+        return count($setEvents);
     }
-
 
 }
 ?>

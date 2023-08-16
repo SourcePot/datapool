@@ -300,6 +300,14 @@ class MiscTools{
     /******************************************************************************************************************************************
     * Array tools
     */
+    
+    public function add2history($arr,$newElement,$maxSize=10){
+        array_unshift($arr,$newElement);
+        while(count($arr)>$maxSize){
+            array_pop($arr);
+        }
+        return $arr;
+    }
 
     public function getSeparator(){return self::ONEDIMSEPARATOR;}
     

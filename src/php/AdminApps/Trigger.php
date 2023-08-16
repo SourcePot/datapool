@@ -17,7 +17,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
     
     public function __construct($oc){
         $this->oc=$oc;
-        $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logging']->getEntryTable();
+        $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable();
     }
 
     public function init(array $oc){
@@ -30,6 +30,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger widget','generic',array(),array('method'=>'triggerWidgetWrapper','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->getSignalsEventChart();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -40,7 +41,11 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerWidget(__CLASS__,__FUNCTION__);
         return $arr;
     }
-  
+
+    public function getSignalsEventChart($arr=array()){
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signals and trigger event chart','generic',array('Source'=>$this->entryTable,'refreshInterval'=>60),array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Container','method'=>'getEventChart'),array());    
+        return $html;
+    }
 
 }
 ?>

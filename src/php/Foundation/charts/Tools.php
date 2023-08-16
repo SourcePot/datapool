@@ -13,9 +13,22 @@ namespace SourcePot\Datapool\Foundation\Charts;
 class Tools{
     
     private $oc;
+    private $pageSettings=array();
 
     function __construct($oc){
         $this->oc=$oc;
+        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        
+        /*
+        for($value=0;$value<=10;$value++){
+            //$params=$this->getScaleParams(array(0,10),array(255,50));
+            //$scaledValue=$this->scale($params,$value);
+            //var_dump($value.': '.$scaledValue);
+            
+            $color=$this->scaleRgb(array(0,10),array('#ffffff','#000000'),$value);
+            var_dump($value.': '.$color);
+        }
+        */
     }
 
     public function getMatchIndex($ordinalScale=array('a','b','c','d','e','f'),$value='c'){
@@ -42,7 +55,9 @@ class Tools{
     
     public function value2label($value,$dataType='float',$alias=array()){
         if (stripos($dataType,'date')!==FALSE){
-            $value=date("Y-m-d m:i:s",$value);
+            $dateTime=new \DateTime('@'.$value);
+            $dateTime->setTimezone(new \DateTimeZone($this->pageSettings['pageTimeZone']));
+            $value=$dateTime->format('Y-m-d H:i:s');
         }
         if (is_numeric($value)){
             $label=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($value);
@@ -53,6 +68,46 @@ class Tools{
         }
         $label=strval($label);
         return $label;
+    }
+    
+    public function getScaleParams($rangeIn=array(0,1),$rangeOut=array(250,0)){
+        $params=array();
+        if ($rangeIn[0]==$rangeIn[1]){
+            $params['scaler']=0;
+            $params['offset']=$rangeOut[0];
+        } else {
+            $params['scaler']=($rangeOut[0]-$rangeOut[1])/($rangeIn[0]-$rangeIn[1]);
+            $params['offset']=$rangeOut[0]-$params['scaler']*$rangeIn[0];
+        }
+        return $params;
+    }
+    
+    public function scale($params,$value){
+        $scaledValue=$params['scaler']*$value+$params['offset'];
+        return $scaledValue;
+    }
+    
+    public function scaleRgb($rangeIn=array(0,1),$rangeOut=array('#ffffff','#000000'),$value=0){
+        $compArr=array();
+        // range out hex to int
+        foreach($rangeOut as $index=>$rangeOutValue){
+            $rangeOutValue=trim($rangeOutValue,'#');
+            $rangeOutValueComps=str_split($rangeOutValue,2);
+            foreach($rangeOutValueComps as $compIndex=>$compValue){
+                $compArr[$compIndex][$index]=hexdec($compValue);
+            }
+        }
+        // scale all values and get result
+        $scaledRgb='#';
+        $scaledValues=array();
+        foreach($compArr as $compIndex=>$rangeOut){
+            $params=$this->getScaleParams($rangeIn,$rangeOut);
+            $scaledValue=intval($this->scale($params,$value));
+            $scaledValue=dechex($scaledValue);
+            if (strlen($scaledValue)<2){$scaledValue='0'.$scaledValue;}
+            $scaledRgb.=$scaledValue;
+        }
+        return $scaledRgb;
     }
     
 }

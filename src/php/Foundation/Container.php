@@ -612,6 +612,40 @@ class Container{
         $arr['html'].=$chart->getChart('Test chart');
         return $arr;
     }
+
+    public function getEventChart($arr,$isDebugging=FALSE){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $settingsTemplate=array('traces'=>array(),'width'=>800,'height'=>600);
+        $arr['settings']=array_merge($settingsTemplate,$arr['settings']);
+        // get instance of EventChart
+        require_once(__DIR__.'/charts/EventChart.php');
+        $chart=new \SourcePot\Datapool\Foundation\Charts\EventChart($this->oc,$arr['settings']);
+        // get selectors
+        if (strcmp($arr['selector']['Source'],'signals')===0){
+            // add events
+            $selectors=array(array('Source'=>'signals','Group'=>'trigger'),array('Source'=>'signals','Group'=>'signal'));
+            foreach($selectors as $selectorIndex=>$selector){    
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
+                    if (!isset($entry['Content'][$selector['Group']])){continue;}
+                    foreach($entry['Content'][$selector['Group']] as $signalIndex=>$rawEvent){
+                        $event=array('name'=>ucfirst($entry['Group']).'|'.$entry['Name'],'timestamp'=>$rawEvent['timeStamp'],'value'=>intval($rawEvent['value']));
+                        $chart->addEvent($event);
+                    } // loop through events
+                } // loop through entries
+            } // loop through selectors
+        } else if (strcmp($arr['selector']['Source'],'piview')===0){
+            $selector=array('Source'=>$arr['selector']['Source'],'Group'=>$arr['selector']['Group']);
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
+                if (!isset($entry['Content']['activity'])){continue;}
+                $activity=intval($entry['Content']['activity']);
+                $event=array('name'=>ucfirst($entry['Group']).'|'.$entry['Folder'],'timestamp'=>$entry['Content']['timestamp'],'value'=>$activity);
+                $chart->addEvent($event);
+            }
+        }
+        $arr['html'].=$chart->getChart(ucfirst($arr['selector']['Source']));
+        return $arr;
+    }
+
     
 }
 ?>
