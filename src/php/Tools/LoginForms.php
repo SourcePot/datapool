@@ -78,7 +78,7 @@ class LoginForms{
     public function getLoginForm($arr=array()){
         $arr['result']=$this->formData();
         //
-        $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('width'=>'100%','margin'=>'0','padding'=>'0','line-height'=>'2em'));
+        $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('float'=>'right'));

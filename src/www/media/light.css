@@ -42,8 +42,10 @@ ol,ul{
 button,input,textarea,select,a.btn,a.phrase-preview,.js-button{
 	float:left;
 	clear:none;
-	padding:0.4em;
+	padding:0.2em;
 	margin: 0 0.2em;
+    line-height:1.5em;
+	text-align:center;
 	color:#000;
 	background-color:#fff;
 	border-radius:unset;
@@ -51,7 +53,6 @@ button,input,textarea,select,a.btn,a.phrase-preview,.js-button{
 	border-top:1px solid #888;
 	border-right:1px solid #555;
 	border-bottom:1px solid #555;
-	text-align:center;
 }
 button:hover,input[type=submit]:hover,a.btn:hover,.js-button:hover{
 	cursor:pointer;
