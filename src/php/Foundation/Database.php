@@ -359,6 +359,31 @@ class Database{
         return $result;    
     }
     
+    private function addUNYCOMrefs($entry){
+        if (!empty($entry['Content']['File content'])){
+            $entry['UNYCOM cases']=array();
+            $entry['UNYCOM patents']=array();
+            $entry['UNYCOM families']=array();
+            $entry['UNYCOM inventions']=array();
+            preg_match_all('/([0-9]{4}[A-Z]{1,2}[0-9]{5})([A-Z ]{0,4}[0-9]{0,2})/',$entry['Content']['File content'],$matches);
+            if (!empty($matches[0][0])){
+                foreach($matches[0] as $matchIndex=>$match){
+                    if ($match[4]=='P' || $match[5]=='P'){$entry['UNYCOM patents'][$match]=$match;}
+                    $familyRef=preg_replace('/[A-Z]+/','F',$matches[1][$matchIndex]);
+                    $inventionRef=preg_replace('/[A-Z]+/','E',$matches[1][$matchIndex]);
+                    $entry['UNYCOM cases'][$match]=$match;
+                    $entry['UNYCOM families'][$familyRef]=$familyRef;
+                    $entry['UNYCOM inventions'][$inventionRef]=$inventionRef;
+                }
+            }
+            $entry['UNYCOM cases']=implode(';',$entry['UNYCOM cases']);
+            $entry['UNYCOM patents']=implode(';',$entry['UNYCOM patents']);
+            $entry['UNYCOM families']=implode(';',$entry['UNYCOM families']);
+            $entry['UNYCOM inventions']=implode(';',$entry['UNYCOM inventions']);
+        }
+        return $entry;
+    }
+    
     private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
         if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
         $sqlArr=$this->selector2sql($selector,$removeGuideEntries);
@@ -389,6 +414,7 @@ class Database{
             foreach($row as $column=>$value){
                 $row=$this->addColumnValue2result($row,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
+            $row=$this->addUNYCOMrefs($row);
             $entries[$row['EntryId']]=$row;
         }
         return $entries;
@@ -420,6 +446,7 @@ class Database{
                 foreach($row as $column=>$value){
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
+                $result=$this->addUNYCOMrefs($result);
                 yield $result;
                 $result['isFirst']=FALSE;
                 $result['rowIndex']++;
@@ -457,6 +484,7 @@ class Database{
                 $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
             $result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
+            $result=$this->addUNYCOMrefs($result);
             yield $result;
             $result['isFirst']=FALSE;
         }
@@ -486,6 +514,7 @@ class Database{
                 foreach($row as $column=>$value){
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
+                $result=$this->addUNYCOMrefs($result);
             } else {
                 if (!$returnMetaOnNoMatch){$result=array();}
             }

@@ -94,6 +94,12 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Outbox','generic',$callingElement,array('method'=>'getOutboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
     }
     
+    private function getOutboxEntriesInfo($callingElement){
+        $matrix=array();
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        return $html;
+    }
+
     public function getOutboxEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing

@@ -24,7 +24,10 @@ class Backbone{
                             'charset'=>'utf-8',
                             'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','ep.css'),
                             'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
-                            'emailWebmaster'=>'admin@datapool.info');
+                            'emailWebmaster'=>'admin@datapool.info',
+                            'path to Xpdf pdftotext executable'=>'',
+                            //'path to Xpdf pdftotext executable'=>'C:\Program Files\Xpdf\pdftotext.exe',
+                            );
     
     public function __construct($oc){
         $this->oc=$oc;

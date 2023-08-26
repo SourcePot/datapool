@@ -127,10 +127,11 @@ class DataExplorer{
         // add canvas element
         $return['canvasElement']=$this->canvasFormProcessing($callingClass);
         // create explorer html
-        $cntrHtml=$this->getCntrHtml($callingClass);
+        $cntrHtmlArr=$this->getCntrHtml($callingClass);
         $canvasHtml=$this->getCanvas($callingClass);
-        $articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtml,'keep-element-content'=>TRUE,'style'=>array());
+        $articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtmlArr['cntr'],'keep-element-content'=>TRUE,'style'=>array());
         $return['explorerHtml']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($articleArr);
+        $return['explorerHtml'].=$cntrHtmlArr['processor'];
         // create content html
         if (!empty($return['canvasElement']['Content']['Widgets']["Processor"])){
             $canvasElement=$return['canvasElement'];
@@ -193,22 +194,24 @@ class DataExplorer{
             if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
             $matrix[$tag['type']]['Btn'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btn);
         }
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'hideHeader'=>TRUE,'caption'=>'Canvas elements'));
+        $htmlArr=array('cntr'=>'','processor'=>'');
+        $htmlArr['cntr']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'hideHeader'=>TRUE,'caption'=>'Canvas elements'));
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
         $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
         if ($isEditMode){
             if ($canvasElement){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($canvasElement);
+                $htmlArr['cntr'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($canvasElement);
             }
         } else {
-            $html.=$this->getFileUpload($canvasElement);
-            $html.=$this->getDeleteBtn($canvasElement);
+            $htmlArr['cntr'].=$this->getFileUpload($canvasElement);
+            $htmlArr['cntr'].=$this->getDeleteBtn($canvasElement);
             if (!empty($canvasElement['Content']['Widgets']["Processor"])){
-                $html.=$this->oc[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'widget');
+                $htmlArr['processor'].=$this->oc[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'widget');
+                $htmlArr['processor'].=$this->oc[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'info');
             }
-            $html.=$this->exportImportHtml($callingClass);
+            $htmlArr['cntr'].=$this->exportImportHtml($callingClass);
         }
-        return $html;
+        return $htmlArr;
     }
     
     private function getCanvas($callingClass){

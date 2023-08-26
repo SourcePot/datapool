@@ -74,7 +74,7 @@ class Container{
         if (isset($return['wrapperSettings'])){
             $wrapperSettings=array_merge($wrapperSettings,$return['wrapperSettings']);
         }
-        if (isset($return['settings'])){$_SESSION['container store'][$containerId]=array_merge($_SESSION['container store'][$containerId],$return['settings']);}
+        if (isset($return['settings'])){$_SESSION['container store'][$containerId]['settings']=array_replace_recursive($_SESSION['container store'][$containerId]['settings'],$return['settings']);}
         $reloadBtnStyle=array('position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'3px','border'=>'none','background-color'=>'#ccc');
         if (!empty($wrapperSettings['hideReloadBtn'])){$reloadBtnStyle['display']='none';}
         $reloadBtnArr=array('tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>array('reloadBtnArr'),'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE);
@@ -569,11 +569,11 @@ class Container{
             $btnWrapper=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'id'=>'btns-'.$arr['containerId'].'-wrapper','style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'10px 0'));
             if ($settings['autoShuffle']){$btnWrapper['style']['display']='none';}
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
-        }
-        if (!empty($settings['presentEntry'])){
-            $entryPlaceholder=array('tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','title'=>$settings['getImageShuffle'],'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'0'));    
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($entryPlaceholder);
-        }
+            if (!empty($settings['presentEntry'])){
+                $entryPlaceholder=array('tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','title'=>$settings['getImageShuffle'],'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'0'));    
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($entryPlaceholder);
+            }
+        }   
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
@@ -615,8 +615,19 @@ class Container{
 
     public function getEventChart($arr,$isDebugging=FALSE){
         if (!isset($arr['html'])){$arr['html']='';}
-        $settingsTemplate=array('traces'=>array(),'width'=>800,'height'=>600);
-        $arr['settings']=array_merge($settingsTemplate,$arr['settings']);
+        // init settings
+        $settingOptions=array('timespan'=>array('600'=>'10min','3600'=>'1hr','43200'=>'12hrs','86400'=>'1day'),
+                              'width'=>array(300=>'300px',600=>'600px',1200=>'1200px'),
+                              'height'=>array(300=>'300px',600=>'600px',1200=>'1200px'),
+                              );
+        foreach($settingOptions as $settingKey=>$options){
+            if (!isset($arr['settings'][$settingKey])){$arr['settings'][$settingKey]=key($options);}
+        }
+        // process form
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        if (!empty($formData['cmd'])){
+            $arr['settings']=array_merge($arr['settings'],$formData['val']['settings']);
+        }
         // get instance of EventChart
         require_once(__DIR__.'/charts/EventChart.php');
         $chart=new \SourcePot\Datapool\Foundation\Charts\EventChart($this->oc,$arr['settings']);
@@ -643,6 +654,15 @@ class Container{
             }
         }
         $arr['html'].=$chart->getChart(ucfirst($arr['selector']['Source']));
+        $cntrArr=array('callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>FALSE);
+        $matrix=array('Cntr'=>array());
+        foreach($settingOptions as $settingKey=>$options){
+            $cntrArr['options']=$options;
+            $cntrArr['selected']=$arr['settings'][$settingKey];
+            $cntrArr['key']=array('settings',$settingKey);
+            $matrix['Cntr'][$settingKey]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($cntrArr);
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE));
         return $arr;
     }
 

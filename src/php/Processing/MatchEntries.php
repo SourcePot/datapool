@@ -84,6 +84,12 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Matching','generic',$callingElement,array('method'=>'getMatchEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
     }
     
+    private function getMatchEntriesInfo($callingElement){
+        $matrix=array();
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        return $html;
+    }
+
     public function getMatchEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing

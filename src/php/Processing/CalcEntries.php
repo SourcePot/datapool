@@ -91,7 +91,13 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getCalcEntriesWidget($callingElement){
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Calculate','generic',$callingElement,array('method'=>'getCalcEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
     }
-    
+
+    private function getCalcEntriesInfo($callingElement){
+        $matrix=array();
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        return $html;
+    }
+
     public function getCalcEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing

@@ -449,7 +449,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return (($eventA['x0']>$eventB['x0'] && $eventA['x0']<=$eventB['x1']) || ($eventA['x1']>$eventB['x0'] && $eventA['x1']<=$eventB['x1']) || ($eventA['x0']<$eventB['x0'] && $eventA['x1']>=$eventB['x1']));
     }
 
-    private function getTimeDiff($dateA,$dateB,$timezoneA='Europe/Berlin',$timezoneB='Europe/Berlin'){
+    public function getTimeDiff($dateA,$dateB,$timezoneA=FALSE,$timezoneB=FALSE){
+        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        if (empty($timezoneA)){$timezoneA=$pageSettings['pageTimeZone'];}
+        if (empty($timezoneB)){$timezoneB=$pageSettings['pageTimeZone'];}
         $timezoneA=new \DateTimezone($timezoneA);
         $timezoneB=new \DateTimezone($timezoneB);
         $dateA=new \DateTime($dateA,$timezoneA);

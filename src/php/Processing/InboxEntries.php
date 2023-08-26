@@ -91,6 +91,12 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox','generic',$callingElement,array('method'=>'getInboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
     }
     
+     private function getInboxEntriesInfo($callingElement){
+        $matrix=array();
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        return $html;
+    }
+    
     public function getInboxEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing

@@ -282,27 +282,24 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
     */
     public function send(string $recipient,array $entry):int{
         $sentEntriesCount=0;
-        if (empty($entry['Content']['Subject'])){
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: subject was empty','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        if (empty($entry['Content']['Subject'])){$entry['Content']['Subject']=$entry['Name'];}
+        $userEntryTable=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
+        $recipient=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$recipient),TRUE);
+        $flatRecipient=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($recipient);
+        $sender=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$_SESSION['currentUser']['EntryId']),TRUE);
+        $flatSender=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sender);
+        $flatUserContentKey=$this->getRelevantFlatUserContentKey();
+        if (empty($flatRecipient[$flatUserContentKey])){
+            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: recipient email address is empty','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         } else {
-            $userEntryTable=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
-            $recipient=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$recipient),TRUE);
-            $flatRecipient=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($recipient);
-            $sender=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$userEntryTable,'EntryId'=>$_SESSION['currentUser']['EntryId']),TRUE);
-            $flatSender=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sender);
-            $flatUserContentKey=$this->getRelevantFlatUserContentKey();
-            if (empty($flatRecipient[$flatUserContentKey])){
-                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Failed to send email: recipient email address is empty','priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $entry['Content']['To']=$flatRecipient[$flatUserContentKey];
+            if (empty($flatSender[$flatUserContentKey])){
+                $entry['Content']['From']=$this->pageSettings['emailWebmaster'];
             } else {
-                $entry['Content']['To']=$flatRecipient[$flatUserContentKey];
-                if (empty($flatSender[$flatUserContentKey])){
-                    $entry['Content']['From']=$this->pageSettings['emailWebmaster'];
-                } else {
-                    $entry['Content']['From']=$flatSender[$flatUserContentKey];
-                }
-                $mail=array('selector'=>$entry);
-                $sentEntriesCount+=intval($this->entry2mail($mail));
+                $entry['Content']['From']=$flatSender[$flatUserContentKey];
             }
+            $mail=array('selector'=>$entry);
+            $sentEntriesCount+=intval($this->entry2mail($mail));
         }
         return $sentEntriesCount;
     }

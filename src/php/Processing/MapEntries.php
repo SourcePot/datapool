@@ -98,7 +98,13 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMapEntriesWidget($callingElement){
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,array('method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
     }
-    
+
+    private function getMapEntriesInfo($callingElement){
+        $matrix=array();
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        return $html;
+    }
+       
     public function getMapEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing

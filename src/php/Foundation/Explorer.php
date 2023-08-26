@@ -46,12 +46,11 @@ class Explorer{
     }
 
     private function getSelectors($callingClass){
-        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-        $stateKeys=array('selectedKey'=>key($selector),'nextKey'=>key($selector));
+        $selectorPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+        $stateKeys=array('selectedKey'=>key($selectorPageState),'nextKey'=>key($selectorPageState));
         $html='';
-        $selector=array_merge($this->selectorTemplate,$selector);
+        $selector=array();
         foreach($this->selectorTemplate as $column=>$initValue){
-            $selected=(isset($selector[$column]))?$selector[$column]:$initValue;
             $selectorHtml='';
             $options=array(self::GUIDEINDICATOR=>'&larrhk;');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
@@ -65,6 +64,7 @@ class Explorer{
                 if (strcmp($row[$label],self::GUIDEINDICATOR)===0){continue;}
                 $options[$row[$column]]=$row[$label];
             }
+            $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
             $selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
             $selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE));
             if (strcmp($column,'Source')!==0 || strcmp($callingClass,'SourcePot\Datapool\AdminApps\Admin')===0){
@@ -72,7 +72,7 @@ class Explorer{
                 $html.=$selectorHtml;
             }
             $stateKeys['nextKey']=$column;
-            if ($selected===FALSE){break;} else {$stateKeys['selectedKey']=$column;}
+            if ($selector[$column]===FALSE){break;} else {$stateKeys['selectedKey']=$column;}
         }
         $html.=$this->addApps($callingClass,$stateKeys);
         return $html;

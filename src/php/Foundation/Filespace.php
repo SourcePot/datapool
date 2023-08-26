@@ -16,6 +16,7 @@ class Filespace{
     
     private $statistics=array();
     private $toReplace=array();
+    private $keepZipIfSource=array('multimedia'=>TRUE,'forum'=>TRUE,'user'=>TRUE,'calendar'=>TRUE);
     
     const ENV_FILE='env.json';
 
@@ -450,7 +451,7 @@ class Filespace{
         if (isset($entry['mimeType'])){
             $entry['Params']['File']['MIME-Type']=$entry['mimeType'];
         }
-        if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE){
+        if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE && empty($this->keepZipIfSource[$entry['Source']])){
             // if file is zip-archive, extract all file and create entries seperately 
             $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
             $debugArr['archive2files return']=$this->archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
@@ -525,12 +526,25 @@ class Filespace{
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
-            $pdfFileContent=$this->parsePdfFile($file);
+            $pdfFileContent=$this->pdfToText($file);
+            if ($pdfFileContent===FALSE){
+                $pdfFileContent=$this->parsePdfFile($file);
+            }
             if (!empty($pdfFileContent)){
                 $entry['Content']['File content']=$pdfFileContent;
             }
         }            
         return $entry;
+    }
+
+    public function pdfToText($file){
+        $text=FALSE;
+        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        if (class_exists('\Spatie\PdfToText\Pdf') && !empty($pageSettings['path to Xpdf pdftotext executable'])){
+            $parser=new \Spatie\PdfToText\Pdf($pageSettings['path to Xpdf pdftotext executable']);
+            $text=$parser->setOptions(['-enc UTF-8'])->setPdf($file)->text();
+        }
+        return $text;
     }
 
     public function parsePdfFile($file){
@@ -560,7 +574,7 @@ class Filespace{
         }
         return $text;
     }
-
+    
     private function pdfOK($pdfContent){
         if (FALSE===($trimpos=strpos($pdfContent,'%PDF-'))){return FALSE;}
         if (empty(preg_match_all('/[\r\n]startxref[\s]*[\r\n]+([0-9]+)[\s]*[\r\n]+%%EOF/i',$pdfContent,$matches,\PREG_SET_ORDER,0))){return FALSE;}
