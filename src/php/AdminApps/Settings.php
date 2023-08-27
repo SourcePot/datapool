@@ -60,6 +60,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                     $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());
                 }
+                if (strcmp($selector['Group'],'Job processing')===0){
+                    $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,array());    
+                }
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;

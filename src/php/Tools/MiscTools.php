@@ -194,18 +194,14 @@ class MiscTools{
         return $entry;
     }
 
-    public function getDateTime($datetime='now',$addDateInterval=FALSE,$usePageStateTimezone=FALSE){
+    public function getDateTime($datetime='now',$addDateInterval=FALSE,$timezone=FALSE){
         // This is the standard method to get a formated date-string.
         // It returns the date based on the selected timezone.
         $dateTime=new \DateTime($datetime);
         if (!empty($addDateInterval)){
             $dateTime->add(new \DateInterval($addDateInterval));
         }
-        if (empty($usePageStateTimezone)){
-            $timezone=date_default_timezone_get();
-        } else {
-            $timezone=$_SESSION['page state']['timezone'];
-        }
+        if (empty($timezone)){$timezone=date_default_timezone_get();}
         $dateTime->setTimezone(new \DateTimeZone($timezone));
         return $dateTime->format('Y-m-d H:i:s');
     }

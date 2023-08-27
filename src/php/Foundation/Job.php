@@ -26,9 +26,11 @@ class Job{
     * @return array The method runs the most overdue job, updates the job setting, adds generated webpage refrenced by the key "page html" to the provided array and returns the completed array.
     */
     public function trigger($arr){
+        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         // all jobs settings - remove non-existing job methods and add new job methods
         $jobs=array('due'=>array(),'undue'=>array());
-        $allJobsSettingInitContent=array('Last run'=>time(),'Last run date'=>date('Y-m-d H:i:s'),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
+        $allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
+        $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,$pageSettings['pageTimeZone']);
         $allJobsSetting=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Type'=>'array setting');
         $allJobsSetting=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
@@ -42,6 +44,7 @@ class Job{
             } else {
                 $allJobsSetting['Content'][$class]=$initContent;
             }
+            ksort($allJobsSetting['Content'][$class]);
             $dueTime=time()-($allJobsSetting['Content'][$class]['Last run']+$allJobsSetting['Content'][$class]['Min time in sec between each run']);
             if ($dueTime>0){$jobs['due'][$class]=$dueTime;} else {$jobs['undue'][$class]=$dueTime;}
         }
@@ -69,7 +72,7 @@ class Job{
             $jobVars['Content']=$this->oc[$dueJob]->$dueMethod($jobVars['Content']);
             $jobStatistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $allJobsSetting['Content'][$dueJob]['Last run']=time();
-            $allJobsSetting['Content'][$dueJob]['Last run date']=date('Y-m-d H:i:s');
+            $allJobsSetting['Content'][$dueJob]['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,$pageSettings['pageTimeZone']);
             $allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]']=round((hrtime(TRUE)-$jobStartTime)/1000000);
             // update job vars
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);
@@ -78,8 +81,23 @@ class Job{
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job done','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobStatistic);
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job statistic','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
+            ksort($allJobsSetting['Content'][$dueJob]);
         }
         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($allJobsSetting,TRUE);
+        return $arr;
+    }
+    
+    public function getJobOverview($arr){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['selector']['Folder']='All jobs';
+        $arr['selector']['Name']='Timing';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],TRUE,'Read') as $jobEntry){
+            if ($jobEntry['isSkipRow']){continue;}
+            break;
+        }
+        if (!empty($jobEntry)){
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$jobEntry['Content'],'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Overview jobs'));
+        }
         return $arr;
     }
 

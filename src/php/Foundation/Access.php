@@ -18,7 +18,7 @@ class Access{
                          'PUBLIC_R'=>1,
                          'REGISTERED_R'=>2,
                          'MEMBER_R'=>4,
-                         'CCTV_R'=>1024,
+                         'SENTINEL_R'=>1024,
                          'ADMIN_R'=>32768,
                          'ALL_CONTENTADMIN_R'=>49152,
                          'ALL_REGISTERED_R'=>65534,
