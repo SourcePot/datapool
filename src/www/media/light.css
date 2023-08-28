@@ -95,11 +95,12 @@ table{
 	width:fit-content;
 	margin:10px;
 	background-color:#eee;
+    box-shadow: 5px 5px 3px #ccc;
+    border: 1px solid #444;
 }
 caption{
 	margin:5px 0;
-	font-size:1.3em;
-	font-variant:petite-caps;
+	font-size:1.2em;
 }
 label{
 	line-height:initial;
@@ -117,7 +118,6 @@ td,th{
 	padding:3px;
 	min-width:30px;
 	overflow:hidden;
-	border-right:1px dotted #333;
 }
 div.log{
 	overflow-y:auto;
@@ -263,7 +263,6 @@ main,#top-filler{
 	width:100%;
 	height:80px;
 	z-index:1;
-	border-top:1px solid #333;
 }
 #bottom-menu{
 	position:fixed;
