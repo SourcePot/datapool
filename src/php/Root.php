@@ -229,10 +229,14 @@ final class Root{
                 } else {
                     $objDef=array_combine($headerArr,$rowArr);
                     $classWithNamespace=$objDef['classWithNamespace'];
-                    require_once $objDef['file'];
-                    if (strcmp($objDef['type'],'Kernal object')===0 || strcmp($objDef['type'],'Application object')===0){
-                        $oc[$classWithNamespace]=new $classWithNamespace($oc);
-                        $this->updateStructure($oc,$classWithNamespace);
+                    if (is_file($objDef['file'])){
+                        require_once $objDef['file'];
+                        if (strcmp($objDef['type'],'Kernal object')===0 || strcmp($objDef['type'],'Application object')===0){
+                            $oc[$classWithNamespace]=new $classWithNamespace($oc);
+                            $this->updateStructure($oc,$classWithNamespace);
+                        }
+                    } else {
+                        $oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('Class'=>__CLASS__,'Function'=>__FUNCTION__,'msg'=>'Failed to load registered object '.$objDef['file'].'. You need to delete the objectList.csv file in the setup directory'));
                     }
                 }
             }

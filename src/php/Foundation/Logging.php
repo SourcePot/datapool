@@ -117,15 +117,18 @@ class Logging{
     }
 
     public function logsToolboxHtml($arr){
+        $getSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $maxCount=50;
         $html='';
-        $needle=date('Y-m-d').' ';
+        $needle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,$getSettings['pageTimeZone']);
+        $needle=substr($needle,0,11);
         $selector=array('Source'=>$this->entryTable,'Type'=>'log%');
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){$selector['Group']=$_SESSION['currentUser']['EntryId'];}
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$maxCount) as $logEntry){
+            $logEntryDate=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate($logEntry['Date'],date_default_timezone_get(),$getSettings['pageTimeZone']);
             $levelArr=$logEntry['Content']['Level'];
             $levelArr=$this->logLevelCntr[$levelArr];
-            $text=$logEntry['Date'].': '.htmlspecialchars($logEntry['Content']['Message']);
+            $text=$logEntryDate.': '.htmlspecialchars($logEntry['Content']['Message']);
             $text=str_replace($needle,'',$text);
             if ($logEntry['isFirst']){$style=$levelArr['style'].'font-weight:bold;';} else {$style=$levelArr['style'];} 
             $pTagArr=array('tag'=>'p','class'=>'log','style'=>$style,'element-content'=>$text,'keep-element-content'=>TRUE,'source'=>$logEntry['Source'],'elementid'=>$logEntry['EntryId'],'title'=>htmlspecialchars($logEntry['Content']['Message']));
@@ -152,7 +155,7 @@ class Logging{
         if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
         $logContent['timestamp']=time();
-        $logContent['time']=date('Y-m-d H:i:s');
+        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,date_default_timezone_get());
         $logContent['timezone']=date_default_timezone_get();
         $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
         $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];

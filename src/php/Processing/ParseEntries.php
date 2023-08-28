@@ -194,7 +194,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Allow multiple hits'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+                                'Allow multiple hits'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes','Multiple entries')),
                                 'Remove match'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 'Match required'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 );
@@ -266,6 +266,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             // parse sections
+            $multipleHits2multipleEntriesColumn=FALSE;
             $textSections2show=$textSections;
             $targetEntry=array();
             foreach($base['parserrules'] as $ruleEntryId=>$rule){
@@ -313,16 +314,14 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                             }
                             $targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$targetKey,$matchText,$rule['Content']['Target data type']);
                         }
+                        if ($rule['Content']['Allow multiple hits']>1){$multipleHits2multipleEntriesColumn=$rule['Content']['Target column'];}    
                     } else {
                         $matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
                         $ruleFailed.='|'.$matchText.' rule '.$ruleEntryId;
                     }
                     if (!empty($matches[0][0]) && !empty($rule['Content']['Remove match'])){
                         $matchRemoved='<p style="color:#fd0;">True</p>';
-                
-                        
                         $textSections[$rule['Content']['Rule relevant on section']]=str_replace($matches[0][0],'',$textSections[$rule['Content']['Rule relevant on section']]);
-                        
                         if (isset($textSections2show[$rule['Content']['Rule relevant on section']])){                        
                             $textSections2show[$rule['Content']['Rule relevant on section']]=str_replace($matches[0][0],'<span title="Rule: '.$rowKey.'" style="text-decoration:line-through;">'.$matches[0][0].'</span>',$textSections2show[$rule['Content']['Rule relevant on section']]);
                             $sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
@@ -351,21 +350,36 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Parser statistics']['No text, skipped']['value']++;
         }
         if (empty($parserFailed)){
-            $result['Parser statistics']['Success']['value']++;
-            $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
             // wrapping up
-            foreach($sourceEntry as $key=>$value){
+            $sourceEntry['Content']=array();
+            $multipleEntriesValueArr=array();
+            $targetEntry=array_replace_recursive($base['entryTemplates'][$params['Target on success']],$targetEntry);
+            foreach($targetEntry as $key=>$value){
                 if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
                 if (!is_array($value)){continue;}
                 foreach($value as $subKey=>$subValue){
                     $value[$subKey]=$this->getStdValueFromValueArr($subValue);
                 }
+                if ($multipleHits2multipleEntriesColumn){
+                    if (strcmp($multipleHits2multipleEntriesColumn,$key)===0){
+                        $multipleEntriesValueArr=$value;
+                    }
+                }
                 // set order of array values
                 ksort($value);
-                $sourceEntry[$key]=implode('|',$value);
+                $targetEntry[$key]=implode('|',$value);
             }
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on success']],TRUE,$testRun);
+            if ($multipleHits2multipleEntriesColumn){
+                foreach($multipleEntriesValueArr as $subKey=>$value){
+                    $targetEntry[$multipleHits2multipleEntriesColumn]=$value;
+                    $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetEntry,TRUE,$testRun,TRUE);
+                    $result['Parser statistics']['Success']['value']++;
+                }
+            } else {
+                $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetEntry,TRUE,$testRun);
+                $result['Parser statistics']['Success']['value']++;
+            }
             $result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
         } else {
             $result['Parser statistics']['Failed']['value']++;

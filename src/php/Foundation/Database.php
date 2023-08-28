@@ -365,7 +365,8 @@ class Database{
             $entry['UNYCOM patents']=array();
             $entry['UNYCOM families']=array();
             $entry['UNYCOM inventions']=array();
-            preg_match_all('/([0-9]{4}[A-Z]{1,2}[0-9]{5})([A-Z ]{0,4}[0-9]{0,2})/',$entry['Content']['File content'],$matches);
+            $entry['UNYCOM contracts']=array();
+            preg_match_all('/([0-9]{4}[XPEF]{1,2}[0-9]{5})([A-Z ]{0,4}[0-9]{0,2})/',$entry['Content']['File content'],$matches);
             if (!empty($matches[0][0])){
                 foreach($matches[0] as $matchIndex=>$match){
                     if ($match[4]=='P' || $match[5]=='P'){$entry['UNYCOM patents'][$match]=$match;}
@@ -376,10 +377,17 @@ class Database{
                     $entry['UNYCOM inventions'][$inventionRef]=$inventionRef;
                 }
             }
+            preg_match_all('/[0-9]{4}V[0-9]{5}/',$entry['Content']['File content'],$matches);
+            if (!empty($matches[0][0])){
+                foreach($matches[0] as $matchIndex=>$match){
+                    $entry['UNYCOM contracts'][$match]=$match;
+                }
+            }
             $entry['UNYCOM cases']=implode(';',$entry['UNYCOM cases']);
             $entry['UNYCOM patents']=implode(';',$entry['UNYCOM patents']);
             $entry['UNYCOM families']=implode(';',$entry['UNYCOM families']);
             $entry['UNYCOM inventions']=implode(';',$entry['UNYCOM inventions']);
+            $entry['UNYCOM contracts']=implode(';',$entry['UNYCOM contracts']);
         }
         return $entry;
     }

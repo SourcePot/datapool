@@ -518,7 +518,7 @@ class HTMLbuilder{
             $arr['cmd']=$cmd;
             $matrix['Btns']['Value'].=$this->btn($arr);
         }
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none','margin'=>'0')));
+        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none','margin'=>'0','min-width'=>'200px')));
         return $html;
     }
     
