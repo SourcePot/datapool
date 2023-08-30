@@ -134,8 +134,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         sort($files);
         $matrix=array();
         foreach($files as $file){
+            if (strpos($file,'exceptionsLog.json')===FALSE){continue;}
             $fullFileName=$GLOBALS['dirs']['debugging'].$file;
-            if (is_dir($file)){continue;}
             $delArr=array('Cmd'=>array('tag'=>'button','element-content'=>'&coprod;','keep-element-content'=>TRUE,'title'=>'Delete file','key'=>array('delete',$fullFileName),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             $matrix[$file]=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2arr($fullFileName);
             $matrix[$file]=$delArr+$matrix[$file];
@@ -144,7 +144,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $matrix[$file]['traceAsString']=implode('<br/>',$matrix[$file]['traceAsString']);
             }
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Debugging dir','hideKeys'=>TRUE,'hideHeader'=>FALSE));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE));
         return $arr;
     }
 }
