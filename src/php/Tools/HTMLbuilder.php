@@ -602,12 +602,21 @@ class HTMLbuilder{
     }
 
     public function entry2row($arr,$commandProcessingOnly=FALSE,$singleRowOnly=FALSE,$isNewRow=FALSE){
+        if (isset($arr['selector']['Class'])){
+            $dataStorageClass='SourcePot\Datapool\Foundation\Filespace';
+        } else {
+            $dataStorageClass='SourcePot\Datapool\Foundation\Database';    
+        }    
         if ($commandProcessingOnly || $singleRowOnly){
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
             if (isset($formData['cmd']['add']) || isset($formData['cmd']['save'])){
                 $entry=$arr['selector'];
                 $entry['EntryId']=key(current($formData['cmd']));
-                $entry['Content']=$formData['val'][$entry['EntryId']]['Content'];
+                if (isset($entry['Content'])){
+                    $entry['Content']=array_replace_recursive($entry['Content'],$formData['val'][$entry['EntryId']]['Content']);
+                } else {
+                    $entry['Content']=$formData['val'][$entry['EntryId']]['Content'];
+                }
                 $file=FALSE;
                 if (isset($formData['files'][$entry['EntryId']])){
                     $flatFile=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files'][$entry['EntryId']]);
@@ -617,12 +626,12 @@ class HTMLbuilder{
                 if ($file){
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($file,$entry);
                 } else {
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+                    $entry=$this->oc[$dataStorageClass]->unifyEntry($entry);
+                    $arr['selector']=$this->oc[$dataStorageClass]->updateEntry($entry);
                 }
             } else if (isset($formData['cmd']['delete'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
+                $this->oc[$dataStorageClass]->deleteEntries($selector);
             } else if (isset($formData['cmd']['moveUp'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
                 $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE);
@@ -679,21 +688,23 @@ class HTMLbuilder{
             if (empty($isNewRow)){
                 $btnArr=array_replace_recursive($arr,$this->btns['save']);
                 $btnArr['key'][]=$arr['selector']['EntryId'];
-                $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
-                $btnArr=array_replace_recursive($arr,$this->btns['delete']);
-                $btnArr['key'][]=$arr['selector']['EntryId'];
-                $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
-                if (empty($arr['selector']['isLast'])){
-                    $btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
+                $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+                if (!$singleRowOnly){
+                    $btnArr=array_replace_recursive($arr,$this->btns['delete']);
                     $btnArr['key'][]=$arr['selector']['EntryId'];
-                    if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
                     $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
-                }
-                if (empty($arr['selector']['isFirst'])){
-                    $btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
-                    $btnArr['key'][]=$arr['selector']['EntryId'];
-                    if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
-                    $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+                    if (empty($arr['selector']['isLast'])){
+                        $btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
+                        $btnArr['key'][]=$arr['selector']['EntryId'];
+                        if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
+                        $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+                    }
+                    if (empty($arr['selector']['isFirst'])){
+                        $btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
+                        $btnArr['key'][]=$arr['selector']['EntryId'];
+                        if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
+                        $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+                    }
                 }
             } else {
                 $btnArr=array_replace_recursive($arr,$this->btns['add']);

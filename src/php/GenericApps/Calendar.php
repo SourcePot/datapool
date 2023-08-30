@@ -120,6 +120,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function getEntryTemplate(){
         return $this->entryTemplate;
     }
+    
+    public function getAvailableTimezones(){
+        return $this->options['Timezone'];
+    }
 
     private function stdReplacements($str=''){
         if (is_array($str)){return $str;}

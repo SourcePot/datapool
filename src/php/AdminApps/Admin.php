@@ -32,8 +32,11 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             $html.=$this->tableViewer();
             $html.=$this->backupArticle();
+            
+            $html.=$this->getPageSettingsHtml();
+            
             $settings=array('method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Debugfiles','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
             $html.=$this->adminChart();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -146,6 +149,29 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE));
         return $arr;
+    }
+    
+    public function getPageSettingsHtml(){
+        $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
+        $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),
+                                'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
+                                'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'admin@datapool.info'),
+                                'path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>''),
+                                'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
+                                );
+        // get selector
+        $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init');
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById(array('Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init'));
+        // form processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['cmd'])){
+        }
+        // get HTML
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Page settings';
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        $matrix=array('Settings'=>$row);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
     }
 }
 ?>
