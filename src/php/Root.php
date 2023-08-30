@@ -325,7 +325,7 @@ final class Root{
         set_exception_handler(function(\Throwable $e){
             // logging
             if (!is_dir($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);}
-            $err=array('message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
+            $err=array('date'=>date('Y-m-d H:i:s'),'message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
             $logFileContent=json_encode($err);
             $logFileName=$GLOBALS['dirs']['debugging'].'/'.time().'_exceptionsLog.json';
             file_put_contents($logFileName,$logFileContent);

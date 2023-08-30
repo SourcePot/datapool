@@ -144,7 +144,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                               'Match type'=>array('method'=>'select','value'=>'identical','options'=>$matchTypOptions,'excontainer'=>TRUE),
                               'Match failure'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-                              'Combine content'=>array('method'=>'select','value'=>'string','excontainer'=>TRUE,'options'=>array('No','Yes')),
+                              'Combine content'=>array('method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>array('No','Yes')),
                               'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                             );
         $contentStructure['Column to match']+=$callingElement['Content']['Selector'];
@@ -172,8 +172,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function matchingRules($callingElement){
-        $contentStructure=array('Operation'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'strcmp','options'=>array('skipIfFound'=>'Skip entry if needle found','skipIfNotFound'=>'Skip entry if needle is not found')),
-                                 'Entry'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'strcmp','options'=>array('Entry A'=>'Entry A','Entry B'=>'Entry B')),
+        $contentStructure=array('Operation'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'skipIfFound','options'=>array('skipIfFound'=>'Skip entry if needle found','skipIfNotFound'=>'Skip entry if needle is not found')),
+                                 'Entry'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'Entry A','options'=>array('Entry A'=>'Entry A','Entry B'=>'Entry B')),
                                  'Column'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
                                  'Needle'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 );

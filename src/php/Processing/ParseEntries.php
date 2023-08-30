@@ -190,7 +190,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Rule relevant on section'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections),
                                 'Constant or...'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Match index'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
+                                'Match index'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),

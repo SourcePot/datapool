@@ -32,6 +32,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             $html.=$this->tableViewer();
             $html.=$this->backupArticle();
+            $settings=array('method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Debugfiles','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
             $html.=$this->adminChart();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -118,6 +120,32 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     private function adminChart(){
         $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test chart','generic',array('refreshInterval'=>10),array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Container','method'=>'getChart'),array());    
         return $html;
+    }
+    
+    public function debugFilesHtml($arr){
+        $arr['html']=(isset($arr['html']))?$arr['html']:'';
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        if (isset($formData['cmd']['delete'])){
+            $filetoDelete=key($formData['cmd']['delete']);
+            if (is_file($filetoDelete)){unlink($filetoDelete);}
+        }
+        //
+        $files=scandir($GLOBALS['dirs']['debugging']);
+        sort($files);
+        $matrix=array();
+        foreach($files as $file){
+            $fullFileName=$GLOBALS['dirs']['debugging'].$file;
+            if (is_dir($file)){continue;}
+            $delArr=array('Cmd'=>array('tag'=>'button','element-content'=>'&coprod;','keep-element-content'=>TRUE,'title'=>'Delete file','key'=>array('delete',$fullFileName),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+            $matrix[$file]=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2arr($fullFileName);
+            $matrix[$file]=$delArr+$matrix[$file];
+            if (isset($matrix[$file]['traceAsString'])){
+                $matrix[$file]['traceAsString']=preg_split('/#\d+\s/',$matrix[$file]['traceAsString']);
+                $matrix[$file]['traceAsString']=implode('<br/>',$matrix[$file]['traceAsString']);
+            }
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Debugging dir','hideKeys'=>TRUE,'hideHeader'=>FALSE));
+        return $arr;
     }
 }
 ?>

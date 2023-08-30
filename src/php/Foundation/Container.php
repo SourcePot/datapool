@@ -69,7 +69,7 @@ class Container{
         $html='<div busy-id="busy-'.$containerId.'" class="container-busy"></div>';
         //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_SESSION['container store'][$containerId]);
         $return=$this->$function($_SESSION['container store'][$containerId]);
-        if (empty($return)){return '';}
+        if (empty($return['html'])){return '';}
         $html.=$return['html'];
         if (isset($return['wrapperSettings'])){
             $wrapperSettings=array_merge($wrapperSettings,$return['wrapperSettings']);
@@ -360,7 +360,7 @@ class Container{
                     } else {
                         $matrix[$filterKey][$columnIndex]='';
                         // filter text field
-                        if ($filterSkipped && !empty($cntrArr['Filter'])){$style=array('background-color'=>'#800');} else {$style=array();}
+                        if ($filterSkipped && !empty($cntrArr['Filter'])){$style=array('color'=>'#fff','background-color'=>'#a00');} else {$style=array();}
                         $filterTextField=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>array('columns',$columnIndex,'Filter'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                         // "order by"-buttons
                         if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}

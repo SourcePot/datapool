@@ -366,7 +366,7 @@ class Database{
             $entry['UNYCOM families']=array();
             $entry['UNYCOM inventions']=array();
             $entry['UNYCOM contracts']=array();
-            preg_match_all('/([0-9]{4}[XPEF]{1,2}[0-9]{5})([A-Z ]{0,4}[0-9]{0,2})/',$entry['Content']['File content'],$matches);
+            preg_match_all('/([0-9]{4}[XPEF]{1,2}[0-9]{5})((\s{1,2}|WO|WE|EP|AP|EA|OA)[A-Z ]{0,2}[0-9]{0,2})/',$entry['Content']['File content'],$matches);
             if (!empty($matches[0][0])){
                 foreach($matches[0] as $matchIndex=>$match){
                     if ($match[4]=='P' || $match[5]=='P'){$entry['UNYCOM patents'][$match]=$match;}
