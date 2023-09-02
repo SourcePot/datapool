@@ -26,7 +26,7 @@ class User{
                                                                  'Middle name'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
                                                                  'Family name'=>array('@tag'=>'input','@type'=>'text','@default'=>'Doe','@excontainer'=>TRUE),
                                                                  'Gender'=>array('@function'=>'select','@options'=>array('male'=>'male','female'=>'female','divers'=>'divers'),'@default'=>'male','@excontainer'=>TRUE),
-                                                                 'Language'=>array('@function'=>'select','@options'=>array('en'=>'en','de'=>'de','es'=>'es','fr'=>'fr'),'@default'=>'en','@excontainer'=>TRUE),
+                                                                 'Language'=>array('@function'=>'select','@options'=>array('en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'),'@default'=>'en','@excontainer'=>TRUE),
                                                                  'Email'=>array('@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'a@b.com','@excontainer'=>TRUE),
                                                                  'Phone'=>array('@tag'=>'input','@type'=>'tel','@default'=>'+49','@excontainer'=>TRUE),
                                                                  'Mobile'=>array('@tag'=>'input','@type'=>'tel','@default'=>'+49','@excontainer'=>TRUE),

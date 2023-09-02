@@ -283,7 +283,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $calendarDateTime->add($dayInterval);
             $newDayPos=$this->date2pos($calendarDateTime->format('Y-m-d H:i:s'));
             $dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
-            if (strcmp($date,$this->pageState['addDate'])===0){$dayStyle['background-color']='#f008';}
+            if (strcmp($date,$this->pageState['addDate'])===0){
+                    $dayStyle['background-color']='#f008';
+            }
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle));
             $dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
             if (strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0){$dayStyle['background-color']='#af6';}

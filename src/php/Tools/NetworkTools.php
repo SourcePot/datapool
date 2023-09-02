@@ -47,7 +47,9 @@ class NetworkTools{
     }
 
     public function getPageState($callingClass,$initState=array()){
-        if (empty($_SESSION['page state']['selected'][$callingClass])){$_SESSION['page state']['selected'][$callingClass]=$initState;}
+        if (empty($_SESSION['page state']['selected'][$callingClass])){
+            $_SESSION['page state']['selected'][$callingClass]=$initState;
+        }
         if (method_exists($callingClass,'getEntryTable')){
             $_SESSION['page state']['selected'][$callingClass]['Source']=$this->oc[$callingClass]->getEntryTable();
         } else if (!isset($_SESSION['page state']['selected'][$callingClass]['Source'])){

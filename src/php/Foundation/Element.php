@@ -17,7 +17,7 @@ class Element{
     private $def=array(''=>array('accesskey'=>FALSE,'autocapitalize'=>FALSE,'autofocus'=>FALSE,'class'=>'std','contenteditable'=>FALSE,'data-*'=>FALSE,
                                  'dir'=>FALSE,'draggable'=>FALSE,'enterkeyhint'=>FALSE,'hidden'=>FALSE,'id'=>FALSE,'inert'=>FALSE,'inputmode'=>FALSE,'is'=>FALSE,
                                  'itemid'=>FALSE,'itemprop'=>FALSE,'itemref'=>FALSE,'itemscope'=>FALSE,'itemtype'=>FALSE,'lang'=>FALSE,'nonce'=>FALSE,'part'=>FALSE,
-                                 'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,'translate'=>FALSE,
+                                 'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,
                                  'virtualkeyboardpolicy'=>FALSE,
                                  'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
                                  'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,
@@ -82,6 +82,20 @@ class Element{
                        'defs'=>array(),
                        );
     
+    private $translate=array('p'=>'element-content|title',
+                             'div'=>'element-content|title',
+                             'caption'=>'element-content',
+                             'label'=>'element-content',
+                             'span'=>'element-content|title',
+                             'submit'=>'value|title',
+                             'button'=>'element-content|title',
+                             'th'=>'element-content',
+                             'h1'=>'element-content',
+                             'h2'=>'element-content',
+                             'h3'=>'element-content',
+                             'option'=>'element-content',
+                             );
+    
     private $specialAttr=array('function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'excontainer'=>FALSE,'container'=>FALSE,'cell'=>FALSE,
                                'row'=>FALSE,'source'=>FALSE,'entry-id'=>FALSE,'index'=>FALSE,'js-status'=>FALSE,
                                );
@@ -103,10 +117,22 @@ class Element{
     }
 
     public function element($arr):string{
+        // translation
+        $translationTestKey=(isset($arr['type']))?'type':'tag';
+        if (isset($this->translate[$arr[$translationTestKey]])){
+            $toTranslateKeys=explode('|',$this->translate[$arr[$translationTestKey]]);
+            foreach($toTranslateKeys as $toTranslateKey){
+                if (isset($arr[$toTranslateKey])){
+                   $arr[$toTranslateKey]=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($arr[$toTranslateKey]);
+                }
+            }
+        }
+        // create tag-arr from $arr
         if (empty($arr['tag'])){
             //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
             throw new \ErrorException('Function '.__FUNCTION__.': Missing or empty arr[tag]-argument.',0,E_ERROR,__FILE__,__LINE__);
         } else if (isset($this->def[$arr['tag']])){
+            if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}
             $def=array_merge($this->def[''],$this->def[$arr['tag']],$this->specialAttr);
             $nameRequired=(!empty($def['name']));
             $elementArr=array('tag'=>$arr['tag'],'attr'=>array(),'sessionArr'=>array('type'=>''));
@@ -143,6 +169,7 @@ class Element{
             $elementArr['sessionArr']['selector']=$this->def2arr($arr['selector'],$this->copyKeys2selector);
             $elementArr=$this->addElement2session($arr,$elementArr);
         }
+        // compile html
         $html=$this->elementArr2html($arr,$elementArr);
         if (!empty($arr['hasCover'])){$html=$this->addCover($arr,$html);}
         return $html;

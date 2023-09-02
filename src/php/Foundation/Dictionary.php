@@ -86,9 +86,7 @@ class Dictionary{
         if (empty($langCode)){$langCode=$_SESSION['page state']['lngCode'];}
         $langCode=strtolower($langCode);
         if (!is_string($phrase)){return $phrase;}
-        $phrase=strip_tags($phrase);
-        $phrase=trim($phrase);
-        if (strcmp($langCode,'en')===0 || empty($phrase)){return $phrase;}
+        if (strcmp($langCode,'en')===0 || empty(strip_tags($phrase))){return $phrase;}
         $elementId=md5($phrase.'|'.$langCode);
         if ($translation===FALSE){
             // translation request
@@ -101,6 +99,8 @@ class Dictionary{
             }
         } else {
             // update translation
+            $phrase=strip_tags($phrase);
+            $phrase=trim($phrase);
             $entry=array('Source'=>$this->entryTable,'phrase'=>$phrase,'translation'=>$translation,'langCode'=>$langCode);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);

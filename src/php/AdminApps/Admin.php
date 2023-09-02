@@ -47,8 +47,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
         $html='';
         if (empty($selector['Source'])){
-            $element=array('tag'=>'p','element-content'=>'Nothing selected, so there is nothing to show here...');
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+            return $html;
         } else if (empty($selector['EntryId'])){
             $selector['disableAutoRefresh']=TRUE;
             $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));

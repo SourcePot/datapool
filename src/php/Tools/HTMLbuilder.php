@@ -767,20 +767,24 @@ class HTMLbuilder{
         $debugArr['presentationSetting selector']=$presentationSetting;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($presentationSetting,FALSE,'Read','EntryId',) as $setting){
             $debugArr['settings'][]=$setting['Content'];
-            $arr=$this->setting2styleArr($arr,$setting);
+            $arr=$this->add2styleArr($arr,$setting);
             $flatKey=$setting['Content']['Entry key'];
+            $elementArr=$arr;
+            $currentHtml='';
             if (isset($flatEntry[$flatKey])){
-                if (empty($setting['Content']['Show key'])){
-                    $elementContent=$flatEntry[$flatKey];
-                } else {
-                    $elementContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey).': '.$flatEntry[$flatKey];
+                $elementArr['tag']='span';
+                $elementArr['element-content']=$flatEntry[$flatKey];
+                $currentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+                if (!empty($setting['Content']['Show key'])){
+                    $elementArr['element-content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label(': ');
+                    $currentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr).$currentHtml;
+                    $elementArr['element-content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey);
+                    $currentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr).$currentHtml;
                 }
-                $elementArr=$arr;
                 $elementArr['tag']='div';
-                $elementArr['element-content']=$elementContent;
-                $elementArr['keep-element-content']=TRUE;
-                $elementHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
-                $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($elementHtml);
+                $elementArr['element-content']=$currentHtml;
+                $currentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+                $currentHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($currentHtml);
             } else if (isset($this->appOptions[$flatKey])){
                 $classMethod=explode('|',$flatKey);
                 $class=array_shift($classMethod);
@@ -793,10 +797,11 @@ class HTMLbuilder{
                 } else {
                     $appArr=$this->oc[$class]->$method($arr);
                 }
-                if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
+                if (is_array($appArr)){$currentHtml.=$appArr['html'];} else {$currentHtml.=$appArr;}
             } else {
                 // flat key not found
             }
+            $html.=$currentHtml;
         }
         if (!isset($flatKey)){
             $whatIsMissing=(isset($arr['settings']['presentEntry']))?$arr['settings']['presentEntry']:'"is undefined: arr[settings][presentEntry]"';
@@ -815,8 +820,9 @@ class HTMLbuilder{
         }
     }
     
-    private function setting2styleArr($arr,$setting){
+    private function add2styleArr($arr,$setting){
         if (!isset($arr['style'])){$arr['style']=array();}
+        $arr['keep-element-content']=TRUE;
         $arr['class']=(empty($setting['Content']['Style class']))?'ep-std':$setting['Content']['Style class'];
         $styleKeys=array('width'=>TRUE,'height'=>TRUE,'clear'=>TRUE);
         $baseKeys=array('maxDim'=>TRUE,'minDim'=>TRUE);
