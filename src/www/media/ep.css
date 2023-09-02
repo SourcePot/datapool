@@ -1,4 +1,4 @@
-.ep-std{
+div.ep-std{
 	float:left;
 	clear:both;
 	margin:5px 10px;
@@ -11,28 +11,28 @@ iframe.ep-std{
 	width:98%;
 	height:300px;
 }
-.ep-std-no-clear{
+div.ep-std-no-clear{
 	float:left;
 	clear:both;
 	margin:5px 10px;	
 }
-.ep-h1{
+div.ep-h1{
 	clear:both;
 	margin:10px 0 0 5px;
 	font-size:1.6em;
 }
-.ep-message{
+div.ep-message{
 	clear:right;
 	margin:5px 10px;
 	font-size:1.5em;
 }
-.ep-footer{
+div.ep-footer{
 	clear:both;
 	font-size:0.8em;
 	font-weight:bold;
 	margin:0 0 0 10px;
 }
-.ep-header-wrapper{
+div.ep-header-wrapper{
 	margin:0;
 	width:100%;
 	background-color:#eee;

@@ -1,10 +1,16 @@
 *{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size:13px;
+	font-size:11px;
 	margin:0;
 	padding:0;
 	text-decoration:none;
 	color:#444;
+}
+span{
+	font-family:inherit;
+	font-size:inherit;
+	text-decoration:none;
+	color:inherit;
 }
 body{
 	color:#333;
@@ -94,7 +100,7 @@ table{
 	clear:none;
 	width:fit-content;
 	margin:10px;
-	background-color:#eee;
+	background-color:#f9f9f9;
     box-shadow: 5px 5px 3px #ccc;
     border: 1px solid #aaa;
 }
@@ -107,7 +113,7 @@ label{
 }
 tr:hover{
 	color:#000;
-	background-color:#ccc;
+	background-color:#eee;
 }
 th{
 	color:#ca843d;
@@ -263,6 +269,7 @@ main,#top-filler{
 	width:100%;
 	height:80px;
 	z-index:1;
+	border-top:1px solid #888;
 }
 #bottom-menu{
 	position:fixed;
@@ -335,8 +342,9 @@ a.first-menu,p.first-menu{
 	border-right:1px solid #bbb;
 }
 select.menu{
-	font-size:16px;
+	font-size:1.1em;
 	padding:7px;
+    height:34px;
 }
 a.first-menu{
 	color:#000;
