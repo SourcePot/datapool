@@ -169,7 +169,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         // create message
         $placeholder=array('firstName'=>$user['Content']['Contact details']['First name'],
                            'pageTitle'=>$this->pageSettings['pageTitle'],
-                           'psw'=>'<b>'.$loginEntry['Name'].'</b> or <b>"'.$loginEntry['Content']['Message'].'"</b>'
+                           'psw'=>'<b>"'.$loginEntry['Name'].'"</b> or <b>"'.$loginEntry['Content']['Message'].'"</b>'
                            );
         $msg=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';
         $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a login token at {{pageTitle}}.",$placeholder).'<br/>';

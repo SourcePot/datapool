@@ -58,7 +58,7 @@ class LoginForms{
     }
     
     public function oneTimeLoginEntry($arr,$user){
-        $mayDigitsIndex=count($this->digits)-1;
+        $maxDigitsIndex=count($this->digits)-1;
         $loginEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
                           'Group'=>$this->pageSettings['pageTitle'],
                           'Folder'=>'Login links',
@@ -69,8 +69,8 @@ class LoginForms{
                           );
         $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
         $passphraseIcons='';
-        for($index=0;$index<10;$index++){
-            $keyArr=$this->digits[random_int(0,$mayDigitsIndex)];
+        for($index=0;$index<6;$index++){
+            $keyArr=$this->digits[random_int(0,$maxDigitsIndex)];
             $loginEntry['Name'].=$keyArr['key'];
             $loginEntry['Content']['Message'].=$keyArr['description'].' | ';
         }
@@ -92,7 +92,6 @@ class LoginForms{
                 $result['Passphrase'].=$hashSymbolArr[$symbolId]['key'];
             }
         }
-        $result['Recovery']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'recovery');
         if ($this->isLoggedIn() && empty($result['Email'])){
             $result['Email']=$_SESSION['currentUser']['Params']['User registration']['Email'];
         }
@@ -130,9 +129,6 @@ class LoginForms{
     }
     
     private function getStandard($arr=array()){
-        $recovery=array('Passphrase'=>$this->getHash(20));
-        $recovery['Passphrase for user']='"'.$recovery['Passphrase'].'"';
-        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
         $passphraseArr=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'required'=>TRUE,'minlength'=>'8','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseArr);
     }
@@ -140,7 +136,6 @@ class LoginForms{
     private function getSymbolKeypad($arr=array()){
         $template=array('symbolSize'=>40,'html'=>'','symbolColumnCount'=>5);
         $arr=array_merge($template,$arr);
-        $recovery=array('Passphrase'=>'','Passphrase for user'=>'');
         $hashSymbolArr=array();
         $aArr=array('tag'=>'a','href'=>'#login-table','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE);
         $imgArr=array('tag'=>'img');
@@ -148,11 +143,6 @@ class LoginForms{
         shuffle($this->digits);
         $html=$arr['html'];
         foreach ($this->digits as $digitIndex => $digitDef){
-            if (strlen($recovery['Passphrase'])<6){
-                if (!empty($recovery['Passphrase for user'])){$recovery['Passphrase for user'].=', ';}
-                $recovery['Passphrase for user'].='"'.$digitDef['description'].'"';
-                $recovery['Passphrase'].=$digitDef['key'];
-            }
             $layersHtml='';
             for ($layer=0;$layer<10;$layer++){ 
                 $imgTmpHash=$this->getHash(20);
@@ -201,7 +191,6 @@ class LoginForms{
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($phraseArr);
         // save state
         $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
-        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'recovery',$recovery);
         return $html;
     }
     
