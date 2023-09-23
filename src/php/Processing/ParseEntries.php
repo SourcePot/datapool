@@ -144,6 +144,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Source column'=>array('method'=>'keySelect','value'=>'useValue','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
                                 'Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+                                'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'|','options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
@@ -367,7 +368,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
                 // set order of array values
                 ksort($value);
-                $targetEntry[$key]=implode('|',$value);
+                $targetEntry[$key]=implode($params['Array→string glue'],$value);
             }
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
             if ($multipleHits2multipleEntriesColumn){

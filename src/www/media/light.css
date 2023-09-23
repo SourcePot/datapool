@@ -1,22 +1,22 @@
 *{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size:11px;
 	margin:0;
 	padding:0;
 	text-decoration:none;
 	color:#444;
-}
-span{
-	font-family:inherit;
-	font-size:inherit;
-	text-decoration:none;
-	color:inherit;
 }
 body{
 	color:#333;
 	background-image:url("lightbg.png");
 	background-repeat:repeat;
 	background-attachment:fixed;
+    font-size:13px;
+}
+span{
+	font-family:inherit;
+	font-size:inherit;
+	text-decoration:none;
+	color:inherit;
 }
 h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button,svg{
 	float:left;
@@ -40,6 +40,10 @@ h2{
 h3{
 	font-size:1.1em;
 	margin:0 0 0.2em 0.5em;
+}
+a.textlink{
+    font-weight:bold;
+    text-decoration: underline dotted #00f;
 }
 ol,ul{
 	margin: 0 10px;

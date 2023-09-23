@@ -36,7 +36,7 @@ class LoginForms{
                           array('key'=>'q','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>79,'description'=>'Black chair'),
                           array('key'=>'r','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>120,'description'=>'White chair'),
                           array('key'=>'s','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>82,'description'=>'Light bulb'),
-                          array('key'=>'t','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>71,'description'=>''),
+                          array('key'=>'t','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>71,'description'=>'Cow'),
                           array('key'=>'u','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>53,'description'=>'5'),
                           array('key'=>'v','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>41,'description'=>'Black arrow pointing right'),
                           array('key'=>'w','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>74,'description'=>'10'),
@@ -51,7 +51,31 @@ class LoginForms{
     public function init($oc){
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $this->formType=intval($this->pageSettings['loginForm']);
+        
+        //var_dump($this->oneTimeLoginEntry(array('Email'=>'cwally@gmx.net'),array()));
+        
         $this->oc=$oc;
+    }
+    
+    public function oneTimeLoginEntry($arr,$user){
+        $mayDigitsIndex=count($this->digits)-1;
+        $loginEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
+                          'Group'=>$this->pageSettings['pageTitle'],
+                          'Folder'=>'Login links',
+                          'Name'=>'',
+                          'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
+                          'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M'),
+                          'Content'=>array('Message'=>''),
+                          );
+        $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
+        $passphraseIcons='';
+        for($index=0;$index<10;$index++){
+            $keyArr=$this->digits[random_int(0,$mayDigitsIndex)];
+            $loginEntry['Name'].=$keyArr['key'];
+            $loginEntry['Content']['Message'].=$keyArr['description'].' | ';
+        }
+        $loginEntry['Content']['Message']=trim($loginEntry['Content']['Message'],'| ');
+        return $loginEntry;
     }
     
     private function formData(){
@@ -99,7 +123,7 @@ class LoginForms{
             $matrix['']=array('Value'=>$btns);
             $matrix['Recover']=array('Value'=>$loginLinkBtn);
         }
-        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Login','style'=>array('background'=>'none')));
+        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Login','style'=>array('background'=>'none'),'id'=>'login-table'));
         $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'none','margin'=>'5em auto','width'=>'fit-content','padding'=>'1em','background-color'=>'#fffb')));
         if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
         return $arr;
@@ -118,7 +142,7 @@ class LoginForms{
         $arr=array_merge($template,$arr);
         $recovery=array('Passphrase'=>'','Passphrase for user'=>'');
         $hashSymbolArr=array();
-        $aArr=array('tag'=>'a','href'=>'#','class'=>'keypad','keep-element-content'=>TRUE);
+        $aArr=array('tag'=>'a','href'=>'#login-table','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE);
         $imgArr=array('tag'=>'img');
         $layersDivArr=array('tag'=>'div','keep-element-content'=>TRUE,'style'=>array('width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px'),'class'=>'keypad');
         shuffle($this->digits);

@@ -28,7 +28,7 @@ class Element{
                        'fieldset'=>array('name'=>TRUE),
                        'form'=>array('action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,
                                      'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE),
-                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE),
+                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE),
                        'label'=>array('for'=>TRUE),
                        'legend'=>array('name'=>TRUE),
                        'meter'=>array('name'=>TRUE),

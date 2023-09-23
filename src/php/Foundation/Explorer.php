@@ -180,6 +180,7 @@ class Explorer{
         if (isset($formData['cmd']['edit'])){
             $oldGuideEntry=$this->deleteGuideEntry($selector);
             $newSelector=array_merge($selector,$formData['val']);
+            if (isset($newSelector['EntryId'])){unset($newSelector['EntryId']);}
             $this->getGuideEntry($newSelector,array('Read'=>$oldGuideEntry['Read'],'Write'=>$oldGuideEntry['Write'],'Owner'=>$oldGuideEntry['Owner']));
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);

@@ -64,7 +64,7 @@ class Backbone{
         // page header
         $arr['page html'].='<head>'.PHP_EOL;
         $arr['page html'].='<meta charset="'.$this->settings['charset'].'">'.PHP_EOL;
-        $arr['page html'].='<meta name="viewport" content="width=device-width, initial-scale=0.8">'.PHP_EOL;
+        $arr['page html'].='<meta name="viewport" content="width=device-width, initial-scale=1">'.PHP_EOL;
         $arr['page html'].='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
         $arr['page html'].='{{head}}'.PHP_EOL;
         $arr['page html'].='</head>'.PHP_EOL;

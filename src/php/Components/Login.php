@@ -165,18 +165,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             return 'Nothing was sent. Please use the password you have already received before.';    
         }
         // create login entry
-        $loginEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-                          'Group'=>$this->pageSettings['pageTitle'],
-                          'Folder'=>'Login links',
-                          'Name'=>$arr['Recovery']['Passphrase'],
-                          'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
-                          'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M')
-                          );
-        $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
+        $loginEntry=$this->oc['SourcePot\Datapool\Tools\LoginForms']->oneTimeLoginEntry($arr,$user);
         // create message
         $placeholder=array('firstName'=>$user['Content']['Contact details']['First name'],
                            'pageTitle'=>$this->pageSettings['pageTitle'],
-                           'psw'=>'<b>'.$arr['Recovery']['Passphrase for user'].'</b>'
+                           'psw'=>'<b>'.$loginEntry['Name'].'</b> or <b>"'.$loginEntry['Content']['Message'].'"</b>'
                            );
         $msg=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';
         $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a login token at {{pageTitle}}.",$placeholder).'<br/>';

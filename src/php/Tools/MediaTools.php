@@ -233,7 +233,6 @@ class MediaTools{
             $videoArr['type']=$video['Params']['File']['MIME-Type'];
             $videoArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
             $videoArr['element-content']=$arr['selector']['Name'];
-            $videoArr['style']['margin']='0.5em';
             $videoArr['controls']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($videoArr);
         }
@@ -254,7 +253,6 @@ class MediaTools{
             $audioArr['type']=$audio['Params']['File']['MIME-Type'];
             $audioArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
             $audioArr['element-content']=$arr['selector']['Name'];
-            $audioArr['style']['margin']='0.5em';
             $audioArr['controls']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($audioArr);
         }

@@ -107,12 +107,17 @@ class HTMLbuilder{
             $html=$this->traceHtml($msg);
         } else if (!empty($arr['matrix'])){
             $hasRows=FALSE;
+            // add teble tag
+            $html.='<table {{class}}';
             if (empty($arr['style'])){
-                $html.='<table {{class}}>'.PHP_EOL;
+                $tableStyle='';
             } else {
-                $arr['style']=is_array($arr['style'])?$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2style($arr['style']):$arr['style'];
-                $html.='<table {{class}} style="'.$arr['style'].'">'.PHP_EOL;    
+                $tableStyle=is_array($arr['style'])?$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2style($arr['style']):$arr['style'];
+                $tableStyle=' style="'.$tableStyle.'"';
             }
+            $tableId=empty($arr['id'])?'':' id="'.$arr['id'].'"';
+            $html.=$tableStyle.$tableId.'>'.PHP_EOL;
+            // add caption
             if (!empty($arr['caption']) && empty($arr['hideCaption'])){$html.='<caption {{class}}>'.PHP_EOL.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['caption']).'</caption>'.PHP_EOL;}
             if (empty($arr['hideHeader'])){$html.='<thead {{class}}>'.PHP_EOL.'{{thead}}</thead>'.PHP_EOL;}
             $html.='<tbody {{class}}>'.PHP_EOL.'{{tbody}}</tbody>'.PHP_EOL;
@@ -769,21 +774,14 @@ class HTMLbuilder{
             $debugArr['settings'][]=$setting['Content'];
             $arr=$this->add2styleArr($arr,$setting);
             $flatKey=$setting['Content']['Entry key'];
-            $elementArr=$arr;
             $currentHtml='';
             if (isset($flatEntry[$flatKey])){
-                $elementArr['tag']='span';
-                $elementArr['element-content']=$flatEntry[$flatKey];
-                $currentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
                 if (!empty($setting['Content']['Show key'])){
-                    $elementArr['element-content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label(': ');
-                    $currentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr).$currentHtml;
-                    $elementArr['element-content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey);
-                    $currentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr).$currentHtml;
+                   $currentHtml.=$this->addTagIfNoTags($arr,$flatKey);
+                   $currentHtml.=$this->addTagIfNoTags($arr,':');
                 }
-                $elementArr['tag']='div';
-                $elementArr['element-content']=$currentHtml;
-                $currentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+                $currentHtml.=$this->addTagIfNoTags($arr,$flatEntry[$flatKey]);
+                $currentHtml=$this->addTagIfNoTags($arr,$currentHtml,'div');
                 $currentHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($currentHtml);
             } else if (isset($this->appOptions[$flatKey])){
                 $classMethod=explode('|',$flatKey);
@@ -818,6 +816,16 @@ class HTMLbuilder{
         } else {
             return $html;
         }
+    }
+    
+    private function addTagIfNoTags($arr,$elementContent,$tag='span'){
+        if (isset($arr['function'])){unset($arr['function']);}
+        if ($elementContent==strip_tags($elementContent) || $tag!='span'){
+            $arr['tag']=$tag;
+            $arr['element-content']=$elementContent;
+            $elementContent=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
+        }
+        return $elementContent;
     }
     
     private function add2styleArr($arr,$setting){
