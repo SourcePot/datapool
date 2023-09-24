@@ -106,13 +106,14 @@ class HTMLbuilder{
                 $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($captionArr);
             }
             foreach($arr['matrix'] as $rowLabel=>$rowArr){
-                $indexArr['x']++;
+                $indexArr['x']=0;
+                $indexArr['y']++;
                 if (!empty($arr['skipEmptyRows']) && empty($rowArr)){continue;}
                 if (empty($arr['hideKeys'])){$rowArr=array('key'=>$rowLabel)+$rowArr;}
                 $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
                 $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
                 foreach($rowArr as $colLabel=>$cell){
-                    $indexArr['y']++;
+                    $indexArr['x']++;
                     $thArr=array('tag'=>'th','element-content'=>ucfirst(strval($colLabel)),'keep-element-content'=>!empty($arr['keep-element-content']));
                     $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
                     if (!empty($arr['class'])){
