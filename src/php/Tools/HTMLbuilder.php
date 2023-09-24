@@ -91,83 +91,58 @@ class HTMLbuilder{
     }
 
     public function table($arr,$returnArr=FALSE){
-        // This function provides an HTML-table created based on the arr argument.
-        // The following keys are specific to this funtion:
-        // 'matrix' ... is the table matrix with the format: arr[matrix][row-index]=array(column-index => column-value, ..., last column-index => last column-value)
-        // 'caption' ... is the table caption
-        // 'skipEmptyRows' ... if TRUE rows with empty cells only will be skipped
         $html='';
-        $hasRows=TRUE;
-        $toReplace=array();
-        if (!isset($arr['matrix'])){
-            $msg='<p>'.__CLASS__.'&rarr;'.__FUNCTION__.' called with arr[matrix] missing.</p>';    
-            $html=$this->traceHtml($msg);
-        } else if (!is_array($arr['matrix'])){
-            $msg='<p>'.__CLASS__.'&rarr;'.__FUNCTION__.' called with type arr[matrix] being '.gettype($arr['matrix']).'. should be an array.</p>';
-            $html=$this->traceHtml($msg);
-        } else if (!empty($arr['matrix'])){
-            $hasRows=FALSE;
-            // add teble tag
-            $html.='<table {{class}}';
-            if (empty($arr['style'])){
-                $tableStyle='';
-            } else {
-                $tableStyle=is_array($arr['style'])?$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2style($arr['style']):$arr['style'];
-                $tableStyle=' style="'.$tableStyle.'"';
+        if (!empty($arr['matrix'])){
+            $indexArr=array('x'=>0,'y'=>0);
+            $tableArr=array('tag'=>'table','keep-element-content'=>TRUE,'element-content'=>'');
+            if (isset($arr['id'])){$tableArr['id']=$arr['id'];}
+            if (isset($arr['class'])){$tableArr['class']=$arr['class'];}
+            if (isset($arr['style'])){$tableArr['style']=$arr['style'];}
+            $tbodyArr=array('tag'=>'tbody','keep-element-content'=>TRUE);
+            if (isset($arr['class'])){$tbodyArr['class']=$arr['class'];}
+            if (!empty($arr['caption'])){
+                $captionArr=array('tag'=>'caption','keep-element-content'=>TRUE,'element-content'=>$arr['caption']);
+                if (isset($arr['class'])){$captionArr['class']=$arr['class'];}
+                $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($captionArr);
             }
-            $tableId=empty($arr['id'])?'':' id="'.$arr['id'].'"';
-            $html.=$tableStyle.$tableId.'>'.PHP_EOL;
-            // add caption
-            if (!empty($arr['caption']) && empty($arr['hideCaption'])){$html.='<caption {{class}}>'.PHP_EOL.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($arr['caption']).'</caption>'.PHP_EOL;}
-            if (empty($arr['hideHeader'])){$html.='<thead {{class}}>'.PHP_EOL.'{{thead}}</thead>'.PHP_EOL;}
-            $html.='<tbody {{class}}>'.PHP_EOL.'{{tbody}}</tbody>'.PHP_EOL;
-            $html.='</table>'.PHP_EOL;
-            $rowIndex=1;
-            $toReplace['{{tbody}}']='';
-            foreach($arr['matrix'] as $row=>$rowArr){
-                $setRowStyle='';
-                if (isset($rowArr['setRowStyle'])){$setRowStyle=$rowArr['setRowStyle'];unset($rowArr['setRowStyle']);}
-                $toReplace['{{thead}}']='<tr {{class}}>';
-                $newRow='<tr {{class}} row="'.$rowIndex.'" style="'.$setRowStyle.'">';
-                if (empty($arr['hideKeys'])){
-                    $toReplace['{{thead}}'].='<th {{class}}>'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Key').'</th>';
-                    $newRow.='<td {{class}}>'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($row).'</td>';                        
-                }
-                $allCellsEmpty=TRUE;
-                $cellIndex=1;
-                foreach($rowArr as $column=>$cell){
-                    if (is_array($column)){$column=$this->oc['SourcePot\Datapool\Foundation\Element']->element($column);} else {$column=htmlEntities(strval($column),ENT_QUOTES);}
-                    if (is_array($cell)){
-                        $cell['tag']=(isset($cell['tag']))?$cell['tag']:'p';
-                        $cell=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
-                    } else {
-                        if (empty($arr['keep-element-content'])){
-                            $cell=htmlspecialchars(strval($cell),ENT_QUOTES,'UTF-8');
-                        }
+            foreach($arr['matrix'] as $rowLabel=>$rowArr){
+                $indexArr['x']++;
+                if (!empty($arr['skipEmptyRows']) && empty($rowArr)){continue;}
+                if (empty($arr['hideKeys'])){$rowArr=array('key'=>$rowLabel)+$rowArr;}
+                $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
+                $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
+                foreach($rowArr as $colLabel=>$cell){
+                    $indexArr['y']++;
+                    $thArr=array('tag'=>'th','element-content'=>ucfirst(strval($colLabel)),'keep-element-content'=>!empty($arr['keep-element-content']));
+                    $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
+                    if (!empty($arr['class'])){
+                        $thArr['class']=$arr['class'];
+                        $tdArr['class']=$arr['class'];
+                        $trHeaderArr['class']=$arr['class'];
+                        $trArr['class']=$arr['class'];
                     }
-                    if (!empty($cell)){$allCellsEmpty=FALSE;}
-                    $toReplace['{{thead}}'].='<th {{class}}>'.ucfirst($column).'</th>';
-                    $newRow.='<td {{class}} cell="'.$cellIndex.'-'.$rowIndex.'">'.$cell.'</td>';
-                    $cellIndex++;                    
+                    if (is_array($cell)){
+                        $tdArr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
+                    } else {
+                        if (empty($arr['keep-element-content'])){$cell=htmlspecialchars(strval($cell),ENT_QUOTES,'UTF-8');}
+                        $tdArr['element-content']=$cell;
+                    }
+                    $trHeaderArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($thArr);
+                    $trArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tdArr);
+                } // loop through columns
+                if (!isset($tbodyArr['element-content'])){
+                    if (empty($arr['hideHeader'])){
+                        $tbodyArr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($trHeaderArr);
+                    } else {
+                        $tbodyArr['element-content']='';
+                    }
                 }
-                $newRow.='</tr>'.PHP_EOL;
-                $toReplace['{{thead}}'].='</tr>'.PHP_EOL;
-                if (!$allCellsEmpty || empty($arr['skipEmptyRows'])){
-                    $hasRows=TRUE;
-                    $toReplace['{{tbody}}'].=$newRow;
-                }
-                $rowIndex++;
-            }
-            if (empty($hasRows)){$html='';}
-            if (empty($arr['class'])){$toReplace['{{class}}']='';} else {$toReplace['{{class}}']=$arr['class'];}
-            foreach($toReplace as $needle=>$value){$html=str_replace($needle,$value,$html);}
-        }
-        if ($returnArr){
-            $arr['html']=$html;
-            return $arr;
-        } else {
-            return $html;
-        }
+                $tbodyArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($trArr);
+            } // loop through rows
+            $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tbodyArr);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tableArr);
+        } // if !empty matrix        
+        if ($returnArr){return array('html'=>$html);} else {return $html;}
     }
     
     public function select($arr,$returnArr=FALSE){

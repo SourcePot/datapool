@@ -160,7 +160,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         exit;
     }
     
-    private function sendOneTimePsw($arr,$user,$isDebugging=TRUE){
+    private function sendOneTimePsw($arr,$user,$isDebugging=FALSE){
         if ($this->getOneTimeEntry($arr['Email'])){
             return 'Nothing was sent. Please use the password you have already received before.';    
         }

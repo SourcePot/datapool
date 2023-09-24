@@ -22,6 +22,15 @@ class Element{
                                  'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
                                  'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,
                                 ),
+                       
+                       // Table
+                       'table'=>array(),
+                       'caption'=>array(),
+                       'tbody'=>array(),
+                       'tr'=>array(),
+                       'td'=>array('cell'=>FALSE),
+                       'th'=>array(),
+                       
                        // Forms
                        'button'=>array('name'=>TRUE),
                        'datalist'=>array('name'=>TRUE),
