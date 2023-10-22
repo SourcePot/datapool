@@ -189,9 +189,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function unifyEntry($entry){
         $entry['Source']=$this->entryTable;    
         $entry['Folder']=$_SESSION['currentUser']['EntryId'];
-        if (!isset($entry['Group'])){
-            // No valid entry
-        } else if (strcmp($entry['Group'],'Events')===0){
+        if (empty($entry['Group'])){$entry['Group']='Events';}
+        if (strcmp($entry['Group'],'Events')===0){
             // Standard events
             if (empty($entry['Content']['Event']) && !empty($entry['addDate'])){
                 $entry['Content']['Event']['Start']=$entry['addDate'].'T00:00';
@@ -273,7 +272,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($this->pageState);
         if (empty($event)){$event=$this->pageState;}
         $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
-        if (strcmp($this->pageState['EntryId'],'{{EntryId}}')===0 && empty($this->pageState['addDate'])){
+        if ($this->pageState['EntryId']=='{{EntryId}}' && empty($this->pageState['addDate'])){
             $arr['html'].=$this->getEventsOverview($arr);
         } else if(strpos($event['EntryId'],'___')!==FALSE){
             if (isset($event['Content']['File content'])){unset($event['Content']['File content']);}
@@ -374,8 +373,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $calendarDateTime->add($dayInterval);
             $newDayPos=$this->date2pos($calendarDateTime->format('Y-m-d H:i:s'));
             $dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
-            if (strcmp($date,$this->pageState['addDate'])===0){
-                    $dayStyle['background-color']='#f008';
+            if ($date==$this->pageState['addDate']){
+                $dayStyle['background-color']='#f008';
             }
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle));
             $dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
