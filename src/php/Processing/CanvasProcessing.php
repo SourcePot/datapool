@@ -197,7 +197,9 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Statistics']['Timestamp']=array('Value'=>time());
             $result['Statistics']['Date']=array('Value'=>date('Y-m-d H:i:s'));
             $base['Statistics']=$result['Statistics'];
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->canvasElement2signal($canvasElement);
+            // update signal from canvasElement
+            $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],__FUNCTION__,$canvasElement['Content']['Style']['Text'],$value,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
         }
         $this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$base,$settingsKey,TRUE);
         return $result;

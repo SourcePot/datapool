@@ -49,7 +49,7 @@ ol,ul{
 	margin: 0 10px;
 	list-style-position:inside;
 }
-button,input,textarea,select,a.btn,a.phrase-preview,.js-button{
+button,input,textarea,select,a.btn,.js-button{
 	float:left;
 	clear:none;
 	padding:0.2em;
@@ -552,7 +552,7 @@ div.calendar-timeline{
 	height:100%;
 	border-left:3px dashed #f00;	
 }
-button.calendar-event,.calendar-event-selected{
+.calendar-event,.calendar-event-selected{
 	position:absolute;
 	padding:0;
 	height:25px;
@@ -613,6 +613,24 @@ a.emoji{
 	color:#000;
 }
 
+/** LOGIN **/
+#login-article{
+    float:none;
+    margin:5em auto;
+    width:fit-content;
+    background-color:#eee;
+}
+#login-table{
+    background-color:#eee;
+    box-shadow:none;
+}
+#login-email,#login-psw{
+    clear:both;
+    padding:3px;
+    margin:0;
+    width:220px;
+}
+
 /** KEYPAD **/
 div.keypad{
 	position:relative;
@@ -632,14 +650,24 @@ img.keypad{
 	float:left;
 	clear:none;
 }
+.phrase-preview{
+	clear:both;
+    width:226px;
+    padding:0;
+    margin:0.2em 0;
+    border:1px solid #ccc;
+}
 div.phrase-preview{
-	height:50px;
-	width: 100%;
-	padding:2px;
-	background-color:#feb;
+	height:80px;
+	background-color:#fff;
+    overflow:hidden;
 }
 a.phrase-preview{
-	width: 100%;
-	margin: 0;
-	padding: 0;
+    float:left;
+    text-align:center;
+    background-color:#fff;
+}
+a.phrase-preview:hover{
+    color:#fff;
+    background-color:#000;
 }

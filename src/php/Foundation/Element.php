@@ -14,7 +14,8 @@ class Element{
     
     private $oc;
     
-    private $def=array(''=>array('accesskey'=>FALSE,'autocapitalize'=>FALSE,'autofocus'=>FALSE,'class'=>'std','contenteditable'=>FALSE,'data-*'=>FALSE,
+    private $def=array(// Generic
+                       ''=>array('accesskey'=>FALSE,'autocapitalize'=>FALSE,'autofocus'=>FALSE,'class'=>'std','contenteditable'=>FALSE,'data-*'=>FALSE,
                                  'dir'=>FALSE,'draggable'=>FALSE,'enterkeyhint'=>FALSE,'hidden'=>FALSE,'id'=>FALSE,'inert'=>FALSE,'inputmode'=>FALSE,'is'=>FALSE,
                                  'itemid'=>FALSE,'itemprop'=>FALSE,'itemref'=>FALSE,'itemscope'=>FALSE,'itemtype'=>FALSE,'lang'=>FALSE,'nonce'=>FALSE,'part'=>FALSE,
                                  'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,
@@ -30,7 +31,6 @@ class Element{
                        'tr'=>array(),
                        'td'=>array('cell'=>FALSE),
                        'th'=>array(),
-                       
                        // Forms
                        'button'=>array('name'=>TRUE),
                        'datalist'=>array('name'=>TRUE),
@@ -49,10 +49,9 @@ class Element{
                        'textarea'=>array('name'=>TRUE),
                        
                        'a'=>array('href'=>FALSE,'target'=>FALSE),
-                       
+                       // Structural elements
                        'main'=>array(),
                        'html'=>array(),
-                       
                        'details'=>array(),
                        'summary'=>array(),
                        'div'=>array(),
@@ -66,7 +65,7 @@ class Element{
                        'p'=>array(),
                        'article'=>array(),
                        'span'=>array(),
-                       
+                       // Media
                        'audio'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'canvas'=>array('height'=>FALSE,'width'=>FALSE),
                        'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
@@ -79,7 +78,7 @@ class Element{
                        'svg'=>array('src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'video'=>array('src'=>FALSE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'source'=>array('src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                      
+                       // SVG
                        'path'=>array('d'=>TRUE),
                        'circle'=>array('r'=>3,'cx'=>TRUE,'cy'=>TRUE),
                        'text'=>array('x'=>TRUE,'y'=>TRUE),
@@ -99,6 +98,7 @@ class Element{
                              'submit'=>'value|title',
                              'button'=>'element-content|title',
                              'th'=>'element-content',
+                             'td'=>'element-content',
                              'h1'=>'element-content',
                              'h2'=>'element-content',
                              'h3'=>'element-content',
@@ -311,11 +311,11 @@ class Element{
                                 $msgArr=$this->arrKeys2arr($keysB,$this->fileErrorCode2str($fileValue));
                                 $result=array_replace_recursive($result,$msgArr);
                             }
-                        }
-                    }
-                }
-            }
-        }
+                        }  // loop through files
+                    } // loop through file keys
+                } // has files
+            } // loop through session var
+        } // relevant session var exists
         return $result;
     }
     

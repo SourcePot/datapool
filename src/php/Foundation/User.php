@@ -107,8 +107,14 @@ class User{
         return $this->userRols;
     }
     
-    public function getUserRols(){
-        return $this->userRols['Content'];
+    public function getUserRols($asOptions=FALSE){
+        if ($asOptions){
+            $options=array();
+            foreach($this->userRols['Content'] as $index=>$userRole){$options[$userRole['Value']]=$userRole['Name'];}
+            return $options;
+        } else {
+            return $this->userRols['Content'];
+        }
     }
     
     public function getUserRolsString($user){

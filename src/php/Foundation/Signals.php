@@ -200,35 +200,5 @@ class Signals{
         return $options;
     }
 
-    public function canvasElement2signal($canvasElement,$rowCount=FALSE){
-        if ($rowCount===FALSE){
-            $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
-        }
-        $this->updateSignal($canvasElement['Folder'],__FUNCTION__,$canvasElement['Content']['Style']['Text'],$rowCount,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
-    }
-
-    public function event2signal($callingClass,$callingFunction,$events){
-        $setEvents=array();
-        // set value of upcomming and current event signal
-        foreach($events as $EntryId=>$event){
-            $eventName=$event['Name'];
-            if (strcmp($event['State'],'Finnishing event')===0){
-                $setEvents[$eventName]=TRUE;
-                $signal=$this->updateSignal($callingClass,$callingFunction,$eventName,1,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
-            } else if (!isset($setEvents[$eventName])){
-                $setEvents[$eventName]=FALSE;
-                $signal=$this->updateSignal($callingClass,$callingFunction,$eventName,0,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
-            }
-        }
-        // set value of old event signals
-        $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,'%');
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Name') as $signal){
-            if (isset($setEvents[$signal['Name']])){continue;}
-            $setEvents[$eventName]=FALSE;
-            $signal=$this->updateSignal($callingClass,$callingFunction,$signal['Name'],0,'bool','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');            
-        }
-        return count($setEvents);
-    }
-
 }
 ?>

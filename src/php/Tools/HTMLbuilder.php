@@ -96,10 +96,12 @@ class HTMLbuilder{
             $indexArr=array('x'=>0,'y'=>0);
             $tableArr=array('tag'=>'table','keep-element-content'=>TRUE,'element-content'=>'');
             if (isset($arr['id'])){$tableArr['id']=$arr['id'];}
-            if (isset($arr['class'])){$tableArr['class']=$arr['class'];}
             if (isset($arr['style'])){$tableArr['style']=$arr['style'];}
             $tbodyArr=array('tag'=>'tbody','keep-element-content'=>TRUE);
-            if (isset($arr['class'])){$tbodyArr['class']=$arr['class'];}
+            if (isset($arr['class'])){
+                $tableArr['class']=$arr['class'];
+                $tbodyArr['class']=$arr['class'];
+            }
             if (!empty($arr['caption'])){
                 $captionArr=array('tag'=>'caption','keep-element-content'=>TRUE,'element-content'=>$arr['caption']);
                 if (isset($arr['class'])){$captionArr['class']=$arr['class'];}
@@ -117,10 +119,10 @@ class HTMLbuilder{
                     $thArr=array('tag'=>'th','element-content'=>ucfirst(strval($colLabel)),'keep-element-content'=>!empty($arr['keep-element-content']));
                     $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
                     if (!empty($arr['class'])){
-                        $thArr['class']=$arr['class'];
-                        $tdArr['class']=$arr['class'];
                         $trHeaderArr['class']=$arr['class'];
                         $trArr['class']=$arr['class'];
+                        $thArr['class']=$arr['class'];
+                        $tdArr['class']=$arr['class'];
                     }
                     if (is_array($cell)){
                         $tdArr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
@@ -562,6 +564,7 @@ class HTMLbuilder{
         // 'contentStructure' ... array([Content key]=>array('method'=>[HTMLbuilder method to be used],'class'=>[Style class],....))
         // 'callingClass','callingFunction' ... are used for the form processing
         // 'caption' ... sets the table caption
+        if (isset($arr['style'])){$tableArrStyle=$arr['style'];unset($arr['style']);}
         if (empty($arr['caption'])){$arr['caption']='Please provide a caption';}
         if (empty($arr['Name'])){$arr['Name']=$arr['caption'];}
         if (empty($arr['contentStructure']) || empty($arr['selector']['Source']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
@@ -578,7 +581,9 @@ class HTMLbuilder{
             $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE);
         }
         $matrix['New']=$this->entry2row($arr,FALSE,FALSE,TRUE);
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        $tableArr=array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']);
+        if (isset($tableArrStyle)){$tableArr['style']=$tableArrStyle;}
+        $html=$this->table($tableArr);
         return $html;
     }
 
@@ -785,6 +790,7 @@ class HTMLbuilder{
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
+        $html=strtr($html,array($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator()=>'&rarr;'));
         if (isset($arr['containerId'])){
             $arr['html']=$html;
             $arr['wrapperSettings']['hideReloadBtn']=TRUE;
