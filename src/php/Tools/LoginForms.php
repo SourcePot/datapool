@@ -142,7 +142,7 @@ class LoginForms{
         $template=array('symbolSize'=>40,'html'=>'','symbolColumnCount'=>5);
         $arr=array_merge($template,$arr);
         $hashSymbolArr=array();
-        $aArr=array('tag'=>'a','href'=>'#login-table','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE);
+        $aArr=array('tag'=>'a','href'=>'javascript:','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE);
         $imgArr=array('tag'=>'img');
         $layersDivArr=array('tag'=>'div','keep-element-content'=>TRUE,'style'=>array('width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px'),'class'=>'keypad');
         shuffle($this->digits);

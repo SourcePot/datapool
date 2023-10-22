@@ -540,7 +540,7 @@ class Container{
 
     public function getImageShuffle($arr,$isDebugging=FALSE){
         if (!isset($arr['html'])){$arr['html']='';}
-        $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>10,'offset'=>0,'autoShuffle'=>FALSE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
+        $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>FALSE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
         $settingsTemplate['style']=array('width'=>600,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
         $settings=array_replace_recursive($settingsTemplate,$arr['settings']);
         $arr['wrapper']=array('style'=>$settings['style']);

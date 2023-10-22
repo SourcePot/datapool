@@ -654,6 +654,7 @@ class HTMLbuilder{
                         $elementArr['value']=$arr['selector']['Content'][$contentKey];
                     }
                 }
+                if (!$isNewRow){$elementArr['excontainer']=TRUE;}
                 $elementArr['callingClass']=$arr['callingClass'];
                 $elementArr['callingFunction']=$arr['callingFunction'];
                 $elementArr['key']=array($arr['selector']['EntryId'],'Content',$contentKey);

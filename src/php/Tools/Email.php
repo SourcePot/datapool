@@ -406,7 +406,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
             $header['From']=addcslashes(mb_encode_mimeheader($header['From'],"UTF-8"),'"');
             $success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
             if ($success){
-                $logArr=array('msg'=>'Email sent...','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+                $logArr=array('msg'=>'Email sent to '.$mail['To'],'priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
                 $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog($logArr);
             } else {
                 $logArr=array('msg'=>'Sending email failed.','priority'=>42,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);

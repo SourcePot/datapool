@@ -353,15 +353,21 @@ jQuery(document).ready(function(){
 			if (zIndex>1){presentEntry(containerId,id);}
 		});
 	}
-	initShuffleImages();
+    initShuffleImages();
 	function initShuffleImages(){
 		var triggerNext={};
 		jQuery("img[function=getImageShuffle]").each(function(entryIndex){
 			var img=jQuery(this);
 			jQuery(this).ready(function(){
 				var containerId=jQuery(img).attr('container-id');
-				var width={'wrapper':jQuery(img).parent().width(),'img':img.width()};
-				var height={'wrapper':jQuery(img).parent().height(),'img':img.height()};
+                var imgId=jQuery(img).attr('id');
+                if (document.getElementById(imgId).hasAttribute("orgwidth") && document.getElementById(imgId).hasAttribute("orgheight")){
+                    var width={'wrapper':jQuery(img).parent().width(),'img':jQuery(img).attr('orgwidth')};
+                    var height={'wrapper':jQuery(img).parent().height(),'img':jQuery(img).attr('orgheight')};                        
+                } else {
+                    var width={'wrapper':jQuery(img).parent().width(),'img':img.width()};
+                    var height={'wrapper':jQuery(img).parent().height(),'img':img.height()};
+                }
 				if (!(containerId in triggerNext)){triggerNext[containerId]=true;}
 				if (jQuery('#btns-'+containerId+'-wrapper').is(":hidden")){
 					var widthDiff=width['img']-width['wrapper'];heightDiff=height['img']-height['wrapper'];

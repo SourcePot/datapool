@@ -70,7 +70,7 @@ class Element{
                        'canvas'=>array('height'=>FALSE,'width'=>FALSE),
                        'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
                        'iframe'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
-                       'img'=>array('src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
+                       'img'=>array('src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE),
                        'link'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'object'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),

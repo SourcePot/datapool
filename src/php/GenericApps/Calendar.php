@@ -247,7 +247,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             }
             if ($index<25){$hourOptions[$fullIndex]=$fullIndex;}
         }
-        
         $contentStructure=array('Name'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Serial event','excontainer'=>TRUE),
                                 'Type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>current($this->options['Type']),'options'=>$this->options['Type']),
                                 'Month'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthOptions),
@@ -393,6 +392,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private function eventsFormProcessing(){
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEvents');
         if (isset($formData['cmd']['EntryId'])){
+            // select entry
             $selector=$this->pageState;
             $selector['EntryId']=key($formData['cmd']['EntryId']);
             $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',$selector['EntryId']);
@@ -402,6 +402,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                 $this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
             }
         } else if (isset($formData['cmd']['Add'])){
+            // add new entry
             $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId','{{EntryId}}');
             $this->pageState['calendarDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',key($formData['cmd']['Add']));
             $this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate',key($formData['cmd']['Add']));
@@ -653,7 +654,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $intervallRecurrence=\DateInterval::createFromDateString(trim($entry['Content']['Event']['Recurrence'],'+'));
         $loopEntry=$entry;
         for($loop=1;$loop<=$entry['Content']['Event']['Recurrence times'];$loop++){
-            $loopEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+            if ($loop===1){
+                $loopEntry['EntryId']=$entry['EntryId'];
+            } else {
+                $loopEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+            }
             $startDateTime->add($intervallRecurrence);
             $loopEntry['Content']['Event']['Start']=$startDateTime->format('Y-m-d H:i:s');
             $endDateTime->add($intervallRecurrence);

@@ -30,6 +30,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger widget','generic',array(),array('method'=>'triggerWidgetWrapper','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Message widget','generic',array(),array('method'=>'messageWidgetWrapper','classWithNamespace'=>__CLASS__),array());
             // add event chart
             $selector=array('Source'=>$this->entryTable);
             $settings=array('classWithNamespace'=>__CLASS__,'method'=>'getSignalsEventChart','width'=>600);
@@ -43,6 +44,12 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
     public function triggerWidgetWrapper($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerWidget(__CLASS__,__FUNCTION__);
+        return $arr;
+    }
+
+    public function messageWidgetWrapper($arr){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getMessageWidget(__CLASS__,__FUNCTION__);
         return $arr;
     }
 

@@ -49,11 +49,22 @@ class Signals{
         $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,20);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
         // update attached trigger
-        $this->updateTrigger($signal);
+        $relevantTrigger=$this->updateTrigger($signal);
+        // send on trigger
+        if (!empty($relevantTrigger)){
+            foreach($relevantTrigger as $entryId=>$trigger){
+                $sendOnTriggerSelector=array('Source'=>$this->entryTable,'Group'=>'Transmitter','Content'=>'%'.$entryId.'%');
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sendOnTriggerSelector,TRUE) as $sendOnTriggerEntry){
+                    if (boolval($trigger['Content']['isActive'])){
+                        $this->sendTrigger($sendOnTriggerEntry,$trigger);
+                    }
+                }
+            }
+        }
         return $signal;
     }
     
-    public function isActiveTrigger($EntryId,$isSystemCall=FALSE){
+    public function isActiveTrigger($EntryId,$isSystemCall=TRUE){
         $selector=array('Source'=>$this->entryTable,'Group'=>'trigger','EntryId'=>$EntryId);
         $trigger=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,$isSystemCall);
         return (!empty($trigger['Content']['isActive']));
@@ -70,6 +81,7 @@ class Signals{
     }
 
     private function updateTrigger($signal){
+        $relevantTrigger=array();
         $triggerSelector=array('Source'=>$this->entryTable,'Group'=>'trigger','Content'=>'%'.$signal['EntryId'].'%');
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read','Name') as $trigger){
             $trigger['Read']=$signal['Read'];
@@ -78,9 +90,9 @@ class Signals{
             $trigger['Content']['signal']=$signal['Content']['signal'];
             $trigger['Content']['isActive']=$this->slopDetector($trigger,$signal);
             $trigger['Content']['trigger']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($trigger['Content']['trigger'],array('timeStamp'=>time(),'value'=>intval($trigger['Content']['isActive'])),20);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($trigger,TRUE);
+            $relevantTrigger[$trigger['EntryId']]=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($trigger,TRUE);
         }
-        return TRUE;
+        return $relevantTrigger;
     }
     
     private function slopDetector($trigger,$signal){
@@ -131,6 +143,37 @@ class Signals{
         }
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Trigger settings','hideKeys'=>TRUE,'keep-element-content'=>TRUE));
         return $html;
+    }
+    
+    public function getMessageWidget($callingClass,$callingFunction){
+        $html='';
+        $availableTransmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
+        if (!isset($settings['Transmitter'])){$settings['Transmitter']=key($availableTransmitter);}
+        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions();
+        if (!isset($settings['Recepient'])){$settings['Recepient']=key($availableRecipients);}
+        $triggerOptions=$this->getTriggerOptions();
+        if (!isset($settings['Trigger'])){$settings['Trigger']=key($triggerOptions);}
+        //
+        $contentStructure=array('Transmitter'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$settings['Transmitter'],'options'=>$availableTransmitter),
+                                'Recepient'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$settings['Recepient'],'options'=>$availableRecipients),
+                                'Trigger'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$settings['Trigger'],'options'=>$triggerOptions),
+                                );
+        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
+        $arr['selector']=array('Source'=>$this->entryTable,'Group'=>'Transmitter','Folder'=>$_SESSION['currentUser']['EntryId'],'Name'=>'Message on trigger');
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Send message on trigger (selected trigger will be reseted)';
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        return $html;
+    }
+
+    private function sendTrigger($sendOnTriggerEntry,$trigger){
+        $name=$trigger['Name'].' was triggered';
+        $entry2send=$sendOnTriggerEntry;
+        $entry2send['Name']='';
+        $entry2send['Content']=array('Subject'=>$name,'Active if'=>'Active if "'.$trigger['Content']['Active if'].'"','Threshold'=>'Threshold "'.$trigger['Content']['Threshold'].'"');
+        $success=$this->oc[$sendOnTriggerEntry['Content']['Transmitter']]->send($sendOnTriggerEntry['Content']['Recepient'],$entry2send);
+        $this->resetTrigger($trigger['EntryId'],TRUE);
+        return $success;
     }
 
     private function getTriggerRow($trigger=array()){

@@ -416,6 +416,11 @@ class MediaTools{
                 @imagedestroy($newImage);
                 if (empty($arr['returnImgFileOnly'])){
                     $imageTagArr['src']=$arr['src'];
+                    
+                    $dims=getimagesize($arr['targetFile']);
+                    $imageTagArr['orgwidth']=$dims[0];
+                    $imageTagArr['orgheight']=$dims[1];
+                    
                     $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageTagArr);
                     if (!empty($arr['Date'])){$html.='<p class="imgOverlay">'.$arr['Date'].'</p>';}
                 } else {
