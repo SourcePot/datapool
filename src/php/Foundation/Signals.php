@@ -223,18 +223,18 @@ class Signals{
     
     public function getSignalOptions($selector=array()){
         $selector['Group']='signal';
-        return $this->getOptions($selector);
+        return $this->getOptions($selector,TRUE);
     }
     
     public function getTriggerOptions($selector=array()){
         $selector['Group']='trigger';
-        return $this->getOptions($selector);
+        return $this->getOptions($selector,TRUE);
     }
 
-    public function getOptions($selector=array()){
+    public function getOptions($selector=array(),$isSystemCall=FALSE){
         $options=array();
         $selector['Source']=$this->getEntryTable();
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Name') as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
             $classStartPos=strrpos($entry['Folder'],'\\')+1;
             $classEndPos=strpos($entry['Folder'],'::');
             $options[$entry['EntryId']]=substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];

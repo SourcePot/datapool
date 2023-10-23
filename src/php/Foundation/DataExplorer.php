@@ -273,8 +273,8 @@ class DataExplorer{
                 $rowCountSelector=$canvasElement['Content']['Selector'];
                 if (!empty($rowCountSelector['Type'])){$rowCountSelector['Type'].='%';}
                 // update signal from canvasElement
-                $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,FALSE);
-                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],__FUNCTION__,$canvasElement['Content']['Style']['Text'],$value,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
+                $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,FALSE);
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],__FUNCTION__,$canvasElement['Content']['Style']['Text'],$rowCount,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
             }
         }
         // canvas element
