@@ -126,7 +126,7 @@ th{
 td,th{
 	position:relative;
 	padding:3px;
-	min-width:30px;
+	width:min-content;
 	overflow:hidden;
 }
 div.log{
@@ -628,7 +628,7 @@ a.emoji{
     clear:both;
     padding:3px;
     margin:0;
-    width:220px;
+    width:222px;
 }
 
 /** KEYPAD **/
@@ -670,4 +670,10 @@ a.phrase-preview{
 a.phrase-preview:hover{
     color:#fff;
     background-color:#000;
+}
+.leaflet-container{
+    height:400px;
+    width:600px;
+    max-width:100%;
+    max-height:100%;
 }

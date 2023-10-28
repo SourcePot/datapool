@@ -282,7 +282,13 @@ class HTMLbuilder{
             $arr['element-content']=(isset($arr['element-content']))?$arr['element-content']:ucfirst($arr['cmd']);
             $arr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr,TRUE);
             $arr['key']=array($arr['cmd']);
-            $arr['value']=(isset($arr['value']))?$arr['value']:((isset($arr['selector']['EntryId']))?$arr['selector']['EntryId']:$arr['id']);
+            if (!empty($arr['selector']['Source'])){$arr['source']=$arr['selector']['Source'];}
+            if (!empty($arr['selector']['EntryId'])){
+                $arr['entry-id']=$arr['selector']['EntryId'];
+                if (!isset($arr['value'])){$arr['value']=$arr['selector']['EntryId'];}
+            } else if (!isset($arr['value'])){
+                $arr['value']=$arr['id'];
+            }
             $btnFailed=FALSE;
             if (isset($this->btns[$arr['cmd']])){
                 $arr=array_replace_recursive($defaultValues,$arr,$setValues,$this->btns[$arr['cmd']]);

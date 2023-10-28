@@ -32,7 +32,9 @@ class Container{
             } else if (strcmp($_POST['function'],'loadEntry')===0){
                 $jsAnswer['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->loadEntry($_POST);
             } else if (strcmp($_POST['function'],'setCanvasElementPosition')===0){
-                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementPosition($_POST['arr']);
+                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementPosition($_POST);
+            } else if (strcmp($_POST['function'],'entryById')===0){
+                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
             } else {
                 
             }
@@ -80,10 +82,16 @@ class Container{
         $reloadBtnArr=array('tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>array('reloadBtnArr'),'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($reloadBtnArr);
         // add wrappers
+        if (isset($wrapperSettings['html'])){
+            $htmlSuffix=$wrapperSettings['html'];
+            unset($wrapperSettings['html']);
+        } else {
+            $htmlSuffix='';
+        }
         $wrapperDiv=$wrapperSettings;
         $wrapperDiv['tag']='article';
         $wrapperDiv['container-id']=$containerId;
-        $wrapperDiv['element-content']=$html;
+        $wrapperDiv['element-content']=$html.$htmlSuffix;
         $wrapperDiv['keep-element-content']=TRUE;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperDiv);
         return $html;
@@ -279,10 +287,10 @@ class Container{
     
     private function entryList($arr,$isDebugging=FALSE){
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $SettingsTemplate=array('columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Date','Filter'=>'')),
+        $SettingsTemplate=array('columns'=>array(array('Column'=>'Name','Filter'=>'')),
                                 'isSystemCall'=>FALSE,
-                                'orderBy'=>'Date',
-                                'isAsc'=>FALSE,
+                                'orderBy'=>'Name',
+                                'isAsc'=>TRUE,
                                 'limit'=>10,
                                 'offset'=>FALSE
                                 );
@@ -540,6 +548,7 @@ class Container{
 
     public function getImageShuffle($arr,$isDebugging=FALSE){
         if (!isset($arr['html'])){$arr['html']='';}
+        $selectBtnHtml='';
         $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>FALSE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
         $settingsTemplate['style']=array('width'=>600,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
         $settings=array_replace_recursive($settingsTemplate,$arr['settings']);
@@ -560,9 +569,10 @@ class Container{
             }
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
             if ($arr['wrapper']['style']['z-index']===2){$arr['wrapper']['style']['z-index']=1;}
+            $selectBtnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'select','selector'=>$entry,'style'=>array('font-size'=>'7px','margin'=>'0 5px 5px 0','line-height'=>'1em')));
         }
         if (!empty($entry['rowCount'])){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'height'=>$settings['style']['height'])));
+            $arr['html']=$selectBtnHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'height'=>$settings['style']['height'])));
             // button div
             $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>array('clear'=>'left','min-width'=>'8em','padding'=>'3px 0')));
             $btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10095;&#10095;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-next','class'=>'js-button','style'=>array('float'=>'right','min-width'=>'8em','padding'=>'3px 0')));

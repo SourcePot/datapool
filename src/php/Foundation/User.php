@@ -126,7 +126,7 @@ class User{
     }
     
     public function getCurrentUser(){
-        if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges'])){
+        if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             $this->anonymousUserLogin();
         }
         return $_SESSION['currentUser'];

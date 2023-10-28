@@ -114,8 +114,8 @@ class Filespace{
             $dir=$this->class2dir($selector['Class'],$mkDirIfMissing);    
             $file=$selector['EntryId'].'.json';
         } else {
-            $source=(empty($selector['Source']))?'EMPTY':'OK';
-            $entryId=(empty($selector['EntryId']))?'EMPTY':'OK';
+            $source=(empty($selector['Source']))?'EMPTY':$selector['Source'];
+            $entryId=(empty($selector['EntryId']))?'EMPTY':$selector['EntryId'];
             $class=(empty($selector['Class']))?'EMPTY':'OK';
             throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in selector argument, either Source='.$source.', EntryId='.$entryId.'  or Class='.$class.', EntryId='.$entryId,0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -464,15 +464,7 @@ class Filespace{
             if (!empty($entry['Params']['File']['MIME-Type'])){    
                 $entry['Type'].=' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
             }
-            $targetFile=$this->selector2file($entry,TRUE);
-            copy($entry['Params']['File']['Source'],$targetFile);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$entry['Params']['File']['Source'],'File source new'=>$targetFile),FALSE);
-            $entry=$this->fileUploadPostProcessing($entry);
-            if ($createOnlyIfMissing){
-                $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
-            } else {
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-            }
+            $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing,TRUE,$entry['Params']['File']['Source']);
             $debugArr['entry updated']=$entry;
         }
         if ($isDebugging){
@@ -520,8 +512,7 @@ class Filespace{
         return $zipStatistic;
     }
     
-    private function fileUploadPostProcessing($entry){
-        $file=$this->selector2file($entry,TRUE);
+    public function fileUploadPostProcessing($entry,$file){
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content

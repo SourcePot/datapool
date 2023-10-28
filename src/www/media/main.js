@@ -37,6 +37,9 @@ jQuery(document).ready(function(){
 		jQuery(this).animate({'top':height},500).delay(5000).animate({'top':0},200);
 	}
 
+    function callbackDummy(data){
+        console.log(data);
+    }
 
 /** STEP-BY-STEP  ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;
@@ -74,7 +77,67 @@ jQuery(document).ready(function(){
 		});
 	}
 
-
+/** GeoTools dynamic map **/
+    var map=false;
+    var mapEntryObjArr={};
+    var mapEntries={};
+    loadDynamicMap()
+    
+    function loadDynamicMap(){
+        mapEntryObjArr=Object.values(jQuery('[entry-id]'));
+        mapEntries={};
+        if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){loadMapEntry();}
+    }
+    
+    function loadMapEntry(){
+        let obj=mapEntryObjArr.shift();
+        let arr={'Source':jQuery(obj).attr('source'),
+                 'EntryId':jQuery(obj).attr('entry-id'),
+                 'function':'entryById',
+                };
+        if (typeof arr['Source']!=='undefined' && typeof arr['EntryId']!=='undefined'){
+            jQuery.ajax({
+                method:"POST",
+                url:'js.php',
+                context:document.body,
+                data:arr,
+                dataType:"json"
+            }).done(function(data){
+                mapEntries[data['arr']['EntryId']]=data['arr'];
+            }).fail(function(data){
+                console.log(data);
+            }).always(function(){
+                if (mapEntryObjArr.length>0){loadMapEntry();} else {entries2dynamicMap();}
+            });
+        } else {
+            if (mapEntryObjArr.length>0){loadMapEntry();} else {entries2dynamicMap();}
+        }
+    }
+    function entries2dynamicMap(){
+        if (map==false){map=L.map('dynamic-map');}
+        var location=[51.505,0];
+        map.setView(location,4);
+        const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        }).addTo(map);
+        var selectBtns={};
+        for (const [key,value] of Object.entries(mapEntries)){
+            if (typeof value['Params']['Geo']!=='undefined'){
+                var selectId=jQuery('button[entry-id='+value['EntryId']+'][title^=Select]').first().attr('id');
+                location=[parseFloat(value['Params']['Geo']['lat']),parseFloat(value['Params']['Geo']['lon'])];
+                var marker=L.marker(location).addTo(map);
+                var tooltip=L.tooltip().setLatLng(location).setContent(value['Folder']+'<br/>'+value['Name']).addTo(map);
+                selectBtns[jQuery(marker).attr('_leaflet_id')]=selectId;
+                marker.on('click',function(e){
+                    var selectBtnSelector='#'+selectBtns[jQuery(this).attr('_leaflet_id')];
+					jQuery(selectBtnSelector).click();
+                });
+            }
+        }
+        map.setView(location,4);
+        
+    }
 /** EMOJI PROCESSING **/
 	addEmojiEvent();
 	function addEmojiEvent(){
@@ -178,7 +241,7 @@ jQuery(document).ready(function(){
 				});
 			}
 		});
-		jQuery(wrapper).find('[type=date],[type=datetime-local]').each(function(i){
+		jQuery(wrapper).find('[type=date],[type=datetime-local],[type=text]').each(function(i){
 			if (jQuery(this).attr('excontainer')===undefined){
 				jQuery(this).unbind('keypress');
 				jQuery(this).on('keypress',function(e){
@@ -416,7 +479,7 @@ jQuery(document).ready(function(){
 		jQuery(toSetId).css('z-index','2');
 		entryShuffleEntries[containerId].set(toSetId,2);
 		presentEntry(containerId,toSetId);
-		return true;
+        return true;
 	}
 	function presentEntry(containerId,selector){
 		var presentEntrySelector='#present-'+containerId+'-entry';
@@ -425,7 +488,9 @@ jQuery(document).ready(function(){
 				 'function':'loadEntry',
 				 'htmlSelector':presentEntrySelector
 				};
-		loadNextSelectedView(arr);
+        jQuery('button[title^=Select]').css({'background-color':'#fff','color':'#fff'});
+        jQuery('button[entry-id='+arr['selector']['EntryId']+'][title^=Select]').css({'background-color':'#000','color':'#000'});
+        loadNextSelectedView(arr);
 	}
 
 	
@@ -438,14 +503,13 @@ jQuery(document).ready(function(){
 			var cmd=idCmps.pop(),containerId=idCmps.pop(),method=idCmps.pop();
 			if (method.localeCompare('getImageShuffle')===0){
 				if (cmd.localeCompare('next')){
-					entryShuffleEntriesStep(containerId,false);
-				} else if (cmd.localeCompare('prev')){
 					entryShuffleEntriesStep(containerId,true);
+				} else if (cmd.localeCompare('prev')){
+					entryShuffleEntriesStep(containerId,false);
 				}
 			}
 		});
 	}
-
 
 /** CANVAS INTERACTIVITY **/
 	initDraggable();
@@ -458,30 +522,29 @@ jQuery(document).ready(function(){
 					start: function(){},
 					drag: function(){},
 					stop: function(){
-						let arr={'Content':{'Style':{'top':jQuery(this).css('top'),'left':jQuery(this).css('left')}},'Source':jQuery(this).attr('source'),'EntryId':jQuery(this).attr('entry-id')};
-						setCanvasElementPosition(arr);
+						let arr={'Content':{'Style':{'top':jQuery(this).css('top'),'left':jQuery(this).css('left')}},
+                                 'Source':jQuery(this).attr('source'),
+                                 'EntryId':jQuery(this).attr('entry-id'),
+                                 'function':'setCanvasElementPosition',
+                                 };
+						jQuery.ajax({
+                            method:"POST",
+                            url:'js.php',
+                            context:document.body,
+                            data:arr,
+                            dataType:"json"
+                        }).done(function(data){
+                            return data;
+                        }).fail(function(data){
+                            console.log(data);
+                        }).always(function(){
+                        
+                        });
 					}
 				});
 			}
 		});
 	}
-	function setCanvasElementPosition(arr){
-		let data={'function':'setCanvasElementPosition','arr':arr};
-		jQuery.ajax({
-			method:"POST",
-			url:'js.php',
-			context:document.body,
-			data:data,
-			dataType: "json"
-		}).done(function(data){
-			//console.log(data);
-		}).fail(function(data){
-			console.log(data);
-		}).always(function(){
-
-		});
-	}
-
 
 /** SYMBOL LOGIN FORM **/
 	addSymbolLoginEvents();
@@ -564,6 +627,7 @@ jQuery(document).ready(function(){
 		addSymbolLoginEvents();
 		loadImageData();
 		initJsButtonEvents();
-	}
+        loadDynamicMap();
+    }
 	
 });

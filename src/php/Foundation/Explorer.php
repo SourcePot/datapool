@@ -61,7 +61,7 @@ class Explorer{
                 } else {
                     $label=$column;
                 }
-                if (strcmp($row[$label],self::GUIDEINDICATOR)===0){continue;}
+                if ($row[$label]===self::GUIDEINDICATOR){continue;}
                 $options[$row[$column]]=$row[$label];
             }
             $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
@@ -79,10 +79,12 @@ class Explorer{
     }
 
     private function addApps($callingClass,$stateKeys){
+        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
         $html='';
-        $arr=$this->addEntry($callingClass,$stateKeys);
+        $arr=$this->addEntry($callingClass,$stateKeys,$selector,$entry);
         $appHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-        $arr=$this->editEntry($callingClass,$stateKeys);
+        $arr=$this->editEntry($callingClass,$stateKeys,$selector,$entry);
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
         $arr=$this->miscToolsEntry($callingClass,$stateKeys);
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
@@ -188,8 +190,8 @@ class Explorer{
         
     }
     
-    private function addEntry($callingClass,$stateKeys){
-        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+    private function addEntry($callingClass,$stateKeys,$selector,$entry){
+        $access=TRUE;
         if (strcmp($stateKeys['nextKey'],'Source')===0){
             return array('html'=>'','icon'=>'&#10010;','class'=>'explorer');
         } else {
@@ -200,6 +202,7 @@ class Explorer{
                 $fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
             } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
+                $access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE);
                 $key=array('update file');
                 $label='Update entry file';
                 $fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
@@ -212,21 +215,19 @@ class Explorer{
             }
             $addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('font-size'=>'1.15em'));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
+            if (empty($access)){$html='';}
         }
         $arr=array('html'=>$html,'icon'=>'&#10010;','title'=>'Add new "'.$stateKeys['selectedKey'].'"','class'=>'explorer');
         return $arr;
     }
 
-    private function editEntry($callingClass,$stateKeys){
+    private function editEntry($callingClass,$stateKeys,$selector,$entry){
         if (strcmp($stateKeys['selectedKey'],'Source')===0){return array('html'=>'','icon'=>'&#9998;','class'=>'explorer');}
-        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Edit'));
         if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
             $selector=array('Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
             if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,array(),array());}
         } else {
-            
             $fileElement=array('tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>array($stateKeys['selectedKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
             $addBtn=array('tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>array('edit'),'value'=>$stateKeys['selectedKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('font-size'=>'1.15em'));

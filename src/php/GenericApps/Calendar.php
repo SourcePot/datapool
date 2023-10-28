@@ -341,14 +341,14 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $events=$this->getEvents(time());
         foreach($events as $EntryId=>$event){
             if (strpos($event['State'],'Upcomming')!==FALSE){
-                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts in'=>$this->getTimeDiff($event['Start'],'now',DB_TIMEZONE,DB_TIMEZONE));
+                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts&nbsp;in'=>$this->getTimeDiff($event['Start'],'now',DB_TIMEZONE,DB_TIMEZONE));
             } else {
-                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Ends in'=>$this->getTimeDiff($event['End'],'now',DB_TIMEZONE,DB_TIMEZONE));
+                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Ends&nbsp;in'=>$this->getTimeDiff($event['End'],'now',DB_TIMEZONE,DB_TIMEZONE));
             }
         }
         $html='';
         foreach($matrices as $caption=>$matrix){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$caption,'hideKeys'=>TRUE));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideKeys'=>TRUE));
         }
         return $html;
     }
@@ -635,9 +635,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $value=$interval->format('%'.$index);
             if (intval($value)===1){$label=rtrim($label,'s');}
             if (intval($value)===0 && $nonZeroDetected===FALSE){continue;} else {$nonZeroDetected=TRUE;}
-            $str.=$value.' '.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($label).', ';
+            $str.=$value.'&nbsp;'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($label).',&nbsp;';
         }
-        return trim($str,', ');
+        return trim($str,',&nbsp;');
     }
 
     private function updateCalendarEventEntry($entry){

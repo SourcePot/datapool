@@ -170,8 +170,7 @@ class GeoTools{
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Map','target'=>'_blank','style'=>array('clear'=>'left')));
         $href='https://www.google.de/maps/@'.$entry['Params']['Geo']['lat'].','.$entry['Params']['Geo']['lon'].',16z';
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Open Google Maps','target'=>'_blank'));
-        $href='https://www.taxifarefinder.com';
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','class'=>'btn','href'=>$href,'element-content'=>'Cab Fares','target'=>'_blank'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('margin'=>'5px 5px 10px 2px')));
         return $html;
     }
     
@@ -186,6 +185,27 @@ class GeoTools{
             }
             return array();
         }
+    }
+    
+    public function getDynamicMap($arr=array()){
+        $html='';
+        $toLoadArr=array('leafletCss'=>array('tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>'','element-content'=>''),
+                         'leafletJ'=>array('tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','crossorigin'=>'','element-content'=>''),
+                         );
+        foreach($toLoadArr as $index=>$elementArr){
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+        }
+        $arr['tag']='div';
+        $arr['id']='dynamic-map';
+        $arr['style']['width']=600;
+        $arr['style']['height']=400;
+        $arr['function']=__FUNCTION__;
+        if (!isset($arr['element-content'])){$arr['element-content']=' ';}
+        if (!isset($arr['keep-element-content'])){$arr['keep-element-content']=TRUE;}
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
+        $matrix=array(array('value'=>$html));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Map'));
+        return $html;
     }
     
 }

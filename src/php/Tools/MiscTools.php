@@ -272,7 +272,7 @@ class MiscTools{
         if ($value==0){
             return $value;
         } else {
-            return $value.' '.$e[$p+6];
+            return $value.$e[$p+6];
         }
     }
     

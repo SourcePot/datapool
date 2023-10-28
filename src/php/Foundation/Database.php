@@ -197,6 +197,7 @@ class Database{
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         $this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
         $this->dbObj->exec("SET CHARACTER SET 'utf8'");
+        $this->dbObj->exec("SET NAMES utf8mb4");
         $this->dbName=$access['Content']['dbName'];
         return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
     }
@@ -318,9 +319,7 @@ class Database{
         if (strcmp($rightType,'Read')!==0 && strcmp($rightType,'Write')!==0){
             throw new \ErrorException('Function '.__FUNCTION__.': right type '.$rightType.' unknown.',0,E_ERROR,__FILE__,__LINE__);    
         }
-        if (empty($user['Owner'])){
-            throw new \ErrorException('Function '.__FUNCTION__.': user[Owner] must not be empty.',0,E_ERROR,__FILE__,__LINE__);    
-        }
+        if (empty($user['Owner'])){$user['Owner']='SYSTEM';}
         $user['Owner']=str_replace('%','\%',$user['Owner']);
         $user['Owner']=str_replace('_','\_',$user['Owner']);
         if (!empty($sqlArr['sql'])){$sqlArr['sql'].=" AND";}
@@ -596,9 +595,7 @@ class Database{
     /**
     * @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
     */
-    public function insertEntry($entry){
-        $entryTemplate=$this->getEntryTemplate($entry['Source']);
-        $entry=$this->addEntryDefaults($entry);
+    private function insertEntry($entry){
         if (!empty($entry['Owner'])){
             if (strcmp($entry['Owner'],'ANONYM')===0){
                 $entry['Expires']=date('Y-m-d H:i:s',time()+600);
@@ -622,33 +619,49 @@ class Database{
         return $entry;
     }
 
-    public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE,$addLog=FALSE){
+    public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateButCreateIfMissing=FALSE,$addLog=FALSE,$attachment=''){
         // only the Admin has the right to update the data in the Privileges column
-        if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
-            unset($entry['Privileges']);
-        }
-        if (empty($entry)){return FALSE;}
-        //
+        if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){unset($entry['Privileges']);}
+        // test for required keys
+        if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
+        $selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
+        // get existing entry
         $existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
             // insert and return entry
+            $entryTemplate=$this->getEntryTemplate($entry['Source']);
+            $entry=$this->addEntryDefaults($entry);
+            if (is_file($attachment)){
+                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry,TRUE);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUploadPostProcessing($entry,$attachment);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$attachment,'File source new'=>$targetFile),FALSE);
+            } else {
+                $targetFile=FALSE;
+            }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
             $entry=$this->insertEntry($entry);
-        } else if (empty($noUpdateCreateIfMissing)){
+            if ($targetFile){copy($attachment,$targetFile);}
+        } else if ($noUpdateButCreateIfMissing==FALSE){
             // update and return entry
-            $selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
             unset($entry['EntryId']);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
+            if (is_file($attachment) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
+                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector,TRUE);
+                copy($attachment,$targetFile);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUploadPostProcessing($entry,$attachment);
+                if (isset($existingEntry['Params']['Attachment log'])){$entry['Params']['Attachment log']=$existingEntry['Params']['Attachment log'];}
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$attachment,'File source new'=>$targetFile),FALSE);
+            }
             if ($addLog){
+                if (isset($existingEntry['Params']['Processing log'])){$entry['Params']['Processing log']=$existingEntry['Params']['Processing log'];}
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
             }
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
-            $entry=$this->entryById($selector,$isSystemCall,'Write');
+            $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
-            // only return ex*isting entry
-            $entry=$existingEntry;
+            $entry=$this->entryById($selector,$isSystemCall,'Read');
         }
         return $entry;
     }

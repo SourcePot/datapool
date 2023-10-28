@@ -88,7 +88,7 @@ class Logging{
         $minPause=round(time()/10);
         $logEntry['EntryId']=md5($logEntry['Content']['Message'].$logEntry['Content']['User id'].$logEntry['Content']['IP'].$minPause);
         // add log to database
-        $logEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($logEntry);
+        $logEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($logEntry,TRUE);
         return $logEntry;
     }
     

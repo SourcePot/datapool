@@ -60,8 +60,13 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
                 $wrapperSetting=array('style'=>array('padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'10px','border'=>'1px dotted #999;'));
                 $setting=array('style'=>array('width'=>500,'height'=>400,'background-color'=>'#fff'),'autoShuffle'=>FALSE,'getImageShuffle'=>'multimedia');
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
+                $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
             } else if (empty($selector['Group']) || empty($selector['EntryId'])){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,array(),array());
+                //$wrapperSetting=array();
+                $wrapperSetting=array('html'=>$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap());
+                $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5);
+                $settings['columns']=array(array('Column'=>'Name','Filter'=>''));
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,$settings,$wrapperSetting);
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
                 $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);

@@ -11,6 +11,7 @@ img.ep-std,video.ep-std{
 iframe.ep-std{
 	width:98%;
 	height:300px;
+    margin:0 0 0 5px;
 }
 div.ep-std-no-clear{
 	float:left;

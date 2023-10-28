@@ -45,6 +45,8 @@ class MediaTools{
             $arr['wrapper']['style']=(isset($arr['wrapper']['style']))?$arr['wrapper']['style']:array();
             $imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'title'=>$arr['selector']['Name'],'class'=>'preview','source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
             $imageArr['id']='img-'.md5($arr['selector']['EntryId']);
+            $imageArr['source']=$arr['selector']['Source'];
+            $imageArr['entry-id']=$arr['selector']['EntryId'];
             if (isset($arr['containerId'])){$imageArr['id'].='-'.$arr['containerId'];}
             $imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapper']['style']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
@@ -543,6 +545,8 @@ class MediaTools{
                 $imgPropArr['width']=$imgPropArr[0];
                 $imgPropArr['height']=$imgPropArr[1];
             }
+        } else if (empty($imgPropArr)){
+            $imgPropArr=array('width'=>1,'height'=>1);
         } else {
             $imgPropArr['width']=$imgPropArr[0];
             $imgPropArr['height']=$imgPropArr[1];

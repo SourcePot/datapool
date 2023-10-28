@@ -79,7 +79,7 @@ class Plot{
             foreach($dataset['data'] as $datasetIndex=>$datapoint){
                 $spanArr['itemid']=$trace->getId().'-'.$datasetIndex;
                 $spanArr['element-content']=$this->oTools->value2label($datapoint['x'],$dataset['x']['dataType']);
-                $spanArr['element-content'].=' , '.$this->oTools->value2label($datapoint['y'],$dataset['y']['dataType']);
+                $spanArr['element-content'].=', '.$this->oTools->value2label($datapoint['y'],$dataset['y']['dataType']);
                 $matrix['Selected'][$traceId].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($spanArr);
             }
         }

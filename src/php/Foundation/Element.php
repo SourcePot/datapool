@@ -21,7 +21,7 @@ class Element{
                                  'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,
                                  'virtualkeyboardpolicy'=>FALSE,
                                  'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
-                                 'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,
+                                 'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,
                                 ),
                        
                        // Table
@@ -71,7 +71,7 @@ class Element{
                        'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
                        'iframe'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
                        'img'=>array('src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE),
-                       'link'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
+                       'link'=>array('rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'object'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'script'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
