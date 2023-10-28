@@ -300,6 +300,7 @@ class HTMLbuilder{
                     $hasFile=is_file($this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']));
                     if (!$hasFile || empty($arr['selector']['Params']['File'])){$btnFailed='File error';}
                 }
+                $arr['element-content']=str_replace(' ','&nbsp;',$arr['element-content']);
             } else {
                 $btnFailed='Button defintion missing';
             }
@@ -507,6 +508,7 @@ class HTMLbuilder{
             $arr['cmd']=$cmd;
             $matrix['Btns']['Value'].=$this->btn($arr);
         }
+        $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
         $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none','margin'=>'0','min-width'=>'200px','box-shadow'=>'none','border'=>'1px dotted #444')));
         return $html;
     }

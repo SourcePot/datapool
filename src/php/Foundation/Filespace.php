@@ -331,6 +331,7 @@ class Filespace{
     }
     
     public function delDir($dir){
+        gc_collect_cycles();
         if (is_dir($dir)){
             $files2delete=scandir($dir);
             foreach($files2delete as $fileIndex=>$file){
@@ -462,7 +463,7 @@ class Filespace{
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
             if (!empty($entry['Params']['File']['MIME-Type'])){    
-                $entry['Type'].=' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
+                $entry['Type']=$entry['Source'].' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
             }
             $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing,TRUE,$entry['Params']['File']['Source']);
             $debugArr['entry updated']=$entry;

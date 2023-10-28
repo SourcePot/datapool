@@ -385,6 +385,7 @@ class Container{
                             $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
                             $matrix['Columns'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         }
+                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Columns'][$columnIndex],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
                         // table rows
                         if (strcmp($cntrArr['Column'],'preview')===0){
                             $mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$entry,'style'=>array('width'=>'100%','max-width'=>300,'max-height'=>250)));

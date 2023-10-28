@@ -343,7 +343,7 @@ class DataExplorer{
         if (empty($canvasElement['Content']['Widgets']['File upload'])){return '';}
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
-        if (isset($formData['cmd']['uplaod'])){
+        if (isset($formData['cmd']['upload'])){
             foreach($formData['files']['files'] as $fileIndex=>$fileArr){
                 if (empty($fileArr["tmp_name"])){continue;}
                 $entry=$canvasElement['Content']['Selector'];
@@ -351,14 +351,14 @@ class DataExplorer{
                 if (empty($entry['Folder'])){$entry['Folder']='Upload';}
                 if (empty($entry['Name'])){$entry['Name']=$fileArr["name"];}
                 if (!empty($entry['Type'])){$entry['Type']=trim($entry['Type'],'%');}
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');    
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
             }
         }
         // create html
         $html='';
         $uploadElement=array('tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>array('files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $uploadBtn=array('tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>array('uplaod'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $uploadBtn=array('tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>array('upload'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $matrix=array();
         $matrix['upload']=array('value'=>$uploadElement);
         $matrix['cmd']=array('value'=>$uploadBtn);

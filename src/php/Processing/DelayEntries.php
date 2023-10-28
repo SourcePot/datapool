@@ -86,7 +86,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
      private function getDelayEntriesInfo($callingElement){
         $matrix=array();
-        $matrix['Description']=array('Entries will be forwarded to the selected next cnavas element when the trigger is active.');
+        $matrix['Description']=array('<p style="width:30em;">Entries will be forwarded to the selected next cnavas element when the trigger is active.</p>');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         return $html;
     }

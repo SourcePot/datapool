@@ -604,6 +604,7 @@ class Database{
         $columns='';
         $values='';
         $inputs=array();
+        $entryTemplate=$this->getEntryTemplate($entry['Source']);
         foreach ($entry as $column => $value){
             if (!isset($entryTemplate[$column])){continue;}
             if (strcmp($column,'Source')===0){continue;}
@@ -629,7 +630,6 @@ class Database{
         $existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
             // insert and return entry
-            $entryTemplate=$this->getEntryTemplate($entry['Source']);
             $entry=$this->addEntryDefaults($entry);
             if (is_file($attachment)){
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry,TRUE);
