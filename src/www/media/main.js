@@ -78,7 +78,6 @@ jQuery(document).ready(function(){
 	}
 
 /** GeoTools dynamic map **/
-    var map=false;
     var mapEntryObjArr={};
     var mapEntries={};
     loadDynamicMap()
@@ -114,7 +113,8 @@ jQuery(document).ready(function(){
         }
     }
     function entries2dynamicMap(){
-        if (map==false){map=L.map('dynamic-map');}
+        var map=false;
+        map=L.map('dynamic-map');
         var location=[51.505,0];
         map.setView(location,4);
         const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
