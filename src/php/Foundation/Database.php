@@ -596,6 +596,8 @@ class Database{
     * @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
     */
     private function insertEntry($entry){
+        $entryTemplate=$this->getEntryTemplate($entry['Source']);
+        $entry=$this->addEntryDefaults($entry);
         if (!empty($entry['Owner'])){
             if (strcmp($entry['Owner'],'ANONYM')===0){
                 $entry['Expires']=date('Y-m-d H:i:s',time()+600);
@@ -604,7 +606,6 @@ class Database{
         $columns='';
         $values='';
         $inputs=array();
-        $entryTemplate=$this->getEntryTemplate($entry['Source']);
         foreach ($entry as $column => $value){
             if (!isset($entryTemplate[$column])){continue;}
             if (strcmp($column,'Source')===0){continue;}
@@ -630,7 +631,6 @@ class Database{
         $existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
             // insert and return entry
-            $entry=$this->addEntryDefaults($entry);
             if (is_file($attachment)){
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry,TRUE);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUploadPostProcessing($entry,$attachment);
