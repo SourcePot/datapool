@@ -102,7 +102,7 @@ class LoginForms{
         $arr['result']=$this->formData();
         //
         $emailLabel=array('tag'=>'label','element-content'=>'Email','for'=>'login-email');
-        $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'id'=>'login-email','filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
+        $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'id'=>'login-email','style'=>array('clear'=>'both','width'=>220),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('width'=>'45%','margin'=>0));
         $registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('float'=>'right','width'=>'45%','margin'=>'0 4px 0 0'));
@@ -118,14 +118,13 @@ class LoginForms{
             $matrix['Btns']=array('Value'=>$updateBtn);
         } else {
             $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
-            $email['id']=md5($this->pageSettings['pageTitle'].'|email');
             $matrix['Email']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
             $matrix['Passphrase']=array('Value'=>$passphrase);
             $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($loginBtn);
             $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
             $matrix['Recover']=array('Value'=>$loginLinkBtn);
         }
-        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login','id'=>'login-table'));
+        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login','id'=>'login-table','class'=>'max-content'));
         $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'id'=>'login-article'));
         if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
         return $arr;
@@ -133,8 +132,7 @@ class LoginForms{
     
     private function getStandard($arr=array()){
         $passphraseLabel=array('tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw');
-        $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'8','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
-        $passphrase['id']=md5($this->pageSettings['pageTitle'].'|passphrase');
+        $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'8','style'=>array('clear'=>'both','width'=>220),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
         return $html;
