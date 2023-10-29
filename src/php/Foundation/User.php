@@ -135,7 +135,7 @@ class User{
     public function unifyEntry($entry){
         $entry['Source']=$this->entryTable;
         if (!isset($entry['Content']['Address'])){$entry['Content']['Address']=array();}
-        if (!empty($entry['Email'])){
+        if (empty($entry['Content']['Contact details']['Email']) && !empty($entry['Email'])){
             $entry['Content']['Contact details']['Email']=$entry['Email'];
         }
         if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
