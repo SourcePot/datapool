@@ -217,7 +217,7 @@ p.icon{
 	width:100%;
 	height:100%;
 	cursor:pointer;
-	background-color:#fff;
+	background-color:#000d;
 	z-index:20;
 }
 #overlay-image{
@@ -226,10 +226,11 @@ p.icon{
 	max-height:95%;
 	margin:0 auto;
 	cursor:pointer;
-	background-color:#fff;
+	background-color:#000;
 	background-image:url("busy.gif");
 	background-repeat:no-repeat;
 	background-position:center;
+    border:1px solid #aaa;
 }
 #img-index{
 	wiodth:100%;
@@ -246,9 +247,11 @@ p.icon{
 	min-width:5%;
 	cursor:pointer;
 	font-size:3em;
+	color:#fff6;
 }
 #prev-img-btn:hover,#next-img-btn:hover{
-	background-color:#aaa8;
+	color:#0008;
+	background-color:#fff8;
 }
 #prev-img-btn{
 	left:0;

@@ -46,17 +46,19 @@ class Signals{
         $signal['Content']=array('signal'=>array());
         // get entry and update the entry
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
-        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,20);
-        $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
-        // update attached trigger
-        $relevantTrigger=$this->updateTrigger($signal);
-        // send on trigger
-        if (!empty($relevantTrigger)){
-            foreach($relevantTrigger as $entryId=>$trigger){
-                $sendOnTriggerSelector=array('Source'=>$this->entryTable,'Group'=>'Transmitter','Content'=>'%'.$entryId.'%');
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sendOnTriggerSelector,TRUE) as $sendOnTriggerEntry){
-                    if (boolval($trigger['Content']['isActive'])){
-                        $this->sendTrigger($sendOnTriggerEntry,$trigger);
+        if (isset($signal['Content']['signal'])){
+            $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,20);
+            $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
+            // update attached trigger
+            $relevantTrigger=$this->updateTrigger($signal);
+            // send on trigger
+            if (!empty($relevantTrigger)){
+                foreach($relevantTrigger as $entryId=>$trigger){
+                    $sendOnTriggerSelector=array('Source'=>$this->entryTable,'Group'=>'Transmitter','Content'=>'%'.$entryId.'%');
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sendOnTriggerSelector,TRUE) as $sendOnTriggerEntry){
+                        if (boolval($trigger['Content']['isActive'])){
+                            $this->sendTrigger($sendOnTriggerEntry,$trigger);
+                        }
                     }
                 }
             }
