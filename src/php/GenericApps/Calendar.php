@@ -340,6 +340,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $matrices=array();
         $events=$this->getEvents(time());
         foreach($events as $EntryId=>$event){
+            if (isset($matrices[$event['State']])){
+                if (count($matrices[$event['State']])>5){
+                    $valueArr=current($matrices[$event['State']]);
+                    $valueArr=array_flip($valueArr);
+                    $valueArr=array_fill_keys(array_keys($valueArr),'...');
+                    $matrices[$event['State']]['...']=$valueArr;
+                    continue;
+                }
+            }
             if (strpos($event['State'],'Upcomming')!==FALSE){
                 $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts&nbsp;in'=>$this->getTimeDiff($event['Start'],'now',DB_TIMEZONE,DB_TIMEZONE));
             } else {
@@ -348,7 +357,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         }
         $html='';
         foreach($matrices as $caption=>$matrix){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideKeys'=>TRUE));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideKeys'=>TRUE,'class'=>'max-content'));
         }
         return $html;
     }

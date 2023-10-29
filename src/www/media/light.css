@@ -129,6 +129,9 @@ td,th{
 	width:min-content;
 	overflow:hidden;
 }
+td.max-content{
+    width:max-content;
+}
 div.log{
 	overflow-y:auto;
 	height:100%;
