@@ -21,6 +21,9 @@ class Money{
     private $entryTable;
     private $entryTemplate=array();
     private $tableRatesSelector=array();
+    
+    private $currencies=array();
+    private $currencyAlias=array('EUR'=>array('EUR','€'),'AUD'=>array('AUD','AU$'),'USD'=>array('USD','US$','$'));
         
     public function __construct($oc){
         $this->oc=$oc;
@@ -33,9 +36,7 @@ class Money{
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->tableRatesSelector=array('Source'=>$this->entryTable,'Group'=>'ECB','Folder'=>'Rates','Owner'=>'SYSTEM');
         $this->getOldRatesIfRequired();
-        
-        var_dump($this->currencyConversion(1000,'JPY','2023-09-30 12:00:00','Europe/Berlin'));
-        
+        $this->currencies=$this->getCurrencies();
     }
     
     public function getEntryTable(){return $this->entryTable;}
@@ -189,7 +190,7 @@ class Money{
         if (isset($currencies['Content'])){
             return $currencies['Content'];
         } else {
-            return FALSE;
+            return array();
         }
     }
     
@@ -228,7 +229,7 @@ class Money{
 
     public function currencyConversion($amount,$sourceCurrency='USD',$date=FALSE,$timezone='Europe/Berlin'){
         $sourceCurrency=strtoupper($sourceCurrency);
-        $result=array('Error'=>'No data',$sourceCurrency=>$amount);
+        $result=array('Error'=>'',$sourceCurrency=>$amount);
         if (empty($date)){$date=date('Y-m-d');}
         // get EUR amount
         if ($sourceCurrency=='EUR'){
@@ -237,20 +238,94 @@ class Money{
             $rates=$this->getRates($date,$timezone);
             $result['Date']=$rates['Date'];
             $result['Date match']=$rates['Date match'];
+            $result['Error']=$rates['Error'];
             foreach($rates['Rates'] as $currency=>$rate){
                 $currency=strtoupper($currency);
                 if ($currency==$sourceCurrency){
                     $result['EUR']=$amount/$rate;
-                    $result['Error']=$rates['Error'];
                     break;
                 }
             }
         }
         // get amount in target currency
-        foreach($rates['Rates'] as $currency=>$rate){
-            $currency=strtoupper($currency);
-            $result[$currency]=$result['EUR']*$rate;
+        if (!isset($result['EUR'])){
+            $result['Error']='Source currency unknown';
+        } else {
+            foreach($rates['Rates'] as $currency=>$rate){
+                $currency=strtoupper($currency);
+                if ($rate==0){continue;}
+                $result[$currency]=$result['EUR']*$rate;
+            }
         }
+        return $result;
+    }
+    
+    public function str2money($string,$lang='de'){
+        $lang=strtolower($lang);
+        $result=array('Currency'=>'','Amount'=>0,'Lang'=>$lang);
+        foreach($this->currencies as $code=>$name){
+            if (isset($this->currencyAlias[$code])){
+                $aliasCodes=$this->currencyAlias[$code];
+            } else {
+                $aliasCodes=array($code);
+            }
+            foreach($aliasCodes as $aliasCode){
+                if (stripos($string,$aliasCode)===FALSE){continue;}
+                $result['Currency']=$code;
+                $result['Currency name']=$name;
+                break 2;
+            }
+        }
+        // get number from string
+        $result['Number string']=preg_replace('/[^0-9\.\,\-]/','',$string);
+        // validate language for number format
+        $dotChunk=mb_strrchr($result['Number string'],'.');
+        $dotCount=mb_strlen($result['Number string'])-mb_strlen(str_replace('.','',$result['Number string']));
+        if ($dotCount>1){
+            // e.g. 1.234.456,78 -> 1234456,78
+            $result['Lang']='de';
+            $numberStr=str_replace('.','',$result['Number string']);
+        } else {
+            $numberStr=$result['Number string'];
+        }
+        $commaChunk=mb_strrchr($result['Number string'],',');
+        $commaCount=mb_strlen($result['Number string'])-mb_strlen(str_replace(',','',$result['Number string']));
+        if ($commaCount>1){
+            // e.g. 1,234,456.78 -> 1234456,78
+            $result['Lang']='en';
+            $numberStr=str_replace(',','',$result['Number string']);
+        } else {
+            $numberStr=$result['Number string'];
+        }
+        if ($dotCount===1 && $commaCount===1){
+            if (mb_strlen($commaChunk)>mb_strlen($dotChunk)){
+                // e.g. 1,234.56
+                $result['Lang']='en';
+            } else {
+                // e.g. 1.234,56
+                $result['Lang']='de';
+            }
+        } else if ($dotCount===1 && mb_strlen($numberStr)>7){
+            // e.g. 1234.567
+            $result['Lang']='en';
+        } else if ($commaCount===1 && mb_strlen($numberStr)>7){
+            // e.g. 1234,567
+            $result['Lang']='de';
+        }
+        // convert to float based on number format
+        if ($result['Lang']==='en'){
+            $numberStr=str_replace(',','',$numberStr);
+            $result['Amount']=floatval($numberStr);
+        } else {
+            $numberStr=str_replace('.','',$numberStr);
+            $numberStr=str_replace(',','.',$numberStr);
+            $result['Amount']=floatval($numberStr);
+        }
+        // enrich result
+        $result['Amount (US)']=$result['Currency'].' '.number_format($result['Amount'],2);
+        $result['Amount (DE)']=number_format($result['Amount'],2,',','').' '.$result['Currency'];
+        $result['Amount (DE full)']=number_format($result['Amount'],2,',','.').' '.$result['Currency'];
+        $result['Amount (FR)']=number_format($result['Amount'],2,'.',' ').' '.$result['Currency'];
         return $result;
     }
 

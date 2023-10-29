@@ -176,7 +176,7 @@ trait Conversions{
     }
 
     public function str2money($string,$currency=FALSE){
-        $return=array('Currency'=>'');
+        $return=array('Currency'=>'EUR');
         if (is_int($string) || is_float($string)){
             $value=$string;
         } else {
