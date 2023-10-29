@@ -444,7 +444,11 @@ class Filespace{
         $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         $entry['Params']['File']['Size']=filesize($entry['Params']['File']['Source']);
         $entry['Params']['File']['Name']=$entry['pathArr']['basename'];
-        $entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
+        if (isset($entry['pathArr']['extension'])){
+            $entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
+        } else {
+            $entry['Params']['File']['Extension']='';
+        }
         $entry['Params']['File']['Date (created)']=filectime($entry['Params']['File']['Source']);
         if (empty($entry['Name'])){
             $entry['Name']=$entry['pathArr']['basename'];
