@@ -136,8 +136,8 @@ class User{
         $entry['Source']=$this->entryTable;
         if (!isset($entry['Content']['Address'])){$entry['Content']['Address']=array();}
         $entry['Content']['Contact details']['Email']=(empty($entry['Email']))?'':$entry['Email'];
-        if (!empty($entry['Params']['User registration']['Email']) && empty($entry['Content']['Contact details']['Email'])){
-            $entry['Content']['Contact details']['Email']=$entry['Params']['User registration']['Email'];
+        if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
+            $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
         $entry['Group']=$this->pageSettings['pageTitle'];

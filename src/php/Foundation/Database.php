@@ -623,7 +623,7 @@ class Database{
 
     public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateButCreateIfMissing=FALSE,$addLog=FALSE,$attachment=''){
         // only the Admin has the right to update the data in the Privileges column
-        if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){unset($entry['Privileges']);}
+        if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys
         if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
         $selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);

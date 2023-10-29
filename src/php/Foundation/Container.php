@@ -534,7 +534,8 @@ class Container{
         $selectArr['excontainer']=TRUE;
         $selectArr['tag']='input';
         $selectArr['type']='text';
-        $selectArr['value']=(isset($arr['selector']['Content']['Subject']))?$arr['selector']['Content']['Subject']:$arr['selector']['Name'];
+        //$selectArr['value']=(isset($arr['selector']['Content']['Subject']))?$arr['selector']['Content']['Subject']:((isset($arr['selector']['Name']))?$arr['selector']['Name']:'...');
+        $selectArr['value']=$selectArr['value']??$arr['selector']['Content']['Subject']??$arr['selector']['Name']??'...';
         $selectArr['key']=array('selector','Content','Subject');
         $matrix['Subject']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($selectArr);
         $selectArr['excontainer']=FALSE;
