@@ -168,7 +168,7 @@ class User{
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
             $admin['Content']['Contact details']['First name']='Admin';
             $admin['Content']['Contact details']['Family name']='Admin';
-            $admin=$this->unifyEntry($admin);
+            $admin=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($admin);
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($admin,TRUE);
             if ($success){
                 // Save init admin details
