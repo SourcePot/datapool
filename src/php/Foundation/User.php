@@ -169,7 +169,7 @@ class User{
             $admin['Content']['Contact details']['First name']='Admin';
             $admin['Content']['Contact details']['Family name']='Admin';
             $admin=$this->unifyEntry($admin);
-            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin);
+            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($admin,TRUE);
             if ($success){
                 // Save init admin details
                 $adminFile=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
