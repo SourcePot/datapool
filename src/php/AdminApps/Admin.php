@@ -146,7 +146,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $matrix[$file]['traceAsString']=implode('<br/>',$matrix[$file]['traceAsString']);
             }
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE,'class'=>'max-content'));
         return $arr;
     }
     

@@ -96,7 +96,7 @@ class Job{
             break;
         }
         if (!empty($jobEntry)){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$jobEntry['Content'],'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Overview jobs'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$jobEntry['Content'],'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Overview jobs','class'=>'max-content'));
         }
         return $arr;
     }

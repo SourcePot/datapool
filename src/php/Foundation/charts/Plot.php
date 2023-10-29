@@ -83,7 +83,7 @@ class Plot{
                 $matrix['Selected'][$traceId].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($spanArr);
             }
         }
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Legend','keep-element-content'=>TRUE,'hideHeader'=>TRUE,'hideKeys'=>FALSE));
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Legend','keep-element-content'=>TRUE,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'class'=>'max-content'));
         $html.=$this->embedJs();
         return $html;
     }
