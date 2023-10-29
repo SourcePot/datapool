@@ -9,6 +9,7 @@
 	"require":{
 		"php":">=8.0",
 		"smalot/pdfparser":">=v2.7.0",
+        "guzzlehttp/guzzle":"^7.0",
 		"spatie/pdf-to-text":">=1.52.0",
 		"sourcepot/ops":">=v0.2.7",
 		"sourcepot/mediaplayer":"*",

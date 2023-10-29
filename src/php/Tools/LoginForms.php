@@ -118,6 +118,7 @@ class LoginForms{
             $matrix['Btns']=array('Value'=>$updateBtn);
         } else {
             $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
+            $email['id']=md5($this->pageSettings['pageTitle'].'|email');
             $matrix['Email']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
             $matrix['Passphrase']=array('Value'=>$passphrase);
             $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($loginBtn);
@@ -133,6 +134,7 @@ class LoginForms{
     private function getStandard($arr=array()){
         $passphraseLabel=array('tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw');
         $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'8','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
+        $passphrase['id']=md5($this->pageSettings['pageTitle'].'|passphrase');
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
         return $html;
