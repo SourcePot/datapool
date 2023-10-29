@@ -14,8 +14,9 @@ class Money{
     
     private $oc;
     
-    private $epoExchangeRatesUrl='https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html';
-    private $epoExchangeRates90url='';
+    private $ecbExchangeRatesUrl='https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html';
+    private $ecbExchangeRates90url='';
+    private $ecbExchangeRatesHistUrl='https://data.ecb.europa.eu/data/data-categories/ecbeurosystem-policy-and-exchange-rates/exchange-rates/reference-rates?searchTerm=&filterSequence=frequency&sort=relevance&filterType=basic&showDatasetModal=false&filtersReset=false&resetAll=false&frequency%5B%5D=D';
     
     private $entryTable;
     private $entryTemplate=array();
@@ -31,8 +32,10 @@ class Money{
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->tableRatesSelector=array('Source'=>$this->entryTable,'Group'=>'ECB','Folder'=>'Rates','Owner'=>'SYSTEM');
-    
         $this->getOldRatesIfRequired();
+        
+        var_dump($this->currencyConversion(1000,'JPY','2023-09-30 12:00:00','Europe/Berlin'));
+        
     }
     
     public function getEntryTable(){return $this->entryTable;}
@@ -41,15 +44,15 @@ class Money{
     
     public function job($vars){
         $client = new \GuzzleHttp\Client();
-        $request = new \GuzzleHttp\Psr7\Request('GET',$this->epoExchangeRatesUrl);
+        $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRatesUrl);
         // Send an asynchronous request.
         $promise = $client->sendAsync($request)->then(function($response){
             $body=((string)$response->getBody());
-            $links=$this->body2links($this->epoExchangeRatesUrl,$body,'90d.xml');
+            $links=$this->body2links($this->ecbExchangeRatesUrl,$body,'90d.xml');
             if ($links){
-                $this->epoExchangeRates90url=current($links);
+                $this->ecbExchangeRates90url=current($links);
                 $client = new \GuzzleHttp\Client();
-                $request = new \GuzzleHttp\Psr7\Request('GET',$this->epoExchangeRates90url);
+                $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRates90url);
                 $promise = $client->sendAsync($request)->then(function($response){
                                 $body=((string)$response->getBody());
                                 $rates=$this->body2rates($body);
@@ -104,7 +107,7 @@ class Money{
         $entry=$this->tableRatesSelector;
         foreach($rates as $date=>$rateArr){
             $entry['Date']=$date.' 16:00:00';
-            $entry['Name']=$date;
+            $entry['Name']=$date.' CET';
             $entry['Read']='ALL_MEMBER_R';
             $entry['Content']=$rateArr;
             $entry['EntryId']=$entry['Name'].' ECBrates';
@@ -116,7 +119,7 @@ class Money{
     
     private function getOldRatesIfRequired(){
         $selector=$this->tableRatesSelector;
-        $selector['Name']='1999-01-21';
+        $selector['Name']='1999-01-21 CET';
         $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE);
         if (empty($rowCount)){
             $dir=$GLOBALS['dirs']['setup'];
@@ -160,7 +163,7 @@ class Money{
             if ($rowIndex!==0){
                 $entry=$this->tableRatesSelector;
                 $entry['Date']=$result['Date'].' 16:00:00';
-                $entry['Name']=$result['Date'];
+                $entry['Name']=$result['Date'].' CET';
                 $entry['Read']='ALL_MEMBER_R';
                 unset($result['Date']);
                 $entry['Content']=$result;
@@ -176,9 +179,79 @@ class Money{
         $entry['Read']='ALL_MEMBER_R';
         $entry['Folder']='Currencies';
         $entry['Content']=$currencies;
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name'));
+        $entry['EntryId']=$entry['Folder'];
         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
         return $rowIndex;
+    }
+    
+    public function getCurrencies(){
+        $currencies=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$this->entryTable,'EntryId'=>'Currencies'),TRUE);
+        if (isset($currencies['Content'])){
+            return $currencies['Content'];
+        } else {
+            return FALSE;
+        }
+    }
+    
+    public function getRates($date,$timezone='Europe/Berlin'){
+        $cetTimezoneObj=new \DateTimeZone('CET');
+        $timezoneObj=new \DateTimeZone($timezone);
+        $datetimeObj=new \DateTime($date,$timezoneObj);
+        $timestamp=$datetimeObj->getTimestamp();
+        $datetimeObj->setTimezone($cetTimezoneObj);
+        $dateTimeString=$datetimeObj->format('Y-m-d');
+        // range start date
+        $startTimestamp=$timestamp-259200;
+        $startDatetimeObj=new \DateTime('@'.$startTimestamp);
+        $startDatetimeObj->setTimezone($cetTimezoneObj);
+        // range end date
+        $endTimestamp=$timestamp+259200;
+        $endDatetimeObj=new \DateTime('@'.$endTimestamp);
+        $endDatetimeObj->setTimezone($cetTimezoneObj);
+        // create selector
+        $selector=$this->tableRatesSelector;
+        $selector['Date>=']=$startDatetimeObj->format('Y-m-d H:i:s');
+        $selector['Date<=']=$endDatetimeObj->format('Y-m-d H:i:s');
+        $ratesMatch=array('Date'=>$dateTimeString,'Rates'=>array(),'Date match'=>FALSE,'Error'=>'No data');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date',TRUE) as $entry){
+            $date=substr($entry['Date'],0,10);
+            if ($date>=$dateTimeString){
+                $ratesMatch=array('Date'=>$date,'Date match'=>($date==$dateTimeString),'Rates'=>$entry['Content'],'Error'=>'');
+                break;
+            }
+        }
+        foreach($ratesMatch['Rates'] as $currency=>$rate){
+            $ratesMatch['Rates'][$currency]=floatval($rate);
+        }
+        return $ratesMatch;
+    }
+
+    public function currencyConversion($amount,$sourceCurrency='USD',$date=FALSE,$timezone='Europe/Berlin'){
+        $sourceCurrency=strtoupper($sourceCurrency);
+        $result=array('Error'=>'No data',$sourceCurrency=>$amount);
+        if (empty($date)){$date=date('Y-m-d');}
+        // get EUR amount
+        if ($sourceCurrency=='EUR'){
+            $result['EUR']=$amount;
+        } else {
+            $rates=$this->getRates($date,$timezone);
+            $result['Date']=$rates['Date'];
+            $result['Date match']=$rates['Date match'];
+            foreach($rates['Rates'] as $currency=>$rate){
+                $currency=strtoupper($currency);
+                if ($currency==$sourceCurrency){
+                    $result['EUR']=$amount/$rate;
+                    $result['Error']=$rates['Error'];
+                    break;
+                }
+            }
+        }
+        // get amount in target currency
+        foreach($rates['Rates'] as $currency=>$rate){
+            $currency=strtoupper($currency);
+            $result[$currency]=$result['EUR']*$rate;
+        }
+        return $result;
     }
 
 }

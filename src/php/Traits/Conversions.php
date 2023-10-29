@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\Traits;
 
 trait Conversions{
 
-    private $currencies=array('US$','€','AFN','EUR','ALL','DZD','USD','AOA','XCD','ARS','AMD','AWG','AUD','AZN','BSD','BHD','BDT','BBD','BYN','BZD','XOF','BMD','BTN',
+    private $currencies=array('USD','USD'=>'US$','EUR','EUR'=>'€','AFN','EUR','ALL','DZD','USD','AOA','XCD','ARS','AMD','AWG','AUD','AZN','BSD','BHD','BDT','BBD','BYN','BZD','XOF','BMD','BTN',
                               'INR','BOB','BOV','BAM','BWP','NOK','BRL','BND','BGN','BIF','CVE','KHR','XAF','CAD','KYD','CLF','CLP','CNY','COP','COU','KMF','CDF',
                               'NZD','CRC','HRK','CUC','CUP','ANG','CZK','DKK','DJF','DOP','EGP','SVC','ERN','ETB','FKP','FJD','XPF','GMD','GEL','GHS','GIP','GTQ',
                               'GBP','GNF','GYD','HTG','HNL','HKD','HUF','ISK','IDR','XDR','IRR','IQD','ILS','JMD','JPY','JOD','KZT','KES','KPW','KRW','KWD','KGS',
@@ -176,28 +176,25 @@ trait Conversions{
     }
 
     public function str2money($string,$currency=FALSE){
+        $return=array('Currency'=>'');
         if (is_int($string) || is_float($string)){
             $value=$string;
         } else {
             $string=$this->convert2stringNoWhitespaces($string);
             $value=$this->str2float($string,TRUE);
-            foreach($this->currencies as $needle){
+            foreach($this->currencies as $targetLabel=>$needle){
                 if (strpos($string,$needle)===FALSE){continue;}
-                $currency=$needle;
+                if (strlen($targetLabel)>2){$needle=$targetLabel;}
+                $return['Currency']=$needle;
                 break;
             }
         }
-        $return=array();
         if ($value!==FALSE){
             $return['Amount']=$value;
             $return['Amount (US)']=number_format($value,2);    
             $return['Amount (DE)']=number_format($value,2,',','');    
             $return['Amount (DE full)']=number_format($value,2,',','.');    
             $return['Amount (FR)']=number_format($value,2,'.',' ');    
-        }
-        if ($currency!==FALSE){
-            $return['Currency']=$currency;
-            $return['Unit']=$currency;
         }
         return $return;
     }
