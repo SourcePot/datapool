@@ -20,9 +20,12 @@ This software is designed to run on a server, i.e. the user interface is the web
 2. Create the database and a database user, e.g. a user and database named "webpage".
 3. Set the database collation to **utf8_unicode_ci**.
 4. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. Check the error log which can be found in the **../debugging/**-subdirectory.  Each error generates a JSON-file containing the error details. Calling the webpage also creates the file **../setup/Database/connect.json** which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
-5. Refresh the webpage. This will create an initial admin user account. The user credentials of this account can be found in **../setup/User/initAdminAccount.json**.  With the credentials from this file you should be able the login for the first time.
+5. Refresh the webpage. This will create an initial admin user account. The user credentials of this account can be found in **../setup/User/initAdminAccount.json**.  With the credentials from this file you should be able the login for the first time as admin.
+6. Make sure that only the **../www/**-subdirectory is visible to the public.
 
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ## Initial adjustments
-The file **../setup/Backbone/init.json** contains some important web page settings, e.g. the webmaster email address (the key is ***emailWebmaster***). You should update this email address as soon as this file is created. The webmaster email address will be used to create the initial admin account. You can trigger the creation of a new admin account by deleting all admin entries from the user database table.
+As shown in the video above, you should register your own future admin-account first. Use the init admin account to elevate your newly registered account to admin level. After this delete the init admin account.
+The file **../setup/Backbone/init.json** contains some important web page settings, e.g. the webmaster email address (the key is ***emailWebmaster***). You should update this email address asap.
+You can trigger the creation of a new admin account by deleting all admin entries from the user database table.
