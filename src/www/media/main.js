@@ -10,14 +10,15 @@ jQuery(document).ready(function(){
 	}
 	
 	jQuery('div.second-menu').css({'height':0,'overflow':'hidden'});
-	jQuery('a.first-menu').on('click',function(e){
+	jQuery('a.first-menu').on('click',function(element){
+        element.preventDefault();
 		if (jQuery('div.second-menu').css('height').length>3){
 			collapseMenu(true);
 		} else {
 			jQuery('div.second-menu').css({'height':'auto'});
 		}
 	});
-	jQuery('select.menu,ul.menu').on('click',function(e){
+	jQuery('select.menu,ul.menu').on('click',function(element){
 		collapseMenu(false);
 	});
 	function collapseMenu(animate){

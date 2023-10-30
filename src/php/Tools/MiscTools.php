@@ -537,5 +537,63 @@ class MiscTools{
         });
         return $result;
     }
+
+    /******************************************************************************************************************************************
+    * Number tools
+    */
+
+    public function str2int($string,$lang=''){
+        $value=$this->str2float($string,$lang);
+        return round($value);
+    }
+    
+    public function str2float($string,$lang=''){
+        $lang=strtolower($lang);
+        // get number from string
+        $string=preg_replace('/[^0-9\.\,\-]/','',$string);
+        // validate language for number format
+        $dotChunk=mb_strrchr($string,'.');
+        $dotCount=mb_strlen($string)-mb_strlen(str_replace('.','',$string));
+        if ($dotCount>1){
+            // e.g. 1.234.456,78 -> 1234456,78
+            $lang='de';
+            $numberStr=str_replace('.','',$string);
+        } else {
+            $numberStr=$string;
+        }
+        $commaChunk=mb_strrchr($string,',');
+        $commaCount=mb_strlen($string)-mb_strlen(str_replace(',','',$string));
+        if ($commaCount>1){
+            // e.g. 1,234,456.78 -> 1234456,78
+            $lang='en';
+            $numberStr=str_replace(',','',$string);
+        } else {
+            $numberStr=$string;
+        }
+        if ($dotCount===1 && $commaCount===1){
+            if (mb_strlen($commaChunk)>mb_strlen($dotChunk)){
+                // e.g. 1,234.56
+                $lang='en';
+            } else {
+                // e.g. 1.234,56
+                $lang='de';
+            }
+        } else if ($dotCount===1){
+            // e.g. 1234.567
+            if (mb_strlen($numberStr)>7 || empty($lang)){$lang='en';}
+        } else if ($commaCount===1 && mb_strlen($numberStr)>7){
+            // e.g. 1234,567
+            if (mb_strlen($numberStr)>7 || empty($lang)){$lang='de';}
+        }
+        // convert to float based on number format
+        if ($lang==='en'){
+            $numberStr=str_replace(',','',$numberStr);
+            return floatval($numberStr);
+        } else {
+            $numberStr=str_replace('.','',$numberStr);
+            $numberStr=str_replace(',','.',$numberStr);
+            return floatval($numberStr);
+        }
+    }
 }
 ?>

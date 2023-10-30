@@ -522,7 +522,8 @@ class Filespace{
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
-            $pdfFileContent=$this->pdfToText($file);
+            $pdfFileContent=FALSE;
+            //$pdfFileContent=$this->pdfToText($file);
             if ($pdfFileContent===FALSE){
                 $pdfFileContent=$this->parsePdfFile($file);
             }

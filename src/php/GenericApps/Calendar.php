@@ -85,6 +85,16 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                         'Content|[]|Settings|[]|Recurrence id'=>'Content|[]|Event|[]|Recurrence id'
                                         );
 
+    private $months=array('january'=>'01','february'=>'02','march'=>'03','april'=>'04','may'=>'05','june'=>'06','july'=>'07','august'=>'08','september'=>'09','october'=>'10','november'=>'11','december'=>'12',
+                          'januar'=>'01','februar'=>'02','märz'=>'03','april'=>'04','mai'=>'05','juni'=>'06','juli'=>'07','august'=>'08','september'=>'09','oktober'=>'10','november'=>'11','dezember'=>'12',
+                          'jan'=>'01','feb'=>'02','mar'=>'03','apr'=>'04','may'=>'05','jun'=>'06','jul'=>'07','aug'=>'08','sep'=>'09','oct'=>'10','nov'=>'11','dec'=>'12',
+                          );
+
+    private $revMonths=array('US'=>array('01'=>'January','02'=>'February','03'=>'March','04'=>'April','05'=>'May','06'=>'June','07'=>'July','08'=>'August','09'=>'September','10'=>'October','11'=>'November','12'=>'December'),
+                             'UK'=>array('01'=>'January','02'=>'February','03'=>'March','04'=>'April','05'=>'May','06'=>'June','07'=>'July','08'=>'August','09'=>'September','10'=>'October','11'=>'November','12'=>'December'),
+                             'DE'=>array('01'=>'Januar','02'=>'Februar','03'=>'März','04'=>'April','05'=>'Mai','06'=>'Juni','07'=>'Juli','08'=>'August','09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Dezember'),
+                             );
+    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -678,6 +688,86 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loopEntry);
         }
         return $entry;
+    }
+    
+    public function str2date($string){
+        $string=trim(mb_strtolower($string));
+        foreach($this->months as $needle=>$month){
+            $string=str_replace($needle,'|'.$month.'|',$string);
+        }
+        $strComps=preg_split("/[^|a-z0-9]+/",$string);
+        $strCompsCopy=$strComps;
+        $dateArr=array('day'=>'','month'=>'','year'=>'');
+        $dateArrCopy=$dateArr;
+        foreach($strComps as $index=>$strComp){
+            if ($strComp[0]=='|'){
+                $dateArr['month']=trim($strComp,'|');
+                unset($strCompsCopy[$index]);
+                unset($dateArrCopy['month']);
+                continue;
+            }
+            if (intval($strComp)>31){
+                $dateArr['year']=$strComp;
+                unset($strCompsCopy[$index]);
+                unset($dateArrCopy['year']);
+                continue;
+            } else if (intval($strComp)>12){
+                $dateArr['day']=$strComp;
+                unset($strCompsCopy[$index]);
+                unset($dateArrCopy['day']);
+                continue;
+            }
+        }
+        if (count($dateArrCopy)===1){
+            // completed date based on value ranges
+            $dateArr[key($dateArrCopy)]=current($strCompsCopy);
+        } else {
+            // additional information to be used
+            $dotCount=mb_strlen($string)-mb_strlen(str_replace('.','',$string));
+            $hyphenCount=mb_strlen($string)-mb_strlen(str_replace('-','',$string));
+            if ($dotCount===2){
+                if (empty($dateArr['day'])){$dateArr['day']=$strComps[0];}
+                if (empty($dateArr['month'])){$dateArr['month']=$strComps[1];}
+                if (empty($dateArr['year'])){$dateArr['year']=$strComps[2];}
+            } else if ($hyphenCount===2){
+                if (empty($dateArr['day'])){$dateArr['day']=$strComps[2];}
+                if (empty($dateArr['month'])){$dateArr['month']=$strComps[1];}
+                if (empty($dateArr['year'])){$dateArr['year']=$strComps[0];}
+            } else {
+                if (empty($dateArr['day'])){$dateArr['day']=$strComps[1];}
+                if (empty($dateArr['month'])){$dateArr['month']=$strComps[0];}
+                if (empty($dateArr['year'])){$dateArr['year']=$strComps[2];}
+            }
+        }
+        // format date comps
+        $year=intval($dateArr['year']);
+        if ($year<10){
+            $dateArr['year']='200'.$year;
+        } else if ($year<60){
+            $dateArr['year']='20'.$year;
+        } else if ($year<100){
+            $dateArr['year']='19'.$year;
+        } else if ($year<1000){
+            $dateArr['year']='0'.$year;
+        }
+        if (strlen($dateArr['month'])<2){$dateArr['month']='0'.$dateArr['month'];}
+        if (strlen($dateArr['day'])<2){$dateArr['day']='0'.$dateArr['day'];}
+        // compile result
+        $dates=array('String'=>$string,'System'=>$dateArr['year'].'-'.$dateArr['month'].'-'.$dateArr['day'].' 12:00:00');
+        $timezoneObj=new \DateTimeZone(DB_TIMEZONE);
+        $datetimeObj=new \DateTime($dates['System'],$timezoneObj);
+        $dates['Timezone']=DB_TIMEZONE;
+        $dates['Timestamp']=$datetimeObj->getTimestamp();
+        $dates['US']=$datetimeObj->format('m/d/Y');
+        $dates['UK']=$datetimeObj->format('d/m/Y');
+        $dates['DE']=$datetimeObj->format('d.m.Y');
+        $dates['day']=intval($dateArr['day']);
+        $dates['month']=intval($dateArr['month']);
+        $dates['year']=intval($dateArr['year']);
+        $dates['US long']=$this->revMonths['US'][$dateArr['month']].' '.intval($dateArr['day']).', '.$dateArr['year'];
+        $dates['UK long']=intval($dateArr['day']).' '.$this->revMonths['UK'][$dateArr['month']].' '.$dateArr['year'];
+        $dates['DE long']=intval($dateArr['day']).'. '.$this->revMonths['DE'][$dateArr['month']].' '.$dateArr['year'];
+        return $dates;
     }
 
 }

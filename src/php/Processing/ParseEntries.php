@@ -91,7 +91,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function getParseEntriesInfo($callingElement){
         $matrix=array();
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info','class'=>'max-content'));
         return $html;
     }
 
@@ -116,7 +116,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix['Commands']['Run']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Parsing widget'));
         foreach($result as $caption=>$matrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption,'class'=>''));
         }
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
@@ -402,10 +402,23 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType){
+        // value datatype conversions
         $dataTypeMethod='convert2'.$dataType;
+        $newValue=match($dataType){
+                        'string' => array($key=>$this->$dataTypeMethod($value)),
+                        'stringNoWhitespaces' => array($key=>$this->$dataTypeMethod($value)),
+                        'splitString' => array($key=>$this->$dataTypeMethod($value)),
+                        'int' => array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2int($value)),
+                        'float' => array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($value)),
+                        'bool' => array($key=>!empty($value)),
+                        'money' => array($key=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value)),
+                        'date' => array($key=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value)),
+                        'codepfad' => array($key=>$this->$dataTypeMethod($value)),
+                        'unycom' => array($key=>$this->$dataTypeMethod($value)),
+                    };
+        // add new value to entry
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
-        $newValue=array($key=>$this->$dataTypeMethod($value));
         if (is_array($entry[$baseKey])){
             $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);
         } else {

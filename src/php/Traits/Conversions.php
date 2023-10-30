@@ -35,11 +35,11 @@ trait Conversions{
     }
     
     public function convert2string($value){
-        return $value;
+        return strval($value);
     }
 
     public function convert2stringNoWhitespaces($value){
-        $value=preg_replace("/\s/",'',$value);
+        $value=preg_replace("/\s/",'',strval($value));
         return $value;
     }
 
@@ -58,16 +58,6 @@ trait Conversions{
     public function convert2int($value){
         $value=$this->str2float($value);
         return round($value);
-    }
-
-    public function convert2money($value){
-        $arr=$this->str2money($value);
-        return $arr;
-    }
-
-    public function convert2date($value){
-        $arr=$this->str2date($value);
-        return $arr;
     }
     
     public function convert2codepfad($value){
@@ -173,104 +163,6 @@ trait Conversions{
         if (empty($string) && $falseOnFailure){return FALSE;}
         $float=floatval($string);
         return $float;
-    }
-
-    public function str2money($string,$currency=FALSE){
-        $return=array('Currency'=>'EUR');
-        if (is_int($string) || is_float($string)){
-            $value=$string;
-        } else {
-            $string=$this->convert2stringNoWhitespaces($string);
-            $value=$this->str2float($string,TRUE);
-            foreach($this->currencies as $targetLabel=>$needle){
-                if (strpos($string,$needle)===FALSE){continue;}
-                if (strlen($targetLabel)>2){$needle=$targetLabel;}
-                $return['Currency']=$needle;
-                break;
-            }
-        }
-        if ($value!==FALSE){
-            $return['Amount']=$value;
-            $return['Amount (US)']=number_format($value,2);    
-            $return['Amount (DE)']=number_format($value,2,',','');    
-            $return['Amount (DE full)']=number_format($value,2,',','.');    
-            $return['Amount (FR)']=number_format($value,2,'.',' ');    
-        }
-        return $return;
-    }
-    
-    public function str2date($string){
-        $date=array('year'=>'','month'=>'','day'=>'');
-        $string=strtolower(trim($string));
-        $string=preg_replace('/\s+/',' ',$string);
-        $string=preg_replace('/([0-9])(\s+)([0-9])/','$1$3',$string);
-        $string=preg_replace('/([a-zA-Zöüä])(\s+)([a-zA-Zöüä])/','$1$3',$string);
-        // check if month name is provided
-        $needleFound='';
-        foreach($this->months as $country=>$months){
-            if (!empty($date['month'])){break;}
-            foreach($months as $monthStr=>$needle){
-                $monthStr=strval($monthStr);
-                if (mb_stripos($string,$needle)===FALSE){continue;}
-                $needleFound=strtolower($needle);
-                $date['month']=$monthStr;
-            }
-        }
-        if (empty($date['month'])){
-            $chunks=preg_split('/[^0-9]+/',$string);
-            $date['year']=array_pop($chunks);
-            foreach($chunks as $index=>$value){
-                if (intval($value)>12){
-                    $date['day']=$value;
-                    unset($chunks[$index]);
-                    reset($chunks);
-                    $date['month']=current($chunks);
-                    break;
-                }
-            }
-            if (empty($date['day'])){
-                $date['day']=array_shift($chunks);
-                $date['month']=array_shift($chunks);
-            }
-        } else {
-            $string=preg_replace('/[^0-9]/',' ',$string);
-            $string=trim($string);
-            $chunks=preg_split('/\s+/',$string);
-            $date['day']=array_shift($chunks);
-            $date['year']=array_shift($chunks);
-        }
-        if (empty($date['day']) || empty($date['month'])){return FALSE;}
-        if (strlen($date['day'])<2){$date['day']='0'.$date['day'];}
-        if (strlen($date['month'])<2){$date['month']='0'.$date['month'];}
-        if ($date['year']<70){
-            $date['year']='20'.$date['year'];
-        } else if ($date['year']>=70 && $date['year']<100){
-            $date['year']='19'.$date['year'];
-        } else if ($date['year']<1000){
-            $date['year']='0'.$date['year'];
-        }
-        $dates=$this->date2dates(implode('-',$date));
-        return $dates;
-    }
-    
-    private function date2dates($date){
-        $dateComps=explode('-',$date);
-        foreach($dateComps as $key=>$value){
-            if (strlen($value)<2){$dateComps[$key]='0'.$value;}
-        }
-        $systemDate=implode('-',$dateComps);
-        $dates=array('System'=>$systemDate,'Timestamp'=>'','US'=>'','UK'=>'','DE'=>'');
-        $dates['Timestamp']=strtotime($systemDate.' 12:00:00');
-        $dates['US']=date('m/d/Y',$dates['Timestamp']);
-        $dates['UK']=date('d/m/Y',$dates['Timestamp']);
-        $dates['DE']=date('d.m.Y',$dates['Timestamp']);
-        $dates['day']=intval($dateComps[2]);
-        $dates['month']=intval($dateComps[1]);
-        $dates['year']=intval($dateComps[0]);
-        $dates['US long']=$this->months['US'][$dateComps[1]].' '.$dates['day'].', '.$dateComps[0];
-        $dates['UK long']=$dates['day'].' '.$this->months['US'][$dateComps[1]].' '.$dateComps[0];
-        $dates['DE long']=$dates['day'].'. '.$this->months['DE'][$dateComps[1]].' '.$dateComps[0];
-        return $dates;
     }
 
 }

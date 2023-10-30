@@ -118,7 +118,7 @@ class HTMLbuilder{
                     $indexArr['x']++;
                     $thArr=array('tag'=>'th','element-content'=>ucfirst(strval($colLabel)),'keep-element-content'=>!empty($arr['keep-element-content']));
                     $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
-                    if (!empty($arr['class'])){
+                    if (isset($arr['class'])){
                         $trHeaderArr['class']=$arr['class'];
                         $trArr['class']=$arr['class'];
                         $thArr['class']=$arr['class'];

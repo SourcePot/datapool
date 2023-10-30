@@ -28,7 +28,7 @@ class Money{
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=strtolower(trim($table,'\\'));        
     }
     
     public function init($oc){
@@ -141,7 +141,7 @@ class Money{
     private function ratesCsv2table($csvFile){
         $csv=new \SplFileObject($csvFile);
         $csv->setCsvControl(',','"','\\');
-        $currencies=array();
+        $currencies=array('EUR'=>'Euro');
         $keys=array();
         $rowIndex=0;
         while($csv->valid()){
@@ -188,6 +188,7 @@ class Money{
     public function getCurrencies(){
         $currencies=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$this->entryTable,'EntryId'=>'Currencies'),TRUE);
         if (isset($currencies['Content'])){
+            $currencies['Content']['EUR']='Euro';
             return $currencies['Content'];
         } else {
             return array();
@@ -260,9 +261,8 @@ class Money{
         return $result;
     }
     
-    public function str2money($string,$lang='de'){
-        $lang=strtolower($lang);
-        $result=array('Currency'=>'','Amount'=>0,'Lang'=>$lang);
+    public function str2money($string,$lang=''){
+        $result=array('Currency'=>'','Amount'=>0);
         foreach($this->currencies as $code=>$name){
             if (isset($this->currencyAlias[$code])){
                 $aliasCodes=$this->currencyAlias[$code];
@@ -276,51 +276,8 @@ class Money{
                 break 2;
             }
         }
-        // get number from string
-        $result['Number string']=preg_replace('/[^0-9\.\,\-]/','',$string);
-        // validate language for number format
-        $dotChunk=mb_strrchr($result['Number string'],'.');
-        $dotCount=mb_strlen($result['Number string'])-mb_strlen(str_replace('.','',$result['Number string']));
-        if ($dotCount>1){
-            // e.g. 1.234.456,78 -> 1234456,78
-            $result['Lang']='de';
-            $numberStr=str_replace('.','',$result['Number string']);
-        } else {
-            $numberStr=$result['Number string'];
-        }
-        $commaChunk=mb_strrchr($result['Number string'],',');
-        $commaCount=mb_strlen($result['Number string'])-mb_strlen(str_replace(',','',$result['Number string']));
-        if ($commaCount>1){
-            // e.g. 1,234,456.78 -> 1234456,78
-            $result['Lang']='en';
-            $numberStr=str_replace(',','',$result['Number string']);
-        } else {
-            $numberStr=$result['Number string'];
-        }
-        if ($dotCount===1 && $commaCount===1){
-            if (mb_strlen($commaChunk)>mb_strlen($dotChunk)){
-                // e.g. 1,234.56
-                $result['Lang']='en';
-            } else {
-                // e.g. 1.234,56
-                $result['Lang']='de';
-            }
-        } else if ($dotCount===1 && mb_strlen($numberStr)>7){
-            // e.g. 1234.567
-            $result['Lang']='en';
-        } else if ($commaCount===1 && mb_strlen($numberStr)>7){
-            // e.g. 1234,567
-            $result['Lang']='de';
-        }
-        // convert to float based on number format
-        if ($result['Lang']==='en'){
-            $numberStr=str_replace(',','',$numberStr);
-            $result['Amount']=floatval($numberStr);
-        } else {
-            $numberStr=str_replace('.','',$numberStr);
-            $numberStr=str_replace(',','.',$numberStr);
-            $result['Amount']=floatval($numberStr);
-        }
+        $result['Amount']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($string,$lang);
+        $result['Amount de']=str_replace('.',',',strval($result['Amount']));
         // enrich result
         $result['Amount (US)']=$result['Currency'].' '.number_format($result['Amount'],2);
         $result['Amount (DE)']=number_format($result['Amount'],2,',','').' '.$result['Currency'];
