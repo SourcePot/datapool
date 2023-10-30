@@ -1,6 +1,6 @@
 # Motivation
 In some way this software package is a result of desperation. 
-Many big organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Even more challenging might be the task of moving data between the packages.
+Many big organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Moving data between the packages is even more challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department.  The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the more valuable tasks.
 
 ![Example application, import of invoices with including cost records](/assets/img/ExampleApplication.png "Invoice import")
