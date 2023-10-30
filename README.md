@@ -16,12 +16,13 @@ This software is designed to run on a server, i.e. the user interface is the web
 
 # Fist steps
 ## Installing the framework
-1. Run composer ``composer create-project sourcepot/datapool {add your target directory here}`` on your server. This will create among other things the **../www/**-subdirectory, which is the document root and should be accessible via the network, i.e. from a client web browser.
-2. Create the database and a database user, e.g. a user and database named "webpage".
-3. Set the database collation to **utf8_unicode_ci**.
-4. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. Check the error log which can be found in the **../debugging/**-subdirectory.  Each error generates a JSON-file containing the error details. Calling the webpage also creates the file **../setup/Database/connect.json** which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
-5. Refresh the webpage. This will create an initial admin user account. The user credentials of this account can be found in **../setup/User/initAdminAccount.json**.  With the credentials from this file you should be able the login for the first time as admin.
-6. Make sure that only the **../www/**-subdirectory is visible to the public.
+Refer to the video below which shows the installation as well as the creation of the admin user account.
+1. Choose your target directory on your web server or your computer and run composer ``composer create-project sourcepot/datapool {add your target directory here}``. This will create among other things the **../www/**-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
+2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
+3. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. (Check the error log which can be found in the **../debugging/**-subdirectory.  Each error generates a JSON-file containing the error details.) 
+4. Calling the webpage creates the file **../setup/Database/connect.json** which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
+5. Refresh the webpage. This will create an initial admin user account. The user credentials of this account can be found in **../setup/User/initAdminAccount.json**. Register your own account and use the initial admin user account to change your own account to admin access level. Delete the initial admin user account after you have set up your own admin account.
+6. Make sure only the **../www/**-subdirectory is visible to the public.
 
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
