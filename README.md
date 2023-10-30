@@ -3,7 +3,7 @@ In some way this software package is a result of desperation.
 Many organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Moving data between the packages is even more challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department.  The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
-![Example application, import of invoices with including cost records](/assets/img/ExampleApplication.png "Invoice import")
+![Example application, import of invoices with including cost records](/assets/img/ExampleApplication.png "Invoice import"){width: 60%;}
 
 The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case. This requires the following:
 1. Parsing: Content extraction from the invoice. SAP relevant data as well as patent case specific data.
@@ -16,7 +16,7 @@ This software is designed to run on a server, i.e. the user interface is the web
 
 # Fist steps
 ## Installing the framework
-Refer to the video below which shows the installation as well as the creation of the admin user account.
+For the installation and creation of the first user account please refer to the video below.
 1. Choose your target directory on your web server or your computer and run composer ``composer create-project sourcepot/datapool {add your target directory here}``. This will create among other things the **../www/**-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 3. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. (Check the error log which can be found in the **../debugging/**-subdirectory.  Each error generates a JSON-file containing the error details.) 
