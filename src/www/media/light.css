@@ -232,12 +232,6 @@ p.icon{
 	background-position:center;
     border:1px solid #aaa;
 }
-#img-index{
-	wiodth:100%;
-	text-align:center;
-	cursor:pointer;
-	font-size:1.5em;
-}
 #prev-img-btn,#next-img-btn{
 	position:absolute;
 	top:0;
@@ -259,7 +253,8 @@ p.icon{
 #next-img-btn{
 	right:0;
 }
-#overlay-title{
+#img-index,#overlay-title{
+    color:#aaa;
 	text-align:center;
 }
 
