@@ -3,7 +3,8 @@ In some way this software package is a result of desperation.
 Many organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Moving data between the packages is even more challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department.  The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
-![Example application, import of invoices with including cost records](/assets/img/ExampleApplication.png "Invoice import"){width: 60%;}
+![Example application](/assets/img/ExampleApplication.png "Invoice import")
+img[alt=Example application]{width: 60%;}
 
 The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case. This requires the following:
 1. Parsing: Content extraction from the invoice. SAP relevant data as well as patent case specific data.
@@ -27,6 +28,5 @@ For the installation and creation of the first user account please refer to the 
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ## Initial adjustments
-As shown in the video above, you should register your own future admin-account first. Use the init admin account to elevate your newly registered account to admin level. After this delete the init admin account.
 The file **../setup/Backbone/init.json** contains some important web page settings, e.g. the webmaster email address (the key is ***emailWebmaster***). You should update this email address asap.
 You can trigger the creation of a new admin account by deleting all admin entries from the user database table.
