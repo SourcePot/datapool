@@ -1,3 +1,4 @@
+# Datapool
 # Motivation
 In some way this software package is a result of desperation. 
 Many organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Moving data between the packages is even more challenging.
@@ -11,10 +12,10 @@ The figure shows a typical application example in a company software setup inclu
 3. Mapping: Adjusting data formats and types to create a UNYCOM compatible dataset.
 The Datapool framework can just achieve this.
 
-# Requirements
+## Requirements
 This software is designed to run on a server, i.e. the user interface is the web browser. It requires PHP and a database. Depending on the application requirements access to an email account might be required.
 
-# Fist steps
+## Fist steps
 ## Installing the framework
 For the installation and creation of the first user account please refer to the video below.
 1. Choose your target directory on your web server or your computer and run composer ``composer create-project sourcepot/datapool {add your target directory here}``. This will create among other things the **../www/**-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
