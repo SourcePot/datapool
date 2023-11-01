@@ -110,9 +110,15 @@ class HTMLbuilder{
             foreach($arr['matrix'] as $rowLabel=>$rowArr){
                 $indexArr['x']=0;
                 $indexArr['y']++;
+                if (isset($rowArr['setRowStyle'])){
+                    $rowStyle=$rowArr['setRowStyle'];
+                    unset($rowArr['setRowStyle']);
+                } else {
+                    $rowStyle=array();
+                }
                 if (!empty($arr['skipEmptyRows']) && empty($rowArr)){continue;}
                 if (empty($arr['hideKeys'])){$rowArr=array('key'=>$rowLabel)+$rowArr;}
-                $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
+                $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowStyle);
                 $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
                 foreach($rowArr as $colLabel=>$cell){
                     $indexArr['x']++;
@@ -589,6 +595,7 @@ class HTMLbuilder{
             $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE);
         }
         $matrix['New']=$this->entry2row($arr,FALSE,FALSE,TRUE);
+        $matrix['New']['setRowStyle']=array('background-color'=>'#ddf;');
         $tableArr=array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']);
         if (isset($tableArrStyle)){$tableArr['style']=$tableArrStyle;}
         $html=$this->table($tableArr);

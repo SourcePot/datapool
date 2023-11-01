@@ -103,8 +103,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
     private function getReceiverSetting($callingClass){
         $EntryId=preg_replace('/\W/','_','INBOX-'.$callingClass);
         $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$EntryId);
-        $setting['Content']=array('Mailbox'=>'{mail.wallenhauer.com:993/imap/ssl/novalidate-cert/user=c@wallenhauer.com}',
-                                  'User'=>'c@wallenhauer.com',
+        $setting['Content']=array('Mailbox'=>'{}',
+                                  'User'=>'',
                                   'Password'=>'');
         return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
     }
