@@ -12,9 +12,8 @@ The figure shows a typical application example in a company software setup inclu
 The Datapool framework can just achieve this.
 
 ## Requirements
-This software is designed to run on a server, i.e. the user interface is the web browser. It requires PHP and a database. Depending on the application requirements access to an email account might be required.
+This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8** and a **database**. Depending on the application requirements access to an email account might be required.
 
-## Fist steps
 ## Installing the framework
 For the installation and creation of the first user account please refer to the video below.
 1. Choose your target directory on your web server or your computer and run composer ``composer create-project sourcepot/datapool {add your target directory here}``. This will create among other things the **../www/**-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
