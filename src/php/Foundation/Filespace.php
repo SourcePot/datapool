@@ -38,6 +38,7 @@ class Filespace{
     public function init($oc){
         $this->oc=$oc;
         $this->removeTmpDirs();
+        
     }
         
     public function getEntryTemplate(){
@@ -428,7 +429,7 @@ class Filespace{
     public function fileContent2entries($entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
         $debugArr=array('entry'=>$entry,'createOnlyIfMissing'=>$createOnlyIfMissing);
         if (!empty($entry['fileContent']) && !empty($entry['fileName'])){
-            // save file content to tmp dir
+            // save file content to tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
             $entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
             $bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
@@ -522,60 +523,10 @@ class Filespace{
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
-            $pdfFileContent=FALSE;
-            //$pdfFileContent=$this->pdfToText($file);
-            if ($pdfFileContent===FALSE){
-                $pdfFileContent=$this->parsePdfFile($file);
-            }
-            if (!empty($pdfFileContent)){
-                $entry['Content']['File content']=$pdfFileContent;
-            }
-        }            
+            $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->text2arrSmalot($file,$entry);
+            $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
+        }           
         return $entry;
-    }
-
-    public function pdfToText($file){
-        $text=FALSE;
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        if (class_exists('\Spatie\PdfToText\Pdf') && !empty($pageSettings['path to Xpdf pdftotext executable'])){
-            $parser=new \Spatie\PdfToText\Pdf($pageSettings['path to Xpdf pdftotext executable']);
-            $text=$parser->setOptions(['-enc UTF-8'])->setPdf($file)->text();
-        }
-        return $text;
-    }
-
-    public function parsePdfFile($file){
-        $text=FALSE;
-        if (class_exists('\Smalot\PdfParser\Config') &&  class_exists('\Smalot\PdfParser\Parser')){
-            $fileContent=file_get_contents($file);
-            $fileContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->base64decodeIfEncoded($fileContent);
-            if ($this->pdfOK($fileContent)){                
-                // parser configuration
-                $config=new \Smalot\PdfParser\Config();
-                $config->setHorizontalOffset('');
-                $config->setRetainImageContent(FALSE);
-                // check for encryption etc.
-                $parser=new \Smalot\PdfParser\RawData\RawDataParser([],$config);
-                list($xref,$data)=$parser->parseData($fileContent);
-                if (!empty($data)){
-                    // parse content
-                    $parser=new \Smalot\PdfParser\Parser([],$config);
-                    $pdf=$parser->parseContent($fileContent);
-                    $text=$pdf->getText();
-                    // clean-up
-                    $text=preg_replace('/[\t ]+/',' ',$text);
-                    $text=preg_replace('/(\n )+|(\n )+/',"\n",$text);
-                    $text=preg_replace('/(\n)+/',"\n",$text);                
-                }
-            }
-        }
-        return $text;
-    }
-    
-    private function pdfOK($pdfContent){
-        if (FALSE===($trimpos=strpos($pdfContent,'%PDF-'))){return FALSE;}
-        if (empty(preg_match_all('/[\r\n]startxref[\s]*[\r\n]+([0-9]+)[\s]*[\r\n]+%%EOF/i',$pdfContent,$matches,\PREG_SET_ORDER,0))){return FALSE;}
-        return TRUE;
     }
 
     public function exportEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000){

@@ -73,6 +73,11 @@ select{
 	max-width:280px;
 	cursor:pointer;
 }
+div.td-content-wrapper{
+    max-height:300px;
+    max-width:300px;
+    overflow:auto;
+}
 div.preview,main,div,select,video,img,p{
 	float:left;
 }
@@ -127,12 +132,7 @@ td,th{
 	position:relative;
 	padding:3px;
 	overflow:hidden;
-}
-td.std{
-    width:min-content;
-}
-td.max-content{
-    width:max-content;
+    max-width:500px;
 }
 div.log{
 	overflow-y:auto;
@@ -144,6 +144,10 @@ p.log{
 	clear:both;
 	line-height:25px;
 	border-bottom:1px dotted #aaa;
+}
+embed{
+    min-width:500px;
+    min-height:300px;
 }
 article{
 	float: left;

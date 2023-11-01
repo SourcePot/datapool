@@ -124,7 +124,7 @@ class LoginForms{
             $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
             $matrix['Recover']=array('Value'=>$loginLinkBtn);
         }
-        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login','id'=>'login-table','class'=>'max-content'));
+        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login','id'=>'login-table'));
         $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'id'=>'login-article'));
         if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
         return $arr;

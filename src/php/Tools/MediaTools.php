@@ -274,7 +274,6 @@ class MediaTools{
             $pdfArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
             $pdfArr['type']='application/pdf';
             $pdfArr['style']=(isset($pdfArr['style']))?array_merge($style,$pdfArr['style']):$style;
-            $pdfArr['style']['width']='98%';
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pdfArr);
         } else {
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));

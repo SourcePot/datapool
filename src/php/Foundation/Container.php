@@ -270,7 +270,7 @@ class Container{
                 $cmdHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                 $matrix['<i>Add</i>']=array('value'=>$valueHtml,'cmd'=>$cmdHtml);
             }
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'max-content'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name']));
             if ($level==0){
                 $arr['hideKeys']=TRUE;
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
@@ -395,7 +395,7 @@ class Container{
                         }
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (strcmp($flatColumnKey,$cntrArr['Column'])!==0){continue;}
-                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getIframe($value,array());
+                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,array());
                         }
                     }
                 } // end of loop through columns

@@ -50,16 +50,43 @@ class MiscTools{
         return $arr;
     }
     
-    public function xml2arr($xml){
+
+    /*  Many thanks to 
+    *   http://php.net/manual/en/class.simplexmlelement.php#108867
+    */
+    private function normalize_xml2array($obj,&$result){
+        $data=$obj;
+        if (is_object($data)){
+            $data=get_object_vars($data);
+            foreach($obj->getDocNamespaces() as $ns_name=>$ns_uri){
+                if ($ns_name===''){continue;}
+                $ns_obj=$obj->children($ns_uri);
+                foreach(get_object_vars($ns_obj) as $k=>$v){
+                    $data[$ns_name.':'.$k]=$v;
+                }
+            }
+        }
+        if (is_array($data)){
+            foreach ($data as $key=>$value){
+                $res=null;
+                $this->normalize_xml2array($value,$res);
+                $result[$key]=$res;
+            }
+        } else {
+            $result=$data;
+        }
+    }
+    
+    public function xml2arr($xml) {
         $arr=array('xml'=>$xml);
         if (extension_loaded('SimpleXML')){
-            $xml=simplexml_load_string($xml);
-            $json=json_encode($xml);
-            $arr=json_decode($json,TRUE);    
+            $this->normalize_xml2array(simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOCDATA),$result);
+            $json=json_encode($result);
+            return json_decode($json,TRUE);
         } else {
             throw new \ErrorException('Function '.__FUNCTION__.': PHP extension SimpleXML missing.',0,E_ERROR,__FILE__,__LINE__);
+            return FALSE;
         }
-        return $arr;
     }
     
     public function arr2xml($arr,$rootElement=NULL,$xml=NULL){

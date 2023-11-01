@@ -560,7 +560,7 @@ class HTMLbuilder{
             }
         }
         krsort($matrix);
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'caption'=>'Entry logs','keep-element-content'=>TRUE,'style'=>array('clear'=>'none'),'class'=>'max-content'));
+        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'caption'=>'Entry logs','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
         return $html;
     }
 
@@ -711,16 +711,23 @@ class HTMLbuilder{
         return $row;
     }
     
-    public function getIframe($html,$arr=array()){
-        if (!is_string($html)){return $html;}
-        if (strlen($html)==strlen(strip_tags($html))){return $html;}
-        $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        $htmlFile=$tmpDir.md5($html).'.html';
-        $bytes=file_put_contents($htmlFile,$html);
-        $arr['tag']='iframe';
-        $arr['allowfullscreen']=TRUE;
-        $arr['element-content']='Html content';
-        $arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'],$htmlFile);
+    public function value2tabelCellContent($html,$arr=array()){
+        if (!is_string($html)){
+            return $html;
+        } else if (strlen($html)==strlen(strip_tags($html))){
+            $arr['tag']='div';
+            $arr['class']='td-content-wrapper';
+            $arr['keep-element-content']=TRUE;
+            $arr['element-content']=$html;
+        } else {
+            $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
+            $htmlFile=$tmpDir.md5($html).'.html';
+            $bytes=file_put_contents($htmlFile,$html);
+            $arr['tag']='iframe';
+            $arr['allowfullscreen']=TRUE;
+            $arr['element-content']='Html content';
+            $arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'],$htmlFile);
+        }
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
     }
     
