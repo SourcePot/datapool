@@ -333,6 +333,7 @@ class Container{
             $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,$settings['isSystemCall']);
             $filterSkipped=TRUE;
         }
+        $csvMatrix=array();
         if ($rowCount<=$settings['offset']){$settings['offset']=0;}
         if (!empty($rowCount)){
             // create html
@@ -379,8 +380,9 @@ class Container{
                         if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
                         $element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-                        // remove column button
+                        // column selector
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+                        // remove column button
                         if ($columnIndex>0){
                             $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
                             $matrix['Columns'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
@@ -395,6 +397,7 @@ class Container{
                         }
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (strcmp($flatColumnKey,$cntrArr['Column'])!==0){continue;}
+                            $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
                             $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,array());
                         }
                     }
@@ -407,6 +410,7 @@ class Container{
                     $options=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200');
                     $matrix['Limit, offset'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                     $matrix['Limit, offset'][$columnIndex].=$this->getOffsetSelector($arr,$settings,$rowCount);
+                    $matrix['Limit, offset'][$columnIndex].=$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
                 } else {
                     $matrix['Limit, offset'][$columnIndex]='';
                 }

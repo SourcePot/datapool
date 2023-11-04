@@ -139,7 +139,7 @@ final class Root{
         if (isset($this->structure['source2class'][$source])){
             return $this->structure['source2class'][$source];
         } else {
-            return FALSE;
+            return '';
         }
     }
 
@@ -147,7 +147,7 @@ final class Root{
         if (isset($this->structure['class2source'][$class])){
             return $this->structure['class2source'][$class];
         } else {
-            return FALSE;
+            return '';
         }
     }
 
@@ -292,7 +292,7 @@ final class Root{
                                     'src'=>array('relPath'=>'./src','permissions'=>0770),
                                     'setup'=>array('relPath'=>'./src/setup','permissions'=>0770),
                                     'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
-                                    'privat tmp'=>array('relPath'=>'./src/tmp','permissions'=>0770),
+                                    'privat tmp'=>array('relPath'=>'./src/tmp_private','permissions'=>0770),
                                     'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
                                     'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
                                     'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),

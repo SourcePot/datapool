@@ -49,7 +49,7 @@ class HTMLbuilder{
     
     public function getBtns($arr){
         if (isset($this->btns[$arr['cmd']])){
-            $arr=array_merge($arr,$this->btns[$arr['cmd']]);
+            $arr=array_merge($this->btns[$arr['cmd']],$arr);
         }
         return $arr;
     }
@@ -57,9 +57,10 @@ class HTMLbuilder{
     public function traceHtml($msg='This has happend:'){
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
         $html='<p>'.$msg.'</p><ol>';
-        $html.='<li>1. '.$trace[1]['class'].'::'.$trace[1]['function'].'() '.$trace[0]['line'].'</li>';
-        $html.='<li>2. '.$trace[2]['class'].'::'.$trace[2]['function'].'() '.$trace[1]['line'].'</li>';
-        $html.='<li>3. '.$trace[3]['class'].'::'.$trace[3]['function'].'() '.$trace[2]['line'].'</li></ul>';
+        for($index=1;$index<4;$index++){
+            if (!isset($trace[$index])){break;}
+            $html.='<li>'.$trace[$index]['class'].'::'.$trace[$index]['function'].'() '.$trace[$index-1]['line'].'</li>';
+        }
         return $html;
     }
     
@@ -150,7 +151,7 @@ class HTMLbuilder{
             } // loop through rows
             $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tbodyArr);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tableArr);
-        } // if !empty matrix        
+        } // if !empty matrix  
         if ($returnArr){return array('html'=>$html);} else {return $html;}
     }
     
@@ -567,6 +568,7 @@ class HTMLbuilder{
         }
         krsort($matrix);
         $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'caption'=>'Entry logs','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+        $html.=$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($matrix);
         return $html;
     }
 

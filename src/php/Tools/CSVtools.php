@@ -306,5 +306,49 @@ class CSVtools{
         return $arr;
     }
     
+    public function matrix2csvDownload($matrix){
+        // write/update file
+        $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir();
+        $file=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($matrix);
+        $file=$tmpDir.$file.'.csv';
+        $isFirstRow=TRUE;
+        $fp=fopen($file,'w');
+        foreach($matrix as $rowIndex=>$row){
+            if ($isFirstRow){
+                fputcsv($fp,array_keys($row));
+            }
+            foreach($row as $cellIndex=>$cell){
+                if (is_array($cell)){$row[$cellIndex]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($cell);}
+                $row[$cellIndex]=str_replace('</br>',"\n",strval($row[$cellIndex]));
+                $row[$cellIndex]=str_replace('<br>',"\n",strval($row[$cellIndex]));
+                $row[$cellIndex]=strip_tags($row[$cellIndex]);
+            }
+            fputcsv($fp,$row);
+            $isFirstRow=FALSE;
+        }
+        fclose($fp);
+        // command processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['cmd']['download'])){
+            $file2download=key($formData['cmd']['download']);
+            if (is_file($file2download)){
+                header('Content-Type: application/csv');
+                header('Content-Disposition: attachment; filename="'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime().'_matrix.csv');
+                header('Content-Length: '.fileSize($file2download));
+                readfile($file2download);
+                exit;
+            }
+        }
+        // create html
+        $html='';
+        $btnArr=array('cmd'=>'download','key'=>array('download',$file),'title'=>'Download table as csv-file','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btnArr=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getBtns($btnArr);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
+        return $html;
+    }
+    
+
+    
 }
 ?>

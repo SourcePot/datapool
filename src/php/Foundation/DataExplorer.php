@@ -86,7 +86,7 @@ class DataExplorer{
     private function completeDefintion(){
         // add Source selector
         $sourceOptions=array(''=>'&larrhk;');
-        $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate();
+        $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
         foreach($dbInfo as $Source=>$entryTemplate){$sourceOptions[$Source]=$Source;}
         $functionOptions=array(''=>'&larrhk;');
         $this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
