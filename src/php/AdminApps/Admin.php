@@ -28,7 +28,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#9781;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
-            // if Source is not set user "logging"
+            // if selector Source is empty, set to "logging"
             $currentPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             if (empty($currentPageState['Source'])){
                 $currentPageState['Source']='logging';
