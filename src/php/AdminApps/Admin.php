@@ -28,13 +28,18 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#9781;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
+            // if Source is not set user "logging"
+            $currentPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+            if (empty($currentPageState['Source'])){
+                $currentPageState['Source']='logging';
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$currentPageState);
+            }
+            // get page content
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $html='';
             $html.=$this->tableViewer();
             $html.=$this->backupArticle();
-            
             $html.=$this->getPageSettingsHtml();
-            
             $settings=array('method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
             $html.=$this->adminChart();

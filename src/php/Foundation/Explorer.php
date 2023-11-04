@@ -222,7 +222,9 @@ class Explorer{
     }
 
     private function editEntry($callingClass,$stateKeys,$selector,$entry){
-        if (strcmp($stateKeys['selectedKey'],'Source')===0){return array('html'=>'','icon'=>'&#9998;','class'=>'explorer');}
+        if (strcmp($stateKeys['selectedKey'],'Source')===0){
+            return array('html'=>'','icon'=>'&#9998;','class'=>'explorer');
+        }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Edit'));
         if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
             $selector=array('Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']);
