@@ -104,7 +104,7 @@ class LoginForms{
         $emailLabel=array('tag'=>'label','element-content'=>'Email','for'=>'login-email');
         $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'id'=>'login-email','style'=>array('clear'=>'both','width'=>220),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
-        $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('width'=>'45%','margin'=>0));
+        $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold'));
         $registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('float'=>'right','width'=>'45%','margin'=>'0 4px 0 0'));
         $loginLinkBtn=array('tag'=>'input','type'=>'submit','key'=>array('pswRequest'),'value'=>'Get login token','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('margin'=>'1em 0'));
         if ($this->formType===1){

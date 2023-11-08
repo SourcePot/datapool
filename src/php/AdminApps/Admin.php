@@ -55,6 +55,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             return $html;
         } else if (empty($selector['EntryId'])){
             $selector['disableAutoRefresh']=TRUE;
+            $settings=array('orderBy'=>'Date','isAsc'=>FALSE);
             $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Table entries','entryList',$selector,$settings,array());        
         } else {
@@ -175,7 +176,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $arr['caption']='Page settings';
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
         $matrix=array('Settings'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
     }
 }
 ?>

@@ -61,6 +61,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
                 $setting=array('style'=>array('width'=>500,'height'=>400,'background-color'=>'#fff'),'autoShuffle'=>FALSE,'getImageShuffle'=>'multimedia');
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
                 $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
             } else if (empty($selector['Group']) || empty($selector['EntryId'])){
                 //$wrapperSetting=array();
                 $wrapperSetting=array('html'=>$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap());

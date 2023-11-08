@@ -65,31 +65,31 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         session_regenerate_id(TRUE);
         // login check
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
-            $this->loginSuccess($user);
+            $this->loginSuccess($user,$arr['Email']);
         } else {
             // check one-time password
             $loginEntry=$this->getOneTimeEntry($arr['Email']);
             if (empty($loginEntry)){
-                $this->loginFailed($user);
+                $this->loginFailed($user,$arr['Email']);
             } else if (strcmp($loginEntry['Name'],$arr['Passphrase'])===0){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
-                $this->loginSuccess($user);
+                $this->loginSuccess($user,$arr['Email']);
             } else {
-                $this->loginFailed($user);
+                $this->loginFailed($user,$arr['Email']);
             }
         }
     }
     
-    private function loginSuccess($user){
+    private function loginSuccess($user,$email){
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login successful.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login successful for '.$email.'.','priority'=>1,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
         exit;
     }
 
-    private function loginFailed($user){
+    private function loginFailed($user,$email){
         sleep(5);
-        $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login failed.','priority'=>2,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Login failed for '.$email.'.','priority'=>46,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         exit;
     }
