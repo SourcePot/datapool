@@ -161,7 +161,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'admin@datapool.info'),
-                                'path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>''),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 );
         // get selector

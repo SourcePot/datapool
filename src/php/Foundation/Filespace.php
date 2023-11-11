@@ -16,7 +16,6 @@ class Filespace{
     
     private $statistics=array();
     private $toReplace=array();
-    private $keepZipIfSource=array('multimedia'=>TRUE,'forum'=>TRUE,'user'=>TRUE,'calendar'=>TRUE);
     
     const ENV_FILE='env.json';
 
@@ -457,7 +456,7 @@ class Filespace{
         if (isset($entry['mimeType'])){
             $entry['Params']['File']['MIME-Type']=$entry['mimeType'];
         }
-        if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE && empty($this->keepZipIfSource[$entry['Source']])){
+        if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE && !empty($entry['extractArchives'])){
             // if file is zip-archive, extract all file and create entries seperately 
             $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
             $debugArr['archive2files return']=$this->archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
@@ -523,7 +522,11 @@ class Filespace{
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
-            $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->text2arrSmalot($file,$entry);
+            if (isset($entry['pdfParser'])){
+                $parserMethod=$entry['pdfParser'];
+                $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
+            }
             $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
         }           
         return $entry;

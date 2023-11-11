@@ -31,6 +31,8 @@ class DataExplorer{
                                                                 ),
                                              'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
                                                                'File upload'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
+                                                               'File upload extract archive'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
+                                                               'pdf-file parser'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
                                                                'Delete selected entries'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>1),
                                                                 ),
                                               ),
@@ -97,6 +99,9 @@ class DataExplorer{
             $this->processorOptions[$classWithNamespace]=ucfirst($label);
         }
         $this->definition['Content']['Widgets']['Processor']['@options']=$this->processorOptions;
+        $pdfParserOptions=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
+        $this->definition['Content']['Widgets']['pdf-file parser']['@options']=$pdfParserOptions['options'];
+        $this->definition['Content']['Widgets']['pdf-file parser']['@default']=$pdfParserOptions['default'];
         // add save button
         $this->definition['save']=array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save');
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
@@ -347,6 +352,8 @@ class DataExplorer{
             foreach($formData['files']['files'] as $fileIndex=>$fileArr){
                 if (empty($fileArr["tmp_name"])){continue;}
                 $entry=$canvasElement['Content']['Selector'];
+                $entry['extractArchives']=!empty($canvasElement['Content']['Widgets']['File upload extract archive']);
+                $entry['pdfParser']=(isset($canvasElement['Content']['Widgets']['pdf-file parser']))?$canvasElement['Content']['Widgets']['pdf-file parser']:'';
                 $entry['EntryId']=hash_file('md5',$fileArr["tmp_name"]);
                 if (empty($entry['Folder'])){$entry['Folder']='Upload';}
                 if (empty($entry['Name'])){$entry['Name']=$fileArr["name"];}

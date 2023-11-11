@@ -12,8 +12,6 @@ namespace SourcePot\Datapool\Processing;
 
 class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    use \SourcePot\Datapool\Traits\Conversions;
-    
     private $oc;
 
     private $entryTable='';
@@ -403,19 +401,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType){
         // value datatype conversions
-        $dataTypeMethod='convert2'.$dataType;
-        $newValue=match($dataType){
-                        'string' => array($key=>$this->$dataTypeMethod($value)),
-                        'stringNoWhitespaces' => array($key=>$this->$dataTypeMethod($value)),
-                        'splitString' => array($key=>$this->$dataTypeMethod($value)),
-                        'int' => array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2int($value)),
-                        'float' => array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($value)),
-                        'bool' => array($key=>!empty($value)),
-                        'money' => array($key=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value)),
-                        'date' => array($key=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value)),
-                        'codepfad' => array($key=>$this->$dataTypeMethod($value)),
-                        'unycom' => array($key=>$this->$dataTypeMethod($value)),
-                    };
+        $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
         // add new value to entry
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}

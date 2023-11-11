@@ -22,24 +22,51 @@ class PdfTools{
    
     public function init($oc){
         $this->oc=$oc;
-        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $this->S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        // get complete page settings
+        $selector=array('Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init');
+        $this->pageSettings=$oc['SourcePot\Datapool\Foundation\Filespace']->entryById($selector,TRUE);
         
         //var_dump($this->attachments2arrSmalot('D:\XRechnung.pdf'));
         //var_dump($this->text2arrSpatie('d:\XRechnung.pdf'));
         //var_dump($this->text2arrSmalot('d:\XRechnung.pdf'));
+        
+        //$this->getPdfTextParserOptions();
+    }
+    
+    public function getPdfTextParserOptions(){
+        $parserKey='text2arr';
+        $parser=array('default'=>'text2arrSmalot','options'=>array());
+        foreach(get_class_methods(__CLASS__) as $method){
+            if (strpos($method,$parserKey)===FALSE){continue;}
+            $parserName=str_replace('text2arr','',$method);
+            $parser['options'][$method]=$parserName;
+        }
+        return $parser;
     }
    
-    public function text2arrSpatie($file,$arr=array()){
-        if (!class_exists('\Spatie\PdfToText\Pdf')){
-           $arr['error'][]='\Spatie\PdfToText\Pdf is missing'; 
-        } else if (empty($this->pageSettings['path to Xpdf pdftotext executable'])){
-           $arr['error'][]='Path to Xpdf pdftotext executable is missing'; 
-        } else if (!is_file($this->pageSettings['path to Xpdf pdftotext executable'])){
-           $arr['error'][]='No valid file at '.$this->pageSettings['path to Xpdf pdftotext executable']; 
+    public function text2arrSpatie($file=FALSE,$arr=array()){
+        // get parser setting, add them if missing
+        if (!isset($this->pageSettings['Content'][__FUNCTION__])){
+            $this->pageSettings['Content'][__FUNCTION__]=array('path to Xpdf pdftotext executable'=>'');
+            $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($this->pageSettings,TRUE);
+        }
+        // parse file if valid
+        if (!is_file($file)){
+            // invalid pdf-file
+            $arr['error'][]='Method '.__FUNCTION__.' failed: Invalid file';
+        } else if (!class_exists('\Spatie\PdfToText\Pdf')){
+            // parser class is missing
+            $arr['error'][]='\Spatie\PdfToText\Pdf is missing';
+        } else if (empty($this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable'])){
+            // path to external parser executable is missing
+            $arr['error'][]='Path to Xpdf pdftotext executable is missing'; 
+        } else if (!is_file($this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable'])){
+            // path to external parser executable is not a file
+            $arr['error'][]='No valid file at '.$this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable']; 
         } else {
             try{
-                $parser=new \Spatie\PdfToText\Pdf($this->pageSettings['path to Xpdf pdftotext executable']);
+                $parser=new \Spatie\PdfToText\Pdf($this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable']);
                 $text=$parser->setOptions(['-enc UTF-8'])->setPdf($file)->text();
                 $arr['Content']['File content']=$this->textCleanup($text);
             } catch (\Exception $e){
@@ -49,7 +76,13 @@ class PdfTools{
         return $arr;
     }
 
-    public function text2arrSmalot($file,$arr=array()){
+    public function text2arrSmalot($file=FALSE,$arr=array()){
+        // get parser setting, add them if missing
+        if (!isset($this->pageSettings['Content'][__FUNCTION__])){
+            $this->pageSettings['Content'][__FUNCTION__]=array();
+            $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($this->pageSettings,TRUE);
+        }
+        // parse file if valid
         if (is_file($file)){
             // parser configuration
             $config=new \Smalot\PdfParser\Config();

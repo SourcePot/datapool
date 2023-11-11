@@ -12,8 +12,6 @@ namespace SourcePot\Datapool\Processing;
 
 class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    use \SourcePot\Datapool\Traits\Conversions;
-    
     private $oc;
 
     private $entryTable='';
@@ -377,10 +375,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule){
-        $dataTypeMethod='convert2'.$dataType;
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
-        $newValue=array($key=>$this->$dataTypeMethod($value));
+        $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
         if ($this->useRule($rule,$dataType,$newValue[$key])){
             if (is_array($entry[$baseKey])){
                 $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);

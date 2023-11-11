@@ -723,7 +723,7 @@ class HTMLbuilder{
     public function value2tabelCellContent($html,$arr=array()){
         if (!is_string($html)){
             return $html;
-        } else if (strlen($html)==strlen(strip_tags($html))){
+        } else if (strlen($html)-strlen(strip_tags($html))<0.5*strlen($html)){
             $arr['tag']='div';
             $arr['class']='td-content-wrapper';
             $arr['keep-element-content']=TRUE;

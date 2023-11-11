@@ -262,6 +262,7 @@ class Money{
     }
     
     public function str2money($string,$lang=''){
+        $string=strval($string);
         $result=array('Currency'=>'','Amount'=>0);
         foreach($this->currencies as $code=>$name){
             if (isset($this->currencyAlias[$code])){

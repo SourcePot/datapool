@@ -696,6 +696,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $string=str_replace($needle,'|'.$month.'|',$string);
         }
         $strComps=preg_split("/[^|a-z0-9]+/",$string);
+        if (count($strComps)<2){return array();}
         $strCompsCopy=$strComps;
         $dateArr=array('day'=>'','month'=>'','year'=>'');
         $dateArrCopy=$dateArr;

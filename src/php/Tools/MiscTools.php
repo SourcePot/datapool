@@ -18,9 +18,15 @@ class MiscTools{
     public $emojis=array();
     private $emojiFile='';
     
+    private $oc=NULL;
+    
     public function __construct(){
         $this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
         $this->loadEmojis($this->emojiFile);
+    }
+    
+    public function init(array $oc){
+        $this->oc=$oc;
     }
         
     /******************************************************************************************************************************************
@@ -566,8 +572,25 @@ class MiscTools{
     }
 
     /******************************************************************************************************************************************
-    * Number tools
+    * Generic conversions
     */
+
+    public function convert($value,$dataType){
+        $dataType=strtolower($dataType);
+        $newValue=match($dataType){
+                    'string'=>strval($value),
+                    'stringnowhitespaces'=>$this->convert2stringNoWhitespaces($value),
+                    'splitstring'=>$this->convert2splitString($value),
+                    'int'=>$this->str2int($value),
+                    'float'=>$this->str2float($value),
+                    'bool'=>!empty($value),
+                    'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
+                    'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
+                    'codepfad'=>$this->convert2codepfad($value),
+                    'unycom'=>$this->convert2unycom($value),
+                };
+        return $newValue;
+    }
 
     public function str2int($string,$lang=''){
         $value=$this->str2float($string,$lang);
@@ -575,6 +598,7 @@ class MiscTools{
     }
     
     public function str2float($string,$lang=''){
+        $string=strval($string);
         $lang=strtolower($lang);
         // get number from string
         $string=preg_replace('/[^0-9\.\,\-]/','',$string);
@@ -622,5 +646,97 @@ class MiscTools{
             return floatval($numberStr);
         }
     }
+    public function convert2stringNoWhitespaces($value){
+        $value=preg_replace("/\s/",'',strval($value));
+        return $value;
+    }
+
+    public function convert2splitString($value){
+        $value=strtolower($value);
+        $value=trim($value);
+        $value=preg_split("/[^a-zäöü0-9ß]+/",$value);
+        return $value;
+    }
+    
+    public function convert2codepfad($value){
+        $codepfade=explode(';',$value);
+        $arr=array();
+        foreach($codepfade as $codePfadIndex=>$codepfad){
+            $codepfadComps=explode('\\',$codepfad);
+            if ($codePfadIndex===0){
+                if (isset($codepfadComps[0])){$arr['FhI']=$codepfadComps[0];}
+                if (isset($codepfadComps[1])){$arr['FhI Teil']=$codepfadComps[1];}
+                if (isset($codepfadComps[2])){$arr['Codepfad 3']=$codepfadComps[2];}
+            } else {
+                if (isset($codepfadComps[0])){$arr[$codePfadIndex]['FhI']=$codepfadComps[0];}
+                if (isset($codepfadComps[1])){$arr[$codePfadIndex]['FhI Teil']=$codepfadComps[1];}
+                if (isset($codepfadComps[2])){$arr[$codePfadIndex]['Codepfad 3']=$codepfadComps[2];}
+            }
+        }
+        return $arr;
+    }
+    
+    public function convert2unycom($value){
+        $keyTemplate=array('Match','Year','Type','Number');
+        $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
+        preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZX]{1,2})([0-9\s]{5,6})/',$value,$matches);
+        if (empty($matches[0])){return array();}
+        $arr=array_combine($keyTemplate,$matches);
+        $arr['Region']='  ';
+        $arr['Country']='  ';
+        $arr['Part']='  ';
+        $prefixSuffix=explode($matches[0],$value);
+        if (!empty($prefixSuffix[1])){
+            $suffix=preg_replace('/\s+/','',$prefixSuffix[1]);
+            $suffix=strtoupper($suffix);
+            $suffix=str_split($suffix,2);
+            foreach($regions as $rc=>$region){
+                if (strpos($suffix[0],$rc)!==0){continue;}
+                array_shift($suffix);
+                $arr['Region']=$rc;
+                $arr['Region long']=$region;
+                break;
+            }
+            if (!empty($suffix[0])){
+                // get country codes from file
+                $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
+                if (is_file($file)){
+                    $cc=file_get_contents($file);
+                    $countries=json_decode($cc,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+                    foreach($countries as $alpha2code=>$countryArr){
+                        if (strpos($suffix[0],$alpha2code)===FALSE){continue;}
+                        $arr['Country']=$alpha2code;
+                        $arr['Country long']=$countryArr['Country'];
+                        break;
+                    }
+                }
+                // get part
+                $suffix=implode('',$suffix);
+                $part=preg_replace('/[^0-9]+/','',$suffix);
+                $nonNumericSuffix=str_replace($part,'',$suffix);
+                if (strlen($part)<2){$part='0'.$part;}
+                if (!empty($part)){$arr['Part']=$part;}
+                if (empty($arr['Country long']) && strlen($nonNumericSuffix)>1){
+                    // get country, if country is empty
+                    $arr['Country']=substr($nonNumericSuffix,0,2);
+                }
+            }
+        }
+        foreach($keyTemplate as $key){$arr[$key]=preg_replace('/\s+/','',$arr[$key]);}
+        if (strlen($arr['Year'])===2){
+            if (intval($arr['Year'])<50){
+                $arr['Year']='20'.$arr['Year'];
+            } else {
+                $arr['Year']='19'.$arr['Year'];
+            }
+        }
+        $reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
+        $arr=array('Reference'=>$reference,'Full'=>$reference)+$arr;
+        $arr['Prefix']=trim($prefixSuffix[0],'- ');
+        if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
+        //$this->arr2file($arr);
+        return $arr;
+    }
+
 }
 ?>

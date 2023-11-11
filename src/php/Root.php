@@ -180,8 +180,7 @@ final class Root{
         $dirs=scandir($dir);
         foreach($dirs as $dirIndex=>$dirName){
             if (strpos($dirName,'.php')!==FALSE || empty(trim($dirName,'.'))){continue;}
-            $type=match($dirName){'Traits'=>'100|Trait',
-                                  'Interfaces'=>'200|Interface',
+            $type=match($dirName){'Interfaces'=>'200|Interface',
                                   'Foundation'=>'400|Kernal object',
                                   'Tools'=>'500|Kernal object',
                                   'Processing'=>'600|Kernal object',
@@ -297,7 +296,6 @@ final class Root{
                                     'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
                                     'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),
                                     'php'=>array('relPath'=>'./src/php','permissions'=>0770),
-                                    'traits'=>array('relPath'=>'./src/php/Traits','permissions'=>0770),
                                     'public'=>array('relPath'=>'./src/www','permissions'=>0775),
                                     'media'=>array('relPath'=>'./src/www/media','permissions'=>0775),
                                     'tmp'=>array('relPath'=>'./src/www/tmp','permissions'=>0775),
