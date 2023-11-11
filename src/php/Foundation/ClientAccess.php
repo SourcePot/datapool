@@ -175,7 +175,7 @@ class ClientAccess{
             $authorizationEntry['Group']='Client token';
             $authorizationEntry['Content']=array_replace_recursive($authorizationEntry['Content'],$tokenContent);
             $authorizationEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($authorizationEntry);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($authorizationEntry);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry);
             // return new token
             $data['answer']=$authorizationEntry['Content'];
             $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Client authorization success','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    

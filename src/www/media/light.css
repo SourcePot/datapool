@@ -26,20 +26,19 @@ h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button,svg{
 	line-height:1.5em;
 }
 h1,h2,h3{
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-variant:petite-caps;
+	font: 1.2rem "Fira Sans", sans-serif;
 }
 h1{
 	font-size:1.4em;
-	margin:0 0 0.6em 0.5em;
+	margin:0 0 0.6em 5px;
 }
 h2{
 	font-size:1.3em;
-	margin:0 0 0.4em 0.5em;
+	margin:0 0 0.4em 5px;
 }
 h3{
 	font-size:1.1em;
-	margin:0 0 0.2em 0.5em;
+	margin:0 0 0.2em 5px;
 }
 a.textlink{
     font-weight:bold;
@@ -131,7 +130,7 @@ th{
 td,th{
 	position:relative;
 	padding:3px;
-	overflow:hidden;
+	overflow:auto;
     max-width:500px;
 }
 div.log{
@@ -179,11 +178,11 @@ div.container-busy{
 }
 div.explorer{
 	clear:none;
-	padding:2em 0.5em 1em 5px;
+	padding:1.25em 0.5em 1em 5px;
 }
 label.explorer{
 	float:left;
-	margin:-2em -2em 0 0;
+	margin:-1.3em -3em 0 0;
 }
 div.icon{
 	clear:none;
@@ -611,12 +610,13 @@ p.user-abstract{
 	line-height:60px;
 }
 span.emoji{
-	font-size:1.3em;
+	font-size:1.5em;
 }
 a.emoji{
 	float:left;
 	clear:none;
 	font-size:2em;
+    line-height:1.2em;
 	color:#000;
 }
 

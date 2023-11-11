@@ -62,7 +62,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry','generic',$selector,$settings,array('style'=>array('margin'=>'0')));
         }
-        return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+        return $html;
     }
     
     public function backupArticle(){
