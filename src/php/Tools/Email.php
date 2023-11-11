@@ -417,7 +417,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
             $entry['Type']= $entry['Source'].' '.(($success)?'success':'failure');
             $entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
             $entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
         }
         if ($isDebugging){
             unset($mail['selector']);
