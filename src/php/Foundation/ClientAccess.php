@@ -22,7 +22,6 @@ class ClientAccess{
     private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.'),
-                                 'Privileges'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'),
                                  );
 
     private $methodBlackList=array('run','init');
@@ -169,13 +168,13 @@ class ClientAccess{
             $expires=time()+$this->authorizationLifespan;
             $accessToken=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(64);
             $authorizationEntry['Expires']=date('Y-m-d H:i:s',$expires);
-            $tokenContent=array('access_token'=>$accessToken,'expires_in'=>$this->authorizationLifespan,'expires'=>$expires,'expires_datetime'=>$authorizationEntry['Expires'],'Privileges'=>$authorizationEntry['Privileges']);
+            $tokenContent=array('access_token'=>$accessToken,'expires_in'=>$this->authorizationLifespan,'expires'=>$expires,'expires_datetime'=>$authorizationEntry['Expires']);
             $authorizationEntry['Name']=$accessToken;
             $authorizationEntry['Type']=$this->entryTable.' token';
             $authorizationEntry['Group']='Client token';
             $authorizationEntry['Content']=array_replace_recursive($authorizationEntry['Content'],$tokenContent);
             $authorizationEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($authorizationEntry);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token
             $data['answer']=$authorizationEntry['Content'];
             $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Client authorization success','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
@@ -194,10 +193,12 @@ class ClientAccess{
         $tokenSelector=array('Source'=>$this->entryTable,'Name'=>substr($data['Authorization'],7));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tokenSelector,TRUE) as $token){
             $data['answer']=$token['Content'];
-            $_SESSION['currentUser']['Privileges']=$token['Privileges'];
             unset($data['answer']['access_token']);
             unset($data['answer']['error']);
             $data['answer']['expires_in']=$data['answer']['expires']-time();
+            // set user from owner
+            $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$token['Owner']);
+            $_SESSION['currentUser']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
             break;
         }
         return $data;
@@ -238,7 +239,12 @@ class ClientAccess{
         ksort($options);
         return $options;
     }
-    
+
+    public function unifyEntry($entry){
+        $entry['Owner']=$_SESSION['currentUser']['EntryId'];
+        return $entry;
+    }
+
     public function clientAppCredentialsForm($arr){
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',FALSE,FALSE,TRUE)){return $arr;}
@@ -247,7 +253,7 @@ class ClientAccess{
                                 'client_id'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'client_secret'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 );
-        $selector=array('Source'=>$this->entryTable,'Type'=>$this->entryTable.' credentials','Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Privileges'=>$arr['selector']['Privileges']);
+        $selector=array('Source'=>$this->entryTable,'Type'=>$this->entryTable.' credentials','Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Owner'=>$arr['selector']['Owner']);
         $selector['Name']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array('selector'=>$arr['selector']),4);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,array('Group','Folder','Name','Type'),0);
         $selector=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($selector,'ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');

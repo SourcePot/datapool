@@ -130,8 +130,6 @@ th{
 td,th{
 	position:relative;
 	padding:3px;
-	overflow:auto;
-    max-width:500px;
 }
 div.log{
 	overflow-y:auto;
