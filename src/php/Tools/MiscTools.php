@@ -731,7 +731,7 @@ class MiscTools{
             }
         }
         $reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
-        $arr=array('Reference'=>$reference,'Full'=>$reference)+$arr;
+        $arr=array('Reference'=>$reference,'Full'=>$reference,'Family'=>$arr['Year'].'F'.$arr['Number'])+$arr;
         $arr['Prefix']=trim($prefixSuffix[0],'- ');
         if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
         //$this->arr2file($arr);

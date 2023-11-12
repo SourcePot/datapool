@@ -34,9 +34,10 @@ class HTMLbuilder{
     private $appOptions=array('SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
                        'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
                        'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
+                       'SourcePot\Datapool\Tools\HTMLbuilder|entryLogs'=>'entryLogs()',
                        'SourcePot\Datapool\Foundation\Container|tools'=>'tools()',
                        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
-                       'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()'
+                       'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
                        );
         
     public function __construct($oc){

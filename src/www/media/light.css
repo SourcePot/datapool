@@ -103,7 +103,7 @@ p.cover{
 p.standard{
 	padding:2px;
 }
-table{
+table,div.table{
 	float:left;
 	clear:none;
 	width:fit-content;

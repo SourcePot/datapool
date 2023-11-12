@@ -151,7 +151,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function mappingParams($callingElement){
         $contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Mode'=>array('method'=>'select','value'=>'entries','excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
-                                'Run...'=>array('method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>array(0=>'when triggered',86400=>'once a day',604800=>'once a week',2592000=>'once every 30 days')),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctor

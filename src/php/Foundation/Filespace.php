@@ -421,6 +421,7 @@ class Filespace{
         if ($debugArr['error']){
             return FALSE;
         } else {
+            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
             return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
         }
     }

@@ -262,7 +262,7 @@ class Database{
         return preg_match('/[^\\\\][%_]{1}/',$string);
     }
     
-    private function selector2sql($selector,$removeGuideEntries=TRUE){
+    private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
         // This function creates a sql-query from a selector.
         // For types VARCHAR and BLOB the mysql keyword LIKE is used, for all other datatypes math operators will be used.
         // f no operator is provided the '=' operator will be applied. Use '!' operator for 'NOT EQUAL'.
@@ -278,10 +278,10 @@ class Database{
             if ($value===FALSE){continue;}
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
             if (!empty($match[2])){$operator=$match[2];} else {$operator='=';}
-            $column=explode($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
-            $column=trim($column[0],' <>=!');
+            $placeholder=':'.md5($column.$opAlias[$operator]);
+            $columns=explode($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
+            $column=trim($columns[0],' <>=!');
             if (!isset($entryTemplate[$column])){continue;}
-            $placeholder=':'.$column.$opAlias[$operator];
             if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
             if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards($value)){
                 $column='`'.$column.'`';
@@ -311,6 +311,9 @@ class Database{
         }
         $sqlArr['sql']=implode(' AND ',$sqlArr['sql']);
         if (empty($sqlArr['sql'])){$sqlArr['sql']='';} else {$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
+        if ($isDebugging){
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('selector'=>$selector,'sqlArr'=>$sqlArr,'entryTemplate'=>$entryTemplate));
+        }
         return $sqlArr;        
     }    
     
@@ -406,7 +409,7 @@ class Database{
         $sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
         $rowCount=current($stmt->fetch());
-        return $rowCount;
+        return intval($rowCount);
     }
     
     public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
@@ -636,6 +639,8 @@ class Database{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUploadPostProcessing($entry,$attachment);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$attachment,'File source new'=>$targetFile),FALSE);
             } else {
+                if (isset($entry['Params']['Attachment log'])){unset($entry['Params']['Attachment log']);}
+                if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
                 $targetFile=FALSE;
             }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);

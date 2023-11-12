@@ -147,6 +147,7 @@ class NetworkTools{
     
     private function decodeResponse($response){
         $arr=array('header'=>array(),'data'=>array());
+        if (empty($response)){return $arr;}
         $strChnuks=explode("\r\n",$response);
         // get header
         while($strChunk=array_shift($strChnuks)){
