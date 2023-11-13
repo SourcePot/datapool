@@ -51,6 +51,7 @@ ol,ul{
 button,input,textarea,select,a.btn,.js-button{
 	float:left;
 	clear:none;
+    font-size:1em;
 	padding:0.2em;
 	margin: 0 0.2em;
     line-height:1.5em;

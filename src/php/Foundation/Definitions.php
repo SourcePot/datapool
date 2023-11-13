@@ -141,7 +141,11 @@ class Definitions{
         $element=array();
         if (empty($definition)){
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write')){
-                $element=array('tag'=>'input','type'=>'text','value'=>$value,'key'=>$selectorKeyComps);
+                if (strlen($value)>20){
+                    $element=array('tag'=>'textarea','keep-element-content'=>TRUE,'element-content'=>$value,'key'=>$selectorKeyComps);
+                } else {
+                    $element=array('tag'=>'input','type'=>'text','value'=>$value,'key'=>$selectorKeyComps);
+                }
             } else if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Read')){
                 $element=array('tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE);
             } else {
