@@ -722,7 +722,7 @@ class HTMLbuilder{
     }
     
     public function value2tabelCellContent($html,$arr=array()){
-        if (!is_string($html)){
+        if (!is_string($html) || empty($html)){
             return $html;
         } else if (strlen($html)-strlen(strip_tags($html))<0.5*strlen($html)){
             $arr['tag']='div';

@@ -27,18 +27,16 @@ h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button,svg{
 }
 h1,h2,h3{
 	font: 1.2rem "Fira Sans", sans-serif;
+    margin:0.4em 0 0.2em 5px;
 }
 h1{
 	font-size:1.4em;
-	margin:0 0 0.6em 5px;
 }
 h2{
 	font-size:1.3em;
-	margin:0 0 0.4em 5px;
 }
 h3{
 	font-size:1.1em;
-	margin:0 0 0.2em 5px;
 }
 a.textlink{
     font-weight:bold;
@@ -52,17 +50,21 @@ button,input,textarea,select,a.btn,.js-button{
 	float:left;
 	clear:none;
     font-size:1em;
-	padding:0.2em;
+	padding:0.2em 0.4em;
 	margin: 0 0.2em;
-    line-height:1.5em;
+    line-height:1.2em;
 	text-align:center;
 	color:#000;
 	background-color:#fff;
 	border-radius:unset;
-	border-left:1px solid #888;
-	border-top:1px solid #888;
-	border-right:1px solid #555;
-	border-bottom:1px solid #555;
+	border-left:1px solid #ccc;
+	border-top:1px solid #ccc;
+	border-right:2px solid #aaa;
+	border-bottom:2px solid #aaa;
+}
+input[type=text]{
+    border:none;
+    border-bottom:1px dotted #000;
 }
 button:hover,input[type=submit]:hover,a.btn:hover,.js-button:hover{
 	cursor:pointer;
@@ -177,7 +179,7 @@ div.container-busy{
 }
 div.explorer{
 	clear:none;
-	padding:1.25em 0.5em 1em 5px;
+	padding:2em 0.5em 0.5em 5px;
 }
 label.explorer{
 	float:left;
