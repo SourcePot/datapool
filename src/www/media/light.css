@@ -152,12 +152,12 @@ embed{
 article{
 	float: left;
 	clear:none;
-	margin:15px 0 0 0;
+	margin:5px 0;
 	position:relative;
 	width:100%;
 	overflow:auto;
 	background-color:#fff;
-	border-bottom:1px solid #555;
+	border-bottom:1px solid #999;
 }
 article.toolbox{
     color:#ccc;
@@ -280,7 +280,6 @@ main,#top-filler{
 	width:100%;
 	height:80px;
 	z-index:1;
-	border-top:1px solid #888;
 }
 #bottom-menu{
 	position:fixed;
