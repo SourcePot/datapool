@@ -70,21 +70,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                              'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'),
                             );
 
-    private $oldEventsKeyMapping=array('Content|[]|Entry|[]|Description'=>'Content|[]|Event|[]|Description',
-                                        'Content|[]|Entry|[]|Description'=>'Content|[]|Event|[]|Description',
-                                        'Content|[]|Entry|[]|Type'=>'Content|[]|Event|[]|Type',
-                                        'Content|[]|Entry|[]|Start|[]|Date'=>'Content|[]|Event|[]|Start',
-                                        'Content|[]|Entry|[]|Start|[]|Time'=>'Content|[]|Event|[]|Start',
-                                        'Content|[]|Entry|[]|Start timezone'=>'Content|[]|Event|[]|Start timezone',
-                                        'Content|[]|Entry|[]|End|[]|Date'=>'Content|[]|Event|[]|End',
-                                        'Content|[]|Entry|[]|End|[]|Time'=>'Content|[]|Event|[]|End',
-                                        'Content|[]|Entry|[]|End timezone'=>'Content|[]|Event|[]|End timezone',
-                                        'Content|[]|Entry|[]|Visibility'=>FALSE,
-                                        'Content|[]|Settings|[]|Recurrence'=>'Content|[]|Event|[]|Recurrence',
-                                        'Content|[]|Settings|[]|Recurrence times'=>'Content|[]|Event|[]|Recurrence times',
-                                        'Content|[]|Settings|[]|Recurrence id'=>'Content|[]|Event|[]|Recurrence id'
-                                        );
-
     private $months=array('january'=>'01','february'=>'02','march'=>'03','april'=>'04','may'=>'05','june'=>'06','july'=>'07','august'=>'08','september'=>'09','october'=>'10','november'=>'11','december'=>'12',
                           'januar'=>'01','februar'=>'02','märz'=>'03','april'=>'04','mai'=>'05','juni'=>'06','juli'=>'07','august'=>'08','september'=>'09','oktober'=>'10','november'=>'11','dezember'=>'12',
                           'jan'=>'01','feb'=>'02','mar'=>'03','apr'=>'04','may'=>'05','jun'=>'06','jul'=>'07','aug'=>'08','sep'=>'09','oct'=>'10','nov'=>'11','dec'=>'12',
