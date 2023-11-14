@@ -224,7 +224,7 @@ class HTMLbuilder{
         return $html;
     }
     
-    public function keySelect($arr){
+    public function keySelect($arr,$appendOptions=array()){
         $html='';
         if (empty($arr['Source'])){return $html;}
         $fileContentKeys=array();
@@ -257,6 +257,7 @@ class HTMLbuilder{
         foreach($keys as $key=>$value){
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
         }
+        $arr['options']+=$appendOptions;
         $html.=$this->select($arr);
         return $html;
     }
@@ -748,8 +749,6 @@ class HTMLbuilder{
             $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
             return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('padding'=>'0','margin'=>'0','border'=>'none')));
         } else {
-            
-            
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
             return $arr['html'];
@@ -766,122 +765,100 @@ class HTMLbuilder{
         return $html;
     }
     
-    // entry presentation
-    public function presentEntry($arr,$isDebugging=FALSE){
-        $this->getEntryKeyOptions($arr);
-        // get presentation keys setting -> compile html
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-        $debugArr=array('arr'=>$arr,'entry'=>$entry);
-        $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+    public function presentEntry($presentArr){
         $html='';
-        $presentationSetting=$this->entryPresentationTemplate($arr,FALSE);
-        $presentationSetting['EntryId']='%__'.$presentationSetting['EntryId'];
-        $debugArr['presentationSetting selector']=$presentationSetting;
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($presentationSetting,FALSE,'Read','EntryId',) as $setting){
-            $debugArr['settings'][]=$setting['Content'];
-            $arr=$this->add2styleArr($arr,$setting);
-            $flatKey=$setting['Content']['Entry key'];
-            $currentHtml='';
-            if (isset($flatEntry[$flatKey])){
-                if (!empty($setting['Content']['Show key'])){
-                   $currentHtml.=$this->addTagIfNoTags($arr,$flatKey);
-                   $currentHtml.=$this->addTagIfNoTags($arr,':');
-                }
-                $currentHtml.=$this->addTagIfNoTags($arr,$flatEntry[$flatKey]);
-                $currentHtml=$this->addTagIfNoTags($arr,$currentHtml,'div');
-                $currentHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($currentHtml);
-            } else if (isset($this->appOptions[$flatKey])){
-                $classMethod=explode('|',$flatKey);
-                $class=array_shift($classMethod);
-                $method=array_shift($classMethod);
-                $useContainer=array_shift($classMethod);
-                $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-                $debugArr['apps'][$setting['EntryId']]=array('class'=>$class,'method'=>$method,'arr'=>$arr);
-                if ($useContainer){
-                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$arr['selector']['EntryId'],'generic',$arr['selector'],array('method'=>$method,'classWithNamespace'=>$class),array());
+        $presentArr=$this->mapContainer2presentArr($presentArr);
+        $selector=$this->getPresentationSelector($presentArr);
+        if (!empty($presentArr['selector']['EntryId'])){
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($presentArr['selector'],FALSE);
+            if ($entry){
+                $presentArr['selector']=$entry;
+            }            
+        }
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId') as $setting){
+            $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']);
+            $presentArr['class']=$setting['Content']['Style class'];
+            $cntrArr=explode('|',$setting['Content']['Entry key']);
+            if (count($cntrArr)===1){
+                // Simple value or array presentation
+                if (is_array($presentArr['selector'][$setting['Content']['Entry key']])){
+                    // Simple array presentation
+                    $resultArr=array();
+                    $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($presentArr['selector'][$setting['Content']['Entry key']]);
+                    foreach($flatEntry as $flatKey=>$flatValue){
+                        if (!empty($setting['Content']['Key filter'])){
+                            if (stripos($flatKey,$setting['Content']['Key filter'])===FALSE){continue;}
+                        }
+                        $resultArr[$flatKey]=$flatValue;
+                    }
+                    if (count($resultArr)===1){
+                        $flatKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label(key($resultArr));
+                        $matrix=array($flatKey=>array('value'=>current($resultArr)));
+                    } else {
+                        $entrSubArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($resultArr);
+                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entrSubArr);
+                    }
                 } else {
-                    $appArr=$this->oc[$class]->$method($arr);
+                    // Simple value presentation
+                    $matrix=array($setting['Content']['Entry key']=>array('value'=>$presentArr['selector'][$setting['Content']['Entry key']]));
                 }
-                if (is_array($appArr)){$currentHtml.=$appArr['html'];} else {$currentHtml.=$appArr;}
+                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>empty($setting['Content']['Show key']),'keep-element-content'=>TRUE,'caption'=>'','style'=>$presentArr['style'],'class'=>$presentArr['class']));
             } else {
-                // flat key not found
+                // App presentation
+                $callingClass=array_shift($cntrArr);
+                $callingFunction=array_shift($cntrArr);
+                $wrapper=array_shift($cntrArr);
+                if (empty($wrapper)){
+                    $appArr=$this->oc[$callingClass]->$callingFunction($presentArr);
+                } else if ($wrapper=='container'){
+                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$setting['EntryId'],'generic',$presentArr['selector'],array('method'=>$callingFunction,'classWithNamespace'=>$callingClass),array());    
+                }
+                if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
             }
-            $html.=$currentHtml;
         }
-        if (!isset($flatKey)){
-            $whatIsMissing=(isset($arr['settings']['presentEntry']))?$arr['settings']['presentEntry']:'"is undefined: arr[settings][presentEntry]"';
-            $msg='Method "'.__FUNCTION__.'": Setting is missing. Go to <b>Admin &#10132; Settings</b> and select (Group, Folder, Name) <b>Entry presentation &#10132; '.$whatIsMissing.' &#10132; Key options</b>. Add the missing settings there in the table.';
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>array('margin'=>'1em')));
-        }
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
-        $html=strtr($html,array($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator()=>'&rarr;'));
-        if (isset($arr['containerId'])){
-            $arr['html']=$html;
-            $arr['wrapperSettings']['hideReloadBtn']=TRUE;
-            return $arr;
+        if (isset($presentArr['containerId'])){
+            $presentArr['html']=$html;
+            $presentArr['wrapperSettings']['hideReloadBtn']=TRUE;
+            return $presentArr;
         } else {
             return $html;
         }
     }
     
-    private function addTagIfNoTags($arr,$elementContent,$tag='span'){
-        if (isset($arr['function'])){unset($arr['function']);}
-        if ($elementContent==strip_tags($elementContent) || $tag!='span'){
-            $arr['tag']=$tag;
-            $arr['element-content']=$elementContent;
-            $elementContent=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
-        }
-        return $elementContent;
+    private function getPresentationSelector($presentArr){
+        $selector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Presentation');
+        $selector['Folder']=$presentArr['callingClass'].'::'.$presentArr['callingFunction'];
+        $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($selector);
+        $selector['Name']='Setting';
+        return $selector;
     }
     
-    private function add2styleArr($arr,$setting){
-        if (!isset($arr['style'])){$arr['style']=array();}
-        $arr['keep-element-content']=TRUE;
-        $arr['class']=(empty($setting['Content']['Style class']))?'ep-std':$setting['Content']['Style class'];
-        $styleKeys=array('width'=>TRUE,'height'=>TRUE,'clear'=>TRUE);
-        $baseKeys=array('maxDim'=>TRUE,'minDim'=>TRUE);
-        foreach($setting['Content'] as $key=>$value){
-            if (empty($value)){continue;}
-            if (isset($styleKeys[$key])){
-                $arr['style'][strtolower($key)]=$value;
-            } else if (isset($baseKeys[$key])){
-                $arr[$key]=$value;    
-            }
+    private function mapContainer2presentArr($presentArr){
+        if (strcmp($presentArr['callingClass'],'SourcePot\\Datapool\\Foundation\\Container')===0){
+            $presentArr['callingClass']=$this->oc['SourcePot\Datapool\Root']->source2class($presentArr['selector']['Source']);
+            $presentArr['callingFunction']=$presentArr['settings']['method'];
         }
-        return $arr;
+        return $presentArr;
     }
     
-    private function entryPresentationTemplate($arr,$isEntryKeyOptions=FALSE){
-        if (!empty($arr['settings']['presentEntry'])){
-            $folder=$arr['settings']['presentEntry'];
-        } else if (!empty($arr['selector']['Folder'])){
-            $folder=$arr['selector']['Folder'];
-        }
-        $entry=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Entry presentation','Folder'=>$folder);
-        $entry['Type']=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable().' array';
-        $entry['Name']=($isEntryKeyOptions)?'Key options':'Presentation setting';
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
-        return $entry;
-    }
-    
-    public function getEntryPresentationSetting($arr,$isDebugging=FALSE){
+    public function getPresentationSettingHtml($arr,$isDebugging=FALSE){
         $debugArr=array('arr'=>$arr);
-        $entryKeyOptions=$this->getEntryKeyOptions($arr);
+        $callingClassFunction=explode('::',$arr['selector']['Folder']);
+        $entryKeyOptions=$this->appOptions;
+        if (isset($this->oc[$callingClassFunction[0]])){
+            $entryTemplate=$this->oc[$callingClassFunction[0]]->getEntryTemplate();
+            foreach($entryTemplate as $column=>$columnInfo){$entryKeyOptions[$column]=$column;}
+        }
         $styleClassOptions=$this->getStyleClassOptions($arr);
         $contentStructure=array('Entry key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE),
+                                'Key filter'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'Style class'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE),
-                                'maxDim'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'minDim'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'width'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'height'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'clear'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                'Style'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'Show key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 );
-        $arr['selector']=$this->entryPresentationTemplate($arr,FALSE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']=$arr['selector']['Name'].' '.$arr['selector']['Folder'];
+        $arr['selector']['Name']='Setting';
+        $arr['caption']=$arr['selector']['Folder'];
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         if ($isDebugging){
             $debugArr['selector']=$arr['selector'];
@@ -898,47 +875,6 @@ class HTMLbuilder{
         $options=array();
         foreach($matches[2] as $class){
             $options[$class]=$class;
-        }
-        return $options;
-    }
-    
-    private function getEntryKeyOptions($arr,$isDebugging=FALSE){
-        $debugArr=array('arr'=>$arr);
-        // get presentation keys setting
-        $entryKeysSetting=$this->entryPresentationTemplate($arr,TRUE);
-        $entryKeysSetting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entryKeysSetting,TRUE);
-        $debugArr['entryKeysSetting existing']=$entryKeysSetting;
-        // add entry flat keys to entryKeysSetting
-        $skipAddingKeys=FALSE;
-        if (!empty($arr['selector']['Type'])){
-            if (strcmp($arr['selector']['Type'],'entryKeys')===0){$skipAddingKeys=TRUE;}
-        }
-        if (!$skipAddingKeys){
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-            $debugArr['entry']=$entry;
-            $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
-            foreach($flatEntry as $flatKey=>$value){
-                $entryKeysSetting['Content'][$flatKey]=time();    
-            }
-        }
-        // remove expired and irrelevant flat keys
-        $maxAge=31536000;
-        foreach($entryKeysSetting['Content'] as $flatKey=>$timeStamp){
-            if ($maxAge<time()-$timeStamp){
-                unset($entryKeysSetting['Content'][$flatKey]);
-                $debugArr['removed expired keys']=$flatKey;
-            }
-        }
-        // get options
-        $options=$this->appOptions;
-        ksort($entryKeysSetting['Content']);
-        foreach($entryKeysSetting['Content'] as $flatKey=>$timeStamp){
-            $options[$flatKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey);
-        }
-        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entryKeysSetting,TRUE);
-        if ($isDebugging){
-            $debugArr['options']=$options;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $options;
     }

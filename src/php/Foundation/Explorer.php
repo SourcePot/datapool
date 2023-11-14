@@ -106,7 +106,7 @@ class Explorer{
         return $entry;
     }
     
-    private function getGuideEntry($selector,$templateB=array()){
+    public function getGuideEntry($selector,$templateB=array()){
         if (empty($selector['Source'])){
             return array('Read'=>0,'Write'=>0);
         } else if (!empty($selector['EntryId'])){

@@ -64,7 +64,7 @@ jQuery(document).ready(function(){
 			data:arr,
 			dataType: "json"
 		}).done(function(data){
-			if ('htmlSelector' in arr){
+            if ('htmlSelector' in arr){
 				jQuery(arr['htmlSelector']).html(data['html']);
 			} else {
 				jQuery(arr['replaceSelector']).replaceWith(data['html']);

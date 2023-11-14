@@ -2,7 +2,17 @@ div.ep-std{
 	float:left;
 	clear:both;
 	margin:5px 10px;
-
+}
+table.ep-std,table.ep-footer{
+	float:left;
+	clear:right;
+	margin:5px 10px;
+    border:none;
+    box-shadow:none;
+}
+table.ep-footer{
+    clear:both;
+	font-size:0.8em;
 }
 img.ep-std,video.ep-std{
 	max-width:360px;
@@ -27,12 +37,6 @@ div.ep-message{
 	clear:right;
 	margin:5px 10px;
 	font-size:1.5em;
-}
-div.ep-footer{
-	clear:both;
-	font-size:0.9em;
-	font-weight:bold;
-	margin:0 0 2em 10px;
 }
 div.ep-header-wrapper{
 	margin:0;

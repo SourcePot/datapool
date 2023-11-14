@@ -50,12 +50,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                 $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());    
             } else {
-                if (strcmp($selector['Group'],'Entry presentation')===0){
-                    $selector['Type']='entryKeys';
-                }
-                if (strcmp($selector['Group'],'Entry presentation')===0 && !empty($selector['EntryId'])){
-                    $settings=array('method'=>'getEntryPresentationSetting','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation settings','generic',$selector,$settings,array());
+                if (strcmp($selector['Group'],'Presentation')===0 && !empty($selector['Folder'])){
+                    $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,array());
                 } else {
                     $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());
