@@ -3,7 +3,7 @@ div.ep-std{
 	clear:both;
 	margin:5px 10px;
 }
-table.ep-std,table.ep-footer{
+table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
 	float:left;
 	clear:right;
 	margin:5px 10px;
@@ -13,6 +13,10 @@ table.ep-std,table.ep-footer{
 table.ep-footer{
     clear:both;
 	font-size:0.8em;
+}
+table.ep-h1{
+    clear:both;
+	font-size:1.3em;
 }
 img.ep-std,video.ep-std{
 	max-width:360px;
