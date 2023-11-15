@@ -676,6 +676,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
     
     public function str2date($string){
+        $orgString=$string;
         $string=trim(mb_strtolower($string));
         foreach($this->months as $needle=>$month){
             $string=str_replace($needle,'|'.$month.'|',$string);
@@ -739,9 +740,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         if (strlen($dateArr['month'])<2){$dateArr['month']='0'.$dateArr['month'];}
         if (strlen($dateArr['day'])<2){$dateArr['day']='0'.$dateArr['day'];}
         // compile result
-        $dates=array('String'=>$string,'System'=>$dateArr['year'].'-'.$dateArr['month'].'-'.$dateArr['day'].' 12:00:00');
+        $dates=array('System short'=>'','System'=>$dateArr['year'].'-'.$dateArr['month'].'-'.$dateArr['day'].' 12:00:00');
         $timezoneObj=new \DateTimeZone(DB_TIMEZONE);
         $datetimeObj=new \DateTime($dates['System'],$timezoneObj);
+        $dates['System short']=$datetimeObj->format('Y-m-d');
+        $dates['System']=$dates['System short'].' 12:00:00';
+        $dates['String']=$orgString;
         $dates['Timezone']=DB_TIMEZONE;
         $dates['Timestamp']=$datetimeObj->getTimestamp();
         $dates['US']=$datetimeObj->format('m/d/Y');
