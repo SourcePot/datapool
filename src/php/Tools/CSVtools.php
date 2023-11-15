@@ -153,7 +153,7 @@ class CSVtools{
                 $entry['Type']=$entry['Source'].' '.str_replace('/',' ',$entry['Params']['File']['MIME-Type']);
                 $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
                 $entry['Content']=$statistics;
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,FALSE,TRUE,$targetFile);
                 // reset csv var-space
                 unset($_SESSION['csvVarSpace'][$EntryId]);
                 $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'CSV-entry created named "'.$entry['Name'].'" containing '.count($csvDefArr['rows']).' rows.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));

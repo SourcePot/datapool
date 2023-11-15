@@ -518,7 +518,8 @@ class Filespace{
         return $zipStatistic;
     }
     
-    public function fileUploadPostProcessing($entry,$file){
+    public function addFile2entry($entry,$file,$isDebugging=TRUE){
+        // process file
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
@@ -529,7 +530,12 @@ class Filespace{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
             }
             $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
-        }           
+        }
+        // add file to entry
+        $targetFile=$this->selector2file($entry,TRUE);
+        if (copy($file,$targetFile)){
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source'=>$file,'File attached'=>$targetFile),FALSE);    
+        }
         return $entry;
     }
 

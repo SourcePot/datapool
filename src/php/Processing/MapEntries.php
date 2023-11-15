@@ -285,7 +285,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $zipEntry['Params']['File']['Date (created)']=filectime($zipEntry['Params']['File']['Source']);
                 $zipEntry['Type']=$zipEntry['Source'].' '.str_replace('/',' ',$zipEntry['Params']['File']['MIME-Type']);
                 // save entry and file
-                $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry,TRUE);
+                $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry,TRUE,FALSE,TRUE,$zipEntry['Params']['File']['Source']);
                 $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
                 $result['Mapping statistics']['Output format']['value']='Zip + csv';
@@ -333,7 +333,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
             $targetEntry['Name']=$base['Attachment name'];
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
-            if (!$testRun){$this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);}
+            if (!$testRun){
+                $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
+            }
         } else {
             $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
@@ -348,9 +350,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function deleteEntriesById($Source,$EntryIds){
-        if (empty($EntryIds)){return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();}
+        if (empty($EntryIds)){
+            return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
+        }
         foreach($EntryIds as $EntryId){
-            $entrySelector=array('Source'=>$Source,'EntryId'=>$EntryId);
+            $entrySelector=array('Source'=>$Source,'EntryId'=>trim($EntryId,"'"));
             $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
             if (is_file($fileToDelete)){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);

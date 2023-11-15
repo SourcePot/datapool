@@ -580,7 +580,6 @@ class Database{
     }
     
     public function deleteEntries($selector,$isSystemCall=FALSE){
-        $this->deleteEntriesOnly($selector,$isSystemCall);
         // delete files
         $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE,FALSE);
         if (empty($entryList['primaryKeys'])){return FALSE;}
@@ -592,6 +591,10 @@ class Database{
                 unlink($fileToDelete);
             }
         }
+        // delete entries by id-list
+        $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
+        $stmt=$this->executeStatement($sql,array(),FALSE);
+        $this->addStatistic('deleted',$stmt->rowCount());
         return $this->getStatistic('deleted');
     }
         
@@ -627,46 +630,42 @@ class Database{
     public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateButCreateIfMissing=FALSE,$addLog=FALSE,$attachment=''){
         // only the Admin has the right to update the data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
-        // test for required keys
+        // test for required keys and set selector
         if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
         $selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
+        // replace right constants
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
         // get existing entry
         $existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
-            // insert and return entry
+            // no existing entry found, insert and return entry
             if (is_file($attachment)){
-                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry,TRUE);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUploadPostProcessing($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$attachment,'File source new'=>$targetFile),FALSE);
+                // valid file attachment found
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
             } else {
+                // no valid file attachment
                 if (isset($entry['Params']['Attachment log'])){unset($entry['Params']['Attachment log']);}
                 if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
-                $targetFile=FALSE;
             }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
             $entry=$this->insertEntry($entry);
-            if ($targetFile){copy($attachment,$targetFile);}
-        } else if ($noUpdateButCreateIfMissing==FALSE){
-            // update and return entry
-            unset($entry['EntryId']);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
-            if (is_file($attachment) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
-                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector,TRUE);
-                copy($attachment,$targetFile);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUploadPostProcessing($entry,$attachment);
-                if (isset($existingEntry['Params']['Attachment log'])){$entry['Params']['Attachment log']=$existingEntry['Params']['Attachment log'];}
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Attachment log',array('File source old'=>$attachment,'File source new'=>$targetFile),FALSE);
+        } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
+            // update and return entry | recover existing logs
+            if (isset($existingEntry['Params']['Attachment log'])){$entry['Params']['Attachment log']=$existingEntry['Params']['Attachment log'];}
+            if (isset($existingEntry['Params']['Processing log'])){$entry['Params']['Processing log']=$existingEntry['Params']['Processing log'];}
+            // add attachment
+            if (is_file($attachment)){
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
             }
-            if ($addLog){
-                if (isset($existingEntry['Params']['Processing log'])){$entry['Params']['Processing log']=$existingEntry['Params']['Processing log'];}
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
-            }
+            // update entry
+            if ($addLog){$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);}
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
-            $entry=$this->entryById($selector,$isSystemCall,'Read');
+            // existing entry and no update 
+            $entry=$this->entryById(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']),$isSystemCall,'Read');
         }
         return $entry;
     }
@@ -691,44 +690,47 @@ class Database{
         
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE){
         $userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
+        // test for required keys and set selector
+        if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId'])){
+            throw new \ErrorException('Function '.__FUNCTION__.': Mandatory sourceEntry-key(s) missing, either Source or EntryId',0,E_ERROR,__FILE__,__LINE__);    
+        }
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
             // write access
             if ($updateSourceFirst && !$isTestRun){
                 $sourceEntry=$this->updateEntry($sourceEntry,$isSystemCall);
             }
+            // apply target selector to source entry
             $targetEntry=array_replace_recursive($sourceEntry,$targetSelector);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
             if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
+                // source and target EntryId identical, attachment does not need to be touched
                 $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
-                if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
+                if ($isTestRun){
+                    $targetEntry=$sourceEntry;
+                } else {
+                    $targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+                }
             } else {
-                // move or copy attached file to tgarget
+                // move or copy attached file to target
                 $fileRenameSuccess=TRUE;
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
                 if (is_file($sourceFile) && !$isTestRun){
-                    if (is_file($targetFile)){
-                        if (unlink($targetFile)){
-                            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Removed file detected at target location'),FALSE);
-                        } else {
-                            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('failed'=>'Failed to remove file detected at target location'),FALSE);
-                        }
-                    }
                     if ($keepSource){
                         $fileRenameSuccess=@copy($sourceFile,$targetFile);
                     } else {
                         $fileRenameSuccess=@rename($sourceFile,$targetFile);
                     }
                 }
-                // create tgarget entry
+                // create target entry
                 if ($fileRenameSuccess){
                     $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
-                    $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId']),FALSE);
+                    $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId'].' to '.$targetEntry['EntryId']),FALSE);
                     if (!$isTestRun){
                         if (!$keepSource){
                             $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
                         }
-                        $targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
+                        $targetEntry=$this->updateEntry($targetEntry,$isSystemCall,FALSE,FALSE,$targetFile);
                     }            
                 } else {
                     // copying or renaming of attached file failed
@@ -743,7 +745,11 @@ class Database{
         } else {
             // no write access
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
-            if ($isTestRun){$targetEntry=$sourceEntry;} else {$targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);}
+            if ($isTestRun){
+                $targetEntry=$sourceEntry;
+            } else {
+                $targetEntry=$this->updateEntry($sourceEntry,TRUE);
+            }
         }
         return $targetEntry;
     }
