@@ -44,25 +44,30 @@ class Money{
     public function getEntryTemplate(){return $this->entryTemplate;}
     
     public function job($vars){
-        $client = new \GuzzleHttp\Client();
-        $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRatesUrl);
-        // Send an asynchronous request.
-        $promise = $client->sendAsync($request)->then(function($response){
-            $body=((string)$response->getBody());
-            $links=$this->body2links($this->ecbExchangeRatesUrl,$body,'90d.xml');
-            if ($links){
-                $this->ecbExchangeRates90url=current($links);
-                $client = new \GuzzleHttp\Client();
-                $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRates90url);
-                $promise = $client->sendAsync($request)->then(function($response){
-                                $body=((string)$response->getBody());
-                                $rates=$this->body2rates($body);
-                                $this->addRates2table($rates);
-                           });
-                $promise->wait();
-            }
-        });
-        $promise->wait();
+        if (!$this->oc['SourcePot\Datapool\Tools\NetworkTools']->hasInternetAccess()){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
+            return $vars;
+        } else {
+            $client = new \GuzzleHttp\Client();
+            $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRatesUrl);
+            // Send an asynchronous request.
+            $promise = $client->sendAsync($request)->then(function($response){
+                $body=((string)$response->getBody());
+                $links=$this->body2links($this->ecbExchangeRatesUrl,$body,'90d.xml');
+                if ($links){
+                    $this->ecbExchangeRates90url=current($links);
+                    $client = new \GuzzleHttp\Client();
+                    $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRates90url);
+                    $promise = $client->sendAsync($request)->then(function($response){
+                                    $body=((string)$response->getBody());
+                                    $rates=$this->body2rates($body);
+                                    $this->addRates2table($rates);
+                               });
+                    $promise->wait();
+                }
+            });
+            $promise->wait();
+        }
         return $vars;
     }
     

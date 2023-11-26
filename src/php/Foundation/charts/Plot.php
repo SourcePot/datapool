@@ -71,9 +71,10 @@ class Plot{
     public function getLegend($traces,$props=array()){
         $html='';
         $spanArr=array('tag'=>'span','style'=>array('display'=>'inherit'),'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','display'=>'none'));
-        $matrix=array('Trace'=>array(),'Selected'=>array());
+        $matrix=array('Name'=>array(),'Trace'=>array(),'Selected'=>array());
         foreach($traces as $traceId=>$trace){
             $dataset=$trace->getDataset();
+            $matrix['Name'][$traceId]=$trace->getName();
             $matrix['Trace'][$traceId]='&fnof;('.$dataset['x']['label'].','.$dataset['y']['label'].')';
             $matrix['Selected'][$traceId]='';
             foreach($dataset['data'] as $datasetIndex=>$datapoint){

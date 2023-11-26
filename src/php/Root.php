@@ -348,7 +348,7 @@ final class Root{
                 $html.='<html xmlns="http://www.w3.org/1999/xhtml" lang="en">';
                 $html.='<head>';
                 $html.='</head>';
-                $html.='<body style="color:#fff;background-color:#444;font-family: Verdana, Arial, Helvetica, sans-serif;font-size:20px;">';
+                $html.='<body style="color:#000;background-color:#fff;font:80% sans-serif;font-size:20px;">';
                 $html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
                 $html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
                 if (strpos($err['message'],'Access denied')===FALSE){

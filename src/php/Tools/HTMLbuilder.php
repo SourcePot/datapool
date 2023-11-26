@@ -45,7 +45,7 @@ class HTMLbuilder{
     }
     
     public function init($oc){
-        $this->oc=$oc;
+        $this->oc=$oc;    
     }
     
     public function getBtns($arr){
@@ -127,10 +127,7 @@ class HTMLbuilder{
                     $thArr=array('tag'=>'th','element-content'=>ucfirst(strval($colLabel)),'keep-element-content'=>!empty($arr['keep-element-content']));
                     $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
                     if (isset($arr['class'])){
-                        $trHeaderArr['class']=$arr['class'];
-                        $trArr['class']=$arr['class'];
-                        $thArr['class']=$arr['class'];
-                        $tdArr['class']=$arr['class'];
+                        $trHeaderArr['class']=$trArr['class']=$thArr['class']=$tdArr['class']=$arr['class'];
                     }
                     if (is_array($cell)){
                         $tdArr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
@@ -218,15 +215,12 @@ class HTMLbuilder{
     }
     
     public function tableSelect($arr){
-        $html='';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDbInfo() as $table=>$tableDef){$arr['options'][$table]=ucfirst($table);}
-        $html.=$this->select($arr);
-        return $html;
+        return $this->select($arr);
     }
     
     public function keySelect($arr,$appendOptions=array()){
-        $html='';
-        if (empty($arr['Source'])){return $html;}
+        if (empty($arr['Source'])){return '';}
         $fileContentKeys=array();
         $keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         if (empty($arr['standardColumsOnly'])){
@@ -258,8 +252,7 @@ class HTMLbuilder{
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
         }
         $arr['options']+=$appendOptions;
-        $html.=$this->select($arr);
-        return $html;
+        return $this->select($arr);
     }
     
     public function canvasElementSelect($arr){
@@ -272,8 +265,7 @@ class HTMLbuilder{
             if (empty($canvasEntry['Content']['Selector']['Source'])){continue;}
             $arr['options'][$canvasEntry['EntryId']]=$canvasEntry['Content']['Style']['Text'];
         }
-        $html=$this->select($arr);
-        return $html;
+        return $this->select($arr);
     }
     
     public function preview($arr){
@@ -765,6 +757,12 @@ class HTMLbuilder{
         return $html;
     }
     
+    /**
+    * This method returns html-string or adds the html content to the 'html'-key of the parameter $presentArr.
+    * The html-string presents the selected entry based on the presentation settings.
+    * @param array Contains the entry selector. 
+    * @return array|string
+    */
     public function presentEntry($presentArr){
         $html='';
         $presentArr=$this->mapContainer2presentArr($presentArr);
@@ -877,6 +875,192 @@ class HTMLbuilder{
             $options[$class]=$class;
         }
         return $options;
+    }
+    
+    /**
+    * This method creates a chart consisting of plots from events, events can consist of more than on signal.
+    * Every key of the event-array which is not a standard-key is a signal-key with the corresponding value..
+    * @param array  $events     Contains the events to be displayed 
+    * @param array  $styles     Is an arrey of styles of the different chart building parts
+    * @return string
+    */
+    public function simpleEventChart($events=FALSE,$styles=array('chart'=>array(),'plot'=>array(),'bar'=>array(),'caption'=>array(),'xLable'=>array(),'yLable'=>array())){
+        $stdKeys=array('timestamp'=>TRUE,'datetime'=>TRUE,'timezone'=>TRUE,'x'=>TRUE);
+        $stylesTemplate=array();
+        $stylesTemplate['chart']=array('position'=>'relative','margin-top'=>'50px');
+        $stylesTemplate['plot']=array('position'=>'relative','width'=>360,'height'=>50,'margin-bottom'=>'2.5em','border'=>'1px solid #444');
+        $stylesTemplate['bar']=array('position'=>'absolute','width'=>5);
+        $stylesTemplate['xLable']=array('position'=>'absolute','font-size'=>'0.8em','width'=>'7em','height'=>'4em','text-align'=>'left');
+        $stylesTemplate['yLable']=array('position'=>'absolute','font-size'=>'0.8em','width'=>'7em','height'=>'1.2em','text-align'=>'right');
+        $stylesTemplate['caption']=array('position'=>'absolute','top'=>'-2em','width'=>'100%','text-align'=>'center');
+        $stylesTemplate['plot']['margin-left']=$stylesTemplate['yLable']['width'];
+        foreach($stylesTemplate as $key=>$styleTemplate){
+            if (isset($styles[$key])){
+                $styles[$key]=array_replace_recursive($styleTemplate,$styles[$key]);
+            } else {
+                $styles[$key]=$styleTemplate;
+            }
+        }
+        // get sample events if events are not provided
+        $xMax=intval(round(200*pi()));
+        if ($events===FALSE){
+            for($index=0;$index<100;$index++){
+                $x=mt_rand(0,$xMax)/100;
+                $events[]=array('timeStamp'=>mt_rand(1700246000,1700247000),'Signal A'=>mt_rand(-100,100));
+                $events[]=array('timestamp'=>1700246000+(360*$x),'Signal B'=>1*sin($x));
+            }
+        }
+        // get parameters
+        $labelEvents=array();
+        $normEvents=array();
+        $params=array();
+        foreach($events as $index=>$event){
+            $normEvent=$this->normalizeEvent($event);
+            // x-index
+            if (isset($normEvent['x'])){
+                // nothing to do
+            } else if (isset($normEvent['timestamp'])){
+                $normEvent['x']=$normEvent['timestamp'];
+            } else {
+                $normEvent['x']=$index;
+            }
+            // x-range
+            if (!isset($params['xMin'])){$params['xMin']=$normEvent['x'];$labelEvents['x']['params']['xMin']=$normEvent;}
+            if (!isset($params['xMax'])){$params['xMax']=$normEvent['x'];$labelEvents['x']['params']['xMax']=$normEvent;}
+            if ($params['xMin']>$normEvent['x']){$params['xMin']=$normEvent['x'];$labelEvents['x']['params']['xMin']=$normEvent;}
+            if ($params['xMax']<$normEvent['x']){$params['xMax']=$normEvent['x'];$labelEvents['x']['params']['xMax']=$normEvent;}
+            $normEvents[$index]=$normEvent;
+            // y-range
+            foreach($normEvent as $signalKey=>$signal){
+                if (isset($stdKeys[$signalKey])){continue;}
+                if (!isset($params[$signalKey]['min'])){$params[$signalKey]['min']=$signal['value'];}
+                if (!isset($params[$signalKey]['max'])){$params[$signalKey]['max']=$signal['value'];}
+                if ($params[$signalKey]['min']>$signal['value']){$params[$signalKey]['min']=$signal['value'];}
+                if ($params[$signalKey]['max']<$signal['value']){$params[$signalKey]['max']=$signal['value'];}
+                $labelEvents['y'][$signalKey]['yMin']=$params[$signalKey]['min'];
+                $labelEvents['y'][$signalKey]['yMax']=$params[$signalKey]['max'];
+            }
+        }
+        if ($params['xMin']===$params['xMax']){$params['xMax']=$params['xMin']+1;;}
+        // create chart
+        $html='';
+        // scaler
+        $htmlArr=array();
+        $hasLabel=array();
+        $lastSignalKey=FALSE;
+        $xScale=intval($styles['plot']['width'])/($params['xMax']-$params['xMin']);
+        foreach($normEvents as $index=>$event){
+            foreach($event as $signalKey=>$signal){
+                if (isset($stdKeys[$signalKey])){continue;}
+                if (!isset($htmlArr[$signalKey])){$htmlArr[$signalKey]='';}
+                $styles['bar']['background-color']='#f004';   
+                // add bar -> html-div
+                $yScale=FALSE;
+                $yRange=$params[$signalKey]['max']-$params[$signalKey]['min'];
+                if ($params[$signalKey]['max']===$params[$signalKey]['min']){
+                    if ($params[$signalKey]['min']<0){
+                        $params[$signalKey]['max']=0;
+                    } else if ($params[$signalKey]['min']>0){
+                        $params[$signalKey]['min']=0;
+                    } else {
+                        $yScale=1;
+                    }
+                }
+                if ($yScale===FALSE){
+                    $yScale=intval($styles['plot']['height'])/$params[$signalKey]['max']-$params[$signalKey]['min'];
+                }
+                $styles['bar']['border-top']='1px solid #000';
+                $styles['bar']['left']=round($xScale*($event['x']-$params['xMin'])-0.5*$styles['bar']['width']);
+                if ($params[$signalKey]['max']>0 && $params[$signalKey]['min']<0){
+                    if ($signal['value']<0){
+                        $styles['bar']['height']=ceil(-$yScale*$signal['value']);   
+                        $styles['bar']['bottom']=round($yScale*($signal['value']-$params[$signalKey]['min']));
+                        $styles['bar']['border-bottom']='1px solid #000';
+                        $styles['bar']['background-color']='#80f4';   
+                    } else {
+                        $styles['bar']['height']=ceil($yScale*$signal['value']);   
+                        $styles['bar']['bottom']=round(-$yScale*$params[$signalKey]['min']);
+                    }
+                } else {
+                    $styles['bar']['height']=ceil($yScale*($signal['value']-$params[$signalKey]['min']));
+                    $styles['bar']['bottom']=0;
+                }
+                $element=array('tag'=>'div','element-content'=>' ','keep-element-content'=>TRUE,'style'=>$styles['bar']);
+                $element['title']=(isset($event['datetime']))?$event['datetime']:$event['x'];
+                $element['title'].=' | '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($signal['signal']);
+                $htmlArr[$signalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                // add y-label and captions
+                if (!isset($hasLabel[$signalKey])){
+                    $hasLabel[$signalKey]=TRUE;
+                    foreach($labelEvents['y'][$signalKey] as $labelIndex=>$labelValue){
+                        $label=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($labelValue,0);
+                        $styles['yLable']['bottom']=ceil($yScale*($labelValue-$params[$signalKey]['min']));
+                        $styles['yLable']['left']='-'.strval($styles['yLable']['width']);
+                        $styles['yLable']['height']='1em';
+                        $element=array('tag'=>'p','element-content'=>$label,'keep-element-content'=>TRUE,'style'=>$styles['yLable']);
+                        $htmlArr[$signalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                    }
+                    $element=array('tag'=>'h3','element-content'=>$signalKey,'keep-element-content'=>TRUE,'style'=>$styles['caption']);
+                    $htmlArr[$signalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);                                    
+                }
+                $lastSignalKey=$signalKey;
+            }
+        }
+        // add x-label
+        if ($lastSignalKey){
+            foreach($labelEvents['x']['params'] as $labelIndex=>$labelEvent){
+                $label=strval((isset($labelEvent['datetime']))?$labelEvent['datetime']:$labelEvent['x']);
+                $styles['xLable']['bottom']='-'.strval($styles['xLable']['height']);
+                $styles['xLable']['left']=round($xScale*($labelEvent['x']-$params['xMin'])-0.5*$styles['bar']['width']);
+                $element=array('tag'=>'p','element-content'=>$label,'keep-element-content'=>TRUE,'style'=>$styles['xLable']);
+                $htmlArr[$lastSignalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+            }
+        }
+        // compile plots to chart
+        foreach($htmlArr as $signalKey=>$barsHtml){
+            $element=array('tag'=>'div','element-content'=>$barsHtml,'keep-element-content'=>TRUE,'style'=>$styles['plot']);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        }
+        $element=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>$styles['chart']);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        return $html;
+    }
+    
+    private function normalizeEvent($event){
+        $normEvent=array();
+        $standardKeys=array('timeStamp'=>'timestamp','timestamp'=>'timestamp','dateTime'=>'datetime','datetime'=>'datetime','timeZone'=>'timezone','timezone'=>'timezone','X'=>'x','x'=>'x');
+        foreach($standardKeys as $testKey=>$stdKey){
+            if (isset($event[$testKey])){
+                $normEvent[$stdKey]=$event[$testKey];
+                unset($event[$testKey]);
+            }
+        }
+        // normalize keys
+        if (!isset($normEvent['timezone'])){
+            $normEvent['timezone']='UTC';
+        }
+        $timezoneObj=new \DateTimeZone($normEvent['timezone']);
+        // get datetime-object
+        $datetimeObj=FALSE;
+        if (isset($normEvent['datetime'])){
+            $datetimeObj=new \DateTime($normEvent['datetime'],$timezoneObj);
+        } else if (isset($normEvent['timestamp'])){
+            $datetimeObj=new \DateTime('@'.$normEvent['timestamp'],$timezoneObj);
+        }
+        // add datetime and timestamp
+        if ($datetimeObj){
+            $normEvent['datetime']=$datetimeObj->format('Y-m-d H:i:s');
+            $normEvent['timestamp']=$datetimeObj->getTimestamp();
+        }
+        // normalize value
+        foreach($event as $signalKey=>$signal){
+            if (is_bool($signal)){
+                $normEvent[$signalKey]=array('value'=>intval($signal),'signal'=>$signal);
+            } else {
+                $normEvent[$signalKey]=array('value'=>floatval($signal),'signal'=>$signal);
+            }
+        }
+        return $normEvent;
     }
     
 }

@@ -571,20 +571,19 @@ div.calendar-timeline{
 	border:2px solid #f00;
 }
 
-
-/** STATUS **//
-.status-on,.status-off{
+/** STATUS **/
+.status-off{
 	background-color:#2a0;
-	color:#fff;
-	min-width:100%;
-	min-height:8px;
-	padding:0.1em;
-	text-align:center;
 }
 .status-on{
 	background-color:#f00;
 }
-
+.status-on,.status-off{
+	color:#fff;
+	min-width:100%;
+	padding:0.1em;
+	text-align:center;
+}
 
 /** COMMENTS etc. **/
 p.comment{

@@ -37,7 +37,7 @@ class Chart{
         require_once(__DIR__.'/Trace.php');
     }
 
-    public function addTrace($trace,$axisMargin=20){
+    public function addTrace($trace,$traceProps=array()){
         $traceId='trace-'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(8);
         $dataset=$trace->getDataset();
         // add x-axis
@@ -62,6 +62,7 @@ class Chart{
                      'xAxis'=>array('shift'=>30*(count($this->xAxisHashes)-1),'hidden'=>$xAxisHidden,'element'=>array('stroke'=>$rgb)),
                      'yAxis'=>array('shift'=>50*(count($this->yAxisHashes)-1),'hidden'=>$yAxisHidden,'element'=>array('stroke'=>$rgb)),
                     );
+        $props=array_replace_recursive($props,$traceProps);
         $this->tracesArr[$traceId]=$trace;
         $this->tracesSvg.=$trace->getTrace($this->xAxisArr[$traceId],$this->yAxisArr[$traceId],$props);
     }

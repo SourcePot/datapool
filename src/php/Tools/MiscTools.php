@@ -299,6 +299,7 @@ class MiscTools{
 
     public function float2str($float,$prec=3,$base=1000){
         // Thanks to "c0x at mail dot ru" based on https://www.php.net/manual/en/function.log.php
+        $float=floatval($float);
         $e=array('a','f','p','n','u','m','','k','M','G','T','P','E');
         $p=min(max(floor(log(abs($float), $base)),-6),6);
         $value=round((float)$float/pow($base,$p),$prec);
@@ -331,7 +332,11 @@ class MiscTools{
     */
     
     public function add2history($arr,$newElement,$maxSize=10){
-        array_unshift($arr,$newElement);
+        if (is_array($arr)){
+            array_unshift($arr,$newElement);
+        } else {
+            $arr=array($newElement);
+        }
         while(count($arr)>$maxSize){
             array_pop($arr);
         }
@@ -343,7 +348,8 @@ class MiscTools{
     public function arr2selector($arr,$defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE)){
         $selector=array();
         foreach($defaultValues as $key=>$defaultValue){
-            $selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
+            //$selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
+            $selector[$key]=(empty($arr[$key]))?$defaultValue:$arr[$key];
             $selector[$key]=(strpos(strval($selector[$key]),self::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
         }
         return $selector;
@@ -368,7 +374,7 @@ class MiscTools{
     }    
     
     public function arr2file($inArr,$fileName=FALSE,$addDateTime=FALSE){
-        /*    This function converts t$inArr to json format and saves the json data to a file. 
+        /*   This function converts t$inArr to json format and saves the json data to a file. 
         *    If the fileName argument is empty, it will be created from the name of the calling class and function.
         *    The function returns the byte count written to the file or false in case of an error.
         */
@@ -574,6 +580,35 @@ class MiscTools{
     /******************************************************************************************************************************************
     * Generic conversions
     */
+    
+    public function var2dataType($var){
+        $strVar=strval($var);
+        if (is_numeric($var)){
+            if (strpos($strVar,'.')!==FALSE){
+                $dataType='float';
+            } else {
+                $dataType='int';
+            }
+        } else if (is_bool($var)){
+            $dataType='bool';
+        } else {
+            if (strcmp($strVar,'FALSE')===0 || strcmp($strVar,'TRUE')===0 || strcmp($strVar,'false')===0 || strcmp($strVar,'true')===0){
+                $dataType='bool';
+            } else {                
+                $strVarComps=explode('-',$strVar);
+                if (count($strVarComps)===3){
+                    $dataType='date';
+                    $strVarComps=explode(':',$strVarComps[2]);
+                    if (count($strVarComps)===3){
+                        $dataType.='Time';
+                    }
+                } else {
+                    $dataType='string';
+                }
+            }
+        }
+        return $dataType;
+    }
 
     public function convert($value,$dataType){
         $dataType=strtolower($dataType);

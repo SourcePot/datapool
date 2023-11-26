@@ -359,7 +359,7 @@ class Filespace{
         try{
             $this->statistics['inserted files']+=intval(copy($source,$target));
             if ($rights){chmod($target,$rights);}
-        } catch(Exception $e){
+        } catch(\Exception $e){
             // Exception handling
         }
     }

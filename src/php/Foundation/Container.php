@@ -505,6 +505,12 @@ class Container{
         return $arr;
     }
     
+    /**
+    * This method adds an html-form to the parameter arr['html'].
+    * Through the form a transmitter can be selected and the selected entry can be sent through thi transmitter.
+    * @param array  $arr    Contains the entry selector of the entry to be sent and settings 
+    * @return array
+    */
     public function sendEntry($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // init settings
@@ -553,6 +559,12 @@ class Container{
         return $arr;
     }    
 
+    /**
+    * This method add an html-string to the parameter $arr['html'] which contains an image presentation of entries selected by the parameter arr['selector'].
+    * @param array  $arr    Contains the entry selector and settings 
+    * @param array  $isDebugging    If TRUE the method will create a debug-file when called
+    * @return array
+    */
     public function getImageShuffle($arr,$isDebugging=FALSE){
         if (!isset($arr['html'])){$arr['html']='';}
         $selectBtnHtml='';
@@ -598,11 +610,161 @@ class Container{
         return $arr;
     }
     
+    /**
+    * This method returns an html-string containing a xy-chart derived from entries selected by parameter selector.
+    * @param array  $selector    Contains the entry selector 
+    * @param array  $traceDefArr    Contains an arrey of rules, each rule defining a trace
+    * @param array  $props    Contains the chart properties
+    * @return string
+    */
+    public function selector2xyChartHtml($selector,$traceDefArr,$props=array()){
+        if (empty($selector['Source'])){
+            throw new \ErrorException('Function '.__FUNCTION__.': selector[Source] is empty',0,E_ERROR,__FILE__,__LINE__);    
+        }
+        $propsTemplate=array('traces'=>array(),'width'=>800,'height'=>300,'caption'=>'Test chart','orderBy'=>'Date','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE,'x-range'=>'','y-range'=>'');
+        $props=array_merge($propsTemplate,$props);
+        // get ranges
+        $props['x-range']=$this->str2range($props['x-range']);
+        $props['y-range']=$this->str2range($props['y-range']);
+        // create chart object
+        require_once(__DIR__.'/charts/Chart.php');
+        $chartObj=new \SourcePot\Datapool\Foundation\Charts\Chart($this->oc,$props);
+        // extract data from selected entries based on parameter traces
+        $valueArr=array();
+        $traces=array();
+        $tracesSetting=array();
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$props['orderBy'],$props['isAsc'],$props['limit'],$props['offset']) as $entry){
+            $partlySkippedEntries=0;
+            if ($entry['isSkipRow']){
+                $partlySkippedEntries=1;
+                continue;
+            }
+            $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+            // loop through trace definitions
+            foreach($traceDefArr as $traceDefIndex=>$traceDef){
+                // filter entries - skip if needle is not found
+                $needle=(isset($traceDef['needle']))?$traceDef['needle']:'';
+                $haystack=(isset($flatEntry[$traceDef['filter']]))?$flatEntry[$traceDef['filter']]:'';
+                if (!empty($needle) && !empty($haystack)){
+                    if (strpos($haystack,$needle)===FALSE){$partlySkippedEntries=1;continue;}
+                }
+                // recover values
+                if (!isset($flatEntry[$traceDef['x-selector']]) || !isset($flatEntry[$traceDef['y-selector']])){
+                    $partlySkippedEntries=1;continue;
+                }
+                $traceName=$traceDef['trace name'];
+                if (!empty($props['separate by'])){
+                    if (isset($entry[$props['separate by']])){
+                        if (!is_array($entry[$props['separate by']])){
+                            $traceName.=' ['.$entry[$props['separate by']].']';
+                        }
+                    }
+                }
+                // grouping
+                $valueArr['x']=$this->strByGroup($flatEntry[$traceDef['x-selector']],$traceDef['x-processing']);
+                $valueArr['y']=$this->strByGroup($flatEntry[$traceDef['y-selector']],$traceDef['y-processing']);
+                // get datatypes
+                if (!isset($tracesSetting[$traceName]['x']) || !isset($tracesSetting[$traceName]['y'])){
+                    if (strpos($traceDef['y-processing'],'group ')!==FALSE){
+                        $tracesSetting[$traceName]['orderBy']='y';
+                    } else if (strpos($traceDef['x-processing'],'group ')!==FALSE){
+                        $tracesSetting[$traceName]['orderBy']='x';
+                    } else {
+                        $tracesSetting[$traceName]['orderBy']='x';
+                    }
+                    $tracesSetting[$traceName]['x']['processing']=$traceDef['x-processing'];
+                    $tracesSetting[$traceName]['x']['dataType']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2dataType($valueArr['x']);
+                    $tracesSetting[$traceName]['x']['label']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($traceDef['x-selector']);
+                    if (!empty($props['x-range'])){$tracesSetting[$traceName]['x']['range']=$props['x-range'];}
+                    $tracesSetting[$traceName]['y']['processing']=$traceDef['y-processing'];
+                    $tracesSetting[$traceName]['y']['dataType']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2dataType($valueArr['y']);
+                    $tracesSetting[$traceName]['y']['label']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($traceDef['y-selector']);
+                    if (!empty($props['y-range'])){$tracesSetting[$traceName]['y']['range']=$props['y-range'];}
+                }
+                // add points to trace
+                $traces[$traceName][$valueArr[$tracesSetting[$traceName]['orderBy']]][]=$valueArr;
+            } // loop through trace definitions
+            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('skipped',$partlySkippedEntries);
+        } // loop through entries
+        // add traces to chart
+        foreach($traces as $traceName=>$traceGroupArr){
+            // create trace object
+            $traceObj=new \SourcePot\Datapool\Foundation\Charts\Trace($this->oc,$tracesSetting[$traceName]['x'],$tracesSetting[$traceName]['y'],$traceName);
+            ksort($traceGroupArr);
+            // add dataponts to trace
+            foreach($traceGroupArr as $groupKey=>$traceIndexArr){
+                // data post-processing
+                $traceIndexArr=$this->arrPostProcessing($traceIndexArr,$tracesSetting[$traceName]['x']['processing'],'x');
+                $traceIndexArr=$this->arrPostProcessing($traceIndexArr,$tracesSetting[$traceName]['y']['processing'],'y');
+                // add data to trace
+                foreach($traceIndexArr as $index=>$valueArr){$traceObj->addDatapoint($valueArr);}
+            }
+            $rgb=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2color($traceName,1,FALSE,FALSE);
+            $traceProps=array('path'=>array('element'=>array('fill'=>$rgb,'stroke'=>$rgb)));
+            $traceObj->done();
+            $chartObj->addTrace($traceObj,$traceProps);
+        }
+        $html=$chartObj->getChart($props['caption']);
+        return $html;
+    }
+    
+    private function str2range($str){
+        if (empty($str)){return $str;}
+        $strComps=preg_split('/[\|;]/',$str);
+        foreach($strComps as $index=>$value){
+            $dataType=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2dataType($value);
+            if (strpos($dataType,'date')!==FALSE){
+                $value=$this->strByGroup($value,'second');
+                $strComps[$index]=strtotime($value);
+            }
+        }
+        return $strComps;
+    }
+    
+    private function strByGroup($value,$groupMode){
+        $keys=array('year','month','day','hour','minute','second');
+        $dateTimeDefualtComps=array('1000','06','15','12','12','30');
+        if (strpos($groupMode,'group ')===FALSE || empty($value)){return $value;}
+        if (strpos($value,'-')===FALSE){return $value;}
+        $dateTimeComps=preg_split('/[:\-\s]/',trim($value,' :-'));
+        $needleFound=FALSE;
+        $dateTime=array();
+        foreach($keys as $keyIndex=>$needle){
+            if (isset($dateTimeComps[$keyIndex]) && !$needleFound){
+                $dateTime[]=$dateTimeComps[$keyIndex];
+            } else {
+                $dateTime[]=$dateTimeDefualtComps[$keyIndex];
+            }
+            if (strpos($groupMode,$needle)!==FALSE){
+                $needleFound=TRUE;
+            }
+        }
+        return $dateTime[0].'-'.$dateTime[1].'-'.$dateTime[2].' '.$dateTime[3].':'.$dateTime[4].':'.$dateTime[5];
+    }
+    
+    private function arrPostProcessing($arr,$processing,$dim='x'){
+        if ($processing!=='avr' && $processing!=='min' && $processing!=='max' && $processing!=='sum' && $processing!=='count'){
+            return $arr;
+        }
+        $results=array('count'=>0,'sum'=>0,'min'=>FALSE,'max'=>FALSE,'avr'=>FALSE);
+        foreach($arr as $index=>$value){
+            $results['count']++;
+            $value=floatval($value[$dim]);
+            $results['sum']+=$value;
+            if ($results['max']===FALSE || $results['max']<$value){$results['max']=$value;}
+            if ($results['min']===FALSE || $results['min']>$value){$results['min']=$value;}
+        }
+        if ($results['count']>0){$results['avr']=$results['sum']/$results['count'];}
+        foreach($arr as $index=>$value){
+            $arr[$index][$dim]=$results[$processing];
+        }
+        return $arr;
+    }
+    
     public function getChart($arr,$isDebugging=FALSE){
         if (!isset($arr['html'])){$arr['html']='';}
         $settingsTemplate=array('traces'=>array(),'width'=>800,'height'=>300);
         $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
-        
         require_once(__DIR__.'/charts/Chart.php');
         $chart=new \SourcePot\Datapool\Foundation\Charts\Chart($this->oc,$arr['settings']);
         for($traceIndex=1;$traceIndex<4;$traceIndex++){

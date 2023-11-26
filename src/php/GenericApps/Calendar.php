@@ -742,21 +742,25 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         // compile result
         $dates=array('System short'=>'','System'=>$dateArr['year'].'-'.$dateArr['month'].'-'.$dateArr['day'].' 12:00:00');
         $timezoneObj=new \DateTimeZone(DB_TIMEZONE);
-        $datetimeObj=new \DateTime($dates['System'],$timezoneObj);
-        $dates['System short']=$datetimeObj->format('Y-m-d');
-        $dates['System']=$dates['System short'].' 12:00:00';
-        $dates['String']=$orgString;
-        $dates['Timezone']=DB_TIMEZONE;
-        $dates['Timestamp']=$datetimeObj->getTimestamp();
-        $dates['US']=$datetimeObj->format('m/d/Y');
-        $dates['UK']=$datetimeObj->format('d/m/Y');
-        $dates['DE']=$datetimeObj->format('d.m.Y');
-        $dates['day']=intval($dateArr['day']);
-        $dates['month']=intval($dateArr['month']);
-        $dates['year']=intval($dateArr['year']);
-        $dates['US long']=$this->revMonths['US'][$dateArr['month']].' '.intval($dateArr['day']).', '.$dateArr['year'];
-        $dates['UK long']=intval($dateArr['day']).' '.$this->revMonths['UK'][$dateArr['month']].' '.$dateArr['year'];
-        $dates['DE long']=intval($dateArr['day']).'. '.$this->revMonths['DE'][$dateArr['month']].' '.$dateArr['year'];
+        try{
+            $datetimeObj=new \DateTime($dates['System'],$timezoneObj);
+            $dates['System short']=$datetimeObj->format('Y-m-d');
+            $dates['System']=$dates['System short'].' 12:00:00';
+            $dates['String']=$orgString;
+            $dates['Timezone']=DB_TIMEZONE;
+            $dates['Timestamp']=$datetimeObj->getTimestamp();
+            $dates['US']=$datetimeObj->format('m/d/Y');
+            $dates['UK']=$datetimeObj->format('d/m/Y');
+            $dates['DE']=$datetimeObj->format('d.m.Y');
+            $dates['day']=intval($dateArr['day']);
+            $dates['month']=intval($dateArr['month']);
+            $dates['year']=intval($dateArr['year']);
+            $dates['US long']=$this->revMonths['US'][$dateArr['month']].' '.intval($dateArr['day']).', '.$dateArr['year'];
+            $dates['UK long']=intval($dateArr['day']).' '.$this->revMonths['UK'][$dateArr['month']].' '.$dateArr['year'];
+            $dates['DE long']=intval($dateArr['day']).'. '.$this->revMonths['DE'][$dateArr['month']].' '.$dateArr['year'];
+        } catch (\Exception $e){
+            $dates['error']=$e->getMessage();
+        }
         return $dates;
     }
 

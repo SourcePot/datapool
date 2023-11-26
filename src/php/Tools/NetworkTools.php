@@ -23,6 +23,16 @@ class NetworkTools{
         $this->oc=$oc;
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
     }
+    
+    public function hasInternetAccess($testUrl='https://www.google.com'){
+        $connected=@fsockopen($testUrl,80);
+        if ($connected){
+            fclose($connected);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
 
     public function href($arr){
         $script=$_SERVER['SCRIPT_NAME'];

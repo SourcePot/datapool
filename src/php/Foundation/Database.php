@@ -80,7 +80,7 @@ class Database{
     }
 
     public function resetStatistic(){
-        $_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0);
+        $_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0,'skipped'=>0);
         return $_SESSION[__CLASS__]['Statistic'];
     }
     
@@ -638,7 +638,7 @@ class Database{
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
         // get existing entry
-        $existingEntry=$this->entryById($entry,TRUE,'Write',TRUE);
+        $existingEntry=$this->entryById($selector,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
             // no existing entry found, insert and return entry
             if (is_file($attachment)){

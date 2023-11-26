@@ -17,23 +17,26 @@ class Trace{
     private $oc;
     private $oTools;
     private $id='';
+    private $name='';
     private $rangeHashes=array();
     private $datasetIndex=-1;
     private $dataset=array('x'=>array('invDim'=>'y','selector'=>'Date','range'=>FALSE,'dataType'=>'dateTime','label'=>'Datum'),
                            'y'=>array('invDim'=>'x','selector'=>'Test','range'=>FALSE,'dataType'=>'float','label'=>'Values'),
-                           'data'=>array()
+                           'data'=>array(),
                            );
     
     private $minMax=array('x'=>array(FALSE,FALSE),'y'=>array(FALSE,FALSE));
     
-    function __construct($oc,$xDef=array(),$yDef=array()){
+    function __construct($oc,$xDef=array(),$yDef=array(),$name=''){
         $this->oc=$oc;
         $this->oTools=new Tools($oc);
         $this->id='trace-'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(8);
+        $this->name=$name;
         $this->dataset=array_replace_recursive($this->dataset,array('x'=>$xDef,'y'=>$yDef));
     }
 
     public function getId(){return $this->id;}
+    public function getName(){return $this->name;}
     public function getDataset(){return $this->dataset;}
     
     public function addEntry($entry){
