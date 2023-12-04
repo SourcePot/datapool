@@ -1,16 +1,20 @@
+:root{
+    --brand:blue;
+    accent-color:var(--brand);
+    font-size:14px;
+	font-family:system-ui,sans-serif;
+}
 *{
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	color:#444;
 	margin:0;
 	padding:0;
 	text-decoration:none;
-	color:#444;
 }
 body{
 	color:#333;
 	background-image:url("lightbg.png");
 	background-repeat:repeat;
 	background-attachment:fixed;
-    font-size:13px;
 }
 span{
 	font-family:inherit;
@@ -18,7 +22,7 @@ span{
 	text-decoration:none;
 	color:inherit;
 }
-h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button,svg{
+h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg{
 	float:left;
 	clear:both;
 	font-size:inherit;
@@ -26,17 +30,16 @@ h1,h2,h3,li,ol,ul,div,p,div,label,calendar-sheet-wrapper,embed,button,svg{
 	line-height:1.5em;
 }
 h1,h2,h3{
-	font: 1.2rem "Fira Sans", sans-serif;
-    margin:0.4em 0 0.2em 5px;
+    margin:0.4em 0 0.2rem 5px;
 }
 h1{
-	font-size:1.4em;
+	font-size:1.4rem;
 }
 h2{
-	font-size:1.3em;
+	font-size:1.3rem;
 }
 h3{
-	font-size:1.1em;
+	font-size:1.1rem;
 }
 a.textlink{
     font-weight:bold;
@@ -54,22 +57,17 @@ button,input,textarea,select,a.btn,.js-button{
 	margin: 0 0.2em;
     line-height:1.2em;
 	text-align:center;
-	color:#000;
-	background-color:#fff;
+    background-color:#fff;
 	border-radius:unset;
 	border-left:1px solid #ccc;
 	border-top:1px solid #ccc;
 	border-right:2px solid #aaa;
 	border-bottom:2px solid #aaa;
 }
-input[type=text]{
-    border:none;
-    border-bottom:1px dotted #000;
-}
-button:hover,input[type=submit]:hover,a.btn:hover,.js-button:hover{
+button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,.js-button:hover{
 	cursor:pointer;
-	color:#fff;
-	background-color:#000;
+    color:#fff;
+    background-color:#000;   
 }
 select{
 	max-width:280px;
@@ -119,7 +117,26 @@ caption{
 	margin:5px 0;
 	font-size:1.2em;
 }
+fieldset{
+    font-size:0.9rem;
+    border:2px solid var(--brand);
+}
+legend{
+    font-weight:700;
+    color:var(--brand);
+}
+div.fieldset{
+    padding:0.5em 0;
+}
+input[type="checkbox"]{
+    clear:left;
+    width:1.2rem;
+    height:1.2rem;
+    margin:0 0.5rem;
+}
 label{
+    float:left;
+    clear:right;
 	line-height:initial;
 }
 tr:hover{

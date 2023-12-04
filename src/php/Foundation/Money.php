@@ -44,10 +44,7 @@ class Money{
     public function getEntryTemplate(){return $this->entryTemplate;}
     
     public function job($vars){
-        if (!$this->oc['SourcePot\Datapool\Tools\NetworkTools']->hasInternetAccess()){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
-            return $vars;
-        } else {
+        if (connection_status()==CONNECTION_NORMAL){
             $client = new \GuzzleHttp\Client();
             $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRatesUrl);
             // Send an asynchronous request.
@@ -67,6 +64,10 @@ class Money{
                 }
             });
             $promise->wait();
+        } else {
+            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
+            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>__CLASS__.'::'.__FUNCTION__.' failed due to no internet access.','priority'=>33,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+            return $vars;
         }
         return $vars;
     }

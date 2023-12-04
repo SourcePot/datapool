@@ -82,6 +82,9 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             } else {
                 $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
             }
+        } else if (isset($formData['cmd']['renew'])){
+            $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
+            unlink($objectListFile);
         }
         // export html
         $matrix=array();
@@ -121,8 +124,31 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $btnArr['hasCover']=TRUE;
         $matrix['Recover from file']=array('Input'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr),
                                            'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr));
-        $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup / recover','hideKeys'=>FALSE,'hideHeader'=>TRUE));
+        // renew object init file
+        $btnArr['key']=array('renew');
+        $btnArr['element-content']='Renew';
+        $btnArr['hasCover']=FALSE;
+        $matrix['Object list']=array('Input'=>$this->objectListHtml(),
+                                     'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr)
+                                    );
+        
+        $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Backup, recover, object list','hideKeys'=>FALSE,'hideHeader'=>TRUE));
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
+    }
+    
+    private function objectListHtml(){
+        $html='';
+        $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
+        if (!is_file($objectListFile)){return 'Please reload to create a new object list.';}
+        $count=0;
+        foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
+            if (!isset($row['type'])){continue;}
+            $count++;
+            $html.=$row['class'].' ('.$row['type'].'); ';
+            if ($count%5===0){$html.='<br/>';}
+        }
+        $html='Objects: '.$count.'<br/>'.trim($html,', ');
+        return $html;
     }
     
     private function adminChart(){

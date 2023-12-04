@@ -524,7 +524,9 @@ class Filespace{
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
-            if (isset($entry['pdfParser'])){
+            if (empty($entry['pdfParser'])){
+                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'File upload, pdf parsing failed: no parser selected','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            } else {
                 $parserMethod=$entry['pdfParser'];
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);

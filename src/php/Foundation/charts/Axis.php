@@ -70,7 +70,9 @@ class Axis{
             $this->params['scaler']=($rangeOut[1]-$rangeOut[0])/(count($rangeIn)-1);
             $this->params['offset']=$rangeOut[0];
         } else {
-            $this->params['scaler']=($rangeOut[0]-$rangeOut[1])/($rangeIn[0]-$rangeIn[1]);
+            $rangeInRange=$rangeIn[0]-$rangeIn[1];
+            if ($rangeIn[0]==$rangeIn[1]){$rangeInRange=0.00000001;}
+            $this->params['scaler']=($rangeOut[0]-$rangeOut[1])/$rangeInRange;
             $this->params['offset']=$rangeOut[0]-$this->params['scaler']*$rangeIn[0];
         }
         return $this->params;

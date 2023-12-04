@@ -99,7 +99,11 @@ class CSVtools{
     }
     
     public function csvIterator($selector){
-        $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
+        if (is_array($selector)){
+            $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
+        } else {
+            $csvFile=$selector;
+        }
         if (!is_file($csvFile)){yield array();}
         $csvSettings=$this->csvSetting();
         $csv=new \SplFileObject($csvFile);

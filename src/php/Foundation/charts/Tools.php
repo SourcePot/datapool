@@ -18,17 +18,6 @@ class Tools{
     function __construct($oc){
         $this->oc=$oc;
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        
-        /*
-        for($value=0;$value<=10;$value++){
-            //$params=$this->getScaleParams(array(0,10),array(255,50));
-            //$scaledValue=$this->scale($params,$value);
-            //var_dump($value.': '.$scaledValue);
-            
-            $color=$this->scaleRgb(array(0,10),array('#ffffff','#000000'),$value);
-            var_dump($value.': '.$color);
-        }
-        */
     }
 
     public function getMatchIndex($ordinalScale=array('a','b','c','d','e','f'),$value='c'){

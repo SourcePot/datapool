@@ -478,12 +478,12 @@ class Container{
             $commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>$arr['class']));
         }
         $commentsHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($commentsHtml);
-        $targetId=$arr['callingFunction'].'-textarea';
+        $targetId=$arr['containerId'].'-textarea';
         $newComment='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'New comment','style'=>array('float'=>'left','clear'=>'both','margin'=>'0 5px')));
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'...','key'=>array('comment'),'id'=>$targetId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$arr['callingFunction'],'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$targetId));
+            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$arr['containerId'],'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$targetId));
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             $appArr=array('html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']);
             $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
@@ -621,6 +621,7 @@ class Container{
         if (empty($selector['Source'])){
             throw new \ErrorException('Function '.__FUNCTION__.': selector[Source] is empty',0,E_ERROR,__FILE__,__LINE__);    
         }
+        if (empty($traceDefArr)){return '';}
         $propsTemplate=array('traces'=>array(),'width'=>800,'height'=>300,'caption'=>'Test chart','orderBy'=>'Date','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE,'x-range'=>'','y-range'=>'');
         $props=array_merge($propsTemplate,$props);
         // get ranges
@@ -697,9 +698,11 @@ class Container{
                 $traceIndexArr=$this->arrPostProcessing($traceIndexArr,$tracesSetting[$traceName]['x']['processing'],'x');
                 $traceIndexArr=$this->arrPostProcessing($traceIndexArr,$tracesSetting[$traceName]['y']['processing'],'y');
                 // add data to trace
-                foreach($traceIndexArr as $index=>$valueArr){$traceObj->addDatapoint($valueArr);}
+                foreach($traceIndexArr as $index=>$valueArr){
+                    $traceObj->addDatapoint($valueArr);
+                }
             }
-            $rgb=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2color($traceName,1,FALSE,FALSE);
+            $rgb=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2color($traceName,2,FALSE,FALSE);
             $traceProps=array('path'=>array('element'=>array('fill'=>$rgb,'stroke'=>$rgb)));
             $traceObj->done();
             $chartObj->addTrace($traceObj,$traceProps);

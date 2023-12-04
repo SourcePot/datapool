@@ -657,20 +657,20 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $endDateTime=new \DateTime($entry['Content']['Event']['End'],$endSourceTimezone);
         $intervallRecurrence=\DateInterval::createFromDateString(trim($entry['Content']['Event']['Recurrence'],'+'));
         $loopEntry=$entry;
-        for($loop=1;$loop<=$entry['Content']['Event']['Recurrence times'];$loop++){
-            if ($loop===1){
+        for($loop=0;$loop<=$entry['Content']['Event']['Recurrence times'];$loop++){
+            if ($loop===0){
                 $loopEntry['EntryId']=$entry['EntryId'];
             } else {
                 $loopEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
             }
-            $startDateTime->add($intervallRecurrence);
             $loopEntry['Content']['Event']['Start']=$startDateTime->format('Y-m-d H:i:s');
-            $endDateTime->add($intervallRecurrence);
             $loopEntry['Content']['Event']['End']=$endDateTime->format('Y-m-d H:i:s');
             $loopEntry['Start']=$this->getTimezoneDate($loopEntry['Content']['Event']['Start'],$loopEntry['Content']['Event']['Start timezone'],DB_TIMEZONE);
             $loopEntry['End']=$this->getTimezoneDate($loopEntry['Content']['Event']['End'],$loopEntry['Content']['Event']['End timezone'],DB_TIMEZONE);
             $loopEntry['Content']['Event']['Recurrence index']=$loop;
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loopEntry);
+            $startDateTime->add($intervallRecurrence);
+            $endDateTime->add($intervallRecurrence);
         }
         return $entry;
     }

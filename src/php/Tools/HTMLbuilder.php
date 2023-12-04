@@ -388,7 +388,9 @@ class HTMLbuilder{
         }
         //
         $callingFunction=$arr['settings']['target'];
-        if (!isset($_SESSION[__CLASS__]['settings'][$callingFunction]['Category'])){$_SESSION[__CLASS__]['settings'][$callingFunction]['Category']=key($options);}
+        if (!isset($_SESSION[__CLASS__]['settings'][$callingFunction]['Category'])){
+            $_SESSION[__CLASS__]['settings'][$callingFunction]['Category']=key($options);
+        }
         $arr['formData']=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,$callingFunction);
         if (!empty($arr['formData']['val'])){
             $_SESSION[__CLASS__]['settings'][$callingFunction]=$arr['formData']['val'];
@@ -427,6 +429,10 @@ class HTMLbuilder{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
         $saveRequest=isset($formData['cmd'][$arr['key']]['save']);
         $updatedInteger=0;
+        
+        $html='<fieldset>';
+        $html.='<legend>'.'"'.$arr['key'].'" right'.'</legend>';
+        
         $matrix=array();
         if (is_string($integer)){$integer=intval($integer);}
         for($bitIndex=0;$bitIndex<$arr['bitCount'];$bitIndex++){
@@ -446,12 +452,16 @@ class HTMLbuilder{
             if (isset($arr['integerDef'][$bitIndex]['Name'])){$label=$arr['integerDef'][$bitIndex]['Name'];} else {$label=$bitIndex;}
             $bitIndex=strval($bitIndex);
             $id=md5($callingClass.$callingFunction.$bitIndex);
-            $matrix[$bitIndex]['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
-            $matrix[$bitIndex]['Status']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
+            //$matrix[$bitIndex]['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
+            //$matrix[$bitIndex]['Status']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
+            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
+            $htmlBit.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$htmlBit,'keep-element-content'=>TRUE,'class'=>'fieldset'));
         }
-        $updateBtn=array('tag'=>'button','key'=>array($arr['key'],'save'),'value'=>'save','element-content'=>'💾','callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
-        $matrix['Cmd']['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
-        $matrix['Cmd']['Status']='';
+        $updateBtn=array('tag'=>'button','key'=>array($arr['key'],'save'),'element-content'=>'Save','style'=>array('margin'=>'0','width'=>'100%'),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
+        //$matrix['Cmd']['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
+        //$matrix['Cmd']['Status']='';
         if ($saveRequest){
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
@@ -461,7 +471,12 @@ class HTMLbuilder{
         }
         $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
         $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
-        $html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>$hideKeys,'hideHeader'=>$hideHeader));
+        //$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>$hideKeys,'hideHeader'=>$hideHeader));
+        
+        
+        $html.='</fieldset>';
+        
+        
         return $html;
     }
     
