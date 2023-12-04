@@ -322,7 +322,6 @@ input[type=submit].bottom-menu{
 }
 input[type=submit].bottom-menu:hover{
 	color:#c00;
-	background:none;
 }
 div.first-menu,div.second-menu{
 	position:fixed;
@@ -340,7 +339,6 @@ div.second-menu{
 }
 ul.menu{
 	list-style-type: none;
-	border-bottom:1px dotted #aaa;
 	background-color:#fff;
 	margin:0;
 }
@@ -349,10 +347,12 @@ li.menu{
 	width:6em;
 	background:none;
 	border-right:1px solid #aaa;
-	overflow:hidden;
+    border-bottom:4px solid #fff;
+	transition:border 500ms ease-out;
+    overflow:hidden;
 }
 li.menu:hover{
-	border-bottom:4px solid #000;	
+    border-bottom:4px solid #000;
 }
 a.menu,a.first-menu,p.first-menu{
 	display:block;
