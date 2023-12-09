@@ -273,7 +273,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         if ($success){
             $result['Matching statistics']['Matched']['value']++;
-            $entryA=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entryA,'Processing log',array('success'=>'Match column "'.$columnToMatch.'" successful'),FALSE);
+            $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entryA,'Processing log',array('success'=>'Match column "'.$columnToMatch.'" successful'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){
                 $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
             } else {
@@ -284,7 +284,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         } else {
             $result['Matching statistics']['Failed']['value']++;
-            $entryA=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entryA,'Processing log',array('failure'=>'Match column "'.$columnToMatch.'" failed'),FALSE);
+            $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entryA,'Processing log',array('failure'=>'Match column "'.$columnToMatch.'" failed'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
                 $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
             } else {

@@ -17,7 +17,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     public function __construct($oc){
         $this->oc=$oc;
-        $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logging']->getEntryTable();
+        $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable();
     }
 
     public function init(array $oc){
@@ -31,7 +31,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             // if selector Source is empty, set to "logging"
             $currentPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             if (empty($currentPageState['Source'])){
-                $currentPageState['Source']='logging';
+                $currentPageState['Source']=$this->entryTable;
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$currentPageState);
             }
             // get page content
@@ -55,9 +55,9 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             return $html;
         } else if (empty($selector['EntryId'])){
             $selector['disableAutoRefresh']=TRUE;
-            $settings=array('orderBy'=>'Date','isAsc'=>FALSE);
-            $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Type','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Table entries','entryList',$selector,$settings,array());        
+            $settings=array('orderBy'=>'Date','isAsc'=>FALSE,'hideUpload'=>TRUE);
+            $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Group','Filter'=>''),array('Column'=>'Name','Filter'=>''));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Table entries as','entryList',$selector,$settings,array());        
         } else {
             $settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry','generic',$selector,$settings,array('style'=>array('margin'=>'0')));

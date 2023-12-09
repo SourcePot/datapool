@@ -31,16 +31,16 @@ class Toolbox{
     }
     
     public function registerToolbox($callingClass,$toolboxEntry){
-        $toolboxTemplate=array('Source'=>$this->entryTable,'Group'=>'Settings','Folder'=>$callingClass,'Type'=>'toolbox','owner'=>'SYSTEM');
-        if (empty($toolboxEntry['Name'])){$toolboxEntry['Name']='NAME WAS NOT PROVIDED';}
-        $toolboxEntry=array_merge($toolboxEntry,$toolboxTemplate);
-        $toolboxEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($toolboxEntry,array('Source','Group','Folder','Name'),0);
-        if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-            $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($toolboxEntry);
-        } else {
-            $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($toolboxEntry);
+        $toolboxEntry['Source']=$this->entryTable;
+        $toolboxEntry['Group']='Settings';
+        $toolboxEntry['Folder']=$callingClass;
+        $toolboxEntry['Type']=$toolboxEntry['Source'].' array';
+        $toolboxEntry['Owner']='SYSTEM';
+        $toolboxEntry['EntryId']=$callingClass;
+        $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($toolboxEntry,TRUE);
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($toolboxEntry)){
+            $this->toolboxes[$toolboxEntry['EntryId']]=$toolboxEntry;
         }
-        if (!empty($toolboxEntry)){$this->toolboxes[$toolboxEntry['EntryId']]=$toolboxEntry;}
         return $toolboxEntry;
     }
     

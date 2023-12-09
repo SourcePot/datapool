@@ -291,7 +291,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $statisticsKey='Forwarding rule '.$ruleIndex.' success';
                 $targetSelector=$base['entryTemplates'][$forwardTo];
                 $processingLogText='Rule "'.$ruleId.'" condition met, forwarded entry to "'.implode(' &rarr; ',$targetSelector).'"';
-                $inboxEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('forwarded'=>$processingLogText),FALSE);
+                $inboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('forwarded'=>$processingLogText),FALSE);
                 if ($this->itemAlreadyProcessed($entry,$processingLogText)){
                     $result['Inbox statistics']['Itmes already processed and skipped']['value']++;
                 } else {

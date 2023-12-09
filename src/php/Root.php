@@ -28,7 +28,7 @@ final class Root{
         $this->initExceptionHandler();
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>FALSE,'selected'=>array());
+            $_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
         }
         // load all external components
         $_SESSION['page state']['autoload.php loaded']=FALSE;
@@ -163,7 +163,8 @@ final class Root{
                                      'Dictionary.php'=>'307|',
                                      'HTMLbuilder.php'=>'308|',
                                      'Logging.php'=>'309|',
-                                     'User.php'=>'310|',
+                                     'Logger.php'=>'310|',
+                                     'User.php'=>'311|',
                                      'Home.php'=>'701|',
                                      'Account.php'=>'702|',
                                      'Login.php'=>'901|',
@@ -175,7 +176,7 @@ final class Root{
         $dir=$GLOBALS['dirs']['php'];
         $dirs=scandir($dir);
         foreach($dirs as $dirIndex=>$dirName){
-            if (strpos($dirName,'.php')!==FALSE || empty(trim($dirName,'.'))){continue;}
+            if (strpos($dirName,'.php')!==FALSE || strpos($dirName,'.md')!==FALSE || empty(trim($dirName,'.'))){continue;}
             $type=match($dirName){'Interfaces'=>'200|Interface',
                                   'Foundation'=>'400|Kernal object',
                                   'Tools'=>'500|Kernal object',

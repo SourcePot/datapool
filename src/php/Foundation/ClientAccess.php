@@ -113,7 +113,7 @@ class ClientAccess{
                 $method=$data['method'];
                 if (in_array($method,$this->methodBlackList)){
                     $data['answer']['error']='Access '.$class.'::'.$method.'() blocked';
-                    $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$data['answer']['error'],'priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning',$data['answer']['error'],array());    
                 } else if (method_exists($this->oc[$class],$method)){
                     unset($data['Authorization']);
                     unset($data['method']);
@@ -124,7 +124,7 @@ class ClientAccess{
                     $data['answer']['error']='Method '.$class.'::'.$method.'() does not exist';
                 }
             } else {
-                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Access token failed: '.$data['answer']['error'],'priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Access token failed: {failed}',array('failed'=>$data['answer']['error']));    
             }
         } else {
             // authorization missing
@@ -162,7 +162,7 @@ class ClientAccess{
             $msg='Client authorization request failed';
             $msg.=(empty($authorizationArr['scope']))?'':' scope:'.$authorizationArr['scope'];
             $msg.=(empty($authorizationArr['client_id']))?'':' client_id:'.$authorizationArr['client_id'];
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$msg,'priority'=>43,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error',$msg,array());    
         } else {
             // create new token
             $expires=time()+$this->authorizationLifespan;
@@ -177,7 +177,7 @@ class ClientAccess{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token
             $data['answer']=$authorizationEntry['Content'];
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Client authorization success','priority'=>40,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Client authorization success',array());    
         }
         return $data;
     }

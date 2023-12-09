@@ -129,7 +129,7 @@ class Access{
         if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
             $user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User account login id for "'.$user['EntryId'].'" was rehashed.','priority'=>41,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','User account login id for {EntryId}" was rehashed.',array('EntryId'=>$user['EntryId']));    
             return TRUE;
         } else {
             return FALSE;

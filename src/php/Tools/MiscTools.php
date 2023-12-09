@@ -234,7 +234,9 @@ class MiscTools{
         if (!empty($addDateInterval)){
             $dateTime->add(new \DateInterval($addDateInterval));
         }
-        if (empty($timezone)){$timezone=date_default_timezone_get();}
+        if (empty($timezone)){
+            $timezone=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbTimezone();
+        }
         $dateTime->setTimezone(new \DateTimeZone($timezone));
         return $dateTime->format('Y-m-d H:i:s');
     }

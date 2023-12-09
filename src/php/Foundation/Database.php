@@ -20,6 +20,8 @@ class Database{
     private $dbObj;
     private $dbName=FALSE;
     
+    const DB_TIMEZONE='UTC';
+    
     const ADMIN_R=32768;
     const GUIDEINDICATOR='!GUIDE';
     
@@ -55,6 +57,14 @@ class Database{
     public function job($vars){
         $vars['statistics']=$this->deleteExpiredEntries();
         return $vars;
+    }
+
+    public function getDbTimezone(){
+        return self::DB_TIMEZONE;
+    }
+    
+    public function getDbStatus(){
+        return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
     }
 
     public function enrichToReplace($toReplace=array()){
@@ -649,7 +659,7 @@ class Database{
                 if (isset($entry['Params']['Attachment log'])){unset($entry['Params']['Attachment log']);}
                 if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
             }
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
+            $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
             $entry=$this->insertEntry($entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // update and return entry | recover existing logs
@@ -660,7 +670,7 @@ class Database{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
             }
             // update entry
-            if ($addLog){$entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);}
+            if ($addLog){$entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);}
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
@@ -704,7 +714,7 @@ class Database{
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
             if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
                 // source and target EntryId identical, attachment does not need to be touched
-                $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
+                $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
                 if ($isTestRun){
                     $targetEntry=$sourceEntry;
                 } else {
@@ -724,8 +734,8 @@ class Database{
                 }
                 // create target entry
                 if ($fileRenameSuccess){
-                    $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
-                    $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId'].' to '.$targetEntry['EntryId']),FALSE);
+                    $targetEntry=$this->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
+                    $targetEntry=$this->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId'].' to '.$targetEntry['EntryId']),FALSE);
                     if (!$isTestRun){
                         if (!$keepSource){
                             $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
@@ -734,7 +744,7 @@ class Database{
                     }            
                 } else {
                     // copying or renaming of attached file failed
-                    $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to rename attached file, kept enrtry'),FALSE);
+                    $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to rename attached file, kept enrtry'),FALSE);
                     if ($isTestRun){
                         $targetEntry=$sourceEntry;
                     } else {
@@ -744,7 +754,7 @@ class Database{
             }
         } else {
             // no write access
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
+            $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
             if ($isTestRun){
                 $targetEntry=$sourceEntry;
             } else {
@@ -854,6 +864,30 @@ class Database{
             $this->swapEntriesByEntryId($entry,$targetSelector);
         }
         return $targetSelector['EntryId'];
+    }
+
+    public function addLog2entry($entry,$logType='Content log',$logContent=array(),$updateEntry=FALSE){
+        if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
+        if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
+        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
+        $logContent['timestamp']=time();
+        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,date_default_timezone_get());
+        $logContent['timezone']=date_default_timezone_get();
+        $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
+        $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
+        $logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
+        $logContent['userId']=(empty($_SESSION['currentUser']['EntryId']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
+        $entry['Params'][$logType][]=$logContent;
+        // remove expired logs
+        foreach($entry['Params'][$logType] as $logIndex=>$logArr){
+            if (!isset($logArr['Expires'])){continue;}
+            $expires=strtotime($logArr['Expires']);
+            if ($expires<time()){unset($entry['Params'][$logType][$logIndex]);}
+        }
+        if ($updateEntry){
+            $entry=$this->updateEntry($entry,TRUE);
+        }
+        return $entry;
     }
 
 }

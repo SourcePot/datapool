@@ -178,7 +178,7 @@ class User{
                 $adminFile['Content']['Admin email']=$admin['Email'];
                 $adminFile['Content']['Admin password']=$admin['Password'];
                 $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($adminFile,TRUE);
-                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('alert','No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
                 return TRUE;
             }
         }
@@ -267,7 +267,7 @@ class User{
     public function loginUser($user){
         $_SESSION['currentUser']=$user;
         if (strcmp($user['Owner'],'ANONYM')!==0){
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'User login '.$_SESSION['currentUser']['Name'],'priority'=>11,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','User login {user}',array('user'=>$_SESSION['currentUser']['Name']));    
         }
     }
     

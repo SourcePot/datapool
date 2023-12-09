@@ -312,7 +312,8 @@ class Definitions{
                     $statistics=$this->oc[$dataStorageClass]->getStatistic();
                     if (isset($this->oc['SourcePot\Datapool\Foundation\Logging'])){
                         $entryType=(isset($entry['Source']))?ucfirst(strval($entry['Source'])):$entry['Class'];
-                        $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>$entryType.'-entry processed: '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+                        $context=array('type'=>$entryType,'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
+                        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','{type}-entry processed: {statistics}',$context);    
                     }
                 }
                 if (isset($this->oc['SourcePot\Datapool\Tools\MediaTools'])){

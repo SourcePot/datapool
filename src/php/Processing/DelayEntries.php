@@ -282,7 +282,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function moveEntries($base,$callingElement,$result,$testRun){
         $params=current($base['delayingparams']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($entry,'Processing log',array('action'=>'Enties moved'),FALSE);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('action'=>'Enties moved'),FALSE);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun);
             $result['Delaying statistics']['Moved entries']['value']++;
         }

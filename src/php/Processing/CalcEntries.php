@@ -386,14 +386,14 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Calculate statistics']['Entries']['value']++;
         if ($isFailure){
             $result['Calculate statistics']['Failure']['value']++;
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($log,'| ')),FALSE);
+            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($log,'| ')),FALSE);
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun);
                 if (!isset($result['Sample result (failure)']) || mt_rand(0,100)>90){
                 $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
             }    
         } else {
             $result['Calculate statistics']['Success']['value']++;
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>trim($log,'| ')),FALSE);
+            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('success'=>trim($log,'| ')),FALSE);
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
                 if (!isset($result['Sample result (success)']) || mt_rand(0,100)>90){
                 $result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);

@@ -49,7 +49,7 @@ class CSVtools{
                 if ($sourceEncoding!=='UTF-8'){
                     $csvContent=mb_convert_encoding($csvContent,"UTF-8",$sourceEncoding);
                     file_put_contents($file,$csvContent);
-                    $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Changed file content encoding from '.$sourceEncoding.' to UTF-8','priority'=>3,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));    
+                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Changed file content encoding from {sourceEncoding} to UTF-8',array('sourceEncoding'=>$sourceEncoding));    
                 }
                 return TRUE;
             }
@@ -160,7 +160,7 @@ class CSVtools{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,FALSE,TRUE,$targetFile);
                 // reset csv var-space
                 unset($_SESSION['csvVarSpace'][$EntryId]);
-                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'CSV-entry created named "'.$entry['Name'].'" containing '.count($csvDefArr['rows']).' rows.','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','CSV-entry created named "{Name}" containing {rowCount} rows.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows'])));    
             }
             return $statistics;
         } else if (isset($entry['Content'])){
@@ -181,7 +181,7 @@ class CSVtools{
             $_SESSION['csvVarSpace']=array();
         } else {
             $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2);
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Method "'.__FUNCTION__.'" called by "'.$trace[1]['function'].'" without content','priority'=>20,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Method "{function}" called by "{trace}" without content',array('function'=>__FUNCTION__,'trace'=>$trace[1]['function']));    
         }
         return FALSE;
     }

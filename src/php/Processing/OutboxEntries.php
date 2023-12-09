@@ -242,7 +242,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Outbox statistics']['Emails sent']['value']++;    
         } else if ($this->oc[$outboxParams['Outbox class']]->send($outboxParams['Recipient'],$entry)){
             if (empty(intval($outboxParams['When done']))){
-                $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($orgEntry,'Processing log',array('forwarded'=>'By email to user "'.$this->recipientOptions[$outboxParams['Recipient']].'"'),TRUE);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($orgEntry,'Processing log',array('forwarded'=>'By email to user "'.$this->recipientOptions[$outboxParams['Recipient']].'"'),TRUE);
             } else {
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($orgEntry,TRUE);
                 $result['Outbox statistics']['Entries removed']['value']++;

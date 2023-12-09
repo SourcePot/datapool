@@ -370,7 +370,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 ksort($value);
                 $targetEntry[$key]=implode($params['Array→string glue'],$value);
             }
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
+            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
             if ($multipleHits2multipleEntriesColumn){
                 foreach($multipleEntriesValueArr as $subKey=>$value){
                     $targetEntry[$multipleHits2multipleEntriesColumn]=$value;
@@ -384,7 +384,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
         } else {
             $result['Parser statistics']['Failed']['value']++;
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Logging']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($parserFailed,'| ')),FALSE);
+            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($parserFailed,'| ')),FALSE);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
             $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
         }

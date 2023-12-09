@@ -37,12 +37,12 @@ class GeoTools{
         // load country codes
         $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
         if (!is_file($file)){
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'File "countryCodes.json" missing.','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','File "countryCodes.json" missing.',array());    
         }
         $cc=file_get_contents($file);
         $this->countryCodes=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($cc);
         if (empty($this->countryCodes)){
-            $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'File error "countryCodes.json"','priority'=>26,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','File error "countryCodes.json"',array());    
         }
     }
 
