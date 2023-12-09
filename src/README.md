@@ -8,7 +8,7 @@
 - tmp_private: contains user specific temporary files
 - debugging: contains debugging information, e.g. exception trace files in json-format
 
-# Running the web application
+# Web application flow chart
 The user interface of the web application is a web browser. The entry point is the PHP-script `..\www\index.php`. The following flow chart shows the processing when the script is called.
 
 <img src="../assets/img/Browser_call_flow.png" alt="Browser call flow chart" style=""/>
