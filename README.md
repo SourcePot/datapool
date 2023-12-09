@@ -1,5 +1,4 @@
 # Datapool
-In some way this software package is a result of desperation. 
 Many organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Moving data between the packages is even more challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department.  The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
@@ -12,7 +11,7 @@ The figure shows a typical application example in a company software setup inclu
 The Datapool framework can just achieve this.
 
 ## Requirements
-This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8** and a **database**. Depending on the application requirements access to an email account might be required.
+This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
 
 ## Installation of the application
 For the installation and creation of the first user account please refer to the video below.
@@ -26,6 +25,5 @@ For the installation and creation of the first user account please refer to the 
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ## Initial adjustments
-The file **../setup/Backbone/init.json** contains some important web page settings, e.g. the webmaster email address (the key is ***emailWebmaster***). You should update this email address asap.
-You can trigger the creation of a new admin account by deleting all admin entries from the user database table.
+You should login as admin and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button the save changes.
 
