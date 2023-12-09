@@ -8,6 +8,7 @@
 	"authors":[{"name":"Carsten Wallenhauer","email":"admin@datapool.info"}],
 	"require":{
 		"php":">=8.0",
+        "psr/log":"^3",
 		"smalot/pdfparser":">=v2.7.0",
         "guzzlehttp/guzzle":"^7.0",
 		"spatie/pdf-to-text":">=1.52.0",
