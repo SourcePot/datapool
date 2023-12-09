@@ -408,7 +408,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter{
             if ($success){
                 $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Email sent to {to}',array('to'=>$mail['To']));    
             } else {
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Sending email to {to} failed.',array('to'=>$mail['To']));    
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Sending email to {to} failed.',array('to'=>$mail['To']));    
             }
             // save message
             $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{NOW}}');
