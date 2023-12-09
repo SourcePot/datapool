@@ -151,15 +151,13 @@ td,th{
 	position:relative;
 	padding:3px;
 }
-div.log{
-	overflow-y:auto;
-	height:100%;
-	padding:0 5px;
-	width:98%;
-}
 p.log{
-	clear:both;
-	line-height:25px;
+	clear:none;
+    padding:0 1em 0 0.5em;
+}
+div.log{
+    clear:both;
+    width:100%;
 	border-bottom:1px dotted #aaa;
 }
 embed{
@@ -348,7 +346,7 @@ li.menu{
 	background:none;
 	border-right:1px solid #aaa;
     border-bottom:4px solid #fff;
-	transition:border 500ms ease-out;
+	transition:border 200ms ease-out;
     overflow:hidden;
 }
 li.menu:hover{
@@ -410,7 +408,7 @@ details.forum,details.toolbox{
 details.toolbox{
 	position:fixed;
 	bottom:0;
-	z-index:2;
+	z-index:20;
 	max-height:80px;
     color:#fff;
 	background-color:#444;
@@ -420,8 +418,8 @@ summary{
 	clear:none;
 	min-width:3em;
 	width:100%;
-	font-size:1.4em;
-	line-height:1.8em;
+	font-size:1.2em;
+	line-height:1.3em;
 	color:#444;
 	border-bottom:1px dotted #000;
 }

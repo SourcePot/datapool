@@ -78,7 +78,9 @@ class Access{
     public function access($entry,$type='Write',$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE){
         if ($isSystemCall===TRUE){return 'SYSTEMCALL';}
         if (empty($entry)){return FALSE;}
-        if ($user===FALSE){$user=$_SESSION['currentUser'];}
+        if ($user===FALSE){
+            if (isset($_SESSION['currentUser'])){$user=$_SESSION['currentUser'];} else {return FALSE;}
+        }
         if (empty($entry['Owner'])){$entry['Owner']='Entry Owner Missing';}
         if (empty($user['Owner'])){$user['Owner']='User EntryId Missing';}
         if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){$user['EntryId']='User id Invalid';}

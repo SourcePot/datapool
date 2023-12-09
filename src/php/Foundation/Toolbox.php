@@ -17,8 +17,6 @@ class Toolbox{
     private $entryTable;
     private $entryTemplate=array();
     
-    private $toolboxes=array();
-    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -31,12 +29,9 @@ class Toolbox{
     }
     
     public function registerToolbox($callingClass,$toolboxEntry){
-        $template=array('Source'=>$this->entryTable,'Group'=>'Settings','Folder'=>$callingClass,'EntryId'=>$callingClass,'Type'=>$this->entryTable.' array','Owner'=>'SYSTEM');
+        $template=array('Source'=>$this->entryTable,'Group'=>'Toolbox','Folder'=>$callingClass,'EntryId'=>$callingClass,'Type'=>$this->entryTable.' array','Owner'=>'SYSTEM');
         $toolboxEntry=array_merge($template,$toolboxEntry);
         $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($toolboxEntry,TRUE);
-        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($toolboxEntry)){
-            $this->toolboxes[$toolboxEntry['EntryId']]=$toolboxEntry;
-        }
         return $toolboxEntry;
     }
     
@@ -46,10 +41,11 @@ class Toolbox{
             $_SESSION['page state']['toolbox']=key($formData['cmd']['select']);
         }
         $html='';
-        foreach($this->toolboxes as $elementId=>$toolboxEntry){
-            if (strcmp($elementId,$_SESSION['page state']['toolbox'])===0){$style='border-bottom:1px solid #a44;';} else {$style='';}
+        $selector=array('Source'=>$this->entryTable,'Group'=>'Toolbox');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $toolboxEntry){
+            if (strcmp($toolboxEntry['EntryId'],$_SESSION['page state']['toolbox'])===0){$style='border-bottom:1px solid #a44;';} else {$style='';}
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($toolboxEntry,'Read')){continue;}
-            $element=array('tag'=>'input','type'=>'submit','key'=>array('select',$elementId),'value'=>$toolboxEntry['Name'],'style'=>$style,'class'=>'bottom-menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $element=array('tag'=>'input','type'=>'submit','key'=>array('select',$toolboxEntry['EntryId']),'value'=>$toolboxEntry['Name'],'style'=>$style,'class'=>'bottom-menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         }
         if (empty($html)){return $html;}
@@ -63,16 +59,10 @@ class Toolbox{
         if (!empty($_SESSION['page state']['toolbox'])){
             $toolbox=array('Source'=>$this->entryTable,'EntryId'=>$_SESSION['page state']['toolbox']);
             $toolbox=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($toolbox);
-            if (empty($toolbox)){
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$this->entryTable,'Name'=>'Logs','Group'=>'Settings'),TRUE) as $toolbox){
-                    $_SESSION['page state']['toolbox']=$toolbox['EntryId'];
-                }
-            }
-            if (!empty($toolbox)){
+            if ($toolbox){
                 $toolboxProviderClass=$toolbox['Content']['class'];
                 $toolboxProviderMethod=$toolbox['Content']['method'];
                 $toolboxProviderArgs=$toolbox['Content']['args'];
-                //$toolbox=array('Name'=>'Logs','class'=>__CLASS__,'method'=>'showLogs','args'=>array('maxCount'=>10),'settings'=>array());
                 $appArr=array('class'=>'toolbox','icon'=>$toolbox['Name']);
                 $appArr['html']=$this->oc[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
                 $toolboxHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);

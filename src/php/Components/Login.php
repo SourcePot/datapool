@@ -53,18 +53,16 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     
     private function loginRequest($arr){
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Login failed, password and/or email were empty',array('user'=>$_SESSION['currentUser']['Name']));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Login failed, password and/or email were empty',array('user'=>$_SESSION['currentUser']['Name']));    
             return 'Password and/or email password were empty';
         }
         $user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
         $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
         $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
         if (empty($user)){return 'Please register';}
-        // reset session | keep page state
-        $_SESSION=array('page state'=>$_SESSION['page state']);
-        session_regenerate_id(TRUE);
         // login check
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
+        // reset session | keep page state
             $this->loginSuccess($user,$arr['Email']);
         } else {
             // check one-time password
@@ -80,17 +78,25 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         }
     }
     
+    private function resetSession(){
+        // reset session | keep page state
+        $_SESSION=array('page state'=>$_SESSION['page state']);
+        session_regenerate_id(TRUE);
+    }
+    
     private function loginSuccess($user,$email){
+        $this->resetSession();
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Login successful for {email}.',array('email'=>$email));    
+        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Login successful for {email}.',array('email'=>$email));    
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
         exit;
     }
 
     private function loginFailed($user,$email){
-        sleep(5);
+        $_SESSION['currentUser']['Privileges']=1;
         $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Login failed for {email}.',array('email'=>$email));    
-        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Login failed for {email}.',array('email'=>$email));    
+        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Login failed for {email}.',array('email'=>$email));    
+        sleep(5);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         exit;
     }
@@ -98,7 +104,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function registerRequest($arr){
         $err=FALSE;
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Registration failed, password and/or email were empty.',array('email'=>$email));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Registration failed, password and/or email were empty.',array());    
             $err='Password and/or email password were empty';
         } else {
             $user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
@@ -114,11 +120,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         if (empty($err)){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','You have been registered as new user ({email}).',array('email'=>$email));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','You have been registered as new user ({email}).',array('email'=>$email));    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
             exit;    
         } else {
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice',$err,array('email'=>$email));    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info',$err,array('email'=>$arr['Email']));    
         }
         return $err;
     }
@@ -130,21 +136,21 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
         if ($existingUser){
             if (strlen($arr['Passphrase'])<self::MIN_PASSPHRASDE_LENGTH){
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Passphrase with {length} characters is too short (min. {minLength} characters), passphrase update failed.',array('length'=>strlen($arr['Passphrase']),'minLength'=>self::MIN_PASSPHRASDE_LENGTH));    
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Passphrase with {length} characters is too short (min. {minLength} characters), passphrase update failed.',array('length'=>strlen($arr['Passphrase']),'minLength'=>self::MIN_PASSPHRASDE_LENGTH));    
             } else {
                 $existingUser['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);            
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($existingUser);
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Passphrase updated.',array());    
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Passphrase updated.',array());    
             }
         } else {
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','User not found, passphrase update failed.',array());    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','User not found, passphrase update failed.',array());    
         }
     }
 
     private function pswRequest($arr){
         // check if email is valid
         if (empty($arr['Email'])){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Please provide your email address.',array());    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Please provide your email address.',array());    
             return 'Failed: invalid email address';
         }
         // check if user exists
