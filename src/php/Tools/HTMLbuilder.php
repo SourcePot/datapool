@@ -500,6 +500,7 @@ class HTMLbuilder{
     */
     public function entryControls($arr){
         if (!isset($arr['selector'])){return 'Selector missing';}
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
         $arr['html']='';
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
@@ -519,7 +520,7 @@ class HTMLbuilder{
         }
         foreach(array('select','remove','delete','download','upload') as $cmd){
             $ucfirstCmd=ucfirst($cmd);
-            if (!empty($arr['hide'.$ucfirstCmd])){continue;}
+            if (!empty($arr['settings']['hide'.$ucfirstCmd])){continue;}
             $arr['excontainer']=TRUE;
             $arr['cmd']=$cmd;
             $matrix['Btns']['Value'].=$this->btn($arr);

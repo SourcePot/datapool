@@ -364,7 +364,6 @@ class Container{
                         $cntrArr=$arr;
                         $cntrArr['callingFunction']=__FUNCTION__;
                         $cntrArr['selector']=$entry;
-                        $cntrArr['hideUpload']=TRUE;
                         $cntrArr['previewStyle']=array('max-height'=>100,'max-height'=>100);
                         $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($cntrArr);
                     } else {

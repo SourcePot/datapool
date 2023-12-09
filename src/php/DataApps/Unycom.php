@@ -61,7 +61,7 @@ class Unycom implements \SourcePot\Datapool\Interfaces\App{
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$arr['selector'],array(),array());
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],array('hideUpload'=>TRUE),array());
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];

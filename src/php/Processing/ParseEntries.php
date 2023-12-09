@@ -22,6 +22,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
     private $sections=array(0=>'all sections');
     
+    private $paramsTemplate=array('Source column'=>'useValue','Target on success'=>'','Target on failure'=>'','Array→string glue'=>' ');
+    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -139,10 +141,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function parserParams($callingElement){
-        $contentStructure=array('Source column'=>array('method'=>'keySelect','value'=>'useValue','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
+        $contentStructure=array('Source column'=>array('method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
                                 'Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'|','options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
+                                'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
@@ -240,7 +242,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function parseEntry($base,$sourceEntry,$result,$testRun){
         $params=current($base['parserparams']);
-        $params=$params['Content'];
+        $params=array_merge($this->paramsTemplate,$params['Content']);
         // get source text
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         $parserFailed='';

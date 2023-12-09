@@ -16,6 +16,33 @@ final class Root{
     private $currentScript='';
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
+
+    public function __construct(){
+        $GLOBALS['script start time']=hrtime(TRUE);
+        session_start();
+        $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
+        // set exeption handler and initialize directories
+        $this->initDirs();
+        $this->initExceptionHandler();
+        // inititate the web page state
+        if (empty($_SESSION['page state'])){
+            $_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>FALSE,'selected'=>array());
+        }
+        // load all external components
+        $_SESSION['page state']['autoload.php loaded']=FALSE;
+        $autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
+        if (is_file($autoloadFile)){
+            $_SESSION['page state']['autoload.php loaded']=TRUE;
+            require_once $autoloadFile;
+        }
+        // initilize object collection, create objects and invoke init methods
+        $oc=array(__CLASS__=>$this);
+        $this->oc=$this->getInstantiatedObjectCollection($oc);
+        $this->oc=$this->registerVendorClasses($this->oc);
+        foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
+            $this->oc[$classWithNamespace]->init($this->oc);
+        }
+    }
     
     /**
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
@@ -46,34 +73,7 @@ final class Root{
         }
         return $oc;
     }
-    
-    public function __construct(){
-        $GLOBALS['script start time']=hrtime(TRUE);
-        session_start();
-        $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
-        // set exeption handler and initialize directories
-        $this->initDirs();
-        $this->initExceptionHandler();
-        // inititate the web page state
-        if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>FALSE,'selected'=>array());
-        }
-        // load all external components
-        $_SESSION['page state']['autoload.php loaded']=FALSE;
-        $autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
-        if (is_file($autoloadFile)){
-            $_SESSION['page state']['autoload.php loaded']=TRUE;
-            require_once $autoloadFile;
-        }
-        // initilize object collection, create objects and invoke init methods
-        $oc=array(__CLASS__=>$this);
-        $this->oc=$this->getInstantiatedObjectCollection($oc);
-        $this->oc=$this->registerVendorClasses($this->oc);
-        foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
-            $this->oc[$classWithNamespace]->init($this->oc);
-        }
-    }
-    
+        
     public function getOc(){
         return $this->oc;
     }

@@ -10,4 +10,4 @@
 
 # Running the web application
 The user interface of the web application is a web browser. The entry point is the PHP-script `..\www\index.php`. The following flow chart shows the processing when the script is called.
-<img src="../assets/img/Browser_call_flow.png" alt="Browser call flow chart" style="width:70%;"/>
+<img src="../assets/img/Browser_call_flow.png" alt="Browser call flow chart" style=""/>
