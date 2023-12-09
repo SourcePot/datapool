@@ -13,6 +13,8 @@ namespace SourcePot\Datapool;
 
 final class Root{
 
+    private $registerVendorClasses=array('SourcePot\Ops\OpsEntries','SourcePot\Ops\Patents','SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
+    
     private $currentScript='';
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
@@ -50,14 +52,8 @@ final class Root{
     */
     private function registerVendorClasses($oc,$isDebugging=FALSE){
         // instantiate external classes
-        $classesWithNamespace=array('SourcePot\Ops\OpsEntries',
-                                    'SourcePot\Ops\Patents',
-                                    'SourcePot\MediaPlayer\MediaPlayer',
-                                    'SourcePot\PIview\PIview',
-                                    'SourcePot\Sms\Sms',
-                                    );
-        $debugArr=array('classesWithNamespace'=>$classesWithNamespace);
-        foreach($classesWithNamespace as $classIndex=>$classWithNamespace){
+        $debugArr=array('registerVendorClasses'=>$this->registerVendorClasses);
+        foreach($this->registerVendorClasses as $classIndex=>$classWithNamespace){
             if (class_exists($classWithNamespace)){
                 $oc[$classWithNamespace]=new $classWithNamespace($oc);
                 //$oc[$classWithNamespace]->dataProcessor(array(),'info');

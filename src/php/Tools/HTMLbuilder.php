@@ -500,7 +500,6 @@ class HTMLbuilder{
     */
     public function entryControls($arr){
         if (!isset($arr['selector'])){return 'Selector missing';}
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
         $arr['html']='';
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
