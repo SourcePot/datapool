@@ -61,12 +61,14 @@ class Toolbox{
             $toolbox=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($toolbox);
             if ($toolbox){
                 $toolboxProviderClass=$toolbox['Content']['class'];
-                $toolboxProviderMethod=$toolbox['Content']['method'];
-                $toolboxProviderArgs=$toolbox['Content']['args'];
-                $appArr=array('class'=>'toolbox','icon'=>$toolbox['Name']);
-                $appArr['html']=$this->oc[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
-                $toolboxHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
-                $arr['toReplace']['{{toolbox}}'].=$toolboxHtml;
+                if (isset($this->oc[$toolboxProviderClass])){
+                    $toolboxProviderMethod=$toolbox['Content']['method'];
+                    $toolboxProviderArgs=$toolbox['Content']['args'];
+                    $appArr=array('class'=>'toolbox','icon'=>$toolbox['Name']);
+                    $appArr['html']=$this->oc[$toolboxProviderClass]->$toolboxProviderMethod($toolboxProviderArgs);
+                    $toolboxHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
+                    $arr['toReplace']['{{toolbox}}'].=$toolboxHtml;
+                }
             }
         }
         return $arr;
