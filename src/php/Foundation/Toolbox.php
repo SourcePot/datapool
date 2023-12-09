@@ -31,12 +31,8 @@ class Toolbox{
     }
     
     public function registerToolbox($callingClass,$toolboxEntry){
-        $toolboxEntry['Source']=$this->entryTable;
-        $toolboxEntry['Group']='Settings';
-        $toolboxEntry['Folder']=$callingClass;
-        $toolboxEntry['Type']=$toolboxEntry['Source'].' array';
-        $toolboxEntry['Owner']='SYSTEM';
-        $toolboxEntry['EntryId']=$callingClass;
+        $template=array('Source'=>$this->entryTable,'Group'=>'Settings','Folder'=>$callingClass,'EntryId'=>$callingClass,'Type'=>$this->entryTable.' array','Owner'=>'SYSTEM');
+        $toolboxEntry=array_merge($template,$toolboxEntry);
         $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($toolboxEntry,TRUE);
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($toolboxEntry)){
             $this->toolboxes[$toolboxEntry['EntryId']]=$toolboxEntry;
