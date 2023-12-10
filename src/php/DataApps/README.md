@@ -20,7 +20,7 @@ The entries of the dataexplorer table have following structure (array-representa
 
 ## DataExplorer: Processor classes
 Processor classes implement the interface `\SourcePot\Datapool\Interfaces\Processor`. Each `Canvas element` can be linked to one processor.
-The processor runs on the data selected by `Canvas Element[Content][Selector]`. A processor linked to a `Canvas element` is linked to one entry storing parameters and multiple entries storing rules.
+The processor runs on the data selected by `Canvas Element[Content][Selector]`. A processor linked to a `Canvas element` is linked to one entry, which stores parameters and multiple entries storing processing rules.
 Entries storing parameters and rules are stored in the database table named the same as the processor class, e.g. mapentries. As an example following screenshot of the mapentries table:
 
 <img src="../../../assets/img/mapentries_table_example.png" alt="Canvas element content example" style=""/>
