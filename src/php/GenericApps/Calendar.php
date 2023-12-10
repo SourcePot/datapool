@@ -37,7 +37,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                                              'Start'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{NOW}})','@excontainer'=>TRUE),
                                                              'Start timezone'=>array('@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
                                                              'End'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{TOMORROW}})','@excontainer'=>TRUE),
-                                                             'End timezone'=>array('@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
+                                                             'End timezone'=>array('@fuction'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
                                                              'Recurrence'=>array('@function'=>'select','@options'=>array('+0 day'=>'Same day','+1 day"'=>'Daily','+1 week"'=>'Weeklyy','+1 month"'=>'Monthly','+1 year"'=>'Yearly'),'@default'=>'+0 day','@excontainer'=>TRUE),
                                                              'Recurrence times'=>array('@tag'=>'input','@type'=>'number','@min'=>0,'@max'=>100,'@default'=>0,'@excontainer'=>TRUE),
                                                              'Recurrence id'=>array('@tag'=>'p'),
@@ -95,9 +95,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->definition['Content']['Event']['Recurrence']['@options']=$this->options['Recurrence'];
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
         // get settings
+        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        $Timezone=(empty($pageSettings['pageTimeZone']))?DB_TIMEZONE:$pageSettings['pageTimeZone'];
         $currentUser=$oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
-        if (strcmp($currentUser['Owner'],'ANONYM')===0){$settingKey='ANONYM';} else {$settingKey=$currentUser['EntryId'];}
-        $this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>DB_TIMEZONE);
+        $settingKey=(strcmp($currentUser['Owner'],'ANONYM')===0)?'ANONYM':$currentUser['EntryId'];
+        $this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>$Timezone);
         $this->setting=$oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
         $this->pageStateTemplate=array('Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);

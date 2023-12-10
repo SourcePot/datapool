@@ -43,7 +43,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
             $user=array('Source'=>$this->entryTable,'disableAutoRefresh'=>TRUE);
             $settings=array('orderBy'=>'Privileges','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
             $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges','Filter'=>''));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User','entryList',$user,$settings,array());    
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' accounts','entryList',$user,$settings,array());    
             $class=$this->oc['SourcePot\Datapool\Root']->source2class($user['Source']);
             $userSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
             if (isset($userSelector['EntryId'])){

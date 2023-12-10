@@ -47,15 +47,23 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             $html=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             if (empty($selector['Group'])){
-                $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());    
+                $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());    
             } else {
                 if (strcmp($selector['Group'],'Presentation')===0 && !empty($selector['Folder'])){
                     $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,array());
+                } else if (!empty($selector['EntryId'])){
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+                    if (isset($entry['Content']) && isset($entry['Params'])){
+                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix(array('Content'=>$entry['Content'],'Params'=>$entry['Params']));
+                        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE));
+                    } else {
+                        $html.='No entry found...';
+                    }
                 } else {
-                    $settings=array('columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Setting entries','entryList',$selector,$settings,array());
+                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());
                 }
                 if (strcmp($selector['Group'],'Job processing')===0){
                     $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');

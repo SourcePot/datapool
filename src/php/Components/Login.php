@@ -79,8 +79,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     }
     
     private function resetSession(){
-        // reset session | keep page state
-        $_SESSION=array('page state'=>$_SESSION['page state']);
+        //$_SESSION=array('page state'=>$_SESSION['page state']); // reset session | keep page state
+        $_SESSION=array(); // reset session
         session_regenerate_id(TRUE);
     }
     
@@ -161,15 +161,15 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             return 'Failed: unknown email.';
         }
         // create login entry and send email
-        $msg=$this->sendOneTimePsw($arr,$existingUser);
-        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning',$msg,array());    
+        $this->sendOneTimePsw($arr,$existingUser);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         exit;
     }
     
     private function sendOneTimePsw($arr,$user,$isDebugging=FALSE){
         if ($this->getOneTimeEntry($arr['Email'])){
-            return 'Nothing was sent. Please use the password you have already received before.';    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Nothing was sent. Please use the password you have already received before.',array('email'=>$arr['Email']));    
+            return FALSE;    
         }
         // create login entry
         $loginEntry=$this->oc['SourcePot\Datapool\Tools\LoginForms']->oneTimeLoginEntry($arr,$user);
@@ -195,9 +195,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $mail=array('selector'=>$loginEntry);
         if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}
         if ($this->oc['SourcePot\Datapool\Tools\Email']->entry2mail($mail)){
-            return 'The email was sent, please check your emails.';    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','The one time passphrase was sent to {email}, please check your emails.',array('email'=>$arr['Email']));    
+            return TRUE;    
         } else {
-            return 'Request failed.';
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','The request to send the one time passphrase to {email} has failed.',array('email'=>$arr['Email']));    
+            return FALSE;
         }
     }
     
