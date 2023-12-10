@@ -70,7 +70,8 @@ class Logger extends \Psr\Log\AbstractLogger
     private function addTrace($entry)
     {
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);
-        for($index=1;$index<4;$index++){        
+        for($index=1;$index<4;$index++){
+            if (!isset($trace[$index])){break;}
             $entry['Content']['trace'][]=$trace[$index];
         }
         return $entry;

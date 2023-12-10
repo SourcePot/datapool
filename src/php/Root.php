@@ -79,12 +79,14 @@ final class Root{
     */
     public function run(){
         $this->structure['callingWWWscript']=$this->currentScript;
+        $pathInfo=pathinfo($this->currentScript);
         // get current temp dir
         if (strpos($this->currentScript,'resource.php')===FALSE && strpos($this->currentScript,'job.php')===FALSE){
             $GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         }
         // process all buttons
         $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn();
+        $GLOBALS['script init time']=hrtime(TRUE);
         // add "page html" to the return array
         $arr=array();
         if (strpos($this->currentScript,'index.php')>0){
@@ -96,17 +98,27 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
             // add page statistic for the web page called by a user
             //$this->addPageStatistic($arr,$callingWWWscript);
-        } else if (strpos($this->currentScript,'js.php')>0){
+        } else if ($pathInfo['basename']=='js.php'){
             // js-call Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
-        } else if (strpos($this->currentScript,'job.php')>0){
+        } else if ($pathInfo['basename']=='job.php'){
             // job Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
-        } else if (strpos($this->currentScript,'resource.php')>0){
+        } else if ($pathInfo['basename']=='resource.php'){
             // client request processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
         } else {
             // invalid
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Invalid script "{script}" called',array('script'=>$pathInfo['basename']));    
+        }
+        // script time consumption in ms
+        $scriptTimeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
+        $scriptInitTimeConsumption=round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000);
+        $context=array('scriptTimeConsumption'=>$scriptTimeConsumption,'scriptInitTimeConsumption'=>$scriptInitTimeConsumption,'script'=>$pathInfo['basename']);
+        if ($scriptTimeConsumption>5000){
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Script "{script}" took {scriptTimeConsumption}ms. Initialization took {scriptInitTimeConsumption}ms.',$context);    
+        } else if ($scriptTimeConsumption>1000){
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Script "{script}" took {scriptTimeConsumption}ms Initialization took {scriptInitTimeConsumption}ms.',$context);    
         }
         return $arr;
     }
