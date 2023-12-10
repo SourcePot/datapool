@@ -14,8 +14,8 @@
 		"spatie/pdf-to-text":">=1.52.0",
 		"sourcepot/ops":">=v0.2.7",
 		"sourcepot/mediaplayer":"*",
-		"sourcepot/sms":"*",
-		"sourcepot/piview":"*"
+		"sourcepot/sms":">=v1.0.2",
+		"sourcepot/piview":">=v1.1.5"
 	},
 	"autoload":{
 		"psr-4":{
