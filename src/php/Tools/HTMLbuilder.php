@@ -468,7 +468,7 @@ class HTMLbuilder{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $context=array('key'=>$arr['key'],'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','{key}-key processed: {statistics}',$context);    
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','{key}-key processed: {statistics}',$context);    
         }
         $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
         $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;

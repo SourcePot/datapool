@@ -65,7 +65,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
             } else if (empty($selector['Group']) || empty($selector['EntryId'])){
                 //$wrapperSetting=array();
                 $wrapperSetting=array('html'=>$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap());
-                $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5);
+                $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
                 $settings['columns']=array(array('Column'=>'Name','Filter'=>''));
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,$settings,$wrapperSetting);
             } else {
