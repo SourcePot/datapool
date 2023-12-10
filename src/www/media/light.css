@@ -118,12 +118,13 @@ caption{
 	font-size:1.2em;
 }
 fieldset{
-    font-size:0.9rem;
+    font-size:1rem;
     border:2px solid var(--brand);
 }
 legend{
-    font-weight:700;
-    color:var(--brand);
+    font-weight:bold;
+    margin:0.4em;
+    padding:0.4em;
 }
 div.fieldset{
     padding:0.5em 0;
@@ -153,6 +154,7 @@ td,th{
 }
 p.log{
 	clear:none;
+    font-size:0.8em;
     padding:0 1em 0 0.5em;
 }
 div.log{
@@ -173,10 +175,6 @@ article{
 	overflow:auto;
 	background-color:#fff;
 	border-bottom:1px solid #999;
-}
-article.toolbox{
-    color:#ccc;
-    background-color:#000;
 }
 div.container-busy{
 	display:none;
@@ -428,15 +426,34 @@ summary.forum,summary.toolbox{
 }
 summary.toolbox{
 	color:#fff;
-	line-height:initial;
+	line-height:20px;
 }
 summary:hover{
 	cursor:pointer;
     color:#000;
 	background-color:#ccc;
 }
-
-
+article.toolbox{
+    color:#ccc;
+    background-color:#000;
+    width:100%;
+    height:60px;
+    margin:0;
+    padding:0;
+}
+table.toolbox,tr.toolbox:hover{
+    color:#fff;
+    background:none;
+    box-shadow:none;
+}
+div.toolbox{
+    width:100%;
+    border-bottom:1px dotted #aaa;
+}
+p.toolbox{
+    clear:none;
+    color:#ddd;
+}
 /** CANVAS **/
 #canvas{
 	position:relative;
