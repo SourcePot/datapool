@@ -106,6 +106,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runInboxEntries($arr['selector'],0);
         } else if (isset($formData['cmd']['test'])){
             $result=$this->runInboxEntries($arr['selector'],1);
+        } else if (isset($formData['cmd']['receive'])){
+            $result=$this->runInboxEntries($arr['selector'],2);
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
@@ -116,6 +118,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=array('run');
         $matrix['Commands']['Run']=$btnArr;
+        $btnArr['value']='Receive';
+        $btnArr['key']=array('receive');
+        $matrix['Commands']['Receive']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Inbox widget'));
         foreach($result as $caption=>$matrix){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
@@ -136,7 +141,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->inboxParams($arr['selector']);
         $arr['callingClass']=$arr['selector']['Folder'];
-        if (isset($this->oc[$this->inboxClass])){$arr=$this->oc[$this->inboxClass]->dataSource($arr,'settingsWidget');}
+        if (isset($this->oc[$this->inboxClass])){
+            $arr['html'].=$this->oc[$this->inboxClass]->receiverPluginHtml($arr);
+        }
         $arr['html'].=$this->inboxConditionRules($arr['selector']);
         $arr['html'].=$this->inboxForwardingRules($arr['selector']);
         return $arr;
@@ -145,7 +152,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function inboxParams($callingElement){
         $return=array('html'=>'','Parameter'=>array(),'result'=>array());
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $options=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataSource');
+        $options=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Receiver');
         $contentStructure=array('Inbox source'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                             );
@@ -160,7 +167,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
             // synchronize with data source
-            $callingElement['Content']['Selector']=$this->oc[$arr['selector']['Content']['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'selector');
+            $callingElement['Content']['Selector']=$this->oc[$arr['selector']['Content']['Inbox source']]->receiverSelector($callingElement['Folder']);
             $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($callingElement,TRUE);
         }
         // load inbox class
@@ -220,19 +227,26 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->getBaseArr($callingElement);
         $inboxParams=current($base['inboxparams']);
         $inboxParams=$inboxParams['Content'];
-        $meta=$this->oc[$inboxParams['Inbox source']]->dataSource(array('callingClass'=>$callingElement['Folder']),'meta');
-        // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Inbox statistics'=>array('Items processed'=>array('value'=>0),
                                                 'Itmes forwarded'=>array('value'=>0),
                                                 'Itmes already processed and skipped'=>array('value'=>0),
                                                 )
                      );
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read','Date',FALSE) as $entry){
-            $result=$this->processEntry($entry,$base,$callingElement,$result,$testRun);
-            $result['Inbox statistics']['Items processed']['value']++;
+        if ($testRun==2){
+            $inboxResult=$this->oc[$inboxParams['Inbox source']]->receive($callingElement['Folder']);
+            foreach($inboxResult as $key=>$value){
+                if (empty($value)){continue;}
+                $result['Inbox statistics'][$key]['value']=$value;
+            }
+        } else {
+            // loop through source entries and parse these entries
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read','Date',FALSE) as $entry){
+                $result=$this->processEntry($entry,$base,$callingElement,$result,$testRun);
+                $result['Inbox statistics']['Items processed']['value']++;
+            }
+            if ($testRun){$result[$inboxParams['Inbox source']]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);}
         }
-        if ($testRun){$result[$inboxParams['Inbox source']]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);}
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));

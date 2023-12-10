@@ -162,17 +162,17 @@ class Dictionary{
         }
         // compile html
         $matrix=array('Translation'=>array());
-        $matrix['Translation']['Label phrase']=array('tag'=>'p','element-content'=>'EN');
+        $matrix['Translation']['Label phrase']=array('tag'=>'p','element-content'=>'EN','class'=>'toolbox');
         $matrix['Translation']['Phrase']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'key'=>array('phrase','en'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode));
+        $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode),'class'=>'toolbox');
         $matrix['Translation']['Translation']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>array('translation',$langCode),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
         $matrix['Translation']['Cmd']=array('tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'','style'=>'margin:0;'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'','class'=>'toolbox'));
         return array('html'=>$html,'wrapperSettings'=>array('class'=>'toolbox'));
     }
     
     public function dictToolbox($arr=array()){
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('style'=>array('height'=>'80px','padding'=>'10px 0 0 0','margin'=>'0')));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('class'=>'toolbox'));
         return $html;
     }
     

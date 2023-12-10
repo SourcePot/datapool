@@ -22,10 +22,10 @@ class Logger extends \Psr\Log\AbstractLogger
                                'alert'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f44','min-width'=>'6em')),
                                'critical'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f88','min-width'=>'6em')),
                                'error'=>array('hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#faa','min-width'=>'6em')),
-                               'warning'=>array('hashIp'=>FALSE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#fcc','min-width'=>'6em')),
-                               'notice'=>array('hashIp'=>FALSE,'lifetime'=>'PT1M','Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
-                               'info'=>array('hashIp'=>FALSE,'lifetime'=>'PT1M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
-                               'debug'=>array('hashIp'=>FALSE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
+                               'warning'=>array('hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#fcc','min-width'=>'6em')),
+                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT1M','Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
+                               'info'=>array('hashIp'=>TRUE,'lifetime'=>'PT1M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
+                               'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
                                );
     
     public function __construct($oc){
@@ -46,6 +46,7 @@ class Logger extends \Psr\Log\AbstractLogger
     
     public function log($level, string|\Stringable $message, array $context=[]):void
     {
+        $context['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($this->levelConfig[$level]['hashIp']);
         $entry=$this->levelConfig[$level];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
@@ -54,8 +55,8 @@ class Logger extends \Psr\Log\AbstractLogger
         $entry['Type']=$entry['Source'].' '.$level;
         $entry['Folder']=isset($_SESSION['currentUser']['EntryId'])?$_SESSION['currentUser']['EntryId']:'ANONYM';
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
-        $entry['Content']=array('msg'=>$this->interpolate($message,$context));
-        $entry['Content']['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($this->levelConfig[$level]['hashIp']);
+        $entry['Content']=$context;
+        $entry['Content']['msg']=$this->interpolate($message,$context);
         $entry=($this->levelConfig[$level]['addTrace'])?$this->addTrace($entry):$entry;
         $entry['Name']=substr($entry['Content']['msg'],0,50);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0);
@@ -116,8 +117,8 @@ class Logger extends \Psr\Log\AbstractLogger
         $arr=array();
         $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$_SESSION['currentUser']['EntryId']);
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
-        $arr['wrapper']=array('style'=>array('overflow'=>'auto','max-height'=>'100px','background-color'=>'#000'));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
+        $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow'=>'scroll','background-color'=>'#000'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         return $html;
     } 
     

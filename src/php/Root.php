@@ -254,15 +254,11 @@ final class Root{
     }
     
     private function updateStructure($oc,$classWithNamespace){
-        $interfaces=array('App','Processor','Transmitter');
         $methods2register=array('init'=>FALSE,
                                 'job'=>FALSE,
                                 'run'=>TRUE,            // class->run(), which returns menu definition
                                 'unifyEntry'=>FALSE,
                                 'dataProcessor'=>array(),
-                                'getTrigger'=>FALSE,    
-                                'dataSource'=>TRUE,
-                                'dataSink'=>TRUE,
                                 );
         // analyse class structure
         if (method_exists($oc[$classWithNamespace],'getEntryTable')){
@@ -287,7 +283,6 @@ final class Root{
                 $this->structure['implemented interfaces'][$interface][$classWithNamespace]=$classWithNamespace;
             }
         }
-        if (stripos($classWithNamespace,'logging')!==FALSE){$GLOBALS['logging class']=$classWithNamespace;}
         return $this->structure;
     }
     
@@ -337,9 +332,9 @@ final class Root{
                 // object list might need an update if new classes where added
                 $deleted=unlink($GLOBALS['dirs']['setup'].'objectList.csv');
                 if ($deleted){
-                    $addInfo.='Due to the detected error I have deleted the object list. This should trigger the creation of an updated object list and might solve the problem.';
+                    $addInfo.='Due to the detected error the object list was deleted. This should trigger the creation of an updated object list and might solve the problem.';
                 } else {
-                    $addInfo.='Due to the detected error I tried to delete the object list but this failed (Maybe it did not exist in the first place?)!';
+                    $addInfo.='Due to the detected error the deletion of the object list was triggered but failed (Maybe it did not exist in the first place?)!';
                 }
             }
             // logging

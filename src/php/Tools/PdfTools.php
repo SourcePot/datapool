@@ -114,11 +114,12 @@ class PdfTools{
     
     public function attachments2arrSmalot($file,$arr=array()){
         if (is_file($file)){
+            $arr['Content']['File content']=(isset($arr['Content']['File content']))?$arr['Content']['File content']:'';
             $embeddedFileContent='';
-            $pdfParser = new \Smalot\PdfParser\Parser();
-            $pdfParsed = $pdfParser->parseFile($file);
+            $pdfParser= new \Smalot\PdfParser\Parser();
+            $pdfParsed=$pdfParser->parseFile($file);
             $filespecs=$pdfParsed->getObjectsByType('Filespec');
-            $embeddedFiles = $pdfParsed->getObjectsByType('EmbeddedFile');
+            $embeddedFiles=$pdfParsed->getObjectsByType('EmbeddedFile');
             try{
                 // get file specs
                 $index=0;
@@ -140,7 +141,7 @@ class PdfTools{
                 foreach ($embeddedFiles as $embeddedFile){
                     $index++;
                     $specsStr=implode(' ',$specs[$index]);
-                    $embeddedFileContent.='~~START~'.$specsStr."~~\n";
+                    $embeddedFileContent.="\n\n~~START~".$specsStr."~~\n";
                     if (!isset($specs[$index]['Subtype'])){$specs[$index]['Subtype']='unknown type';}
                     $content=trim($embeddedFile->getContent());
                     $content=stripslashes($content);
@@ -160,9 +161,9 @@ class PdfTools{
                     } else {
                        $embeddedFileContent.='Content-type not yet implemented';
                     }
-                    $embeddedFileContent.='~~END~'.$specsStr."~~\n";
+                    $embeddedFileContent.='~~END~'.$specsStr."~~";
                 }
-                $arr['Content']['File content embedded']=$embeddedFileContent;
+                $arr['Content']['File content'].=$embeddedFileContent;
             } catch (\Exception $e){
                 $arr['error'][]=$e->getMessage();
             }

@@ -733,7 +733,7 @@ class HTMLbuilder{
     public function value2tabelCellContent($html,$arr=array()){
         if (!is_string($html) || empty($html)){
             return $html;
-        } else if (strlen($html)-strlen(strip_tags($html))<0.5*strlen($html)){
+        } else if (strlen($html)-strlen(strip_tags($html))<0.9*strlen($html)){
             $arr['tag']='div';
             $arr['class']='td-content-wrapper';
             $arr['keep-element-content']=TRUE;
@@ -957,7 +957,8 @@ class HTMLbuilder{
                 $labelEvents['y'][$signalKey]['yMax']=$params[$signalKey]['max'];
             }
         }
-        if ($params['xMin']===$params['xMax']){$params['xMax']=$params['xMin']+1;;}
+        if (empty($params)){return '';}
+        if ($params['xMin']===$params['xMax']){$params['xMax']=$params['xMin']+1;}
         // create chart
         $html='';
         // scaler
