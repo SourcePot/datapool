@@ -32,7 +32,7 @@ The screenshot above shows a part of the database table of a processor class. Th
 - **Folder:** contains the class with namespace of the data app the corresponding `Canvas element` the parameter or rule belongs to
 - **Name:** contains the EntryId of the `Canvas element` the parameter or rule belongs to
 - **EntryId:** is the unique identifier
-- **Content:** is an array that contains all the parameter or rule
+- **Content:** is an array that contains the parameter or rule
 - **Params:** is an array that contains meta information such as when the entry was created or changed
 - **Expires:** is the date when the entry will be deleted
 - **Read:** is the access byte defining the read permission with regard to the entry
