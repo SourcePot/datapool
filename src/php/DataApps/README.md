@@ -8,7 +8,7 @@ The entries of the dataexplorer table have following structure (array-representa
 - **Folder:** is the name of the PHP-class including the namespace of the DataApp the Canvas element belongs to
 - **Name:** is the initial HTML tag content of the Canvas element
 - **EntryId:** is the unique identifier
-- **Content:** is an array that contains all data with relation to the Canvas element, e.g. the style information, the database selector with relatiuon to the Canvas element
+- **Content:** is an array that contains all data with relation to the Canvas element, e.g. the style information, the database selector with relation to the Canvas element and Widgets such as the linked processor
 - **Params:** is an array that contains the Canvas element meta information
 - **Expires:** is the date when the entry will be deleted
 - **Read:** is the access byte defining the read permission with regard to the entry
