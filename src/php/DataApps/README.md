@@ -16,7 +16,7 @@ The entries of the dataexplorer table have following structure (array-representa
 - **Owner:** is the unique identifier of the party who created the entry
 
 ## DataExplorer: `Canvas element` data structure array-key Content
-<img src="../../../assets/img/canvas_elment_content.png" alt="Canvas element content example" style=""/>
+<img src="../../../assets/img/canvas_element_content.png" alt="Canvas element content example" style=""/>
 
 ## DataExplorer: Processor classes
 Processor classes implement the interface `\SourcePot\Datapool\Interfaces\Processor`. Each `Canvas element` can be linked to one processor.
