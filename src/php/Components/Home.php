@@ -65,7 +65,8 @@ private $entryTable;
             }
             // Add admin section
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section administration','generic',$selector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
+                $selector['disableAutoRefresh']=TRUE;
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section configurator','generic',$selector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;

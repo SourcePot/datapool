@@ -670,7 +670,9 @@ class Database{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
             }
             // update entry
-            if ($addLog){$entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);}
+            if ($addLog){
+                $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
+            }
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
@@ -764,33 +766,44 @@ class Database{
         return $targetEntry;
     }
 
-    public function moveEntryByEntryId($entry,$targetSelector){
-        $entryFileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-        $targetFileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetSelector);
-        // backup an existing entry file with EntryId equal to $targetSelector at the tmp dir 
-        $return=$this->entryById($targetSelector);
-        if (!empty($return)){
-            $return['File']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().__FUNCTION__.'.file';
-            @rename($targetFileName,$return['File']);
+    public function swapEntries($entryA,$entryB,$isSystemCall=FALSE)
+    {
+        if (empty($entryA['Source']) || empty($entryB['Source']) || empty($entryA['EntryId']) || empty($entryB['EntryId'])){
+            throw new \ErrorException('Function '.__FUNCTION__.': required key(s) Source, EntryId missing',0,E_ERROR,__FILE__,__LINE__);
         }
-        // move entry
-        @rename($entryFileName,$targetFileName);
-        $newEntry=$entry;
-        $newEntry['EntryId']=$targetSelector['EntryId'];
-        $this->updateEntry($newEntry,TRUE);
-        $this->deleteEntries($entry,TRUE);
-        return $return;
-    }
-    
-    public function swapEntriesByEntryId($entryA,$entryB){
-        $entryB=$this->moveEntryByEntryId($entryA,$entryB);
-        if (!empty($entryB)){
-            $entryB['EntryId']=$entryA['EntryId'];
-            $entryBfileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
-            @rename($entryB['File'],$entryBfileName);
-            $this->updateEntry($entryB,TRUE);
+        // swap entry data and update entries
+        $targetEntryB=$this->entryById($entryA,$isSystemCall);
+        $targetEntryA=$this->entryById($entryB,$isSystemCall);
+        if (empty($targetEntryA) || empty($targetEntryB)){return FALSE;}
+        $targetEntryA['Source']=$entryA['Source'];
+        $targetEntryA['EntryId']=$entryA['EntryId'];
+        $targetEntryB['Source']=$entryB['Source'];
+        $targetEntryB['EntryId']=$entryB['EntryId'];
+        $this->updateEntry($targetEntryA);
+        $this->updateEntry($targetEntryB);
+        // copy files A, B to temporary files B, A
+        $sourceFileA=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryA);
+        $sourceFileB=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
+        if (is_file($sourceFileA)){
+            $targetFileB=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$entryA['Source'].'_'.$entryA['EntryId'];
+            if (copy($sourceFileA,$targetFileB)){
+                unlink($sourceFileA);
+            } else {
+                throw new \ErrorException('Function '.__FUNCTION__.': copy('.$sourceFileA.','.$targetFileB.') failed',0,E_ERROR,__FILE__,__LINE__);
+            }
         }
-        return $entryB;
+        if (is_file($sourceFileB)){
+            $targetFileA=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$entryB['Source'].'_'.$entryB['EntryId'];
+            if (copy($sourceFileB,$targetFileA)){
+                unlink($sourceFileB);
+            } else {
+                throw new \ErrorException('Function '.__FUNCTION__.': copy('.$sourceFileB.','.$targetFileA.') failed',0,E_ERROR,__FILE__,__LINE__);
+            }
+        }
+        // copy temporary files A, B to files A, B
+        if (isset($targetFileA)){copy($targetFileA,$sourceFileA);}
+        if (isset($targetFileB)){copy($targetFileB,$sourceFileB);}
+        return TRUE;
     }
     
     public function addOrderedListIndexToEntryId($primaryKeyValue,$index){
@@ -830,7 +843,8 @@ class Database{
         foreach($this->entryIterator($orderedListSelector,FALSE,'Read','EntryId',TRUE) as $entry){
             $targetEntryId=$this->addOrderedListIndexToEntryId($entry['EntryId'],$targetIndex);
             if (strcmp($entry['EntryId'],$targetEntryId)!==0){
-                $this->moveEntryByEntryId($entry,array('Source'=>$selector['Source'],'EntryId'=>$targetEntryId));
+                $targetSelector=array('Source'=>$selector['Source'],'EntryId'=>$targetEntryId);
+                $this->moveEntryOverwriteTarget($entry,$targetSelector,FALSE,FALSE,FALSE,FALSE);    
             }
             $debugArr['stpes'][]=array('targetIndex'=>$targetIndex,'entry EntryId'=>$entry['EntryId'],'target EntryId'=>$targetEntryId);
             $targetIndex++;
@@ -861,12 +875,12 @@ class Database{
             $key=$this->getOrderedListKeyFromEntryId($entry['EntryId']);
             $targetSelector=array('Source'=>$selector['Source']);
             $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($key,$targetIndex);
-            $this->swapEntriesByEntryId($entry,$targetSelector);
+            $this->swapEntries($entry,$targetSelector);
         }
         return $targetSelector['EntryId'];
     }
 
-    public function addLog2entry($entry,$logType='Content log',$logContent=array(),$updateEntry=FALSE){
+    public function addLog2entry($entry,$logType='Processing log',$logContent=array(),$updateEntry=FALSE){
         if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
         if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
