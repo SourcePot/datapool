@@ -196,7 +196,7 @@ final class Root{
                                   default=>'800|Application object'
                                  };
             // scan files
-            $subDir=$dir.'/'.$dirName.'/';
+            $subDir=$dir.$dirName.'/';
             $files=scandir($subDir);
             // loop through all components found in $dir
             foreach($files as $filesIndex=>$file){
@@ -225,6 +225,7 @@ final class Root{
     * If the object list file does not exist, it will be created.
     */
     private function getInstantiatedObjectCollection($oc=array()){
+        $objListNeedsToBeRebuild=FALSE;
         $objListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objListFile)){
             $this->createObjList($objListFile);
@@ -244,13 +245,14 @@ final class Root{
                             $this->updateStructure($oc,$classWithNamespace);
                         }
                     } else {
-                        $oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('Class'=>__CLASS__,'Function'=>__FUNCTION__,'msg'=>'Failed to load registered object '.$objDef['file'].'. You need to delete the objectList.csv file in the setup directory'));
+                        $objListNeedsToBeRebuild=TRUE;
                     }
                 }
             }
             fclose($handle);
         }
-         return $oc;
+        if ($objListNeedsToBeRebuild){unlink($objListFile);}
+        return $oc;
     }
     
     private function updateStructure($oc,$classWithNamespace){

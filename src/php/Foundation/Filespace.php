@@ -280,6 +280,11 @@ class Filespace{
             $fileForDownload=$this->selector2file($entry);
         }
         if (is_file($fileForDownload)){
+            $fileNamePathInfo=pathinfo($entry['Params']['File']['Name']);
+            if (!isset($fileNamePathInfo['extension'])){
+                $entry['Params']['File']['Name'].='.'.$entry['Params']['File']['Extension'];
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','"{function}" file extension added to filename {fileName}',array('function'=>__FUNCTION__,'fileName'=>$entry['Params']['File']['Name']));
+            }
             header('Content-Type: application/'.$entry['Params']['File']['Extension']);
             header('Content-Disposition: attachment; filename="'.$entry['Params']['File']['Name'].'"');
             header('Content-Length: '.fileSize($fileForDownload));
@@ -444,17 +449,20 @@ class Filespace{
         $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         $entry['Params']['File']['Size']=filesize($entry['Params']['File']['Source']);
         $entry['Params']['File']['Name']=$entry['pathArr']['basename'];
-        if (isset($entry['pathArr']['extension'])){
-            $entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
-        } else {
-            $entry['Params']['File']['Extension']='';
-        }
         $entry['Params']['File']['Date (created)']=filectime($entry['Params']['File']['Source']);
         if (empty($entry['Name'])){
             $entry['Name']=$entry['pathArr']['basename'];
         }
         if (isset($entry['mimeType'])){
             $entry['Params']['File']['MIME-Type']=$entry['mimeType'];
+        }
+        if (isset($entry['pathArr']['extension'])){
+            $entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
+        } else if (!empty($entry['Params']['File']['MIME-Type'])){
+            $mimeComps=explode('/',$entry['Params']['File']['MIME-Type']);
+            $entry['Params']['File']['Extension']=array_pop($mimeComps);
+        } else {
+            $entry['Params']['File']['Extension']='';
         }
         if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE && !empty($entry['extractArchives'])){
             // if file is zip-archive, extract all file and create entries seperately 

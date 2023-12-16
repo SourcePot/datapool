@@ -73,7 +73,8 @@ select{
 	max-width:280px;
 	cursor:pointer;
 }
-div.td-content-wrapper{
+.td-content-wrapper{
+    white-space:break-spaces;
     max-height:300px;
     max-width:300px;
     overflow:auto;
@@ -366,8 +367,7 @@ a.first-menu,p.first-menu{
 }
 select.menu{
 	font-size:1.1em;
-	padding:7px;
-    height:34px;
+	height:34px;
 }
 a.first-menu{
 	color:#000;

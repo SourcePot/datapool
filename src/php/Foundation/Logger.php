@@ -117,7 +117,7 @@ class Logger extends \Psr\Log\AbstractLogger
         $arr=array();
         $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$_SESSION['currentUser']['EntryId']);
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
-        $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow'=>'scroll','background-color'=>'#000'));
+        $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#000'));
         $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         return $html;
     } 

@@ -14,12 +14,12 @@ class Menu{
     
     private $oc;
     
-    private $categories=array('Home'=>array('Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home'),
-                              'Login'=>array('Emoji'=>'&#8688;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login'),
-                              'Logout'=>array('Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout'),
-                              'Admin'=>array('Emoji'=>'&#128295;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account'),
-                              'Apps'=>array('Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia'),
-                              'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Invoices'),
+    private $categories=array('Home'=>array('Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'),
+                              'Login'=>array('Emoji'=>'&#8688;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'),
+                              'Logout'=>array('Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'),
+                              'Admin'=>array('Emoji'=>'&#128295;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'),
+                              'Apps'=>array('Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'),
+                              'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Invoices','Name'=>'Invoice app'),
                              );
                              
     private $available=array('Categories'=>array(),'Apps'=>array());
@@ -76,7 +76,28 @@ class Menu{
             }
         }
     }
-        
+
+    public function getCategories($optionsOnly=FALSE){
+        if ($optionsOnly){
+            $options=array();
+            foreach($this->categories as $key=>$category){
+                $options[$key]=$category['Label'];
+            }
+            return $options;
+        } else {
+            return $this->categories;
+        }
+    }
+    
+    public function class2category($class){
+        foreach($this->categories as $key=>$category){
+            if (strpos($category['Class'],$class)===FALSE){continue;}
+            $category['Category']=$key;
+            return $category;
+        }
+        return FALSE;
+    }
+
     public function menu($arr){
         $arr=$this->firstMenuBar($arr);
         $arr=$this->secondMenuBar($arr);

@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Sap implements \SourcePot\Datapool\Interfaces\App{
+class SAP implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
@@ -44,7 +44,7 @@ class Sap implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array{
         $html='';
         if ($arr===TRUE){
-            return array('Category'=>'Data','Emoji'=>'&#9868;','Label'=>'SAP','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+            return array('Category'=>'Data','Emoji'=>'€','Label'=>'SAP','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];

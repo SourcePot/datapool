@@ -149,6 +149,9 @@ class Database{
     public function unifyEntry($entry,$addEntryDefaults=FALSE){
         // This function selects the $entry-specific unifyEntry() function based on $entry['Source']
         // If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
+        if (empty($entry['Source'])){
+            throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
+        }
         $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($entry['Source']);
         $registeredMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('unifyEntry');    
         if (isset($registeredMethods[$classWithNamespace])){
@@ -270,6 +273,11 @@ class Database{
     private function containsStringWildCards($string='abcd\_fgh\%jkl'){
         $string=strval($string);
         return preg_match('/[^\\\\][%_]{1}/',$string);
+    }
+    
+    private function addSelector2result($selector,$result){
+        $result['app']=(isset($selector['app']))?$selector['app']:'';
+        return $result;
     }
     
     private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
@@ -467,6 +475,7 @@ class Database{
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
                 $result=$this->addUNYCOMrefs($result);
+                $result=$this->addSelector2result($selector,$result);
                 yield $result;
                 $result['isFirst']=FALSE;
                 $result['rowIndex']++;
@@ -505,6 +514,7 @@ class Database{
             }
             $result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
             $result=$this->addUNYCOMrefs($result);
+            $result=$this->addSelector2result($selector,$result);
             yield $result;
             $result['isFirst']=FALSE;
         }
@@ -535,6 +545,7 @@ class Database{
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
                 $result=$this->addUNYCOMrefs($result);
+                $result=$this->addSelector2result($selector,$result);
             } else {
                 if (!$returnMetaOnNoMatch){$result=array();}
             }

@@ -341,7 +341,7 @@ class Container{
             $filterKey='Filter';
             $matrix=array();
             $columnOptions=array();
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],array(),TRUE,$isDebugging=FALSE) as $entry){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],array(),TRUE,FALSE) as $entry){
                 $rowIndex=$entry['rowIndex']+intval($settings['offset'])+1;
                 //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,__FUNCTION__.'-'.$entry['EntryId']);
                 $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);

@@ -52,6 +52,15 @@ class NetworkTools{
         return $script.$suffix;
     }
 
+    public function setPageStateBySelector($selector){
+        if (empty($selector['app'])){
+            $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
+        } else {
+            $classWithNamespace=$selector['app'];
+        }
+        return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
+    }
+    
     public function setPageState($callingClass,$state){
         $_SESSION['page state']['selected'][$callingClass]=$state;
         return $_SESSION['page state']['selected'][$callingClass];

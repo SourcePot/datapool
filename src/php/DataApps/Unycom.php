@@ -10,14 +10,12 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Unycom implements \SourcePot\Datapool\Interfaces\App{
+class UNYCOM implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array('Folder'=>array('index'=>'FOLDERIND','type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-                                 'Name'=>array('index'=>'NAMEIND','type'=>'VARCHAR(1024)','value'=>'...','Description'=>'Third level ordering criterion'),
-                                 );
+    private $entryTemplate=array();
 
     public function __construct($oc){
         $this->oc=$oc;

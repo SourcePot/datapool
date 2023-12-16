@@ -347,7 +347,7 @@ class MiscTools{
 
     public function getSeparator(){return self::ONEDIMSEPARATOR;}
     
-    public function arr2selector($arr,$defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE)){
+    public function arr2selector($arr,$defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'app'=>'')){
         $selector=array();
         foreach($defaultValues as $key=>$defaultValue){
             //$selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
@@ -357,22 +357,28 @@ class MiscTools{
         return $selector;
     }
     
-    public function selectorAfterDeletion($selector,$columns=array('Source','Group','Folder','Name','EntryId','Type')){
+    public function selectorAfterDeletion($selector,$columns=array('Source','Group','Folder','Name','EntryId')){
         $unselectedColumnSelected=FALSE;
         $lastColumn='Source';
-        $selector=array();
+        $newSelector=array('app'=>(isset($selector['app'])?$selector['app']:''));
         foreach($columns as $column){
-            if (!isset($selector[$column])){
+            if ($lastColumn==='Source'){
+                $unselectedColumnSelected=FALSE;
+            } else if (!isset($selector[$column])){
                 $unselectedColumnSelected=TRUE;
             } else if ($selector[$column]===FALSE){
                 $unselectedColumnSelected=TRUE;
             } else if (strcmp(strval($selector[$column]),self::GUIDEINDICATOR)===0){
                 $unselectedColumnSelected=TRUE;
             }
-            if (strcmp($lastColumn,'Source')!==0 && $unselectedColumnSelected){$selector[$lastColumn]=FALSE;}
+            if ($unselectedColumnSelected){
+                $newSelector[$lastColumn]=FALSE;
+            } else {
+                $newSelector[$lastColumn]=isset($selector[$lastColumn])?$selector[$lastColumn]:FALSE;
+            }
             $lastColumn=$column;
         }
-        return $selector;
+        return $newSelector;
     }    
     
     public function arr2file($inArr,$fileName=FALSE,$addDateTime=FALSE){

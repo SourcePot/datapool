@@ -14,7 +14,7 @@ class Access{
     
     private $oc;
 
-    public $access=array('NO_R'=>0,
+    private $access=array('NO_R'=>0,
                          'PUBLIC_R'=>1,
                          'REGISTERED_R'=>2,
                          'MEMBER_R'=>4,
@@ -36,7 +36,11 @@ class Access{
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         $this->access=$access['Content'];
     }
-        
+    
+    public function getAccessOptions(){
+        return $this->access;
+    }
+    
     public function accessString2int($string='ADMIN_R',$setNoRightsIfMissing=TRUE){
         if (isset($this->access[$string])){
             return $this->access[$string];

@@ -204,10 +204,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $this->msgEntry['attachments']=array();
         // HEADER
         $h=\imap_headerinfo($mbox,$mid);
-        $this->msgEntry['Name']=iconv_mime_decode($h->subject,0,'utf-8');
+        $this->msgEntry['Name']=$this->iconvMimeDecode($h->subject,0,'utf-8');
         $mailingDate=new \DateTime('@'.$h->udate);
         $this->msgEntry['Date']=$mailingDate->format('Y-m-d H:i:s');
-        $this->msgEntry['Folder']=htmlspecialchars(iconv_mime_decode($h->senderaddress,0,'utf-8'));
+        $this->msgEntry['Folder']=htmlspecialchars($this->iconvMimeDecode($h->senderaddress,0,'utf-8'));
         $s=\imap_fetchstructure($mbox,$mid);
         if (!isset($s->parts)){
             // simple
@@ -448,7 +448,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 }
             }
         }
-        $entry['Name']=iconv_mime_decode($mailArr['Subject']);
+        $entry['Name']=$this->iconvMimeDecode($mailArr['Subject']);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
         $fileName=date('Y-m-d').' '.preg_replace('/\W/','_',$entry['Name']).'.eml';
         $pathArr=pathinfo($fileName);
@@ -461,6 +461,19 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $entry['Params']['File']['Date (created)']=date('Y-m-d');
         $entry['Expires']=date('Y-m-d',time()+31536000);
         return $entry;
+    }
+    
+    private function iconvMimeDecode($str,$mode=0,$encoding=null){
+        if (empty($str)){
+            return '';
+        } else {
+            $result=iconv_mime_decode($str,$mode,$encoding);
+            if ($result===FALSE){
+                return '?';
+            } else {
+                return $result;
+            }
+        }
     }
 
 }

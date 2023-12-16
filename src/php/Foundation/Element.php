@@ -37,7 +37,7 @@ class Element{
                        'fieldset'=>array('name'=>TRUE),
                        'form'=>array('action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,
                                      'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE),
-                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE),
+                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE),
                        'label'=>array('for'=>TRUE),
                        'legend'=>array('name'=>TRUE),
                        'meter'=>array('name'=>TRUE),
@@ -68,7 +68,7 @@ class Element{
                        // Media
                        'audio'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'canvas'=>array('height'=>FALSE,'width'=>FALSE),
-                       'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
+                       'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE,'type'=>FALSE),
                        'iframe'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
                        'img'=>array('src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE),
                        'link'=>array('rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
@@ -114,7 +114,7 @@ class Element{
                                     );
     
     private $copyKeys2selector=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Date'=>FALSE,'Expires'=>FALSE,
-                                     'Read'=>FALSE,'Write'=>FALSE,'Privileges'=>FALSE,'LoginId'=>FALSE
+                                     'Read'=>FALSE,'Write'=>FALSE,'Privileges'=>FALSE,'LoginId'=>FALSE,'app'=>FALSE
                                     );
 
     public function __construct($oc){

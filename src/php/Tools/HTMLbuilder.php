@@ -332,10 +332,14 @@ class HTMLbuilder{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
-                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
-                $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
-                $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
-                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);    
+                $count=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
+                if ($count){
+                    $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
+                    $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
+                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Entries deleted: "{count}"',array('count'=>$count));         
+                } else {
+                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Nothing deleted. Either an empty selection or missing write access');         
+                }
             } else if (isset($formData['cmd']['remove'])){
                 $entry=$formData['selector'];
                 if (!empty($entry['EntryId'])){
@@ -347,8 +351,7 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['delete all entries'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntriesOnly($selector);
             } else if (isset($formData['cmd']['select'])){
-                $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
-                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['export'])){
                 $selectors=array($selector);
                 $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
@@ -420,6 +423,7 @@ class HTMLbuilder{
         $arr=array_replace_recursive($template,$arr);
         $entry=$arr['selector'];
         // only the Admin has access to the method if columns 'Privileges' is selected
+        if (is_array($arr['key'])){$arr['key']=array_shift($arr['key']);}
         if (strcmp($arr['key'],'Privileges')===0 && !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,TRUE)){
             return '';
         }
@@ -429,10 +433,8 @@ class HTMLbuilder{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
         $saveRequest=isset($formData['cmd'][$arr['key']]['save']);
         $updatedInteger=0;
-        
         $html='<fieldset>';
         $html.='<legend>'.'"'.$arr['key'].'" right'.'</legend>';
-        
         $matrix=array();
         if (is_string($integer)){$integer=intval($integer);}
         for($bitIndex=0;$bitIndex<$arr['bitCount'];$bitIndex++){
@@ -499,10 +501,13 @@ class HTMLbuilder{
     * $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
     * @return string
     */
-    public function entryControls($arr){
+    public function entryControls($arr,$isDebugging=FALSE){
         if (!isset($arr['selector'])){return 'Selector missing';}
+        $debugArr=array('arr_in'=>$arr);
         $arr['html']='';
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
+        if (!isset($arr['selector']['Content'])){
+            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
+        }
         if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
         $template=array('callingClass'=>__CLASS__,
                         'callingFunction'=>__FUNCTION__,
@@ -524,9 +529,13 @@ class HTMLbuilder{
             $arr['excontainer']=TRUE;
             $arr['cmd']=$cmd;
             $matrix['Btns']['Value'].=$this->btn($arr);
+            $debugArr['btn'][]=$arr;
         }
         $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
         $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none','margin'=>'0','min-width'=>'200px','box-shadow'=>'none','border'=>'1px dotted #444')));
+        if ($isDebugging){
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
+        }
         return $html;
     }
     
@@ -730,11 +739,23 @@ class HTMLbuilder{
         return $row;
     }
     
+    public function row2table($row,$caption='Row as table',$flip=FALSE){
+        if ($flip){
+            $matrix=array();
+            foreach($row as $key=>$value){
+                $matrix[$key]=array('value'=>$value);
+            }
+        } else {
+            $matrix=array($caption=>$row);
+        }
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+    }
+    
     public function value2tabelCellContent($html,$arr=array()){
         if (!is_string($html) || empty($html)){
             return $html;
-        } else if (strlen($html)-strlen(strip_tags($html))<0.9*strlen($html)){
-            $arr['tag']='div';
+        } else if (strlen(strip_tags($html))==strlen($html)){
+            $arr['tag']='p';
             $arr['class']='td-content-wrapper';
             $arr['keep-element-content']=TRUE;
             $arr['element-content']=$html;
@@ -742,10 +763,11 @@ class HTMLbuilder{
             $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
             $htmlFile=$tmpDir.md5($html).'.html';
             $bytes=file_put_contents($htmlFile,$html);
-            $arr['tag']='iframe';
+            $arr['tag']='embed';
+            $arr['type']='text/html';
             $arr['allowfullscreen']=TRUE;
-            $arr['element-content']='Html content';
-            $arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'],$htmlFile);
+            $arr['element-content']=' ';
+            $arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'].'/',$htmlFile);
         }
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
     }
@@ -790,6 +812,7 @@ class HTMLbuilder{
             }            
         }
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId') as $setting){
+            $rowCount=$setting['rowCount'];
             $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']);
             $presentArr['class']=$setting['Content']['Style class'];
             $cntrArr=explode('|',$setting['Content']['Entry key']);
@@ -829,6 +852,9 @@ class HTMLbuilder{
                 }
                 if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
             }
+        }
+        if (empty($rowCount)){
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
         }
         if (isset($presentArr['containerId'])){
             $presentArr['html']=$html;

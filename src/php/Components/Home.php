@@ -82,7 +82,7 @@ private $entryTable;
                                 'Section content'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
                                 'Section footer'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
                                 'Section attachment'=>array('method'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
-                                'Read access'=>array('method'=>'select','selected'=>65535,'options'=>array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->access),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
+                                'Read access'=>array('method'=>'select','selected'=>65535,'options'=>array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions()),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
                                 );
         $sectionArr['canvasCallingClass']=$arr['callingFunction'];
         $sectionArr['contentStructure']=$contentStructure;

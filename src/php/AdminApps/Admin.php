@@ -38,10 +38,11 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $html='';
             $html.=$this->tableViewer();
-            $html.=$this->backupArticle();
-            $html.=$this->getPageSettingsHtml();
             $settings=array('method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
+            $html.=$this->getPageSettingsHtml();
+            $html.=$this->appAdminHtml();
+            $html.=$this->backupArticle();
             $html.=$this->adminChart();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -54,13 +55,14 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if (empty($selector['Source'])){
             return $html;
         } else if (empty($selector['EntryId'])){
+            $selector['app']=__CLASS__;
             $selector['disableAutoRefresh']=TRUE;
             $settings=array('orderBy'=>'Date','isAsc'=>FALSE,'hideUpload'=>TRUE);
             $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Group','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Table entries as','entryList',$selector,$settings,array());        
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Admin table entries','entryList',$selector,$settings,array());        
         } else {
             $settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry','generic',$selector,$settings,array('style'=>array('margin'=>'0')));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$selector['Source'],'generic',$selector,$settings,array('style'=>array('margin'=>'0')));
         }
         return $html;
     }
@@ -137,18 +139,136 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     }
     
     private function objectListHtml(){
-        $html='';
+        $matrix=array();
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objectListFile)){return 'Please reload to create a new object list.';}
-        $count=0;
         foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
             if (!isset($row['type'])){continue;}
-            $count++;
-            $html.=$row['class'].' ('.$row['type'].'); ';
-            if ($count%5===0){$html.='<br/>';}
+            $matrix[$row['class']]=$row;
         }
-        $html='Objects: '.$count.'<br/>'.trim($html,', ');
-        return $html;
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE,'class'=>'toolbox'));
+    }
+    
+    public function appAdminHtml(){
+        $html=$this->replicateAppHtml();
+        $html.=$this->deleteAppHtml();
+        return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+    }
+    
+    public function replicateAppHtml(){
+        $apps=array();
+        foreach($this->oc['SourcePot\Datapool\Foundation\Menu']->getCategories() as $category=>$def){
+            if ($category!=='Apps' && $category!=='Data'){continue;}
+            $apps[$def['Class']]=$def['Name'];
+        }
+        $readOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
+        // init arr
+        $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'noBtns'=>TRUE);
+        $arr['selector']=array('Source'=>'settings','Group'=>__CLASS__,'Folder'=>__FUNCTION__,'Name'=>'Replicate app');
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Source','Group','Folder','Name'),'0','',FALSE);
+        $arr['selector']['Content']=array('Source class'=>key($apps),'New class'=>'Inventory','Label'=>'Inventory','Emoji'=>'€','Read'=>32768);
+        // form processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (!empty($formData['cmd'])){
+            $entryKey=key($formData['cmd']);
+            $arr['selector']['Content']=$formData['val'][$entryKey]['Content'];
+            $this->replicateApp($formData['val'][$entryKey]['Content']);
+        }
+        //return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+        $contentStructure=array('Source class'=>array('method'=>'select','options'=>$apps,'excontainer'=>TRUE),
+                                'New class'=>array('method'=>'element','tag'=>'input','type'=>'text','minlength'=>3),
+                                'Label'=>array('method'=>'element','tag'=>'input','type'=>'text','minlength'=>3),
+                                'Emoji'=>array('method'=>'element','tag'=>'input','type'=>'text','minlength'=>1,'maxlength'=>1),
+                                'Read'=>array('method'=>'select','options'=>$readOptions,'excontainer'=>TRUE),
+                                ''=>array('method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Replicate'),
+                                );
+        // get HTML
+        $arr['contentStructure']=$contentStructure;
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Replicate app',TRUE);
+    }
+    
+    public function deleteAppHtml(){
+        $classes=array();
+        $classes2files=array();
+        $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
+        if (!is_file($objectListFile)){return '';}
+        foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
+            if (!isset($row['classWithNamespace'])){continue;}
+            if ($row['type']==='Application object' && 
+                (strpos($row['classWithNamespace'],'\GenericApps')!==FALSE || strpos($row['classWithNamespace'],'\DataApps')!==FALSE) &&
+                (strpos($row['classWithNamespace'],'\Multimedia')===FALSE && strpos($row['classWithNamespace'],'\Invoices')===FALSE && strpos($row['classWithNamespace'],'\Calendar')===FALSE && strpos($row['classWithNamespace'],'\Forum')===FALSE)){
+                $classes[$row['classWithNamespace']]=$row['classWithNamespace'];
+                $classes2files[$row['classWithNamespace']]=$row['file'];
+            }
+        }
+        // init arr
+        $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'noBtns'=>TRUE);
+        $arr['selector']=array('Source'=>'settings','Group'=>__CLASS__,'Folder'=>__FUNCTION__,'Name'=>'Delete app');
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Source','Group','Folder','Name'),'0','',FALSE);
+        $arr['selector']['Content']=array('Class'=>key($classes));
+        // form processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (!empty($formData['cmd'])){
+            $entryKey=key($formData['cmd']);
+            $class2delete=$formData['val'][$entryKey]['Content']['Class'];
+            if (unlink($classes2files[$class2delete])){
+                unlink($objectListFile);
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Class "{class}" has been deleted. But the corresponding database table and filespace was left alone',array('class'=>$class2delete));         
+            } else {
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Failed to remove class "{class}", file {file}',array('class'=>$class2delete,'file'=>$classes2files[$class2delete]));         
+            }
+        }
+        //return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+        $contentStructure=array('Class'=>array('method'=>'select','options'=>$classes,'excontainer'=>TRUE),
+                                ''=>array('method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Delete'),
+                                );
+        // get HTML
+        $arr['contentStructure']=$contentStructure;
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Delete app',TRUE);
+    }
+    
+    
+    private function replicateApp($data){
+        $target=array();
+        $readOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
+        $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
+        if (!is_file($objectListFile)){return FALSE;}
+        foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
+            if (strcmp($row['classWithNamespace'],$data['Source class'])!==0){continue;}
+            $target['class']=ucfirst(preg_replace('/[^a-zA-Z]/','',$data['New class']));
+            $source=$row;
+            $source['namespace']=explode('\\',$source['classWithNamespace']);
+            array_pop($source['namespace']);
+            $target['namespace']=$source['namespace']=implode('\\',$source['namespace']);
+            $target['classWithNamespace']=$target['namespace'].'\\'.$target['class'];
+            $target['type']=$source['type'];
+            $target['file']=str_replace($source['class'],$target['class'],$source['file']);
+            break;
+        }
+        if (isset($source)){
+            $category=$this->oc['SourcePot\Datapool\Foundation\Menu']->class2category($source['class']);
+            if (is_file($target['file'])){
+               $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Target class "{class}" exists already and was not changed',array('class'=>$target['class']));     
+            } else if (strlen($target['class'])<3){
+               $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Target class name "{class}" is invalid',array('class'=>$data['New class']));     
+            } else if (empty($category)){
+               $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Category info missing for source class "{class}", nothing created',array('class'=>$data['New class']));     
+            } else {
+                $fileContent=file_get_contents($source['file']);
+                $fileContent=str_replace('class '.$source['class'].' ','class '.$target['class'].' ',$fileContent);
+                $newDef="if (\$arr===TRUE){\n            return array('Category'=>'".$category['Category']."','Emoji'=>'".$data['Emoji']."','Label'=>'".$data['Label']."','Read'=>'".$readOptions[intval($data['Read'])]."','Class'=>__CLASS__);";
+                $fileContent=preg_replace('/(if \(\$arr\=+TRUE\)\{\s+return )(array\([^)]+\)\;)/',$newDef,$fileContent);
+                if (file_put_contents($target['file'],$fileContent)){
+                    unlink($objectListFile);
+                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','New class "{class}" created',array('class'=>$data['New class']));
+                } else {
+                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Creation of class "{class}" failed',array('class'=>$data['New class']));
+                }
+            }
+        }
+        return TRUE;
     }
     
     private function adminChart(){
@@ -198,10 +318,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         }
         // get HTML
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Page settings';
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        $matrix=array('Settings'=>$row);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Web application settings',TRUE);
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
     }
 }
