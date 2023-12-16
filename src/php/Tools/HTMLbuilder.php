@@ -811,7 +811,7 @@ class HTMLbuilder{
                 $presentArr['selector']=$entry;
             }            
         }
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId') as $setting){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
             $rowCount=$setting['rowCount'];
             $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']);
             $presentArr['class']=$setting['Content']['Style class'];

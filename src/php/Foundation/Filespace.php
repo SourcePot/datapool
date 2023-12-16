@@ -525,7 +525,8 @@ class Filespace{
         return $zipStatistic;
     }
     
-    public function addFile2entry($entry,$file,$isDebugging=TRUE){
+    public function addFile2entry($entry,$file,$isDebugging=TRUE)
+    {
         // process file
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
@@ -539,6 +540,20 @@ class Filespace{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
             }
             $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
+        } else if (stripos($entry['Params']['File']['Extension'],'xls')!==FALSE){
+            $matrix=array();
+            $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+            $reader->setReadDataOnly(TRUE);
+            $spreadsheet=$reader->load($file);
+            $worksheet= $spreadsheet->getActiveSheet();
+            foreach($worksheet->getRowIterator() as $rowIndex=>$row){
+                $cellIterator= $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(FALSE);
+                foreach($cellIterator as $cellIndex=>$cell){
+                    $matrix[$rowIndex][$cellIndex]=$cell->getValue();
+                }
+            }
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($matrix);
         }
         // add file to entry
         $targetFile=$this->selector2file($entry,TRUE);
