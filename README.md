@@ -10,10 +10,19 @@ The figure shows a typical application example in a company software setup inclu
 3. Mapping: Adjusting data formats and types to create a UNYCOM compatible dataset.
 The Datapool framework can just achieve this.
 
+## Features
+- Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
+- The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
+- Data processing can be controlled manually or by trigger derived from values or the calendar events
+- External devices can provide data or files through a client interface
+- Processes can be easily designed and adopted via a graphical user interface
+
+<img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style="width:70%;"/>
+
 ## Requirements
 This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
 
-## Installation of the application
+## Installation of the web-application
 For the installation and creation of the first user account please refer to the video below.
 1. Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create among other things the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
