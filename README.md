@@ -14,7 +14,7 @@ This example requires the following steps:
 *The Datapool framework can achieve exactly this in a very transparent manner!*
 
 ## Features
-- Very lightweight web-application with data-processing, calendar, user account and rights management, a multimedia app and a forum
+- Very lightweight web-application with data-processing, calendar, user account and rights management, a multimedia app and forum
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
 - External devices can provide data or files through a client interface
 - The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
