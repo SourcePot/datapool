@@ -20,10 +20,12 @@ The Datapool framework can just achieve this.
 
 <img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style=""/>
 
-## Requirements
+## Hosting the web-application
+
+### Requirements
 This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
 
-## Installation of the web-application
+### Installation 
 For the installation and creation of the first user account please refer to the video below.
 1. Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create among other things the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
@@ -34,7 +36,7 @@ For the installation and creation of the first user account please refer to the 
 
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
-## Initial adjustments
+### Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button the save changes.
 
 ## Philosophy
