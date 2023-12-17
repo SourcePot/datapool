@@ -4,7 +4,9 @@ This framework aims to fill the gap between the big software packages such as SA
 
 <img src="./assets/img/ExampleApplication.png" alt="Example application" style="width:70%;"/>
 
-The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case. This requires the following:
+The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case.
+
+This requires the following:
 1. Parsing: Content extraction from the invoice. SAP relevant data as well as patent case specific data.
 2. Matching an SAP accounting record with the patent case.
 3. Mapping: Adjusting data formats and types to create a UNYCOM compatible dataset.
