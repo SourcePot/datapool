@@ -2,7 +2,7 @@
     "name":"sourcepot/datapool",
     "type":"library",
     "description":"The Datapool PHP framework",
-    "keywords":["UNYCOM","SAP"],
+    "keywords":["UNYCOM","SAP","lists","spreadsheets","No-Code"],
     "homepage":"https://datapool.info",
     "license":"AGPL-3.0-or-later",
     "authors":[{"name":"Carsten Wallenhauer","email":"admin@datapool.info"}],
