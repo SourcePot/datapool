@@ -11,6 +11,7 @@ The figure shows a typical application example in a company software setup inclu
 The Datapool framework can just achieve this.
 
 ## Features
+- Very lightweight web-application with data-processing, calendar, user account and rights management, a multimedia app and a forum
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
 - The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
 - Data processing can be controlled manually or by trigger derived from values or the calendar events
