@@ -38,6 +38,7 @@ For the installation and creation of the first user account please refer to the 
 5. Refresh the webpage. This will create an initial admin user account. The user credentials of this account can be found in `../setup/User/initAdminAccount.json`. Register your own account and use the initial admin user account to change your own account to admin access level. Delete the initial admin user account after you have set up your own admin account.
 6. Make sure **only** the `../www/`-subdirectory is visible to the public.
 
+Example installation using composer on a notebook computer running MS Windows, XAMPP server and MariaDB:
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ### Initial adjustments
