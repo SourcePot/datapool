@@ -17,7 +17,7 @@ The Datapool framework can just achieve this.
 - External devices can provide data or files through a client interface
 - Processes can be easily designed and adopted via a graphical user interface
 
-<img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style="width:70%;"/>
+<img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style=""/>
 
 ## Requirements
 This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
