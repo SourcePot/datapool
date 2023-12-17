@@ -13,12 +13,13 @@ The Datapool framework can just achieve this.
 ## Features
 - Very lightweight web-application with data-processing, calendar, user account and rights management, a multimedia app and a forum
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
+- External devices can provide data or files through a client interface
 - The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
 - Data processing can be controlled manually or by trigger derived from values or calendar events
 - Processes can be easily designed and adopted via a graphical user interface
-<img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style=""/>
-- External devices can provide data or files through a client interface
 - Processes can easily be exported or imported to other systems running Datapool
+
+<img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style=""/>
 
 ## Hosting the web-application
 
