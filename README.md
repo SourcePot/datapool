@@ -11,7 +11,7 @@ This example requires the following steps:
 2. Matching an SAP accounting record with the patent case.
 3. Mapping: adjusting data formats and types to create a UNYCOM compatible dataset.
 
-The Datapool framework can achieve exactly this in a very transparent manner!
+*The Datapool framework can achieve exactly this in a very transparent manner!*
 
 ## Features
 - Very lightweight web-application with data-processing, calendar, user account and rights management, a multimedia app and a forum
