@@ -15,10 +15,10 @@ The Datapool framework can just achieve this.
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
 - The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
 - Data processing can be controlled manually or by trigger derived from values or calendar events
-- External devices can provide data or files through a client interface
 - Processes can be easily designed and adopted via a graphical user interface
-
 <img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style=""/>
+- External devices can provide data or files through a client interface
+- Processes can easily be exported or imported to other systems running Datapool
 
 ## Hosting the web-application
 
@@ -43,7 +43,7 @@ After you have set up your admin account you should login and update the webmast
 Datapool is based on an **object collection** or `oc`, i.e. a collection objects instantiated from PHP-classes in the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web-application is called.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `init(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the init method of the class.
 
-The configuration file `../setup/objectList.csv` determines the order of creation of objects. Vendor classes can be added to the object collection with the private property `registerVendorClasses` of class `../php/Root.php`.
+The configuration file `../setup/objectList.csv` determines the order of creation of objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection.
 Otherwise, an instance of a vendor class can be created within the source code when required.
 
 <img src="./assets/img/objectList.png" alt="Object list file"/>
