@@ -32,6 +32,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'ge'=>'is >= than target value',
                                  );
         
+    private $paramsTemplate=array('Mode'=>'entries','Array→string glue'=>'|');
+    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -150,7 +152,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function mappingParams($callingElement){
         $contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Mode'=>array('method'=>'select','value'=>'entries','excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
+                                'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
+                                'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctor
@@ -211,7 +214,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Mapping statistics'=>array('Entries'=>array('value'=>0),
-                                                  'CSV-Entries'=>array('value'=>0),
+                                                  'Spreadsheet entries'=>array('value'=>0),
                                                   'Files added to zip'=>array('value'=>0),
                                                   'Skip rows'=>array('value'=>0),
                                                   'Output format'=>array('value'=>'Entries'),
@@ -248,10 +251,12 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $deleteEntries['EntryIds'][]="'".$sourceEntry['EntryId']."'";
             }
             // map entry
-            if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($sourceEntry)){
-                foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($sourceEntry) as $rowIndex=>$rowArr){
-                    $result['Mapping statistics']['CSV-Entries']['value']++;
-                    $sourceEntry['File content']=array_replace($sourceEntry['Content'],$rowArr);
+            if (!empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
+                $iteratorClass=$sourceEntry['Params']['File']['SpreadsheetIteratorClass'];
+                $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
+                foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$sourceEntry['Params']['File']['Extension']) as $rowIndex=>$rowArr){
+                    $result['Mapping statistics']['Spreadsheet entries']['value']++;
+                    $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
                     $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
                 }
             } else {
@@ -323,7 +328,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             // set order of array values
             ksort($value);
-            $targetEntry[$key]=implode('|',$value);
+            $targetEntry[$key]=implode($params['Content']['Array→string glue'],$value);
         }
         $result['Mapping statistics']['Entries']['value']++;
         $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('mode'=>$params['Content']['Mode']),FALSE);

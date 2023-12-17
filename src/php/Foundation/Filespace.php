@@ -525,8 +525,17 @@ class Filespace{
         return $zipStatistic;
     }
     
+    /**
+     * Adds meta data to to an entry derived from the file provided.
+     *
+     * @param array $entry is the entry which meta data is added to
+     * @param array $file is file from which the meta data is derived
+     *
+     * @return $entry is the enriched entry
+     */
     public function addFile2entry($entry,$file,$isDebugging=TRUE)
     {
+        $debugArr=array('entry_in'=>$entry,'file'=>$file);
         // process file
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
@@ -540,25 +549,23 @@ class Filespace{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
             }
             $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
+        } else if (stripos($entry['Params']['File']['Extension'],'csv')!==FALSE){
+                $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();
+                $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
+                $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
         } else if (stripos($entry['Params']['File']['Extension'],'xls')!==FALSE){
-            $matrix=array();
-            $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
-            $reader->setReadDataOnly(TRUE);
-            $spreadsheet=$reader->load($file);
-            $worksheet= $spreadsheet->getActiveSheet();
-            foreach($worksheet->getRowIterator() as $rowIndex=>$row){
-                $cellIterator= $row->getCellIterator();
-                $cellIterator->setIterateOnlyExistingCells(FALSE);
-                foreach($cellIterator as $cellIndex=>$cell){
-                    $matrix[$rowIndex][$cellIndex]=$cell->getValue();
-                }
-            }
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($matrix);
+                $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($file,$entry['Params']['File']['Extension'])->current();
+                $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\XLStools';
+                $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
         }
         // add file to entry
         $targetFile=$this->selector2file($entry,TRUE);
         if (copy($file,$targetFile)){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source'=>$file,'File attached'=>$targetFile),FALSE);    
+        }
+        if ($isDebugging){
+            $debugArr['entry_out']=$entry;
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $entry;
     }

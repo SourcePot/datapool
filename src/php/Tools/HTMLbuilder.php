@@ -226,11 +226,6 @@ class HTMLbuilder{
         if (empty($arr['standardColumsOnly'])){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,TRUE) as $tmpEntry){
                 if ($tmpEntry['isSkipRow']){continue;}
-                if (isset($tmpEntry['Params']['File']['MIME-Type'])){
-                    if (strpos($tmpEntry['Params']['File']['MIME-Type'],'text/')===0){
-                        $fileContentKeys=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($tmpEntry)->current();
-                    }
-                }
                 $keys=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
                 break;
             }
@@ -243,10 +238,6 @@ class HTMLbuilder{
         }
         if (!empty($arr['addColumns'])){
             $arr['options']+=$arr['addColumns'];
-        }
-        foreach($fileContentKeys as $key=>$value){
-            $key='File content'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().$key;
-            $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
         }
         foreach($keys as $key=>$value){
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);

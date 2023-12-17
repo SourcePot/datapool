@@ -678,17 +678,18 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
     
     public function str2date($string){
-        $orgString=$string;
+        $orgString=$string=strval($string);
         $string=trim(mb_strtolower($string));
         foreach($this->months as $needle=>$month){
             $string=str_replace($needle,'|'.$month.'|',$string);
         }
         $strComps=preg_split("/[^|a-z0-9]+/",$string);
-        if (count($strComps)<2){return array();}
+        if (count($strComps)<3){return array();}
         $strCompsCopy=$strComps;
         $dateArr=array('day'=>'','month'=>'','year'=>'');
         $dateArrCopy=$dateArr;
         foreach($strComps as $index=>$strComp){
+            if (empty($strComp)){continue;}
             if ($strComp[0]=='|'){
                 $dateArr['month']=trim($strComp,'|');
                 unset($strCompsCopy[$index]);

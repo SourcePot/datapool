@@ -695,14 +695,14 @@ class MiscTools{
     }
 
     public function convert2splitString($value){
-        $value=strtolower($value);
+        $value=strtolower(strval($value));
         $value=trim($value);
         $value=preg_split("/[^a-zäöü0-9ß]+/",$value);
         return $value;
     }
     
     public function convert2codepfad($value){
-        $codepfade=explode(';',$value);
+        $codepfade=explode(';',strval($value));
         $arr=array();
         foreach($codepfade as $codePfadIndex=>$codepfad){
             $codepfadComps=explode('\\',$codepfad);
@@ -720,9 +720,10 @@ class MiscTools{
     }
     
     public function convert2unycom($value){
+        $value=strval($value);
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-        preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZX]{1,2})([0-9\s]{5,6})/',$value,$matches);
+        preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/',$value,$matches);
         if (empty($matches[0])){return array();}
         $arr=array_combine($keyTemplate,$matches);
         $arr['Region']='  ';

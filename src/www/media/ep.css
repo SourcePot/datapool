@@ -1,64 +1,65 @@
 div.ep-std{
-	float:left;
-	clear:both;
-	margin:5px 10px;
+    float:left;
+    clear:both;
+    margin:5px 10px;
 }
 table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
-	float:left;
-	clear:right;
-	margin:5px 10px;
+    float:left;
+    clear:right;
+    max-width:100%;
+    margin:5px 0;
     border:none;
     box-shadow:none;
 }
 table.ep-footer{
     clear:both;
-	font-size:0.8em;
+    font-size:0.8em;
 }
 table.ep-h1{
     clear:both;
-	font-size:1.3em;
+    font-size:1.3em;
 }
 img.ep-std,video.ep-std{
-	max-width:360px;
+    max-width:360px;
     margin:0.5em;
 }
 iframe.ep-std{
-	width:98%;
-	height:300px;
+    width:98%;
+    height:300px;
     margin:0 0 0 5px;
 }
 div.ep-std-no-clear{
-	float:left;
-	clear:both;
-	margin:5px 10px;	
+    float:left;
+    clear:both;
+    margin:5px 10px;    
 }
 div.ep-h1{
-	clear:both;
-	margin:1em 0 0 5px;
-	font-size:1.6em;
+    clear:both;
+    margin:1em 0 0 5px;
+    font-size:1.6em;
 }
 div.ep-message{
-	clear:right;
-	margin:5px 10px;
-	font-size:1.5em;
+    clear:right;
+    margin:5px 10px;
+    font-size:1.5em;
 }
 div.ep-header-wrapper{
-	margin:0;
-	width:100%;
-	background-color:#eee;
-	border-top:1px solid #444;
+    margin:0;
+    width:100%;
+    background-color:#eee;
+    border-top:1px solid #444;
 }
 details.ep-comment{
-	clear:left;
+    clear:left;
 }
 div.ep-comment{
-	padding:3px 5px;
+    padding:3px 5px;
 }
 p.ep-comment{
-	font-size:1.2em;
-	color:#a80;
+    font-size:1.2em;
+    color:#a80;
 }
 .ep-comment-footer{
-	font-size:0.8em;
-	font-weight:bold;
+    font-size:0.8em;
+    font-weight:bold;
 }
