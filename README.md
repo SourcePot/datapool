@@ -39,6 +39,7 @@ For the installation and creation of the first user account please refer to the 
 6. Make sure **only** the `../www/`-subdirectory is visible to the public.
 
 Example installation using composer on a notebook computer running MS Windows, XAMPP server and MariaDB:
+
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ### Initial adjustments
