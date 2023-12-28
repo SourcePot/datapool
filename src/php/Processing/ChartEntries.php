@@ -176,6 +176,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function runChartEntries($callingElement,$testRun=FALSE){
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($callingElement['Content']['Selector']);
+        if (empty($selector['Source'])){return array();}
         $traceDefArr=array();
         $props=array('Script start timestamp'=>hrtime(TRUE));
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);

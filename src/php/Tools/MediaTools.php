@@ -71,11 +71,17 @@ class MediaTools{
             }
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/zip')===0){
             $arr['html'].='&#10066;';    
+        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['File']['Extension']==='md'){
+            $arr['html'].='Is md file';
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
             $text=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($file);
             $arr=$this->addPreviewTextStyle($arr);
             $arr['tag']='p';
-            $arr['element-content']=substr($text,0,200);
+            if (mb_strlen($text)>200){
+                $arr['element-content']=substr($text,0,200).' .....';
+            } else {
+                $arr['element-content']=$text;
+            }
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
         } else {
             // attached file with undefined mime-type

@@ -23,8 +23,8 @@ class Logger extends \Psr\Log\AbstractLogger
                                'critical'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f88','min-width'=>'6em')),
                                'error'=>array('hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#faa','min-width'=>'6em')),
                                'warning'=>array('hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#fcc','min-width'=>'6em')),
-                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT1M','Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
-                               'info'=>array('hashIp'=>TRUE,'lifetime'=>'PT1M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
+                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT5M','Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
+                               'info'=>array('hashIp'=>TRUE,'lifetime'=>'PT5M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
                                'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6em')),
                                );
     

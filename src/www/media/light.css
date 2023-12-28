@@ -520,6 +520,9 @@ button.canvas-dark{
     background:none;
     z-index:15;
 }
+div.canvas-symbol:hover{
+    background-color:#0004;
+}
 button.canvas{
     float:left;
     clear:none;

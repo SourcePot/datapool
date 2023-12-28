@@ -533,7 +533,7 @@ class Filespace{
      *
      * @return $entry is the enriched entry
      */
-    public function addFile2entry($entry,$file,$isDebugging=TRUE)
+    public function addFile2entry($entry,$file,$isDebugging=FALSE)
     {
         $debugArr=array('entry_in'=>$entry,'file'=>$file);
         // process file
