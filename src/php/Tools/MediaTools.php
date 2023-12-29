@@ -228,9 +228,12 @@ class MediaTools{
     }
     
     private function getMarkdown($arr){
+        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
+        $arr['settings']['style']=array_merge(array('overflow'=>'hidden'),$arr['settings']['style']);
         $pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateBySelector($arr['selector']);
         $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         // process form
+        $btns='';
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['val']['content'])){
            $md=$formData['val']['content'];
@@ -248,8 +251,13 @@ class MediaTools{
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
             $arr['cmd']='show';
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE));
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']));
+        $btns.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
+        $arr['cmd']='print';
+        $btns.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
+        if (empty($arr['settings']['style']['height']) && empty($arr['settings']['style']['max-height'])){
+            $arr['html'].=$btns;
+        }
         return $arr;
     }
     

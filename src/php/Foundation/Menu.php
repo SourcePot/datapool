@@ -119,7 +119,7 @@ class Menu{
         }
         $html.='{{firstMenuBarExt}}';
         $html.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu','id'=>'nav'));
         $arr['toReplace']['{{firstMenuBar}}']=$html;
         return $arr;
     }

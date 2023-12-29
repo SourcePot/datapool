@@ -5,11 +5,17 @@
     font-family:system-ui,sans-serif;
 }
 *{
-    color:#444;
+    color:#000;
     margin:0;
     padding:0;
     text-decoration:none;
 }
+@media print{
+  #top-filler,#explorer,#bottom-menu,.toolbox,#nav{
+    display:none !important;
+  }
+}
+
 body{
     color:#333;
     background-image:url("lightbg.png");

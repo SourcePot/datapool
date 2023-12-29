@@ -155,6 +155,13 @@ jQuery(document).ready(function(){
     });
 
     
+/** CLIPBOARD **/
+    jQuery('button[title=Print]').on('click',function(e){
+        e.preventDefault();
+        console.log(jQuery(this).parent('article'));
+        window.print();
+    });
+
 /** EMOJI PROCESSING **/
 	addEmojiEvent();
 	function addEmojiEvent(){
