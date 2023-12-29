@@ -524,13 +524,13 @@ class HTMLbuilder{
                         'callingFunction'=>__FUNCTION__,
                         'hideHeader'=>TRUE,
                         'hideKeys'=>TRUE,
-                        'previewStyle'=>array('max-height'=>300,'max-height'=>300),
+                        'previewStyle'=>array('max-height'=>100,'max-width'=>200),
                         );
         $arr=array_replace_recursive($template,$arr);
         $matrix=array('Preview'=>array('Value'=>''),'Btns'=>array('Value'=>''));
         if (empty($arr['hidePreview'])){
             $previewArr=$arr;
-            $previewArr['style']=$arr['previewStyle'];
+            $previewArr['settings']['style']=$arr['previewStyle'];
             $previewArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
             $matrix['Preview']['Value'].=$previewArr['html'];
         }

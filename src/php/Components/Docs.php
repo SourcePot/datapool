@@ -51,7 +51,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Documentation','Read'=>'ALL_R','Class'=>__CLASS__);
+            return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
@@ -60,14 +60,14 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
                 $html.='Add directory here...';
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-                $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
+                $presentArr['settings']=array('style'=>array('width'=>'97vw'),'presentEntry'=>__CLASS__.'::'.__FUNCTION__);
                 $presentArr['selector']=$selector;
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             }
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
             //
             $settings=array('method'=>'manageAssets','classWithNamespace'=>__CLASS__);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Manage assets','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array()));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Manage assets','generic',array('Source'=>$this->entryTable),$settings,array());
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }

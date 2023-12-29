@@ -25,10 +25,10 @@ class MediaTools{
     public function getPreview($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         if (!empty($arr['maxDim'])){
-            $arr['style']['max-width']=$arr['maxDim'];
-            $arr['style']['max-height']=$arr['maxDim'];
+            $arr['settings']['style']['max-width']=$arr['maxDim'];
+            $arr['settings']['style']['max-height']=$arr['maxDim'];
         }
-        $isSmallPreview=(!empty($arr['style']['max-width']) || !empty($arr['style']['width']));
+        $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['width']));
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){return $arr;}
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         if (!is_file($file)){return $arr;}
@@ -91,11 +91,11 @@ class MediaTools{
     }
 
     private function addPreviewTextStyle($arr){
-        $arr['style']['float']='left';
-        $arr['style']['clear']='both';
-        $arr['style']['font-size']='0.8em';
-        $arr['style']['font-style']='italic;';
-        $arr['style']['max-width']=100;
+        $arr['settings']['style']['float']='left';
+        $arr['settings']['style']['clear']='both';
+        $arr['settings']['style']['font-size']='0.8em';
+        $arr['settings']['style']['font-style']='italic;';
+        $arr['settings']['style']['max-width']=100;
         return $arr;
     }    
     
@@ -255,6 +255,8 @@ class MediaTools{
     
     private function getVideo($arr){
         if (!isset($arr['html'])){$arr['html']='';}
+        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
+        $arr['settings']['style']=array_merge(array('height'=>'70vh'),$arr['settings']['style']);
         $video=$arr['selector'];
         $videoFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($video);
         if (is_file($videoFile)){
@@ -266,6 +268,7 @@ class MediaTools{
             $videoArr['tag']='video';
             $videoArr['type']=$video['Params']['File']['MIME-Type'];
             $videoArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
+            $videoArr['style']=$arr['settings']['style'];
             $videoArr['element-content']=$arr['selector']['Name'];
             $videoArr['controls']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($videoArr);
@@ -295,7 +298,8 @@ class MediaTools{
 
     private function getPdf($arr){
         if (!isset($arr['html'])){$arr['html']='';}
-        $style=array('margin'=>'10px 0 0 5px','height'=>'500px','border'=>'1px solid #444');
+        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
+        $arr['settings']['style']=array_merge(array('margin'=>'10px 0 0 5px','height'=>'70vh','border'=>'1px solid #444'),$arr['settings']['style']);
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         $pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
@@ -305,7 +309,7 @@ class MediaTools{
             $pdfArr['tag']='embed';
             $pdfArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
             $pdfArr['type']='application/pdf';
-            $pdfArr['style']=(isset($pdfArr['style']))?array_merge($style,$pdfArr['style']):$style;
+            $pdfArr['style']=$pdfArr['settings']['style'];
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pdfArr);
         } else {
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
@@ -337,6 +341,12 @@ class MediaTools{
     }    
     
     private function getImage($arr){
+        if (isset($arr['settings']['style']['max-width'])){
+            $arr['maxDim']=$arr['settings']['style']['max-width'];
+        }
+        if (isset($arr['settings']['style']['max-height'])){
+            $arr['maxDim']=$arr['settings']['style']['max-height'];
+        }
         $html='';
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         // return svg file without processing 
@@ -527,11 +537,11 @@ class MediaTools{
         $arr=$this->resetScaleImage($arr);
         if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
             $variant='C';    // OK
-            //$arr['style']['max-height']='100%';
+            //$arr['settings']['style']['max-height']='100%';
             $arr['newHeight']=$boxStyleArr['height'];
         } else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
             $variant='D';    // OK
-            //$arr['style']['max-width']='100%';
+            //$arr['settings']['style']['max-width']='100%';
             $arr['newWidth']=$boxStyleArr['width'];
         } else {
             // scale image width to match box width
@@ -559,8 +569,8 @@ class MediaTools{
         if (isset($arr['newHeight'])){unset($arr['newHeight']);}
         if (isset($arr['minDim'])){unset($arr['minDim']);}
         if (isset($arr['maxDim'])){unset($arr['maxDim']);}
-        if (isset($arr['style']['max-width'])){unset($arr['style']['max-width']);}
-        if (isset($arr['style']['max-height'])){unset($arr['style']['max-height']);}
+        if (isset($arr['settings']['style']['max-width'])){unset($arr['settings']['style']['max-width']);}
+        if (isset($arr['settings']['style']['max-height'])){unset($arr['settings']['style']['max-height']);}
         return $arr;
     }
     
