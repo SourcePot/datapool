@@ -15,6 +15,8 @@ class HTMLbuilder{
     private $oc;
         
     private $btns=array('test'=>array('key'=>array('test'),'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE),
+                        'edit'=>array('key'=>array('edit'),'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'Edit','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>TRUE),
+                        'show'=>array('key'=>array('show'),'title'=>'Show','hasCover'=>FALSE,'element-content'=>'Show','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>TRUE),
                         'run'=>array('key'=>array('run'),'title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE),
                         'add'=>array('key'=>array('add'),'title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE),
                         'save'=>array('key'=>array('save'),'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE),
@@ -263,6 +265,18 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
     }
     
+    public function copy2clipboard($text){
+        $html='';
+        $id=md5($text.mt_rand(1000,9999));
+        $element=array('tag'=>'button','element-content'=>'&#10064;&#10064;','keep-element-content'=>TRUE,'id'=>'clipboard-'.$id,'key'=>array('copy',$id),'excontainer'=>TRUE,'title'=>'copy to clipboard','style'=>array('font-weight'=>'bold'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        $element=array('tag'=>'div','element-content'=>$text,'id'=>$id,'style'=>array('padding'=>'0'));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        $element=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        return $html;
+    }
+    
     public function btn($arr=array()){
         // This function returns standard buttons based on argument arr.
         // If arr is empty, buttons will be processed
@@ -342,6 +356,12 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['delete all entries'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntriesOnly($selector);
             } else if (isset($formData['cmd']['select'])){
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
+            } else if (isset($formData['cmd']['edit'])){
+                $selector['editMode']=TRUE;
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
+            } else if (isset($formData['cmd']['show'])){
+                $selector['editMode']=FALSE;
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['export'])){
                 $selectors=array($selector);

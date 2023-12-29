@@ -143,29 +143,30 @@ class Access{
     }
 
     public function isAdmin($user=FALSE){
-        if (empty($user)){
-            if (empty($_SESSION['currentUser'])){
-                return FALSE;
-            } else {
-                $user=$_SESSION['currentUser'];
-            }
-        }
-        if (($user['Privileges'] & $this->access['ADMIN_R'])>0){
-            return TRUE;
-        } else {
-            return FALSE;
-        }
+        return $this->hasRights($user,'ADMIN_R');
     }
     
     public function isContentAdmin($user=FALSE){
-        if (empty($user)){$user=$_SESSION['currentUser'];}
-        if (($_SESSION['currentUser']['Privileges'] & $this->access['ALL_CONTENTADMIN_R'])>0){
+        return $this->hasRights($user,'ALL_CONTENTADMIN_R');
+    }
+    
+    public function isMember($user=FALSE){
+        return $this->hasRights($user,'ALL_MEMBER_R');
+    }
+    
+    private function hasRights($user=FALSE,$right='ADMIN_R')
+    {
+        if (empty($user)){
+            if (empty($_SESSION['currentUser'])){return FALSE;}
+            $user=$_SESSION['currentUser'];
+        }
+        if (($user['Privileges'] & $this->access[$right])>0){
             return TRUE;
         } else {
             return FALSE;
-        }
+        }    
     }
-
+    
 
 }
 ?>

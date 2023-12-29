@@ -49,6 +49,14 @@ ol,ul{
     margin: 0 10px;
     list-style-position:inside;
 }
+code{
+    padding:0.2rem;
+    color:#ccc;
+    background-color:#000;
+    font-family:'Courier New',monospace;
+    font-weight:bold;
+    font-size:1.05rem;
+}
 button,input,textarea,select,a.btn,.js-button{
     float:left;
     clear:none;
@@ -91,19 +99,20 @@ div.cover-wrapper{
     overflow:hidden;
     width:auto;
 }
+p{
+    padding:0.75rem;
+}
 p.cover{
     position:absolute;
     top:0;
     left:0;
+    padding:0;
     width:100%;
     height:100%;
     color:#fff;
     background-color:#f88a;
     text-align:center;
     cursor:pointer;
-}
-p.standard{
-    padding:2px;
 }
 table.std,div.table{
     float:left;

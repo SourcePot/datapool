@@ -72,7 +72,7 @@ class MediaTools{
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/zip')===0){
             $arr['html'].='&#10066;';    
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['File']['Extension']==='md'){
-            $arr['html'].='Is md file';
+            $arr=$this->getMarkdown($arr);
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
             $text=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($file);
             $arr=$this->addPreviewTextStyle($arr);
@@ -225,6 +225,32 @@ class MediaTools{
         } else {
             return FALSE;
         }
+    }
+    
+    private function getMarkdown($arr){
+        $pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateBySelector($arr['selector']);
+        $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
+        // process form
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['val']['content'])){
+           $md=$formData['val']['content'];
+           file_put_contents($mdFile,$md);
+        } else {
+            $md=file_get_contents($mdFile);
+        }
+        if (empty($pageState['editMode'])){
+            $contentHtml=\Michelf\Markdown::defaultTransform($md);
+            $arr['cmd']='edit';
+        } else {
+            $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $contentArr['key']=array('content');
+            $contentArr['style']=array('text-align'=>'left','width'=>'95vw','height'=>'70vh','color'=>'#ccc','background-color'=>'#000');
+            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
+            $arr['cmd']='show';
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
+        return $arr;
     }
     
     private function getVideo($arr){

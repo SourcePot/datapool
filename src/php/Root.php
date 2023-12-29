@@ -304,6 +304,7 @@ final class Root{
                                     'php'=>array('relPath'=>'./src/php','permissions'=>0770),
                                     'public'=>array('relPath'=>'./src/www','permissions'=>0775),
                                     'media'=>array('relPath'=>'./src/www/media','permissions'=>0775),
+                                    'assets'=>array('relPath'=>'./src/www/assets','permissions'=>0775),
                                     'tmp'=>array('relPath'=>'./src/www/tmp','permissions'=>0775),
                                     );
         $absRootPath=strtr(__DIR__,array('\\'=>'/'));

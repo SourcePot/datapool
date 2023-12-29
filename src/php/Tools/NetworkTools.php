@@ -51,18 +51,29 @@ class NetworkTools{
         }
         return $script.$suffix;
     }
-
-    public function setPageStateBySelector($selector){
+    
+    public function selector2class($selector){
         if (empty($selector['app'])){
             $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
         } else {
             $classWithNamespace=$selector['app'];
         }
+        return $classWithNamespace;
+    }
+
+    public function setPageStateBySelector($selector){
+        $classWithNamespace=$this->selector2class($selector);
         return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
     }
     
+    public function getPageStateBySelector($selector){
+        $classWithNamespace=$this->selector2class($selector);
+        return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
+    }
+
     public function setPageState($callingClass,$state){
         $_SESSION['page state']['selected'][$callingClass]=$state;
+        $_SESSION['page state']['selected'][$callingClass]['app']=$callingClass;
         return $_SESSION['page state']['selected'][$callingClass];
     }
 
@@ -80,6 +91,7 @@ class NetworkTools{
         } else if (!isset($_SESSION['page state']['selected'][$callingClass]['Source'])){
             $_SESSION['page state']['selected'][$callingClass]['Source']=FALSE;
         }
+        $_SESSION['page state']['selected'][$callingClass]['app']=$callingClass;
         return $_SESSION['page state']['selected'][$callingClass];
     }
 

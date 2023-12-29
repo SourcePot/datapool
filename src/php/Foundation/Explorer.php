@@ -38,7 +38,7 @@ class Explorer{
 
     public function getExplorer($callingClass){
         $this->appProcessing($callingClass);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Database explorer'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Explorer'));
         $selectorsHtml=$this->getSelectors($callingClass);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE));
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('box-shadow'=>'0px 5px 5px #ccc')));
@@ -81,6 +81,9 @@ class Explorer{
     private function addApps($callingClass,$stateKeys){
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+        if (empty($entry)){
+            $entry=$this->getGuideEntry($selector);
+        }
         $html='';
         $arr=$this->addEntry($callingClass,$stateKeys,$selector,$entry);
         $appHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
@@ -88,14 +91,16 @@ class Explorer{
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
         $arr=$this->miscToolsEntry($callingClass,$stateKeys);
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-        $arr=$this->sendEmail($callingClass,$stateKeys);
-        $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-        $arr=$this->setRightsEntry($callingClass,$stateKeys,'Read');
-        $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-        $arr=$this->setRightsEntry($callingClass,$stateKeys,'Write');
-        $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
-        $commentsArr=$this->comments($callingClass,$stateKeys);
-        $appHtml.=$commentsArr['html'];
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
+            $arr=$this->sendEmail($callingClass,$stateKeys);
+            $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+            $arr=$this->setRightsEntry($callingClass,$stateKeys,'Read');
+            $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+            $arr=$this->setRightsEntry($callingClass,$stateKeys,'Write');
+            $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+            $commentsArr=$this->comments($callingClass,$stateKeys);
+            $appHtml.=$commentsArr['html'];
+        }
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$appHtml,'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','padding'=>'5px','margin'=>'0.5em')));
         return $html;
     }
@@ -192,7 +197,7 @@ class Explorer{
     
     private function addEntry($callingClass,$stateKeys,$selector,$entry){
         $access=TRUE;
-        if (strcmp($stateKeys['nextKey'],'Source')===0){
+        if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
             return array('html'=>'','icon'=>'&#10010;','class'=>'explorer');
         } else {
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Add'));
@@ -222,7 +227,7 @@ class Explorer{
     }
 
     private function editEntry($callingClass,$stateKeys,$selector,$entry){
-        if (strcmp($stateKeys['selectedKey'],'Source')===0){
+        if (strcmp($stateKeys['selectedKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
             return array('html'=>'','icon'=>'&#9998;','class'=>'explorer');
         }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Edit'));
@@ -240,7 +245,7 @@ class Explorer{
     }
     
     private function miscToolsEntry($callingClass,$stateKeys){
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
+        $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
         $selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';
@@ -251,8 +256,11 @@ class Explorer{
             $btnArr['cmd']=$cmd;
             $btnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         }
-        $wrapperElement=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'));
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperElement);
+        if (!empty($btnHtml)){
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
+            $wrapperElement=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperElement);
+        }
         $arr=array('html'=>$html,'icon'=>'...','title'=>'Misc tools, e.g. entry deletion and download','class'=>'explorer');
         return $arr;
     }

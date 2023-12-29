@@ -139,6 +139,22 @@ jQuery(document).ready(function(){
         map.setView(location,4);
         
     }
+/** CLIPBOARD **/
+    jQuery('button[id^=clipboard]').on('click',function(e){
+        e.preventDefault();
+        let id=jQuery(this).attr('id').split('-').pop();
+        let text=document.getElementById(id).innerHTML;
+        jQuery('button[id^=clipboard]').parent().css({backgroundColor:""});
+        try{
+            navigator.clipboard.writeText(text);
+            jQuery(this).parent().css({backgroundColor:"#8c4"});
+        } catch (err){
+            jQuery(this).css({backgroundColor:"#faa"});
+        }
+        
+    });
+
+    
 /** EMOJI PROCESSING **/
 	addEmojiEvent();
 	function addEmojiEvent(){
