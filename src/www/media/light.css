@@ -290,8 +290,8 @@ a.toc:hover,a.toc-0:hover,a.toc-1:hover,a.toc-2:hover,a.toc-3:hover{
 }
 #overlay-image{
     display:block;
-    max-width:95%;
-    max-height:95%;
+    max-width:90vw;
+    max-height:90vh;
     margin:0 auto;
     cursor:pointer;
     background-color:#000;
