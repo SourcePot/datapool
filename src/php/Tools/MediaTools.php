@@ -232,14 +232,17 @@ class MediaTools{
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $arr['settings']['style']=array_merge(array('overflow'=>'hidden'),$arr['settings']['style']);
         $pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateBySelector($arr['selector']);
-        $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         // process form
         $btns='';
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['val']['content'])){
-           $md=$formData['val']['content'];
-           file_put_contents($mdFile,$md);
+            $source=key($formData['val']['content']);
+            $entryId=key($formData['val']['content'][$source]);
+            $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(array('Source'=>$source,'EntryId'=>$entryId));
+            $md=$formData['val']['content'][$source][$entryId];
+            file_put_contents($mdFile,$md);
         } else {
+            $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
             $md=file_get_contents($mdFile);
         }
         if (empty($pageState['editMode'])){
@@ -247,7 +250,7 @@ class MediaTools{
             $arr['cmd']='edit';
         } else {
             $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-            $contentArr['key']=array('content');
+            $contentArr['key']=array('content',$arr['selector']['Source'],$arr['selector']['EntryId']);
             $contentArr['style']=array('text-align'=>'left','width'=>'95vw','height'=>'70vh','color'=>'#ccc','background-color'=>'#000');
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
             $arr['cmd']='show';

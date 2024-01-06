@@ -423,7 +423,7 @@ class Explorer{
             if (isset($selector[$column])){$columns[$column]=$selector[$column];}
             if (!isset($selector[$column]) || $selector[$column]===FALSE){break;}
         }
-        $btnArr=array('','','');
+        $btnArr=array('<a class="btn" style="color:#aaa;">&#10096;&#10096;</a>','<a class="btn" style="color:#aaa;">&#10097;&#10097;</a>','');
         $matchFound=FALSE;
         $lastEntryArr=FALSE;
         $nextEntryArr=FALSE;
