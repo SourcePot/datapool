@@ -317,7 +317,7 @@ class Filespace{
     }
     
     public function removeTmpDirs(){
-        $tmpDirs=array($GLOBALS['dirs']['tmp']=>86400,$GLOBALS['dirs']['privat tmp']=>30);
+        $tmpDirs=array($GLOBALS['dirs']['tmp']=>28600,$GLOBALS['dirs']['privat tmp']=>30);
         foreach($tmpDirs as $tmpDir=>$maxAge){
             if (is_dir($tmpDir)){
                 $allDirs=scandir($tmpDir);
@@ -540,7 +540,9 @@ class Filespace{
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
-        if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
+        if (empty($entry['Params']['File'])){
+            // file info is missing
+        } else if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
             if (empty($entry['pdfParser'])){
                 $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
             } else {

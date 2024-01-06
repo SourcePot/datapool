@@ -48,6 +48,11 @@ private $entryTable;
             return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {
             $html='';
+            // Add quick links
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
+                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+            }
             // Add content
             $selector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $section){

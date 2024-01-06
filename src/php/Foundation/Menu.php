@@ -31,15 +31,35 @@ class Menu{
     }
         
     public function init($oc){
+        $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run');
         // get category from input
-        $this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_UNSAFE_RAW);
-        if (!isset($this->categories[$this->requested['Category']])){
-            $this->requested['Category']='Home';
-        }
-        if (isset($_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']])){
-            $this->requested['App']=$_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']];
+        $linkid=filter_input(INPUT_GET,'linkid',FILTER_SANITIZE_ENCODED);
+        $linkid??FALSE;
+        if (isset($_SESSION['page state']['linkids'][$linkid])){
+            $linkinfo=$_SESSION['page state']['linkids'][$linkid];
+            $this->requested['App']=$linkinfo['Class'];
+            $this->requested['Category']=$linkinfo['Category'];
+            $selector=array();
+            $selector['Source']=(isset($linkinfo['Source']))?$linkinfo['Source']:FALSE;
+            $selector['Group']=(isset($linkinfo['Group']))?$linkinfo['Group']:FALSE;
+            $selector['Folder']=(isset($linkinfo['Folder']))?$linkinfo['Folder']:FALSE;
+            $selector['Name']=(isset($linkinfo['Name']))?$linkinfo['Name']:FALSE;
+            $selector['EntryId']=(isset($linkinfo['EntryId']))?$linkinfo['EntryId']:FALSE;
+            $_SESSION['page state']['selected'][$this->requested['App']]=$selector;
+            $_SESSION['page state']['linkids']=array();
         } else {
-            $this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
+            $this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
+            if (!isset($this->categories[$this->requested['Category']])){
+                $this->requested['Category']='Home';
+            }
+            if (isset($_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']])){
+                $this->requested['App']=$_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']];
+            } else {
+                $this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
+            }
+            // reset $_SESSION['page state']['app']
+            $homeApp=$this->categories['Home']['Class'];
+            $_SESSION['page state']['app']=$registeredRunMethods[$homeApp];
         }
         // get app from form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
@@ -50,10 +70,6 @@ class Menu{
                 $_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']]=$this->requested['App'];
             }
         }
-        // reset $_SESSION['page state']['app']
-        $homeApp=$this->categories['Home']['Class'];
-        $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run');
-        $_SESSION['page state']['app']=$registeredRunMethods[$homeApp];
         // get available and selected categories and apps
         if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
         foreach($registeredRunMethods as $classWithNamespace=>$menuDef){
@@ -137,7 +153,7 @@ class Menu{
     }
 
     private function def2div($def){
-        $href='?'.http_build_query(array('category'=>$def['Category']));
+        $href='index.php?'.http_build_query(array('category'=>$def['Category']));
         $style='';
         if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}
         $def['Label']=$arr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);

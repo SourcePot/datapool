@@ -22,7 +22,6 @@ class Database{
     
     const DB_TIMEZONE='UTC';
     
-    const ADMIN_R=32768;
     const GUIDEINDICATOR='!GUIDE';
     
     private $entryTable='settings';
@@ -35,31 +34,39 @@ class Database{
                                  'Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Source}}','Description'=>'This is the data-type of Content'),
                                  'Date'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
                                  'Content'=>array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
-                                 'Params'=>    array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
+                                 'Params'=>array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
                                  'Expires'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'2999-01-01 01:00:00','Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
-                                 'Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>self::ADMIN_R,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>self::ADMIN_R,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
+                                 'Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $this->resetStatistic();
         $this->connect();
+        // set defualt entry access rights
+        $accessOptions=$oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
+        $this->rootEntryTemplate['Read']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
+        $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
     }
 
-    public function init($oc){
+    public function init($oc)
+    {
         $this->oc=$oc;
         $this->collectDatabaseInfo();
         $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function job($vars){
+    public function job($vars):array
+    {
         $vars['statistics']=$this->deleteExpiredEntries();
         return $vars;
     }
 
-    public function getDbTimezone(){
+    public function getDbTimezone():string
+    {
         return self::DB_TIMEZONE;
     }
     
@@ -71,6 +78,7 @@ class Database{
         $toReplace['{{NOW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $toReplace['{{YESTERDAY}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
         $toReplace['{{TOMORROW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
+        $toReplace['{{TIMEZONE}}']=self::DB_TIMEZONE;
         $toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
         $toReplace['{{Expires}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
         $toReplace['{{EntryId}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
@@ -674,8 +682,7 @@ class Database{
             $entry=$this->insertEntry($entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // update and return entry | recover existing logs
-            if (isset($existingEntry['Params']['Attachment log'])){$entry['Params']['Attachment log']=$existingEntry['Params']['Attachment log'];}
-            if (isset($existingEntry['Params']['Processing log'])){$entry['Params']['Processing log']=$existingEntry['Params']['Processing log'];}
+            $entry=array_replace_recursive($existingEntry,$entry);
             // add attachment
             if (is_file($attachment)){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
@@ -851,13 +858,13 @@ class Database{
         if (empty($orderedListSelector)){return FALSE;}
         $targetIndex=1;
         $debugArr=array('selector'=>$selector,'orderedListSelector'=>$orderedListSelector);
-        foreach($this->entryIterator($orderedListSelector,FALSE,'Read','EntryId',TRUE) as $entry){
+        foreach($this->entryIterator($orderedListSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $targetEntryId=$this->addOrderedListIndexToEntryId($entry['EntryId'],$targetIndex);
             if (strcmp($entry['EntryId'],$targetEntryId)!==0){
                 $targetSelector=array('Source'=>$selector['Source'],'EntryId'=>$targetEntryId);
-                $this->moveEntryOverwriteTarget($entry,$targetSelector,FALSE,FALSE,FALSE,FALSE);    
+                $this->moveEntryOverwriteTarget($entry,$targetSelector,TRUE,FALSE,FALSE,FALSE);    
             }
-            $debugArr['stpes'][]=array('targetIndex'=>$targetIndex,'entry EntryId'=>$entry['EntryId'],'target EntryId'=>$targetEntryId);
+            $debugArr['steps'][]=array('targetIndex'=>$targetIndex,'entry EntryId'=>$entry['EntryId'],'target EntryId'=>$targetEntryId,'rowCount'=>$entry['rowCount']);
             $targetIndex++;
         }
         if ($isDebugging){
@@ -867,13 +874,13 @@ class Database{
         return TRUE;
     }
     
-    public function moveEntry($selector,$moveUp=TRUE){
+    public function moveEntry($selector,$moveUp=TRUE,$isSystemCall=FALSE){
         // This method requires column EntryId have the format [constant prefix]|[index]
         // The index range is: 1...index...rowCount
         $orderedListSelector=$this->orderedList2selector($selector);
         if (empty($orderedListSelector)){return FALSE;}
-        $status=array('rowCount'=>0,'targetEntryId'=>FALSE,'selectedEntryId'=>FALSE,'entries'=>array());
-        foreach($this->entryIterator($orderedListSelector,FALSE,'Read','EntryId',TRUE) as $entry){
+        $status=array('rowCount'=>0,'entries'=>array());
+        foreach($this->entryIterator($orderedListSelector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
             $status['rowCount']=$entry['rowCount'];
             $status['entries'][$entry['EntryId']]=$entry;
             if (strcmp($entry['EntryId'],$selector['EntryId'])!==0){continue;}
@@ -886,7 +893,10 @@ class Database{
             $key=$this->getOrderedListKeyFromEntryId($entry['EntryId']);
             $targetSelector=array('Source'=>$selector['Source']);
             $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($key,$targetIndex);
-            $this->swapEntries($entry,$targetSelector);
+            $this->swapEntries($entry,$targetSelector,$isSystemCall);
+        }
+        if (empty($targetSelector)){
+            throw new \ErrorException('Function '.__FUNCTION__.': found "'.$status['rowCount'].'" entries, no targetselector created. Selector used returned no valid entry, isSystemCall='.intval($isSystemCall).'. ',0,E_ERROR,__FILE__,__LINE__);
         }
         return $targetSelector['EntryId'];
     }
@@ -896,7 +906,7 @@ class Database{
         if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
         $logContent['timestamp']=time();
-        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,date_default_timezone_get());
+        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,FALSE);
         $logContent['timezone']=date_default_timezone_get();
         $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
         $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
@@ -913,6 +923,17 @@ class Database{
             $entry=$this->updateEntry($entry,TRUE);
         }
         return $entry;
+    }
+    
+    public function isSameSelector(array $selectorA,array $selectorB):bool
+    {
+        $relevantKeys=array('Source','Group','Folder','Name','EntryId');
+        foreach($relevantKeys as $column){
+            if (empty($selectorA[$column])){$selectorA[$column]='';}
+            if (empty($selectorB[$column])){$selectorB[$column]='';}
+            if ($selectorA[$column]!=$selectorB[$column]){return FALSE;}
+        }
+        return TRUE;
     }
 
 }

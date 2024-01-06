@@ -53,21 +53,26 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {
-            $html='';
-            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
-            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-            if (empty($selector['EntryId'])){
-                $html.='Add directory here...';
+            // add explorer
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+                $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             } else {
+                $style=array('width'=>'320px','border'=>'none','overflow'=>'unset');
+                $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getTocHtml(__CLASS__,$style);
+            }
+            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+            // add content article
+            $html='';
+            if (!empty($selector['EntryId'])){
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-                $presentArr['settings']=array('style'=>array('width'=>'97vw'),'presentEntry'=>__CLASS__.'::'.__FUNCTION__);
+                $presentArr['settings']=array('style'=>array('width'=>'98%','border-left'=>'1px solid #000'),'presentEntry'=>__CLASS__.'::'.__FUNCTION__);
                 $presentArr['selector']=$selector;
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
+                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('width'=>'80%')));
+                //
+                $settings=array('method'=>'manageAssets','classWithNamespace'=>__CLASS__);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Manage assets','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array()));
             }
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
-            //
-            $settings=array('method'=>'manageAssets','classWithNamespace'=>__CLASS__);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Manage assets','generic',array('Source'=>$this->entryTable),$settings,array());
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }

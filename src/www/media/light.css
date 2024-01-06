@@ -1,7 +1,7 @@
 :root{
     --brand:blue;
     accent-color:var(--brand);
-    font-size:14px;
+    font-size:1.75vb;
     font-family:system-ui,sans-serif;
 }
 *{
@@ -46,6 +46,9 @@ h2{
 }
 h3{
     font-size:1.1rem;
+}
+a.std:hover{
+    background-color:#ccc;
 }
 a.textlink{
     font-weight:bold;
@@ -182,10 +185,11 @@ embed{
     min-height:300px;
 }
 article{
-    float: left;
+    float:left;
     clear:none;
-    margin:5px 0;
+    display:block;
     position:relative;
+    margin:5px 0;
     width:100%;
     overflow:auto;
     background-color:#fff;
@@ -239,6 +243,36 @@ p.icon{
 .logo{
     float:none;
     margin:10px auto;
+}
+
+
+/** TOC **/
+a.toc,a.toc-0,a.toc-1,a.toc-2,a.toc-3{
+    float:left;
+    clear:both;
+    width:98%;
+    padding:5px 0 5px 2%; 
+}
+a.toc-0{
+    font-size:1.4rem;
+}
+a.toc-1{
+    font-size:1.3rem;
+    padding:5px 0 5px 4%;
+    width:96%;
+}
+a.toc-2{
+    font-size:1.2rem;
+    padding:5px 0 5px 6%;
+    width:94%;
+}
+a.toc-3{
+    font-size:1.1rem;
+    padding:5px 0 5px 8%;
+    width:92%;
+}
+a.toc:hover,a.toc-0:hover,a.toc-1:hover,a.toc-2:hover,a.toc-3:hover{
+    background-color:#ddf;
 }
 
 

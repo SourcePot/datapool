@@ -41,6 +41,7 @@ class HTMLbuilder{
                        'SourcePot\Datapool\Foundation\Container|tools'=>'tools()',
                        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
                        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
+                       'SourcePot\Datapool\Foundation\Explorer|getQuicklinksHtml'=>'getQuicklinksHtml()',
                        );
         
     public function __construct($oc){
@@ -486,12 +487,7 @@ class HTMLbuilder{
         }
         $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
         $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
-        //$html=$this->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'"'.$arr['key'].'" right','hideKeys'=>$hideKeys,'hideHeader'=>$hideHeader));
-        
-        
         $html.='</fieldset>';
-        
-        
         return $html;
     }
     
@@ -617,15 +613,15 @@ class HTMLbuilder{
         if (empty($arr['contentStructure']) || empty($arr['selector']['Source']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
             throw new \ErrorException('Method '.__FUNCTION__.', required arr key(s) missing.',0,E_ERROR,__FILE__,__LINE__);    
         }
+        $isSystemCall=$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin();
         $matrix=array('New'=>array());
-        $arr['movedEntryId']=$this->entry2row($arr,TRUE,FALSE,FALSE);
+        $arr['movedEntryId']=$this->entry2row($arr,TRUE,FALSE,FALSE,$isSystemCall);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $entry){
-            $listIndicatorPos=strpos($entry['EntryId'],'__');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
             $orderedListComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             if (count($orderedListComps)!==2){continue;}
             $arr['selector']=$entry;
-            $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE);
+            $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE,$isSystemCall);
         }
         $matrix['New']=$this->entry2row($arr,FALSE,FALSE,TRUE);
         $matrix['New']['setRowStyle']=array('background-color'=>'#ddf;');
@@ -635,7 +631,7 @@ class HTMLbuilder{
         return $html;
     }
 
-    public function entry2row($arr,$commandProcessingOnly=FALSE,$singleRowOnly=FALSE,$isNewRow=FALSE){
+    public function entry2row($arr,$commandProcessingOnly=FALSE,$singleRowOnly=FALSE,$isNewRow=FALSE,$isSystemCall=FALSE){
         if (isset($arr['selector']['Class'])){
             $dataStorageClass='SourcePot\Datapool\Foundation\Filespace';
         } else {
@@ -661,17 +657,17 @@ class HTMLbuilder{
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($file,$entry);
                 } else {
                     $entry=$this->oc[$dataStorageClass]->unifyEntry($entry);
-                    $arr['selector']=$this->oc[$dataStorageClass]->updateEntry($entry);
+                    $arr['selector']=$this->oc[$dataStorageClass]->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
                 }
             } else if (isset($formData['cmd']['delete'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
                 $this->oc[$dataStorageClass]->deleteEntries($selector);
             } else if (isset($formData['cmd']['moveUp'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE);
+                $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE,$isSystemCall);
             } else if (isset($formData['cmd']['moveDown'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE);
+                $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE,$isSystemCall);
             }
             if ($commandProcessingOnly){
                 if (isset($movedEntryId)){
@@ -687,7 +683,7 @@ class HTMLbuilder{
             $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],$relevantKeys=array('Source','Group','Folder','Name','Type'),'0','',TRUE);
             $newIndex=(isset($arr['selector']['rowCount']))?$arr['selector']['rowCount']+1:1;
             $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],$newIndex);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector'],FALSE);
         }
         foreach($arr['contentStructure'] as $contentKey=>$elementArr){
             $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];

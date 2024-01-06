@@ -100,10 +100,11 @@ class MiscTools{
             $xml=new \SimpleXMLElement($rootElement===NULL?'<root/>':$rootElement);
         }
         foreach($arr as $key=>$value){
+            $key=strval($key);
             if (is_array($value)){
                 $this->arr2xml($value,$key,$xml->addChild($key));
             } else {
-                $xml->addChild($key,$value);
+                $xml->addChild($key,strval($value));
             }
         }
         return $xml->asXML();

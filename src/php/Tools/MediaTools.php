@@ -253,8 +253,6 @@ class MediaTools{
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']));
         $btns.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
-        $arr['cmd']='print';
-        $btns.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
         if (empty($arr['settings']['style']['height']) && empty($arr['settings']['style']['max-height'])){
             $arr['html'].=$btns;
         }
@@ -264,7 +262,6 @@ class MediaTools{
     private function getVideo($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
-        $arr['settings']['style']=array_merge(array('height'=>'70vh'),$arr['settings']['style']);
         $video=$arr['selector'];
         $videoFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($video);
         if (is_file($videoFile)){
