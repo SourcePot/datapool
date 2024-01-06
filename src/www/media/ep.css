@@ -35,6 +35,7 @@ div.ep-std-no-clear{
 }
 div.ep-h1{
     clear:both;
+    width:98vw;
     margin:1em 0 0 5px;
     font-size:1.6rem;
 }

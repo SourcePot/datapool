@@ -1,7 +1,7 @@
 :root{
     --brand:blue;
     accent-color:var(--brand);
-    font-size:1.75vb;
+    font-size:13px;
     font-family:system-ui,sans-serif;
 }
 *{
