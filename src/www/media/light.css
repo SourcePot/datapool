@@ -376,7 +376,7 @@ div.first-menu,div.second-menu{
     height:33px;
     z-index:10;
     border-bottom:1px solid #000;
-    background-color:#0005;
+    background-color:#004d73aa;
     overflow:hidden;
 }
 div.second-menu{
@@ -416,6 +416,7 @@ a.first-menu,p.first-menu{
 select.menu{
     font-size:1.1em;
     height:34px;
+    margin:0;
 }
 a.first-menu{
     color:#000;
