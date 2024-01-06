@@ -422,20 +422,41 @@ class Explorer{
             if (isset($selector[$column])){$columns[$column]=$selector[$column];}
             if (!isset($selector[$column]) || $selector[$column]===FALSE){break;}
         }
+        $btnArr=array('','','');
+        $matchFound=FALSE;
+        $lastEntryArr=FALSE;
+        $nextEntryArr=FALSE;
         foreach($result as $source=>$groupArr){
             if (count($groupArr)<2){continue;}
             foreach($groupArr as $group=>$folderArr){
                 foreach($folderArr as $folder=>$elements){
                     foreach($elements as $elementIndex=>$elementArr){
-                        if ($this->oc['SourcePot\Datapool\Foundation\Database']->isSameSelector($selector,$elementArr)){
-                            $elementArr['style']=array('background-color'=>'#ccc');
+                        $elementArr['title']=$elementArr['element-content'];
+                        if ($matchFound && empty($nextEntryArr) && !empty($elementArr['EntryId'])){
+                            $nextEntryArr=$elementArr;
+                            $nextEntryArr['class']='btn';
+                            $nextEntryArr['element-content']='&#10097;&#10097;';
+                            $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextEntryArr);
                         }
+                        if ($this->oc['SourcePot\Datapool\Foundation\Database']->isSameSelector($selector,$elementArr)){
+                            $matchFound=TRUE;
+                            $elementArr['style']=array('background-color'=>'#ccc');
+                            if (!empty($elementArr['EntryId'])){
+                                if ($lastEntryArr){
+                                    $lastEntryArr['class']='btn';
+                                    $lastEntryArr['element-content']='&#10096;&#10096;';
+                                    $btnArr[0]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($lastEntryArr);
+                                }
+                                $btnArr[2]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'print'));
+                            }
+                        }
+                        if (!empty($elementArr['EntryId'])){$lastEntryArr=$elementArr;}
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
                     }
                 }
             }
         }
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'print'));
+        $html.=implode('',$btnArr);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>$style));
         return $html;
     }
