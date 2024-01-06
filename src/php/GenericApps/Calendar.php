@@ -354,7 +354,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         }
         $html='';
         foreach($matrices as $caption=>$matrix){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideKeys'=>TRUE,'class'=>'max-content'));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption,'hideKeys'=>TRUE));
         }
         return $html;
     }
