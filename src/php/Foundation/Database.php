@@ -190,7 +190,9 @@ class Database{
             }
         } // loop throug entry-template-array
         $debugArr['entry out']=$entry;
-        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);}
+        if ($isDebugging){
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);
+        }
         return $entry;
     }
 
@@ -656,7 +658,13 @@ class Database{
         return $entry;
     }
 
-    public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateButCreateIfMissing=FALSE,$addLog=FALSE,$attachment=''){
+    /**
+    * The method inserts an entry that does not exist or updates an existing entry.
+    *
+    * @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
+    */
+    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=FALSE,string $attachment=''):array|bool
+    {
         // only the Admin has the right to update the data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys and set selector
@@ -674,9 +682,12 @@ class Database{
                 // valid file attachment found
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
             } else {
-                // no valid file attachment
-                if (isset($entry['Params']['Attachment log'])){unset($entry['Params']['Attachment log']);}
-                if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
+                $currentFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+                if (!is_file($currentFile)){
+                    // no valid file attachment. clear related meta data
+                    if (isset($entry['Params']['Attachment log'])){unset($entry['Params']['Attachment log']);}
+                    if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
+                }
             }
             $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
             $entry=$this->insertEntry($entry);

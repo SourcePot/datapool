@@ -396,7 +396,7 @@ class Explorer{
         return $html;
     }
     
-    public function getTocHtml(string $callingClass,array $style=array()):string
+    public function getTocHtml(string $callingClass,array $filter=array(),array $style=array()):string
     {
         $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
@@ -405,7 +405,8 @@ class Explorer{
         $columnsClass=array('Source'=>'toc-0','Group'=>'toc-1','Folder'=>'toc-2','EntryId'=>'toc-3');
         $columns=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);
         foreach($columns as $column=>$initValue){
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($columns,$column,FALSE,'Read',$column,TRUE,FALSE,FALSE,TRUE) as $entry){
+            $entrySelector=$columns+$filter;
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($entrySelector,$column,FALSE,'Read',$column,TRUE,FALSE,FALSE,TRUE) as $entry){
                 $entry=array_merge($columns,$entry);
                 if (!empty($entry['EntryId'])){
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry);

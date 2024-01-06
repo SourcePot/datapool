@@ -95,11 +95,11 @@ class Filespace{
         return $dir;    
     }    
 
-    private function source2dir($source,$mkDirIfMissing=TRUE){
+    private function source2dir($sourceFile,$mkDirIfMissing=TRUE){
         // This function returns the filespace directory based on the tablename provided.
-        $source=explode('\\',$source);
-        $source=array_pop($source);
-        $dir=$GLOBALS['dirs']['filespace'].$source.'/';
+        $sourceFile=explode('\\',$sourceFile);
+        $sourceFile=array_pop($sourceFile);
+        $dir=$GLOBALS['dirs']['filespace'].$sourceFile.'/';
         if (!is_dir($dir) && $mkDirIfMissing){
             mkdir($dir,0750,TRUE);
         }
@@ -359,10 +359,10 @@ class Filespace{
         return $size;
     }
     
-    public function tryCopy($source,$target,$rights=FALSE){
+    public function tryCopy($source,$targetFile,$rights=FALSE){
         try{
-            $this->statistics['inserted files']+=intval(copy($source,$target));
-            if ($rights){chmod($target,$rights);}
+            $this->statistics['inserted files']+=intval(copy($source,$targetFile));
+            if ($rights){chmod($targetFile,$rights);}
         } catch(\Exception $e){
             // Exception handling
         }
@@ -474,9 +474,6 @@ class Filespace{
             $entry['Params']['File']['Style class']='';
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
-            if (!empty($entry['Params']['File']['MIME-Type'])){    
-                $entry['Type']=$entry['Source'].' '.preg_replace('/[^a-zA-Z]/',' ',$entry['Params']['File']['MIME-Type']);
-            }
             $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing,TRUE,$entry['Params']['File']['Source']);
             $debugArr['entry updated']=$entry;
         }
@@ -634,6 +631,7 @@ class Filespace{
             $zip->close();
             $files=scandir($dir);
             foreach($files as $fileName){
+                // get entry and linked file
                 $file=$dir.$fileName;
                 if (!is_file($file)){continue;}
                 if (strpos($fileName,'.json')===FALSE){continue;}
@@ -643,14 +641,18 @@ class Filespace{
                     $statistics['json decode errors']++;
                     continue;
                 }
-                $statistics['entries updated']++;
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
-                $source=$dir.$entry['Source'].'~'.$entry['EntryId'].'.file';
-                $target=$this->selector2file($entry);
-                if (is_file($source)){
+                // copy file
+                $sourceFile=$dir.$entry['Source'].'~'.$entry['EntryId'].'.file';
+                $targetFile=$this->selector2file($entry);
+                if (is_file($sourceFile)){
                     $statistics['attached files added']++;
-                    $this->tryCopy($source,$target,0750);
+                    $this->tryCopy($sourceFile,$targetFile,0750);
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('msg'=>'Entry attachment imported','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
                 }
+                // update insert entry
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry imported','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+                $statistics['entries updated']++;
             }
         } else {
             $statistics['zip errors']++;

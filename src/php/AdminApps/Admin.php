@@ -80,7 +80,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
             if (!empty($formData['files']['import'])){
                 $success=move_uploaded_file($formData['files']['import'][0]['tmp_name'],$tmpFile);
-                if ($success){$this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);}
+                if ($success){$this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile,TRUE);}
             } else {
                 $this->oc['SourcePot\Datapool\Foundation\Logging']->addLog(array('msg'=>'Import file missing','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
             }
