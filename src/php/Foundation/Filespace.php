@@ -49,13 +49,13 @@ class Filespace{
             $dirs=scandir($GLOBALS['dirs']['filespace']);
             foreach($dirs as $dir){
                 if (strcmp($dir,'.')===0 || strcmp($dir,'..')===0){continue;}
-                $vars['Dirs to process'][$dir]=array('absDir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir);
+                $vars['Dirs to process'][$dir]=array('dir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir);
             }
         }
         $dir2process=array_shift($vars['Dirs to process']);
         $files=scandir($GLOBALS['dirs']['filespace']);
-        foreach(new \DirectoryIterator($dir2process['absDir']) as $fileInfo){
-            $file=$dir2process['absDir'].'/'.$fileInfo->getFilename();
+        foreach(new \DirectoryIterator($dir2process['dir']) as $fileInfo){
+            $file=$dir2process['dir'].$fileInfo->getFilename();
             $extensionPos=strpos($fileInfo->getFilename(),'.file');
             if (empty($extensionPos)){continue;}
             $entryId=substr($fileInfo->getFilename(),0,$extensionPos);
@@ -72,7 +72,7 @@ class Filespace{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
             }
         }
-        $vars['Last processed dir']=$dir2process['absDir'];
+        $vars['Last processed dir']=$dir2process['dir'];
         return $vars;
     }
 

@@ -105,6 +105,7 @@ class MediaTools{
         if (!isset($arr['selector']['Params']['File']['MIME-Type'])){$arr['selector']['Params']['File']['MIME-Type']='text';}
         if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
+            $arr['maxDim']=100;
             $iconSrc=$this->getImage($arr);
         } else {
             $iconArr=array('tag'=>'p','element-content'=>$text,'class'=>'icon');
