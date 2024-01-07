@@ -52,7 +52,7 @@ class Database{
         $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
     }
 
-    public function init($oc)
+    public function init($oc):void
     {
         $this->oc=$oc;
         $this->collectDatabaseInfo();
@@ -70,11 +70,13 @@ class Database{
         return self::DB_TIMEZONE;
     }
     
-    public function getDbStatus(){
+    public function getDbStatus():string
+    {
         return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
     }
 
-    public function enrichToReplace($toReplace=array()){
+    public function enrichToReplace(array $toReplace=array()):array
+    {
         $toReplace['{{NOW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $toReplace['{{YESTERDAY}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
         $toReplace['{{TOMORROW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
@@ -97,7 +99,7 @@ class Database{
         return $toReplace;
     }
 
-    public function resetStatistic()
+    public function resetStatistic():array
     {
         $_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0,'skipped'=>0);
         return $_SESSION[__CLASS__]['Statistic'];
@@ -581,7 +583,24 @@ class Database{
         }
         return $result;
     }
-    private function sqlEntryIdListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array('EntryId'),$removeGuideEntries=FALSE,$isDebugging=FALSE){
+    
+    /**
+    * The method creates an array containing an EntryId-list as SQL-suffix of the entries selected by the method parameters.
+    *
+    * @param array $selector Is the selector  
+    * @param boolean $isSystemCall If true read and write access is granted  
+    * @param boolean $rightType Sets the relevant right-type for the creation of the EntryId-list
+    * @param boolean $orderBy Selects the column the EntryId-list will be ordered by
+    * @param boolean $isAsc Selects order direction for the EntryId-list
+    * @param boolean $limit Limits the size of the Entry-list
+    * @param boolean $offset Set the start of the Entry-list
+    * @param array $selectExprArr Sets the select column of the database table (is irrelevant in this context)
+    * @param boolean $removeGuideEntries If true Guide-entries will be removed from the Entry-list
+    *
+    * @return array Array containing the EntryId-list as SQL-suiffix
+    */
+    private function sqlEntryIdListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array('EntryId'),$removeGuideEntries=FALSE,$isDebugging=FALSE):array
+    {
         $result=array('primaryKeys'=>array(),'sql'=>'','primaryKey'=>'EntryId');
         foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging) as $row){
             $result['sql'].=",'".$row['EntryId']."'";
@@ -591,7 +610,102 @@ class Database{
         return $result;
     }    
         
-    public function updateEntries($selector,$entry,$isSystemCall=FALSE,$rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE){
+    /**
+    * This method deletes the selected entries and returns the count of deleted entries or false on error.
+    *
+    * @param array $selector Is the selector to select the entries to be deleted  
+    * @return int|boolean The count of deleted entries or false on failure
+    */
+    public function deleteEntriesOnly($selector,$isSystemCall=FALSE){
+        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return FALSE;}
+        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write',FALSE,TRUE,FALSE,FALSE,FALSE);
+        $sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
+        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
+        $this->addStatistic('deleted',$stmt->rowCount());
+    }
+    
+    /**
+    * This method deletes the selected entries including linked files 
+    * and returns the count of deleted entries or false on error.
+    *
+    * @param array $selector Is the selector to select the entries to be deleted  
+    * @return int|boolean The count of deleted entries or false on failure
+    */
+    public function deleteEntries(array $selector,bool $isSystemCall=FALSE):int|bool
+    {
+        // delete files
+        $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE,FALSE);
+        if (empty($entryList['primaryKeys'])){return FALSE;}
+        foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
+            $entrySelector=array('Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue);
+            $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
+            if (is_file($fileToDelete)){
+                $this->addStatistic('removed',1);
+                unlink($fileToDelete);
+            }
+        }
+        // delete entries by id-list
+        $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
+        $stmt=$this->executeStatement($sql,array(),FALSE);
+        $this->addStatistic('deleted',$stmt->rowCount());
+        return $this->getStatistic('deleted');
+    }
+    
+    /**
+    * This method inserts the provided entry into the selected database table.
+    * Default values are added if any entry property is missing.
+    *
+    * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
+    * @return array|boolean The method returns the inserted entry or false
+    */
+    private function insertEntry(array $entry):array
+    {
+        $entryTemplate=$this->getEntryTemplate($entry['Source']);
+        $entry=$this->addEntryDefaults($entry);
+        if (!empty($entry['Owner'])){
+            if (strcmp($entry['Owner'],'ANONYM')===0){
+                $entry['Expires']=date('Y-m-d H:i:s',time()+600);
+            }
+        }
+        $columns='';
+        $values='';
+        $inputs=array();
+        foreach ($entry as $column => $value){
+            if (!isset($entryTemplate[$column])){continue;}
+            if (strcmp($column,'Source')===0){continue;}
+            $sqlPlaceholder=':'.$column;
+            $columns.='`'.$column.'`,';
+            $values.=$sqlPlaceholder.',';
+            if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+            $inputs[$sqlPlaceholder]=strval($value);
+        }
+        $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
+        $stmt=$this->executeStatement($sql,$inputs,FALSE);
+        $this->addStatistic('inserted',$stmt->rowCount());
+        return $entry;
+    }
+
+    /**
+    * The method selects entries based on the selector and updates these entries based on the provided entry.
+    * The method employs a two step approach: 
+    * 1. Creation of an EntryId-list based on the provided selector and parameters, read access is required
+    * 2. Update based on the EntryId-list, write access is required
+    *
+    * @param array $selector Is the selector  
+    * @param array $entry Is the template used for the entry update  
+    * @param boolean $isSystemCall If true read and write access is granted  
+    * @param boolean $rightType Sets the relevant right-type for the creation of the EntryId-list
+    * @param boolean $orderBy Selects the column, the EntryId-list will be ordered by
+    * @param boolean $isAsc Selects order direction for the EntryId-list
+    * @param boolean $limit Limits the size of the Entry-list
+    * @param boolean $offset Set the start of the Entry-list
+    * @param array $selectExprArr Sets the select column of the database table (is irrelevant in this context)
+    * @param boolean $removeGuideEntries If true Guide-entries will be removed from the Entry-list
+    *
+    * @return int|boolean The updated entry count or false on failure
+    */
+    public function updateEntries($selector,$entry,$isSystemCall=FALSE,$rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE):int|bool
+    {
         // only the Admin has the right to change data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
             unset($entry['Privileges']);
@@ -621,70 +735,21 @@ class Database{
         }
     }
     
-    public function deleteEntriesOnly($selector,$isSystemCall=FALSE){
-        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return FALSE;}
-        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write',FALSE,TRUE,FALSE,FALSE,FALSE);
-        $sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-        $this->addStatistic('deleted',$stmt->rowCount());
-    }
-    
-    public function deleteEntries($selector,$isSystemCall=FALSE){
-        // delete files
-        $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE,FALSE);
-        if (empty($entryList['primaryKeys'])){return FALSE;}
-        foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
-            $entrySelector=array('Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue);
-            $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
-            if (is_file($fileToDelete)){
-                $this->addStatistic('removed',1);
-                unlink($fileToDelete);
-            }
-        }
-        // delete entries by id-list
-        $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
-        $stmt=$this->executeStatement($sql,array(),FALSE);
-        $this->addStatistic('deleted',$stmt->rowCount());
-        return $this->getStatistic('deleted');
-    }
-        
     /**
-    * @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
-    */
-    private function insertEntry($entry){
-        $entryTemplate=$this->getEntryTemplate($entry['Source']);
-        $entry=$this->addEntryDefaults($entry);
-        if (!empty($entry['Owner'])){
-            if (strcmp($entry['Owner'],'ANONYM')===0){
-                $entry['Expires']=date('Y-m-d H:i:s',time()+600);
-            }
-        }
-        $columns='';
-        $values='';
-        $inputs=array();
-        foreach ($entry as $column => $value){
-            if (!isset($entryTemplate[$column])){continue;}
-            if (strcmp($column,'Source')===0){continue;}
-            $sqlPlaceholder=':'.$column;
-            $columns.='`'.$column.'`,';
-            $values.=$sqlPlaceholder.',';
-            if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
-            $inputs[$sqlPlaceholder]=strval($value);
-        }
-        $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
-        $stmt=$this->executeStatement($sql,$inputs,FALSE);
-        $this->addStatistic('inserted',$stmt->rowCount());
-        return $entry;
-    }
-
-    /**
-    * The method inserts an entry that does not exist or updates an existing entry.
+    * The method inserts an entry that does not exist OR updates an existing entry (based on the columns provided).
+    * Default values are added if any entry property is missing.
     *
-    * @return array|FALSE This method adds the provided entry to the database. Default values are added if any entry property is missing. If the entry could not be inserted, the method returns FALSE..
+    * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
+    * @param boolean $isSystemCall The value is provided to access control to establish read/write access within the method 
+    * @param boolean $noUpdateButCreateIfMissing If true, an existing entry won't be updated
+    * @param boolean $addLog If true, an entry update will be documented in the entry processing log
+    * @param string $attachment If a valid file name is provided the file is added to the entry
+    *
+    * @return array|boolean The inserted, updated or created entry, an empty array if access rights were insufficient or false on error.
     */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=FALSE,string $attachment=''):array|bool
     {
-        // only the Admin has the right to update the data in the Privileges column
+        // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys and set selector
         if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
@@ -711,34 +776,52 @@ class Database{
             $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
             $entry=$this->insertEntry($entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
-            // update and return entry | recover existing logs
-            foreach($existingEntry as $key=>$value){
-                if (!isset($entry[$key])){
-                    $entry[$key]=$existingEntry[$key];
-                }
-            }
-            // add attachment
+            // existing entry, update
+            $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
+            // add attachment 
             if (is_file($attachment)){
+                if (!isset($entry['Params'])){$entry['Params']=$existingEntry['Params'];}
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
             }
-            // update entry
+            // add log
             if ($addLog){
+                if (!isset($entry['Params'])){$entry['Params']=$existingEntry['Params'];}
                 $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
             }
+            // update entry
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
-            // existing entry and no update 
+            // existing entry, no update 
             $entry=$this->entryById(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']),$isSystemCall,'Read');
         }
         return $entry;
     }
     
+    /**
+    * The method returns an entry selected by entry['Source'] and entry['EntryId'].
+    * If the entry does not exist it will be created. An existing entry will not be updated.
+    *
+    * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
+    * @param boolean $isSystemCall The value is provided to access control to establish read/write access within the method 
+    *
+    * @return array|boolean The entry, an empty array if right are insufficient or false on error.
+    */
     public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
         return $this->updateEntry($entry,$isSystemCall,TRUE);
     }
     
-    public function hasEntry($selector,$isSystemCall=TRUE,$returnMetaOnNoMatch=FALSE){
+    /**
+    * The method returns the first entry that matches the selector or false, if no match is found.
+    *
+    * @param array $selector Is the selector.  
+    * @param boolean $isSystemCall The value is provided to access control. 
+    * @param boolean $returnMetaOnNoMatch If true and EntryId is provided, meta data is return on no match instead of false. 
+    *
+    * @return array|boolean The entry, an empty array or flase if no entry was found.
+    */
+    public function hasEntry(array $selector,bool $isSystemCall=TRUE,bool $returnMetaOnNoMatch=FALSE):array|bool
+    {
         if (empty($selector['Source'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -752,7 +835,8 @@ class Database{
         return FALSE;
     }
         
-    public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE){
+    public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
+    {
         $userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
         // test for required keys and set selector
         if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId'])){
@@ -818,7 +902,7 @@ class Database{
         return $targetEntry;
     }
 
-    public function swapEntries($entryA,$entryB,$isSystemCall=FALSE)
+    public function swapEntries(array $entryA,array $entryB,bool $isSystemCall=FALSE):bool
     {
         if (empty($entryA['Source']) || empty($entryB['Source']) || empty($entryA['EntryId']) || empty($entryB['EntryId'])){
             throw new \ErrorException('Function '.__FUNCTION__.': required key(s) Source, EntryId missing',0,E_ERROR,__FILE__,__LINE__);
@@ -858,36 +942,42 @@ class Database{
         return TRUE;
     }
     
-    public function addOrderedListIndexToEntryId($primaryKeyValue,$index){
+    public function addOrderedListIndexToEntryId(string $primaryKeyValue,int $index):string
+    {
         $primaryKeyValue=$this->orderedListComps($primaryKeyValue);
         $primaryKeyValue=array_pop($primaryKeyValue);    
         return str_pad(strval($index),4,'0',STR_PAD_LEFT).'___'.$primaryKeyValue;
     }
     
-    public function getOrderedListIndexFromEntryId($primaryKeyValue){
+    public function getOrderedListIndexFromEntryId(string $primaryKeyValue):int
+    {
         $comps=$this->orderedListComps($primaryKeyValue);
         if (count($comps)<2){return 0;}
         $index=array_shift($comps);
         return intval($index);
     }
     
-    public function getOrderedListKeyFromEntryId($primaryKeyValue){
+    public function getOrderedListKeyFromEntryId(string $primaryKeyValue):string
+    {
         $comps=$this->orderedListComps($primaryKeyValue);
         $key=array_pop($comps);
         return $key;
     }
     
-    public function orderedListComps($primaryKeyValue){
+    public function orderedListComps(string $primaryKeyValue):array
+    {
         return explode('___',$primaryKeyValue);    
     }
     
-    private function orderedList2selector($entry){
+    private function orderedList2selector(array $entry):array|bool
+    {
         if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
         $selector=array('Source'=>$entry['Source'],'EntryId'=>'%'.$this->getOrderedListKeyFromEntryId($entry['EntryId']));
         return $selector;
     }
     
-    public function orderedEntryListCleanup($selector,$isDebugging=FALSE){
+    public function orderedEntryListCleanup(array $selector, bool $isDebugging=FALSE):bool
+    {
         $orderedListSelector=$this->orderedList2selector($selector);
         if (empty($orderedListSelector)){return FALSE;}
         $targetIndex=1;
@@ -908,7 +998,8 @@ class Database{
         return TRUE;
     }
     
-    public function moveEntry($selector,$moveUp=TRUE,$isSystemCall=FALSE){
+    public function moveEntry(array $selector,bool $moveUp=TRUE,bool $isSystemCall=FALSE):string|bool
+    {
         // This method requires column EntryId have the format [constant prefix]|[index]
         // The index range is: 1...index...rowCount
         $orderedListSelector=$this->orderedList2selector($selector);
@@ -935,7 +1026,8 @@ class Database{
         return $targetSelector['EntryId'];
     }
 
-    public function addLog2entry($entry,$logType='Processing log',$logContent=array(),$updateEntry=FALSE){
+    public function addLog2entry(array $entry,string $logType='Processing log',array $logContent=array(),bool $updateEntry=FALSE)
+    {
         if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
         if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    

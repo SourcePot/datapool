@@ -81,7 +81,7 @@ private $entryTable;
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
-            $fileContent='';
+            $fileContent="[//]: # (This a Markdown document!)\n\n";
             if ($name=='Top'){
                 $fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="width:20vw;margin-left:40vw;"/></div>';
             } else {
