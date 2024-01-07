@@ -93,7 +93,14 @@ class LoginForms{
             }
         }
         if ($this->isLoggedIn() && empty($result['Email'])){
-            $result['Email']=$_SESSION['currentUser']['Params']['User registration']['Email'];
+            // Email input field was missing - get email from user entry
+            $class=$this->oc['SourcePot\Datapool\Root']->source2class('user');
+            $user=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
+            $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user);
+            if (empty($user['EntryId'])){$user=$_SESSION['currentUser'];}
+            if (isset($user['Params']['User registration']['Email'])){
+                $result['Email']=$user['Params']['User registration']['Email'];
+            }
         }
         return $result;
     }
@@ -114,8 +121,8 @@ class LoginForms{
         }
         $matrix=array();
         if ($this->isLoggedIn()){
-            $matrix['Passphrase']=array('Value'=>$passphrase);
-            $matrix['Btns']=array('Value'=>$updateBtn);
+            $matrix['Passphrase']['Value']=$passphrase;
+            $matrix['Btns']['Value']=$updateBtn;
         } else {
             $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
             $matrix['Email']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);

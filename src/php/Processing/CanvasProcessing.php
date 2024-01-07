@@ -149,9 +149,12 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         $result=array();
         $canvasElementsSelector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Folder'=>$class);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $canvasElement){
+            // continue if Processor is not CanvasProcessing class
             if (empty($canvasElement['Content']['Widgets']['Processor'])){continue;}
             if (strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
+            // canvas processing class found -> run processor
             $result=$this->runCanvasProcessing($canvasElement,$isTestRun);
+            break;
         }
         return $result;
     }
@@ -159,6 +162,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     public function runCanvasProcessing($callingElement,$isTestRun=TRUE){
         // get canvas processing rules
         $settingsKey=__CLASS__.'|'.$callingElement['Folder'];
+        // get CanvasProcessing paramerter and rules
         $base=array('canvasprocessingrules'=>array());
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
@@ -174,6 +178,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         $base['Step count']=count($base['canvasprocessingrules']);
+        // get current CanvasProcessing status
         $savedBase=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting('Job processing','Var space',$base,$settingsKey,TRUE);
         if (empty($savedBase['canvasprocessingrules'])){
             $base=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$base,$settingsKey,TRUE);

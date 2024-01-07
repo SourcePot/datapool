@@ -245,7 +245,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result=$this->processEntry($entry,$base,$callingElement,$result,$testRun);
                 $result['Inbox statistics']['Items processed']['value']++;
             }
-            if ($testRun){$result[$inboxParams['Inbox source']]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);}
+            if ($testRun && !empty($meta)){
+                $result[$inboxParams['Inbox source']]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);
+            }
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));

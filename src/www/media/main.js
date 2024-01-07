@@ -2,12 +2,6 @@ jQuery(document).ready(function(){
 	
 /** BASIC PAGE CONTENT STYLING **/
 	jQuery('article').fadeIn(300);
-	adjustMainHeight();
-	function adjustMainHeight(){
-		let mainHeight=jQuery(window).height();
-		mainHeight=mainHeight-jQuery('#top-filler').outerHeight(),
-		jQuery('main').css({'min-height':mainHeight});
-	}
 	
 	jQuery('div.second-menu').css({'height':0,'overflow':'hidden'});
 	jQuery('a.first-menu').on('click',function(element){
@@ -645,7 +639,6 @@ jQuery(document).ready(function(){
 		}
 	}
 	function resetAll(){
-		adjustMainHeight();
 		addSafetyCoverEvent();
 		addEmojiEvent();
 		addSymbolLoginEvents();

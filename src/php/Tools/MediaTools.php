@@ -231,10 +231,12 @@ class MediaTools{
     private function getMarkdown($arr){
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $arr['settings']['style']=array_merge(array('overflow'=>'hidden'),$arr['settings']['style']);
-        $pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateBySelector($arr['selector']);
+        $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$arr['selector']['EntryId'],'Write'=>$arr['selector']['Write'],'Write'=>$arr['selector']['Read']);
         // process form
-        $btns='';
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        $markDownId=md5(__FUNCTION__.$arr['selector']['Source'].$arr['selector']['EntryId']);
+        $arr['callingFunction']=$markDownId;
+        $btnArr=$arr;
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,$markDownId);
         if (isset($formData['val']['content'])){
             $source=key($formData['val']['content']);
             $entryId=key($formData['val']['content'][$source]);
@@ -245,20 +247,19 @@ class MediaTools{
             $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
             $md=file_get_contents($mdFile);
         }
-        if (empty($pageState['editMode'])){
-            $contentHtml=\Michelf\Markdown::defaultTransform($md);
-            $arr['cmd']='edit';
-        } else {
-            $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
+            $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId);
             $contentArr['key']=array('content',$arr['selector']['Source'],$arr['selector']['EntryId']);
-            $contentArr['style']=array('text-align'=>'left','width'=>'95vw','height'=>'70vh','color'=>'#ccc','background-color'=>'#000');
+            $contentArr['style']=array('text-align'=>'left','width'=>'98%','height'=>'70vh','color'=>'#ccc','background-color'=>'#020044');
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
-            $arr['cmd']='show';
+            $btnArr['cmd']='show';
+        } else {
+            $contentHtml=\Michelf\Markdown::defaultTransform($md);
+            $btnArr['cmd']='edit';
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']));
-        $btns.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr);
         if (empty($arr['settings']['style']['height']) && empty($arr['settings']['style']['max-height'])){
-            $arr['html'].=$btns;
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         }
         return $arr;
     }

@@ -97,17 +97,20 @@ class Database{
         return $toReplace;
     }
 
-    public function resetStatistic(){
+    public function resetStatistic()
+    {
         $_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0,'skipped'=>0);
         return $_SESSION[__CLASS__]['Statistic'];
     }
     
-    public function addStatistic($key,$amount){
+    public function addStatistic($key,$amount)
+    {
         if (!isset($_SESSION[__CLASS__]['Statistic'])){$this->resetStatistic();}
         $_SESSION[__CLASS__]['Statistic'][$key]+=$amount;
     }
     
-    public function getStatistic($key=FALSE){
+    public function getStatistic($key=FALSE):array|int
+    {
         if (isset($_SESSION[__CLASS__]['Statistic'][$key])){
             return $_SESSION[__CLASS__]['Statistic'][$key];
         } else {
@@ -115,7 +118,8 @@ class Database{
         }
     }
     
-    public function statistic2matrix(){
+    public function statistic2matrix():array
+    {
         $matrix=array();
         if (isset($_SESSION[__CLASS__]['Statistic'])){
             foreach($_SESSION[__CLASS__]['Statistic'] as $key=>$value){
@@ -128,12 +132,16 @@ class Database{
     /**
     * @return string|FALSE The method returns the database name or FALSE if connection to the database failed.
     */
-    public function getDbName(){return $this->dbName;}
+    public function getDbName():string
+    {
+        return $this->dbName;
+    }
     
     /**
     * @return array|FALSE The method returns entry template for all columns of the provided database table or all columns of all tables if no table is provided or FALSE if the table does not exist.
     */
-    public function getEntryTemplate($table=FALSE){
+    public function getEntryTemplate(string|bool $table=FALSE):array|bool
+    {
         if ($table){
             if (isset($GLOBALS['dbInfo'][$table])){return $GLOBALS['dbInfo'][$table];}
         } else {
@@ -145,7 +153,8 @@ class Database{
     /**
     * @return array The method returns the entry template array based on the table and template provided. The method completes the class property dbInfo which contains all entry templates for all tables.
     */
-    public function getEntryTemplateCreateTable($table,$template=array()){
+    public function getEntryTemplateCreateTable(string $table,array $template=array()):array
+    {
         // This function returns the entry template based on the root entry template and
         // the argument $template. In addition this funtion calls create table which creates and updates the
         // database table based on the entry template.
@@ -154,7 +163,8 @@ class Database{
         return $GLOBALS['dbInfo'][$table];
     }
 
-    public function unifyEntry($entry,$addEntryDefaults=FALSE){
+    public function unifyEntry(array $entry,bool $addEntryDefaults=FALSE):array|bool
+    {
         // This function selects the $entry-specific unifyEntry() function based on $entry['Source']
         // If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
         if (empty($entry['Source'])){
@@ -170,7 +180,8 @@ class Database{
         return $entry;    
     }
 
-    public function addEntryDefaults($entry,$isDebugging=FALSE){
+    public function addEntryDefaults(array $entry,bool $isDebugging=FALSE):array
+    {
         $entryTemplate=$GLOBALS['dbInfo'][$entry['Source']];
         $toReplace=$this->getReplacmentArr($entry,$entryTemplate);
         $debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry,'toReplace'=>$toReplace);
@@ -196,7 +207,8 @@ class Database{
         return $entry;
     }
 
-    private function getReplacmentArr($entry,$entryTemplate=array()){
+    private function getReplacmentArr(array $entry,array $entryTemplate=array()):array
+    {
         $toReplace=array();
         foreach($entry as $column=>$value){
             if (is_array($value)){continue;}
@@ -208,7 +220,8 @@ class Database{
         return $toReplace;
     }
 
-    private function connect(){
+    private function connect():string
+    {
         // This function establishes the database connection and saves the PDO-object in dbObj.
         // The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
         // 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
@@ -225,7 +238,8 @@ class Database{
         return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
     }
     
-    private function collectDatabaseInfo(){
+    private function collectDatabaseInfo():array
+    {
         $sql='SHOW TABLES;';
         $stmt=$this->executeStatement($sql);
         $tables=$stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -236,7 +250,8 @@ class Database{
         return $GLOBALS['dbInfo'];
     }
 
-    public function executeStatement($sql,$inputs=array(),$debugging=FALSE){
+    public function executeStatement(string $sql,array $inputs=array(),bool $debugging=FALSE):object
+    {
         $debugArr=array('sql'=>$sql,'inputs'=>$inputs);
         $stmt=$this->dbObj->prepare($sql);
         foreach($inputs as $bindKey=>$bindValue){
@@ -249,7 +264,8 @@ class Database{
         return $stmt;
     }
     
-    private function createTable($table,$entryTemplate,$engine='MyISAM'){
+    private function createTable(string $table,array $entryTemplate,string $engine='MyISAM'):void
+    {
         $sql="CREATE TABLE IF NOT EXISTS `".$table."` (";
         foreach ($entryTemplate as $column=>$template){
             if ($template['index']===FALSE){
@@ -272,7 +288,8 @@ class Database{
         $this->executeStatement($sql,$inputs,FALSE);
     }
     
-    private function deleteExpiredEntries(){
+    private function deleteExpiredEntries():array
+    {
         foreach($GLOBALS['dbInfo'] as $table=>$entryTemplate){
             $selector=array('Source'=>$table,'Expires<'=>date('Y-m-d H:i:s'));
             $this->deleteEntries($selector,TRUE);
@@ -280,13 +297,15 @@ class Database{
         return $this->getStatistic();
     }
     
-    private function containsStringWildCards($string='abcd\_fgh\%jkl'){
-        $string=strval($string);
+    private function containsStringWildCards(string $string='abcd\_fgh\%jkl'):int|bool
+    {
         return preg_match('/[^\\\\][%_]{1}/',$string);
     }
     
-    private function addSelector2result($selector,$result){
-        $result['app']=(isset($selector['app']))?$selector['app']:'';
+    private function addSelector2result(array $selector,array $result):array
+    {
+        $result=array_merge($selector,$result);
+        //$result['app']=(isset($selector['app']))?$selector['app']:'';
         return $result;
     }
     
@@ -311,7 +330,7 @@ class Database{
             $column=trim($columns[0],' <>=!');
             if (!isset($entryTemplate[$column])){continue;}
             if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
-            if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards($value)){
+            if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
                 $column='`'.$column.'`';
                 if (empty($value)){
                     if ($operator==='<' || $operator==='>' || $operator==='!'){$value='';} else {continue;}
@@ -693,7 +712,11 @@ class Database{
             $entry=$this->insertEntry($entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // update and return entry | recover existing logs
-            $entry=array_replace_recursive($existingEntry,$entry);
+            foreach($existingEntry as $key=>$value){
+                if (!isset($entry[$key])){
+                    $entry[$key]=$existingEntry[$key];
+                }
+            }
             // add attachment
             if (is_file($attachment)){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);

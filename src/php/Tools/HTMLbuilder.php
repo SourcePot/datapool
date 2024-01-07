@@ -360,11 +360,9 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['select'])){
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['edit'])){
-                $selector['editMode']=TRUE;
-                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setEditMode($selector,TRUE);
             } else if (isset($formData['cmd']['show'])){
-                $selector['editMode']=FALSE;
-                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setEditMode($selector,FALSE);
             } else if (isset($formData['cmd']['export'])){
                 $selectors=array($selector);
                 $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
@@ -780,7 +778,8 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
     }
     
-    public function loadEntry($arr){
+    public function loadEntry(array $arr):string
+    {
         if (empty($arr['selector'])){return '';}
         if (empty($arr['excontainer'])){
             $settingsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
@@ -793,23 +792,14 @@ class HTMLbuilder{
         }
     }        
     
-    public function getLogo($width=360){
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        $src=$this->oc['SourcePot\Datapool\Foundation\Backbone']->mediaFile2href($pageSettings['logoFile']);
-        $imgArr=array('tag'=>'img','src'=>$src,'class'=>'logo','style'=>array('width'=>$width));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imgArr);
-        $divArr=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'logo','style'=>array('text-align'=>'center'));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($divArr);
-        return $html;
-    }
-    
     /**
     * This method returns html-string or adds the html content to the 'html'-key of the parameter $presentArr.
     * The html-string presents the selected entry based on the presentation settings.
     * @param array Contains the entry selector. 
     * @return array|string
     */
-    public function presentEntry($presentArr){
+    public function presentEntry(array $presentArr):array|string
+    {
         $html='';
         $presentArr=$this->mapContainer2presentArr($presentArr);
         $selector=$this->getPresentationSelector($presentArr);

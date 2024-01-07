@@ -15,7 +15,9 @@ class DataExplorer{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array();
+    private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 );
     
     public $definition=array('Content'=>array('Style'=>array('Text'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
                                                             'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Red','canvas-green'=>'Green','canvas-dark'=>'Dark','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'processor'),'@default'=>'canvas-std'),

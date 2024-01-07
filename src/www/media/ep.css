@@ -1,3 +1,6 @@
+p.ep-std,p.ep-std-footer,p.ep-comment,p.ep-comment-footer{
+    padding:0;
+}
 div.ep-std{
     float:left;
     clear:both;

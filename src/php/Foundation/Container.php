@@ -586,7 +586,7 @@ class Container{
             }
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
             if ($arr['wrapper']['style']['z-index']===2){$arr['wrapper']['style']['z-index']=1;}
-            $selectBtnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'select','selector'=>$entry,'style'=>array('font-size'=>'7px','margin'=>'0 5px 5px 0','line-height'=>'1em')));
+            $selectBtnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'select','selector'=>$entry,'style'=>array('font-size'=>'0.1rem','margin'=>'0 5px 5px 0','line-height'=>'0.3rem')));
         }
         if (!empty($entry['rowCount'])){
             $arr['html']=$selectBtnHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'height'=>$settings['style']['height'])));

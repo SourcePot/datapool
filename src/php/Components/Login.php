@@ -140,7 +140,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             } else {
                 $existingUser['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);            
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($existingUser);
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Passphrase updated.',array());    
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','Passphrase for "{email}" updated.',array('email'=>$arr['Email']));    
             }
         } else {
             $this->oc['SourcePot\Datapool\Foundation\Logger']->log('info','User not found, passphrase update failed.',array());    

@@ -99,6 +99,25 @@ class NetworkTools{
         if (!isset($_SESSION['page state']['selected'][$callingClass][$key])){$_SESSION['page state']['selected'][$callingClass][$key]=$initValue;}
         return $_SESSION['page state']['selected'][$callingClass][$key];
     }
+    
+    public function setEditMode(array $selector,bool $isEditMode=FALSE):string
+    {
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
+        $id=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+        $_SESSION['page state']['isEditMode'][$id]=$isEditMode;
+        return $id;
+    }
+    
+    public function getEditMode(array $selector):bool
+    {
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
+        $id=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+        if (isset($_SESSION['page state']['isEditMode'][$id])){
+            return $_SESSION['page state']['isEditMode'][$id];
+        } else {
+            return FALSE;
+        }
+    }
 
     /** HTML request methods, e.g. to be used for REST interface
     *    

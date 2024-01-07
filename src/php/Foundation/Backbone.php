@@ -104,11 +104,13 @@ class Backbone{
         } else {
             $mainStyle=array();
         }
+        $arr['toReplace']['{{background}}']='';
         $arr['toReplace']['{{body}}'].='{{firstMenuBar}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='{{secondMenuBar}}'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='<div class="filler" id="top-filler"></div>'.PHP_EOL;
         // main
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'main','style'=>$mainStyle)).PHP_EOL;
+        $arr['toReplace']['{{body}}'].='<div class="filler" id="top-filler"></div>'.PHP_EOL;
+        $arr['toReplace']['{{body}}'].='{{background}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='{{explorer}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='{{content}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='</main>'.PHP_EOL;

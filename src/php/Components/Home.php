@@ -47,59 +47,53 @@ private $entryTable;
         if ($arr===TRUE){
             return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {
-            // Add content
-            $contentHtml='';
-            $selector=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode']);
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','EntryId',TRUE) as $section){
-                $settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
-                $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section '.$section['EntryId'],'generic',$section,$settings,array('style'=>array('margin'=>'0')));
-            }
-            // Add admin section
-            $adminHtml='';
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-                $selector['disableAutoRefresh']=TRUE;
-                $adminHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Section configurator','generic',$selector,array('method'=>'adminHtml','classWithNamespace'=>__CLASS__),array());
-            }
-            // compile html
             $html='';
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
-                if (empty($section['rowCount'])){
-                    $quicklinkHtml=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$quicklinkHtml,'keep-element-content'=>TRUE));
-                } else {
-                    $html.=$contentHtml;
-                }
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
+                // background video - Youtube: if playing in loop playlist must be added with same id as video id
+                $arr['toReplace']['{{background}}']='<iframe class="bg-video" src="https://www.youtube.com/embed/NwFallcMDoY?si=nn2-JvAM1wVuMkcc&playlist=NwFallcMDoY&controls=0&autoplay=1&mute=1&controls=0&loop=1" title="YouTube video player" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
+                // markdown logo
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Top'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'20vh','overflow'=>'unset')));
+                // image shuffle
+                /*
+                $width=320;
+                $height=320;
+                $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width+40,'margin'=>'10px auto','border'=>'1px dotted #999'));
+                $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
+                $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
+                */
+                // spacer for background video
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>' ','keep-element-content'=>TRUE,'style'=>array('height'=>'40vh','overflow'=>'unset','background'=>'none')));
+                // markdown doc
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Bottom'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'40vh','overflow'=>'unset')));
             } else {
-                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getLogo(320);
-                $html.=$contentHtml;
-            }
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-                $html.=$adminHtml;
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
     }
     
-    public function adminHtml($arr){
-        $html='';
-        // section control
-        $sectionArr['selector']=array('Source'=>$this->entryTable,'Group'=>'Homepage','Folder'=>$_SESSION['page state']['lngCode'],'Name'=>'Page content');
-        $sectionArr['selector']=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($sectionArr['selector'],'ALL_R','ADMIN_R');
-        $contentStructure=array('Section title'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Section content'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                'Section footer'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                'Section attachment'=>array('method'=>'element','tag'=>'input','type'=>'file','excontainer'=>TRUE),
-                                'Read access'=>array('method'=>'select','selected'=>65535,'options'=>array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions()),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                );
-        $sectionArr['canvasCallingClass']=$arr['callingFunction'];
-        $sectionArr['contentStructure']=$contentStructure;
-        $sectionArr['caption']='Web page administration: Each entry/row will be compiled into a section.';
-        $sectionArr['callingClass']=__CLASS__;
-        $sectionArr['callingFunction']=__FUNCTION__;
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($sectionArr);
-        $arr['html']=$html;
-        return $arr;
+    private function getDocumentHtml(string $name='Content'):string
+    {
+        $entry=array('Source'=>$this->entryTable,'Group'=>__CLASS__,'Folder'=>$_SESSION['page state']['lngCode'],'Name'=>$name);
+        $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>'Home.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
+        $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+        if (!is_file($fileName)){
+            $fileContent='';
+            if ($name=='Top'){
+                $fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="width:20vw;margin-left:40vw;"/></div>';
+            } else {
+                $fileContent.='# Home ('.$_SESSION['page state']['lngCode'].')';
+            }
+            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,FALSE);
+            file_put_contents($fileName,$fileContent);
+        }
+        $arr=array('settings'=>array('style'=>array('width'=>'100vw')));
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,TRUE,TRUE,'');
+        $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
+        return $arr['html'];
     }
     
 }

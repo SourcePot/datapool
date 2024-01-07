@@ -19,7 +19,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
                                  'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'),
                                  );
     
-    public $definition=array('Content'=>array('Message'=>array('@tag'=>'textarea','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>array('font-size'=>'1.8em')),
+    public $definition=array('Content'=>array('Message'=>array('@tag'=>'textarea','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>array('font-size'=>'1.2rem')),
                                               '@hideCaption'=>FALSE
                                              ),
                              'Attachment'=>array('@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE),

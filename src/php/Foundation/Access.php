@@ -154,6 +154,10 @@ class Access{
         return $this->hasRights($user,'ALL_MEMBER_R');
     }
     
+    public function isPublic($user=FALSE){
+        return $this->hasRights($user,'PUBLIC_R');
+    }
+    
     private function hasRights($user=FALSE,$right='ADMIN_R')
     {
         if (empty($user)){

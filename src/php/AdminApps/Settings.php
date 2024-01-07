@@ -77,10 +77,12 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
 
     public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
         $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
+        $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
         $entry['Content']=$setting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Setting "{name}" updated',array('name'=>$name));    
         if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
     }
     

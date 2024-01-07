@@ -1,5 +1,7 @@
 :root{
     --brand:blue;
+    --bottom-filler-height:14vh;
+    --article-toolbox-height:11vh; /* --bottom-filler-height minus summary.toolbox height (3vh) */
     accent-color:var(--brand);
     font-size:13px;
     font-family:system-ui,sans-serif;
@@ -11,6 +13,11 @@
     text-decoration:none;
 }
 @media print{
+  :root{
+    --brand:blue;
+    accent-color:var(--brand);
+    font-size:9px;
+  }
   #top-filler,#explorer,#bottom-menu,.toolbox,#nav{
     display:none !important;
   }
@@ -21,6 +28,10 @@ body{
     background-image:url("lightbg.png");
     background-repeat:repeat;
     background-attachment:fixed;
+}
+main{
+    min-height:97vh;
+    z-index:2;
 }
 span{
     font-family:inherit;
@@ -33,7 +44,7 @@ h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg{
     clear:both;
     font-size:inherit;
     font-style:inherit;
-    line-height:1.5em;
+    line-height:1.5rem;
 }
 h1,h2,h3{
     margin:0.4em 0 0.2rem 5px;
@@ -45,6 +56,9 @@ h2{
     font-size:1.3rem;
 }
 h3{
+    font-size:1.2rem;
+}
+p,li,code{
     font-size:1.1rem;
 }
 a.std:hover{
@@ -55,10 +69,18 @@ a.textlink{
     text-decoration: underline dotted #00f;
 }
 ol,ul{
-    margin: 0 10px;
+    margin-left:0.75rem;
     list-style-position:inside;
 }
+li{
+    margin:0.3rem 0;
+}
+li:hover{
+    background-color:#ccc;
+}
 code{
+    display:block;
+    white-space: pre-wrap;
     padding:0.2rem;
     color:#ccc;
     background-color:#000;
@@ -69,10 +91,10 @@ code{
 button,input,textarea,select,a.btn,.js-button{
     float:left;
     clear:none;
-    font-size:1em;
-    padding:0.2em 0.4em;
-    margin: 0 0.2em;
-    line-height:1.2em;
+    font-size:1rem;
+    padding:0.2rem 0.4rem;
+    margin: 0 0.2rem;
+    line-height:1.2rem;
     text-align:center;
     background-color:#fff;
     border-radius:unset;
@@ -111,11 +133,14 @@ div.cover-wrapper{
 p{
     padding:0.75rem;
 }
+p.std,p.calendar-hour,p.cover,p.icon,p.first-menu,p.toolbox,p.comment,p.comment-footer,p.user-abstract{
+    padding:0;
+    line-height:initial;
+}
 p.cover{
     position:absolute;
     top:0;
     left:0;
-    padding:0;
     width:100%;
     height:100%;
     color:#fff;
@@ -133,7 +158,7 @@ table.std,div.table{
 }
 caption{
     margin:5px 0;
-    font-size:1.2em;
+    font-size:1.2rem;
 }
 fieldset{
     font-size:1rem;
@@ -141,11 +166,11 @@ fieldset{
 }
 legend{
     font-weight:bold;
-    margin:0.4em;
-    padding:0.4em;
+    margin:0.4rem;
+    padding:0.4rem;
 }
 div.fieldset{
-    padding:0.5em 0;
+    padding:0.5rem 0;
 }
 input[type="checkbox"]{
     clear:left;
@@ -172,8 +197,8 @@ td,th{
 }
 p.log{
     clear:none;
-    font-size:0.8em;
-    padding:0 1em 0 0.5em;
+    font-size:0.95rem;
+    padding:0 1rem 0 0.5rem;
 }
 div.log{
     clear:both;
@@ -183,13 +208,14 @@ div.log{
 embed{
     min-width:500px;
     min-height:300px;
+    box-shadow:2px 2px 3px 3px #aaa;
 }
 article{
     float:left;
     clear:none;
     display:block;
     position:relative;
-    margin:5px 0;
+    padding:5px 0;
     width:100%;
     overflow:auto;
     background-color:#fff;
@@ -303,12 +329,12 @@ a.toc:hover,a.toc-0:hover,a.toc-1:hover,a.toc-2:hover,a.toc-3:hover{
 #prev-img-btn,#next-img-btn{
     position:absolute;
     top:0;
-    padding:3em 0.5em;
+    padding:3rem 0.5rem;
     text-align:center;
     height:100%;
     min-width:5%;
     cursor:pointer;
-    font-size:3em;
+    font-size:3rem;
     color:#fff6;
 }
 #prev-img-btn:hover,#next-img-btn:hover{
@@ -332,15 +358,15 @@ main,#top-filler{
     position:relative;
     width:100%;
     background-color:#fff;
-    z-index:3;
 }
 #top-filler{
     height:33px;
+    z-index:3;
 }
 #bottom-filler{
     position:relative;
     width:100%;
-    height:80px;
+    height:var(--bottom-filler-height);
     z-index:1;
 }
 #bottom-menu{
@@ -348,18 +374,18 @@ main,#top-filler{
     bottom:0;
     left:0;
     width:100%;
-    height:80px;
+    height:var(--bottom-filler-height);
     background:none;
-    z-index:2;
+    z-index:1;
 }
 div.bottom-wrapper{
     float:none;
     width:fit-content;
-    margin:5px auto;
+    margin:2vh auto 0 auto;
 }
 input[type=submit].bottom-menu{
     float:none;
-    font-size:1.25em;
+    font-size:1.25rem;
     margin:0 25px;
     border:none;
     background:none;
@@ -389,7 +415,8 @@ ul.menu{
 }
 li.menu{
     clear:none;
-    width:6em;
+    width:6rem;
+    margin:0;
     background:none;
     border-right:1px solid #aaa;
     border-bottom:4px solid #fff;
@@ -414,7 +441,7 @@ a.first-menu,p.first-menu{
     border-right:1px solid #bbb;
 }
 select.menu{
-    font-size:1.1em;
+    font-size:1.1rem;
     height:34px;
     margin:0;
 }
@@ -427,10 +454,10 @@ div.menu-item-emoji,div.menu-item-label{
     float:inherit;
     text-align:center;
     width:100%;
+    line-height:25px;
 }
 div.menu-item-emoji{
     font-size:24px;
-    height:30px;
 }
 select.lng-selector{
     float:right;
@@ -456,17 +483,17 @@ details.toolbox{
     position:fixed;
     bottom:0;
     z-index:20;
-    max-height:80px;
+    max-height:var(--bottom-filler-height);
     color:#fff;
     background-color:#444;
 }
 summary{
     float:left;
     clear:none;
-    min-width:3em;
+    min-width:3rem;
     width:100%;
-    font-size:1.2em;
-    line-height:1.3em;
+    font-size:1.2rem;
+    line-height:2rem;
     color:#444;
     border-bottom:1px dotted #000;
 }
@@ -475,7 +502,7 @@ summary.forum,summary.toolbox{
 }
 summary.toolbox{
     color:#fff;
-    line-height:20px;
+    line-height:3vh;
 }
 summary:hover{
     cursor:pointer;
@@ -485,8 +512,8 @@ summary:hover{
 article.toolbox{
     color:#ccc;
     background-color:#000;
+    height:var(--article-toolbox-height);
     width:100%;
-    height:60px;
     margin:0;
     padding:0;
 }
@@ -518,6 +545,7 @@ p.toolbox{
 }
 .canvas-text,.canvas-symbol,.canvas-processor,.canvas-trigger,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     position:absolute;
+    font-size:16px;
     margin:0;
     color:#000;
     padding:5px;
@@ -577,8 +605,8 @@ button.canvas{
     float:left;
     clear:none;
     font-weight:bold;
-    width:1.8em;
-    margin: 0.15em 0.15em 0em 0em;
+    width:1.8rem;
+    margin: 0.15rem 0.15rem 0rem 0rem;
 }
 div.canvas{
     clear:none;
@@ -591,7 +619,7 @@ p.canvas-info{
     font-size:10px;
     background-color:#fff;
     padding:1px;
-    line-height:1em;
+    line-height:1rem;
 }
 
 
@@ -621,7 +649,7 @@ div.calendar-day,button.calendar-day{
 button.calendar-day{
     height:65px;
     border:none;
-    font-size:0.96em;
+    font-size:0.96rem;
     font-weight:bold;
     background-color:#ddd;
 }
@@ -665,20 +693,20 @@ div.calendar-timeline{
 .status-on,.status-off{
     color:#fff;
     min-width:100%;
-    padding:0.1em;
+    padding:0.1rem;
     text-align:center;
 }
 
 /** COMMENTS etc. **/
-p.comment{
-    font-size:1.2em;
-    color:#a80;
-}
 div.comment{
     padding:3px 5px;
 }
+p.comment{
+    font-size:1.2rem;
+    color:#a80;
+}
 p.comment-footer{
-    font-size:0.8em;
+    font-size:0.8rem;
     font-weight:bold;
 }
 div.forum{
@@ -689,17 +717,17 @@ div.user-abstract{
 }
 p.user-abstract{
     clear:none;
-    font-size:1.5em;
+    font-size:1.5rem;
     line-height:60px;
 }
 span.emoji{
-    font-size:1.5em;
+    font-size:1.5rem;
 }
 a.emoji{
     float:left;
     clear:none;
-    font-size:2em;
-    line-height:1.2em;
+    font-size:2rem;
+    line-height:1.2rem;
     color:#000;
 }
 
@@ -766,4 +794,17 @@ a.phrase-preview:hover{
     width:600px;
     max-width:100%;
     max-height:100%;
+}
+.bg-video{
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-size: cover;
+  background: no-repeat center;
+  user-select: none;
+  pointer-events: none;
+  /*filter: grayscale(0.8); */
+  /*additional tweaks for positioning, read more in the link above*/
+  height: 86vh; /* 100vh - --bottom-filler-height=14vh */
+  width: 100vw;
 }
