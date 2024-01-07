@@ -189,6 +189,7 @@ class Explorer{
                     if ($newSelector[$column]!=$selector[$column]){$resetFromHere=TRUE;}
                 }
             }
+            $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
             // save selector
             if (!empty($newSelector['EntryId'])){

@@ -803,8 +803,7 @@ a.phrase-preview:hover{
   background: no-repeat center;
   user-select: none;
   pointer-events: none;
-  /*filter: grayscale(0.8); */
-  /*additional tweaks for positioning, read more in the link above*/
+  filter: grayscale(0.6);
   height: 86vh; /* 100vh - --bottom-filler-height=14vh */
   width: 100vw;
 }
