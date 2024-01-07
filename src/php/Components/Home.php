@@ -50,7 +50,8 @@ private $entryTable;
             $html='';
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
                 // background video - Youtube: if playing in loop playlist must be added with same id as video id
-                $arr['toReplace']['{{background}}']='<iframe class="bg-video" src="https://www.youtube.com/embed/NwFallcMDoY?si=nn2-JvAM1wVuMkcc&playlist=NwFallcMDoY&controls=0&autoplay=1&mute=1&controls=0&loop=1" title="YouTube video player" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
+                //$arr['toReplace']['{{background}}']='<iframe class="bg-video" src="https://www.youtube.com/embed/NwFallcMDoY?si=nn2-JvAM1wVuMkcc&playlist=NwFallcMDoY&controls=0&autoplay=1&mute=1&controls=0&loop=1" title="YouTube video player" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
+                $arr['toReplace']['{{background}}']='<iframe class="bg-video" src="https://www.youtube.com/embed/a3ohg2TGNo8?si=nn2-JvAM1wVuMkcc&playlist=a3ohg2TGNo8&controls=0&autoplay=1&mute=1&controls=0&loop=1" title="YouTube video player" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
                 // markdown logo
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Top'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'20vh','overflow'=>'unset')));
                 // image shuffle
