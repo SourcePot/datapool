@@ -630,6 +630,7 @@ class MiscTools{
                     'bool'=>!empty($value),
                     'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                     'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
+                    'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2timestamp($value),
                     'codepfad'=>$this->convert2codepfad($value),
                     'unycom'=>$this->convert2unycom($value),
                 };

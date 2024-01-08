@@ -47,26 +47,35 @@ private $entryTable;
         if ($arr===TRUE){
             return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {
+            $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
-                // background video - Youtube: if playing in loop playlist must be added with same id as video id
-                //$arr['toReplace']['{{background}}']='<iframe class="bg-video" src="https://www.youtube.com/embed/NwFallcMDoY?si=nn2-JvAM1wVuMkcc&playlist=NwFallcMDoY&controls=0&autoplay=1&mute=1&controls=0&loop=1" title="YouTube video player" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
-                $arr['toReplace']['{{background}}']='<iframe class="bg-video" src="https://www.youtube.com/embed/a3ohg2TGNo8?si=nn2-JvAM1wVuMkcc&playlist=a3ohg2TGNo8&controls=0&autoplay=1&mute=1&controls=0&loop=1" title="YouTube video player" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
                 // markdown logo
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Top'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'20vh','overflow'=>'unset')));
-                // image shuffle
-                /*
-                $width=320;
-                $height=320;
-                $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width+40,'margin'=>'10px auto','border'=>'1px dotted #999'));
-                $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
-                $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
-                */
-                // spacer for background video
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>' ','keep-element-content'=>TRUE,'style'=>array('height'=>'40vh','overflow'=>'unset','background'=>'none')));
-                // markdown doc
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Bottom'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'40vh','overflow'=>'unset')));
+                if (empty($pageSettings['homePageContent'])){
+                    // do nothing
+                } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
+                    $width=320;
+                    $height=320;
+                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width+40,'margin'=>'10px auto','border'=>'1px dotted #999'));
+                    $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
+                    $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            
+                } else if (strcmp($pageSettings['homePageContent'],'video')===0){
+                    if (empty($pageSettings['homePageContentSource'])){
+                        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','The pageSetting "homePageContent" == "video" but "homePageContentSource" is empty',array());    
+                    } else {
+                        $homePageContentSource=$pageSettings['homePageContentSource'];
+                        if (stripos($homePageContentSource,'://')===FALSE){
+                            $homePageContentSource='./assets/'.$homePageContentSource;
+                        }
+                        $videoHtml='<iframe class="video-container" src="'.$homePageContentSource.'" title="Intro" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>';
+                        $arr['toReplace']['{{background}}']='<div class="video-container">'.$videoHtml.'</div>';
+                        // spacer for background video
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>' ','keep-element-content'=>TRUE,'style'=>array('height'=>'200px','overflow'=>'unset','background'=>'none')));
+                    }
+                }
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Bottom'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'70vh','overflow'=>'unset')));
             } else {
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
             }

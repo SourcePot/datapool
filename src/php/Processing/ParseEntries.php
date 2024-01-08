@@ -246,7 +246,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // get source text
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         $parserFailed='';
-        if (isset($flatSourceEntry[$params['Source column']])){
+        if (empty($flatSourceEntry[$params['Source column']])){
+            // source column missing
+            $parserFailed='No text to parse';
+            $result['Parser statistics']['No text, skipped']['value']++;
+        } else {
             $fullText=$flatSourceEntry[$params['Source column']];
             $textSections=array(0=>$fullText);
             $base['parsersectionrules'][0]=array('Content'=>array('Regular expression'=>'_____','Section name'=>'All sections'));
@@ -345,10 +349,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     break;
                 }
             } // loop through parser rules
-        } else {
-            // source column missing
-            $parserFailed='No text to parse';
-            $result['Parser statistics']['No text, skipped']['value']++;
         }
         if (empty($parserFailed)){
             // wrapping up

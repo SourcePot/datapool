@@ -57,7 +57,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         } else if (empty($selector['EntryId'])){
             $selector['app']=__CLASS__;
             $selector['disableAutoRefresh']=TRUE;
-            $settings=array('orderBy'=>'Date','isAsc'=>FALSE,'hideUpload'=>TRUE);
+            $settings=array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
             $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Group','Filter'=>''),array('Column'=>'Name','Filter'=>''));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Admin table entries','entryList',$selector,$settings,array());        
         } else {
@@ -298,24 +298,27 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $matrix[$file]['traceAsString']=implode('<br/>',$matrix[$file]['traceAsString']);
             }
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE));
+        $tableStyle=array('background-color'=>'#fcc');
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE,'style'=>$tableStyle));
         return $arr;
     }
     
     public function getPageSettingsHtml(){
+        $homePageContentSource='https://www.youtube.com/embed/a3ohg2TGNo8?si=nn2-JvAM1wVuMkcc&playlist=a3ohg2TGNo8&controls=0&autoplay=1&mute=1&controls=0&loop=1';
+        $homePageContentSourceInfo="Enter the image or video source here.\nIt can be an url or file name (any file needs to be located in the assets dir).\nSample: ".$homePageContentSource;
+        $homePageContentOptions=array(''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video');
         $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
         $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'admin@datapool.info'),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
+                                'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),
+                                'homePageContentSourceInfo'=>array('method'=>'element','tag'=>'p','element-content'=>$homePageContentSourceInfo,'class'=>'std'),
+                                'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>$homePageContentSource),
                                 );
         // get selector
         $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init');
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById(array('Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init'));
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (isset($formData['cmd'])){
-        }
         // get HTML
         $arr['contentStructure']=$contentStructure;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);

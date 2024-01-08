@@ -677,18 +677,40 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $entry;
     }
     
-    public function str2date($string){
+    public function str2timestamp($string):array
+    {
+        $timestamp=intval($string);
+        $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($timestamp));
+        $dates=$this->str2date($string);
+        if (isset($dates['Timestamp'])){
+            return array('Timestamp'=>$dates['Timestamp'])+$dates;
+        } else {
+            return array();
+        }
+    }
+    
+    public function str2date($string):array
+    {
+        if (is_int($string)){
+            // EXCEL date: number of days since 1/1/1900
+            $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('1900-01-01 12:00:00','P'.$string.'D');
+        }
         $orgString=$string=strval($string);
         $string=trim(mb_strtolower($string));
         foreach($this->months as $needle=>$month){
             $string=str_replace($needle,'|'.$month.'|',$string);
         }
         $strComps=preg_split("/[^|a-z0-9]+/",$string);
-        if (count($strComps)<3){return array();}
+        if (count($strComps)<3){
+            $context=array('method'=>__FUNCTION__,'string'=>$string);
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Method "{method}" failed to parse date from "{string}"',$context);         
+            return array();
+        }
         $strCompsCopy=$strComps;
         $dateArr=array('day'=>'','month'=>'','year'=>'');
         $dateArrCopy=$dateArr;
         foreach($strComps as $index=>$strComp){
+            if ($index>2){break;}
             if (empty($strComp)){continue;}
             if ($strComp[0]=='|'){
                 $dateArr['month']=trim($strComp,'|');

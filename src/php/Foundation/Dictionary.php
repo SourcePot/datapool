@@ -137,7 +137,7 @@ class Dictionary{
     public function dictWidget($arr=array()){
         $langCode=$_SESSION['page state']['lngCode'];
         if (strcmp($langCode,$this->sourceLng)===0){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Please select a language different to '.$this->lngCodes[$this->sourceLng],'style'=>'fonct-size:2em;padding:10px;'));
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Please select a language different to '.$this->lngCodes[$this->sourceLng],'style'=>array('font-size'=>'1.2rem','padding'=>'10px','color'=>'#f00')));
             return $arr;
         }
         // form processing

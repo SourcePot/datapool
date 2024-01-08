@@ -123,6 +123,8 @@ class Menu{
     private function firstMenuBar($arr){
         $options=array();
         $selected=FALSE;
+        $lngSelector=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
+        // get apps selector
         foreach($this->available['Apps'] as $class=>$def){
             $options[$class]=$def['Label'];
             if (!empty($def['isSelected'])){$selected=$class;}
@@ -133,8 +135,10 @@ class Menu{
         if (!empty($options)){
             $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selected,'key'=>array('Class'),'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         }
+        // compile html
+        // $html.=$lngHtml;
         $html.='{{firstMenuBarExt}}';
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
+        $html.=$lngSelector;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu','id'=>'nav'));
         $arr['toReplace']['{{firstMenuBar}}']=$html;
         return $arr;

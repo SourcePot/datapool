@@ -52,25 +52,33 @@ class Filespace{
                 $vars['Dirs to process'][$dir]=array('dir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir);
             }
         }
+        $vars['Last deleted files']=array();
+        $vars['Last failed deletions']=array();
         $dir2process=array_shift($vars['Dirs to process']);
-        $files=scandir($GLOBALS['dirs']['filespace']);
-        foreach(new \DirectoryIterator($dir2process['dir']) as $fileInfo){
-            $file=$dir2process['dir'].$fileInfo->getFilename();
-            $extensionPos=strpos($fileInfo->getFilename(),'.file');
+        $files=scandir($dir2process['dir']);
+        foreach($files as $fileName){
+            $file=$dir2process['dir'].'/'.$fileName;
+            $extensionPos=strpos($fileName,'.file');
             if (empty($extensionPos)){continue;}
-            $entryId=substr($fileInfo->getFilename(),0,$extensionPos);
+            $entryId=substr($fileName,0,$extensionPos);
             $sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
             $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
             if (empty($stmt->fetchAll())){
                 if (is_file($file)){
                     if (unlink($file)){
                         $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
+                        $vars['Last deleted files'][]=$file;
                     } else {
                         $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
+                        $vars['Last failed deletions'][]=$file;
                     }
                 }
                 $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
             }
+        }
+        if (!empty($vars['Last deleted files']) || !empty($vars['Last failed deletions'])){
+            $context=array('table'=>$dir2process['table'],'deleted'=>count($vars['Last deleted files']),'failed'=>count($vars['Last failed deletions']));
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
         }
         $vars['Last processed dir']=$dir2process['dir'];
         return $vars;
