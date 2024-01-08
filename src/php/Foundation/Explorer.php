@@ -441,8 +441,10 @@ class Explorer{
                             $nextElementArr['class']='btn';
                             if ($matchFound){
                                 $nextElementArr['element-content']='&#10097;&#10097;';
+                                $nextElementArr['title']='next page';
                             } else {
-                                $nextElementArr['element-content']='1';
+                                $nextElementArr['element-content']='&#8614;';
+                                $nextElementArr['title']='first page';
                                 $btnArr[0]='';    
                             }
                             $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextElementArr);    
@@ -455,6 +457,7 @@ class Explorer{
                                 $lastElementArr['style']='';
                                 $lastElementArr['class']='btn';
                                 $lastElementArr['element-content']='&#10096;&#10096;';
+                                $lastElementArr['title']='previous page';
                                 $btnArr[0]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($lastElementArr);
                             }
                             $matchFound=TRUE;
