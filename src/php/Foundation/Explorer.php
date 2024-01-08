@@ -436,10 +436,15 @@ class Explorer{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($folderElement);
                 foreach($folderArr as $name=>$nameArr){
                     foreach($nameArr as $entryId=>$elementArr){
-                        if ($matchFound && empty($nextElementArr)){
+                        if (empty($nextElementArr) && ($matchFound || empty($selector['EntryId']))){
                             $nextElementArr=$elementArr;
                             $nextElementArr['class']='btn';
-                            $nextElementArr['element-content']='&#10097;&#10097;';
+                            if ($matchFound){
+                                $nextElementArr['element-content']='&#10097;&#10097;';
+                            } else {
+                                $nextElementArr['element-content']='1';
+                                $btnArr[0]='';    
+                            }
                             $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextElementArr);    
                         }
                         if (!$showGroup || !$showFolder || empty($selector['Folder'])){$elementArr['style']='display:none;';}
