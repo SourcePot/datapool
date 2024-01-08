@@ -399,66 +399,68 @@ class Explorer{
     
     public function getTocHtml(string $callingClass,array $filter=array(),array $style=array()):string
     {
-        $html='';
+        // get data
+        $list=array();
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-        $tag=array('tag'=>'a','keep-element-content'=>TRUE);
-        $result=array();
-        $columnsClass=array('Source'=>'toc-0','Group'=>'toc-1','Folder'=>'toc-2','EntryId'=>'toc-3');
-        $columns=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);
-        foreach($columns as $column=>$initValue){
-            $entrySelector=$columns+$filter;
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($entrySelector,$column,FALSE,'Read',$column,TRUE,FALSE,FALSE,TRUE) as $entry){
-                $entry=array_merge($columns,$entry);
-                if (!empty($entry['EntryId'])){
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry);
-                }
-                $elementArr=$this->selector2linkInfo($selector['app'],$entry);
-                if (empty($entry['EntryId'])){
-                    $elementArr['element-content']=ucfirst($entry[$column]);
-                } else {
-                    $elementArr['element-content']=ucfirst($entry['Name']);
-                }
-                $elementArr['class']=$columnsClass[$column];
-                $result[$entry['Source']][$entry['Group']][$entry['Folder']][$entry['EntryId']]=$elementArr;
-            }
-            if (isset($selector[$column])){$columns[$column]=$selector[$column];}
-            if (!isset($selector[$column]) || $selector[$column]===FALSE){break;}
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$selector['Source']),FALSE,'Read','Group',TRUE) as $entry){
+            $elementArr=$this->selector2linkInfo($selector['app'],$entry);
+            $elementArr['element-content']=ucfirst($entry['Name']);
+            $elementArr['class']='toc-3';
+            $list[$entry['Group']][$entry['Folder']][$entry['Name']][$entry['EntryId']]=$elementArr;
         }
-        $btnArr=array('<a class="btn" style="color:#aaa;">&#10096;&#10096;</a>','<a class="btn" style="color:#aaa;">&#10097;&#10097;</a>','');
+        // create html
+        $html='';
         $matchFound=FALSE;
-        $lastEntryArr=FALSE;
-        $nextEntryArr=FALSE;
-        foreach($result as $source=>$groupArr){
-            if (count($groupArr)<2){continue;}
-            foreach($groupArr as $group=>$folderArr){
-                foreach($folderArr as $folder=>$elements){
-                    foreach($elements as $elementIndex=>$elementArr){
-                        $elementArr['title']=$elementArr['element-content'];
-                        if ($matchFound && empty($nextEntryArr) && !empty($elementArr['EntryId'])){
-                            $nextEntryArr=$elementArr;
-                            $nextEntryArr['class']='btn';
-                            $nextEntryArr['element-content']='&#10097;&#10097;';
-                            $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextEntryArr);
+        $nextElementArr=FALSE;
+        $tag=array('tag'=>'a','keep-element-content'=>TRUE);
+        $btnArr=array('<a class="btn" style="color:#aaa;">&#10096;&#10096;</a>','<a class="btn" style="color:#aaa;">&#10097;&#10097;</a>','');
+        $sourceElement=$this->selector2linkInfo($selector['app'],array('Source'=>$selector['Source']));
+        $sourceElement['element-content']=ucfirst($selector['Source']);
+        $sourceElement['class']='toc-0';
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($sourceElement);
+        foreach($list as $group=>$groupArr){
+            ksort($groupArr);
+            $showGroup=$selector['Group']===$group || empty($selector['Group']);
+            $groupElement=$this->selector2linkInfo($selector['app'],array('Source'=>$selector['Source'],'Group'=>$group));
+            $groupElement['element-content']=ucfirst($group);
+            $groupElement['class']='toc-1';
+            //if (!$showGroup){$groupElement['style']='display:none;';}
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($groupElement);
+            foreach($groupArr as $folder=>$folderArr){
+                ksort($folderArr);
+                $showFolder=$selector['Folder']===$folder || empty($selector['Folder']);
+                $folderElement=$this->selector2linkInfo($selector['app'],array('Source'=>$selector['Source'],'Group'=>$group,'Folder'=>$folder));
+                $folderElement['element-content']=ucfirst($folder);
+                $folderElement['class']='toc-2';
+                if (!$showGroup || !$showFolder || empty($selector['Group'])){$folderElement['style']='display:none;';}
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($folderElement);
+                foreach($folderArr as $name=>$nameArr){
+                    foreach($nameArr as $entryId=>$elementArr){
+                        if ($matchFound && empty($nextElementArr)){
+                            $nextElementArr=$elementArr;
+                            $nextElementArr['class']='btn';
+                            $nextElementArr['element-content']='&#10097;&#10097;';
+                            $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextElementArr);    
                         }
+                        if (!$showGroup || !$showFolder || empty($selector['Folder'])){$elementArr['style']='display:none;';}
                         if ($this->oc['SourcePot\Datapool\Foundation\Database']->isSameSelector($selector,$elementArr)){
-                            $matchFound=TRUE;
                             $elementArr['style']=array('background-color'=>'#ccc');
-                            if (!empty($elementArr['EntryId'])){
-                                if ($lastEntryArr){
-                                    $lastEntryArr['class']='btn';
-                                    $lastEntryArr['element-content']='&#10096;&#10096;';
-                                    $btnArr[0]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($lastEntryArr);
-                                }
-                                $btnArr[2]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'print'));
+                            $btnArr[2]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'print'));
+                            if (isset($lastElementArr)){
+                                $lastElementArr['style']='';
+                                $lastElementArr['class']='btn';
+                                $lastElementArr['element-content']='&#10096;&#10096;';
+                                $btnArr[0]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($lastElementArr);
                             }
+                            $matchFound=TRUE;
                         }
-                        if (!empty($elementArr['EntryId'])){$lastEntryArr=$elementArr;}
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
+                        $lastElementArr=$elementArr;
                     }
                 }
             }
         }
-        $html.=implode('',$btnArr);
+        $html=implode('',$btnArr).$html;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>$style));
         return $html;
     }
