@@ -131,6 +131,9 @@ div.cover-wrapper{
     overflow:hidden;
     width:auto;
 }
+img{
+    max-width:100%;
+}
 p{
     padding:0.75rem;
 }
