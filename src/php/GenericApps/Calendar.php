@@ -677,6 +677,24 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $entry;
     }
     
+    private function excel2date($excel){
+        $excel=strval($excel);
+        $excelDatestamp=preg_replace('/[^0-9]/','',$excel);
+        if (strlen($excelDatestamp)===strlen($excel) && strlen($excelDatestamp)>0){
+            $unixDaystamp=intval($excelDatestamp)-25569;
+            if ($unixDaystamp<0){
+                // out of range
+                return $excel;
+            } else {
+                // whithin range
+                $unixTimestamp=86400*$unixDaystamp;
+                return $this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($unixTimestamp));                
+            }
+        } else {
+            return $excel;
+        }
+    }
+    
     public function str2timestamp($string):array
     {
         $timestamp=intval($string);
@@ -691,11 +709,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     public function str2date($string):array
     {
-        if (is_int($string)){
-            // EXCEL date: number of days since 1/1/1900
-            $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('1900-01-01 12:00:00','P'.$string.'D');
-        }
-        $orgString=$string=strval($string);
+        $string=$orgString=$this->excel2date($string);
         $string=trim(mb_strtolower($string));
         foreach($this->months as $needle=>$month){
             $string=str_replace($needle,'|'.$month.'|',$string);

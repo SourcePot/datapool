@@ -29,7 +29,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Login','Emoji'=>'&#128274;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
+            return array('Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
         } else {
             $arr['toReplace']['{{content}}']=$this->getLoginForm();
             return $arr;

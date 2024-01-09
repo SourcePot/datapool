@@ -115,9 +115,7 @@ final class Root{
         $scriptTimeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
         $scriptInitTimeConsumption=round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000);
         $context=array('scriptTimeConsumption'=>$scriptTimeConsumption,'scriptInitTimeConsumption'=>$scriptInitTimeConsumption,'script'=>$pathInfo['basename']);
-        if ($scriptTimeConsumption>10000){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Script "{script}" took {scriptTimeConsumption}ms. Initialization took {scriptInitTimeConsumption}ms.',$context);    
-        } else if ($scriptTimeConsumption>5000){
+        if ($scriptTimeConsumption>5000){
             $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Script "{script}" took {scriptTimeConsumption}ms Initialization took {scriptInitTimeConsumption}ms.',$context);    
         }
         return $arr;
