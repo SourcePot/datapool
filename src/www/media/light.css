@@ -21,6 +21,9 @@
   #top-filler,#explorer,#bottom-menu,.toolbox,#nav{
     display:none !important;
   }
+  img{
+        max-width:100%;
+  }
 }
 
 body{
@@ -130,9 +133,6 @@ div.cover-wrapper{
     position:relative;
     overflow:hidden;
     width:auto;
-}
-img{
-    max-width:100%;
 }
 p{
     padding:0.75rem;
