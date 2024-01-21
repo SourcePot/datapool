@@ -145,7 +145,7 @@ class Filespace{
         return $fileName=$dir.$file;
     }
     
-    private function stdReplacements(array|string $str=''):array|string
+    private function stdReplacements($str='')
     {
         if (!is_string($str)){return $str;}
         if (isset($this->oc['SourcePot\Datapool\Foundation\Database'])){
