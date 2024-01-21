@@ -27,7 +27,7 @@ class HTMLbuilder{
                         'export'=>array('key'=>array('export'),'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
                         'select'=>array('key'=>array('select'),'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE),
                         'delete'=>array('key'=>array('delete'),'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array(),'excontainer'=>FALSE),
-                        'remove'=>array('key'=>array('remove'),'title'=>'Remove file','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array(),'excontainer'=>FALSE),
+                        'remove'=>array('key'=>array('remove'),'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array(),'excontainer'=>FALSE),
                         'delete all'=>array('key'=>array('delete all'),'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>array(),'excontainer'=>FALSE),
                         'delete all entries'=>array('key'=>array('delete all entries'),'title'=>'Delete all selected entries excluding attched files','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>array(),'excontainer'=>FALSE),
                         'moveUp'=>array('key'=>array('moveUp'),'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write'),
@@ -44,22 +44,26 @@ class HTMLbuilder{
                        'SourcePot\Datapool\Foundation\Explorer|getQuicklinksHtml'=>'getQuicklinksHtml()',
                        );
         
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;    
     }
     
-    public function getBtns($arr){
+    public function getBtns(array $arr):array
+    {
         if (isset($this->btns[$arr['cmd']])){
             $arr=array_merge($this->btns[$arr['cmd']],$arr);
         }
         return $arr;
     }
     
-    public function traceHtml($msg='This has happend:'){
+    public function traceHtml(string $msg='This has happend:'):string
+    {
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
         $html='<p>'.$msg.'</p><ol>';
         for($index=1;$index<4;$index++){
@@ -69,7 +73,8 @@ class HTMLbuilder{
         return $html;
     }
     
-    public function template2string($template='Hello [p:{{key}}]...',$arr=array('key'=>'world'),$element=array()){
+    public function template2string($template='Hello [p:{{key}}]...',$arr=array('key'=>'world'),$element=array())
+    {
         $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
         foreach($flatArr as $flatArrKey=>$flatArrValue){
             $template=str_replace('{{'.$flatArrKey.'}}',(string)$flatArrValue,$template);
@@ -87,16 +92,19 @@ class HTMLbuilder{
         return $template;
     }
     
-    private function arr2id($arr){
+    private function arr2id(array $arr):string
+    {
         $toHash=array($arr['callingClass'],$arr['callingFunction'],$arr['key']);
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash);
     }
     
-    public function element($arr){
+    public function element(array $arr):string
+    {
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
     }
 
-    public function table($arr,$returnArr=FALSE){
+    public function table(array $arr,bool $returnArr=FALSE):string|array
+    {
         $html='';
         if (!empty($arr['matrix'])){
             $indexArr=array('x'=>0,'y'=>0);
@@ -157,7 +165,8 @@ class HTMLbuilder{
         if ($returnArr){return array('html'=>$html);} else {return $html;}
     }
     
-    public function select($arr,$returnArr=FALSE){
+    public function select(array $arr,bool $returnArr=FALSE):string|array
+    {
         // This function returns the HTML-select-element with options based on $arr.
         // Required keys are 'options', 'key', 'callingClass' and 'callingFunction'.
         // Key 'label', 'selected', 'triggerId' are optional.
@@ -218,12 +227,14 @@ class HTMLbuilder{
         }
     }
     
-    public function tableSelect($arr){
+    public function tableSelect(array $arr):string
+    {
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDbInfo() as $table=>$tableDef){$arr['options'][$table]=ucfirst($table);}
         return $this->select($arr);
     }
     
-    public function keySelect($arr,$appendOptions=array()){
+    public function keySelect(array $arr,array $appendOptions=array()):string
+    {
         if (empty($arr['Source'])){return '';}
         $fileContentKeys=array();
         $keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
@@ -250,7 +261,8 @@ class HTMLbuilder{
         return $this->select($arr);
     }
     
-    public function canvasElementSelect($arr){
+    public function canvasElementSelect(array $arr):string
+    {
         if (empty($arr['canvasCallingClass'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Argument arr[canvasCallingClass] is missing but required.',0,E_ERROR,__FILE__,__LINE__);
         }
@@ -263,14 +275,16 @@ class HTMLbuilder{
         return $this->select($arr);
     }
     
-    public function preview($arr){
+    public function preview(array $arr):array
+    {
         return $this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
     }
     
-    public function copy2clipboard($text){
+    public function copy2clipboard(string $text):string
+    {
         $html='';
         $id=md5($text.mt_rand(1000,9999));
-        $element=array('tag'=>'button','element-content'=>'&#10064;&#10064;','keep-element-content'=>TRUE,'id'=>'clipboard-'.$id,'key'=>array('copy',$id),'excontainer'=>TRUE,'title'=>'copy to clipboard','style'=>array('font-weight'=>'bold'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $element=array('tag'=>'button','element-content'=>'&#9780;','keep-element-content'=>TRUE,'id'=>'clipboard-'.$id,'key'=>array('copy',$id),'excontainer'=>TRUE,'title'=>'Copy to clipboard','style'=>array('font-weight'=>'bold'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         $element=array('tag'=>'div','element-content'=>$text,'id'=>$id,'style'=>array('padding'=>'0'));
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
@@ -279,7 +293,8 @@ class HTMLbuilder{
         return $html;
     }
     
-    public function btn($arr=array()){
+    public function btn(array $arr=array()):string
+    {
         // This function returns standard buttons based on argument arr.
         // If arr is empty, buttons will be processed
         $html='';
@@ -339,14 +354,12 @@ class HTMLbuilder{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
-                $count=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
-                if ($count){
-                    $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
-                    $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
-                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Entries deleted: "{count}"',array('count'=>$count));         
-                } else {
-                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Nothing deleted. Either an empty selection or missing write access');         
-                }
+                $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+                $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
+                $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Deletion resulted in {statistics}',$context);    
+                $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['remove'])){
                 $entry=$formData['selector'];
                 if (!empty($entry['EntryId'])){
@@ -367,13 +380,14 @@ class HTMLbuilder{
                 $selectors=array($selector);
                 $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
                 $fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,FALSE,10000000000,$fileName);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,10000000000);
             }
         }
         return $html;
     }
         
-    public function app($arr){
+    public function app(array $arr):string
+    {
         if (empty($arr['html'])){return '';}
         $arr['icon']=(isset($arr['icon']))?$arr['icon']:'?';
         $arr['style']=(isset($arr['style']))?$arr['style']:array();
@@ -387,7 +401,8 @@ class HTMLbuilder{
         
     }
     
-    public function emojis($arr=array()){
+    public function emojis(array $arr=array()):array
+    {
         if (empty($arr['settings']['target'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called without target setting.',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -425,7 +440,8 @@ class HTMLbuilder{
         return $arr;
     }
     
-    public function integerEditor($arr){
+    public function integerEditor(array $arr):string
+    {
         // This function provides the HTML-script for an integer editor for the provided entry argument.
         // Typical use is for keys 'Read', 'Write' or 'Privileges'.
         //
@@ -489,7 +505,8 @@ class HTMLbuilder{
         return $html;
     }
     
-    public function setAccessByte($arr){
+    public function setAccessByte(array $arr):string
+    {
         // This method returns html with a number of checkboxes to set the bits of an access-byte.
         // $arr[key] ... Selects the respective access-byte, e.g. $arr['key']='Read', $arr['key']='Write' or $arr['key']='Privileges'.   
         if (!isset($arr['selector'])){return $arr;}
@@ -507,7 +524,8 @@ class HTMLbuilder{
     * $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
     * @return string
     */
-    public function entryControls($arr,$isDebugging=FALSE){
+    public function entryControls(array $arr,bool $isDebugging=FALSE):string
+    {
         if (!isset($arr['selector'])){return 'Selector missing';}
         $debugArr=array('arr_in'=>$arr);
         $arr['html']='';
@@ -549,7 +567,8 @@ class HTMLbuilder{
     * This method returns an html-table containing an overview of the entry content-, processing- and attachment-logs.
     * @return string
     */
-    public function entryLogs($arr){
+    public function entryLogs(array $arr):string
+    {
         if (!isset($arr['selector'])){return $this->traceHtml('Problem: Method "'.__FUNCTION__.'" arr[selector] missing.');}
         if (!isset($arr['selector']['Params'])){return $this->traceHtml('Problem: Method "'.__FUNCTION__.'" arr[selector][Params] missing.');}
         $matrix=array();
@@ -597,7 +616,8 @@ class HTMLbuilder{
         return $html;
     }
 
-    public function entryListEditor($arr){
+    public function entryListEditor(array $arr):string
+    {
         // This method returns a html-table from entries selected by the arr-argument.
         // Each entry is a row in the table and the data stored under the key Content of every entry can be updated and entries can be added or deleted.
         // $arr must contain the key 'contentStructure' which defines the html-elements used in order to show and edit the entry content.
@@ -629,7 +649,8 @@ class HTMLbuilder{
         return $html;
     }
 
-    public function entry2row($arr,$commandProcessingOnly=FALSE,$singleRowOnly=FALSE,$isNewRow=FALSE,$isSystemCall=FALSE){
+    public function entry2row(array $arr,bool $commandProcessingOnly=FALSE,bool $singleRowOnly=FALSE,bool $isNewRow=FALSE,bool $isSystemCall=FALSE):array|string
+    {
         if (isset($arr['selector']['Class'])){
             $dataStorageClass='SourcePot\Datapool\Foundation\Filespace';
         } else {
@@ -745,7 +766,8 @@ class HTMLbuilder{
         return $row;
     }
     
-    public function row2table($row,$caption='Row as table',$flip=FALSE){
+    public function row2table(array $row,string $caption='Row as table',bool $flip=FALSE):string
+    {
         if ($flip){
             $matrix=array();
             foreach($row as $key=>$value){
@@ -757,7 +779,8 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
     }
     
-    public function value2tabelCellContent($html,$arr=array()){
+    public function value2tabelCellContent($html,array $arr=array())
+    {
         if (!is_string($html) || empty($html)){
             return $html;
         } else if (strlen(strip_tags($html))==strlen($html)){
@@ -801,14 +824,14 @@ class HTMLbuilder{
     public function presentEntry(array $presentArr):array|string
     {
         $html='';
-        $presentArr=$this->mapContainer2presentArr($presentArr);
-        $selector=$this->getPresentationSelector($presentArr);
         if (!empty($presentArr['selector']['EntryId'])){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($presentArr['selector'],FALSE);
             if ($entry){
                 $presentArr['selector']=$entry;
             }            
         }
+        $presentArr=$this->mapContainer2presentArr($presentArr);
+        $selector=$this->getPresentationSelector($presentArr);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
             $rowCount=$setting['rowCount'];
             $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']);
@@ -816,7 +839,10 @@ class HTMLbuilder{
             $cntrArr=explode('|',$setting['Content']['Entry key']);
             if (count($cntrArr)===1){
                 // Simple value or array presentation
-                if (is_array($presentArr['selector'][$setting['Content']['Entry key']])){
+                if (!isset($presentArr['selector'][$setting['Content']['Entry key']])){
+                    // Entzry key missing
+                    $matrix=array();
+                } else if (is_array($presentArr['selector'][$setting['Content']['Entry key']])){
                     // Simple array presentation
                     $resultArr=array();
                     $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($presentArr['selector'][$setting['Content']['Entry key']]);
@@ -863,7 +889,8 @@ class HTMLbuilder{
         }
     }
     
-    private function getPresentationSelector($presentArr){
+    private function getPresentationSelector(array $presentArr):array
+    {
         $selector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Presentation');
         $selector['Folder']=$presentArr['callingClass'].'::'.$presentArr['callingFunction'];
         $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($selector);
@@ -871,7 +898,8 @@ class HTMLbuilder{
         return $selector;
     }
     
-    private function mapContainer2presentArr($presentArr){
+    private function mapContainer2presentArr(array $presentArr):array
+    {
         if (strcmp($presentArr['callingClass'],'SourcePot\\Datapool\\Foundation\\Container')===0){
             $presentArr['callingClass']=$this->oc['SourcePot\Datapool\Root']->source2class($presentArr['selector']['Source']);
             $presentArr['callingFunction']=$presentArr['settings']['method'];
@@ -879,7 +907,8 @@ class HTMLbuilder{
         return $presentArr;
     }
     
-    public function getPresentationSettingHtml($arr,$isDebugging=FALSE){
+    public function getPresentationSettingHtml(array $arr,bool $isDebugging=FALSE):array
+    {
         $debugArr=array('arr'=>$arr);
         $callingClassFunction=explode('::',$arr['selector']['Folder']);
         $entryKeyOptions=$this->appOptions;
@@ -906,7 +935,8 @@ class HTMLbuilder{
         return $arr;
     }
     
-    private function getStyleClassOptions($arr){
+    private function getStyleClassOptions(array $arr):array
+    {
         $entryPresentationCss=$GLOBALS['dirs']['media'].'/ep.css';
         $entryPresentationCss=file_get_contents($entryPresentationCss);
         preg_match_all('/(\.)([a-z0-9\-]+)([\{\,\:]+)/',$entryPresentationCss,$matches);
@@ -924,7 +954,8 @@ class HTMLbuilder{
     * @param array  $styles     Is an arrey of styles of the different chart building parts
     * @return string
     */
-    public function simpleEventChart($events=FALSE,$styles=array('chart'=>array(),'plot'=>array(),'bar'=>array(),'caption'=>array(),'xLable'=>array(),'yLable'=>array())){
+    public function simpleEventChart($events=FALSE,$styles=array('chart'=>array(),'plot'=>array(),'bar'=>array(),'caption'=>array(),'xLable'=>array(),'yLable'=>array())):string
+    {
         $stdKeys=array('timestamp'=>TRUE,'datetime'=>TRUE,'timezone'=>TRUE,'x'=>TRUE);
         $stylesTemplate=array();
         $stylesTemplate['chart']=array('position'=>'relative','margin-top'=>'50px');
@@ -1067,7 +1098,8 @@ class HTMLbuilder{
         return $html;
     }
     
-    private function normalizeEvent($event){
+    private function normalizeEvent(array $event):array
+    {
         $normEvent=array();
         $standardKeys=array('timeStamp'=>'timestamp','timestamp'=>'timestamp','dateTime'=>'datetime','datetime'=>'datetime','timeZone'=>'timezone','timezone'=>'timezone','X'=>'x','x'=>'x');
         foreach($standardKeys as $testKey=>$stdKey){

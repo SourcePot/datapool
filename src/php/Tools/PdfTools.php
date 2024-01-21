@@ -16,25 +16,37 @@ class PdfTools{
     private $patieOK=FALSE;
     private $S='';
     
-    public function __construct(){
-        
+    private $formats=array('a4'=>array('width'=>210,'height'=>297),
+                           'a3'=>array('width'=>297,'height'=>420),
+                           'a5'=>array('width'=>148,'height'=>210),
+                           'a6'=>array('width'=>105,'height'=>148),
+                           );
+    
+    public function __construct()
+    {    
     }
    
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         // get complete page settings
         $selector=array('Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init');
         $this->pageSettings=$oc['SourcePot\Datapool\Foundation\Filespace']->entryById($selector,TRUE);
-        
-        //var_dump($this->attachments2arrSmalot('D:\XRechnung.pdf'));
-        //var_dump($this->text2arrSpatie('d:\XRechnung.pdf'));
-        //var_dump($this->text2arrSmalot('d:\XRechnung.pdf'));
-        
-        //$this->getPdfTextParserOptions();
     }
     
-    public function getPdfTextParserOptions(){
+    public function getFormat(string $paper='a4'):array
+    {
+        $paper=strtolower($paper);
+        if (isset($this->formats[$paper])){
+            return $this->formats[$paper];
+        } else {
+            return $this->formats['a4'];
+        }
+    }
+    
+    public function getPdfTextParserOptions():array
+    {
         $parserKey='text2arr';
         $parser=array('default'=>'text2arrSmalot','options'=>array());
         foreach(get_class_methods(__CLASS__) as $method){
@@ -45,7 +57,8 @@ class PdfTools{
         return $parser;
     }
    
-    public function text2arrSpatie($file=FALSE,$arr=array()){
+    public function text2arrSpatie($file=FALSE,array $arr=array()):array
+    {
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content'][__FUNCTION__])){
             $this->pageSettings['Content'][__FUNCTION__]=array('path to Xpdf pdftotext executable'=>'');
@@ -76,7 +89,8 @@ class PdfTools{
         return $arr;
     }
 
-    public function text2arrSmalot($file=FALSE,$arr=array()){
+    public function text2arrSmalot($file=FALSE,array $arr=array()):array
+    {
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content'][__FUNCTION__])){
             $this->pageSettings['Content'][__FUNCTION__]=array();
@@ -105,14 +119,19 @@ class PdfTools{
         return $arr;
     }
     
-    private function textCleanup($text){
+    private function textCleanup(string $text):string
+    {
         $text=preg_replace('/[\t ]+/',' ',$text);
         $text=preg_replace('/(\n )+|(\r )+/',"\n",$text);
-        $text=preg_replace('/[\n\r]+/',"\n",$text);                
+        $text=preg_replace('/[\n\r]+/',"\n",$text);   
+        $encodings=['ISO-8859-1','windows-1252','UTF-8'];
+        $encoding=mb_detect_encoding($text,$encodings);
+        $text=mb_convert_encoding($text,'UTF-8',$encoding);
         return $text;
     }
     
-    public function attachments2arrSmalot($file,$arr=array()){
+    public function attachments2arrSmalot($file,array $arr=array()):array
+    {
         if (is_file($file)){
             $arr['Content']['File content']=(isset($arr['Content']['File content']))?$arr['Content']['File content']:'';
             $embeddedFileContent='';
@@ -172,7 +191,6 @@ class PdfTools{
         }
         return $arr;
     }
-
 
 }
 ?>

@@ -206,10 +206,10 @@ class Explorer{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
         if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
             $selector=array_merge($selector,$formData['val']);
-            $guideEntry=$this->getGuideEntry($selector);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
         } else if (isset($formData['cmd']['add files'])){
             if ($formData['hasValidFiles']){
+                $guideEntry=$this->getGuideEntry($selector);
                 if (isset($guideEntry['Read'])){$selector['Read']=$guideEntry['Read'];}
                 if (isset($guideEntry['Write'])){$selector['Write']=$guideEntry['Write'];}
                 foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
@@ -231,7 +231,7 @@ class Explorer{
             $oldGuideEntry=$this->deleteGuideEntry($selector);
             $newSelector=array_merge($selector,$formData['val']);
             if (isset($newSelector['EntryId'])){unset($newSelector['EntryId']);}
-            $this->getGuideEntry($newSelector,array('Read'=>$oldGuideEntry['Read'],'Write'=>$oldGuideEntry['Write'],'Owner'=>$oldGuideEntry['Owner']));
+            $this->getGuideEntry($newSelector,array('Content'=>$oldGuideEntry['Content'],'Params'=>$oldGuideEntry['Params'],'Read'=>$oldGuideEntry['Read'],'Write'=>$oldGuideEntry['Write'],'Owner'=>$oldGuideEntry['Owner']));
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
         }
@@ -258,7 +258,7 @@ class Explorer{
             } else {
                 $key=array('add');
                 $label='Add '.$stateKeys['nextKey'];
-                $fileElement=array('tag'=>'input','type'=>'text','key'=>array($stateKeys['nextKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
+                $fileElement=array('tag'=>'input','type'=>'text','placeholder'=>'e.g. Documents','key'=>array($stateKeys['nextKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
             }
             $addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array());
@@ -297,7 +297,7 @@ class Explorer{
         $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ADMIN_R';
         $btnHtml='';
         $btnArr=array('selector'=>$selector);
-        foreach(array('download all','export','delete') as $cmd){
+        foreach(array('download all','print','export','delete') as $cmd){
             $btnArr['cmd']=$cmd;
             $btnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         }
@@ -306,7 +306,6 @@ class Explorer{
             $wrapperElement=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperElement);
         }
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'print'));
         $arr=array('html'=>$html,'icon'=>'...','title'=>'Misc tools, e.g. entry deletion and download','class'=>'explorer');
         return $arr;
     }
@@ -442,10 +441,10 @@ class Explorer{
                             $nextElementArr['class']='btn';
                             if ($matchFound){
                                 $nextElementArr['element-content']='&#10097;&#10097;';
-                                $nextElementArr['title']='next page';
+                                $nextElementArr['title']='Next page';
                             } else {
                                 $nextElementArr['element-content']='&#8614;';
-                                $nextElementArr['title']='first page';
+                                $nextElementArr['title']='First page';
                                 $btnArr[0]='';    
                             }
                             $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextElementArr);    
@@ -458,7 +457,7 @@ class Explorer{
                                 $lastElementArr['style']='';
                                 $lastElementArr['class']='btn';
                                 $lastElementArr['element-content']='&#10096;&#10096;';
-                                $lastElementArr['title']='previous page';
+                                $lastElementArr['title']='Previous page';
                                 $btnArr[0]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($lastElementArr);
                             }
                             $matchFound=TRUE;

@@ -153,7 +153,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctorB
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=array('Column to delay'=>'Name');
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
@@ -177,13 +177,14 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function outboxRules($callingElement){
-        $contentStructure=array('Text'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
+        $msgPlaceholder='e.g. Dear Sir or Madam, the import for the attached document failed. Please capture the docuument manually.';
+        $contentStructure=array('Text'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'placeholder'=>$msgPlaceholder,'rows'=>4,'cols'=>20,'excontainer'=>TRUE),
                                 ' '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'),
                                 'use column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE),
                                 'Add to'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Subject'=>'Subject','Message'=>'Message')),
                                 );
         $contentStructure['use column']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Email creation rules';
@@ -264,18 +265,6 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $result;
-    }
-    
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
     }
 
     private function getBaseArr($callingElement){

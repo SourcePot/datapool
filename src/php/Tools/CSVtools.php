@@ -141,7 +141,9 @@ class CSVtools{
                 $entry=$csvDefArr['entry'];
                 foreach($csvDefArr['rows'] as $rowIndex=>$valArr){
                     $csvLineArr=$this->getCsvRow($valArr,$csvSetting);
-                    if ($rowIndex===0){$csvContent.=$csvLineArr['header'];}
+                    if ($rowIndex===0){
+                        $csvContent.=$csvLineArr['header'];
+                    }
                     $csvContent.=$csvLineArr['line'];
                     $statistics['row count']++;
                     $statistics['header']=$csvLineArr['header'];
@@ -149,7 +151,7 @@ class CSVtools{
                 // save csv content
                 $statistics['csv entries']++;
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                file_put_contents($targetFile,$csvContent);
+                file_put_contents($targetFile,trim($csvContent));
                 if (empty($entry['Params']['File']['Name'])){$entry['Params']['File']['Name']=str_replace('.csv','',$entry['Name']).'.csv';}
                 $entry['Params']['File']['Size']=filesize($targetFile);
                 $entry['Params']['File']['Extension']='csv';

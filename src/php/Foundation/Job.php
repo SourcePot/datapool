@@ -30,7 +30,7 @@ class Job{
         // all jobs settings - remove non-existing job methods and add new job methods
         $jobs=array('due'=>array(),'undue'=>array());
         $allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
-        $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,$pageSettings['pageTimeZone']);
+        $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageSettings['pageTimeZone']);
         $allJobsSetting=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Owner'=>'SYSTEM');
         $allJobsSetting['Type']=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable();
         $allJobsSetting=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
@@ -73,7 +73,7 @@ class Job{
             $jobVars['Content']=$this->oc[$dueJob]->$dueMethod($jobVars['Content']);
             $jobStatistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $allJobsSetting['Content'][$dueJob]['Last run']=time();
-            $allJobsSetting['Content'][$dueJob]['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,$pageSettings['pageTimeZone']);
+            $allJobsSetting['Content'][$dueJob]['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageSettings['pageTimeZone']);
             $allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]']=round((hrtime(TRUE)-$jobStartTime)/1000000);
             // update job vars
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);

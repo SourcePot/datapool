@@ -28,21 +28,29 @@ class Logger extends \Psr\Log\AbstractLogger
                                'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                );
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init($oc){
+    public function init($oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->registerToolbox();
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
     
     public function log($level, string|\Stringable $message, array $context=[]):void
     {
@@ -89,7 +97,8 @@ class Logger extends \Psr\Log\AbstractLogger
         return strtr($message,$replace);
     }
     
-    public function getLogsHtml($arr){
+    public function getLogsHtml(array $arr):array
+    {
         $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $sourceTimezone=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbTimezone();
         $targetTimezone=$pageSettings['pageTimeZone'];
@@ -113,7 +122,8 @@ class Logger extends \Psr\Log\AbstractLogger
         return $arr;
     }
     
-    public function getMyLogs(){
+    public function getMyLogs():string
+    {
         $arr=array();
         $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$_SESSION['currentUser']['EntryId']);
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
@@ -122,7 +132,8 @@ class Logger extends \Psr\Log\AbstractLogger
         return $html;
     } 
     
-    public function registerToolbox(){
+    public function registerToolbox():array
+    {
         $toolbox=array('Name'=>'Logger',
                        'Content'=>array('class'=>__CLASS__,'method'=>'getMyLogs','args'=>array('maxCount'=>10),'settings'=>array())
                        );

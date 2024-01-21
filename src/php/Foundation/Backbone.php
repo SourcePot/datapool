@@ -15,6 +15,9 @@ class Backbone{
     private $oc;
         
     private $settings=array('pageTitle'=>'Datapool',
+                            'metaViewport'=>'width=device-width, initial-scale=1',
+                            'metaDescription'=>'Light weight web application',
+                            'metaRobots'=>'index',
                             'pageTimeZone'=>'Europe/Berlin',
                             'loginForm'=>0,
                             'mainBackgroundImageFile'=>FALSE,
@@ -64,7 +67,9 @@ class Backbone{
         // page header
         $arr['page html'].='<head>'.PHP_EOL;
         $arr['page html'].='<meta charset="'.$this->settings['charset'].'">'.PHP_EOL;
-        $arr['page html'].='<meta name="viewport" content="width=device-width, initial-scale=1">'.PHP_EOL;
+        $arr['page html'].='<meta name="viewport" content="'.$this->settings['metaViewport'].'">'.PHP_EOL;
+        $arr['page html'].='<meta name="description" content="'.$this->settings['metaDescription'].'">'.PHP_EOL;
+        $arr['page html'].='<meta name="robots" content="'.$this->settings['metaRobots'].'">'.PHP_EOL;
         $arr['page html'].='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
         $arr['page html'].='{{head}}'.PHP_EOL;
         $arr['page html'].='</head>'.PHP_EOL;

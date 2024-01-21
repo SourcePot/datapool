@@ -57,7 +57,7 @@ private $entryTable;
                 } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
                     $width=320;
                     $height=320;
-                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width+40,'margin'=>'10px auto','border'=>'1px dotted #999'));
+                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width,'margin'=>'10px auto','border'=>'1px dotted #999'));
                     $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
                     $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            
@@ -97,7 +97,7 @@ private $entryTable;
             } else {
                 $fileContent.='# Home ('.$_SESSION['page state']['lngCode'].')';
             }
-            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,FALSE);
+            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }
         $arr=array('settings'=>array('style'=>array('width'=>'100vw')));

@@ -112,7 +112,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         foreach($assets as $file){
             $completeFileName=$GLOBALS['dirs']['assets'].$file;
             if (!is_file($completeFileName)){continue;}
-            $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Delete','key'=>array('remove',$file),'hasCover'=>TRUE,'title'=>'delete file','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+            $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Delete','key'=>array('remove',$file),'hasCover'=>TRUE,'title'=>'Delete file','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             $relFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($completeFileName);
             $relFile=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard($relFile);
             $matrix[$file]=array('Relative file path'=>$relFile,'Cmd'=>$btn);
@@ -120,7 +120,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','element-content'=>'','key'=>array('add'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
         $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('add'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
         $matrix['']=array('Relative file path'=>$fileUpload,'Cmd'=>$btn);
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Documentation assets'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content'));
         return $arr;
     }
 }

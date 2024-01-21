@@ -75,7 +75,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $selectors=array($formData['val']);
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,FALSE,$formData['val']['Size'],$fileName);    
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,$formData['val']['Size']);    
         } else if (isset($formData['cmd']['import'])){
             $tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
             if (!empty($formData['files']['import'])){
@@ -309,12 +309,15 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $homePageContentOptions=array(''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video');
         $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
         $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),
+                                'metaViewport'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>array('min-width'=>'50vw')),
+                                'metaDescription'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>array('min-width'=>'50vw')),
+                                'metaRobots'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>array('min-width'=>'50vw')),
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
-                                'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'admin@datapool.info'),
+                                'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),
                                 'homePageContentSourceInfo'=>array('method'=>'element','tag'=>'p','element-content'=>$homePageContentSourceInfo,'class'=>'std'),
-                                'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>$homePageContentSource),
+                                'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>$homePageContentSource,'style'=>array('min-width'=>'50vw')),
                                 );
         // get selector
         $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init');

@@ -146,7 +146,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                             );
         // get selctorB
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=array('Column to delay'=>'Name');
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
@@ -173,7 +173,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Reset trigger'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
                                 'Combine with next row'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>array('or'=>'OR','and'=>'AND','xor'=>'XOR',)),
                                 );
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Delay ends if all rules combined are TRUE.';
@@ -182,20 +182,8 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runDelayEntries($callingElement,$testRun=1){
-        $base=array('Script start timestamp'=>hrtime(TRUE));
-        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $key=explode('|',$entry['Type']);
-            $key=array_pop($key);
-            $base[$key][$entry['EntryId']]=$entry;
-            // entry template
-            foreach($entry['Content'] as $contentKey=>$content){
-                if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-                $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
-                if ($template){$base['entryTemplates'][$content]=$template;}
-            }
-        }
+        $base=array('delayingparams'=>array(),'delayingrules'=>array());
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Delaying statistics'=>array('Condition'=>array('value'=>''),
@@ -241,7 +229,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!$isFirstRule){
                 $result['Delaying statistics']['Condition']['value'].='<b>'.$lastOparation.'</b>';
             }
-            $triggerName=$triggerOptions[$rule['Content']['Trigger']];
+            $triggerName=(isset($triggerOptions[$rule['Content']['Trigger']]))?$triggerOptions[$rule['Content']['Trigger']]:'?';
             $result['Delaying statistics']['Condition']['value'].=' '.$spanOpen.$triggerName.'</span>';
             $result['Delaying statistics']['Condition']['value'].=' ';
             $lastOparation=$rule['Content']['Combine with next row'];
@@ -294,18 +282,6 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
             
         }
         return $result;
-    }
-
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
     }
 
 }

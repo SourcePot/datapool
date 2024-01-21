@@ -99,13 +99,15 @@ button,input,textarea,select,a.btn,.js-button{
     padding:0.2rem 0.4rem;
     margin: 0 0.2rem;
     line-height:1.2rem;
-    text-align:center;
     background-color:#fff;
     border-radius:unset;
     border-left:1px solid #ccc;
     border-top:1px solid #ccc;
     border-right:2px solid #aaa;
     border-bottom:2px solid #aaa;
+}
+button,input[type="submit"],a.btn,.js-button{
+    text-align:center;
 }
 button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,.js-button:hover{
     cursor:pointer;
@@ -385,7 +387,7 @@ main,#top-filler{
 }
 div.bottom-wrapper{
     float:none;
-    width:fit-content;
+    width:max-content;
     margin:2vh auto 0 auto;
 }
 input[type=submit].bottom-menu{
@@ -462,6 +464,7 @@ div.menu-item-emoji,div.menu-item-label{
 }
 div.menu-item-emoji{
     font-size:24px;
+    padding:0.3rem 0;
 }
 select.lng-selector{
     float:right;
@@ -739,7 +742,7 @@ a.emoji{
 #login-article{
     float:none;
     margin:5em auto;
-    width:fit-content;
+    width:max-content;
     background-color:#eee;
 }
 #login-table{

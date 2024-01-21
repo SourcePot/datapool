@@ -29,22 +29,27 @@ class Filespace{
                                  'Owner'=>array('type'=>'string','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $this->resetStatistic();
     }
     
-    public function init($oc){
+    public function init(array $oc):void
+    {
         $this->oc=$oc;
         $this->removeTmpDirs();
         
     }
         
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
     
-    public function job($vars){
+    public function job(array $vars):array
+    {
+        if (isset($vars['Error'])){unset($vars['Error']);}
         if (empty($vars['Dirs to process'])){
             $dirs=scandir($GLOBALS['dirs']['filespace']);
             foreach($dirs as $dir){
@@ -55,45 +60,53 @@ class Filespace{
         $vars['Last deleted files']=array();
         $vars['Last failed deletions']=array();
         $dir2process=array_shift($vars['Dirs to process']);
-        $files=scandir($dir2process['dir']);
-        foreach($files as $fileName){
-            $file=$dir2process['dir'].'/'.$fileName;
-            $extensionPos=strpos($fileName,'.file');
-            if (empty($extensionPos)){continue;}
-            $entryId=substr($fileName,0,$extensionPos);
-            $sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
-            if (empty($stmt->fetchAll())){
-                if (is_file($file)){
-                    if (unlink($file)){
-                        $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
-                        $vars['Last deleted files'][]=$file;
-                    } else {
-                        $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
-                        $vars['Last failed deletions'][]=$file;
+        if (empty($dir2process['dir'])){
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Failed "{class}->{function}()" due to array key in "dir2process[dir]" missing or empty array',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
+            $vars['Error']='Key missing or empty: dir2process[dir]';
+        } else {
+            $files=scandir($dir2process['dir']);
+            foreach($files as $fileName){
+                $file=$dir2process['dir'].'/'.$fileName;
+                $extensionPos=strpos($fileName,'.file');
+                if (empty($extensionPos)){continue;}
+                $entryId=substr($fileName,0,$extensionPos);
+                $sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
+                $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
+                if (empty($stmt->fetchAll())){
+                    if (is_file($file)){
+                        if (unlink($file)){
+                            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
+                            $vars['Last deleted files'][]=$file;
+                        } else {
+                            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
+                            $vars['Last failed deletions'][]=$file;
+                        }
                     }
+                    $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
                 }
-                $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
             }
+            if (!empty($vars['Last deleted files']) || !empty($vars['Last failed deletions'])){
+                $context=array('table'=>$dir2process['table'],'deleted'=>count($vars['Last deleted files']),'failed'=>count($vars['Last failed deletions']));
+                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
+            }
+            $vars['Last processed dir']=$dir2process['dir'];
         }
-        if (!empty($vars['Last deleted files']) || !empty($vars['Last failed deletions'])){
-            $context=array('table'=>$dir2process['table'],'deleted'=>count($vars['Last deleted files']),'failed'=>count($vars['Last failed deletions']));
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
-        }
-        $vars['Last processed dir']=$dir2process['dir'];
         return $vars;
     }
 
-    public function resetStatistic(){
+    public function resetStatistic():array
+    {
         $this->statistics=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0);
         return $this->statistics;
     }
     
-    public function getStatistic(){
+    public function getStatistic():array
+    {
         return $this->statistics;
     }
     
-    private function class2dir($class,$mkDirIfMissing=FALSE){
+    private function class2dir(string $class,bool $mkDirIfMissing=FALSE):string
+    {
         $classComps=explode('\\',$class);
         $class=array_pop($classComps);
         $dir=$GLOBALS['dirs']['setup'].$class.'/';
@@ -103,7 +116,8 @@ class Filespace{
         return $dir;    
     }    
 
-    private function source2dir($sourceFile,$mkDirIfMissing=TRUE){
+    private function source2dir(string $sourceFile,bool $mkDirIfMissing=TRUE):string
+    {
         // This function returns the filespace directory based on the tablename provided.
         $sourceFile=explode('\\',$sourceFile);
         $sourceFile=array_pop($sourceFile);
@@ -114,7 +128,8 @@ class Filespace{
         return $dir;    
     }
     
-    public function selector2file($selector,$mkDirIfMissing=TRUE){
+    public function selector2file(array $selector,bool $mkDirIfMissing=TRUE):string
+    {
         if (!empty($selector['Source']) && !empty($selector['EntryId'])){
             $dir=$this->source2dir($selector['Source'],$mkDirIfMissing);    
             $file=$selector['EntryId'].'.file';
@@ -130,7 +145,8 @@ class Filespace{
         return $fileName=$dir.$file;
     }
     
-    private function stdReplacements($str=''){
+    private function stdReplacements(string $str=''):string
+    {
         if (!is_string($str)){return $str;}
         if (isset($this->oc['SourcePot\Datapool\Foundation\Database'])){
             $this->toReplace=$this->oc['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
@@ -139,7 +155,8 @@ class Filespace{
         return $str;
     }
     
-    public function unifyEntry($entry){
+    public function unifyEntry(array $entry):array 
+    {
         if (!isset($entry['Type'])){
             $classComps=explode('\\',$entry['Class']);
             $entry['Type']=array_pop($classComps);
@@ -163,7 +180,8 @@ class Filespace{
         return $entry;
     }
     
-    public function file2arr($fileName){
+    public function file2arr(string $fileName):array
+    {
         $arr=FALSE;
         if (is_file($fileName)){
             $content=$this->file_get_contents_utf8($fileName);
@@ -175,7 +193,8 @@ class Filespace{
         return $arr;
     }
 
-    public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read'){
+    public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read'):\Generator
+    {
         $dir=$this->class2dir($selector['Class']);
         $files=scandir($dir);
         $selector['rowCount']=count($files)-2;
@@ -186,10 +205,10 @@ class Filespace{
             $entry=$this->entryById($selector,$isSystemCall,$rightType);
             yield array_replace_recursive($selector,$entry);
         }
-        return $entry['rowCount'];
     }
 
-    public function entryById($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE){
+    public function entryById(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',bool $returnMetaOnNoMatch=FALSE):array
+    {
         // This method returns the entry from a setup-file selected by the selector arguments.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         //
@@ -214,7 +233,8 @@ class Filespace{
         return $entry;
     }
     
-    private function insertEntry($entry){
+    private function insertEntry(array $entry):array
+    {
         if (empty($entry['Class']) || empty($entry['EntryId'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in entry argument, i.e. Class and EntryId',0,E_ERROR,__FILE__,__LINE__);        
         }
@@ -229,11 +249,12 @@ class Filespace{
         } else {
             // do nothing if entry exsits
             $this->statistics['matched files']++;
-            return FALSE;
+            return array();
         }
     }
     
-    public function updateEntry($entry,$isSystemCall=FALSE,$noUpdateCreateIfMissing=FALSE){
+    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE):array
+    {
         // This method updates and returns the entry of setup-file selected by the entry arguments.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         // 
@@ -264,11 +285,13 @@ class Filespace{
         return $entry;
     }
     
-    public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
+    public function entryByIdCreateIfMissing(array $entry,bool $isSystemCall=FALSE):array
+    {
         return $this->updateEntry($entry,$isSystemCall,TRUE);
     }
 
-    public function entry2fileDownload($entry){
+    public function entry2fileDownload(array $entry):void
+    {
         if (empty($entry['EntryId'])){
             $zipName=date('Y-m-d His').' bulk download.zip';
             $zipFile=$this->getTmpDir().$zipName;
@@ -303,7 +326,8 @@ class Filespace{
         }
     }
 
-    public function getPrivatTmpDir(){
+    public function getPrivatTmpDir():string
+    {
         $ip=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($hashOnly=TRUE);
         $tmpDir=$GLOBALS['dirs']['privat tmp'].$ip.'/';
         if (!is_dir($tmpDir)){
@@ -312,7 +336,8 @@ class Filespace{
         return $tmpDir;
     }
     
-    public function getTmpDir(){
+    public function getTmpDir():string
+    {
         if (!isset($_SESSION[__CLASS__]['tmpDir'])){
             $_SESSION[__CLASS__]['tmpDir']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
             $_SESSION[__CLASS__]['tmpDir'].='/';
@@ -324,7 +349,8 @@ class Filespace{
         return $tmpDir;
     }
     
-    public function removeTmpDirs(){
+    public function removeTmpDirs():array
+    {
         $tmpDirs=array($GLOBALS['dirs']['tmp']=>28600,$GLOBALS['dirs']['privat tmp']=>30);
         foreach($tmpDirs as $tmpDir=>$maxAge){
             if (is_dir($tmpDir)){
@@ -342,7 +368,8 @@ class Filespace{
         return $this->statistics;
     }
     
-    public function delDir($dir){
+    public function delDir(string $dir):array
+    {
         gc_collect_cycles();
         if (is_dir($dir)){
             $files2delete=scandir($dir);
@@ -357,7 +384,8 @@ class Filespace{
         return $this->statistics;
     }
     
-    public function dirSize($dir){
+    public function dirSize(array $dir):int
+    {
         $size=0;
         if (is_dir($dir)){
             foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir,\FilesystemIterator::SKIP_DOTS)) as $file){
@@ -367,38 +395,44 @@ class Filespace{
         return $size;
     }
     
-    public function tryCopy($source,$targetFile,$rights=FALSE){
+    public function tryCopy(string $source,string $targetFile,int|bool $rights=FALSE):array
+    {
         try{
             $this->statistics['inserted files']+=intval(copy($source,$targetFile));
             if ($rights){chmod($targetFile,$rights);}
         } catch(\Exception $e){
             // Exception handling
         }
+        return $this->statistics;
     }
 
-    public function abs2rel($file){
+    public function abs2rel(string $file):string
+    {
         $rel=str_replace($GLOBALS['dirs']['public'],'./',$file);
         return $rel;
     }
 
-    public function rel2abs($file){
+    public function rel2abs(string $file):string
+    {
         $abs=str_replace('./',$GLOBALS['dirs']['public'],$file);
         return $abs;
     }
     
-    public function file_get_contents_utf8($fn){
+    public function file_get_contents_utf8(string $fn):string
+    {
         $content=@file_get_contents($fn);
         $content=mb_convert_encoding($content,'UTF-8',mb_detect_encoding($content,'UTF-16,UTF-8,ISO-8859-1',TRUE));
         // clean up - remove BOM
         $bom=pack('H*','EFBBBF');
         $content=preg_replace("/^$bom/",'',$content);
-          return $content;
+        return $content;
     }
     
     /**
     * This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
     */
-    public function file2entries($fileHandle,$entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
+    public function file2entries(array|string $fileHandle,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    {
         $debugArr=array('fileHandle'=>$fileHandle,'entry_in'=>$entry,'error'=>'');
         if (isset($fileHandle['name']) && isset($fileHandle['tmp_name'])){
             // uploaded file via html form
@@ -431,21 +465,22 @@ class Filespace{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         if ($debugArr['error']){
-            return FALSE;
+            return array();
         } else {
             $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
             return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
         }
     }
     
-    public function fileContent2entries($entry,$createOnlyIfMissing=FALSE,$isSystemCall=FALSE,$isDebugging=FALSE){
+    public function fileContent2entries(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    {
         $debugArr=array('entry'=>$entry,'createOnlyIfMissing'=>$createOnlyIfMissing);
         if (!empty($entry['fileContent']) && !empty($entry['fileName'])){
             // save file content to tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
             $entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
             $bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
-            if ($bytes===FALSE){return FALSE;}
+            if ($bytes===FALSE){return array();}
             $entry['mimeType']=mime_content_type($entry['Params']['File']['Source']);
             $entry['pathArr']=pathinfo($entry['Params']['File']['Source']);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
@@ -491,7 +526,8 @@ class Filespace{
         return $entry;
     }
     
-    private function archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging){
+    private function archive2files(array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging):array
+    {
         $zipStatistic=array('errors'=>array(),'files'=>array());
         // extract zip archive to a temporary dir
         if (is_file($entry['Params']['File']['Source'])){
@@ -538,7 +574,7 @@ class Filespace{
      *
      * @return $entry is the enriched entry
      */
-    public function addFile2entry($entry,$file,$isDebugging=FALSE)
+    public function addFile2entry(array $entry,string $file,bool $isDebugging=FALSE):array
     {
         $debugArr=array('entry_in'=>$entry,'file'=>$file);
         // process file
@@ -577,7 +613,8 @@ class Filespace{
         return $entry;
     }
 
-    public function exportEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000){
+    public function exportEntries(array $selectors,bool $isSystemCall=FALSE,int $maxAttachedFilesize=10000000000):string
+    {
         $statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>array(),'Errors'=>array());
         if (isset($selectors['Source'])){$selectors=array($selectors);}
         $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
@@ -618,7 +655,8 @@ class Filespace{
         return $dumpFile;
     }
     
-    public function downloadExportedEntries($selectors,$isSystemCall=FALSE,$maxAttachedFilesize=10000000000,$fileName=FALSE){
+    public function downloadExportedEntries(array $selectors,string $fileName='',bool $isSystemCall=FALSE,int $maxAttachedFilesize=10000000000):void
+    {
         $dumpFile=$this->exportEntries($selectors,$isSystemCall,$maxAttachedFilesize);
         if (is_file($dumpFile)){
             $pathArr=pathinfo($dumpFile);
@@ -630,7 +668,8 @@ class Filespace{
         }
     }
     
-    public function importEntries($dumpFile,$isSystemCall=FALSE){
+    public function importEntries(string $dumpFile,bool $isSystemCall=FALSE):array
+    {
         $statistics=array('zip errors'=>0,'json decode errors'=>0,'entries updated'=>0,'attached files added'=>0);
         $dir=$this->getTmpDir();
         $zip = new \ZipArchive;

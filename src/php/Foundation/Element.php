@@ -37,7 +37,7 @@ class Element{
                        'fieldset'=>array('name'=>TRUE),
                        'form'=>array('action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,
                                      'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE),
-                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE),
+                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE),
                        'label'=>array('for'=>TRUE),
                        'legend'=>array('name'=>TRUE),
                        'meter'=>array('name'=>TRUE),
@@ -46,7 +46,7 @@ class Element{
                        'output'=>array('name'=>TRUE),
                        'progress'=>array('name'=>TRUE),
                        'select'=>array('name'=>TRUE),
-                       'textarea'=>array('name'=>TRUE),
+                       'textarea'=>array('name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE),
                        
                        'a'=>array('href'=>FALSE,'target'=>FALSE),
                        // Structural elements

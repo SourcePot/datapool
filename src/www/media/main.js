@@ -543,7 +543,7 @@ jQuery(document).ready(function(){
 						let arr={'Content':{'Style':{'top':jQuery(this).css('top'),'left':jQuery(this).css('left')}},
                                  'Source':jQuery(this).attr('source'),
                                  'EntryId':jQuery(this).attr('entry-id'),
-                                 'function':'setCanvasElementPosition',
+                                 'function':'setCanvasElementStyle',
                                  };
 						jQuery.ajax({
                             method:"POST",

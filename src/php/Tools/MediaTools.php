@@ -312,7 +312,7 @@ class MediaTools{
         $arr['settings']['style']=array_merge(array('margin'=>'10px 0 0 5px','height'=>'70vh','border'=>'1px solid #444'),$arr['settings']['style']);
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        $pdfFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
+        $pdfFile=$tmpDir.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr['selector'],TRUE).'.pdf';
         $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$pdfFile);
         if (is_file($pdfFile)){
             $pdfArr=$arr;

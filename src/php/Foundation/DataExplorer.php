@@ -98,11 +98,18 @@ class DataExplorer{
         $this->completeDefintion();
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
     
-    private function completeDefintion(){
+    private function completeDefintion():void
+    {
         // add Source selector
         $sourceOptions=array(''=>'&larrhk;');
         $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
@@ -124,7 +131,14 @@ class DataExplorer{
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
-    public function unifyEntry($entry){
+    /**
+    * Class specific entry normalization.
+    *
+    * @param    array  $entry  Entry
+    * @return   array  Normalized entry
+    */
+    public function unifyEntry(array $entry):array
+    {
         if (!empty($entry['class'])){$entry['Content']['Style']['Style class']=$entry['class'];}
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
@@ -144,7 +158,14 @@ class DataExplorer{
         return $entry;
     }
 
-    public function getDataExplorer($callingClass){
+    /**
+    * Creates array containing html-content for the canvas explorer as well as content, including widgets etc.
+    *
+    * @param    string $callingClass  Class calling this method
+    * @return   array  Array containing the html
+    */
+    public function getDataExplorer(string $callingClass):array
+    {
         $return=array('selector'=>array(),'contentHtml'=>'');
         // add canvas element
         $return['canvasElement']=$this->canvasFormProcessing($callingClass);
@@ -163,10 +184,17 @@ class DataExplorer{
                 $return['contentHtml'].=$this->oc[$processor]->dataProcessor($canvasElement,'settings');
             }
         }
-         return $return;
+        return $return;
     }
     
-    private function canvasFormProcessing($callingClass){
+    /**
+    * Canvas element form processing.
+    *
+    * @param    string $callingClass  Class calling this method
+    * @return   array  Canvas element
+    */
+    private function canvasFormProcessing(string $callingClass):array|bool
+    {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getCanvas',TRUE);
         if (!empty($formData['cmd'])){
             $cmd=key($formData['cmd']);
@@ -191,7 +219,14 @@ class DataExplorer{
         return $canvasElement;
     }
     
-    private function getCntrHtml($callingClass){
+    /**
+    * Creates html control panel with two parts: 'cntr' and 'processor'.
+    *
+    * @param    string $callingClass  Class calling this method
+    * @return   array  Array containing the html
+    */
+    private function getCntrHtml(string $callingClass):array
+    {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
         if (isset($formData['cmd']['run'])){
             $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',FALSE);
@@ -237,7 +272,14 @@ class DataExplorer{
         return $htmlArr;
     }
     
-    private function getCanvas($callingClass){
+    /**
+    * Creates canvas html inluding canvas elements.
+    *
+    * @param    string $callingClass  Class calling this method
+    * @return   string Html replesenting the complete canvas with canvas elements
+    */
+    private function getCanvas(string $callingClass):string
+    {
         // create html
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
         $html='';
@@ -249,6 +291,15 @@ class DataExplorer{
         return $html;
     }
     
+    /**
+    * Creates canvas element html.
+    *
+    * @param    string  $callingClass  Class calling this method
+    * @param    string  $callingFunction  Method calling this method
+    * @param    array   $canvasElement  Canvas element array
+    * @param    bool    $selectedCanvasElement  TRUE if canvas element is selected
+    * @return   string  Html replesenting the canvas element
+    */
     private function canvasElement2html($callingClass,$callingFunction,$canvasElement,$selectedCanvasElement=FALSE){
         $rowCount=FALSE;
         $element=array('tag'=>'div');
@@ -314,14 +365,81 @@ class DataExplorer{
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         return $html;
     }
+
+    /**
+    * Returns all settings for a canvas element.
+    *
+    * @param string $callingClass    The calling method's class-name
+    * @param string $callingFunction The calling method's name
+    * @param array  $callingElement  Is the canvas element from which the template is derived
+    * @param array  $settings        Initial settings
+    *
+    * @return array  Canvas element settings
+    */
+    public function callingElement2settings(string $callingClass,string $callingFunction,array $callingElement,array $settings=array()):array
+    {
+        $settings['Script start timestamp']=hrtime(TRUE);
+        $entriesSelector=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']);
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+            $key=explode('|',$entry['Type']);
+            $key=array_pop($key);
+            $settings[$key][$entry['EntryId']]=$entry;
+            // entry template
+            foreach($entry['Content'] as $contentKey=>$content){
+                if (is_array($content)){continue;}
+                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+                $template=$this->entryId2selector($content);
+                if ($template){$settings['entryTemplates'][$content]=$template;}
+            }
+        }
+        return $settings;
+    }
     
-    public function canvasSelector($callingClass){
-        // This method returns the geberiv selector for the canvas elements.
+    /**
+    * Creates an arr-template (for rules, parameters etc) for the callingElement.
+    * The template is used by HTMLbuilder's entry2row(arr-template) method.
+    *
+    * @param string    $callingClass       The calling method's class-name
+    * @param string    $callingFunction    The calling method's name
+    * @param array     $callingElement     Is the canvas element from which the template is derived
+    *
+    * @return array    arr-template
+    */
+    public function callingElement2arr(string $callingClass,string $callingFunction,array $callingElement):array
+    {
+        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){
+            return array();
+        }
+        $type=$this->oc['SourcePot\Datapool\Root']->class2source($callingClass);
+        $type.='|'.$callingFunction;
+        $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
+        $entry['Content']=array();
+        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
+        return $arr;
+    }
+    
+    /**
+    * Canvas element selector from calling class.
+    *
+    * @param string    $callingClass       The calling method's class-name
+    * @return array    Selector
+    */
+    public function canvasSelector(string $callingClass):array
+    {
         $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
         return $selector;
     }
     
-    public function getCanvasElements($callingClass){
+    /**
+    * Canvas elements from calling class.
+    *
+    * @param string    $callingClass       The calling method's class-name
+    * @return array    Canvas elements
+    */
+    public function getCanvasElements(string $callingClass):array
+    {
         // This method is called by HTMLbuilder to provide a canvas elements selector.
         // It returns the canvas elements in order by their position.
         $elements=array();
@@ -334,7 +452,14 @@ class DataExplorer{
         return $elements;
     }
     
-    public function entryId2selector($entryId){
+    /**
+    * Selector contained within a canvas element which is selected by EntryId.
+    *
+    * @param string    $entryId Is the EntryId
+    * @return array    Selector or an empty array
+    */
+    public function entryId2selector(string $entryId):array
+    {
         $selector=array('Source'=>$this->entryTable,'EntryId'=>$entryId);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
         if (isset($entry['Content']['Selector'])){
@@ -350,7 +475,14 @@ class DataExplorer{
         }
     }
 
-    public function setCanvasElementPosition($arr){
+    /**
+    * Update canvas element properties with $arr values, i.e. style including position.
+    *
+    * @param    array   $arr Array containing vales to be updated
+    * @return   $canvasElement Updated canvas element
+    */
+    public function setCanvasElementStyle(array $arr):array
+    {
         $canvasElement=array();
         if (!empty($arr['Source']) && !empty($arr['EntryId']) && !empty($arr['Content']['Style'])){
             $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$arr['Source'],'EntryId'=>$arr['EntryId']));
@@ -362,7 +494,14 @@ class DataExplorer{
         return $canvasElement;
     }
     
-    private function getFileUpload($canvasElement){
+    /**
+    * File upload form linked to the canvas element.
+    *
+    * @param    array   $canvasElement  Canvas elememnt
+    * @return   string  Html-form
+    */
+    private function getFileUpload(array $canvasElement):string
+    {
         if (empty($canvasElement['Content']['Widgets']['File upload'])){return '';}
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
@@ -391,7 +530,14 @@ class DataExplorer{
         return $html;
     }
     
-    private function getDeleteBtn($canvasElement){
+    /**
+    * Delete button linked to the canvas element.
+    *
+    * @param    array   $canvasElement  Canvas elememnt
+    * @return   string  Delete button html
+    */
+    private function getDeleteBtn(array $canvasElement):string
+    {
         if (empty($canvasElement['Content']['Widgets']['Delete selected entries'])){return '';}
         $deleteBtn=array('selector'=>$canvasElement['Content']['Selector']);
         $deleteBtn['cmd']='delete all';
@@ -400,9 +546,18 @@ class DataExplorer{
         $matrix['cmd']=array('value'=>$deleteBtn);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delete entries'));
     }
-        
-    private function exportImportHtml($callingClass){
-        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R')){return '';}
+    
+    /**
+    * Export/import form linked to the App.
+    *
+    * @param    string  $callingClass  Is the class calling this method
+    * @return   string  Import/export html form
+    */
+    private function exportImportHtml(string $callingClass):string
+    {
+        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R')){
+            return '';
+        }
         //
         $selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass));
         foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataProcessor') as $classWithNamespace=>$ret){

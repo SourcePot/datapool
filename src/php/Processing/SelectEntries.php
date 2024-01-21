@@ -138,13 +138,14 @@ class SelectEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function selectingParams($callingElement){
         $return=array('html'=>'','Parameter'=>array(),'result'=>array());
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $contentStructure=array('Entry pool'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+        $contentStructure=array('Selector pool'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>$callingElement['Content']['Style']['Text'],'disabled'=>TRUE,'excontainer'=>TRUE),
+                                'Entry pool'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Mode'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('Run when triggered','Run only on empty Target')),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+                                'Mode'=>array('method'=>'select','value'=>0,'options'=>array('Run when triggered','Run only on empty Target'),'excontainer'=>TRUE),
+                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE),
                             );
         // get selctorB
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -166,7 +167,7 @@ class SelectEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function selectingRules($callingElement){
         $triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
-        $contentStructure=array('Needle value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+        $contentStructure=array('Needle value'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. US','excontainer'=>TRUE),
                                 '... or needle column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE),
                                 'Entry pool column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Content','standardColumsOnly'=>TRUE,'addColumns'=>array()),
                                 'Wrap needle'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'...','options'=>array('...'=>'...','%...'=>'%...','...%'=>'...%','%...%'=>'%...%')),
@@ -174,7 +175,7 @@ class SelectEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 );
         $contentStructure['... or needle column']+=$callingElement['Content']['Selector'];
         $contentStructure['Entry pool column']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select rules';
@@ -274,18 +275,6 @@ class SelectEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $result;
-    }
-
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
     }
 
 }

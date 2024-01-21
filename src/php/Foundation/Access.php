@@ -26,32 +26,35 @@ class Access{
                          'ALL_R'=>65535
                          );
         
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init($oc)
+    {
         $this->oc=$oc;
         $access=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access);
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         $this->access=$access['Content'];
     }
     
-    public function getAccessOptions(){
+    public function getAccessOptions():array
+    {
         return $this->access;
     }
     
-    public function accessString2int($string='ADMIN_R',$setNoRightsIfMissing=TRUE){
+    public function accessString2int($string='NO_R'):int
+    {
         if (isset($this->access[$string])){
             return $this->access[$string];
-        } else if ($setNoRightsIfMissing){
-            return $this->access['NO_R'];
         } else {
-            return $string;
+            return $this->access['NO_R'];
         }
     }
 
-    public function addRights($entry,$Read=FALSE,$Write=FALSE,$Privileges=FALSE){
+    public function addRights(array $entry,string|bool $Read=FALSE,string|bool $Write=FALSE,string|bool $Privileges=FALSE):array
+    {
         //    This function adds named rights to an entry based on the rights constants names or, if this fails, 
         //  it changes the existing right of entry Read and/or Write key if these contain a named right.
         //
@@ -72,14 +75,23 @@ class Access{
         return $entry;        
     }
     
-    public function replaceRightConstant($entry,$type='Read'){
+    public function replaceRightConstant(array $entry,string $type='Read'):array
+    {
         if (!isset($entry[$type])){return $entry;}
         if (is_array($entry[$type])){return $entry;}
         if (isset($this->access[$entry[$type]])){$entry[$type]=$this->access[$entry[$type]];}
         return $entry;
     }
 
-    public function access($entry,$type='Write',$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE){
+    private function isEntryWithoutContent(array $entry):bool
+    {
+        if (isset($entry['app'])){unset($entry['app']);}
+        return empty($entry);
+    }
+    
+    public function access($entry,$type='Write',$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE)
+    {
+        if ($this->isEntryWithoutContent($entry)){return 'EMPTY ENTRY';}
         if ($isSystemCall===TRUE){return 'SYSTEMCALL';}
         if (empty($entry)){return FALSE;}
         if ($user===FALSE){
@@ -94,7 +106,7 @@ class Access{
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
             if ($accessLevel>0){return $accessLevel;}
         } else {
-            throw new \ErrorException('Function '.__FUNCTION__.': Type '.$type.' missing in argument entry.',0,E_ERROR,__FILE__,__LINE__);
+            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Function "{class}->{function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
         }
         return FALSE;
     }

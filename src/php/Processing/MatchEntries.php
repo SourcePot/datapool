@@ -150,7 +150,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure['Column to match']+=$callingElement['Content']['Selector'];
         $contentStructure['Match with column']+=$callingElement['Content']['Selector'];
         // get selctorB
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);;
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=array('Column to match'=>'Name');
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
@@ -179,7 +179,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 );
         $contentStructure['Column']+=$callingElement['Content']['Selector'];
         if (empty($callingElement['Content']['Selector']['Source'])){return $html;}
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Filter-rules: Skip entries if one of the conditions is met';
@@ -188,20 +188,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runMatchEntries($callingElement,$testRun=TRUE){
-        $base=array('Script start timestamp'=>hrtime(TRUE));
-        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $key=explode('|',$entry['Type']);
-            $key=array_pop($key);
-            $base[$key][$entry['EntryId']]=$entry;
-            // entry template
-            foreach($entry['Content'] as $contentKey=>$content){
-                if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-                $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
-                if ($template){$base['entryTemplates'][$content]=$template;}
-            }
-        }
+        $base=array('matchingparams'=>array(),'matchingrules'=>array());
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Matching statistics'=>array('Entries A'=>array('value'=>0),
@@ -214,7 +202,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                                  )
                      );
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entryA){
-            if ($entry['isSkipRow']){
+            if ($entryA['isSkipRow']){
                 $result['Matching statistics']['Skip rows']['value']++;
                 continue;
             }
@@ -317,18 +305,6 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         return $skip;
-    }
-
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
     }
 
 }

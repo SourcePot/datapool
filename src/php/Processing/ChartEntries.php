@@ -130,7 +130,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure['separate by']+=$callingElement['Content']['Selector'];
         $contentStructure['orderBy']+=$callingElement['Content']['Selector'];
         // get selector
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -166,7 +166,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure['filter']+=$callingElement['Content']['Selector'];
         $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
         $contentStructure['y-selector']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Parser rules: Parse selected entry and copy result to target entry';
@@ -194,18 +194,6 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$props['Script start timestamp'])/1000000));
         return $result;
-    }
-    
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
     }
 
 }

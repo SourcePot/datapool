@@ -41,7 +41,7 @@ class Database{
                                  'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
         $this->resetStatistic();
@@ -52,14 +52,14 @@ class Database{
         $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
     }
 
-    public function init($oc):void
+    public function init(array $oc):void
     {
         $this->oc=$oc;
         $this->collectDatabaseInfo();
         $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function job($vars):array
+    public function job(array $vars):array
     {
         $vars['statistics']=$this->deleteExpiredEntries();
         return $vars;
@@ -105,10 +105,11 @@ class Database{
         return $_SESSION[__CLASS__]['Statistic'];
     }
     
-    public function addStatistic($key,$amount)
+    public function addStatistic($key,$amount):array
     {
         if (!isset($_SESSION[__CLASS__]['Statistic'])){$this->resetStatistic();}
         $_SESSION[__CLASS__]['Statistic'][$key]+=$amount;
+        return $_SESSION[__CLASS__]['Statistic'];
     }
     
     public function getStatistic($key=FALSE):array|int
@@ -153,22 +154,26 @@ class Database{
     }
     
     /**
+    * This function returns the entry template based on the root entry template and
+    * the argument $template. In addition this funtion calls create table which creates and updates the
+    * database table based on the entry template.
+    *
     * @return array The method returns the entry template array based on the table and template provided. The method completes the class property dbInfo which contains all entry templates for all tables.
     */
     public function getEntryTemplateCreateTable(string $table,array $template=array()):array
     {
-        // This function returns the entry template based on the root entry template and
-        // the argument $template. In addition this funtion calls create table which creates and updates the
-        // database table based on the entry template.
         $GLOBALS['dbInfo'][$table]=array_merge($this->rootEntryTemplate,$template);
         $this->createTable($table,$GLOBALS['dbInfo'][$table]);
         return $GLOBALS['dbInfo'][$table];
     }
 
-    public function unifyEntry(array $entry,bool $addEntryDefaults=FALSE):array|bool
+    /**
+    * This function selects the $entry-specific unifyEntry() function based on $entry['Source']
+    * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
+    *
+    */
+    public function unifyEntry(array $entry,bool $addEntryDefaults=FALSE):array
     {
-        // This function selects the $entry-specific unifyEntry() function based on $entry['Source']
-        // If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -222,11 +227,13 @@ class Database{
         return $toReplace;
     }
 
+    /**
+    * This function establishes the database connection and saves the PDO-object in dbObj.
+    * The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
+    * 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
+    */
     private function connect():string
     {
-        // This function establishes the database connection and saves the PDO-object in dbObj.
-        // The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
-        // 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
         $namespaceComps=explode('\\',__NAMESPACE__);
         $dbName=strtolower($namespaceComps[0]);
         $access=array('Class'=>__CLASS__,'EntryId'=>'connect');
@@ -311,20 +318,22 @@ class Database{
         return $result;
     }
     
+    /**
+    * This function creates a sql-query from a selector.
+    * For types VARCHAR and BLOB the mysql keyword LIKE is used, for all other datatypes math operators will be used.
+    * If no operator is provided the '=' operator will be applied. Use '!' operator for 'NOT EQUAL'.
+    * Operator need to be added to the end of the column name with the selector,
+    * e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
+    * If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
+    * e.g. 'Date|[]|Start' -> refers to column 'Date'.
+    */
     private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
-        // This function creates a sql-query from a selector.
-        // For types VARCHAR and BLOB the mysql keyword LIKE is used, for all other datatypes math operators will be used.
-        // f no operator is provided the '=' operator will be applied. Use '!' operator for 'NOT EQUAL'.
-        // Operator need to be added to the end of the column name with the selector,
-        // e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
-        // If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
-        // e.g. 'Date|[]|Start' -> refers to column 'Date'.
         if ($removeGuideEntries){$selector['EntryId=!']='%'.self::GUIDEINDICATOR;}
         $entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
         $opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
         $sqlArr=array('sql'=>array(),'inputs'=>array());            
         foreach($selector as $column=>$value){
-            if ($value===FALSE){continue;}
+            if ($value===FALSE || $value==self::GUIDEINDICATOR){continue;}
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
             if (!empty($match[2])){$operator=$match[2];} else {$operator='=';}
             $placeholder=':'.md5($column.$opAlias[$operator]);
@@ -479,7 +488,8 @@ class Database{
         return $entries;
     }
     
-    public function getDistinct($selector,$column,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=FALSE){
+    public function getDistinct(array $selector,string $column,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeGuideEntries=FALSE):\Generator
+    {
         $result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>'');
         $column=trim($column,'!');
         if (strcmp($column,'Source')===0){
@@ -512,10 +522,10 @@ class Database{
                 $result['rowIndex']++;
             }
         }
-        return $result;
     }
     
-    public function entryIterator($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=TRUE,$isDebugging=FALSE){
+    public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=array(),bool $removeGuideEntries=TRUE,bool $isDebugging=FALSE):\Generator
+    {
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return array();}
         // debugging trigger
         /*
@@ -549,10 +559,10 @@ class Database{
             yield $result;
             $result['isFirst']=FALSE;
         }
-        return $result;
     }
     
-    public function entryById($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE){
+    public function entryById(array|bool $selector,bool $isSystemCall=FALSE,string $rightType='Read',bool $returnMetaOnNoMatch=FALSE):array
+    {
         $result=array();
         if (empty($selector['Source'])){
             return $result;
@@ -599,7 +609,7 @@ class Database{
     *
     * @return array Array containing the EntryId-list as SQL-suiffix
     */
-    private function sqlEntryIdListSelector($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$selectExprArr=array('EntryId'),$removeGuideEntries=FALSE,$isDebugging=FALSE):array
+    private function sqlEntryIdListSelector(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=array('EntryId'),bool $removeGuideEntries=FALSE,bool $isDebugging=FALSE):array
     {
         $result=array('primaryKeys'=>array(),'sql'=>'','primaryKey'=>'EntryId');
         foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging) as $row){
@@ -616,12 +626,15 @@ class Database{
     * @param array $selector Is the selector to select the entries to be deleted  
     * @return int|boolean The count of deleted entries or false on failure
     */
-    public function deleteEntriesOnly($selector,$isSystemCall=FALSE){
-        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return FALSE;}
+    public function deleteEntriesOnly(array $selector,bool $isSystemCall=FALSE):array
+    {
+        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){
+            return $this->getStatistic();
+        }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write',FALSE,TRUE,FALSE,FALSE,FALSE);
         $sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-        $this->addStatistic('deleted',$stmt->rowCount());
+        return $this->addStatistic('deleted',$stmt->rowCount());
     }
     
     /**
@@ -631,11 +644,13 @@ class Database{
     * @param array $selector Is the selector to select the entries to be deleted  
     * @return int|boolean The count of deleted entries or false on failure
     */
-    public function deleteEntries(array $selector,bool $isSystemCall=FALSE):int|bool
+    public function deleteEntries(array $selector,bool $isSystemCall=FALSE):array
     {
         // delete files
         $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,array(),FALSE,FALSE);
-        if (empty($entryList['primaryKeys'])){return FALSE;}
+        if (empty($entryList['primaryKeys'])){
+            return $this->getStatistic();
+        }
         foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
             $entrySelector=array('Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue);
             $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
@@ -647,8 +662,7 @@ class Database{
         // delete entries by id-list
         $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
         $stmt=$this->executeStatement($sql,array(),FALSE);
-        $this->addStatistic('deleted',$stmt->rowCount());
-        return $this->getStatistic('deleted');
+        return $this->addStatistic('deleted',$stmt->rowCount());
     }
     
     /**
@@ -722,6 +736,7 @@ class Database{
             $valueSql='';
             foreach($entry as $column=>$value){
                 if (!isset($entryTemplate[$column])){continue;}
+                if ($value===FALSE){continue;}
                 if (strcmp($column,'Source')===0){continue;}
                 $sqlPlaceholder=':'.$column;
                 $valueSql.="`".$column."`=".$sqlPlaceholder.",";
@@ -1032,7 +1047,7 @@ class Database{
         if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
         $logContent['timestamp']=time();
-        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',FALSE,FALSE);
+        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
         $logContent['timezone']=date_default_timezone_get();
         $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
         $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];

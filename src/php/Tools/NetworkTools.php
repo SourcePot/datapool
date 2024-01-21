@@ -96,7 +96,9 @@ class NetworkTools{
     }
 
     public function getPageStateByKey($callingClass,$key,$initValue=FALSE){
-        if (!isset($_SESSION['page state']['selected'][$callingClass][$key])){$_SESSION['page state']['selected'][$callingClass][$key]=$initValue;}
+        if (!isset($_SESSION['page state']['selected'][$callingClass][$key])){
+            $_SESSION['page state']['selected'][$callingClass][$key]=$initValue;
+        }
         return $_SESSION['page state']['selected'][$callingClass][$key];
     }
     

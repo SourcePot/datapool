@@ -129,7 +129,7 @@ class Dictionary{
             $_SESSION['page state']['lngCode']=$formData['val']['lngCode'];
         }
         //
-        $selectArr=array('options'=>$this->lngCodes,'value'=>$_SESSION['page state']['lngCode'],'key'=>array('lngCode'),'hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $selectArr=array('options'=>$this->lngCodes,'value'=>$_SESSION['page state']['lngCode'],'key'=>array('lngCode'),'title'=>'select page language','hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         return $html;
     }

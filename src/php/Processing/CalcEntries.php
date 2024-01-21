@@ -24,20 +24,26 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $failureCondition=array('stripos'=>'&#8839;','stripos!'=>"&#8837;",'lt'=>'&#60;','le'=>'&#8804;','eq'=>'&#61;','ne'=>'&#8800;','gt'=>'&#62;','ge'=>'&#8805;');
     private $conditionalValue=array('lt'=>'&#60; 0','gt'=>"&#62; 0",'eq'=>'&#61; 0','ne'=>'&#8800; 0');
         
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init(array $oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;    
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function getEntryTable():string{return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=array(),string $action='info')
+    {
         // This method is the interface of this data processing class
         // The Argument $action selects the method to be invoked and
         // argument $callingElementSelector$ provides the entry which triggerd the action.
@@ -86,17 +92,20 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return FALSE;
     }
 
-    private function getCalcEntriesWidget($callingElement){
+    private function getCalcEntriesWidget($callingElement)
+    {
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Calculate','generic',$callingElement,array('method'=>'getCalcEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
     }
 
-    private function getCalcEntriesInfo($callingElement){
+    private function getCalcEntriesInfo($callingElement):string
+    {
         $matrix=array();
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         return $html;
     }
 
-    public function getCalcEntriesWidgetHtml($arr){
+    public function getCalcEntriesWidgetHtml($arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
         $result=array();
@@ -124,7 +133,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getCalcEntriesSettings($callingElement){
+    private function getCalcEntriesSettings($callingElement):string
+    {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calculate entries settings','generic',$callingElement,array('method'=>'getCalcEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
@@ -132,7 +142,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
     
-    public function getCalcEntriesSettingsHtml($arr){
+    public function getCalcEntriesSettingsHtml(array $arr):array
+    {
         // initialize rule options
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$arr['selector']['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
@@ -153,13 +164,14 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function calculationParams($callingElement){
+    private function calculationParams($callingElement)
+    {
         $contentStructure=array('Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctor
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=array();
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
@@ -180,7 +192,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
     }
     
-    private function calculationRules($callingElement){
+    private function calculationRules(array $callingElement):string
+    {
         $addKeys=(isset($this->ruleOptions[strtolower(__FUNCTION__)]))?$this->ruleOptions[strtolower(__FUNCTION__)]:array();
         $contentStructure=array('"A" selected by...'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
                                 'Default value "A"'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
@@ -195,7 +208,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure['"A" selected by...']+=$callingElement['Content']['Selector'];
         $contentStructure['"B" selected by...']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Calculation rules';
@@ -203,14 +216,15 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
 
-    private function failureRules($callingElement){
+    private function failureRules(array $callingElement):string
+    {
         $addKeys=(isset($this->ruleOptions['calculationrules']))?$this->ruleOptions['calculationrules']:array();
         $contentStructure=array('Value'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
                                 'Failure if Result...'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>$this->failureCondition),
                                 'Compare value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 );
         $contentStructure['Value']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Failure rules';
@@ -218,7 +232,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
 
-    private function conditionalValueRules($callingElement){
+    private function conditionalValueRules(array $callingElement):string
+    {
         $addKeys=(isset($this->ruleOptions['calculationrules']))?$this->ruleOptions['calculationrules']:array();
         $contentStructure=array('Condition'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
                                 'Use value if...'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>$this->conditionalValue),
@@ -229,7 +244,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 );
         $contentStructure['Condition']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Conditional value rules';
@@ -237,21 +252,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
 
-    private function runCalcEntries($callingElement,$testRun=FALSE){
-        $base=array('Script start timestamp'=>hrtime(TRUE));
-        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $key=explode('|',$entry['Type']);
-            $key=array_pop($key);
-            $base[$key][$entry['EntryId']]=$entry;
-            // entry template
-            foreach($entry['Content'] as $contentKey=>$content){
-                if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-                $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
-                if ($template){$base['entryTemplates'][$content]=$template;}
-            }
-        }
+    private function runCalcEntries(array $callingElement,bool $testRun=FALSE):array
+    {
+        $base=array('calculationparams'=>array(),'calculationrules'=>array(),'conditionalvaluerules'=>array());
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Calculate statistics'=>array('Entries'=>array('value'=>0),
@@ -261,7 +265,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     );
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if ($entry['isSkipRow']){
+            if ($sourceEntry['isSkipRow']){
                 $result['Calculate statistics']['Skip rows']['value']++;
                 continue;
             }
@@ -273,7 +277,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
     
-    private function calcEntry($base,$sourceEntry,$result,$testRun){
+    private function calcEntry(array $base,array $sourceEntry,array $result,bool $testRun)
+    {
         $debugArr=array();
         $log='';
         $params=current($base['calculationparams']);
@@ -402,7 +407,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
     
-    private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR'){
+    private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR')
+    {
         if (isset($value[$useKeyIfPresent])){
             $value=$value[$useKeyIfPresent];
         } else if (is_array($value)){
@@ -412,7 +418,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $value;
     }
 
-    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType){
+    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType):array
+    {
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
         $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
@@ -424,24 +431,12 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $entry;
     }
     
-    private function ruleId2ruleIndex($ruleId,$ruleType='Calc rule'){
+    private function ruleId2ruleIndex($ruleId,$ruleType='Calc rule')
+    {
         $ruleIndex=substr($ruleId,0,strpos($ruleId,'__'));
         $ruleIndex=$ruleType.' '.$ruleIndex;
         return $ruleIndex;
     }
-    
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
-    }
-
 
 }
 ?>

@@ -139,7 +139,7 @@ class LoginForms{
     
     private function getStandard($arr=array()){
         $passphraseLabel=array('tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw');
-        $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'8','style'=>array('clear'=>'both','width'=>220),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
+        $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'6','style'=>array('clear'=>'both','width'=>220),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
         return $html;

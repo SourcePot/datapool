@@ -20,12 +20,14 @@ class MiscTools{
     
     private $oc=NULL;
     
-    public function __construct(){
+    public function __construct()
+    {
         $this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
         $this->loadEmojis($this->emojiFile);
     }
     
-    public function init(array $oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
         
@@ -33,7 +35,8 @@ class MiscTools{
     * XML tools
     */
 
-    public function arr2style($arr){
+    public function arr2style(array $arr):string
+    {
         $style='';
         foreach($arr as $property=>$value){
             $property=strtolower($property);
@@ -45,7 +48,8 @@ class MiscTools{
         return $style;
     }
     
-    public function style2arr($style){
+    public function style2arr(string $style):array
+    {
         $arr=array();
         $styleChunks=explode(';',$style);
         while($styleChunk=array_shift($styleChunks)){
@@ -55,12 +59,12 @@ class MiscTools{
         }
         return $arr;
     }
-    
 
     /*  Many thanks to 
     *   http://php.net/manual/en/class.simplexmlelement.php#108867
     */
-    private function normalize_xml2array($obj,&$result){
+    private function normalize_xml2array($obj,&$result)
+    {
         $data=$obj;
         if (is_object($data)){
             $data=get_object_vars($data);
@@ -83,7 +87,8 @@ class MiscTools{
         }
     }
     
-    public function xml2arr($xml) {
+    public function xml2arr(string $xml):array|bool
+    {
         $arr=array('xml'=>$xml);
         if (extension_loaded('SimpleXML')){
             $this->normalize_xml2array(simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOCDATA),$result);
@@ -95,7 +100,8 @@ class MiscTools{
         }
     }
     
-    public function arr2xml($arr,$rootElement=NULL,$xml=NULL){
+    public function arr2xml(array $arr,$rootElement=NULL,$xml=NULL)
+    {
         if ($xml===NULL){
             $xml=new \SimpleXMLElement($rootElement===NULL?'<root/>':$rootElement);
         }
@@ -110,11 +116,13 @@ class MiscTools{
         return $xml->asXML();
     }
     
-    public function containsTags($str){
+    public function containsTags(string $str):bool
+    {
         if (strlen($str)===strlen(strip_tags($str))){return FALSE;} else {return TRUE;}
     }
     
-    public function wrapUTF8($str){
+    public function wrapUTF8(string $str):string
+    {
         preg_match_all("/[\x{1f000}-\x{1ffff}]/u",$str,$matches);
         foreach($matches[0] as $matchIndex=>$match){
             $str=str_replace($match,'<span class="emoji">'.$match.'</span>',$str);
@@ -122,7 +130,8 @@ class MiscTools{
         return $str;
     }
     
-    public function str2bool($str){
+    public function str2bool($str):bool
+    {
         if (is_bool($str)){
             return $str;
         } else if (is_numeric($str)){
@@ -132,7 +141,8 @@ class MiscTools{
         }
     }
     
-    public function bool2element($value,$element=array()){
+    public function bool2element($value,$element=array()):array
+    {
         $boolval=$this->str2bool($value);
         $element['class']=$boolval?'status-on':'status-off';
         if (!isset($element['element-content'])){$element['element-content']=$boolval?'TRUE':'FALSE';}
@@ -144,12 +154,14 @@ class MiscTools{
     * String tools
     */
     
-    public function startsWithUpperCase($str){
+    public function startsWithUpperCase(string $str):bool
+    {
         $startChr=mb_substr($str,0,1,"UTF-8");
         return mb_strtolower($startChr,"UTF-8")!=$startChr;
     }
 
-    public function base64decodeIfEncoded($str){
+    public function base64decodeIfEncoded(string $str):string
+    {
         $decoded=base64_decode($str,TRUE);
         if (empty($decoded)){return $str;}
         $encoded=base64_encode($decoded);
@@ -160,7 +172,8 @@ class MiscTools{
         }
     }
     
-    public function getRandomString($length){
+    public function getRandomString(int $length):string
+    {
         $hash='';
         $byteStr=random_bytes($length);
         for ($i=0;$i<$length;$i++){
@@ -176,8 +189,13 @@ class MiscTools{
         return $hash;
     }
 
-    public function getHash($arr,$short=FALSE){
-        if (is_array($arr)){$hash=json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_IGNORE);} else {$hash=strval($arr);}
+    public function getHash($arr,bool $short=FALSE):string
+    {
+        if (is_array($arr)){
+            $hash=json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_IGNORE);
+        } else {
+            $hash=strval($arr);
+        }
         $hash=hash('sha256',$hash);
         if (!empty($short)){
             // short hash
@@ -188,9 +206,14 @@ class MiscTools{
         return $hash;
     }    
     
-    public function getEntryId($base=FALSE,$timestamp=FALSE){
+    public function getEntryId($base=FALSE,$timestamp=FALSE):string
+    {
         //    Creates and returns the unique EntryId
-        if ($base){$suffix=$this->getHash($base,TRUE);} else {$suffix=mt_rand(100000,999999);}
+        if ($base){
+            $suffix=$this->getHash($base,TRUE);
+        } else {
+            $suffix=mt_rand(100000,999999);
+        }
         if ($timestamp===FALSE){
             $timestamp=time();
         } else {
@@ -200,7 +223,8 @@ class MiscTools{
         return $entryId;
     }
     
-    public function getEntryIdAge($entryId){
+    public function getEntryIdAge(string $entryId):int
+    {
         // Returns the age of a provided EntryId
         if (strpos($entryId,'eid')===FALSE || strpos($entryId,'EID')===FALSE){return 0;}
         $timestamp=substr($entryId,3,strpos($entryId,'-')-1);
@@ -208,11 +232,14 @@ class MiscTools{
         return time()-$timestamp;
     }
     
-    public function addEntryId($entry,$relevantKeys=array('Source','Group','Folder','Name','Type'),$timestampToUse=FALSE,$suffix='',$keepExistingEntryId=FALSE){
+    public function addEntryId(array $entry,array $relevantKeys=array('Source','Group','Folder','Name','Type'),$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
+    {
         if (!empty($entry['EntryId']) && $keepExistingEntryId){return $entry;}
         $base=array();
         foreach($relevantKeys as $keyIindex=>$relevantKey){
-            if (isset($entry[$relevantKey])){$base[]=$entry[$relevantKey];}
+            if (isset($entry[$relevantKey])){
+                if ($entry[$relevantKey]!==FALSE){$base[]=$entry[$relevantKey];}
+            }
         }
         if ($timestampToUse===FALSE){
             if (empty($entry['Date'])){
@@ -228,7 +255,8 @@ class MiscTools{
         return $entry;
     }
 
-    public function getDateTime($datetime='now',$addDateInterval=FALSE,$timezone=FALSE){
+    public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone=''):string
+    {
         // This is the standard method to get a formated date-string.
         // It returns the date based on the selected timezone.
         $dateTime=new \DateTime($datetime);
@@ -242,7 +270,8 @@ class MiscTools{
         return $dateTime->format('Y-m-d H:i:s');
     }
     
-    public function code2utf($code){
+    public function code2utf(int $code):string
+    {
         if($code<128)return chr($code);
         if($code<2048)return chr(($code>>6)+192).chr(($code&63)+128);
         if($code<65536)return chr(($code>>12)+224).chr((($code>>6)&63)+128).chr(($code&63)+128);
@@ -250,7 +279,8 @@ class MiscTools{
         return '';
     }
     
-    private function emojiList2file(){
+    private function emojiList2file():array
+    {
         //$html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
         $html=file_get_contents('D:/Full Emoji List, v15.0.htm');
         if (empty($html)){return FALSE;}
@@ -290,30 +320,32 @@ class MiscTools{
         return $result;
     }
 
-    private function loadEmojis($emojiFile){
+    private function loadEmojis(string $emojiFile):void
+    {
         if (is_file($emojiFile)){
             $json=file_get_contents($emojiFile);
             $this->emojis=$this->json2arr($json);
         } else {
             $this->emojis=$this->emojiList2file();
-        }
-        
+        } 
     }
 
-    public function float2str($float,$prec=3,$base=1000){
+    public function float2str($float,$prec=3,$base=1000):string
+    {
         // Thanks to "c0x at mail dot ru" based on https://www.php.net/manual/en/function.log.php
         $float=floatval($float);
         $e=array('a','f','p','n','u','m','','k','M','G','T','P','E');
         $p=min(max(floor(log(abs($float), $base)),-6),6);
         $value=round((float)$float/pow($base,$p),$prec);
         if ($value==0){
-            return $value;
+            return strval($value);
         } else {
             return $value.$e[$p+6];
         }
     }
     
-    public function var2color($var,$colorScheme=0,$light=FALSE,$decimal=TRUE){
+    public function var2color($var,$colorScheme=0,$light=FALSE,$decimal=TRUE):string
+    {
         $colorArr=array();
         $hash=$this->getHash($var);
         $colorValuesArr=str_split($hash,2);
@@ -334,7 +366,8 @@ class MiscTools{
     * Array tools
     */
     
-    public function add2history($arr,$newElement,$maxSize=10){
+    public function add2history($arr,array $newElement,int $maxSize=10):array
+    {
         if (is_array($arr)){
             array_unshift($arr,$newElement);
         } else {
@@ -346,43 +379,47 @@ class MiscTools{
         return $arr;
     }
 
-    public function getSeparator(){return self::ONEDIMSEPARATOR;}
+    public function getSeparator():string
+    {
+        return self::ONEDIMSEPARATOR;
+    }
     
-    public function arr2selector($arr,$defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'app'=>'')){
+    public function arr2selector(array $arr,array $defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'app'=>'')):array
+    {
         $selector=array();
         foreach($defaultValues as $key=>$defaultValue){
-            //$selector[$key]=(isset($arr[$key]))?$arr[$key]:$defaultValue;
             $selector[$key]=(empty($arr[$key]))?$defaultValue:$arr[$key];
             $selector[$key]=(strpos(strval($selector[$key]),self::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
         }
         return $selector;
     }
     
-    public function selectorAfterDeletion($selector,$columns=array('Source','Group','Folder','Name','EntryId')){
-        $unselectedColumnSelected=FALSE;
+    /**
+    * Creates a new selector from a deletion selector. Example:
+    * $selector=array('Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>'Kanzlei XYZ')  
+    * return array('Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>FALSE,'EntryId'=>FALSE)
+    * 
+    * @param    array   $selector   Is an selector to select entries or an entry 
+    * @return   array   The new selector
+    */
+    public function selectorAfterDeletion(array $selector,array $columns=array('Source','Group','Folder','EntryId','VOID')):array
+    {
         $lastColumn='Source';
         $newSelector=array('app'=>(isset($selector['app'])?$selector['app']:''));
         foreach($columns as $column){
-            if ($lastColumn==='Source'){
-                $unselectedColumnSelected=FALSE;
-            } else if (!isset($selector[$column])){
-                $unselectedColumnSelected=TRUE;
-            } else if ($selector[$column]===FALSE){
-                $unselectedColumnSelected=TRUE;
-            } else if (strcmp(strval($selector[$column]),self::GUIDEINDICATOR)===0){
-                $unselectedColumnSelected=TRUE;
-            }
-            if ($unselectedColumnSelected){
+            $newSelector[$column]=(isset($selector[$column]))?$selector[$column]:FALSE;
+            if ($newSelector[$column]==self::GUIDEINDICATOR || $newSelector[$column]===FALSE){
+                $newSelector[$column]=FALSE;
                 $newSelector[$lastColumn]=FALSE;
-            } else {
-                $newSelector[$lastColumn]=isset($selector[$lastColumn])?$selector[$lastColumn]:FALSE;
+                break;
             }
             $lastColumn=$column;
         }
         return $newSelector;
     }    
     
-    public function arr2file($inArr,$fileName=FALSE,$addDateTime=FALSE){
+    public function arr2file(array $inArr,string $fileName='',bool $addDateTime=FALSE):int|bool
+    {
         /*   This function converts t$inArr to json format and saves the json data to a file. 
         *    If the fileName argument is empty, it will be created from the name of the calling class and function.
         *    The function returns the byte count written to the file or false in case of an error.
@@ -407,14 +444,16 @@ class MiscTools{
     /**
     * @return string This method converts an array to the corresponding json string.
     */
-    public function arr2json($arr){
+    public function arr2json(array $arr):string
+    {
         return json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_IGNORE);
     }
     
     /**
     * @return arr This method converts a json string to the corresponding array.
     */
-    public function json2arr($json){
+    public function json2arr(string $json):array
+    {
         if (is_string($json)){
             $arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             if (empty($arr)){$arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
@@ -427,14 +466,16 @@ class MiscTools{
     /**
     * @return arr This method converts an array to the corresponding flat array.
     */
-    public function arr2flat($arr,$S=self::ONEDIMSEPARATOR){
+    public function arr2flat(array $arr,string $S=self::ONEDIMSEPARATOR):array
+    {
         if (!is_array($arr)){return $arr;}
         $flat=array();
         $this->arr2flatHelper($arr,$flat,'',$S);
         return $flat;
     }
     
-    private function arr2flatHelper($arr,&$flat,$oldKey='',$S=self::ONEDIMSEPARATOR){
+    private function arr2flatHelper($arr,&$flat,$oldKey='',string $S=self::ONEDIMSEPARATOR)
+    {
         $result=array();
         foreach ($arr as $key=>$value){
             if (strlen(strval($oldKey))===0){$newKey=$key;} else {$newKey=$oldKey.$S.$key;}
@@ -451,7 +492,8 @@ class MiscTools{
     /**
     * @return arr This method converts a flat array to the corresponding array.
     */
-    public function flat2arr($arr,$S=self::ONEDIMSEPARATOR){
+    public function flat2arr($arr,string $S=self::ONEDIMSEPARATOR)
+    {
         if (!is_array($arr)){return $arr;}
         $result=array();
         foreach($arr as $key=>$value){
@@ -460,7 +502,8 @@ class MiscTools{
         return $result;
     }
     
-    private function flatKey2arr($key,$value,$S=self::ONEDIMSEPARATOR){
+    private function flatKey2arr($key,$value,string $S=self::ONEDIMSEPARATOR):array
+    {
         if (!is_string($key)){return array($key=>$value);}
         $k=explode($S,$key);
         while(count($k)>0){
@@ -473,7 +516,8 @@ class MiscTools{
     /**
     * @return arr This method deletes a key-value-pair selecting the key by the corresponding flat key.
     */
-    public function arrDeleteKeyByFlatKey($arr,$flatKey){
+    public function arrDeleteKeyByFlatKey(array $arr,string $flatKey):array
+    {
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $arrKey=>$arrValue){
             if (strpos($arrKey,$flatKey)===FALSE){continue;}
@@ -486,7 +530,8 @@ class MiscTools{
     /**
     * @return arr This method updates a key-value-pair selecting the key by the corresponding flat key.
     */
-    public function arrUpdateKeyByFlatKey($arr,$flatKey,$value){
+    public function arrUpdateKeyByFlatKey(array $arr,string $flatKey,$value):array
+    {
         $flatArr=$this->arr2flat($arr);
         $flatArr[$flatKey]=$value;
         $arr=$this->flat2arr($flatArr);
@@ -496,14 +541,16 @@ class MiscTools{
     /**
     * @return string This method returns a string representing the provided flat key for a web page.
     */
-    public function flatKey2label($key,$S=self::ONEDIMSEPARATOR){
+    public function flatKey2label(string $key,string $S=self::ONEDIMSEPARATOR):string
+    {
         return str_replace($S,' &rarr; ',$key);
     }
     
     /**
     * @return array This method returns an array representing last subkey value pairs
     */
-    public function flatArrLeaves($flatArr,$S=self::ONEDIMSEPARATOR){
+    public function flatArrLeaves(array $flatArr,string $S=self::ONEDIMSEPARATOR):array
+    {
         $leaves=array();
         foreach($flatArr as $flatKey=>$flatValue){
             $leafKey=explode($S,$flatKey);
@@ -517,7 +564,8 @@ class MiscTools{
     /**
     * @return string This method returns a string for a web page created from a statistics array, e.g. array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'file added'=>0)
     */
-    public function statistic2str($statistic){
+    public function statistic2str(array $statistic):string
+    {
         $str=array();
         foreach($statistic as $key=>$value){
             if (is_array($value)){
@@ -532,7 +580,8 @@ class MiscTools{
     /**
     * @return array This method returns an array which is a matrix used to create an html-table and a representation of the provided array.
     */
-    public function arr2matrix($arr,$S=self::ONEDIMSEPARATOR){
+    public function arr2matrix(array $arr,string $S=self::ONEDIMSEPARATOR):array
+    {
         $matrix=array();
         $rowIndex=0;
         $rows=array();
@@ -568,9 +617,10 @@ class MiscTools{
     }
     
     /**
-    * @return array This method adds the values (if numeric mathmatically, if string ) with the same key of multiple arrays.
+    * @return array This method adds the values (if numeric mathmatically), if string with the same key of multiple arrays.
     */
-    public function addArrValuesKeywise(...$arrays){
+    public function addArrValuesKeywise(...$arrays)
+    {
         // Example: Arguments "array('deleted'=>2,'inserted'=>1,'steps'=>'Open web page','done'=>FALSE)" and "array('deleted'=>0,'inserted'=>4,'steps'=>'Close web page','done'=>TRUE)"
         // will return array('deleted'=>2,'inserted'=>5,'steps'=>'Open web page|Close web page','done'=>TRUE)
         $result=array();
@@ -590,7 +640,8 @@ class MiscTools{
     * Generic conversions
     */
     
-    public function var2dataType($var){
+    public function var2dataType($var):string
+    {
         $strVar=strval($var);
         if (is_numeric($var)){
             if (strpos($strVar,'.')!==FALSE){
@@ -637,12 +688,14 @@ class MiscTools{
         return $newValue;
     }
 
-    public function str2int($string,$lang=''){
+    public function str2int($string,$lang=''):int
+    {
         $value=$this->str2float($string,$lang);
-        return round($value);
+        return intval($value);
     }
     
-    public function str2float($string,$lang=''){
+    public function str2float($string,$lang=''):float
+    {
         $string=strval($string);
         $lang=strtolower($lang);
         // get number from string
@@ -691,19 +744,22 @@ class MiscTools{
             return floatval($numberStr);
         }
     }
-    public function convert2stringNoWhitespaces($value){
+    public function convert2stringNoWhitespaces($value):string
+    {
         $value=preg_replace("/\s/",'',strval($value));
         return $value;
     }
 
-    public function convert2splitString($value){
+    public function convert2splitString($value):array|bool
+    {
         $value=strtolower(strval($value));
         $value=trim($value);
         $value=preg_split("/[^a-zäöü0-9ß]+/",$value);
         return $value;
     }
     
-    public function convert2codepfad($value){
+    public function convert2codepfad($value):array
+    {
         $codepfade=explode(';',strval($value));
         $arr=array();
         foreach($codepfade as $codePfadIndex=>$codepfad){
@@ -721,7 +777,8 @@ class MiscTools{
         return $arr;
     }
     
-    public function convert2unycom($value){
+    public function convert2unycom($value):array
+    {
         $value=strval($value);
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');

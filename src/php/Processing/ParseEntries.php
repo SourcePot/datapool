@@ -149,7 +149,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 );
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
         // get selector
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -170,10 +170,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function parserSectionRules($callingElement){
-        $contentStructure=array('Regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Section name'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+        $contentStructure=array('Regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. I\s{0,1}n\s{0,1}v\s{0,1}o\s{0,1}i\s{0,1}c\s{0,1}e\s{0,1}','excontainer'=>TRUE),
+                                'Section name'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. Invoice start','excontainer'=>TRUE),
                                 );
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Provide rules to divide the text into sections.';
@@ -200,7 +200,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Match required'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 );
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
-        $arr=$this->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Parser rules: Parse selected entry and copy result to target entry';
@@ -209,25 +209,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runParseEntries($callingElement,$testRun=FALSE){
-        $base=array('Script start timestamp'=>hrtime(TRUE));
-        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $key=explode('|',$entry['Type']);
-            $key=array_pop($key);
-            $base[$key][$entry['EntryId']]=$entry;
-            // entry template
-            foreach($entry['Content'] as $contentKey=>$content){
-                if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
-                $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
-                if ($template){$base['entryTemplates'][$content]=$template;}
-            }
-        }
+        $base=array('parserparams'=>array(),'parsersectionrules'=>array());
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Parser statistics'=>array('Entries'=>array('value'=>0),'Success'=>array('value'=>0),'Failed'=>array('value'=>0),'No text, skipped'=>array('value'=>0),'Skip rows'=>array('value'=>0)));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if ($entry['isSkipRow']){
+            if ($sourceEntry['isSkipRow']){
                 $result['Parser statistics']['Skip rows']['value']++;
                 continue;
             }
@@ -413,18 +401,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $entry[$baseKey]=$newValue;
         }
         return $entry;
-    }
-    
-    public function callingElement2arr($callingClass,$callingFunction,$callingElement){
-        if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){return array();}
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source(__CLASS__);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
-        return $arr;
     }
 
 }

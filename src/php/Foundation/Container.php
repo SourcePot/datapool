@@ -31,8 +31,8 @@ class Container{
                 $jsAnswer['arr']=array('isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']);
             } else if (strcmp($_POST['function'],'loadEntry')===0){
                 $jsAnswer['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->loadEntry($_POST);
-            } else if (strcmp($_POST['function'],'setCanvasElementPosition')===0){
-                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementPosition($_POST);
+            } else if (strcmp($_POST['function'],'setCanvasElementStyle')===0){
+                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementStyle($_POST);
             } else if (strcmp($_POST['function'],'entryById')===0){
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
             } else {
@@ -322,7 +322,7 @@ class Container{
             $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$settings;
         }
         // add column button
-        $element=array('tag'=>'button','element-content'=>'➕','key'=>array('addColumn'),'value'=>'add','title'=>'add column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+        $element=array('tag'=>'button','element-content'=>'➕','key'=>array('addColumn'),'value'=>'add','title'=>'Add column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
         $addColoumnBtn=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         $settings['columns'][]=array('Column'=>$addColoumnBtn,'Filter'=>FALSE);
         // get selector
@@ -373,17 +373,17 @@ class Container{
                         // "order by"-buttons
                         if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}
                         if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
-                        $element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
+                        $element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'Order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         $matrix[$filterKey][$columnIndex].=$filterTextField;
                         if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
-                        $element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
+                        $element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'Order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         // column selector
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                         // remove column button
                         if ($columnIndex>0){
-                            $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+                            $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'Remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
                             $matrix['Columns'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         }
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Columns'][$columnIndex],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
@@ -407,7 +407,7 @@ class Container{
                     $matrix['Limit, offset'][$columnIndex]='';
                 } else if ($columnIndex===0){
                     $options=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200');
-                    $matrix['Limit, offset'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+                    $matrix['Limit, offset'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'key'=>array('limit'),'value'=>$settings['limit'],'title'=>'Rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                     $matrix['Limit, offset'][$columnIndex].=$this->getOffsetSelector($arr,$settings,$rowCount);
                     $matrix['Limit, offset'][$columnIndex].=$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
                 } else {
@@ -456,6 +456,7 @@ class Container{
 
     public function comments($arr){
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
+        if (empty($arr['selector'])){return $arr;}
         $arr['class']=(isset($arr['class']))?$arr['class']:'comment';
         $arr['style']=(isset($arr['style']))?$arr['style']:array();
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
@@ -480,7 +481,7 @@ class Container{
         $newComment='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'New comment','style'=>array('float'=>'left','clear'=>'both','margin'=>'0 5px')));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'...','key'=>array('comment'),'id'=>$targetId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>array('comment'),'id'=>$targetId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$targetId,'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$targetId));
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             $appArr=array('html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']);
