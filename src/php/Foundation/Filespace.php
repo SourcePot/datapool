@@ -182,7 +182,7 @@ class Filespace{
     
     public function file2arr(string $fileName):array
     {
-        $arr=FALSE;
+        $arr=array();
         if (is_file($fileName)){
             $content=$this->file_get_contents_utf8($fileName);
             if (!empty($content)){

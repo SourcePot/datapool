@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Tools;
 
-class MiscTools{
+final class MiscTools{
 
     const ONEDIMSEPARATOR='|[]|';
     const GUIDEINDICATOR='!GUIDE';
