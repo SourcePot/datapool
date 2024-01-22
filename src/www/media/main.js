@@ -151,7 +151,7 @@ jQuery(document).ready(function(){
 
     
 /** CLIPBOARD **/
-    jQuery('button[title=Print]').on('click',function(e){
+    jQuery('button:contains("❐")').on('click',function(e){
         e.preventDefault();
         console.log(jQuery(this).parent('article'));
         window.print();
@@ -507,8 +507,8 @@ jQuery(document).ready(function(){
 				 'function':'loadEntry',
 				 'htmlSelector':presentEntrySelector
 				};
-        jQuery('button[title^=Select]').css({'background-color':'#fff','color':'#fff'});
-        jQuery('button[entry-id='+arr['selector']['EntryId']+'][title^=Select]').css({'background-color':'#000','color':'#000'});
+        jQuery('button:contains("✦")').css({'background-color':'#fff','color':'#fff'});
+        jQuery('button[entry-id='+arr['selector']['EntryId']+']:contains("✦")').css({'background-color':'#000','color':'#000'});
         loadNextSelectedView(arr);
 	}
 
