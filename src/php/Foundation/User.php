@@ -77,13 +77,15 @@ class User{
     
     private $pageSettings=array();
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
@@ -95,11 +97,18 @@ class User{
         $this->initAdminAccount();
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
     
-    private function userRols(){
+    private function userRols():array
+    {
         $entry=$this->userRols;
         $entry['Class']=__CLASS__;
         $entry['EntryId']=__FUNCTION__;
@@ -107,17 +116,21 @@ class User{
         return $this->userRols;
     }
     
-    public function getUserRols($asOptions=FALSE){
+    public function getUserRols(bool $asOptions=FALSE):array
+    {
         if ($asOptions){
             $options=array();
-            foreach($this->userRols['Content'] as $index=>$userRole){$options[$userRole['Value']]=$userRole['Name'];}
+            foreach($this->userRols['Content'] as $index=>$userRole){
+                $options[$userRole['Value']]=$userRole['Name'];
+            }
             return $options;
         } else {
             return $this->userRols['Content'];
         }
     }
     
-    public function getUserRolsString($user){
+    public function getUserRolsString(array $user):string
+    {
         $userRols=array();
         foreach($this->userRols['Content'] as $index=>$rolArrc){
             if ((intval($user['Privileges']) & $rolArrc['Value'])>0){$userRols[]=$rolArrc['Name'];}
@@ -125,14 +138,16 @@ class User{
         return implode(', ',$userRols);
     }
     
-    public function getCurrentUser(){
+    public function getCurrentUser():array
+    {
         if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             $this->anonymousUserLogin();
         }
         return $_SESSION['currentUser'];
     }
     
-    public function unifyEntry($entry){
+    public function unifyEntry(array $entry):array
+    {
         $entry['Source']=$this->entryTable;
         if (!isset($entry['Content']['Address'])){$entry['Content']['Address']=array();}
         if (empty($entry['Content']['Contact details']['Email']) && !empty($entry['Email'])){
@@ -150,7 +165,8 @@ class User{
         return $entry;
     }
     
-    private function anonymousUserLogin(){
+    private function anonymousUserLogin():array
+    {
         $user=array('Source'=>$this->entryTable,'Type'=>'user');
         $user['Owner']='ANONYM';
         $user['LoginId']=mt_rand(1,10000000);
@@ -162,7 +178,8 @@ class User{
         return $user;
     }
     
-    private function initAdminAccount(){
+    private function initAdminAccount():bool
+    {
         $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
         if ($noAdminAccountFound){
             $admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R','Email'=>$this->pageSettings['emailWebmaster'],'Password'=>bin2hex(random_bytes(16)),'Owner'=>'SYSTEM');
@@ -185,7 +202,8 @@ class User{
         return FALSE;
     }
     
-    public function newlyRegisteredUserLogin($user){
+    public function newlyRegisteredUserLogin(array $user):array
+    {
         $user['Owner']=$user['EntryId'];
         $user['LoginId']=$user['LoginId'];
         $user['Privileges']='REGISTERED_R';
@@ -195,7 +213,8 @@ class User{
         return $user;
     }
     
-    public function userAbstract($arr=FALSE,$template=0){
+    public function userAbstract(array|string $arr=array(),int $template=0):string
+    {
         // This method returns formated html text from an entry based on predefined templates.
         //     
         if (empty($arr)){
@@ -208,9 +227,15 @@ class User{
             $user=$arr;
         }
         if (!isset($user['Content'])){
-            if ($template<4){$isSystemCall=TRUE;} else {$isSystemCall=FALSE;}
+            if ($template<4){
+                $isSystemCall=TRUE;
+            } else {
+                $isSystemCall=FALSE;
+            }
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,$isSystemCall);
-            if (empty($user)){return '';}
+            if (empty($user)){
+                return '';
+            }
         }
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         if ($template===0){
@@ -241,7 +266,8 @@ class User{
         return $abtract;
     }
     
-    public function ownerAbstract($arr){
+    public function ownerAbstract(array $arr):string
+    {
         $template=(isset($arr['selector']['template']))?$arr['selector']['template']:2;
         $html=$this->userAbstract($arr['selector']['Owner'],$template);
         $arr['tag']='div';
@@ -251,7 +277,8 @@ class User{
         return $html;
     }
     
-    public function userAccountForm($arr){
+    public function userAccountForm(array $arr):array
+    {
         $template=array('html'=>'');
         $arr=array_merge($template,$arr);
         if (isset($arr['selector']['EntryId'])){
@@ -264,14 +291,16 @@ class User{
         return $arr;
     }
 
-    public function loginUser($user){
+    public function loginUser(array $user)
+    {
         $_SESSION['currentUser']=$user;
         if (strcmp($user['Owner'],'ANONYM')!==0){
             $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','User login {user}',array('user'=>$_SESSION['currentUser']['Name']));    
         }
     }
     
-    public function getUserOptions($selector=array(),$flatContactDetailsKey=FALSE){
+    public function getUserOptions(array $selector=array(),string $flatContactDetailsKey=''):array
+    {
         $selector['Source']=$this->entryTable;
         $selector['Privileges>']=1;
         $options=array();

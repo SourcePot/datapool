@@ -117,15 +117,18 @@ class Element{
                                      'Read'=>FALSE,'Write'=>FALSE,'Privileges'=>FALSE,'LoginId'=>FALSE,'app'=>FALSE
                                     );
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function element($arr):string{
+    public function element(array $arr):string
+    {
         // translation
         $translationTestKey=(isset($arr['type']))?'type':'tag';
         if (isset($this->translate[$arr[$translationTestKey]])){
@@ -184,7 +187,8 @@ class Element{
         return $html;
     }
     
-    private function attr2string($arr,$attrName,$attrValue){
+    private function attr2string(array $arr,string $attrName,$attrValue):string
+    {
         if (strcmp($attrName,'name')===0 && !empty($arr['multiple'])){$attrValue.='[]';}
         if (is_array($attrValue)){
             $newAttrValue='';
@@ -210,7 +214,8 @@ class Element{
         return $string;
     }
 
-    private function def2arr($arrIn,$def,$arrOut=array()){
+    private function def2arr(array $arrIn,array $def,array $arrOut=array()):array
+    {
         foreach($def as $defKey=>$defCntr){
             if (isset($arrIn[$defKey])){
                 $arrOut[$defKey]=$arrIn[$defKey];
@@ -225,7 +230,8 @@ class Element{
         return $arrOut;
     }
 
-    private function addElement2session($arr,$elementArr){
+    private function addElement2session(array $arr,array $elementArr):array
+    {
         if (isset($elementArr['sessionArr']['name'])){
             if (isset($arr['callingClass']) && isset($arr['callingFunction'])){
                 $_SESSION[$arr['callingClass']][$arr['callingFunction']][$elementArr['sessionArr']['name']]=$elementArr['sessionArr'];
@@ -236,7 +242,8 @@ class Element{
         return $elementArr;
     }
     
-    private function elementArr2html($arr,$elementArr){
+    private function elementArr2html(array $arr,array $elementArr):string
+    {
         if (isset($arr['element-content'])){
             $arr['element-content']=strval($arr['element-content']);
             if (empty($arr['keep-element-content'])){$arr['element-content']=htmlentities($arr['element-content']);}
@@ -247,7 +254,8 @@ class Element{
         return $html;
     }
 
-    private function addCover($arr,$html){
+    private function addCover(array $arr,string $html):string
+    {
         $arr['title']=(isset($arr['title']))?$arr['title']:'Safety cover..';
         $arr['style']=array('margin'=>'0 0.2em');
         $coverArrP=array('tag'=>'p','title'=>$arr['title'],'class'=>'cover','id'=>'cover-'.hrtime(TRUE),'element-content'=>'Sure?');
@@ -257,7 +265,8 @@ class Element{
         return $html;
     }
 
-    public function formProcessing($callingClass,$callingFunction):array{
+    public function formProcessing(string $callingClass,string $callingFunction):array
+    {
         // This method returns the result from processing of $_POST and $_FILES.
         // It returns an array with the old values, the new values, files und commmands.
         $result=array('cmd'=>array(),'val'=>array(),'changed'=>array(),'files'=>array(),'hasValidFiles'=>FALSE,'selector'=>array(),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
@@ -328,7 +337,8 @@ class Element{
         return $arr;
     }
 
-    public function fileErrorCode2str($code){
+    public function fileErrorCode2str($code):string
+    {
         $codeArr=array(0=>'There is no error, the file uploaded with success',
                        1=>'The uploaded file exceeds the upload_max_filesize directive in php.ini',
                        2=>'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
@@ -342,12 +352,14 @@ class Element{
         if (isset($codeArr[$code])){return $codeArr[$code];} else {return '';}
     }
     
-    private function escapeAttrName($attrName):string{
+    private function escapeAttrName(string $attrName):string
+    {
         $attrName=preg_replace('/[^a-zA-Z0-9\-]/','',$attrName);
         return $attrName;
     }
     
-    private function escapeAttrValue($attrValue):string{
+    private function escapeAttrValue($attrValue):string
+    {
         $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $attrValue=htmlspecialchars(strval($attrValue),ENT_QUOTES|ENT_SUBSTITUTE|ENT_HTML401,$pageSettings['charset'],TRUE);
         return $attrValue;

@@ -25,13 +25,15 @@ class Money{
     private $currencies=array();
     private $currencyAlias=array('EUR'=>array('EUR','€'),'AUD'=>array('AUD','AU$'),'USD'=>array('USD','US$','$'));
         
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));        
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->tableRatesSelector=array('Source'=>$this->entryTable,'Group'=>'ECB','Folder'=>'Rates','Owner'=>'SYSTEM');
@@ -39,11 +41,18 @@ class Money{
         $this->currencies=$this->getCurrencies();
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
     
-    public function job($vars){
+    public function job(array $vars):array
+    {
         if (connection_status()==CONNECTION_NORMAL){
             $client = new \GuzzleHttp\Client();
             $request = new \GuzzleHttp\Psr7\Request('GET',$this->ecbExchangeRatesUrl);
@@ -72,14 +81,17 @@ class Money{
         return $vars;
     }
     
-    private function body2links($url,$body,$filter=FALSE){
+    private function body2links(string $url,string $body,string $filter=''):array
+    {
         $urlArr=parse_url($url);
         $links=array();
         $chunks=explode('href="',$body);
         foreach($chunks as $chunk){
             $href=substr($chunk,0,strpos($chunk,'"'));
             if ($filter){
-                if (stripos($href,$filter)===FALSE){continue;}
+                if (stripos($href,$filter)===FALSE){
+                    continue;
+                }
             }
             if ($href[0]=='/'){
                 $links[]=$urlArr['host'].$href;
@@ -90,7 +102,8 @@ class Money{
         return $links;
     }
 
-    private function body2rates($body){
+    private function body2rates(string $body):array
+    {
         $rates=array();
         $chunks=explode('time="',$body);
         array_shift($chunks);
@@ -109,7 +122,8 @@ class Money{
         return $rates;
     }
     
-    private function addRates2table($rates){
+    private function addRates2table(array $rates):int
+    {
         $count=0;
         $entry=$this->tableRatesSelector;
         foreach($rates as $date=>$rateArr){
@@ -124,7 +138,8 @@ class Money{
         return $count;
     }
     
-    private function getOldRatesIfRequired(){
+    private function getOldRatesIfRequired():bool
+    {
         $selector=$this->tableRatesSelector;
         $selector['Name']='1999-01-21 CET';
         $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE);
@@ -144,7 +159,8 @@ class Money{
         }
     }
     
-    private function ratesCsv2table($csvFile){
+    private function ratesCsv2table(string $csvFile):int
+    {
         $csv=new \SplFileObject($csvFile);
         $csv->setCsvControl(',','"','\\');
         $currencies=array('EUR'=>'Euro');
@@ -191,7 +207,8 @@ class Money{
         return $rowIndex;
     }
     
-    public function getCurrencies(){
+    public function getCurrencies():array
+    {
         $currencies=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$this->entryTable,'EntryId'=>'Currencies'),TRUE);
         if (isset($currencies['Content'])){
             $currencies['Content']['EUR']='Euro';
@@ -201,7 +218,8 @@ class Money{
         }
     }
     
-    public function getRates($date,$timezone='Europe/Berlin'){
+    public function getRates(string $date,string $timezone='Europe/Berlin'):array
+    {
         $cetTimezoneObj=new \DateTimeZone('CET');
         $timezoneObj=new \DateTimeZone($timezone);
         $datetimeObj=new \DateTime($date,$timezoneObj);
@@ -234,7 +252,8 @@ class Money{
         return $ratesMatch;
     }
 
-    public function currencyConversion($amount,$sourceCurrency='USD',$date=FALSE,$timezone='Europe/Berlin'){
+    public function currencyConversion(int|float $amount,string $sourceCurrency='USD',string $date='',string $timezone='Europe/Berlin'):array
+    {
         $sourceCurrency=strtoupper($sourceCurrency);
         $result=array('Error'=>'',$sourceCurrency=>$amount);
         if (empty($date)){$date=date('Y-m-d');}
@@ -267,7 +286,8 @@ class Money{
         return $result;
     }
     
-    public function str2money($string,$lang=''){
+    public function str2money($string,string $lang=''):array
+    {
         $string=strval($string);
         $result=array('Currency'=>'','Amount'=>0);
         foreach($this->currencies as $code=>$name){

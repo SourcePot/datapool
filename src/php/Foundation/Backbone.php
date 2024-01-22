@@ -20,7 +20,7 @@ class Backbone{
                             'metaRobots'=>'index',
                             'pageTimeZone'=>'Europe/Berlin',
                             'loginForm'=>0,
-                            'mainBackgroundImageFile'=>FALSE,
+                            'mainBackgroundImageFile'=>'',
                             'loginBackgroundImageFile'=>'main-login.jpg',
                             'iconFile'=>'main.ico',
                             'logoFile'=>'logo.jpg',
@@ -32,11 +32,13 @@ class Backbone{
                             //'path to Xpdf pdftotext executable'=>'C:\Program Files\Xpdf\pdftotext.exe',
                             );
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc):array
+    {
         $this->oc=$oc;
         // Initialize page settings
         $settings=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
@@ -47,11 +49,13 @@ class Backbone{
         return $this->oc;
     }
     
-    public function getSettings(){
+    public function getSettings():array
+    {
         return $this->settings;
     }
     
-    public function addHtmlPageBackbone($arr){
+    public function addHtmlPageBackbone(array $arr):array
+    {
         $arr['formName']=md5($this->settings['pageTitle']);
         $arr['toReplace']=array('{{head}}'=>'',
                                 '{{body}}'=>'',
@@ -83,7 +87,8 @@ class Backbone{
         return $arr;
     }
     
-    public function addHtmlPageHeader($arr){
+    public function addHtmlPageHeader(array $arr):array
+    {
         $headerFiles=array('iconFile'=>'<link rel="shortcut icon" href="{{iconFile}}">',
                            'cssFiles'=>'<link type="text/css" rel="stylesheet" href="{{cssFiles}}">',
                            'jsFiles'=>'<script src="{{jsFiles}}"></script>',
@@ -102,7 +107,8 @@ class Backbone{
         return $arr;
     }
 
-    public function addHtmlPageBody($arr){
+    public function addHtmlPageBody(array $arr):array
+    {
         $imageFile=(strcmp($_SESSION['page state']['app']['Category'],'Login')===0)?$this->settings['loginBackgroundImageFile']:$this->settings['mainBackgroundImageFile'];
         if ($src=$this->mediaFile2href($imageFile)){
             $mainStyle=array('background-size'=>'cover','background-image'=>'url('.$src.')');
@@ -129,14 +135,16 @@ class Backbone{
         return $arr;
     }
     
-    public function finalizePage($arr){
+    public function finalizePage(array $arr):array
+    {
         foreach($arr['toReplace'] as $needle=>$replacement){
             $arr['page html']=strtr($arr['page html'],array($needle=>$replacement));
         }
         return $arr;
     }
     
-    public function mediaFile2href($mediaFile,$throwException=FALSE){
+    public function mediaFile2href(string|bool $mediaFile,bool $throwException=FALSE):string|bool
+    {
         $mediaFileAbs=$GLOBALS['dirs']['media'].$mediaFile;
         if (is_file($mediaFileAbs)){
             return $GLOBALS['relDirs']['media'].'/'.$mediaFile;

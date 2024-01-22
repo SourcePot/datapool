@@ -17,26 +17,35 @@ class Definitions{
     private $entryTable;
     private $entryTemplate=array();
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable()
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate()
+    {
+        return $this->entryTemplate;
+    }
     
     /**
     * This method returns the definition name from the class argument provided. 
     * @return string
     */
-    private function class2name($class){
+    private function class2name(string $class):string
+    {
         $source=$this->oc['SourcePot\Datapool\Root']->class2source($class);
         if ($source){
             return $source;
@@ -53,7 +62,8 @@ class Definitions{
     * To force data storage in files, preceding character cann be added to the callingClass argument, e.g. "!" 
     * @return array
     */
-    public function addDefintion($callingClass,$definition){
+    public function addDefintion(string $callingClass,array $definition)
+    {
         $entry=array('Source'=>$this->entryTable,'Group'=>'Templates','Folder'=>$callingClass,'Name'=>$this->class2name($callingClass),'Type'=>'definition','Owner'=>'SYSTEM');
         $entry['EntryId']=md5(json_encode($entry));
         $entry['Content']=$definition;
@@ -65,7 +75,8 @@ class Definitions{
     * Only the first part (everything up to the first space character) of entry['Type'] is used.
     * @return array
     */
-    public function getDefinition($entry,$isDebugging=FALSE){
+    public function getDefinition(array $entry,bool $isDebugging=FALSE):array
+    {
         $selector=array('Source'=>$this->entryTable,'Group'=>'Templates');
         if (!empty($entry['Class'])){
             $selector['Name']=$this->class2name($entry['Class']);    
@@ -73,7 +84,7 @@ class Definitions{
             $typeComps=explode(' ',$entry['Type']);
             $selector['Name']=array_shift($typeComps);
         } else {
-            throw new \ErrorException('Function '.__FUNCTION__.': Entry missing Type- or Class-key.',0,E_ERROR,__FILE__,__LINE__);
+            throw new \ErrorException('Function '.__FUNCTION__.': Entry missing Type-key or Class-key.',0,E_ERROR,__FILE__,__LINE__);
         }
         $arr=array('entry'=>$entry,'selector'=>$selector,'definition'=>array());
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
@@ -89,7 +100,8 @@ class Definitions{
     * Default values originate from the database entry template as well as default values provided by the defintion.
     * @return array
     */
-    public function definition2entry($definition,$entry=array(),$isDebugging=FALSE){
+    public function definition2entry(array $definition,array $entry=array(),bool $isDebugging=FALSE):array
+    {
         $debugArr=array('definition'=>$definition,'entry_in'=>$entry);
         $flatArrayKeySeparator=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
@@ -131,7 +143,8 @@ class Definitions{
     * If the definition exsists, the webpaghe element will be created based on this definition. 
     * @return array
     */
-    public function selectorKey2element($entry,$flatSelectorKey,$value=NULL,$callingClass=FALSE,$callingFunction=FALSE,$skipKeysWithNoDefintion=FALSE,$definition=FALSE){
+    public function selectorKey2element(array $entry,string $flatSelectorKey,$value=NULL,string $callingClass='',string $callingFunction='',bool $skipKeysWithNoDefintion=FALSE,$definition=array())
+    {
         $value=strval($value);
         if (empty($definition)){
             $definition=$this->getDefinition($entry);
@@ -196,7 +209,8 @@ class Definitions{
     * This method returns a complex html form consisting of tables and based on the definition for the entry provided as method argument.    
     * @return array
     */
-    public function definition2html($definition,$entry,$callingClass=FALSE,$callingFunction=FALSE,$isDebugging=FALSE){
+    public function definition2html(array $definition,array $entry,string $callingClass='',string $callingFunction='',bool $isDebugging=FALSE):string
+    {
         $debugArr=array('definition'=>$definition,'entry'=>$entry,'elements'=>array());
         if (empty($callingClass)){$callingClass=__CLASS__;}
         if (empty($callingFunction)){$callingFunction=__FUNCTION__;}
@@ -274,7 +288,8 @@ class Definitions{
         return $html;
     }
 
-    public function entry2form($entry=array(),$isDebugging=FALSE){
+    public function entry2form(array $entry=array(),bool $isDebugging=FALSE):string
+    {
         $definition=$this->getDefinition($entry);
         $debugArr=array('definition'=>$definition,'entry_in'=>$entry,'entry_updated'=>array());
         $html='';
@@ -329,7 +344,8 @@ class Definitions{
         return $html;
     }
     
-    private function elementDef2element($element,$outputStr=NULL){
+    private function elementDef2element(array $element,$outputStr=NULL):array|string
+    {
         $element=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($element);
         // check read access
         $access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read');
@@ -389,7 +405,8 @@ class Definitions{
         return $element;
     }
     
-    private function defArr2html($defArr){
+    private function defArr2html(array $defArr):string
+    {
         $html='';
         $function=$defArr['function'];
         if (isset($defArr['class'])){$class=$defArr['class'];} else {$class='SourcePot\Datapool\Tools\HTMLbuilder';}

@@ -26,11 +26,13 @@ class Menu{
     
     private $requested=array('Category'=>'Home');
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
         
-    public function init($oc){
+    public function init(array $oc)
+    {
         $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run');
         // get category from input
         $linkid=filter_input(INPUT_GET,'linkid',FILTER_SANITIZE_ENCODED);
@@ -93,7 +95,8 @@ class Menu{
         }
     }
 
-    public function getCategories($optionsOnly=FALSE){
+    public function getCategories(bool $optionsOnly=FALSE):array
+    {
         if ($optionsOnly){
             $options=array();
             foreach($this->categories as $key=>$category){
@@ -105,7 +108,8 @@ class Menu{
         }
     }
     
-    public function class2category($class){
+    public function class2category(string $class):string
+    {
         foreach($this->categories as $key=>$category){
             if (strpos($category['Class'],$class)===FALSE){continue;}
             $category['Category']=$key;
@@ -114,13 +118,15 @@ class Menu{
         return FALSE;
     }
 
-    public function menu($arr){
+    public function menu(array $arr):array
+    {
         $arr=$this->firstMenuBar($arr);
         $arr=$this->secondMenuBar($arr);
         return $arr;
     }
     
-    private function firstMenuBar($arr){
+    private function firstMenuBar(array $arr):array
+    {
         $options=array();
         $selected=FALSE;
         $lngSelector=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
@@ -144,7 +150,8 @@ class Menu{
         return $arr;
     }
     
-    private function secondMenuBar($arr){
+    private function secondMenuBar(array $arr):array
+    {
         $html='';
         foreach($this->available['Categories'] as $category=>$def){
             $def['Category']=$category;
@@ -156,7 +163,8 @@ class Menu{
         return $arr;
     }
 
-    private function def2div($def){
+    private function def2div(array $def):string
+    {
         $href='index.php?'.http_build_query(array('category'=>$def['Category']));
         $style='';
         if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}

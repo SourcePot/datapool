@@ -17,25 +17,29 @@ class Toolbox{
     private $entryTable;
     private $entryTemplate=array();
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function registerToolbox($callingClass,$toolboxEntry){
+    public function registerToolbox(string $callingClass,array $toolboxEntry):array 
+    {
         $template=array('Source'=>$this->entryTable,'Group'=>'Toolbox','Folder'=>$callingClass,'EntryId'=>$callingClass,'Type'=>$this->entryTable.' array','Owner'=>'SYSTEM');
         $toolboxEntry=array_merge($template,$toolboxEntry);
         $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($toolboxEntry,TRUE);
         return $toolboxEntry;
     }
     
-    private function getToolboxMenu(){
+    private function getToolboxMenu():string
+    {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['select'])){
             $_SESSION['page state']['toolbox']=key($formData['cmd']['select']);
@@ -48,13 +52,16 @@ class Toolbox{
             $element=array('tag'=>'input','type'=>'submit','key'=>array('select',$toolboxEntry['EntryId']),'value'=>$toolboxEntry['Name'],'style'=>$style,'class'=>'bottom-menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         }
-        if (empty($html)){return $html;}
+        if (empty($html)){
+            return $html;
+        }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'bottom-wrapper'));
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'bottom-menu'));
         return $html;
     }
     
-    public function getToolbox($arr){
+    public function getToolbox(array $arr):array
+    {
         $arr['toReplace']['{{toolbox}}']=$this->getToolboxMenu();
         if (!empty($_SESSION['page state']['toolbox'])){
             $toolbox=array('Source'=>$this->entryTable,'EntryId'=>$_SESSION['page state']['toolbox']);

@@ -28,11 +28,13 @@ class GeoTools{
     private $requestHeader=array('Content-Type'=>'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                                  'User-agent'=>'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0');
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         // load country codes
         $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
@@ -46,7 +48,8 @@ class GeoTools{
         }
     }
 
-    public function location2address($entry,$targetKey='Address',$isDebugging=FALSE){
+    public function location2address(array $entry,$targetKey='Address',bool $isDebugging=FALSE):array
+    {
         $debugArr=array('entry_in'=>$entry);
         if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
@@ -73,7 +76,8 @@ class GeoTools{
         return $entry;
     }
     
-    public function address2location($entry,$isDebugging=FALSE){
+    public function address2location(array $entry,bool $isDebugging=FALSE):array
+    {
         $debugArr=array('entry_in'=>$entry);
         if (!empty($entry['Content']['Address'])){
             $address=$entry['Content']['Address'];
@@ -105,7 +109,8 @@ class GeoTools{
         return $entry;    
     }
     
-    private function normalizeAddress($address){
+    private function normalizeAddress(array $address):array
+    {
         $normAddress=array();
         foreach ($address as $oldKey=>$value){
             $newKey=ucfirst($oldKey);
@@ -117,7 +122,8 @@ class GeoTools{
         return $normAddress;
     }
 
-    private function getRequestAddress($address=array()){
+    private function getRequestAddress(array $address=array()):array
+    {
         $osmAlias=array('House number'=>'housenumber',
                         'Street'=>'street',
                         'Town'=>'city',
@@ -138,7 +144,8 @@ class GeoTools{
         return $query;
     }
 
-    public function getMapHtml($arr){
+    public function getMapHtml(array $arr):array
+    {
         // This method returns the html-code for a map.
         // The map is based on the data provided by $entry['Params']['Geo'], if $entry is empty the current user obj will be used
         //
@@ -162,7 +169,8 @@ class GeoTools{
         return $arr;
     }
     
-    private function getMapLink($entry){
+    private function getMapLink(array $entry):string
+    {
         if (empty($entry['Params']['Geo'])){return '';}
         $href='http://www.openstreetmap.org/';
         $href.='?lat='.$entry['Params']['Geo']['lat'].'&amp;lon='.$entry['Params']['Geo']['lon'];
@@ -174,7 +182,8 @@ class GeoTools{
         return $html;
     }
     
-    public function getCountryCodes($country=FALSE){
+    public function getCountryCodes(string|bool $country=FALSE):array
+    {
         if ($country===FALSE){
             return $this->countryCodes;
         } else {
@@ -187,7 +196,8 @@ class GeoTools{
         }
     }
     
-    public function getDynamicMap($arr=array()){
+    public function getDynamicMap(array $arr=array()):string
+    {
         $html='';
         $toLoadArr=array('leafletCss'=>array('tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>'','element-content'=>''),
                          'leafletJ'=>array('tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','crossorigin'=>'','element-content'=>''),

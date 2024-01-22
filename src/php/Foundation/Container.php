@@ -14,15 +14,18 @@ class Container{
 
     private $oc;
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function jsCall($arr){
+    public function jsCall(array $arr):array
+    {
         $jsAnswer=array();
         if (isset($_POST['function'])){
             if (strcmp($_POST['function'],'container')===0){
@@ -47,7 +50,8 @@ class Container{
         return $arr;
     }
     
-    public function container($key=FALSE,$function='',$selector=array(),$settings=array(),$wrapperSettings=array(),$containerId=FALSE,$isJScall=FALSE){
+    public function container($key=FALSE,$function='',$selector=array(),$settings=array(),$wrapperSettings=array(),$containerId=FALSE,$isJScall=FALSE):string
+    {
         // This function provides a dynamic web-page container, it returns html-script.
         // The state of forms whithin the container is stored in  $_SESSION['Container'][$container-id]
         if ($isJScall){
@@ -97,7 +101,8 @@ class Container{
         return $html;
     }
 
-    private function containerMonitor($containerId,$registerSelector=FALSE){
+    private function containerMonitor($containerId,$registerSelector=FALSE):bool
+    {
         if ($registerSelector===FALSE){
             // check if data selected by registered selector for the selected container has changed
             if (!isset($_SESSION['container monitor'][$containerId])){return TRUE;}
@@ -124,7 +129,8 @@ class Container{
         return TRUE;
     }
     
-    private function selector2hash($registerSelector){
+    private function selector2hash($registerSelector):string
+    {
         if (isset($registerSelector['isSystemCall'])){$isSystemCall=$registerSelector['isSystemCall'];} else {$isSystemCall=FALSE;}
         if (isset($registerSelector['rightType'])){$rightType=$registerSelector['rightType'];} else {$rightType='Read';}
         if (isset($registerSelector['orderBy'])){$orderBy=$registerSelector['orderBy'];} else {$orderBy=FALSE;}
@@ -141,7 +147,8 @@ class Container{
     
     // Standard html widgets emploeyed by the container method
 
-    public function generic($arr){
+    public function generic(array $arr):array
+    {
         // This method provides a generic container widget
         if (!isset($arr['html'])){$arr['html']='';}
         if (empty($arr['settings']['method']) || empty($arr['settings']['classWithNamespace'])){
@@ -160,7 +167,8 @@ class Container{
         return $arr;
     }
 
-    public function entryEditor($arr,$isDebugging=FALSE){
+    public function entryEditor(array $arr,bool $isDebugging=FALSE):array
+    {
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         if (empty($arr['selector'])){return $arr;}
         if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
@@ -286,7 +294,8 @@ class Container{
         return $arr;        
     }
     
-    private function entryList($arr,$isDebugging=FALSE){
+    private function entryList(array $arr,bool $isDebugging=FALSE):array
+    {
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $SettingsTemplate=array('columns'=>array(array('Column'=>'Name','Filter'=>'')),
                                 'isSystemCall'=>FALSE,
@@ -426,7 +435,8 @@ class Container{
         return $arr;        
     }
     
-    private function getOffsetSelector($arr,$settings,$rowCount){
+    private function getOffsetSelector(array $arr,array $settings,int $rowCount):string
+    {
         $limit=intval($settings['limit']);
         if ($rowCount<=$limit){return '';}
         $options=array();
@@ -440,7 +450,8 @@ class Container{
         return $html;
     }
 
-    private function selectorFromSetting($selector,$settings,$resetFilter=FALSE){
+    private function selectorFromSetting(array $selector,array $settings,bool $resetFilter=FALSE):array
+    {
         // This function is a suporting function for entryList() only.
         // It has no further use.
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
@@ -454,7 +465,8 @@ class Container{
         return $selector;        
     }
 
-    public function comments($arr){
+    public function comments(array $arr):array
+    {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (empty($arr['selector'])){return $arr;}
         $arr['class']=(isset($arr['class']))?$arr['class']:'comment';
@@ -491,7 +503,8 @@ class Container{
         return $arr;
     }
     
-    public function tools($arr){
+    public function tools(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         $html='';
         $btn=$arr;
@@ -510,7 +523,8 @@ class Container{
     * @param array  $arr    Contains the entry selector of the entry to be sent and settings 
     * @return array
     */
-    public function sendEntry($arr){
+    public function sendEntry(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         // init settings
         $availableTransmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
@@ -564,7 +578,8 @@ class Container{
     * @param array  $isDebugging    If TRUE the method will create a debug-file when called
     * @return array
     */
-    public function getImageShuffle($arr,$isDebugging=FALSE){
+    public function getImageShuffle(array $arr,bool $isDebugging=FALSE):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         $selectBtnHtml='';
         $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>FALSE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
@@ -616,7 +631,8 @@ class Container{
     * @param array  $props    Contains the chart properties
     * @return string
     */
-    public function selector2xyChartHtml($selector,$traceDefArr,$props=array()){
+    public function selector2xyChartHtml(array $selector,array $traceDefArr,array $props=array()):string
+    {
         if (empty($selector['Source'])){
             throw new \ErrorException('Function '.__FUNCTION__.': selector[Source] is empty',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -710,7 +726,8 @@ class Container{
         return $html;
     }
     
-    private function str2range($str){
+    private function str2range(string $str):array
+    {
         if (empty($str)){return $str;}
         $strComps=preg_split('/[\|;]/',$str);
         foreach($strComps as $index=>$value){
@@ -723,7 +740,8 @@ class Container{
         return $strComps;
     }
     
-    private function strByGroup($value,$groupMode){
+    private function strByGroup($value,$groupMode):string
+    {
         $keys=array('year','month','day','hour','minute','second');
         $dateTimeDefualtComps=array('1000','06','15','12','12','30');
         if (strpos($groupMode,'group ')===FALSE || empty($value)){return $value;}
@@ -744,7 +762,8 @@ class Container{
         return $dateTime[0].'-'.$dateTime[1].'-'.$dateTime[2].' '.$dateTime[3].':'.$dateTime[4].':'.$dateTime[5];
     }
     
-    private function arrPostProcessing($arr,$processing,$dim='x'){
+    private function arrPostProcessing(array $arr,string $processing,string $dim='x'):array
+    {
         if ($processing!=='avr' && $processing!=='min' && $processing!=='max' && $processing!=='sum' && $processing!=='count'){
             return $arr;
         }
@@ -763,7 +782,8 @@ class Container{
         return $arr;
     }
     
-    public function getChart($arr,$isDebugging=FALSE){
+    public function getChart(array $arr,bool $isDebugging=FALSE):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         $settingsTemplate=array('traces'=>array(),'width'=>800,'height'=>300);
         $arr['settings']=array_merge($arr['settings'],$settingsTemplate);

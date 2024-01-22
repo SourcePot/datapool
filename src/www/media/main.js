@@ -119,13 +119,14 @@ jQuery(document).ready(function(){
         var selectBtns={};
         for (const [key,value] of Object.entries(mapEntries)){
             if (typeof value['Params']['Geo']!=='undefined'){
-                var selectId=jQuery('button[entry-id='+value['EntryId']+'][title^=Select]').first().attr('id');
+                var selectId=jQuery('button[entry-id='+value['EntryId']+']:contains("✦")').first().attr('id');
                 location=[parseFloat(value['Params']['Geo']['lat']),parseFloat(value['Params']['Geo']['lon'])];
                 var marker=L.marker(location).addTo(map);
                 var tooltip=L.tooltip().setLatLng(location).setContent(value['Folder']+'<br/>'+value['Name']).addTo(map);
                 selectBtns[jQuery(marker).attr('_leaflet_id')]=selectId;
                 marker.on('click',function(e){
                     var selectBtnSelector='#'+selectBtns[jQuery(this).attr('_leaflet_id')];
+                    console.log(value);
 					jQuery(selectBtnSelector).click();
                 });
             }

@@ -14,18 +14,21 @@ class Job{
     
     private $oc;
         
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
 
     /**
     * @return array The method runs the most overdue job, updates the job setting, adds generated webpage refrenced by the key "page html" to the provided array and returns the completed array.
     */
-    public function trigger($arr){
+    public function trigger(array $arr):array
+    {
         $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         // all jobs settings - remove non-existing job methods and add new job methods
         $jobs=array('due'=>array(),'undue'=>array());
@@ -88,7 +91,8 @@ class Job{
         return $arr;
     }
     
-    public function getJobOverview($arr){
+    public function getJobOverview(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['selector']['Folder']='All jobs';
         $arr['selector']['Name']='Timing';

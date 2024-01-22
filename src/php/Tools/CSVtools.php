@@ -27,17 +27,20 @@ class CSVtools{
                             );
     private $csvSettings=array('offset'=>0,'limit'=>5,'enclosure'=>4,'separator'=>1,'escape'=>6,'lineSeparator'=>7,'noEnclosureOutput'=>TRUE,'mode'=>0);
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $this->csvTimestamp=time();
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entry2csv();
     }
     
-    public function isCSV($selector){
+    public function isCSV(array $selector):bool
+    {
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         if (!is_file($file)){return FALSE;}
         if (strpos(mime_content_type($file),'text/')!==0){return FALSE;}
@@ -58,7 +61,8 @@ class CSVtools{
         return FALSE;
     }
     
-    public function alias($index=FALSE,$validate='separator'){
+    public function alias($index=FALSE,$validate='separator')
+    {
         // This method returns an alias based on the provided $index.
         // If $index is FALSE, an array of options is returned based on the labels in $csvAlias.
         // The options are filtered by the $validate argument.
@@ -80,16 +84,19 @@ class CSVtools{
         }
     }
     
-    public function getSettings(){
+    public function getSettings():array
+    {
         return $this->csvSettings;
     }
     
-    public function setSetting($setting){
+    public function setSetting(array $setting):array
+    {
         $this->csvSettings=array_merge($this->csvSettings,$setting);
         return $this->csvSettings;
     }
     
-    private function csvSetting(){
+    private function csvSetting():array
+    {
         $csvSettings=array();
         foreach($this->csvSettings as $settingKey=>$settingValueIndex){
             if (!isset($this->csvAlias[$settingValueIndex])){continue;}
@@ -98,7 +105,8 @@ class CSVtools{
         return $csvSettings;
     }
     
-    public function csvIterator($selector){
+    public function csvIterator(array|string $selector):\Generator
+    {
         if (is_array($selector)){
             $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         } else {
@@ -126,7 +134,8 @@ class CSVtools{
         }
     }
     
-    public function entry2csv($entry=FALSE,$rowId=FALSE){
+    public function entry2csv(array $entry=array()):array|bool
+    {
         // When called with an object this method adds the object to a session var space for later
         // csv-file creation. When the class is created the session var space will be written to respective csv-file-objects
         // csv-file name = $entry['Name'], if $entry['EntryId'] is not set it will be created from $entry['Name']
@@ -188,7 +197,8 @@ class CSVtools{
         return FALSE;
     }
     
-    private function getCsvRow($row,$csvSetting){
+    private function getCsvRow(array $row,array $csvSetting):array
+    {
         $result=array('header'=>'','line'=>'');
         $valueStr='';
         foreach($row as $column=>$value){
@@ -209,7 +219,8 @@ class CSVtools{
         return $result;
     }
     
-    public function csvEditor($arr,$isDebugging=FALSE){
+    public function csvEditor(array $arr,bool $isDebugging=FALSE):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
         $settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
@@ -312,7 +323,8 @@ class CSVtools{
         return $arr;
     }
     
-    public function matrix2csvDownload($matrix){
+    public function matrix2csvDownload(array $matrix):string
+    {
         // write/update file
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir();
         $file=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($matrix);
@@ -353,8 +365,6 @@ class CSVtools{
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
         return $html;
     }
-    
 
-    
 }
 ?>

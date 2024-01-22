@@ -19,7 +19,8 @@ final class Root{
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
 
-    public function __construct(){
+    public function __construct()
+    {
         $GLOBALS['script start time']=hrtime(TRUE);
         session_start();
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
@@ -50,7 +51,8 @@ final class Root{
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     * This method can be used to add external objects to the Datapool object collection. 
     */
-    private function registerVendorClasses($oc,$isDebugging=FALSE){
+    private function registerVendorClasses(array $oc,bool $isDebugging=FALSE):array
+    {
         // instantiate external classes
         $debugArr=array('registerVendorClasses'=>$this->registerVendorClasses);
         foreach($this->registerVendorClasses as $classIndex=>$classWithNamespace){
@@ -70,14 +72,16 @@ final class Root{
         return $oc;
     }
         
-    public function getOc(){
+    public function getOc():array
+    {
         return $this->oc;
     }
         
     /**
     * @return array An associative array that contains the full generated webpage referenced by the key "page html".
     */
-    public function run(){
+    public function run():array
+    {
         $this->structure['callingWWWscript']=$this->currentScript;
         $pathInfo=pathinfo($this->currentScript);
         // get current temp dir
@@ -121,7 +125,8 @@ final class Root{
         return $arr;
     }
     
-    public function getRegisteredMethods($method=FALSE){
+    public function getRegisteredMethods(string $method=''):array
+    {
         if (empty($method)){
             return $this->structure['registered methods'];
         } else if (isset($this->structure['registered methods'][$method])){
@@ -131,7 +136,8 @@ final class Root{
         }
     }
 
-    public function getImplementedInterfaces($interface=FALSE){
+    public function getImplementedInterfaces(string $interface=''):array
+    {
         if (empty($interface)){
             return $this->structure['implemented interfaces'];
         } else if (isset($this->structure['implemented interfaces'][$interface])){
@@ -141,7 +147,8 @@ final class Root{
         }
     }
 
-    public function source2class($source){
+    public function source2class(string $source):string
+    {
         if (isset($this->structure['source2class'][$source])){
             return $this->structure['source2class'][$source];
         } else {
@@ -149,7 +156,8 @@ final class Root{
         }
     }
 
-    public function class2source($class){
+    public function class2source(string $class):string
+    {
         if (isset($this->structure['class2source'][$class])){
             return $this->structure['class2source'][$class];
         } else {
@@ -163,7 +171,8 @@ final class Root{
     * In each class the Datapool object collection array can be accessed by $this->oc[...],
     * with "..." being the classWithNamespace which refers to the intantiated object of this class.
     */
-    private function createObjList($objListFile){
+    private function createObjList(string $objListFile)
+    {
         $orderedInitialization=array('MiscTools.php'=>'301|',
                                      'Access.php'=>'302|',
                                      'Filespace.php'=>'303|',
@@ -222,7 +231,8 @@ final class Root{
     * This method returns the Datapool object collection from the object list file.
     * If the object list file does not exist, it will be created.
     */
-    private function getInstantiatedObjectCollection($oc=array()){
+    private function getInstantiatedObjectCollection(array $oc=array()):array
+    {
         $objListNeedsToBeRebuild=FALSE;
         $objListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objListFile)){
@@ -253,7 +263,8 @@ final class Root{
         return $oc;
     }
     
-    private function updateStructure($oc,$classWithNamespace){
+    private function updateStructure(array $oc,string $classWithNamespace):array
+    {
         $methods2register=array('init'=>FALSE,
                                 'job'=>FALSE,
                                 'run'=>TRUE,            // class->run(), which returns menu definition
@@ -286,7 +297,8 @@ final class Root{
         return $this->structure;
     }
     
-    private function initDirs(){
+    private function initDirs():array
+    {
         $relThisDirSuffix='/src/php';
         $wwwDirIndicator='/src/www';
         // relative dirs from root
@@ -323,7 +335,8 @@ final class Root{
         return $GLOBALS['dirs'];
     }
 
-    private function initExceptionHandler(){
+    private function initExceptionHandler()
+    {
         // error handling
         set_exception_handler(function(\Throwable $e){
             $errMessage=$e->getMessage();

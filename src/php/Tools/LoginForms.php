@@ -44,11 +44,13 @@ class LoginForms{
                           array('key'=>'9','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>53,'description'=>'Cloud'),
                         );
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $this->formType=intval($this->pageSettings['loginForm']);
         
@@ -57,7 +59,8 @@ class LoginForms{
         $this->oc=$oc;
     }
     
-    public function oneTimeLoginEntry($arr,$user){
+    public function oneTimeLoginEntry(array $arr,$user):array
+    {
         $maxDigitsIndex=count($this->digits)-1;
         $loginEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
                           'Group'=>$this->pageSettings['pageTitle'],
@@ -78,7 +81,8 @@ class LoginForms{
         return $loginEntry;
     }
     
-    private function formData(){
+    private function formData():array
+    {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'loginForm');
         $result=$formData['val'];
         $result['cmd']=empty($formData['cmd'])?'':key($formData['cmd']);
@@ -105,7 +109,8 @@ class LoginForms{
         return $result;
     }
     
-    public function getLoginForm($arr=array()){
+    public function getLoginForm(array $arr=array()):array
+    {
         $arr['result']=$this->formData();
         //
         $emailLabel=array('tag'=>'label','element-content'=>'Email','for'=>'login-email');
@@ -137,7 +142,8 @@ class LoginForms{
         return $arr;
     }
     
-    private function getStandard($arr=array()){
+    private function getStandard(array $arr=array()):string
+    {
         $passphraseLabel=array('tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw');
         $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'6','style'=>array('clear'=>'both','width'=>220),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
@@ -145,7 +151,8 @@ class LoginForms{
         return $html;
     }
     
-    private function getSymbolKeypad($arr=array()){
+    private function getSymbolKeypad(array $arr=array()):string
+    {
         $template=array('symbolSize'=>40,'html'=>'','symbolColumnCount'=>5);
         $arr=array_merge($template,$arr);
         $hashSymbolArr=array();
@@ -206,7 +213,8 @@ class LoginForms{
         return $html;
     }
     
-    private function getHash($length){
+    private function getHash(int $length):string
+    {
         $hash='';
         $byteStr=random_bytes($length);
         for ($i=0;$i<$length;$i++){
@@ -222,7 +230,8 @@ class LoginForms{
         return $hash;
     }
 
-    private function isLoggedIn(){
+    private function isLoggedIn():bool
+    {
         return intval($_SESSION['currentUser']['Privileges'])>1;
     }
 

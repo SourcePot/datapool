@@ -20,28 +20,33 @@ class Dictionary{
     private $sourceLng='en';
     private $lngCodes=array('en'=>'English','de'=>'Deutsch','es'=>'Español');
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
 
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->initDictionaryIfEmpty();
         $this->registerToolbox();
     }
     
-    public function getEntryTable(){
+    public function getEntryTable()
+    {
         return $this->entryTable;
     }
 
-    public function getEntryTemplate(){
+    public function getEntryTemplate()
+    {
         return $this->entryTemplate;
     }
 
-    private function initDictionaryIfEmpty(){
+    private function initDictionaryIfEmpty()
+    {
         $added=0;
         $hasEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(array('Source'=>$this->entryTable,'Group'=>'Translations from en'));
         if (empty($hasEntry)){
@@ -67,7 +72,8 @@ class Dictionary{
         return $added;
     }
     
-    public function unifyEntry($entry){
+    public function unifyEntry(array $entry):array
+    {
         $entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);
         $entry['Group']='Translations from en';
         $entry['Folder']=$entry['langCode'];
@@ -81,7 +87,8 @@ class Dictionary{
         return $entry;
     }
     
-    public function lng($phrase,$langCode=FALSE,$translation=FALSE){
+    public function lng($phrase,string $langCode='',string|bool$translation=FALSE)
+    {
         // This method provides the translation of the phrase argument or updates the translation if translation argument is provided.
         if (empty($langCode)){$langCode=$_SESSION['page state']['lngCode'];}
         $langCode=strtolower($langCode);
@@ -109,7 +116,8 @@ class Dictionary{
         return $phrase;
     }
     
-    public function lngText($text='Dear {{First name}},',$placeholder=array('First name'=>'John')){
+    public function lngText(string $text='Dear {{First name}},',array $placeholder=array('First name'=>'John')):string
+    {
         $regexp='/(\s*\{{2}[\w\s]+\}{2}\s*)|([\r\n.,]+)/';
         $phrases=preg_split($regexp,$text);
         foreach($phrases as $index=>$from){
@@ -123,7 +131,8 @@ class Dictionary{
         return $text;
     }
     
-    public function lngSelector(){
+    public function lngSelector():string
+    {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['select'])){
             $_SESSION['page state']['lngCode']=$formData['val']['lngCode'];
@@ -134,7 +143,8 @@ class Dictionary{
         return $html;
     }
     
-    public function dictWidget($arr=array()){
+    public function dictWidget(array $arr=array()):array
+    {
         $langCode=$_SESSION['page state']['lngCode'];
         if (strcmp($langCode,$this->sourceLng)===0){
             $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Please select a language different to '.$this->lngCodes[$this->sourceLng],'style'=>array('font-size'=>'1.2rem','padding'=>'10px','color'=>'#f00')));
@@ -171,12 +181,14 @@ class Dictionary{
         return array('html'=>$html,'wrapperSettings'=>array('class'=>'toolbox'));
     }
     
-    public function dictToolbox($arr=array()){
+    public function dictToolbox(array $arr=array()):string
+    {
         $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('class'=>'toolbox'));
         return $html;
     }
     
-    public function registerToolbox(){
+    public function registerToolbox():array
+    {
         $toolbox=array('Name'=>'Dictionary',
                        'Content'=>array('class'=>__CLASS__,'method'=>'dictToolbox','args'=>array(),'settings'=>array()),
                        );

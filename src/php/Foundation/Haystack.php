@@ -17,22 +17,31 @@ class Haystack{
     private $entryTable;
     private $entryTemplate=array();
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
     
-    public function processSQLquery($sql,$inputs){
+    public function processSQLquery($sql,$inputs)
+    {
         
     }
 }

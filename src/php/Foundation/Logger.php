@@ -28,14 +28,14 @@ class Logger extends \Psr\Log\AbstractLogger
                                'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                );
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init($oc)
+    public function init(array $oc)
     {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
@@ -86,7 +86,7 @@ class Logger extends \Psr\Log\AbstractLogger
         return $entry;
     }
     
-    private function interpolate( string $message, array $context=array()):string
+    private function interpolate(string $message,array $context=array()):string
     {
         $replace=array();
         foreach ($context as $key=>$val){
@@ -142,7 +142,6 @@ class Logger extends \Psr\Log\AbstractLogger
         if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['EntryId'])){$_SESSION['page state']['toolbox']=$toolbox['EntryId'];}
         return $toolbox;
     }
-
 
 }
 ?>

@@ -14,15 +14,18 @@ class MediaTools{
 
     private $oc;
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function getPreview($arr){
+    public function getPreview(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!empty($arr['maxDim'])){
             $arr['settings']['style']['max-width']=$arr['maxDim'];
@@ -90,7 +93,8 @@ class MediaTools{
         return $arr;
     }
 
-    private function addPreviewTextStyle($arr){
+    private function addPreviewTextStyle(array $arr):array
+    {
         $arr['settings']['style']['float']='left';
         $arr['settings']['style']['clear']='both';
         $arr['settings']['style']['font-size']='0.8em';
@@ -99,7 +103,8 @@ class MediaTools{
         return $arr;
     }    
     
-    public function getIcon($arr){
+    public function getIcon(array $arr):array|string
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
         if (!isset($arr['selector']['Params']['File']['MIME-Type'])){$arr['selector']['Params']['File']['MIME-Type']='text';}
@@ -118,10 +123,14 @@ class MediaTools{
             $imageArr['style']['background-image']='url('.$iconSrc.')';
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
-        if (empty($arr['returnHtmlOnly'])){return $arr;} else {return $arr['html'];}
+        if (empty($arr['returnHtmlOnly'])){
+            return $arr;
+        } else {
+            return $arr['html'];
+        }
     }
     
-    public function presentEntry($arr){
+    public function presentEntry(array $arr):array|string{
         if (empty($arr['selector'])){
             return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called arr["selector"] being empty.'));
         } else if (!isset($arr['selector']['Content'])){
@@ -152,10 +161,15 @@ class MediaTools{
             }
         }
         if (!empty($arr['setting']['Show entry editor'])){$arr=$this->oc['SourcePot\Datapool\Foundation\Container']->entryEditor($arr);}
-        if (empty($arr['returnHtmlOnly'])){return $arr;} else {return $arr['html'];}
+        if (empty($arr['returnHtmlOnly'])){
+            return $arr;
+        } else {
+            return $arr['html'];
+        }
     }
     
-    private function addElementFromKeySettingValue($arrElements,$key,$value){
+    private function addElementFromKeySettingValue(array $arrElements,$key,$value):array
+    {
         // comments are excluded due to varying keys
         if (strpos($key,'Content|Comments')===0){return $arrElements;}
         if (strpos($arrElements['arr']['selector']['Source'],'settings')===0){return $arrElements;}
@@ -201,7 +215,8 @@ class MediaTools{
         return $arrElements;
     }
     
-    public function loadImage($arr){
+    public function loadImage(array $arr):array|bool
+    {
         $image=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr);
         // get source file
         $imageFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($image);
@@ -228,7 +243,8 @@ class MediaTools{
         }
     }
     
-    private function getMarkdown($arr){
+    private function getMarkdown(array $arr):array
+    {
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $arr['settings']['style']=array_merge(array('overflow'=>'hidden'),$arr['settings']['style']);
         $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$arr['selector']['EntryId'],'Write'=>$arr['selector']['Write'],'Write'=>$arr['selector']['Read']);
@@ -264,7 +280,8 @@ class MediaTools{
         return $arr;
     }
     
-    private function getVideo($arr){
+    private function getVideo(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $video=$arr['selector'];
@@ -286,7 +303,8 @@ class MediaTools{
         return $arr;
     }
     
-    private function getAudio($arr,$maxDim=FALSE){
+    private function getAudio(array $arr,$maxDim=FALSE):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         $audio=$arr['selector'];
         $audioFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($audio);
@@ -306,7 +324,8 @@ class MediaTools{
         return $arr;
     }
 
-    private function getPdf($arr){
+    private function getPdf(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $arr['settings']['style']=array_merge(array('margin'=>'10px 0 0 5px','height'=>'70vh','border'=>'1px solid #444'),$arr['settings']['style']);
@@ -328,7 +347,8 @@ class MediaTools{
         return $arr;
     }    
     
-    private function getHtml($arr){
+    private function getHtml(array $arr):array
+    {
         if (!isset($arr['html'])){$arr['html']='';}
         $style=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
@@ -350,7 +370,8 @@ class MediaTools{
         return $arr;
     }    
     
-    private function getImage($arr){
+    private function getImage(array $arr):string|array
+    {
         if (isset($arr['settings']['style']['max-width'])){
             $arr['maxDim']=$arr['settings']['style']['max-width'];
         }
@@ -492,7 +513,8 @@ class MediaTools{
         return $html;
     }
         
-    private function styleClass2Params($arr){
+    private function styleClass2Params(array $arr):array
+    {
         $transformArr=array('deg'=>0,'flip'=>FALSE);
         $styleComps=explode(' ',$arr['styleClass']);
         $transformArr['deg']=intval(preg_replace('/[^0-9]/','',$styleComps[0]));
@@ -507,7 +529,8 @@ class MediaTools{
         return $transformArr;
     }
 
-    private function isBase64Encoded($data){
+    private function isBase64Encoded($data):bool
+    {
         if (preg_match('%^[a-zA-Z0-9/+]*={0,2}$%',$data)){
             return TRUE;
         } else {
@@ -515,7 +538,8 @@ class MediaTools{
         }
     }
 
-    public function scaleImageToCover($arr,$imgFile,$boxStyleArr){
+    public function scaleImageToCover(array $arr,string $imgFile,array $boxStyleArr):array
+    {
         $imgPropArr=$this->getImgPropArr($imgFile);
         $arr=$this->resetScaleImage($arr);
         if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
@@ -542,7 +566,8 @@ class MediaTools{
         return $arr;
     }    
 
-    public function scaleImageToContain($arr,$imgFile,$boxStyleArr){
+    public function scaleImageToContain(array $arr,string $imgFile,array $boxStyleArr):array
+    {
         $imgPropArr=$this->getImgPropArr($imgFile);
         $arr=$this->resetScaleImage($arr);
         if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
@@ -570,7 +595,8 @@ class MediaTools{
         return $arr;
     }
     
-    private function resetScaleImage($arr){
+    private function resetScaleImage(array $arr):array
+    {
         if (isset($arr['width'])){unset($arr['width']);}
         if (isset($arr['height'])){unset($arr['height']);}
         if (isset($arr['newWidth'])){unset($arr['newWidth']);}
@@ -584,7 +610,8 @@ class MediaTools{
         return $arr;
     }
     
-    private function getImgPropArr($imgFile){
+    private function getImgPropArr(string $imgFile):array
+    {
         $exif=$this->addExif2entry(array(),$imgFile);
         $exif=current($exif);
         $imgPropArr=getimagesize($imgFile);
@@ -605,7 +632,8 @@ class MediaTools{
         return $imgPropArr;
     }
     
-    public function addExif2entry($entry,$file){
+    public function addExif2entry(array $entry,string $file):array
+    {
         if (!is_file($file)){return $entry;}
         if (!function_exists('exif_read_data')){return $entry;}
         $exif=@exif_read_data($file,'IFD0');

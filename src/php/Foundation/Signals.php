@@ -16,26 +16,33 @@ class Signals{
     private $entryTable;
     private $entryTemplate=array();
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
     
-    private function getSignalSelector($callingClass,$callingFunction,$name){
+    private function getSignalSelector(string $callingClass,string $callingFunction,string $name):array
+    {
         $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction,'Name'=>$name);
         $signalSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signalSelector,array('Source','Group','Folder','Name'),'0','',TRUE);
         return $signalSelector;
     }
     
-    public function updateSignal($callingClass,$callingFunction,$name,$value,$dataType='int',$read='ADMIN_R',$write='ADMIN_R'){
+    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',$read='ADMIN_R',$write='ADMIN_R'):array
+    {
         $newContent=array('value'=>$value,'dataType'=>$dataType,'timeStamp'=>time());
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
@@ -62,13 +69,15 @@ class Signals{
         return $signal;
     }
     
-    public function isActiveTrigger($EntryId,$isSystemCall=TRUE){
+    public function isActiveTrigger(string $EntryId,bool $isSystemCall=TRUE):bool
+    {
         $selector=array('Source'=>$this->entryTable,'Group'=>'trigger','EntryId'=>$EntryId);
         $trigger=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,$isSystemCall);
         return (!empty($trigger['Content']['isActive']));
     }
     
-    public function resetTrigger($EntryId,$isSystemCall=FALSE){
+    public function resetTrigger(string $EntryId,bool $isSystemCall=FALSE):array
+    {
         $trigger=array('Source'=>$this->entryTable,'Group'=>'trigger','EntryId'=>$EntryId);
         $trigger=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($trigger,$isSystemCall);
         if (!empty($trigger['Content']['isActive'])){
@@ -78,7 +87,8 @@ class Signals{
         return $trigger;
     }
 
-    private function updateTrigger($signal){
+    private function updateTrigger(array $signal):array
+    {
         $relevantTrigger=array();
         $triggerSelector=array('Source'=>$this->entryTable,'Group'=>'trigger','Content'=>'%'.$signal['EntryId'].'%');
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read','Name') as $trigger){
@@ -92,7 +102,8 @@ class Signals{
         return $relevantTrigger;
     }
     
-    private function slopDetector($trigger,$signal){
+    private function slopDetector(array $trigger,array $signal):bool
+    {
         $arr=array();
         foreach($signal['Content']['signal'] as $index=>$signalArr){
             if (strcmp($signalArr['dataType'],'int')===0 || strcmp($signalArr['dataType'],'bool')===0){
@@ -115,7 +126,8 @@ class Signals{
         return ($condtionMet)?$condtionMet:((isset($trigger['Content']['isActive']))?$trigger['Content']['isActive']:FALSE);
     }
     
-    public function getTriggerWidget($callingClass,$callingFunction){
+    public function getTriggerWidget(string $callingClass,string $callingFunction):string
+    {
         $triggerSelector=array('Source'=>$this->entryTable,'Group'=>'trigger','Folder'=>$callingClass.'::'.$callingFunction);
         $trigger=array('Type'=>$this->entryTable.' trigger','Read'=>'ADMIN_R','Write'=>'ADMIN_R');
         $trigger=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($trigger);
@@ -142,7 +154,8 @@ class Signals{
         return $html;
     }
     
-    public function getMessageWidget($callingClass,$callingFunction){
+    public function getMessageWidget(string $callingClass,string $callingFunction):string
+    {
         $html='';
         $availableTransmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
         if (!isset($settings['Transmitter'])){$settings['Transmitter']=key($availableTransmitter);}
@@ -163,7 +176,8 @@ class Signals{
         return $html;
     }
 
-    private function sendTrigger($sendOnTriggerEntry,$trigger){
+    private function sendTrigger($sendOnTriggerEntry,array $trigger)
+    {
         $name=$trigger['Name'].' was triggered';
         $entry2send=$sendOnTriggerEntry;
         $entry2send['Name']='';
@@ -173,7 +187,8 @@ class Signals{
         return $success;
     }
 
-    private function getTriggerRow($trigger=array()){
+    private function getTriggerRow(array $trigger=array()):array
+    {
         $callingFunction='getTriggerWidget';
         $arr=array('Signal'=>$this->getSignalOptions());
         $arr['Active if']=array('stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
@@ -222,7 +237,8 @@ class Signals{
         return $row;
     }
     
-    public function getSignalPlot($selector=array()){
+    public function getSignalPlot(array $selector=array()):string
+    {
         $events=array();
         $selector['Source']='signals';
         $selector['Group']='signal';
@@ -236,17 +252,20 @@ class Signals{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->simpleEventChart($events,$styles);
     }
     
-    public function getSignalOptions($selector=array()){
+    public function getSignalOptions(array $selector=array()):array
+    {
         $selector['Group']='signal';
         return $this->getOptions($selector,TRUE);
     }
     
-    public function getTriggerOptions($selector=array()){
+    public function getTriggerOptions(array $selector=array()):array
+    {
         $selector['Group']='trigger';
         return $this->getOptions($selector,TRUE);
     }
 
-    public function getOptions($selector=array(),$isSystemCall=FALSE){
+    public function getOptions(array $selector=array(),bool $isSystemCall=FALSE):array
+    {
         $options=array();
         $selector['Source']=$this->getEntryTable();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
