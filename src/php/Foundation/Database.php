@@ -70,9 +70,13 @@ class Database{
         return self::DB_TIMEZONE;
     }
     
-    public function getDbStatus():string
+    public function getDbStatus():string|bool
     {
-        return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
+        if (isset($this->dbObj)){
+            return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
+        } else {
+            return FALSE;
+        }
     }
 
     public function enrichToReplace(array $toReplace=array()):array
@@ -240,11 +244,18 @@ class Database{
         $access['Read']=65535;
         $access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
-        $this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
-        $this->dbObj->exec("SET CHARACTER SET 'utf8'");
-        $this->dbObj->exec("SET NAMES utf8mb4");
+        try{
+            $this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
+            $this->dbObj->exec("SET CHARACTER SET 'utf8'");
+            $this->dbObj->exec("SET NAMES utf8mb4");
+        } catch (\Exception $e){
+            $msg=$e->getMessage();
+            $this->oc['logger']->log('critical',$msg);
+            echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i>');
+            exit(0);
+        }
         $this->dbName=$access['Content']['dbName'];
-        return $this->dbObj->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
+        return $this->getDbStatus();
     }
     
     private function collectDatabaseInfo():array

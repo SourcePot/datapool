@@ -15,15 +15,18 @@ class XLStools{
     private $oc;
     
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function isXLS($selector){
+    public function isXLS(array $selector):bool
+    {
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         if (!is_file($file)){return FALSE;}
         if (strpos(mime_content_type($file),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')===FALSE){
@@ -33,7 +36,8 @@ class XLStools{
         }
     }
     
-    public function iterator($selector,$reader='xlsx'){
+    public function iterator($selector,$reader='xlsx'):\Generator
+    {
         if (is_array($selector)){
             $xlsFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         } else {
@@ -45,7 +49,7 @@ class XLStools{
         try{
             $spreadsheet=$reader->load($xlsFile);
         } catch(\Exception $e){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','"{function}" failed to load "{file}"',array('function'=>__FUNCTION__,'file'=>$xlsFile));         
+            $this->oc['logger']->log('error','"{function}" failed to load "{file}"',array('function'=>__FUNCTION__,'file'=>$xlsFile));         
             yield array();
         }
         $worksheet=$spreadsheet->getActiveSheet();
@@ -64,7 +68,9 @@ class XLStools{
                     $keys[$columnIndex]=$cellValue;
                 }
             }
-            if ($xls->key()>1){yield $result;}
+            if ($xls->key()>1){
+                yield $result;
+            }
             $xls->next();
         }
     }

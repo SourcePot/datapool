@@ -61,7 +61,7 @@ class Filespace{
         $vars['Last failed deletions']=array();
         $dir2process=array_shift($vars['Dirs to process']);
         if (empty($dir2process['dir'])){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Failed "{class}->{function}()" due to array key in "dir2process[dir]" missing or empty array',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
+            $this->oc['logger']->log('error','Failed "{class}->{function}()" due to array key in "dir2process[dir]" missing or empty array',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
             $vars['Error']='Key missing or empty: dir2process[dir]';
         } else {
             $files=scandir($dir2process['dir']);
@@ -87,7 +87,7 @@ class Filespace{
             }
             if (!empty($vars['Last deleted files']) || !empty($vars['Last failed deletions'])){
                 $context=array('table'=>$dir2process['table'],'deleted'=>count($vars['Last deleted files']),'failed'=>count($vars['Last failed deletions']));
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
+                $this->oc['logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
             }
             $vars['Last processed dir']=$dir2process['dir'];
         }
@@ -314,7 +314,7 @@ class Filespace{
             $fileNamePathInfo=pathinfo($entry['Params']['File']['Name']);
             if (!isset($fileNamePathInfo['extension'])){
                 $entry['Params']['File']['Name'].='.'.$entry['Params']['File']['Extension'];
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','"{function}" file extension added to filename {fileName}',array('function'=>__FUNCTION__,'fileName'=>$entry['Params']['File']['Name']));
+                $this->oc['logger']->log('notice','"{function}" file extension added to filename {fileName}',array('function'=>__FUNCTION__,'fileName'=>$entry['Params']['File']['Name']));
             }
             header('Content-Type: application/'.$entry['Params']['File']['Extension']);
             header('Content-Disposition: attachment; filename="'.$entry['Params']['File']['Name'].'"');
@@ -322,7 +322,7 @@ class Filespace{
             readfile($fileForDownload);
             exit;
         } else {
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','No file found to download.',array());    
+            $this->oc['logger']->log('notice','No file found to download.',array());    
         }
     }
 
@@ -585,7 +585,7 @@ class Filespace{
             // file info is missing
         } else if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
             if (empty($entry['pdfParser'])){
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
+                $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
             } else {
                 $parserMethod=$entry['pdfParser'];
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
@@ -651,7 +651,7 @@ class Filespace{
         $zip->close();
         $statistics['Attached filesize']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($statistics['Attached filesize'],2,1024);
         $msg='Export resulted in '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
-        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice',$msg,array());    
+        $this->oc['logger']->log('notice',$msg,array());    
         return $dumpFile;
     }
     
@@ -705,7 +705,7 @@ class Filespace{
             $statistics['zip errors']++;
         }
         $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Import resulted in {statistics}',$context);    
+        $this->oc['logger']->log('notice','Import resulted in {statistics}',$context);    
         return $statistics;
     }
     

@@ -63,7 +63,7 @@ private $entryTable;
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            
                 } else if (strcmp($pageSettings['homePageContent'],'video')===0){
                     if (empty($pageSettings['homePageContentSource'])){
-                        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','The pageSetting "homePageContent" == "video" but "homePageContentSource" is empty',array());    
+                        $this->oc['logger']->log('error','The pageSetting "homePageContent" == "video" but "homePageContentSource" is empty',array());    
                     } else {
                         $homePageContentSource=$pageSettings['homePageContentSource'];
                         if (stripos($homePageContentSource,'://')===FALSE){

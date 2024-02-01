@@ -31,6 +31,10 @@ class Dictionary{
     {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        // set language
+        if (empty($_SESSION['page state']['lngCode'])){
+            $_SESSION['page state']['lngCode']=$this->getValidLngCode($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        }
         $this->initDictionaryIfEmpty();
         $this->registerToolbox();
     }
@@ -43,6 +47,17 @@ class Dictionary{
     public function getEntryTemplate()
     {
         return $this->entryTemplate;
+    }
+
+    public function getValidLngCode(string $lngCode):string
+    {
+        $lngCode=substr($lngCode,0,2);
+        $lngCode=strtolower($lngCode);
+        if (isset($this->lngCodes[$lngCode])){
+            return $lngCode;
+        } else {
+            return 'en';
+        }
     }
 
     private function initDictionaryIfEmpty()

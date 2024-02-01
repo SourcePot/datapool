@@ -717,7 +717,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $strComps=preg_split("/[^|a-z0-9]+/",$string);
         if (count($strComps)<3){
             $context=array('method'=>__FUNCTION__,'string'=>$string);
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Method "{method}" failed to parse date from "{string}"',$context);         
+            $this->oc['logger']->log('warning','Method "{method}" failed to parse date from "{string}"',$context);         
             return array();
         }
         $strCompsCopy=$strComps;

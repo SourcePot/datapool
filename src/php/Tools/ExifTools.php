@@ -14,15 +14,18 @@ class ExifTools{
     
     private $oc;
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
     
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function addExif2entry($entry,$file){
+    public function addExif2entry(array $entry,string $file):array
+    {
         $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addExif2entry($entry,$file);
         $entry=$this->addMimeType($entry);
         $entry=$this->addOrientation($entry);
@@ -33,7 +36,8 @@ class ExifTools{
         return $entry;
     }
     
-    private function addMimeType($entry){
+    private function addMimeType(array $entry):array
+    {
         if (isset($entry['exif']['MimeType'])){
             $entry['Params']['File']['MIME-Type']=$entry['exif']['MimeType'];
             unset($entry['exif']['MimeType']);
@@ -41,7 +45,8 @@ class ExifTools{
         return $entry;
     }
     
-    private function addCamera($entry){
+    private function addCamera(array $entry):array
+    {
         $defs=array('Model'=>'Model','Make'=>'Make',
                     'XResolution'=>'XResolution','YResolution'=>'YResolution','Compression'=>'Compression',
                     'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
@@ -56,7 +61,8 @@ class ExifTools{
         return $entry;
     }
     
-    private function addGPS($entry){
+    private function addGPS(array $entry):array
+    {
         if (isset($entry['Params']['Geo'])){$oldGeo=$entry['Params']['Geo'];} else {$oldGeo=array('lat'=>9999,'lon'=>9999);}
         // get lat and lon from exif
         $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude');        
@@ -87,7 +93,8 @@ class ExifTools{
         return $entry;
     }
 
-    private function addDateTime($entry){
+    private function addDateTime(array $entry):array
+    {
         $exifDateTime='';
         if (isset($entry['exif']['GPSDateStamp'])){
             $exifDateTime=str_replace(':','-',$entry['exif']['GPSDateStamp']);
@@ -118,7 +125,8 @@ class ExifTools{
         return $entry;
     }
     
-    private function addOrientation($entry){
+    private function addOrientation(array $entry):array
+    {
         if (isset($entry['exif']['Orientation'])){
             if ($entry['exif']['Orientation']===1){
                 $entry['Params']['File']['Style class']='rotate0';
@@ -142,7 +150,8 @@ class ExifTools{
         return $entry;
     }
     
-    private function normalizeEncoding($exifValue){
+    private function normalizeEncoding($exifValue)
+    {
         if (is_string($exifValue)){
             $encoding=mb_detect_encoding($exifValue,mb_detect_order(),TRUE);
             if (is_string($encoding)){
@@ -152,7 +161,8 @@ class ExifTools{
         return $exifValue;
     }
     
-    private function time2str($time){
+    private function time2str($time):string
+    {
         $timeStr='';
         if (is_array($time)){
             foreach($time as $index=>$value){
@@ -169,7 +179,8 @@ class ExifTools{
         return $timeStr;
     }
     
-    public function degMinSec2float($degMinSec,$returnFloat=TRUE){
+    public function degMinSec2float($degMinSec,bool $returnFloat=TRUE)
+    {
         if (is_array($degMinSec)){
             $result=0;
             $multipliers=array(1,1/60,1/3600);
@@ -184,10 +195,18 @@ class ExifTools{
         }
     }
 
-    public function fraction2float($str,$returnFloat=TRUE){
-        // This method calculates a fraction provided within a string.
-        // If $returnFloat is FALSE the whole string will be returned else 
-        // only the result will be returned or FALSE if the calculation failed.        
+    /**
+    * This method calculates a fraction provided from a provided string,e.g. "... 12/13 ...".
+    *
+    * @param string|int|float|bool Input value for conversion to float  
+    * @return   float if $returnFloat==TRUE and no division by zero, e.g. 0.5 for "These are 1/5 litres"; 
+    *           false if $returnFloat==TRUE and division by zero, e.g. FALSE for "These are 1/0 litres";
+    *           string if $returnFloat==FALSE e.g. "These are 0.5 litres" for "These are 1/5 litres" or; 
+    *                     "These are 1/0 litres" for "These are 1/0 litres" 
+    */
+    public function fraction2float($str,bool $returnFloat=TRUE):float|string|bool
+    {
+        $str=strval($str);
         preg_match_all("/(\d*)(\/)(\d*)/",(string)$str,$matches);
         if (isset($matches[1][0]) && isset($matches[3][0])){
             $a=floatval($matches[1][0]);
@@ -201,7 +220,8 @@ class ExifTools{
             }
             return str_replace($matches[0][0],(string)$fraction,$str);
         } if ($returnFloat){
-            return (float)$str;
+            $float=preg_replace('/[^0-9\.]/','',$str);
+            return floatval($float);
         } else {
             return $str;
         }

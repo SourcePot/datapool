@@ -357,7 +357,7 @@ class HTMLbuilder{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
                 $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
                 $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Deletion resulted in {statistics}',$context);    
+                $this->oc['logger']->log('notice','Deletion resulted in {statistics}',$context);    
                 $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['remove'])){
@@ -497,7 +497,7 @@ class HTMLbuilder{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $context=array('key'=>$arr['key'],'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','{key}-key processed: {statistics}',$context);    
+            $this->oc['logger']->log('notice','{key}-key processed: {statistics}',$context);    
         }
         $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
         $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
@@ -878,7 +878,7 @@ class HTMLbuilder{
             }
         }
         if (empty($rowCount)){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
+            $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
         }
         if (isset($presentArr['containerId'])){
             $presentArr['html']=$html;

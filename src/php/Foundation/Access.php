@@ -106,7 +106,7 @@ class Access{
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
             if ($accessLevel>0){return $accessLevel;}
         } else {
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Function "{class}->{function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
+            $this->oc['logger']->log('error','Function "{class}->{function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
         }
         return FALSE;
     }
@@ -147,7 +147,7 @@ class Access{
         if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
             $user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','User account login id for {EntryId}" was rehashed.',array('EntryId'=>$user['EntryId']));    
+            $this->oc['logger']->log('warning','User account login id for {EntryId}" was rehashed.',array('EntryId'=>$user['EntryId']));    
             return TRUE;
         } else {
             return FALSE;

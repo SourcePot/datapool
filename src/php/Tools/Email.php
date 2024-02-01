@@ -158,7 +158,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         if ($errors){$result['Exceptions'].=' | Errors: '.implode(', ',$errors);}
         $result['Exceptions']=trim($result['Exceptions'],' |');
         if (!empty($result['Exceptions'])){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Failed to connect to mailbox: {Exceptions}',array('Exceptions'=>$result['Exceptions']));    
+            $this->oc['logger']->log('error','Failed to connect to mailbox: {Exceptions}',array('Exceptions'=>$result['Exceptions']));    
         }
         // open mailbox
         if (!empty($mbox)){
@@ -188,7 +188,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                     }
                 } // loop through messages
                 $result['Messages']=count($messages);
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Messages found in mailbox: {count}',array('count'=>$result['Messages']));    
+                $this->oc['logger']->log('notice','Messages found in mailbox: {count}',array('count'=>$result['Messages']));    
             }
             imap_close($mbox);
         }
@@ -295,7 +295,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $flatSender=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sender);
         $flatUserContentKey=$this->getRelevantFlatUserContentKey();
         if (empty($flatRecipient[$flatUserContentKey])){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Failed to send email: recipient email address is empty',array());    
+            $this->oc['logger']->log('notice','Failed to send email: recipient email address is empty',array());    
         } else {
             $entry['Content']['To']=$flatRecipient[$flatUserContentKey];
             if (empty($flatSender[$flatUserContentKey])){
@@ -338,7 +338,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $success=FALSE;
         if (empty($mail['selector'])){
             $logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','No email sent. Could not find the selected entry or no read access for the selected entry',array());    
+            $this->oc['logger']->log('notice','No email sent. Could not find the selected entry or no read access for the selected entry',array());    
         } else {
             // copy email settings from mail[selector][Content] to mail and unset these settings
             foreach($mailKeyTypes as $keyType=>$mailKeys){
@@ -411,9 +411,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $header['From']=addcslashes(mb_encode_mimeheader($header['From'],"UTF-8"),'"');
             $success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
             if ($success){
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Email sent to {to}',array('to'=>$mail['To']));    
+                $this->oc['logger']->log('notice','Email sent to {to}',array('to'=>$mail['To']));    
             } else {
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Sending email to {to} failed.',array('to'=>$mail['To']));    
+                $this->oc['logger']->log('warning','Sending email to {to} failed.',array('to'=>$mail['To']));    
             }
             // save message
             $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{NOW}}');

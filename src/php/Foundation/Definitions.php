@@ -328,7 +328,7 @@ class Definitions{
                     if (isset($this->oc['SourcePot\Datapool\Foundation\Logging'])){
                         $entryType=(isset($entry['Source']))?ucfirst(strval($entry['Source'])):$entry['Class'];
                         $context=array('type'=>$entryType,'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-                        $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','{type}-entry processed: {statistics}',$context);    
+                        $this->oc['logger']->log('notice','{type}-entry processed: {statistics}',$context);    
                     }
                 }
                 if (isset($this->oc['SourcePot\Datapool\Tools\MediaTools'])){

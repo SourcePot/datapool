@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool;
 
+use Monolog\Level;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\NativeMailerHandler;
+
 final class Root{
 
     private $registerVendorClasses=array('SourcePot\Ops\OpsEntries','SourcePot\Ops\Patents','SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
@@ -21,16 +26,16 @@ final class Root{
 
     public function __construct()
     {
+        $oc=array(__CLASS__=>$this);
         $GLOBALS['script start time']=hrtime(TRUE);
         session_start();
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
-        // set exeption handler and initialize directories
-        $this->initDirs();
-        $this->initExceptionHandler();
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('lngCode'=>'en','cssFile'=>'light.css','toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
+            $_SESSION['page state']=array('cssFile'=>'light.css','toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
         }
+        // set exeption handler and initialize directories
+        $this->initDirs();
         // load all external components
         $_SESSION['page state']['autoload.php loaded']=FALSE;
         $autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
@@ -38,15 +43,66 @@ final class Root{
             $_SESSION['page state']['autoload.php loaded']=TRUE;
             require_once $autoloadFile;
         }
+        // add logger
+        $oc=$this->addMonologLogger($oc);
+        // 
+        $this->initExceptionHandler();
         // initilize object collection, create objects and invoke init methods
-        $oc=array(__CLASS__=>$this);
-        $this->oc=$this->getInstantiatedObjectCollection($oc);
-        $this->oc=$this->registerVendorClasses($this->oc);
+        $oc=$this->getInstantiatedObjectCollection($oc);
+        $oc=$this->registerVendorClasses($oc);
         foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
-            $this->oc[$classWithNamespace]->init($this->oc);
+            $oc[$classWithNamespace]->init($oc);
         }
+        $oc=$this->configureMonologLogger($oc);
+        $this->oc=$oc;
     }
     
+    /**
+    * This method adds a Monolg logger instance to the object collection
+    *
+    * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
+    */
+    private function addMonologLogger(array $oc):array
+    {
+        $channel='Root';
+        $logFile=$GLOBALS['dirs']['logging'].date('Y-m-d').' '.$channel.'.log';
+        $streamHandler = new StreamHandler($logFile,Level::Notice);
+        $oc['logger'] = new Logger($channel);
+        $oc['logger']->pushHandler($streamHandler);
+        return $oc;
+    }
+    
+    /**
+    * This method adds a Monolg logger instance to the object collection
+    *
+    * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
+    */
+    private function configureMonologLogger(array $oc):array
+    {
+        $pageSettings=$oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        
+        require_once(__DIR__.'/Foundation/logger/DbHandler.php');
+        $dbHandler = new \SourcePot\Datapool\Foundation\Logger\DbHandler($oc);
+
+        
+        $errorMailHandler = new NativeMailerHandler($pageSettings['emailWebmaster'],'Error detected on '.$pageSettings['pageTitle'],$pageSettings['emailWebmaster'],Level::Error);
+        $criticalMailHandler = new NativeMailerHandler($pageSettings['emailWebmaster'],'Critical detected on '.$pageSettings['pageTitle'],$pageSettings['emailWebmaster'],Level::Critical);
+        $alertMailHandler = new NativeMailerHandler($pageSettings['emailWebmaster'],'Alert detected on '.$pageSettings['pageTitle'],$pageSettings['emailWebmaster'],Level::Alert);
+        
+        
+        $oc['logger']->pushHandler($dbHandler);
+        
+        
+        $oc['logger']->pushHandler($errorMailHandler);
+        $oc['logger']->pushHandler($criticalMailHandler);
+        $oc['logger']->pushHandler($alertMailHandler);
+    
+        //$oc['logger']->warning('Foo');
+        //$oc['logger']->alert('Foo');
+        return $oc;
+    }
+    
+
     /**
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     * This method can be used to add external objects to the Datapool object collection. 
@@ -113,14 +169,14 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
         } else {
             // invalid
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Invalid script "{script}" called',array('script'=>$pathInfo['basename']));    
+            $this->oc['logger']->log('error','Invalid script "{script}" called',array('script'=>$pathInfo['basename']));    
         }
         // script time consumption in ms
         $scriptTimeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
         $scriptInitTimeConsumption=round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000);
         $context=array('scriptTimeConsumption'=>$scriptTimeConsumption,'scriptInitTimeConsumption'=>$scriptInitTimeConsumption,'script'=>$pathInfo['basename']);
         if ($scriptTimeConsumption>5000){
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Script "{script}" took {scriptTimeConsumption}ms Initialization took {scriptInitTimeConsumption}ms.',$context);    
+            $this->oc['logger']->log('warning','Script "{script}" took {scriptTimeConsumption}ms Initialization took {scriptInitTimeConsumption}ms.',$context);    
         }
         return $arr;
     }
@@ -309,6 +365,7 @@ final class Root{
                                     'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
                                     'privat tmp'=>array('relPath'=>'./src/tmp_private','permissions'=>0770),
                                     'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
+                                    'logging'=>array('relPath'=>'./src/logging','permissions'=>0770),
                                     'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
                                     'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),
                                     'php'=>array('relPath'=>'./src/php','permissions'=>0770),
@@ -362,26 +419,26 @@ final class Root{
             if (strpos($this->currentScript,'js.php')!==FALSE){
                 $html.='Have run into a problem, please check debugging dir...';
             } else {
-                $html.='<!DOCTYPE html>';
-                $html.='<html xmlns="http://www.w3.org/1999/xhtml" lang="en">';
-                $html.='<head>';
-                $html.='</head>';
-                $html.='<body style="color:#000;background-color:#fff;font:80% sans-serif;font-size:20px;">';
-                $html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
-                $html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
-                if (strpos($err['message'],'Access denied')===FALSE){
-                    $html.='<p style="width:fit-content;margin: 20px auto;">But some improvements might take a while.</p>';
-                } else {
-                    $html.='<p style="width:fit-content;margin: 20px auto;">The problem is: '.$err['message'].'</p>';
-                }
-                $html.='<p style="width:fit-content;margin: 20px auto;">The Admin <span style="font-size:2em;">👷</span></p>';
-                $html.='</body>';
-                $html.='</html>';
+                $html.=$this->getBackupPageContent();
             }
             echo $html;
             exit;
         });
-        
+    }
+    
+    public function getBackupPageContent($msg='But some improvements might take a while.'){
+        $html='<!DOCTYPE html>';
+        $html.='<html xmlns="http://www.w3.org/1999/xhtml" lang="en">';
+        $html.='<head>';
+        $html.='</head>';
+        $html.='<body style="color:#000;background-color:#fff;font:80% sans-serif;font-size:20px;">';
+        $html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
+        $html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
+        $html.='<p style="width:fit-content;margin: 20px auto;">'.$msg.'</p>';
+        $html.='<p style="width:fit-content;margin: 20px auto;">The Admin <span style="font-size:2em;">👷</span></p>';
+        $html.='</body>';
+        $html.='</html>';
+        return $html;
     }
 
 }

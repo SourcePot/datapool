@@ -75,7 +75,7 @@ class Money{
             $promise->wait();
         } else {
             $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
-            $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','{class}::{function} failed due to no internet access.',array('class'=>__CLASS__,'function'=>'__FUNCTION__'));    
+            $this->oc['logger']->log('error','{class}::{function} failed due to no internet access.',array('class'=>__CLASS__,'function'=>'__FUNCTION__'));    
             return $vars;
         }
         return $vars;

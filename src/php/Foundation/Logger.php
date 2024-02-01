@@ -10,7 +10,10 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class Logger extends \Psr\Log\AbstractLogger
+use Monolog\LogRecord;
+use Monolog\Level;
+
+class Logger
 {
     
     private $oc;
@@ -52,8 +55,9 @@ class Logger extends \Psr\Log\AbstractLogger
         return $this->entryTemplate;
     }
     
-    public function log($level, string|\Stringable $message, array $context=[]):void
+    public function addLog(LogRecord $record)
     {
+        $level=strtolower($record->level->name);
         $context['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($this->levelConfig[$level]['hashIp']);
         $entry=$this->levelConfig[$level];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
@@ -64,14 +68,13 @@ class Logger extends \Psr\Log\AbstractLogger
         $entry['Folder']=isset($_SESSION['currentUser']['EntryId'])?$_SESSION['currentUser']['EntryId']:'ANONYM';
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
         $entry['Content']=$context;
-        $entry['Content']['msg']=$this->interpolate($message,$context);
+        $entry['Content']['msg']=$this->interpolate($record->message,$record->context);
         $entry=($this->levelConfig[$level]['addTrace'])?$this->addTrace($entry):$entry;
         $entry['Name']=substr($entry['Content']['msg'],0,50);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        if (empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,hrtime(TRUE).'_'.$level.'_log.json');
-        } else {
+        // write to databse if it is present
+        if (!empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
         }
     }

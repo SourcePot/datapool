@@ -15,16 +15,19 @@ class NetworkTools{
     private $oc;
     private $pageSettings=array();
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
 
-    public function init($oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
     }
 
-    public function getIP($hashOnly=TRUE){
+    public function getIP(bool $hashOnly=TRUE):string
+    {
         if (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER)){
             $ip=$_SERVER["HTTP_X_FORWARDED_FOR"];
         } else if (array_key_exists('REMOTE_ADDR',$_SERVER)){
@@ -40,7 +43,8 @@ class NetworkTools{
         return $ip;
     }
 
-    public function href($arr){
+    public function href(array $arr):string
+    {
         $script=$_SERVER['SCRIPT_NAME'];
         $suffix='';
         foreach($arr as $key=>$value){
@@ -52,7 +56,8 @@ class NetworkTools{
         return $script.$suffix;
     }
     
-    public function selector2class($selector){
+    public function selector2class(array $selector):string
+    {
         if (empty($selector['app'])){
             $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($selector['Source']);
         } else {
@@ -61,28 +66,27 @@ class NetworkTools{
         return $classWithNamespace;
     }
 
-    public function setPageStateBySelector($selector){
+    public function setPageStateBySelector(array $selector)
+    {
         $classWithNamespace=$this->selector2class($selector);
         return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
     }
     
-    public function getPageStateBySelector($selector){
-        $classWithNamespace=$this->selector2class($selector);
-        return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
-    }
-
-    public function setPageState($callingClass,$state){
+    public function setPageState(string $callingClass,$state)
+    {
         $_SESSION['page state']['selected'][$callingClass]=$state;
         $_SESSION['page state']['selected'][$callingClass]['app']=$callingClass;
         return $_SESSION['page state']['selected'][$callingClass];
     }
 
-    public function setPageStateByKey($callingClass,$key,$value){
+    public function setPageStateByKey(string $callingClass,$key,$value)
+    {
         $_SESSION['page state']['selected'][$callingClass][$key]=$value;
         return $_SESSION['page state']['selected'][$callingClass][$key];
     }
 
-    public function getPageState($callingClass,$initState=array()){
+    public function getPageState(string $callingClass,$initState=array())
+    {
         if (empty($_SESSION['page state']['selected'][$callingClass])){
             $_SESSION['page state']['selected'][$callingClass]=$initState;
         }
@@ -95,7 +99,8 @@ class NetworkTools{
         return $_SESSION['page state']['selected'][$callingClass];
     }
 
-    public function getPageStateByKey($callingClass,$key,$initValue=FALSE){
+    public function getPageStateByKey(string $callingClass,$key,$initValue=FALSE)
+    {
         if (!isset($_SESSION['page state']['selected'][$callingClass][$key])){
             $_SESSION['page state']['selected'][$callingClass][$key]=$initValue;
         }
@@ -126,7 +131,8 @@ class NetworkTools{
     *
     */
     
-    public function request($request,$isDebugging=FALSE){
+    public function request(array $request,bool $isDebugging=FALSE):array
+    {
         $requestTemplate=array('method'=>'POST','url'=>'https://ops.epo.org/3.2','resource'=>'auth/accesstoken','query'=>array(),'header'=>array(),'data'=>array(),'options'=>array(),'dataType'=>'application/x-www-form-urlencoded');
         $request=array_merge($requestTemplate,$request);
         $request=$this->requestUrl($request);
@@ -164,7 +170,8 @@ class NetworkTools{
         return $response;
     }
 
-    private function requestUrl($request,$isDebugging=FALSE){
+    private function requestUrl(array $request,bool $isDebugging=FALSE):array
+    {
         $request['url']=trim($request['url'],'/');
         $request['url']=$request['url'].'/'.$request['resource'];
         if (!empty($request['query'])){$request['url']=$request['url'].'?'.http_build_query($request['query']);}
@@ -172,7 +179,8 @@ class NetworkTools{
         return $request;
     }
     
-    private function requestHeader($request,$isDebugging=FALSE){
+    private function requestHeader(array $request,bool $isDebugging=FALSE):array
+    {
         $template=array('Accept'=>'application/json','Content-Type'=>'multipart/form-data','Accept-Charset'=>'utf-8');
         $request['header']=array_merge($template,$request['header']);
         if (empty($request['header']['User-agent'])){
@@ -188,7 +196,8 @@ class NetworkTools{
         return $request;
     }
 
-    private function requestData($request,$isDebugging=FALSE){
+    private function requestData(array $request,bool $isDebugging=FALSE):array
+    {
         if (is_string($request['data'])){
             if (is_file($request['data'])){
                 $mime=mime_content_type($request['data']);
@@ -203,7 +212,8 @@ class NetworkTools{
         return $request;
     }
     
-    private function decodeResponse($response){
+    private function decodeResponse(array $response):array
+    {
         $arr=array('header'=>array(),'data'=>array());
         if (empty($response)){return $arr;}
         $strChnuks=explode("\r\n",$response);
@@ -240,7 +250,8 @@ class NetworkTools{
         return $arr;
     }
     
-    public function answer($header,$data,$dataType='application/json',$charset='UTF-8'){
+    public function answer(array $header,array $data,string $dataType='application/json',string $charset='UTF-8'):string
+    {
         if (strpos($dataType,'json')>0){
             $data=json_encode($data);
         } else if (strpos($dataType,'xml')>0){

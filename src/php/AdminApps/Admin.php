@@ -214,9 +214,9 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $class2delete=$formData['val'][$entryKey]['Content']['Class'];
             if (unlink($classes2files[$class2delete])){
                 unlink($objectListFile);
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','Class "{class}" has been deleted. But the corresponding database table and filespace was left alone',array('class'=>$class2delete));         
+                $this->oc['logger']->log('notice','Class "{class}" has been deleted. But the corresponding database table and filespace was left alone',array('class'=>$class2delete));         
             } else {
-                $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Failed to remove class "{class}", file {file}',array('class'=>$class2delete,'file'=>$classes2files[$class2delete]));         
+                $this->oc['logger']->log('error','Failed to remove class "{class}", file {file}',array('class'=>$class2delete,'file'=>$classes2files[$class2delete]));         
             }
         }
         //return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
@@ -250,11 +250,11 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if (isset($source)){
             $category=$this->oc['SourcePot\Datapool\Foundation\Menu']->class2category($source['class']);
             if (is_file($target['file'])){
-               $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Target class "{class}" exists already and was not changed',array('class'=>$target['class']));     
+               $this->oc['logger']->log('warning','Target class "{class}" exists already and was not changed',array('class'=>$target['class']));     
             } else if (strlen($target['class'])<3){
-               $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Target class name "{class}" is invalid',array('class'=>$data['New class']));     
+               $this->oc['logger']->log('warning','Target class name "{class}" is invalid',array('class'=>$data['New class']));     
             } else if (empty($category)){
-               $this->oc['SourcePot\Datapool\Foundation\Logger']->log('warning','Category info missing for source class "{class}", nothing created',array('class'=>$data['New class']));     
+               $this->oc['logger']->log('warning','Category info missing for source class "{class}", nothing created',array('class'=>$data['New class']));     
             } else {
                 $fileContent=file_get_contents($source['file']);
                 $fileContent=str_replace('class '.$source['class'].' ','class '.$target['class'].' ',$fileContent);
@@ -262,9 +262,9 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $fileContent=preg_replace('/(if \(\$arr\=+TRUE\)\{\s+return )(array\([^)]+\)\;)/',$newDef,$fileContent);
                 if (file_put_contents($target['file'],$fileContent)){
                     unlink($objectListFile);
-                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('notice','New class "{class}" created',array('class'=>$data['New class']));
+                    $this->oc['logger']->log('notice','New class "{class}" created',array('class'=>$data['New class']));
                 } else {
-                    $this->oc['SourcePot\Datapool\Foundation\Logger']->log('error','Creation of class "{class}" failed',array('class'=>$data['New class']));
+                    $this->oc['logger']->log('error','Creation of class "{class}" failed',array('class'=>$data['New class']));
                 }
             }
         }
@@ -317,7 +317,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),
                                 'homePageContentSourceInfo'=>array('method'=>'element','tag'=>'p','element-content'=>$homePageContentSourceInfo,'class'=>'std'),
-                                'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>$homePageContentSource,'style'=>array('min-width'=>'50vw')),
+                                'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>$homePageContentSource,'style'=>array('min-width'=>'50vw')),
+                                'path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>array('min-width'=>'50vw')),
                                 );
         // get selector
         $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init');

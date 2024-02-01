@@ -29,7 +29,6 @@ class Backbone{
                             'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
                             'emailWebmaster'=>'admin@datapool.info',
                             'path to Xpdf pdftotext executable'=>'',
-                            //'path to Xpdf pdftotext executable'=>'C:\Program Files\Xpdf\pdftotext.exe',
                             );
     
     public function __construct(array $oc)
