@@ -366,6 +366,16 @@ final class MiscTools{
     * Array tools
     */
     
+    public function formData2statisticlog($formData)
+    {
+        if (!empty($formData['cmd'])){
+            $statistics=$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str();
+            if ($statistics){
+                $this->oc['logger']->log('info',ucfirst(key($formData['cmd'])).' resulted in {statistics}',array('statistics'=>$statistics));    
+            }
+        }   
+    }
+    
     public function add2history($arr,array $newElement,int $maxSize=10):array
     {
         if (is_array($arr)){
@@ -564,10 +574,14 @@ final class MiscTools{
     /**
     * @return string This method returns a string for a web page created from a statistics array, e.g. array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'file added'=>0)
     */
-    public function statistic2str(array $statistic):string
+    public function statistic2str(array|bool $statistic=FALSE):string
     {
+        if ($statistic===FALSE){
+            $statistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
+        }
         $str=array();
         foreach($statistic as $key=>$value){
+            if (empty($value)){continue;}
             if (is_array($value)){
                 $str[]=$key.': '.implode(', ',$value);
             } else {

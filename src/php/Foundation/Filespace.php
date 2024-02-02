@@ -114,7 +114,7 @@ class Filespace{
             mkdir($dir,0750,TRUE);
         }
         return $dir;    
-    }    
+    }
 
     private function source2dir(string $sourceFile,bool $mkDirIfMissing=TRUE):string
     {

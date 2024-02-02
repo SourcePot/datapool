@@ -26,7 +26,7 @@ class Logger
                                'critical'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f88','min-width'=>'6rem')),
                                'error'=>array('hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#faa','min-width'=>'6rem')),
                                'warning'=>array('hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#fcc','min-width'=>'6rem')),
-                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT5M','Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
+                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT5M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                'info'=>array('hashIp'=>TRUE,'lifetime'=>'PT5M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                );
@@ -68,7 +68,7 @@ class Logger
         $entry['Folder']=isset($_SESSION['currentUser']['EntryId'])?$_SESSION['currentUser']['EntryId']:'ANONYM';
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
         $entry['Content']=$context;
-        $entry['Content']['msg']=$this->interpolate($record->message,$record->context);
+        $entry['Content']['msg']=$record->message;
         $entry=($this->levelConfig[$level]['addTrace'])?$this->addTrace($entry):$entry;
         $entry['Name']=substr($entry['Content']['msg'],0,50);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0);
@@ -87,17 +87,6 @@ class Logger
             $entry['Content']['trace'][]=$trace[$index];
         }
         return $entry;
-    }
-    
-    private function interpolate(string $message,array $context=array()):string
-    {
-        $replace=array();
-        foreach ($context as $key=>$val){
-            if (!is_array($val) && (!is_object($val) || method_exists($val, '__toString'))) {
-                $replace['{'.$key.'}']=$val;
-            }
-        }
-        return strtr($message,$replace);
     }
     
     public function getLogsHtml(array $arr):array

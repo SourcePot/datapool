@@ -325,11 +325,9 @@ class Definitions{
                         $debugArr['entry_updated']=$this->oc[$dataStorageClass]->updateEntry($entry);
                     }
                     $statistics=$this->oc[$dataStorageClass]->getStatistic();
-                    if (isset($this->oc['SourcePot\Datapool\Foundation\Logging'])){
-                        $entryType=(isset($entry['Source']))?ucfirst(strval($entry['Source'])):$entry['Class'];
-                        $context=array('type'=>$entryType,'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-                        $this->oc['logger']->log('notice','{type}-entry processed: {statistics}',$context);    
-                    }
+                    $entryType=(isset($entry['Source']))?ucfirst(strval($entry['Source'])):$entry['Class'];
+                    $context=array('type'=>$entryType,'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
+                    $this->oc['logger']->log('info','{type}-entry processed: {statistics}',$context);    
                 }
                 if (isset($this->oc['SourcePot\Datapool\Tools\MediaTools'])){
                     $iconArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$entry));

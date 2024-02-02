@@ -250,7 +250,7 @@ class Database{
             $this->dbObj->exec("SET NAMES utf8mb4");
         } catch (\Exception $e){
             $msg=$e->getMessage();
-            $this->oc['logger']->log('critical',$msg);
+            $this->oc['logger']->log('emergency',$msg);
             echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i>');
             exit(0);
         }
@@ -665,15 +665,27 @@ class Database{
         foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
             $entrySelector=array('Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue);
             $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
-            if (is_file($fileToDelete)){
-                $this->addStatistic('removed',1);
-                unlink($fileToDelete);
-            }
+            $this->removeFile($fileToDelete);
         }
         // delete entries by id-list
         $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
         $stmt=$this->executeStatement($sql,array(),FALSE);
         return $this->addStatistic('deleted',$stmt->rowCount());
+    }
+    
+    /**
+    * This method deletes files and updates the statistics.
+    *
+    * @param array $selector Is the selector to select the entries to be deleted  
+    * @return int|boolean The count of deleted entries or false on failure
+    */
+    public function removeFile(string $file):bool
+    {
+        if (is_file($file)){
+            $removed=unlink($file);
+            $this->addStatistic('removed',intval($removed));
+        }
+        return $removed??FALSE;
     }
     
     /**

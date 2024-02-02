@@ -176,6 +176,7 @@ class Explorer{
     
     private function appProcessing(string $callingClass):void
     {
+        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         // process selectors
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->selector2guideEntry($selector);
@@ -202,6 +203,7 @@ class Explorer{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
         }
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         // add entry app
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
         if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
@@ -225,6 +227,7 @@ class Explorer{
                 }
             }    
         }
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         // editEntry
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'editEntry');
         if (isset($formData['cmd']['edit'])){
@@ -235,6 +238,7 @@ class Explorer{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
         }
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
     }
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array

@@ -342,6 +342,7 @@ class HTMLbuilder{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
             }
         } else {
+            $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             // button command processing
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
             $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($formData['selector']);
@@ -354,18 +355,17 @@ class HTMLbuilder{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
-                $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-                $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
-                $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-                $this->oc['logger']->log('notice','Deletion resulted in {statistics}',$context);    
+                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
                 $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['remove'])){
                 $entry=$formData['selector'];
                 if (!empty($entry['EntryId'])){
                     $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                    if (is_file($file)){unlink($file);}
-                    if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
+                    $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
+                    if (isset($entry['Params']['File']) && $removed){
+                        unset($entry['Params']['File']);
+                    }
                     $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
                 }
             } else if (isset($formData['cmd']['delete all entries'])){
@@ -382,6 +382,7 @@ class HTMLbuilder{
                 $fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,10000000000);
             }
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         }
         return $html;
     }
@@ -497,7 +498,7 @@ class HTMLbuilder{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $context=array('key'=>$arr['key'],'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-            $this->oc['logger']->log('notice','{key}-key processed: {statistics}',$context);    
+            $this->oc['logger']->log('info','{key}-key processed: {statistics}',$context);    
         }
         $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
         $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;

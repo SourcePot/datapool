@@ -13,6 +13,9 @@ namespace SourcePot\Datapool;
 
 use Monolog\Level;
 use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
+use Monolog\Processor\WebProcessor;
+use Monolog\Processor\LoadAverageProcessor;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\NativeMailerHandler;
 
@@ -44,7 +47,7 @@ final class Root{
             require_once $autoloadFile;
         }
         // add logger
-        $oc=$this->addMonologLogger($oc);
+        $oc['logger']=$this->getMonologLogger('Root');
         // 
         $this->initExceptionHandler();
         // initilize object collection, create objects and invoke init methods
@@ -53,7 +56,7 @@ final class Root{
         foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
             $oc[$classWithNamespace]->init($oc);
         }
-        $oc=$this->configureMonologLogger($oc);
+        $oc['logger']=$this->configureMonologLogger($oc,$oc['logger']);
         $this->oc=$oc;
     }
     
@@ -62,44 +65,30 @@ final class Root{
     *
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     */
-    private function addMonologLogger(array $oc):array
+    private function getMonologLogger(string $channel='Root'):Logger
     {
-        $channel='Root';
         $logFile=$GLOBALS['dirs']['logging'].date('Y-m-d').' '.$channel.'.log';
         $streamHandler = new StreamHandler($logFile,Level::Notice);
-        $oc['logger'] = new Logger($channel);
-        $oc['logger']->pushHandler($streamHandler);
-        return $oc;
+        $logger = new Logger($channel);
+        $logger->pushProcessor(new PsrLogMessageProcessor());
+        $logger->pushProcessor(new LoadAverageProcessor());
+        $logger->pushHandler($streamHandler);
+        return $logger;
     }
     
     /**
-    * This method adds a Monolg logger instance to the object collection
+    * This method adds a Monolog logger database handler
     *
-    * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
+    * @return Logger Is the logger instance
     */
-    private function configureMonologLogger(array $oc):array
+    private function configureMonologLogger(array $oc,Logger $logger):Logger
     {
         $pageSettings=$oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        
+        // log to database handler
         require_once(__DIR__.'/Foundation/logger/DbHandler.php');
         $dbHandler = new \SourcePot\Datapool\Foundation\Logger\DbHandler($oc);
-
-        
-        $errorMailHandler = new NativeMailerHandler($pageSettings['emailWebmaster'],'Error detected on '.$pageSettings['pageTitle'],$pageSettings['emailWebmaster'],Level::Error);
-        $criticalMailHandler = new NativeMailerHandler($pageSettings['emailWebmaster'],'Critical detected on '.$pageSettings['pageTitle'],$pageSettings['emailWebmaster'],Level::Critical);
-        $alertMailHandler = new NativeMailerHandler($pageSettings['emailWebmaster'],'Alert detected on '.$pageSettings['pageTitle'],$pageSettings['emailWebmaster'],Level::Alert);
-        
-        
-        $oc['logger']->pushHandler($dbHandler);
-        
-        
-        $oc['logger']->pushHandler($errorMailHandler);
-        $oc['logger']->pushHandler($criticalMailHandler);
-        $oc['logger']->pushHandler($alertMailHandler);
-    
-        //$oc['logger']->warning('Foo');
-        //$oc['logger']->alert('Foo');
-        return $oc;
+        $logger->pushHandler($dbHandler);
+        return $logger;
     }
     
 
