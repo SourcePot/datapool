@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Money{
     
     private $oc;
+    private $logLevel=0;
     
     private $ecbExchangeRatesUrl='https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html';
     private $ecbExchangeRates90url='';
@@ -35,6 +36,7 @@ class Money{
     public function init(array $oc)
     {
         $this->oc=$oc;
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->tableRatesSelector=array('Source'=>$this->entryTable,'Group'=>'ECB','Folder'=>'Rates','Owner'=>'SYSTEM');
         $this->getOldRatesIfRequired();

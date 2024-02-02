@@ -19,6 +19,7 @@ final class MiscTools{
     private $emojiFile='';
     
     private $oc=NULL;
+    private $logLevel=0;
     
     public function __construct()
     {
@@ -29,6 +30,7 @@ final class MiscTools{
     public function init(array $oc)
     {
         $this->oc=$oc;
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
         
     /******************************************************************************************************************************************

@@ -95,11 +95,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->definition['Content']['Event']['Recurrence']['@options']=$this->options['Recurrence'];
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
         // get settings
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        $Timezone=(empty($pageSettings['pageTimeZone']))?DB_TIMEZONE:$pageSettings['pageTimeZone'];
+        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $currentUser=$oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
         $settingKey=(strcmp($currentUser['Owner'],'ANONYM')===0)?'ANONYM':$currentUser['EntryId'];
-        $this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>$Timezone);
+        $this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>$pageTimeZone);
         $this->setting=$oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
         $this->pageStateTemplate=array('Source'=>$this->entryTable,'Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
@@ -625,9 +624,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
 
     public function getTimeDiff($dateA,$dateB,$timezoneA=FALSE,$timezoneB=FALSE){
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        if (empty($timezoneA)){$timezoneA=$pageSettings['pageTimeZone'];}
-        if (empty($timezoneB)){$timezoneB=$pageSettings['pageTimeZone'];}
+        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        if (empty($timezoneA)){$timezoneA=$pageTimeZone;}
+        if (empty($timezoneB)){$timezoneB=$pageTimeZone;}
         $timezoneA=new \DateTimezone($timezoneA);
         $timezoneB=new \DateTimezone($timezoneB);
         $dateA=new \DateTime($dateA,$timezoneA);

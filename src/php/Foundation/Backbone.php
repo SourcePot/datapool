@@ -34,6 +34,12 @@ class Backbone{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
+        // get settings asap.
+        $settingsFile=$GLOBALS['dirs']['setup'].'Backbone\init.json';
+        $settings=$oc['SourcePot\Datapool\Root']->file2arr($settingsFile);
+        if (isset($settings['Content'])){
+            $this->settings=$settings['Content'];
+        }
     }
     
     public function init(array $oc):array
@@ -48,10 +54,16 @@ class Backbone{
         return $this->oc;
     }
     
-    public function getSettings():array
+    public function getSettings($key=FALSE)
     {
-        return $this->settings;
+        if (isset($this->settings[$key])){
+            return $this->settings[$key];
+        } else {
+            return $this->settings;
+        }
     }
+    
+    
     
     public function addHtmlPageBackbone(array $arr):array
     {

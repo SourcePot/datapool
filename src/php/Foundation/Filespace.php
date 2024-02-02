@@ -180,19 +180,6 @@ class Filespace{
         return $entry;
     }
     
-    public function file2arr(string $fileName):array
-    {
-        $arr=array();
-        if (is_file($fileName)){
-            $content=$this->file_get_contents_utf8($fileName);
-            if (!empty($content)){
-                $arr=json_decode($content,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-                if (empty($arr)){$arr=json_decode(stripslashes($content),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
-            }
-        }
-        return $arr;
-    }
-
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read'):\Generator
     {
         $dir=$this->class2dir($selector['Class']);
@@ -214,7 +201,7 @@ class Filespace{
         //
         $entry=array('rowCount'=>0,'rowIndex'=>0,'access'=>'NO ACCESS RESTRICTION');
         $entry['file']=$this->selector2file($selector);
-        $arr=$this->file2arr($entry['file']);
+        $arr=$this->oc['SourcePot\Datapool\Root']->file2arr($entry['file']);
         $entry['rowCount']=intval($arr);
         if (empty($arr)){
             // no entry found
@@ -418,16 +405,6 @@ class Filespace{
         return $abs;
     }
     
-    public function file_get_contents_utf8(string $fn):string
-    {
-        $content=@file_get_contents($fn);
-        $content=mb_convert_encoding($content,'UTF-8',mb_detect_encoding($content,'UTF-16,UTF-8,ISO-8859-1',TRUE));
-        // clean up - remove BOM
-        $bom=pack('H*','EFBBBF');
-        $content=preg_replace("/^$bom/",'',$content);
-        return $content;
-    }
-    
     /**
     * This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
     */
@@ -617,8 +594,8 @@ class Filespace{
     {
         $statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>array(),'Errors'=>array());
         if (isset($selectors['Source'])){$selectors=array($selectors);}
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        $fileName=preg_replace('/\W+/','_',$pageSettings['pageTitle']).' dump.zip';
+        $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+        $fileName=preg_replace('/\W+/','_',$pageTitle).' dump.zip';
         $dir=$this->getTmpDir();
         $dumpFile=$dir.$fileName;
         if (is_file($dumpFile)){unlink($dumpFile);}

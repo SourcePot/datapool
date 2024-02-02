@@ -13,7 +13,8 @@ namespace SourcePot\Datapool\Tools;
 class HTMLbuilder{
     
     private $oc;
-        
+    private $logLevel=0;
+
     private $btns=array('test'=>array('key'=>array('test'),'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE),
                         'edit'=>array('key'=>array('edit'),'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
                         'show'=>array('key'=>array('show'),'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
@@ -51,7 +52,8 @@ class HTMLbuilder{
     
     public function init(array $oc)
     {
-        $this->oc=$oc;    
+        $this->oc=$oc;
+        $this->logLevel=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));    
     }
     
     public function getBtns(array $arr):array
@@ -378,8 +380,8 @@ class HTMLbuilder{
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setEditMode($selector,FALSE);
             } else if (isset($formData['cmd']['export'])){
                 $selectors=array($selector);
-                $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-                $fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
+                $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+                $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.current($selectors)['Source'].' dump.zip';
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,10000000000);
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
@@ -718,7 +720,9 @@ class HTMLbuilder{
                         $elementArr['value']=$arr['selector']['Content'][$contentKey];
                     }
                 }
-                if (!$isNewRow){$elementArr['excontainer']=TRUE;}
+                if (!$isNewRow && !isset($elementArr['excontainer'])){
+                    $elementArr['excontainer']=TRUE;
+                }
                 $elementArr['callingClass']=$arr['callingClass'];
                 $elementArr['callingFunction']=$arr['callingFunction'];
                 $elementArr['key']=array($arr['selector']['EntryId'],'Content',$contentKey);

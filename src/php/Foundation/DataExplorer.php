@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class DataExplorer{
     
     private $oc;
+    private $logLevel=0;
     
     private $entryTable;
     private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -96,6 +97,7 @@ class DataExplorer{
     public function init(array $oc)
     {
         $this->oc=$oc;
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->completeDefintion();
     }

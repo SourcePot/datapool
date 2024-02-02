@@ -57,7 +57,7 @@ class MediaTools{
             if ($isSmallPreview){
                 $arr['html']='&plusb;';
             } else {
-                $json=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($file);
+                $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($file);
                 $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
                 $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json);
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
@@ -77,7 +77,7 @@ class MediaTools{
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['File']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
         } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
-            $text=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($file);
+            $text=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($file);
             $arr=$this->addPreviewTextStyle($arr);
             $arr['tag']='p';
             if (mb_strlen($text)>200){
@@ -231,8 +231,8 @@ class MediaTools{
             $arr['title']='';
             if (!empty($image['Params']['reverseGeoLoc']['display_name'])){$arr['title']=$image['Params']['reverseGeoLoc']['display_name'];}
             if (!empty($image['Params']['DateTime']['GPS'])){
-                $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-                $arr['title'].=' '.$image['Params']['DateTime']['GPS'].' ('.$pageSettings['pageTimeZone'].')';
+                $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+                $arr['title'].=' '.$image['Params']['DateTime']['GPS'].' ('.$pageTimeZone.')';
             }
             if (!empty($image['Params']['GPS']['GPSAltitude'])){$arr['title'].=' | Altitude: '.$image['Params']['GPS']['GPSAltitude'];}
             $arr['title']=htmlentities($arr['title']);
@@ -382,7 +382,7 @@ class MediaTools{
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         // return svg file without processing 
         if (stripos($arr['selector']['Params']['File']['MIME-Type'],'/svg')!==FALSE){
-            return $this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($sourceFile);
+            return $this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($sourceFile);
         }
         // target file saved in the tmp directory
         $arr['targetFile']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
@@ -432,7 +432,7 @@ class MediaTools{
                 } else if (strpos($imgArr['fileType'],'/jpeg')!==FALSE){
                     $orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
                 } else {
-                    $string=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file_get_contents_utf8($imgArr['sourceFile']);
+                    $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($imgArr['sourceFile']);
                     if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
                     $orgImage=imagecreatefromstring($string);    
                 }

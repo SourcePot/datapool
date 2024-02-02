@@ -13,7 +13,6 @@ namespace SourcePot\Datapool\Tools;
 class NetworkTools{
     
     private $oc;
-    private $pageSettings=array();
     
     public function __construct(array $oc)
     {
@@ -23,7 +22,6 @@ class NetworkTools{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
     }
 
     public function getIP(bool $hashOnly=TRUE):string
@@ -165,8 +163,15 @@ class NetworkTools{
         }
         //curl_setopt($curl,\CURLOPT_CAINFO,$certificateFile); <---------------------    
         $response=curl_exec($curl);
-        $response=$this->decodeResponse($response);
-        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('request'=>$request,'response'=>$response));}
+        if (is_array($response)){
+            $response=$this->decodeResponse($response);
+        } else {
+            $response=array('response'=>$response);
+            $isDebugging=TRUE;
+        }
+        if ($isDebugging){
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('request'=>$request,'response'=>$response));
+        }
         return $response;
     }
 
@@ -184,7 +189,7 @@ class NetworkTools{
         $template=array('Accept'=>'application/json','Content-Type'=>'multipart/form-data','Accept-Charset'=>'utf-8');
         $request['header']=array_merge($template,$request['header']);
         if (empty($request['header']['User-agent'])){
-            $request['header']['User-agent']=$this->pageSettings['pageTitle'];
+            $request['header']['User-agent']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
         }
         $request['contentType']=$request['header']['Content-Type'];
         $header=array();
@@ -269,7 +274,7 @@ class NetworkTools{
                               'Content-Type'=>$dataType.';charset='.$charset,
                               'Content-Length'=>mb_strlen($data,$charset),
                               'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
-                              'X-API'=>$this->pageSettings['pageTitle']
+                              'X-API'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle')
                               );
         $header=array_merge($headerTemplate,$header);
         foreach($header as $key=>$value){

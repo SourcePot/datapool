@@ -32,13 +32,15 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
 
     public function getEntryTable():string{return $this->entryTable;}
     
+    /**
+     * This method is the interface of this data processing class
+     *
+     * @param array $callingElementSelector Is the selector for the canvas element which called the method 
+     * @param string $action Selects the requested process to be run  
+     *
+     * @return bool TRUE the requested action exists or FALSE if not
+     */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
-        // This method is the interface of this data processing class
-        // The Argument $action selects the method to be invoked and
-        // argument $callingElementSelector$ provides the entry which triggerd the action.
-        // $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
-        // If the requested action does not exist the method returns FALSE and 
-        // TRUE, a value or an array otherwise.
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         switch($action){
             case 'run':

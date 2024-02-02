@@ -51,11 +51,7 @@ class LoginForms{
     
     public function init(array $oc)
     {
-        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-        $this->formType=intval($this->pageSettings['loginForm']);
-        
-        //var_dump($this->oneTimeLoginEntry(array('Email'=>'cwally@gmx.net'),array()));
-        
+        $this->formType=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('loginForm'));
         $this->oc=$oc;
     }
     

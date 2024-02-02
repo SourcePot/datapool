@@ -36,8 +36,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                             );
 
     private $msgEntry=array();
-    private $pageSettings=array();
- 
+    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -46,7 +45,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     
     public function init($oc){
         $this->oc=$oc;
-        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
@@ -299,7 +297,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         } else {
             $entry['Content']['To']=$flatRecipient[$flatUserContentKey];
             if (empty($flatSender[$flatUserContentKey])){
-                $entry['Content']['From']=$this->pageSettings['emailWebmaster'];
+                $entry['Content']['From']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
             } else {
                 $entry['Content']['From']=$flatSender[$flatUserContentKey];
             }
@@ -331,9 +329,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         // 'selector' ... selects the entry
         // 'To' ... is the recipients emal address, use array for multiple addressees
         $header=array();
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        $emailWebmaster=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
         $mailKeyTypes=array('mail'=>array('To'=>'','Subject'=>$mail['selector']['Name']),
-                            'header'=>array('From'=>$pageSettings['emailWebmaster'],'Cc'=>FALSE,'Bcc'=>FALSE,'Reply-To'=>FALSE)
+                            'header'=>array('From'=>$emailWebmaster,'Cc'=>FALSE,'Bcc'=>FALSE,'Reply-To'=>FALSE)
                             );
         $success=FALSE;
         if (empty($mail['selector'])){

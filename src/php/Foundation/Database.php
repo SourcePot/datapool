@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Database{
 
     private $oc;
+    private $logLevel=0;
     
     private $statistic=array();
     private $toReplace=array();
@@ -57,6 +58,7 @@ class Database{
         $this->oc=$oc;
         $this->collectDatabaseInfo();
         $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
     
     public function job(array $vars):array
@@ -96,9 +98,8 @@ class Database{
             $toReplace['{{Owner}}']='ANONYM';
         }
         if (isset($this->oc['SourcePot\Datapool\Tools\HTMLbuilder'])){
-            $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-            $toReplace['{{pageTitle}}']=$pageSettings['pageTitle'];
-            $toReplace['{{pageTimeZone}}']=$pageSettings['pageTimeZone'];
+            $toReplace['{{pageTitle}}']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+            $toReplace['{{pageTimeZone}}']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         }
         return $toReplace;
     }

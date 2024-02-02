@@ -48,6 +48,8 @@ final class Root{
         }
         // add logger
         $oc['logger']=$this->getMonologLogger('Root');
+        $oc['logger_1']=$this->getMonologLogger('Monitoring');
+        $oc['logger_2']=$this->getMonologLogger('Debugging');
         // 
         $this->initExceptionHandler();
         // initilize object collection, create objects and invoke init methods
@@ -68,7 +70,7 @@ final class Root{
     private function getMonologLogger(string $channel='Root'):Logger
     {
         $logFile=$GLOBALS['dirs']['logging'].date('Y-m-d').' '.$channel.'.log';
-        $streamHandler = new StreamHandler($logFile,Level::Notice);
+        $streamHandler = new StreamHandler($logFile,Level::Debug);
         $logger = new Logger($channel);
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new LoadAverageProcessor());
@@ -83,7 +85,6 @@ final class Root{
     */
     private function configureMonologLogger(array $oc,Logger $logger):Logger
     {
-        $pageSettings=$oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         // log to database handler
         require_once(__DIR__.'/Foundation/logger/DbHandler.php');
         $dbHandler = new \SourcePot\Datapool\Foundation\Logger\DbHandler($oc);
@@ -430,5 +431,27 @@ final class Root{
         return $html;
     }
 
+    public function file_get_contents_utf8(string $fn):string
+    {
+        $content=@file_get_contents($fn);
+        $content=mb_convert_encoding($content,'UTF-8',mb_detect_encoding($content,'UTF-16,UTF-8,ISO-8859-1',TRUE));
+        // clean up - remove BOM
+        $bom=pack('H*','EFBBBF');
+        $content=preg_replace("/^$bom/",'',$content);
+        return $content;
+    }
+
+    public function file2arr(string $fileName):array
+    {
+        $arr=array();
+        if (is_file($fileName)){
+            $content=$this->file_get_contents_utf8($fileName);
+            if (!empty($content)){
+                $arr=json_decode($content,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+                if (empty($arr)){$arr=json_decode(stripslashes($content),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
+            }
+        }
+        return $arr;
+    }    
 }
 ?>

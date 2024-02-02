@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class User{
     
     private $oc;
+    private $logLevel=0;
     
     private $entryTable;
     private $entryTemplate=array('Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'user','Description'=>'This is the data-type of Content'),
@@ -75,8 +76,6 @@ class User{
                             'Write'=>'ADMIN_R',
                             );
     
-    private $pageSettings=array();
-    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -87,8 +86,8 @@ class User{
     public function init(array $oc)
     {
         $this->oc=$oc;
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
         $this->userRols();
         // check database user entry definition 
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
@@ -157,7 +156,7 @@ class User{
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
-        $entry['Group']=$this->pageSettings['pageTitle'];
+        $entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
         $entry['Folder']=$this->getUserRolsString($entry);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);    
@@ -182,7 +181,11 @@ class User{
     {
         $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
         if ($noAdminAccountFound){
-            $admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R','Email'=>$this->pageSettings['emailWebmaster'],'Password'=>bin2hex(random_bytes(16)),'Owner'=>'SYSTEM');
+            $admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
+                         'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
+                         'Password'=>bin2hex(random_bytes(16)),
+                         'Owner'=>'SYSTEM'
+                         );
             $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
             $admin['Content']['Contact details']['First name']='Admin';

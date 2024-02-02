@@ -13,11 +13,9 @@ namespace SourcePot\Datapool\Foundation\Charts;
 class Tools{
     
     private $oc;
-    private $pageSettings=array();
-
+    
     function __construct($oc){
         $this->oc=$oc;
-        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
     }
 
     public function getMatchIndex($ordinalScale=array('a','b','c','d','e','f'),$value='c'){
@@ -44,8 +42,9 @@ class Tools{
     
     public function value2label($value,$dataType='float',$alias=array()){
         if (stripos($dataType,'date')!==FALSE){
+            $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
             $dateTime=new \DateTime('@'.$value);
-            $dateTime->setTimezone(new \DateTimeZone($this->pageSettings['pageTimeZone']));
+            $dateTime->setTimezone(new \DateTimeZone($pageTimeZone));
             $value=$dateTime->format('Y-m-d H:i:s');
         }
         if (is_numeric($value)){

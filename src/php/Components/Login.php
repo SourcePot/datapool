@@ -14,8 +14,6 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
-    private $pageSettings=array();
-    
     const MIN_PASSPHRASDE_LENGTH=4;
     
     public function __construct($oc){
@@ -24,7 +22,6 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 
     public function init(array $oc){
         $this->oc=$oc;
-        $this->pageSettings=$oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
     }
 
     public function run(array|bool $arr=TRUE):array{
@@ -174,7 +171,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $loginEntry=$this->oc['SourcePot\Datapool\Tools\LoginForms']->oneTimeLoginEntry($arr,$user);
         // create message
         $placeholder=array('firstName'=>$user['Content']['Contact details']['First name'],
-                           'pageTitle'=>$this->pageSettings['pageTitle'],
+                           'pageTitle'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle'),
                            'psw'=>'<b>"'.$loginEntry['Name'].'"</b> or <b>"'.$loginEntry['Content']['Message'].'"</b>'
                            );
         $msg=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';

@@ -103,9 +103,9 @@ class ExifTools{
             } else {
                 $exifDateTime.=' 12:00:00';
             }
-            $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+            $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
             $dateTime=\DateTime::createFromFormat('Y-m-d H:i:s',$exifDateTime,new \DateTimeZone('UTC'));
-            $dateTime->setTimeZone(new \DateTimeZone($pageSettings['pageTimeZone']));
+            $dateTime->setTimeZone(new \DateTimeZone($pageTimeZone));
             $entry['Date']=$dateTime->format('Y-m-d H:i:s');
             $entry['Params']['DateTime']['GPS']=$entry['Date'];
         }

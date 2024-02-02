@@ -17,6 +17,7 @@ class Logger
 {
     
     private $oc;
+    private $logLevel=0;
     
     private $entryTable;
     private $entryTemplate=array();
@@ -41,6 +42,7 @@ class Logger
     public function init(array $oc)
     {
         $this->oc=$oc;
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->registerToolbox();
     }
@@ -55,9 +57,48 @@ class Logger
         return $this->entryTemplate;
     }
     
+    /**
+     * Is a test fixture for class methods based on arguments provided.
+     * If the method test finishes without an exceptions, an log entry is created with provided logLevel.
+     * In case of an exception the LogLevel will be "error".
+     *
+     * @param $classInstance the method belongs to
+     * @param string $method Name of the method
+     * @param array $args Array containing all method arguments for the test
+     * @param string $logLevel Is the LogLevel if test finishes without exceptions
+     * @param string $logger Is tghe name of the logger instance to be used. Instances are created within class Root
+     *
+     * @return bool TRUE if no exception is triggered, FALSE if an exception is triggered otherwise
+     */
+    public function methodTest($classInstance,string $method,array $args,string $logLevel='info',string $logger='logger_2'):bool
+    {
+        $class=get_class($classInstance);
+        $context=array('class'=>$class,'method'=>$method);
+        $msg='{class}::{method}';
+        try{
+            $paramsStr='';
+            $f=new \ReflectionMethod($class,$method);
+            foreach($f->getParameters() as $pIndex=>$param){
+                $paramsStr.='{'.$param->name.'},';
+                $context[$param->name]=$args[$pIndex];
+                
+            }
+            $return=call_user_func_array(array($classInstance,$method),$args);
+            $context['return']=$return;
+            $msg.='('.trim($paramsStr,', ').') returned {return}';
+        } catch (\Exception $e){
+            $logLevel='error';
+            $context['exception']=$e->getMessage();
+            $msg.=' threw exception {exception}';
+        }
+        $this->oc[$logger]->log($logLevel,$msg,$context);
+        return empty($context['exception']);
+    }
+    
     public function addLog(LogRecord $record)
     {
         $level=strtolower($record->level->name);
+        $context=array_merge($record->context,$record->extra);
         $context['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($this->levelConfig[$level]['hashIp']);
         $entry=$this->levelConfig[$level];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
@@ -91,10 +132,9 @@ class Logger
     
     public function getLogsHtml(array $arr):array
     {
-        $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $sourceTimezone=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbTimezone();
-        $targetTimezone=$pageSettings['pageTimeZone'];
-        $today=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('now',$sourceTimezone,$targetTimezone);
+        $today=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
         $today=substr($today,0,11);
         $columns=array('Date','Group','Content'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'msg');
         $arr['settings']=array_replace_recursive(array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'),$arr['settings']);
@@ -103,7 +143,7 @@ class Logger
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read',$arr['settings']['orderBy'],$arr['settings']['isAsc'],$arr['settings']['limit'],$arr['settings']['offset']) as $log){
             $rowHtml='';
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
-            $flatLog['Date']=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate($flatLog['Date'],$sourceTimezone,$targetTimezone);
+            $flatLog['Date']=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate($flatLog['Date'],$sourceTimezone,$pageTimeZone);
             $flatLog['Date']=str_replace($today,'',$flatLog['Date']);
             foreach($arr['settings']['columns'] as $column){
                 if (!isset($flatLog[$column])){continue;}

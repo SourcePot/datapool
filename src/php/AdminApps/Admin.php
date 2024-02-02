@@ -73,9 +73,9 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         if (isset($formData['cmd']['export'])){
             $selectors=array($formData['val']);
-            $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
-            $fileName=date('Y-m-d H_i_s').' '.$pageSettings['pageTitle'].' '.current($selectors)['Source'].' dump.zip';
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,$formData['val']['Size']);    
+            $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+            $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.current($selectors)['Source'].' dump.zip';
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,intval($formData['val']['Size']));    
         } else if (isset($formData['cmd']['import'])){
             $tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
             if (!empty($formData['files']['import'])){
@@ -112,6 +112,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $sizeSelect['selected']=10000000;
         $sizeSelect['options']=$attachedFileSizeOptions;
         $btnArr['key']=array('export');
+        $btnArr['title']="Create export from database table\nand download as file";
         $btnArr['element-content']='Export';
         $matrix['Backup to file']=array('Input'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
                                         'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr));
@@ -122,12 +123,14 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $fileArr['type']='file';
         $fileArr['multiple']=TRUE;
         $fileArr['key']=$btnArr['key']=array('import');
+        $btnArr['title']="Import database entries from file.\nEntries with the same EntryId will be replaced by the import!";
         $btnArr['element-content']='Import';
         $btnArr['hasCover']=TRUE;
         $matrix['Recover from file']=array('Input'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr),
                                            'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr));
         // renew object init file
         $btnArr['key']=array('renew');
+        $btnArr['title']="Deletes existing object collection and\ntriggers creation of up-to-date object collection.";
         $btnArr['element-content']='Renew';
         $btnArr['hasCover']=FALSE;
         $matrix['Object list']=array('Input'=>$this->objectListHtml(),
@@ -291,7 +294,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             if (strpos($file,'exceptionsLog.json')===FALSE){continue;}
             $fullFileName=$GLOBALS['dirs']['debugging'].$file;
             $delArr=array('Cmd'=>array('tag'=>'button','element-content'=>'&coprod;','keep-element-content'=>TRUE,'title'=>'Delete file','key'=>array('delete',$fullFileName),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-            $matrix[$file]=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2arr($fullFileName);
+            $matrix[$file]=$this->oc['SourcePot\Datapool\Root']->file2arr($fullFileName);
             $matrix[$file]=$delArr+$matrix[$file];
             if (isset($matrix[$file]['traceAsString'])){
                 $matrix[$file]['traceAsString']=preg_split('/#\d+\s/',$matrix[$file]['traceAsString']);
@@ -313,6 +316,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'metaDescription'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>array('min-width'=>'50vw')),
                                 'metaRobots'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>array('min-width'=>'50vw')),
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
+                                'logLevel'=>array('method'=>'select','options'=>array('Production','Monitoring','Testing'),'excontainer'=>TRUE),
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),

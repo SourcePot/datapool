@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Menu{
     
     private $oc;
+    private $logLevel=0;
     
     private $categories=array('Home'=>array('Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'),
                               'Login'=>array('Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'),
@@ -34,6 +35,7 @@ class Menu{
     public function init(array $oc)
     {
         $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run');
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         // get category from input
         $linkid=filter_input(INPUT_GET,'linkid',FILTER_SANITIZE_ENCODED);
         $linkid??FALSE;

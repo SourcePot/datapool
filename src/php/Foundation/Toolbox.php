@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Toolbox{
     
     private $oc;
+    private $logLevel=0;
         
     private $entryTable;
     private $entryTemplate=array();
@@ -28,6 +29,7 @@ class Toolbox{
     public function init(array $oc)
     {
         $this->oc=$oc;
+        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
     
     public function registerToolbox(string $callingClass,array $toolboxEntry):array 
