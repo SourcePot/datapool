@@ -17,7 +17,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable;
     private $entryTemplate=array();
     
-    private $dataTypes=array(''=>'mixed','string'=>'string','int'=>'int','float'=>'float','bool'=>'bool','array'=>'array');
+    private $dataTypes=array(''=>'mixed','string'=>'string','int'=>'int','float'=>'float','bool'=>'bool','array'=>'array','null'=>'null');
     private $boolStr=array(0=>'FALSE',1=>'TRUE');
     
     public function __construct($oc){
@@ -169,7 +169,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $arr['html']='';
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$cntrMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Test'));
         foreach($results as $caption=>$resultMatrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$resultMatrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$resultMatrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'thKeepCase'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption));
         }
         return $arr;
     }
@@ -225,6 +225,8 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 $valueArr[]=intval($arrNameValueType['value']);
             } else if ($arrNameValueType['type']==='float'){
                 $valueArr[]=floatval($arrNameValueType['value']);
+            } else if ($arrNameValueType['type']==='null'){
+                $valueArr[]=NULL;
             } else {
                 $valueArr[]=$arrNameValueType['value'];
             }
@@ -244,12 +246,15 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 unset($toRemove[$key]);
                 continue;
             }
-            if (is_array($value)){
+            if ($value===NULL){
+                $value='NULL';
+            } else if (is_array($value)){
                 if (empty($value)){
                     $value='[]';
                 } else {
                     if ($jsonEncode){
                         $value=json_encode($value);
+                        $value=htmlentities(strval($value));
                     } else {
                         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($value);
                         $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE));
@@ -259,6 +264,8 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 $value='FALSE';
             } else if ($value===TRUE){
                 $value='TRUE';
+            } else {
+                $value='"'.htmlentities(strval($value)).'"';
             }
             $results[$caption][$testIndex][$key]=$value;
         }
