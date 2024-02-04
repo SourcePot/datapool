@@ -13,7 +13,6 @@ namespace SourcePot\Datapool\Foundation;
 class Database{
 
     private $oc;
-    private $logLevel=0;
     
     private $statistic=array();
     private $toReplace=array();
@@ -58,7 +57,6 @@ class Database{
         $this->oc=$oc;
         $this->collectDatabaseInfo();
         $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
     
     public function job(array $vars):array

@@ -13,8 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Job{
     
     private $oc;
-    private $logLevel=0;
-
+    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -23,7 +22,6 @@ class Job{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
 
     /**

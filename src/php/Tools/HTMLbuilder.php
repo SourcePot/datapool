@@ -13,8 +13,7 @@ namespace SourcePot\Datapool\Tools;
 class HTMLbuilder{
     
     private $oc;
-    private $logLevel=0;
-
+    
     private $btns=array('test'=>array('key'=>array('test'),'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE),
                         'edit'=>array('key'=>array('edit'),'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
                         'show'=>array('key'=>array('show'),'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
@@ -53,7 +52,6 @@ class HTMLbuilder{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));    
     }
     
     public function getBtns(array $arr):array
@@ -137,8 +135,13 @@ class HTMLbuilder{
                 $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowStyle);
                 $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
                 foreach($rowArr as $colLabel=>$cell){
+                    if (empty($arr['thKeepCase'])){
+                        $colLabel=ucfirst(strval($colLabel));
+                    } else {
+                        $colLabel=strval($colLabel);
+                    }
                     $indexArr['x']++;
-                    $thArr=array('tag'=>'th','element-content'=>ucfirst(strval($colLabel)),'keep-element-content'=>!empty($arr['keep-element-content']));
+                    $thArr=array('tag'=>'th','element-content'=>$colLabel,'keep-element-content'=>!empty($arr['keep-element-content']));
                     $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
                     if (isset($arr['class'])){
                         $trHeaderArr['class']=$trArr['class']=$thArr['class']=$tdArr['class']=$arr['class'];

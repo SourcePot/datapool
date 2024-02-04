@@ -17,7 +17,6 @@ class Logger
 {
     
     private $oc;
-    private $logLevel=0;
     
     private $entryTable;
     private $entryTemplate=array();
@@ -42,7 +41,6 @@ class Logger
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->registerToolbox();
     }
@@ -85,6 +83,7 @@ class Logger
             }
             $return=call_user_func_array(array($classInstance,$method),$args);
             $context['return']=$return;
+            $context['return dataType']=gettype($return);
             $msg.='('.trim($paramsStr,', ').') returned {return}';
         } catch (\Exception $e){
             $logLevel='error';

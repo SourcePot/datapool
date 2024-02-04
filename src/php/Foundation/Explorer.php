@@ -13,7 +13,6 @@ namespace SourcePot\Datapool\Foundation;
 class Explorer{
     
     private $oc;
-    private $logLevel=0;
     
     private $entryTable;
     private $entryTemplate=array();
@@ -31,7 +30,6 @@ class Explorer{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }

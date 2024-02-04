@@ -17,8 +17,7 @@ class ClientAccess{
     private $authorizationLifespan=3600;
     
     private $oc;
-    private $logLevel=0;
-
+    
     private $entryTable;
     private $entryTemplate=array('Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
@@ -29,7 +28,6 @@ class ClientAccess{
     
     public function __construct($oc){
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
     }

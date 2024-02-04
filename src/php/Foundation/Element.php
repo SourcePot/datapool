@@ -13,7 +13,6 @@ namespace SourcePot\Datapool\Foundation;
 class Element{
     
     private $oc;
-    private $logLevel=0;
     
     private $def=array(// Generic
                        ''=>array('accesskey'=>FALSE,'autocapitalize'=>FALSE,'autofocus'=>FALSE,'class'=>'std','contenteditable'=>FALSE,'data-*'=>FALSE,
@@ -126,7 +125,6 @@ class Element{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
 
     public function element(array $arr):string

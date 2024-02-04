@@ -13,7 +13,6 @@ namespace SourcePot\Datapool\Foundation;
 class Container{
 
     private $oc;
-    private $logLevel=0;
     
     public function __construct(array $oc)
     {
@@ -23,7 +22,6 @@ class Container{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
     }
     
     public function jsCall(array $arr):array

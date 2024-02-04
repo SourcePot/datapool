@@ -13,8 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Dictionary{
     
     private $oc;
-    private $logLevel=0;
-
+    
     private $entryTable='';
     private $entryTemplate=array();
     
@@ -31,7 +30,6 @@ class Dictionary{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         // set language
         if (empty($_SESSION['page state']['lngCode'])){

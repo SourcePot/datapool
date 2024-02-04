@@ -13,7 +13,6 @@ namespace SourcePot\Datapool\Foundation;
 class Definitions{
     
     private $oc;
-    private $logLevel=0;
     
     private $entryTable;
     private $entryTemplate=array();
@@ -28,7 +27,6 @@ class Definitions{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
     }
     
