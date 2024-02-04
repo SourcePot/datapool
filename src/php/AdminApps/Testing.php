@@ -17,6 +17,9 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable;
     private $entryTemplate=array();
     
+    private $dataTypes=array(''=>'mixed','string'=>'string','int'=>'int','float'=>'float','bool'=>'bool','array'=>'array');
+    private $boolStr=array(0=>'FALSE',1=>'TRUE');
+    
     public function __construct($oc){
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
@@ -32,16 +35,23 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>'ALL_CONTENTADMIN_R','Class'=>__CLASS__);
         } else {
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test','generic',array(),array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration','generic',array(),array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing','generic',array(),array('method'=>'getTestHtml','classWithNamespace'=>__CLASS__),array());
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
     }
 
     public function getTestSettingsHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']='';
         $arr=$this->testParams($arr);
         $arr=$this->testArgs($arr);
+        return $arr;
+    }
+    
+    public function getTestHtml($arr){
+        $arr['html']='';
+        $arr=$this->test($arr);
         return $arr;
     }
     
@@ -55,6 +65,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Group','Folder','Name','Type'),0);
 		return $arr;
 	}
+
+    private function getParamsId(string $class, string $method):string
+    {
+        return md5($class.'|'.$method);
+    }
 
     private function testParams($arr){
         $arr=$this->finalizeSelector($arr,__FUNCTION__,'settings');
@@ -100,13 +115,13 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private function testArgs($arr){
         // get method properties
         if (empty($arr['testParams']['class']) || empty($arr['testParams']['method'])){return $arr;}
-        $testingParamsId=md5($arr['testParams']['class'].'|'.$arr['testParams']['method']);
+        $testingParamsId=$this->getParamsId($arr['testParams']['class'],$arr['testParams']['method']);
         if (!method_exists($arr['testParams']['class'],$arr['testParams']['method'])){return $arr;}
         // get content structure from args
         $contentStructure=array();
         $f=new \ReflectionMethod($arr['testParams']['class'],$arr['testParams']['method']);
         foreach($f->getParameters() as $pIndex=>$param){
-            $key=$param->name.' ['.$param->getType().']';
+            // get default value
             try{
                 $default=$param->getDefaultValue();
             } catch (\Exception $e){
@@ -115,9 +130,12 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             if (is_array($default)){
                 $default=json_encode($default);
             } else if (is_bool($default)){
-                
+                $default=$this->boolStr[intval($default)];
             }
-            $contentStructure[$key]=array('method'=>'element','tag'=>'input','value'=>$default,'placeholder'=>$default,'type'=>'text','excontainer'=>TRUE);
+            // get type
+            $dataType=strval($param->getType());
+            $contentStructure[$param->name]=array('method'=>'element','tag'=>'input','value'=>$default,'placeholder'=>$default,'type'=>'text','excontainer'=>TRUE);
+            $contentStructure[$param->name.' type ']=array('method'=>'select','value'=>$dataType,'options'=>$this->dataTypes,'excontainer'=>TRUE);
         }
         //
         $arr=$this->finalizeSelector(array('html'=>$arr['html']),__FUNCTION__,$testingParamsId);
@@ -129,11 +147,122 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
 	}
     
-    private function runTest()
+    private function test($arr)
     {
-        
-        //$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($oc['SourcePot\Datapool\Tools\MiscTools'],'str2float',array('A 1,234','de'));
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        $results=array();
+        if (isset($formData['cmd']['array'])){
+            $results=$this->runTest($arr,FALSE);
+        } else if (isset($formData['cmd']['json'])){
+            $results=$this->runTest($arr,TRUE);
+        }
+        // test control form
+        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+        $cntrMatrix=array();
+        $btnArr['value']='Run (array -> table)';
+        $btnArr['key']=array('array');
+        $cntrMatrix['Commands']['Run']=$btnArr;
+        $btnArr['value']='Run (array -> json';
+        $btnArr['key']=array('json');
+        $cntrMatrix['Commands']['JSON']=$btnArr;
+        // build html  
+        $arr['html']='';
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$cntrMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Test'));
+        foreach($results as $caption=>$resultMatrix){
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$resultMatrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption));
+        }
+        return $arr;
+    }
     
+    private function runTest(array $arr,bool $jsonEncode=FALSE):array
+    {
+        $results=array();
+        // load configuration
+        $args=array();
+        $config=array();
+        // get params
+        $params=$this->finalizeSelector(array(),'testParams','settings');
+        $params=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($params['selector'],TRUE);
+        $config['params']=$params['Content'];
+        // get args
+        $testingParamsId=$this->getParamsId($config['params']['class'],$config['params']['method']);
+        $tests=$this->finalizeSelector(array(),'testArgs',$testingParamsId);
+        $tests=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($tests['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tests,TRUE,'Read','EntryId',TRUE) as $argsEntry){
+            $testIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($argsEntry['EntryId']);
+            while ($argsEntry['Content']){
+                $argName=key($argsEntry['Content']);
+                $argValue=array_shift($argsEntry['Content']);
+                $argType=array_shift($argsEntry['Content']);
+                $config['tests'][$testIndex][$argName]=array('name'=>$argName,'value'=>$argValue,'type'=>$argType);
+            }
+        }
+        // testing
+        $results['Result']=array();
+        foreach($config['tests'] as $testIndex=>$args){
+            $valueArr=$this->testArgs2valueArr($args);
+            $context=$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($this->oc[$config['params']['class']],$config['params']['method'],$valueArr);
+            $results=$this->addContext2results($results,$config,$testIndex,$context,$jsonEncode);
+        }
+        return $results;
+    }
+    
+    private function testArgs2valueArr(array $args):array
+    {
+        $valueArr=array();
+        foreach($args as $argName=>$arrNameValueType){
+            if ($arrNameValueType['type']==='array'){
+                $valueArr[]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($arrNameValueType['value']);
+            } else if ($arrNameValueType['type']==='bool'){
+                if (stripos($arrNameValueType['value'],'TRUE')===0){
+                    $valueArr[]=TRUE;
+                } else if (stripos($arrNameValueType['value'],'FALSE')===0){
+                    $valueArr[]=FALSE;
+                } else {
+                    $valueArr[]=boolval($arrNameValueType['value']);
+                }
+            } else if ($arrNameValueType['type']==='int'){
+                $valueArr[]=intval($arrNameValueType['value']);
+            } else if ($arrNameValueType['type']==='float'){
+                $valueArr[]=floatval($arrNameValueType['value']);
+            } else {
+                $valueArr[]=$arrNameValueType['value'];
+            }
+        }
+        return $valueArr;
+    }
+    
+    private function addContext2results(array $results,array $config,int $testIndex,array $context,bool $jsonEncode=FALSE):array
+    {
+        $toRemove=array('class'=>'class','method'=>'method');
+        $args=array_keys($config['tests'][$testIndex]);
+        $args=implode(',',$args);
+        $caption=$config['params']['class'].'&horbar;&gt;'.$config['params']['method'].'('.$args.')';
+        $results[$caption][$testIndex]['Test']=$testIndex;
+        foreach($context as $key=>$value){
+            if (isset($toRemove[$key])){
+                unset($toRemove[$key]);
+                continue;
+            }
+            if (is_array($value)){
+                if (empty($value)){
+                    $value='[]';
+                } else {
+                    if ($jsonEncode){
+                        $value=json_encode($value);
+                    } else {
+                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($value);
+                        $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE));
+                    }
+                }
+            } else if ($value===FALSE){
+                $value='FALSE';
+            } else if ($value===TRUE){
+                $value='TRUE';
+            }
+            $results[$caption][$testIndex][$key]=$value;
+        }
+        return $results;
     }
     
 }

@@ -133,7 +133,7 @@ class HTMLbuilder{
                     $rowStyle=array();
                 }
                 if (!empty($arr['skipEmptyRows']) && empty($rowArr)){continue;}
-                if (empty($arr['hideKeys'])){$rowArr=array('key'=>$rowLabel)+$rowArr;}
+                if (empty($arr['hideKeys'])){$rowArr=array(' Key '=>$rowLabel)+$rowArr;}
                 $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowStyle);
                 $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
                 foreach($rowArr as $colLabel=>$cell){
@@ -631,7 +631,7 @@ class HTMLbuilder{
         if (isset($arr['style'])){$tableArrStyle=$arr['style'];unset($arr['style']);}
         if (empty($arr['caption'])){$arr['caption']='Please provide a caption';}
         if (empty($arr['Name'])){$arr['Name']=$arr['caption'];}
-        if (empty($arr['contentStructure']) || empty($arr['selector']['Source']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
+        if (!isset($arr['contentStructure']) || empty($arr['selector']['Source']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
             throw new \ErrorException('Method '.__FUNCTION__.', required arr key(s) missing.',0,E_ERROR,__FILE__,__LINE__);    
         }
         $isSystemCall=$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin();

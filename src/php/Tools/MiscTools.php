@@ -143,7 +143,7 @@ final class MiscTools{
         }
     }
     
-    public function bool2element($value,$element=array()):array
+    public function bool2element($value,array $element=array()):array
     {
         $boolval=$this->str2bool($value);
         $element['class']=$boolval?'status-on':'status-off';
@@ -332,7 +332,7 @@ final class MiscTools{
         } 
     }
 
-    public function float2str($float,$prec=3,$base=1000):string
+    public function float2str($float,int $prec=3,int $base=1000):string
     {
         // Thanks to "c0x at mail dot ru" based on https://www.php.net/manual/en/function.log.php
         $float=floatval($float);
@@ -603,7 +603,7 @@ final class MiscTools{
         $rows=array();
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
-            $columns=explode($S,$flatKey);
+            $columns=explode($S,strval($flatKey));
             $columnCount=count($columns);
             $rows[$rowIndex]=array('columns'=>$columns,'value'=>$value);
             if ($columnCount>$maxColumnCount){$maxColumnCount=$columnCount;}
@@ -658,6 +658,9 @@ final class MiscTools{
     
     public function var2dataType($var):string
     {
+        if (is_array($var)){
+            return 'array';
+        }
         $strVar=strval($var);
         if (is_numeric($var)){
             if (strpos($strVar,'.')!==FALSE){
