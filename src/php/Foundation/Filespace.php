@@ -628,7 +628,7 @@ class Filespace{
         $zip->close();
         $statistics['Attached filesize']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($statistics['Attached filesize'],2,1024);
         $msg='Export resulted in '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
-        $this->oc['logger']->log('notice',$msg,array());    
+        $this->oc['logger']->log('info',$msg,array());    
         return $dumpFile;
     }
     

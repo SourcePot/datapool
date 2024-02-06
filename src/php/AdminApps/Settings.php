@@ -82,7 +82,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
         $entry['Content']=$setting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
-        $this->oc['logger']->log('notice','Setting "{name}" updated',array('name'=>$name));    
+        $this->oc['logger']->log('info','Setting "{name}" updated',array('name'=>$name));    
         if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
     }
     

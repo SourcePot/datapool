@@ -35,8 +35,8 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>'ALL_CONTENTADMIN_R','Class'=>__CLASS__);
         } else {
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration','generic',array(),array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array());
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing','generic',array(),array('method'=>'getTestHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',array(),array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array('style'=>array('background-color'=>'#c9ffc9')));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing result','generic',array(),array('method'=>'getTestHtml','classWithNamespace'=>__CLASS__),array());
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -142,7 +142,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
-		$arr['caption']='Arguments';
+		$arr['caption']='Method arguments for testing';
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $arr;
 	}
@@ -152,9 +152,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         $results=array();
         if (isset($formData['cmd']['array'])){
-            $results=$this->runTest($arr,FALSE);
+            $results=$this->runTest($arr,0);
         } else if (isset($formData['cmd']['json'])){
-            $results=$this->runTest($arr,TRUE);
+            $results=$this->runTest($arr,1);
+        } else if (isset($formData['cmd']['html'])){
+            $results=$this->runTest($arr,2);
         }
         // test control form
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
@@ -165,6 +167,9 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $btnArr['value']='Run (array -> json';
         $btnArr['key']=array('json');
         $cntrMatrix['Commands']['JSON']=$btnArr;
+        $btnArr['value']='Run (array -> html';
+        $btnArr['key']=array('html');
+        $cntrMatrix['Commands']['html']=$btnArr;
         // build html  
         $arr['html']='';
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$cntrMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Test'));
@@ -174,7 +179,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    private function runTest(array $arr,bool $jsonEncode=FALSE):array
+    private function runTest(array $arr,int $outputFormat=0):array
     {
         $results=array();
         // load configuration
@@ -190,6 +195,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $tests=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($tests['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tests,TRUE,'Read','EntryId',TRUE) as $argsEntry){
             $testIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($argsEntry['EntryId']);
+            $config['tests'][$testIndex]=array();
             while ($argsEntry['Content']){
                 $argName=key($argsEntry['Content']);
                 $argValue=array_shift($argsEntry['Content']);
@@ -202,7 +208,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         foreach($config['tests'] as $testIndex=>$args){
             $valueArr=$this->testArgs2valueArr($args);
             $context=$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($this->oc[$config['params']['class']],$config['params']['method'],$valueArr);
-            $results=$this->addContext2results($results,$config,$testIndex,$context,$jsonEncode);
+            $results=$this->addContext2results($results,$config,$testIndex,$context,$outputFormat);
         }
         return $results;
     }
@@ -234,7 +240,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         return $valueArr;
     }
     
-    private function addContext2results(array $results,array $config,int $testIndex,array $context,bool $jsonEncode=FALSE):array
+    private function addContext2results(array $results,array $config,int $testIndex,array $context,int $outputFormat=0):array
     {
         $toRemove=array('class'=>'class','method'=>'method');
         $args=array_keys($config['tests'][$testIndex]);
@@ -252,9 +258,9 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 if (empty($value)){
                     $value='[]';
                 } else {
-                    if ($jsonEncode){
+                    if ($outputFormat===1){
                         $value=json_encode($value);
-                        $value=htmlentities(strval($value));
+                        $value=($outputFormat===2)?strval($value):htmlentities(strval($value));
                     } else {
                         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($value);
                         $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE));
@@ -265,7 +271,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             } else if ($value===TRUE){
                 $value='TRUE';
             } else {
-                $value='"'.htmlentities(strval($value)).'"';
+                $value=($outputFormat===2)?strval($value):'"'.htmlentities(strval($value)).'"';
             }
             $results[$caption][$testIndex][$key]=$value;
         }

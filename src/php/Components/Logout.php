@@ -26,7 +26,7 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
         } else {
-            $this->oc['logger']->log('notice','User logout {user}',array('user'=>$_SESSION['currentUser']['Name']));    
+            $this->oc['logger']->log('info','User logout {user}',array('user'=>$_SESSION['currentUser']['Name']));    
             // reset session | keep page state
             $_SESSION=array('page state'=>$_SESSION['page state']);
             session_regenerate_id(TRUE);

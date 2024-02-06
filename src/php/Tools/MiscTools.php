@@ -466,8 +466,14 @@ final class MiscTools{
     {
         if (is_string($json)){
             $arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-            if (empty($arr)){$arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
-            return $arr;
+            if (empty($arr)){
+                $arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);
+            }
+            if (empty($arr)){
+                return array();
+            } else {
+                return $arr;
+            }
         } else {
             return array();
         }

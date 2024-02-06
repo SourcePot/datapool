@@ -24,13 +24,16 @@ final class Root{
     private $registerVendorClasses=array('SourcePot\Ops\OpsEntries','SourcePot\Ops\Patents','SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
     
     private $currentScript='';
+    
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
 
+    public $traces=array();
+    
     public function __construct()
     {
-        $oc=array(__CLASS__=>$this);
         $GLOBALS['script start time']=hrtime(TRUE);
+        $oc=array(__CLASS__=>$this);
         session_start();
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
@@ -46,14 +49,13 @@ final class Root{
             $_SESSION['page state']['autoload.php loaded']=TRUE;
             require_once $autoloadFile;
         }
-        // add logger
-        $oc['logger']=$this->getMonologLogger('Root');
-        $oc['logger_1']=$this->getMonologLogger('Monitoring');
-        $oc['logger_2']=$this->getMonologLogger('Debugging');
-        // 
         $this->initExceptionHandler();
         // initilize object collection, create objects and invoke init methods
         $oc=$this->getInstantiatedObjectCollection($oc);
+        // add logger
+        $oc['logger']=$this->getMonologLogger($oc,'Root');
+        $oc['logger_1']=$this->getMonologLogger($oc,'Debugging');
+        //
         $oc=$this->registerVendorClasses($oc);
         foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
             $oc[$classWithNamespace]->init($oc);
@@ -67,13 +69,18 @@ final class Root{
     *
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     */
-    private function getMonologLogger(string $channel='Root'):Logger
+    private function getMonologLogger(array $oc,string $channel='Root'):Logger
     {
+        $logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $logFile=$GLOBALS['dirs']['logging'].date('Y-m-d').' '.$channel.'.log';
-        $streamHandler = new StreamHandler($logFile,Level::Debug);
         $logger = new Logger($channel);
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new LoadAverageProcessor());
+        if ($logLevel===0){
+            $streamHandler = new StreamHandler($logFile,Level::Notice);
+        } else if ($logLevel>0){
+            $streamHandler = new StreamHandler($logFile,Level::Debug);
+        }
         $logger->pushHandler($streamHandler);
         return $logger;
     }
@@ -137,6 +144,7 @@ final class Root{
         // process all buttons
         $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn();
         $GLOBALS['script init time']=hrtime(TRUE);
+        // get trace
         // add "page html" to the return array
         $arr=array();
         if (strpos($this->currentScript,'index.php')>0){

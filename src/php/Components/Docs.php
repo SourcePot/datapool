@@ -99,7 +99,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             if (empty($fileHandle['error'])){
                 $success=move_uploaded_file($fileHandle['tmp_name'],$GLOBALS['dirs']['assets'].$fileHandle['name']);
                 if ($success){
-                    $this->oc['logger']->log('notice','Moved uploaded file "{file}" to dir "{dir}"',array('file'=>$fileHandle['name'],'dir'=>$GLOBALS['dirs']['assets']));         
+                    $this->oc['logger']->log('info','Moved uploaded file "{file}" to dir "{dir}"',array('file'=>$fileHandle['name'],'dir'=>$GLOBALS['dirs']['assets']));         
                 } else {
                     $this->oc['logger']->log('error','Moving uploaded file "{file}" to dir "{dir}" failed.',array('file'=>$fileHandle['name'],'dir'=>$GLOBALS['dirs']['assets']));             
                 }

@@ -186,7 +186,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                     }
                 } // loop through messages
                 $result['Messages']=count($messages);
-                $this->oc['logger']->log('notice','Messages found in mailbox: {count}',array('count'=>$result['Messages']));    
+                $this->oc['logger']->log('info','Messages found in mailbox: {count}',array('count'=>$result['Messages']));    
             }
             imap_close($mbox);
         }
@@ -409,7 +409,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $header['From']=addcslashes(mb_encode_mimeheader($header['From'],"UTF-8"),'"');
             $success=@mail($mail['To'],$mail['Subject'],$mail['message'],$header);
             if ($success){
-                $this->oc['logger']->log('notice','Email sent to {to}',array('to'=>$mail['To']));    
+                $this->oc['logger']->log('info','Email sent to {to}',array('to'=>$mail['To']));    
             } else {
                 $this->oc['logger']->log('warning','Sending email to {to} failed.',array('to'=>$mail['To']));    
             }

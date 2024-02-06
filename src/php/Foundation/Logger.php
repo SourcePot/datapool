@@ -68,7 +68,7 @@ class Logger
      *
      * @return bool TRUE if no exception is triggered, FALSE if an exception is triggered otherwise
      */
-    public function methodTest($classInstance,string $method,array $args,string $logLevel='info',string $logger='logger_2'):array
+    public function methodTest($classInstance,string $method,array $args,string $logLevel='info',string $logger='logger_1'):array
     {
         $class=get_class($classInstance);
         $context=array('class'=>$class,'method'=>$method);

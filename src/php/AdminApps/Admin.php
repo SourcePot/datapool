@@ -217,7 +217,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $class2delete=$formData['val'][$entryKey]['Content']['Class'];
             if (unlink($classes2files[$class2delete])){
                 unlink($objectListFile);
-                $this->oc['logger']->log('notice','Class "{class}" has been deleted. But the corresponding database table and filespace was left alone',array('class'=>$class2delete));         
+                $this->oc['logger']->log('info','Class "{class}" has been deleted. But the corresponding database table and filespace was left alone',array('class'=>$class2delete));         
             } else {
                 $this->oc['logger']->log('error','Failed to remove class "{class}", file {file}',array('class'=>$class2delete,'file'=>$classes2files[$class2delete]));         
             }
@@ -265,7 +265,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $fileContent=preg_replace('/(if \(\$arr\=+TRUE\)\{\s+return )(array\([^)]+\)\;)/',$newDef,$fileContent);
                 if (file_put_contents($target['file'],$fileContent)){
                     unlink($objectListFile);
-                    $this->oc['logger']->log('notice','New class "{class}" created',array('class'=>$data['New class']));
+                    $this->oc['logger']->log('info','New class "{class}" created',array('class'=>$data['New class']));
                 } else {
                     $this->oc['logger']->log('error','Creation of class "{class}" failed',array('class'=>$data['New class']));
                 }
