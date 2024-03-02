@@ -191,36 +191,42 @@ jQuery(document).ready(function(){
 			jQuery('div[busy-id=busy-'+containerId+']').hide();
 		}
 	}
-    var containerMonitorBusy={};
-    const containerMonitor=function(){
+    
+    var containerArr=[];
+    function initContainerArr(){
         jQuery('article[container-id]').each(function(containerIndex){
-            // loop through all containers present on the page
-			let containerId=jQuery(this).attr('container-id');
-            if (typeof containerMonitorBusy[containerId]==="undefined"){
-                containerMonitorBusy[containerId]=false;
-            }
-            if (containerMonitorBusy[containerId]===false){
-                containerMonitorBusy[containerId]=true;
-                jQuery.ajax({
-                    method:"POST",
-                    url:'js.php',
-                    context:document.body,
-                    data:{'function':'containerMonitor','container-id':containerId},
-                    dataType: "json"
-                }).done(function(data){
-                    if (!data['arr']['isUp2date']){
-                        containerId=data['arr']['container-id'];
-                        data=jQuery(data).serializeArray();
-                        reloadContainer(containerId,data);
-                    }
-                }).fail(function(data){
-                    console.log(data);	
-                }).always(function(){
-                    containerMonitorBusy[containerId]=false;
-                });
-            }
-		});
-	}
+            let containerId=jQuery(this).attr('container-id');
+            containerArr.push(containerId);
+        });
+    }
+    
+    var containerMonitorBusy=false;
+    function containerMonitor(){
+        if (containerMonitorBusy){return false;}
+        if (containerArr.length==0){
+            initContainerArr();
+            if (containerArr.length==0){return true;}
+        }
+        containerMonitorBusy=true;
+        var containerId=containerArr.pop();
+        jQuery.ajax({   method:"POST",
+                        url:'js.php',
+                        context:document.body,
+                        data:{'function':'containerMonitor','container-id':containerId},
+                        dataType: "json"
+                    }).done(function(data){
+                        if (!data['arr']['isUp2date']){
+                            containerId=data['arr']['container-id'];
+                            data=jQuery(data).serializeArray();
+                            reloadContainer(containerId,data);
+                        }
+                    }).fail(function(data){
+                        console.log(data);	
+                    }).always(function(){
+                        containerMonitorBusy=false;
+                    });
+        return true;
+    }
 	let attachedEvents={};
 	attachMissingContainerEvents()
 	function attachMissingContainerEvents(){
@@ -311,14 +317,7 @@ jQuery(document).ready(function(){
 				var myXhr=$.ajaxSettings.xhr();
 				if (myXhr.upload){
 					myXhr.upload.addEventListener('progress',function(e){
-						/*
-						if (e.lengthComputable){
-							$('progress').attr({
-								value: e.loaded,
-								max: e.total,
-							});
-						}
-						*/
+						//console.log(e.loaded+' '+e.total);
 					},false);		
 					myXhr.addEventListener('load',function(e){
 						try{
@@ -621,8 +620,8 @@ jQuery(document).ready(function(){
 	(function heartbeat(){
     	setTimeout(heartbeat,100);
 		heartbeats++;
-		if (heartbeats%11===0){
-			containerMonitor();
+		if (heartbeats%6===0){
+            containerMonitor();
 		} else if (heartbeats%5===0){
 			loadNextEntry();
 		}
