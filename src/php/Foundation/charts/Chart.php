@@ -78,7 +78,10 @@ class Chart{
         reset($this->xAxisArr);
         reset($this->yAxisArr);
         $plot=new \SourcePot\Datapool\Foundation\Charts\Plot($this->oc);
-        $svg.=$plot->getPlotArea(current($this->xAxisArr),current($this->yAxisArr));
+        $xAxis=current($this->xAxisArr);
+        $yAxis=current($this->yAxisArr);
+        if (is_bool($xAxis) || is_bool($yAxis)){return '<p>Axis could not be drawn...</p>';}
+        $svg.=$plot->getPlotArea($xAxis,$yAxis);
         $svg.=$this->tracesSvg;
         // add chart and finalize svg
         if ($caption){

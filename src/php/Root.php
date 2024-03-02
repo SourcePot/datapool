@@ -65,7 +65,7 @@ final class Root{
     }
     
     /**
-    * This method adds a Monolg logger instance to the object collection
+    * This method returns a Monolog logger instance.
     *
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     */
@@ -77,8 +77,10 @@ final class Root{
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new LoadAverageProcessor());
         if ($logLevel===0){
+            $streamHandler = new StreamHandler($logFile,Level::Warning);
+        } else if ($logLevel===1){
             $streamHandler = new StreamHandler($logFile,Level::Notice);
-        } else if ($logLevel>0){
+        } else if ($logLevel>1){
             $streamHandler = new StreamHandler($logFile,Level::Debug);
         }
         $logger->pushHandler($streamHandler);

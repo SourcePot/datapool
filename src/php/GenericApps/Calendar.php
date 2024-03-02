@@ -106,6 +106,29 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
 
     public function job($vars){
+        if (!isset($vars['bankholidays'])){$vars['bankholidays']['lastRun']=0;}
+        if (time()-$vars['bankholidays']['lastRun']>3000000){
+            $entry=array('Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R');
+            $events=array();
+            $uk=new \SourcePot\BankHolidays\es();
+            $events+=$uk->getBankHolidays();
+            $de=new \SourcePot\BankHolidays\de();
+            $events+=$de->getBankHolidays();
+            $es=new \SourcePot\BankHolidays\uk();
+            $events+=$es->getBankHolidays();
+            foreach($events as $country=>$eventArr){
+                foreach($eventArr as $entryId=>$event){
+                    $entry['EntryId']=$entryId;
+                    $entry['Folder']=$country;
+                    $entry['Content']=$event;
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
+                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+                }
+            }
+            $vars['bankholidays']['lastRun']=time();
+            return $vars;
+        }
+        // update signals
         if (isset($vars['Period start'])){
             $vars['Period end']=time();
             $events=array();
@@ -186,7 +209,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $entry['Source']=$this->entryTable;    
         $entry['Folder']=$_SESSION['currentUser']['EntryId'];
         if (empty($entry['Group'])){$entry['Group']='Events';}
-        if (strcmp($entry['Group'],'Events')===0){
+        if (strcmp($entry['Group'],'Events')===0 || strcmp($entry['Group'],'Bank holidays')===0){
             // Standard events
             if (empty($entry['Content']['Event']) && !empty($entry['addDate'])){
                 $entry['Content']['Event']['Start']=$entry['addDate'].'T00:00';
@@ -522,9 +545,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $events=array();
         $oldEvents=array();
         $selectors=array();
-        $selectors['Ongoing event']=array('Source'=>$this->entryTable,'Group'=>'Events','Start<'=>$viewStart,'End>'=>$viewEnd);
-        $selectors['Finnishing event']=array('Source'=>$this->entryTable,'Group'=>'Events','End>='=>$viewStart,'End<='=>$viewEnd);
-        $selectors['Upcomming event']=array('Source'=>$this->entryTable,'Group'=>'Events','Start>='=>$viewStart,'Start<='=>$viewEnd);
+        $selectors['Ongoing event']=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start<'=>$viewStart,'End>'=>$viewEnd);
+        $selectors['Finnishing event']=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','End>='=>$viewStart,'End<='=>$viewEnd);
+        $selectors['Upcomming event']=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start>='=>$viewStart,'Start<='=>$viewEnd);
         $selectors['Serial event']=array('Source'=>$this->entryTable,'Group'=>'Serial events');
         foreach($selectors as $state=>$selector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Start') as $entry){

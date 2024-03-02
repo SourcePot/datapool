@@ -316,7 +316,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'metaDescription'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>array('min-width'=>'50vw')),
                                 'metaRobots'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>array('min-width'=>'50vw')),
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
-                                'logLevel'=>array('method'=>'select','options'=>array('Production','Monitoring','Testing'),'excontainer'=>TRUE),
+                                'logLevel'=>array('method'=>'select','options'=>array('Production','Monitoring','Debugging'),'excontainer'=>TRUE),
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),

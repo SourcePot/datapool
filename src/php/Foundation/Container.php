@@ -726,7 +726,7 @@ class Container{
         return $html;
     }
     
-    private function str2range(string $str):array
+    private function str2range(string $str):array|string
     {
         if (empty($str)){return $str;}
         $strComps=preg_split('/[\|;]/',$str);
@@ -744,8 +744,8 @@ class Container{
     {
         $keys=array('year','month','day','hour','minute','second');
         $dateTimeDefualtComps=array('1000','06','15','12','12','30');
-        if (strpos($groupMode,'group ')===FALSE || empty($value)){return $value;}
-        if (strpos($value,'-')===FALSE){return $value;}
+        if (strpos($groupMode,'group ')===FALSE || empty($value)){return strval($value);}
+        if (strpos($value,'-')===FALSE){return strval($value);}
         $dateTimeComps=preg_split('/[:\-\s]/',trim($value,' :-'));
         $needleFound=FALSE;
         $dateTime=array();
