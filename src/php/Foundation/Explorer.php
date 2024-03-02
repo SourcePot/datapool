@@ -407,6 +407,7 @@ class Explorer{
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('app'=>FALSE,'Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$selector['Source']),FALSE,'Read','Group',TRUE) as $entry){
+            if (strpos($entry['Type'],'md ')===0){continue;}
             $elementArr=$this->selector2linkInfo($selector['app'],$entry);
             $elementArr['element-content']=ucfirst($entry['Name']);
             $elementArr['class']='toc-3';

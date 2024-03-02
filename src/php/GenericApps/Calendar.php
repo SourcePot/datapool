@@ -106,6 +106,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
 
     public function job($vars){
+        // add bank holidays
         if (!isset($vars['bankholidays'])){$vars['bankholidays']['lastRun']=0;}
         if (time()-$vars['bankholidays']['lastRun']>3000000){
             $entry=array('Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R');
@@ -134,6 +135,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $events=array();
             // get all events
             $selector=array('Source'=>$this->entryTable,'Group'=>'Events');
+            //$selector=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE,array('Name')) as $event){
                 $events[$event['Name']]=0;
             }

@@ -68,12 +68,18 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
                 $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getTocHtml(__CLASS__,$filter,$style);
             }
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+            $selector['Type']=$this->entryTable;
             // add content article
             $html='';
-            if (!empty($selector['EntryId'])){
+            if (empty($selector['EntryId'])){
+                $settings=array();
+                $selector['Type']='md%';
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,$settings,array('style'=>array()));
+            } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
                 $presentArr['settings']=array('style'=>array('width'=>'98%','border'=>'none'),'presentEntry'=>__CLASS__.'::'.__FUNCTION__);
                 $presentArr['selector']=$selector;
+                $presentArr['selector']['Type'].=' %';
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('width'=>'84%','overflow'=>'unset')));
                 //
@@ -85,7 +91,8 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         }
     }
     
-    public function manageAssets($arr){
+    public function manageAssets($arr)
+    {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
             return $arr;

@@ -166,7 +166,28 @@ class Container{
         }
         return $arr;
     }
-
+    
+    public function mdContainer(array $arr)
+    {
+        $entry=$arr['selector'];
+        $entry['Type']='md '.$_SESSION['page state']['lngCode'];
+        if (empty($entry['Group'])){$entry['Group']=__CLASS__;}
+        if (empty($entry['Folder'])){$entry['Folder']=$_SESSION['page state']['lngCode'];}
+        if (empty($entry['Name'])){$entry['Name']='Description';}
+        $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
+        $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+        if (!is_file($fileName)){
+            $fileContent="[//]: # (This a Markdown document!)\n\n";
+            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
+            file_put_contents($fileName,$fileContent);
+        }
+        $arr=array('settings'=>array('style'=>array('width'=>'100vw')));
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,TRUE,TRUE,'');
+        $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
+        return $arr;
+    }
+    
     public function entryEditor(array $arr,bool $isDebugging=FALSE):array
     {
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
