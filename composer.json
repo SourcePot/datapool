@@ -18,7 +18,8 @@
         "sourcepot/ops":">=v0.2.7",
         "sourcepot/mediaplayer":"*",
         "sourcepot/sms":">=v1.0.2",
-        "sourcepot/piview":">=v1.1.5"
+        "sourcepot/piview":">=v1.1.5",
+        "sourcepot/bankholidays":">=v1.0.0"
     },
     "autoload":{
         "psr-4":{
