@@ -47,6 +47,7 @@ class HTMLbuilder{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
+        $_SESSION[__CLASS__]['keySelect']=array();
     }
     
     public function init(array $oc)
@@ -241,14 +242,24 @@ class HTMLbuilder{
     public function keySelect(array $arr,array $appendOptions=array()):string
     {
         if (empty($arr['Source'])){return '';}
-        $fileContentKeys=array();
         $keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
-        if (empty($arr['standardColumsOnly'])){
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,TRUE) as $tmpEntry){
-                if ($tmpEntry['isSkipRow']){continue;}
-                $keys=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
-                break;
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr);
+        $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+        if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
+            // get options from cache
+            $keys=$_SESSION[__CLASS__][__FUNCTION__][$requestId];
+        } else {
+            // get available keys
+            if (empty($arr['standardColumsOnly'])){
+                $keyTestArr=array(array('EntryId',TRUE),array('EntryId',FALSE),array('Date',TRUE),array('Date',TRUE),array('Group',TRUE),array('Group',FALSE),array('Folder',TRUE),array('Folder',TRUE),array('Name',TRUE),array('Name',FALSE));
+                foreach($keyTestArr as $keyTest){
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,TRUE,'Read',$keyTest[0],$keyTest[1],2) as $tmpEntry){
+                        if ($tmpEntry['isSkipRow']){continue;}
+                        $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
+                    }                
+                }
             }
+            $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
         }
         $arr['keep-element-content']=TRUE;
         if (!empty($arr['addSourceValueColumn'])){
