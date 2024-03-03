@@ -55,6 +55,24 @@ class Logger
         return $this->entryTemplate;
     }
     
+    public function job($vars){
+        // create and update signals for relevant logging Groups
+        $relevantGroups=array('emergency','alert','critical','error','warning');
+        $selector=array('Source'=>$this->entryTable);
+        foreach($relevantGroups as $Group){
+            $selector['Group']=$Group;
+            $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE);
+            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,'Entries',$Group,$value,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
+        }
+        // cleanup
+        if (isset($signal['Date'])){
+            $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector(__CLASS__,'Entries');
+            $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],'-P1D');
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
+        }
+        return $vars;
+    }
+    
     /**
      * Is a test fixture for class methods based on arguments provided.
      * If the method test finishes without an exceptions, an log entry is created with provided logLevel.
