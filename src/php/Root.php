@@ -21,7 +21,7 @@ use Monolog\Handler\NativeMailerHandler;
 
 final class Root{
 
-    private $registerVendorClasses=array('SourcePot\Ops\OpsEntries','SourcePot\Ops\Patents','SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
+    private $registerVendorClasses=array('SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
     
     private $currentScript='';
     
