@@ -57,6 +57,7 @@ class Signals{
         // update signal
         $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,20);
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+        $signal['Owner']='SYSTEM';
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
         // update attached trigger
         $relevantTrigger=$this->updateTrigger($signal);

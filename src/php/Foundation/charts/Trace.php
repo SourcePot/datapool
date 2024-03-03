@@ -67,7 +67,7 @@ class Trace{
                 break;
             }
             if (stripos($this->dataset[$dim]['dataType'],'date')!==FALSE){
-                $datapoint[$dim]=strtotime($datapoint[$dim]);
+                $datapoint[$dim]=strtotime(strval($datapoint[$dim]));
             } else if (stripos($this->dataset[$dim]['dataType'],'float')!==FALSE){
                 $datapoint[$dim]=floatval($datapoint[$dim]);
             } else if (stripos($this->dataset[$dim]['dataType'],'int')!==FALSE){

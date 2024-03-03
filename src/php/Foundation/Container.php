@@ -609,7 +609,7 @@ class Container{
         $arr['wrapper']=array('style'=>$settings['style']);
         $debugArr=array('arr'=>$arr,'settings'=>$settings);
         $entrySelector=$arr['selector'];
-        $entrySelector['Type']='%image%';
+        $entrySelector['Params']='%image%';
         $arr['style']=array('float'=>'none','display'=>'block','margin'=>'0 auto');
         $entry=array('rowCount'=>0,'rowIndex'=>0);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entrySelector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
@@ -738,7 +738,7 @@ class Container{
                     $traceObj->addDatapoint($valueArr);
                 }
             }
-            $rgb=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2color($traceName,2,FALSE,FALSE);
+            $rgb=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2color($traceName,4,FALSE,FALSE);
             $traceProps=array('path'=>array('element'=>array('fill'=>$rgb,'stroke'=>$rgb)));
             $traceObj->done();
             $chartObj->addTrace($traceObj,$traceProps);

@@ -25,7 +25,7 @@ class Plot{
     }
     
     public function getPlotArea(Axis $axisX,Axis $axisY,$props=array()){
-        $propsTemplate=array('plotArea'=>array('element'=>array('tag'=>'rect','fill'=>'#eee')),
+        $propsTemplate=array('plotArea'=>array('element'=>array('tag'=>'rect','fill'=>'#fff')),
                              'grid'=>array('x'=>array('element'=>array('tag'=>'line','stroke'=>'#000','stroke-dasharray'=>'1 4')),
                                            'y'=>array('element'=>array('tag'=>'line','stroke'=>'#000','stroke-dasharray'=>'1 4')),
                                            ),

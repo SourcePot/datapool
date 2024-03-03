@@ -243,7 +243,7 @@ class HTMLbuilder{
     {
         if (empty($arr['Source'])){return '';}
         $keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr);
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>''));
         $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
         if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
             // get options from cache
@@ -251,15 +251,16 @@ class HTMLbuilder{
         } else {
             // get available keys
             if (empty($arr['standardColumsOnly'])){
+                $foundEntries=FALSE;
                 $keyTestArr=array(array('EntryId',TRUE),array('EntryId',FALSE),array('Date',TRUE),array('Date',TRUE),array('Group',TRUE),array('Group',FALSE),array('Folder',TRUE),array('Folder',TRUE),array('Name',TRUE),array('Name',FALSE));
                 foreach($keyTestArr as $keyTest){
-                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr,TRUE,'Read',$keyTest[0],$keyTest[1],2) as $tmpEntry){
-                        if ($tmpEntry['isSkipRow']){continue;}
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read',$keyTest[0],$keyTest[1],2) as $tmpEntry){
+                        $foundEntries=TRUE;
                         $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
                     }                
                 }
+                if ($foundEntries){$_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;}
             }
-            $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
         }
         $arr['keep-element-content']=TRUE;
         if (!empty($arr['addSourceValueColumn'])){
