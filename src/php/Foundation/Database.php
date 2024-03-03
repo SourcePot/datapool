@@ -249,7 +249,6 @@ class Database{
             $this->dbObj->exec("SET NAMES utf8mb4");
         } catch (\Exception $e){
             $msg=$e->getMessage();
-            $this->oc['logger']->log('emergency',$msg);
             echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i>');
             exit(0);
         }
