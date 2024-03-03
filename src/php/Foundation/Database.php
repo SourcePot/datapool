@@ -57,6 +57,7 @@ class Database{
         $this->oc=$oc;
         $this->collectDatabaseInfo();
         $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $_SESSION[__CLASS__]['getRowCount']=array();
     }
     
     public function job(array $vars):array
@@ -472,11 +473,18 @@ class Database{
     
     public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE,$isDebugging=FALSE){
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
-        // count all selected rows
-        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
-        $sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
-        $rowCount=current($stmt->fetch());
+        $cachId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(array($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries));
+        if (isset($_SESSION[__CLASS__]['getRowCount'][$cachId])){
+            // row count from cache
+            $rowCount=$_SESSION[__CLASS__]['getRowCount'][$cachId];
+        } else {
+            // count all selected rows
+            $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
+            $sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
+            $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
+            $rowCount=current($stmt->fetch());
+            $_SESSION[__CLASS__]['getRowCount'][$cachId]=$rowCount;
+        }
         return intval($rowCount);
     }
     

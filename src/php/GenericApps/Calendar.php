@@ -129,6 +129,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $vars['bankholidays']['lastRun']=time();
             return $vars;
         }
+        // delete signals without a linked calendar entry
+        if (!isset($vars['signalCleanup'])){$vars['signalCleanup']['lastRun']=0;}
+        if (time()-$vars['signalCleanup']['lastRun']>725361){
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->removeSignalsWithoutSource(__CLASS__,__FUNCTION__);
+            $vars['signalCleanup']['lastRun']=time();
+            return $vars;
+        }
         // update signals
         if (isset($vars['Period start'])){
             $vars['Period end']=time();

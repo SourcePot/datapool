@@ -34,9 +34,13 @@ class Signals{
         return $this->entryTable;
     }
     
-    private function getSignalSelector(string $callingClass,string $callingFunction,string $name):array
+    public function getSignalSelector(string $callingClass,string $callingFunction,string|bool $name=FALSE):array
     {
         $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction,'Name'=>$name);
+        if ($name===FALSE){
+            unset($signalSelector['Name']);
+            return $signalSelector;
+        }
         $signalSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signalSelector,array('Source','Group','Folder','Name'),'0','',TRUE);
         return $signalSelector;
     }
@@ -52,6 +56,7 @@ class Signals{
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
         // update signal
         $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,20);
+        $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
         // update attached trigger
         $relevantTrigger=$this->updateTrigger($signal);
@@ -67,6 +72,18 @@ class Signals{
             }
         }
         return $signal;
+    }
+    
+    public function removeSignalsWithoutSource(string $callingClass,string $callingFunction)
+    {
+        $signalSelector=$this->getSignalSelector($callingClass,$callingFunction);
+        $signalSourceSelector=array();
+        $signalSourceSelector['Source']=$this->oc[$callingClass]->getEntryTable();
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE) as $signal){
+            $signalSourceSelector['Name']=$signal['Name'];
+            if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($signalSourceSelector,TRUE)){continue;}
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($signal,TRUE);
+        }
     }
     
     public function isActiveTrigger(string $EntryId,bool $isSystemCall=TRUE):bool

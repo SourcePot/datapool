@@ -110,6 +110,23 @@ class DataExplorer{
         return $this->entryTemplate;
     }
     
+    public function job($vars){
+        // create signals from canvas elements
+        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $canvasElement){
+            if (empty($canvasElement['Content']['Selector']['Source'])){continue;}
+            $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
+            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$value,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
+        }
+        // cleanup
+        if (isset($signal['Date'])){
+            $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('%','DataExplorer');
+            $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],'-P1D');
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
+        }
+        return $vars;
+    }
+    
     private function completeDefintion():void
     {
         // add Source selector
@@ -141,7 +158,11 @@ class DataExplorer{
     */
     public function unifyEntry(array $entry):array
     {
+        $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         if (!empty($entry['class'])){$entry['Content']['Style']['Style class']=$entry['class'];}
+        if (!empty($entry['Content']['Style']['Text'])){
+            $entry['Name']=$entry['Content']['Style']['Text'];
+        }
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
             $entry['Content']['Style']['Text']=$entry['element-content'];
@@ -153,7 +174,6 @@ class DataExplorer{
                 $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
                 $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasTrigger';
             }
-
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_CONTENTADMIN_R');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
@@ -348,9 +368,7 @@ class DataExplorer{
                 $style['box-sizing']='content-box';
                 $rowCountSelector=$canvasElement['Content']['Selector'];
                 if (!empty($rowCountSelector['Type'])){$rowCountSelector['Type'].='%';}
-                // update signal from canvasElement
                 $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,FALSE);
-                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],__FUNCTION__,$canvasElement['Content']['Style']['Text'],$rowCount,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
             }
         }
         // canvas element

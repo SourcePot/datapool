@@ -261,7 +261,12 @@ final class MiscTools{
         // It returns the date based on the selected timezone.
         $dateTime=new \DateTime($datetime);
         if (!empty($addDateInterval)){
-            $dateTime->add(new \DateInterval($addDateInterval));
+            $dateInterval=trim($addDateInterval,'-');
+            if (strlen($dateInterval)<strlen($addDateInterval)){
+                $dateTime->sub(new \DateInterval($dateInterval));
+            } else {
+                $dateTime->add(new \DateInterval($dateInterval));
+            }
         }
         if (empty($timezone)){
             $timezone=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbTimezone();
