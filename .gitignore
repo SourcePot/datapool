@@ -1,2 +1,7 @@
-/src/www/assets/
+/src/www/assets
+/src/www/tmp
 /src/setup/*/
+/src/debugging
+/src/filespace
+/src/logging
+/src/tmp_private
