@@ -286,8 +286,13 @@ class DataExplorer{
             $htmlArr['cntr'].=$this->getFileUpload($canvasElement);
             $htmlArr['cntr'].=$this->getDeleteBtn($canvasElement);
             if (!empty($canvasElement['Content']['Widgets']["Processor"])){
-                $htmlArr['processor'].=$this->oc[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'widget');
-                $htmlArr['processor'].=$this->oc[$canvasElement['Content']['Widgets']["Processor"]]->dataProcessor($canvasElement,'info');
+                $processorClass=$canvasElement['Content']['Widgets']["Processor"];
+                if (isset($this->oc[$processorClass])){
+                    $htmlArr['processor'].=$this->oc[$processorClass]->dataProcessor($canvasElement,'widget');
+                    $htmlArr['processor'].=$this->oc[$processorClass]->dataProcessor($canvasElement,'info');
+                } else {
+                    $this->oc['logger']->log('error','Processor class {processor} missing',array('processor'=>$processorClass));    
+                }
             }
             $htmlArr['cntr'].=$this->exportImportHtml($callingClass);
         }
