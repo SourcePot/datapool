@@ -48,24 +48,26 @@ class GeoTools{
         }
     }
 
-    public function location2address(array $entry,$targetKey='Address',bool $isDebugging=FALSE):array
+    public function location2address(array $entry,$targetKey='Address',bool $isDebugging=TRUE):array
     {
         $debugArr=array('entry_in'=>$entry);
         if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
             $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
-            $query=array('lat'=>$entry['Params']['Geo']['lat'],'lon'=>$entry['Params']['Geo']['lon']);
-            $requestArr=array('method'=>'GET','url'=>'https://nominatim.openstreetmap.org','resource'=>'reverse','query'=>$query,'header'=>$this->requestHeader);
-            $response=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->request($requestArr,FALSE);
-            $debugArr['requestArr']=$requestArr;
+            $options=array('headers'=>array('Accept'=>'application/xml','Content-Type'=>'text/plain'),
+                           'query'=>$entry['Params']['Geo']
+                           );
+            $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
+            $response=$client->request('GET','/reverse',$options);
+            $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response->getBody()->getContents());
             $debugArr['response']=$response;
-            if (isset($response['data']['addressparts'])){
-                $entry['Params'][$targetKey]=$this->normalizeAddress($response['data']['addressparts']);
+            if (isset($response['addressparts'])){
+                $entry['Params'][$targetKey]=$this->normalizeAddress($response['addressparts']);
                 if (isset($entry['Content'][$targetKey])){$entry['Content'][$targetKey]=$entry['Params'][$targetKey];}
-                if (isset($response['data']['result'])){
-                    $entry['Params'][$targetKey]['display_name']=$response['data']['result'];
+                if (isset($response['result'])){
+                    $entry['Params'][$targetKey]['display_name']=$response['result'];
                 } else {
-                    $entry['Params'][$targetKey]['display_name']=implode(', ',$response['data']['addressparts']);
+                    $entry['Params'][$targetKey]['display_name']=implode(', ',$response['addressparts']);
                 }
             }
             $debugArr['entry_out']=$entry;
@@ -90,18 +92,17 @@ class GeoTools{
         if (!empty($address)){
             $query=$this->getRequestAddress($address);
             $debugArr['query']=$query;
-            if ($query){
-                $requestArr=array('method'=>'GET','url'=>'https://nominatim.openstreetmap.org','resource'=>'search','query'=>$query,'header'=>$this->requestHeader);
-                $debugArr['requestArr']=$requestArr;
-                $response=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->request($requestArr,FALSE);
-                $debugArr['response']=$response;
-                if (isset($response['data']['0'])){
-                    $entry['Params']['Geo']=$response['data']['0'];
-                    $entry['Params']['Address']=$address;
-                    $debugArr['entry_out']=$entry;
-                }
+            $options=array('headers'=>array(),'query'=>$query);
+            $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
+            $response=$client->request('GET','/search',$options);
+            $response=$response->getBody()->getContents();
+            $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
+            $debugArr['response']=$response;
+            if (isset($response['0'])){
+                $entry['Params']['Geo']=$response['0'];
+                $entry['Params']['Address']=$address;
+                $debugArr['entry_out']=$entry;
             }
-            
         }
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
