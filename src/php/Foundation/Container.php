@@ -182,7 +182,7 @@ class Container{
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }
-        $arr=array('settings'=>array('style'=>array('width'=>'100vw')));
+        $arr=array('settings'=>array('style'=>array('width'=>'100vw','max-width'=>'100%')));
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,TRUE,TRUE,'');
         $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
         return $arr;

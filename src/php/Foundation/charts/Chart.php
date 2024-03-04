@@ -111,7 +111,7 @@ class Chart{
         $html.=$svg;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'&#8892;','keep-element-content'=>TRUE,'key'=>array('download'),'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>TRUE));
         $html.=$plot->getLegend($this->tracesArr);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('max-width'=>'100%','overflow'=>'auto')));
         return $html;
     }
 }
