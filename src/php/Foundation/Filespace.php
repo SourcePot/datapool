@@ -648,7 +648,7 @@ class Filespace{
     public function importEntries(string $dumpFile,bool $isSystemCall=FALSE):array
     {
         $statistics=array('zip errors'=>0,'json decode errors'=>0,'entries updated'=>0,'attached files added'=>0);
-        $dir=$this->getTmpDir();
+        $dir=$this->getPrivatTmpDir();
         $zip = new \ZipArchive;
         if ($zip->open($dumpFile)===TRUE){
             $zip->extractTo($dir);

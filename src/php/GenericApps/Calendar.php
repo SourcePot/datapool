@@ -452,6 +452,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $events=$this->getEvents($timestamp);
         $arr['calendarSheetHeight']=120;
         foreach($events as $EntryId=>$event){
+            if (empty($event['Content']['Event']['Start']) || empty($event['Content']['Event']['End'])){continue;}
+            if (is_array($event['Content']['Event']['Start'])){implode(' ',$event['Content']['Event']['Start']);}
+            if (is_array($event['Content']['Event']['End'])){implode(' ',$event['Content']['Event']['End']);}
             $style=array();
             $style['top']=100+$event['y']*40;
             if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
@@ -566,6 +569,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     $entries=array($entry);
                 }
                 foreach($entries as $entry){
+                    // skip invalid entries
+                    if (empty($entry['Content']['Event']['Start']) || empty($entry['Content']['Event']['End'])){
+                        continue;
+                    }
                     $key=$entry['EntryId'];
                     $eventStartTimestamp=strtotime($entry['Start']);
                     if (strcmp($state,'Finnishing event')===0){

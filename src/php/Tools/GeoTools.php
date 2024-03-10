@@ -48,7 +48,7 @@ class GeoTools{
         }
     }
 
-    public function location2address(array $entry,$targetKey='Address',bool $isDebugging=TRUE):array
+    public function location2address(array $entry,$targetKey='Address',bool $isDebugging=FALSE):array
     {
         $debugArr=array('entry_in'=>$entry);
         if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){

@@ -108,7 +108,7 @@ class Menu{
         }
     }
     
-    public function class2category(string $class):string
+    public function class2category(string $class):array|bool
     {
         foreach($this->categories as $key=>$category){
             if (strpos($category['Class'],$class)===FALSE){continue;}
