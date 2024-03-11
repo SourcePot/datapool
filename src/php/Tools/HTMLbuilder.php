@@ -900,6 +900,7 @@ class HTMLbuilder{
         if (empty($rowCount)){
             $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
         }
+        $html=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($html);
         if (isset($presentArr['containerId'])){
             $presentArr['html']=$html;
             $presentArr['wrapperSettings']['hideReloadBtn']=TRUE;

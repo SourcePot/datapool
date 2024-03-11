@@ -301,7 +301,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
         if ($this->pageState['EntryId']=='{{EntryId}}' && empty($this->pageState['addDate'])){
             $arr['html'].=$this->getEventsOverview($arr);
-        } else if(strpos($event['EntryId'],'___')!==FALSE){
+        } else if(strpos(strval($event['EntryId']),'___')!==FALSE){
             if (isset($event['Content']['File content'])){unset($event['Content']['File content']);}
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($event['Content']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>TRUE,'hideHeader'=>TRUE));

@@ -509,7 +509,6 @@ class Container{
             $commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$footer,'keep-element-content'=>TRUE,'class'=>$arr['class'].'-footer'));
             $commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>$arr['class']));
         }
-        $commentsHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($commentsHtml);
         $targetId=(isset($arr['containerId']))?$arr['containerId'].'-textarea':$arr['callingFunction'].'-textarea';
         $newComment='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){

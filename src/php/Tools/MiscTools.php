@@ -123,10 +123,8 @@ final class MiscTools{
     
     public function wrapUTF8(string $str):string
     {
-        preg_match_all("/[\x{1f000}-\x{1ffff}]/u",$str,$matches);
-        foreach($matches[0] as $matchIndex=>$match){
-            $str=str_replace($match,'<span class="emoji">'.$match.'</span>',$str);
-        }
+        $str=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' ${1} ',$str);
+        $str=preg_replace("/(\s)([\x{1f000}-\x{1ffff}])(\s)/u",'<span class="emoji">${2}</span>',$str);
         return $str;
     }
     
