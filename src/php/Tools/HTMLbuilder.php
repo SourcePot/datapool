@@ -52,7 +52,7 @@ class HTMLbuilder{
     
     public function init(array $oc)
     {
-        $this->oc=$oc;
+        $this->oc=$oc;    
     }
     
     public function getBtns(array $arr):array
@@ -177,6 +177,7 @@ class HTMLbuilder{
         // Required keys are 'options', 'key', 'callingClass' and 'callingFunction'.
         // Key 'label', 'selected', 'triggerId' are optional.
         // If 'hasSelectBtn' is set, a button will be added which will be clicked if an item is selected.
+        $optionsFilterLimit=10;
         if (!isset($arr['key'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Missing key-key in argument arr',0,E_ERROR,__FILE__,__LINE__);
         }
@@ -221,6 +222,12 @@ class HTMLbuilder{
                 $toReplace['{{options}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($optionArr);                
             }
             foreach($toReplace as $needle=>$value){$html=str_replace($needle,$value,$html);}
+            if (count($arr['options'])>$optionsFilterLimit && !empty($selectArr['id'])){
+                $filterArr=array('tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>array('filter'),'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
+                $countArr=array('tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($countArr);
+            }
             if (isset($selectArr['trigger-id'])){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'*','key'=>array('select'),'value'=>$key,'id'=>$triggerId,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             }
@@ -244,7 +251,7 @@ class HTMLbuilder{
         if (empty($arr['Source'])){return '';}
         $keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>''));
-        $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+        $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STD');
         if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
             // get options from cache
             $keys=$_SESSION[__CLASS__][__FUNCTION__][$requestId];
@@ -669,11 +676,7 @@ class HTMLbuilder{
 
     public function entry2row(array $arr,bool $commandProcessingOnly=FALSE,bool $singleRowOnly=FALSE,bool $isNewRow=FALSE,bool $isSystemCall=FALSE):array|string
     {
-        if (isset($arr['selector']['Class'])){
-            $dataStorageClass='SourcePot\Datapool\Foundation\Filespace';
-        } else {
-            $dataStorageClass='SourcePot\Datapool\Foundation\Database';    
-        }    
+        $olInfoArr=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListInfo($arr['selector']);
         if ($commandProcessingOnly || $singleRowOnly){
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
             if (isset($formData['cmd']['add']) || isset($formData['cmd']['save'])){
@@ -693,12 +696,12 @@ class HTMLbuilder{
                 if ($file){
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($file,$entry);
                 } else {
-                    $entry=$this->oc[$dataStorageClass]->unifyEntry($entry);
-                    $arr['selector']=$this->oc[$dataStorageClass]->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
+                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
                 }
             } else if (isset($formData['cmd']['delete'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $this->oc[$dataStorageClass]->deleteEntries($selector);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteOrderedListEntry($selector);
             } else if (isset($formData['cmd']['moveUp'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
                 $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE,$isSystemCall);
@@ -707,20 +710,12 @@ class HTMLbuilder{
                 $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE,$isSystemCall);
             }
             if ($commandProcessingOnly){
-                if (isset($movedEntryId)){
-                    return $movedEntryId;
-                } else {
-                    return '';
-                }
+                if (isset($movedEntryId)){return $movedEntryId;} else {return '';}
             }
         }
         $row=array();
         if ($isNewRow){
-            $arr['selector']['Content']=array();
-            $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],$relevantKeys=array('Source','Group','Folder','Name','Type'),'0','',TRUE);
-            $newIndex=(isset($arr['selector']['rowCount']))?$arr['selector']['rowCount']+1:1;
-            $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],$newIndex);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->orderedEntryListCleanup($arr['selector'],FALSE);
+            $arr['selector']['EntryId']=$olInfoArr['newEntryId'];
         }
         foreach($arr['contentStructure'] as $contentKey=>$elementArr){
             $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
@@ -762,15 +757,15 @@ class HTMLbuilder{
                 if (!$singleRowOnly){
                     $btnArr=array_replace_recursive($arr,$this->btns['delete']);
                     $btnArr['key'][]=$arr['selector']['EntryId'];
-                    $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
-                    if (empty($arr['selector']['isLast'])){
-                        $btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
+                    $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);  
+                    if ($olInfoArr['hasMoveDownBtn']){
+                        $btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
                         $btnArr['key'][]=$arr['selector']['EntryId'];
                         if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
                         $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
                     }
-                    if (empty($arr['selector']['isFirst'])){
-                        $btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
+                    if ($olInfoArr['hasMoveUpBtn']){
+                        $btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
                         $btnArr['key'][]=$arr['selector']['EntryId'];
                         if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
                         $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
@@ -967,195 +962,110 @@ class HTMLbuilder{
         }
         return $options;
     }
-    
-    /**
-    * This method creates a chart consisting of plots from events, events can consist of more than on signal.
-    * Every key of the event-array which is not a standard-key is a signal-key with the corresponding value..
-    * @param array  $events     Contains the events to be displayed 
-    * @param array  $styles     Is an arrey of styles of the different chart building parts
-    * @return string
-    */
-    public function simpleEventChart($events=FALSE,$styles=array('chart'=>array(),'plot'=>array(),'bar'=>array(),'caption'=>array(),'xLable'=>array(),'yLable'=>array())):string
+
+    public function xyTraces2plot(array $prop=array(),...$traces):string
     {
-        $stdKeys=array('timestamp'=>TRUE,'datetime'=>TRUE,'timezone'=>TRUE,'x'=>TRUE);
-        $stylesTemplate=array();
-        $stylesTemplate['chart']=array('position'=>'relative','margin-top'=>'50px');
-        $stylesTemplate['plot']=array('position'=>'relative','width'=>360,'height'=>50,'margin-bottom'=>'2.5em','border'=>'1px solid #444');
-        $stylesTemplate['bar']=array('position'=>'absolute','width'=>5);
-        $stylesTemplate['xLable']=array('position'=>'absolute','font-size'=>'0.8em','width'=>'7em','height'=>'4em','text-align'=>'left');
-        $stylesTemplate['yLable']=array('position'=>'absolute','font-size'=>'0.8em','width'=>'7em','height'=>'1.2em','text-align'=>'right');
-        $stylesTemplate['caption']=array('position'=>'absolute','top'=>'-2em','width'=>'100%','text-align'=>'center');
-        $stylesTemplate['plot']['margin-left']=$stylesTemplate['yLable']['width'];
-        foreach($stylesTemplate as $key=>$styleTemplate){
-            if (isset($styles[$key])){
-                $styles[$key]=array_replace_recursive($styleTemplate,$styles[$key]);
-            } else {
-                $styles[$key]=$styleTemplate;
+        $plot=$prop;
+        foreach($traces as $traceIndex=>$trace){
+            $data=array();
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($trace['selector'],$trace['isSystemCall'],'Read',$trace['orderBy'],$trace['isAsc'],$trace['limit'],$trace['offset']) as $entry){
+                $trace=$this->addEntry2data($trace,$entry);
             }
+            $plot['traces'][$trace['Name']]=$trace;
+            if (isset($trace['stroke'])){$plot['traces'][$trace['Name']]['prop']['stroke']=$trace['stroke'];}
+            
+            // {x: "Date", y: "Close", stroke: "red"}
+            
         }
-        // get sample events if events are not provided
-        $xMax=intval(round(200*pi()));
-        if ($events===FALSE){
-            for($index=0;$index<100;$index++){
-                $x=mt_rand(0,$xMax)/100;
-                $events[]=array('timeStamp'=>mt_rand(1700246000,1700247000),'Signal A'=>mt_rand(-100,100));
-                $events[]=array('timestamp'=>1700246000+(360*$x),'Signal B'=>1*sin($x));
-            }
-        }
-        // get parameters
-        $labelEvents=array();
-        $normEvents=array();
-        $params=array();
-        foreach($events as $index=>$event){
-            $normEvent=$this->normalizeEvent($event);
-            // x-index
-            if (isset($normEvent['x'])){
-                // nothing to do
-            } else if (isset($normEvent['timestamp'])){
-                $normEvent['x']=$normEvent['timestamp'];
-            } else {
-                $normEvent['x']=$index;
-            }
-            // x-range
-            if (!isset($params['xMin'])){$params['xMin']=$normEvent['x'];$labelEvents['x']['params']['xMin']=$normEvent;}
-            if (!isset($params['xMax'])){$params['xMax']=$normEvent['x'];$labelEvents['x']['params']['xMax']=$normEvent;}
-            if ($params['xMin']>$normEvent['x']){$params['xMin']=$normEvent['x'];$labelEvents['x']['params']['xMin']=$normEvent;}
-            if ($params['xMax']<$normEvent['x']){$params['xMax']=$normEvent['x'];$labelEvents['x']['params']['xMax']=$normEvent;}
-            $normEvents[$index]=$normEvent;
-            // y-range
-            foreach($normEvent as $signalKey=>$signal){
-                if (isset($stdKeys[$signalKey])){continue;}
-                if (!isset($params[$signalKey]['min'])){$params[$signalKey]['min']=$signal['value'];}
-                if (!isset($params[$signalKey]['max'])){$params[$signalKey]['max']=$signal['value'];}
-                if ($params[$signalKey]['min']>$signal['value']){$params[$signalKey]['min']=$signal['value'];}
-                if ($params[$signalKey]['max']<$signal['value']){$params[$signalKey]['max']=$signal['value'];}
-                $labelEvents['y'][$signalKey]['yMin']=$params[$signalKey]['min'];
-                $labelEvents['y'][$signalKey]['yMax']=$params[$signalKey]['max'];
-            }
-        }
-        if (empty($params)){return '';}
-        if ($params['xMin']===$params['xMax']){$params['xMax']=$params['xMin']+1;}
-        // create chart
-        $html='';
-        // scaler
-        $htmlArr=array();
-        $hasLabel=array();
-        $lastSignalKey=FALSE;
-        $xScale=intval($styles['plot']['width'])/($params['xMax']-$params['xMin']);
-        foreach($normEvents as $index=>$event){
-            foreach($event as $signalKey=>$signal){
-                if (isset($stdKeys[$signalKey])){continue;}
-                if (!isset($htmlArr[$signalKey])){$htmlArr[$signalKey]='';}
-                $styles['bar']['background-color']='#f004';   
-                // add bar -> html-div
-                $yScale=FALSE;
-                $yRange=$params[$signalKey]['max']-$params[$signalKey]['min'];
-                if ($params[$signalKey]['max']===$params[$signalKey]['min']){
-                    if ($params[$signalKey]['min']<0){
-                        $params[$signalKey]['max']=0;
-                    } else if ($params[$signalKey]['min']>0){
-                        $params[$signalKey]['min']=0;
-                    } else {
-                        $yScale=1;
+        return $this->plot($plot);
+    }
+    
+    public function getTraceTemplate(){
+        $trace=array('Name'=>'Logs',
+                     'selector'=>array('Source'=>'signals','Group'=>'signal','Folder'=>'%Logger%'),
+                     'isSystemCall'=>FALSE,'orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>0,
+                     'x'=>array('key'=>'Content|[]|signal|[]|*|[]|timeStamp','Type'=>'timestamp','Name'=>'Date'),
+                     'y'=>array('key'=>'Content|[]|signal|[]|*|[]|value','Type'=>'int','Name'=>'Count'),
+                     'data'=>array(),
+                     //'type'=>'rectY',
+                     //'type'=>'lineY',
+                     'type'=>'areaY',
+                     );
+        return $trace;
+    }
+
+    private function addEntry2data(array $trace,array $entry):array
+    {
+        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+        $compareFlatKeyCompsXY=array('x'=>explode($S,$trace['x']['key']),'y'=>explode($S,$trace['y']['key']));
+        $dataXY=array();
+        foreach($flatEntry as $flatArrKey=>$flatArrValue){
+            $flatKeyComps=explode($S,$flatArrKey);
+            $index=array();
+            foreach($compareFlatKeyCompsXY as $dim=>$compareFlatKeyComps){
+                if (count($flatKeyComps)!==count($compareFlatKeyComps)){continue;}
+                $isValid=TRUE;
+                foreach($compareFlatKeyComps as $keyIndex=>$compareFlatKeyComp){
+                    if (strcmp($compareFlatKeyComp,'*')===0){
+                        $index[$dim]=$flatKeyComps[$keyIndex];
+                    } else if (strcmp($compareFlatKeyComp,$flatKeyComps[$keyIndex])!==0){
+                        $isValid=FALSE;
+                        break;
                     }
+                    
                 }
-                if ($yScale===FALSE){
-                    $yScale=intval($styles['plot']['height'])/$params[$signalKey]['max']-$params[$signalKey]['min'];
-                }
-                $styles['bar']['border-top']='1px solid #000';
-                $styles['bar']['left']=round($xScale*($event['x']-$params['xMin'])-0.5*$styles['bar']['width']);
-                if ($params[$signalKey]['max']>0 && $params[$signalKey]['min']<0){
-                    if ($signal['value']<0){
-                        $styles['bar']['height']=ceil(-$yScale*$signal['value']);   
-                        $styles['bar']['bottom']=round($yScale*($signal['value']-$params[$signalKey]['min']));
-                        $styles['bar']['border-bottom']='1px solid #000';
-                        $styles['bar']['background-color']='#80f4';   
-                    } else {
-                        $styles['bar']['height']=ceil($yScale*$signal['value']);   
-                        $styles['bar']['bottom']=round(-$yScale*$params[$signalKey]['min']);
+                if ($isValid){
+                    if (!isset($trace[$dim]['Name'])){
+                        $trace[$dim]['Name']=$compareFlatKeyComp;
                     }
-                } else {
-                    $styles['bar']['height']=ceil($yScale*($signal['value']-$params[$signalKey]['min']));
-                    $styles['bar']['bottom']=0;
+                    $flatArrValue=match($trace[$dim]['Type']){
+                        'int'=>intval($flatArrValue),
+                        'float'=>floatval($flatArrValue),
+                        'bool'=>boolval($flatArrValue),
+                        'string'=>strval($flatArrValue),
+                        'timestamp'=>date('Y-m-d H:i:s',$flatArrValue),
+                    };
+                    $indexKey=$entry['EntryId'];
+                    if (isset($index[$dim])){$indexKey.='_'.$index[$dim];}
+                    $dataXY[$indexKey][$trace[$dim]['Name']]=$flatArrValue;
                 }
-                $element=array('tag'=>'div','element-content'=>' ','keep-element-content'=>TRUE,'style'=>$styles['bar']);
-                $element['title']=(isset($event['datetime']))?$event['datetime']:$event['x'];
-                $element['title'].=' | '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($signal['signal']);
-                $htmlArr[$signalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-                // add y-label and captions
-                if (!isset($hasLabel[$signalKey])){
-                    $hasLabel[$signalKey]=TRUE;
-                    foreach($labelEvents['y'][$signalKey] as $labelIndex=>$labelValue){
-                        $label=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($labelValue,0);
-                        $styles['yLable']['bottom']=ceil($yScale*($labelValue-$params[$signalKey]['min']));
-                        $styles['yLable']['left']='-'.strval($styles['yLable']['width']);
-                        $styles['yLable']['height']='1em';
-                        $element=array('tag'=>'p','element-content'=>$label,'keep-element-content'=>TRUE,'style'=>$styles['yLable']);
-                        $htmlArr[$signalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-                    }
-                    $element=array('tag'=>'h3','element-content'=>$signalKey,'keep-element-content'=>TRUE,'style'=>$styles['caption']);
-                    $htmlArr[$signalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);                                    
-                }
-                $lastSignalKey=$signalKey;
             }
         }
-        // add x-label
-        if ($lastSignalKey){
-            foreach($labelEvents['x']['params'] as $labelIndex=>$labelEvent){
-                $label=strval((isset($labelEvent['datetime']))?$labelEvent['datetime']:$labelEvent['x']);
-                $styles['xLable']['bottom']='-'.strval($styles['xLable']['height']);
-                $styles['xLable']['left']=round($xScale*($labelEvent['x']-$params['xMin'])-0.5*$styles['bar']['width']);
-                $element=array('tag'=>'p','element-content'=>$label,'keep-element-content'=>TRUE,'style'=>$styles['xLable']);
-                $htmlArr[$lastSignalKey].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-            }
-        }
-        // compile plots to chart
-        foreach($htmlArr as $signalKey=>$barsHtml){
-            $element=array('tag'=>'div','element-content'=>$barsHtml,'keep-element-content'=>TRUE,'style'=>$styles['plot']);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-        }
-        $element=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>$styles['chart']);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        $trace['datatype']=array('x'=>$trace['x']['Type'],'y'=>$trace['y']['Type']);
+        $trace['traceProp']=array('x'=>$trace['x']['Name'],'y'=>$trace['y']['Name']);
+        $trace['data']+=$dataXY;
+        return $trace;
+    }
+    
+    private function plot(array $plot):string
+    {
+        // create plot definition
+        $plotTemplate=array('caption'=>'Sample chart',
+                            'style'=>array(),
+                            'plotProp'=>array('grid'=>TRUE,'color'=>array('legend'=>TRUE),'marginBottom'=>50,'x'=>array('padding'=>0.2)),
+                            'axisX'=>array('tickRotate'=>0),
+                            'axisY'=>array('tickRotate'=>0),
+                            );
+        $plot=array_replace_recursive($plotTemplate,$plot);
+        $plot['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(hrtime(TRUE),TRUE);
+        $_SESSION[__CLASS__]['plot'][$plot['id']]=$plot;
+        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_SESSION[__CLASS__]['plot']);
+        // draw plot container
+        $elArr=array('tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot '.$plot['caption'],'id'=>$plot['id']);
+        $elArr['style']=$plot['style'];
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+        $elArr=array('tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$plot['id']);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+        $elArr=array('tag'=>'div','class'=>'plot-wrapper','keep-element-content'=>TRUE,'element-content'=>$html);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
         return $html;
     }
     
-    private function normalizeEvent(array $event):array
+    public function getPlotData(array $arr):array
     {
-        $normEvent=array();
-        $standardKeys=array('timeStamp'=>'timestamp','timestamp'=>'timestamp','dateTime'=>'datetime','datetime'=>'datetime','timeZone'=>'timezone','timezone'=>'timezone','X'=>'x','x'=>'x');
-        foreach($standardKeys as $testKey=>$stdKey){
-            if (isset($event[$testKey])){
-                $normEvent[$stdKey]=$event[$testKey];
-                unset($event[$testKey]);
-            }
-        }
-        // normalize keys
-        if (!isset($normEvent['timezone'])){
-            $normEvent['timezone']='UTC';
-        }
-        $timezoneObj=new \DateTimeZone($normEvent['timezone']);
-        // get datetime-object
-        $datetimeObj=FALSE;
-        if (isset($normEvent['datetime'])){
-            $datetimeObj=new \DateTime($normEvent['datetime'],$timezoneObj);
-        } else if (isset($normEvent['timestamp'])){
-            $datetimeObj=new \DateTime('@'.$normEvent['timestamp'],$timezoneObj);
-        }
-        // add datetime and timestamp
-        if ($datetimeObj){
-            $normEvent['datetime']=$datetimeObj->format('Y-m-d H:i:s');
-            $normEvent['timestamp']=$datetimeObj->getTimestamp();
-        }
-        // normalize value
-        foreach($event as $signalKey=>$signal){
-            if (is_bool($signal)){
-                $normEvent[$signalKey]=array('value'=>intval($signal),'signal'=>$signal);
-            } else {
-                $normEvent[$signalKey]=array('value'=>floatval($signal),'signal'=>$signal);
-            }
-        }
-        return $normEvent;
+        return $_SESSION[__CLASS__]['plot'][$arr['id']];
     }
-    
+
 }
 ?>

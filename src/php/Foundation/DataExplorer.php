@@ -34,6 +34,7 @@ class DataExplorer{
                                              'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
                                                                'File upload'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
                                                                'File upload extract archive'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
+                                                               'File upload extract email parts'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
                                                                'pdf-file parser'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
                                                                'Delete selected entries'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>1),
                                                                 ),
@@ -535,6 +536,7 @@ class DataExplorer{
                 if (empty($fileArr["tmp_name"])){continue;}
                 $entry=$canvasElement['Content']['Selector'];
                 $entry['extractArchives']=!empty($canvasElement['Content']['Widgets']['File upload extract archive']);
+                $entry['extractEmails']=!empty($canvasElement['Content']['Widgets']['File upload extract email parts']);
                 $entry['pdfParser']=(isset($canvasElement['Content']['Widgets']['pdf-file parser']))?$canvasElement['Content']['Widgets']['pdf-file parser']:'';
                 $entry['EntryId']=hash_file('md5',$fileArr["tmp_name"]);
                 if (empty($entry['Folder'])){$entry['Folder']='Upload';}

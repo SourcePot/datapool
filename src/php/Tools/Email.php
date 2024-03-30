@@ -176,6 +176,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
                     } else {
                         foreach($entry['attachments'] as $attName=>$attContent){
+                            $attName=imap_utf8($attName);
                             $entry['pathArr']=pathinfo($attName);
                             $entry['Name'].=' ('.$attName.')';
                             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);

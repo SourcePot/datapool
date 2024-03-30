@@ -985,10 +985,16 @@ class Database{
         return str_pad(strval($index),4,'0',STR_PAD_LEFT).'___'.$primaryKeyValue;
     }
     
-    public function getOrderedListIndexFromEntryId(string $primaryKeyValue):int
+    public function getOrderedListIndexFromEntryId(string|bool $primaryKeyValue,bool $detectMalFormat=TRUE):int
     {
+        if (is_bool($primaryKeyValue)){return 0;}
         $comps=$this->orderedListComps($primaryKeyValue);
-        if (count($comps)<2){return 0;}
+        if (count($comps)<2){
+            if ($detectMalFormat){
+                $this->oc['logger']->log('warning','Invalid EntryId "{EntryId}" supplied to "{function}"',array('function'=>__FUNCTION__,'EntryId'=>$primaryKeyValue));
+            }
+            return 0;
+        }
         $index=array_shift($comps);
         return intval($index);
     }
@@ -1005,60 +1011,94 @@ class Database{
         return explode('___',$primaryKeyValue);    
     }
     
-    private function orderedList2selector(array $entry):array|bool
+    public function orderedListInfo(array $orderedListSelector,bool $isSystemCall=TRUE,bool $isDebugging=FALSE):array
     {
-        if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
-        $selector=array('Source'=>$entry['Source'],'EntryId'=>'%'.$this->getOrderedListKeyFromEntryId($entry['EntryId']));
-        return $selector;
+        $loopIndex=$loopEntryIndex=1;
+        $currentEntryId=(empty($orderedListSelector['EntryId']))?FALSE:$orderedListSelector['EntryId'];
+        $currentEntryIndex=$this->getOrderedListIndexFromEntryId($currentEntryId,FALSE);
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($orderedListSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
+        $olInfo=array('firstEntryId'=>FALSE,'lastEntryId'=>FALSE,'newEntryIndex'=>FALSE,'newEntryId'=>FALSE,'baseEntryId'=>FALSE,'currentEntryIndex'=>$currentEntryIndex,'selector'=>$selector,'error'=>array());
+        foreach($this->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
+            if ($olInfo['firstEntryId']===FALSE){
+                $olInfo['firstEntryId']=$olInfo['lastEntryId']=$entry['EntryId'];
+                $olInfo['baseEntryId']=$this->getOrderedListKeyFromEntryId($olInfo['firstEntryId']);
+            }
+            if (strpos($entry['EntryId'],$olInfo['baseEntryId'])===FALSE){
+                $this->oc['logger']->log('notice','"Deleted invalid ordered list entry: Source="{Source}", EntryId="{EntryId}"',array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']));
+                $olInfo['error'][]='Invalid ordered list entry '.$entry['EntryId'];
+                $this->deleteEntries(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']),TRUE);
+            } else {
+                $olInfo['lastEntryId']=$entry['EntryId'];
+                $loopEntryIndex=$this->getOrderedListIndexFromEntryId($entry['EntryId'],FALSE);
+                if ($loopEntryIndex!==$loopIndex && $loopEntryIndex>0){
+                    $olInfo['error'][]='Index mismatch at '.$entry['EntryId'].', index should be '.$loopIndex;
+                }
+                $loopIndex++;
+            }
+        }
+        if ($olInfo['firstEntryId']===FALSE){
+            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,$relevantKeys=array('Source','Group','Folder','Name','Type'),'0','',TRUE);
+            $olInfo['baseEntryId']=$selector['EntryId'];
+            $olInfo['firstEntryId']=$olInfo['lastEntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],0);
+        }
+        $olInfo['lastEntryIndex']=$olInfo['moveUpIndex']=$this->getOrderedListIndexFromEntryId($olInfo['lastEntryId'],FALSE);
+        $olInfo['newEntryIndex']=$olInfo['lastEntryIndex']+1;
+        $olInfo['newEntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['newEntryIndex']);
+        if ($currentEntryIndex>1){
+            $olInfo['moveDownIndex']=$currentEntryIndex-1;
+            $olInfo['hasMoveDownBtn']=TRUE;
+        } else {
+            $olInfo['moveDownIndex']=$currentEntryIndex;
+            $olInfo['hasMoveDownBtn']=FALSE;
+        }
+        if ($currentEntryIndex<$olInfo['lastEntryIndex']){
+            $olInfo['moveUpIndex']=$currentEntryIndex+1;
+            $olInfo['hasMoveUpBtn']=TRUE;
+        } else {
+            $olInfo['moveUpIndex']=$currentEntryIndex;
+            $olInfo['hasMoveUpBtn']=FALSE;
+        }
+        if ($isDebugging || !empty($olInfo['error'])){
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('orderedListSelector'=>$orderedListSelector,'infoArr'=>$olInfo));
+        }
+        return $olInfo;
     }
     
-    public function orderedEntryListCleanup(array $selector, bool $isDebugging=FALSE):bool
+    public function deleteOrderedListEntry(array $selector,bool $isSystemCall=TRUE)
     {
-        $orderedListSelector=$this->orderedList2selector($selector);
-        if (empty($orderedListSelector)){return FALSE;}
-        $targetIndex=1;
-        $debugArr=array('selector'=>$selector,'orderedListSelector'=>$orderedListSelector);
-        foreach($this->entryIterator($orderedListSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $targetEntryId=$this->addOrderedListIndexToEntryId($entry['EntryId'],$targetIndex);
-            if (strcmp($entry['EntryId'],$targetEntryId)!==0){
-                $targetSelector=array('Source'=>$selector['Source'],'EntryId'=>$targetEntryId);
-                $this->moveEntryOverwriteTarget($entry,$targetSelector,TRUE,FALSE,FALSE,FALSE);    
+        $toDeleteEntry=$this->entryById($selector,TRUE);
+        if (empty($toDeleteEntry)){return FALSE;}
+        $entryDetected=FALSE;
+        $lastEntrySelector=array('Source'=>$selector['Source'],'EntryId'=>'');
+        $olSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($toDeleteEntry,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
+        foreach($this->entryIterator($olSelector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
+            if ($entryDetected){
+                $this->swapEntries($lastEntrySelector,$entry,$isSystemCall);
             }
-            $debugArr['steps'][]=array('targetIndex'=>$targetIndex,'entry EntryId'=>$entry['EntryId'],'target EntryId'=>$targetEntryId,'rowCount'=>$entry['rowCount']);
-            $targetIndex++;
+            $lastEntrySelector['EntryId']=$entry['EntryId'];
+            if (strcmp($entry['EntryId'],$toDeleteEntry['EntryId'])===0){$entryDetected=TRUE;}
         }
-        if ($isDebugging){
-            if (isset($_SESSION[__CLASS__][__FUNCTION__]['callCount'])){$_SESSION[__CLASS__][__FUNCTION__]['callCount']++;} else {$_SESSION[__CLASS__][__FUNCTION__]['callCount']=1;}
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,'DebugArr '.__FUNCTION__.'-'.$_SESSION[__CLASS__][__FUNCTION__]['callCount'].'-');
+        if ($entryDetected){
+            $this->deleteEntries(array('Source'=>$selector['Source'],'EntryId'=>$lastEntrySelector['EntryId']),$isSystemCall);
+            return TRUE;
+        } else {
+            return FALSE;
         }
-        return TRUE;
     }
     
     public function moveEntry(array $selector,bool $moveUp=TRUE,bool $isSystemCall=FALSE):string|bool
     {
-        // This method requires column EntryId have the format [constant prefix]|[index]
-        // The index range is: 1...index...rowCount
-        $orderedListSelector=$this->orderedList2selector($selector);
-        if (empty($orderedListSelector)){return FALSE;}
-        $status=array('rowCount'=>0,'entries'=>array());
-        foreach($this->entryIterator($orderedListSelector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
-            $status['rowCount']=$entry['rowCount'];
-            $status['entries'][$entry['EntryId']]=$entry;
-            if (strcmp($entry['EntryId'],$selector['EntryId'])!==0){continue;}
-            $currentIndex=$this->getOrderedListIndexFromEntryId($entry['EntryId']);
-            if ($moveUp){
-                if ($currentIndex<$entry['rowCount']){$targetIndex=$currentIndex+1;} else {return $entry['EntryId'];}
-            } else {
-                if ($currentIndex>1){$targetIndex=$currentIndex-1;} else {return $entry['EntryId'];}
-            }
-            $key=$this->getOrderedListKeyFromEntryId($entry['EntryId']);
-            $targetSelector=array('Source'=>$selector['Source']);
-            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($key,$targetIndex);
-            $this->swapEntries($entry,$targetSelector,$isSystemCall);
+        $sourceEntry=$this->entryById($selector,TRUE);
+        $olInfo=$this->orderedListInfo($sourceEntry,TRUE,FALSE);
+        if (empty($olInfo['selector'])){return FALSE;}
+        $sourceSelector=$targetSelector=$olInfo['selector'];
+        $sourceSelector['EntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['currentEntryIndex']);
+        if ($moveUp){
+            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['moveUpIndex']);
+        } else {
+            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['moveDownIndex']);
         }
-        if (empty($targetSelector)){
-            throw new \ErrorException('Function '.__FUNCTION__.': found "'.$status['rowCount'].'" entries, no targetselector created. Selector used returned no valid entry, isSystemCall='.intval($isSystemCall).'. ',0,E_ERROR,__FILE__,__LINE__);
-        }
+        $this->swapEntries($sourceSelector,$targetSelector,$isSystemCall);
         return $targetSelector['EntryId'];
     }
 

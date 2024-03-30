@@ -206,15 +206,15 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $conditionRuleOptions=array(''=>'-');
         if (!empty($base['inboxconditionrules'])){
             foreach($base['inboxconditionrules'] as $ruleId=>$rule){
-                $ruleIndex=substr($ruleId,0,strpos($ruleId,'_'));
+                $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
                 $conditionRuleOptions[$ruleId]='Rule '.$ruleIndex;
             }
         }
-        $contentStructure=array('Condition A'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
+        $contentStructure=array('Condition A'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$conditionRuleOptions),
                                 ' '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'AND'),
-                                'Condition B'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
+                                'Condition B'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$conditionRuleOptions),
                                 '  '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'AND'),
-                                'Condition C'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'stripos','options'=>$conditionRuleOptions),
+                                'Condition C'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$conditionRuleOptions),
                                 'Forward to'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 );
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -236,7 +236,12 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                                 )
                      );
         if ($testRun==2){
-            $inboxResult=$this->oc[$inboxParams['Inbox source']]->receive($callingElement['Folder']);
+            if (isset($this->oc[$inboxParams['Inbox source']])){
+                $inboxResult=$this->oc[$inboxParams['Inbox source']]->receive($callingElement['Folder']);    
+            } else {
+                $this->oc['logger']->log('warning','Function {class}::{function} failed. Inbox "{inboxSource}" was not initiated.',array('class'=>__CLASS__,'class'=>__CLASS__,'inboxSource'=>$inboxParams['Inbox source']));         
+                $result['Inbox statistics']['error']['value']='Inbox source not set';
+            }
             foreach($inboxResult as $key=>$value){
                 if (empty($value)){continue;}
                 $result['Inbox statistics'][$key]['value']=$value;
@@ -268,7 +273,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $ruleArr=array();
         foreach($base['inboxconditionrules'] as $ruleId=>$rule){
-            $ruleIndex=substr($ruleId,0,strpos($ruleId,'_'));
+            $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
             $conditionMet[$ruleId]=FALSE;
             foreach($flatEntry as $flatKey=>$value){
                 if (strpos($flatKey,$rule['Content']['Column'])!==0){continue;}
@@ -288,7 +293,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             return $result;
         }
         foreach($base['inboxforwardingrules'] as $ruleId=>$rule){
-            $ruleIndex=substr($ruleId,0,strpos($ruleId,'_'));
+            $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
             $forward[$ruleId]=TRUE;
             foreach($rule['Content'] as $key=>$condRuleId){
                 if (strpos($key,'Condition')===FALSE || empty($condRuleId)){continue;}
@@ -303,8 +308,11 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // forward relevant entries
         $inboxEntry=$entry;
         foreach($forward as $ruleId=>$forwardTo){
-            $ruleIndex=substr($ruleId,0,strpos($ruleId,'_'));
-            if ($forwardTo){
+            $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
+            if (is_bool($forwardTo)){
+                $statisticsKey='Forwarding rule '.$ruleIndex.' failed';
+                $targetEntry=$entry;
+            } else if (isset($base['entryTemplates'][$forwardTo])){
                 // conditions to forward entry  met
                 $statisticsKey='Forwarding rule '.$ruleIndex.' success';
                 $targetSelector=$base['entryTemplates'][$forwardTo];
@@ -318,9 +326,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             } else {
                 // conditions to forward entry NOT met
-                $statisticsKey='Forwarding rule '.$ruleIndex.' failed';
+                $statisticsKey='Forwarding rule '.$ruleIndex.' error';
                 $targetEntry=$entry;
-                
+                $this->oc['logger']->log('notice','"{class}" forwarding rule "{ruleId}" error',array('class'=>__CLASS__,'ruleId'=>$ruleId));
             }
             // update statistic
             if (isset($result['Inbox statistics'][$statisticsKey]['value'])){

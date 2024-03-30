@@ -14,8 +14,12 @@ class Signals{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array();
-
+    private $entryTemplate=array('Expires'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'2999-01-01 01:00:00','Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
+                                 'Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
+                                 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
+                                 );
+    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -45,12 +49,12 @@ class Signals{
         return $signalSelector;
     }
     
-    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',$read='ADMIN_R',$write='ADMIN_R'):array
+    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int'):array
     {
         $newContent=array('value'=>$value,'dataType'=>$dataType,'timeStamp'=>time());
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
-        $signal=array('Type'=>$this->entryTable.' '.$dataType,'Read'=>$read,'Write'=>$write,'Content'=>array('signal'=>array()));
+        $signal=array('Type'=>$this->entryTable.' '.$dataType,'Content'=>array('signal'=>array()));
         $signal=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($signal);
         $signal=array_merge($signal,$signalSelector);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
@@ -257,17 +261,18 @@ class Signals{
     
     public function getSignalPlot(array $selector=array()):string
     {
-        $events=array();
+        $html='';
         $selector['Source']='signals';
         $selector['Group']='signal';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
-            $signalName=$entry['Folder'].'::'.$entry['Name'];
-            foreach($entry['Content']['signal'] as $index=>$signalValue){
-                $events[]=array($signalName=>$signalValue['value'],'timestamp'=>$signalValue['timeStamp']);
-            }
-        } // loop through entries
-        $styles=array('plot'=>array('height'=>30,'width'=>400),'caption'=>array('font-size'=>'0.8em'),'xLabel'=>array('font-size'=>'0.6em'),'yLabel'=>array('font-size'=>'0.6em'));
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->simpleEventChart($events,$styles);
+            $plotDef=array('caption'=>date('Y-m-d').'_'.$entry['Name'],'plotProp'=>array('height'=>150));
+            $trace=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
+            $trace['Name']=$entry['Folder'].'::'.$entry['Name'];
+            $trace['selector']=$selector;
+            $trace['isSystemCall']=TRUE;
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->xyTraces2plot($plotDef,$trace);
+        }
+        return $html;
     }
     
     public function getSignalOptions(array $selector=array()):array

@@ -153,19 +153,10 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function chartRules($callingElement){
-        $processingOptions=array(''=>'none','group day'=>'Group by day','group month'=>'Group by month','group year'=>'Group by year','avr'=>'Average','sum'=>'Sum','min'=>'Minimum','max'=>'Maximum','count'=>'Count');
-        // complete section selector
         $contentStructure=array('trace name'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE),
-                                'filter'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE),
-                                'needle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'2022','excontainer'=>TRUE),
-                                '&#10073;'=>array('method'=>'element','tag'=>'p','element-content'=>'X:','excontainer'=>TRUE),
                                 'x-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE),
-                                'x-processing'=>array('method'=>'select','value'=>'','options'=>$processingOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                '&#10074;'=>array('method'=>'element','tag'=>'p','element-content'=>'Y:','excontainer'=>TRUE),
                                 'y-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Group','standardColumsOnly'=>FALSE),
-                                'y-processing'=>array('method'=>'select','value'=>'','options'=>$processingOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE),
                                 );
-        $contentStructure['filter']+=$callingElement['Content']['Selector'];
         $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
         $contentStructure['y-selector']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -177,21 +168,28 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runChartEntries($callingElement,$testRun=FALSE){
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($callingElement['Content']['Selector']);
-        if (empty($selector['Source'])){return array();}
-        $traceDefArr=array();
         $props=array('Script start timestamp'=>hrtime(TRUE));
-        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            if (strpos($entry['Group'],'Params')!==FALSE){
-                $props=array_merge($props,$entry['Content']);
-            } else if (strpos($entry['Group'],'Rule')!==FALSE){
-                $traceDefArr[$entry['EntryId']]=$entry['Content'];
-            }
-        }
+        
+        
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+        
+        
+        
+        $traceA=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
+        $traceA['Name']='Error';
+        $traceA['selector']['Name']='error';
+        $traceA['isSystemCall']=TRUE;
+        $traceB=$traceA;
+        $traceB['Name']='Warning';
+        $traceB['type']='lineY';
+        $traceB['selector']['Name']='warning';
+            
+        
         $result=array();
-        $result['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->selector2xyChartHtml($selector,$traceDefArr,$props);
+        
+        $result['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->xyTraces2plot(array(),$traceB,$traceA);
+        
+        
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$props['Script start timestamp'])/1000000));

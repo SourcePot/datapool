@@ -95,7 +95,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
             $forumEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
         } 
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin'=>'15px 5px;','border'=>'none')));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin'=>'0','border'=>'none')));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','class'=>'forum'));
         return $html;
     }

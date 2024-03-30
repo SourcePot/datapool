@@ -379,7 +379,7 @@ final class MiscTools{
         }   
     }
     
-    public function add2history($arr,array $newElement,int $maxSize=10):array
+    public function add2history($arr,array $newElement,int $maxSize=50):array
     {
         if (is_array($arr)){
             array_unshift($arr,$newElement);

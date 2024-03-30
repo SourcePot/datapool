@@ -213,6 +213,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function runParseEntries($callingElement,$testRun=FALSE){
         $base=array('parserparams'=>array(),'parsersectionrules'=>array());
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
+        if (!isset($base['parserrules'])){$base['parserrules']=array();}
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Parser statistics'=>array('Entries'=>array('value'=>0),'Success'=>array('value'=>0),'Failed'=>array('value'=>0),'No text, skipped'=>array('value'=>0),'Skip rows'=>array('value'=>0)));
@@ -241,8 +242,14 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $parserFailed='No text to parse';
             $result['Parser statistics']['No text, skipped']['value']++;
         } else {
-            $fullText=$flatSourceEntry[$params['Source column']];
+            $fullText=preg_replace('/<\/[a-z]+>/','$0 ',$flatSourceEntry[$params['Source column']]);
+            $fullText=strip_tags($fullText);
+            $fullText=preg_replace('/\s+/',' ',$fullText);
+            
             $textSections=array(0=>$fullText);
+            
+            if ($testRun){$result['Parser text sections']['all sections']=array('value'=>$textSections[0]);}
+            
             $base['parsersectionrules'][0]=array('Content'=>array('Regular expression'=>'_____','Section name'=>'All sections'));
             $lastSection='START';
             $base['parsersectionrules'][$lastSection]=array('Content'=>array('Regular expression'=>'_____','Section name'=>'START'));
@@ -277,7 +284,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     continue;
                 }
                 $matchRemoved='<p>No</p>';
-                $rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
+                //$rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
+                $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
                 if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
                     $sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
                 } else {

@@ -98,7 +98,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $currentUser=$oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
         $settingKey=(strcmp($currentUser['Owner'],'ANONYM')===0)?'ANONYM':$currentUser['EntryId'];
-        $this->setting=array('Days to show'=>31,'Day width'=>300,'Timezone'=>$pageTimeZone);
+        $this->setting=array('Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone);
         $this->setting=$oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
         $this->pageStateTemplate=array('Source'=>$this->entryTable,'Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
@@ -108,6 +108,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function job($vars){
         // add bank holidays
         if (!isset($vars['bankholidays'])){$vars['bankholidays']['lastRun']=0;}
+        if (!isset($vars['signalCleanup'])){$vars['signalCleanup']['lastRun']=0;}
         if (time()-$vars['bankholidays']['lastRun']>3000000){
             $entry=array('Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R');
             $events=array();
@@ -128,16 +129,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             }
             $vars['bankholidays']['lastRun']=time();
             return $vars;
-        }
-        // delete signals without a linked calendar entry
-        if (!isset($vars['signalCleanup'])){$vars['signalCleanup']['lastRun']=0;}
-        if (time()-$vars['signalCleanup']['lastRun']>725361){
+        } else if (time()-$vars['signalCleanup']['lastRun']>725361){
+            // delete signals without a linked calendar entry
             $this->oc['SourcePot\Datapool\Foundation\Signals']->removeSignalsWithoutSource(__CLASS__,__FUNCTION__);
             $vars['signalCleanup']['lastRun']=time();
             return $vars;
-        }
-        // update signals
-        if (isset($vars['Period start'])){
+        } else if (isset($vars['Period start'])){
+            // update signals
             $vars['Period end']=time();
             $events=array();
             // get all events
@@ -314,7 +312,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private function getCalendarSettings($arr=array()){
         $template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $btnTemplate=array('style'=>array('font-size'=>'20px','line-height'=>'15px','width'=>'50px'),'tag'=>'button','keep-element-content'=>'TRUE','excontainer'=>FALSE);
+        $btnTemplate=array('style'=>array('font-size'=>'20px'),'tag'=>'button','keep-element-content'=>'TRUE','excontainer'=>FALSE);
         $arr=array_merge($template,$arr);
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (isset($formData['cmd']['Home'])){

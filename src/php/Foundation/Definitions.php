@@ -84,7 +84,8 @@ class Definitions{
             $typeComps=explode(' ',$entry['Type']);
             $selector['Name']=array_shift($typeComps);
         } else {
-            throw new \ErrorException('Function '.__FUNCTION__.': Entry missing Type-key or Class-key.',0,E_ERROR,__FILE__,__LINE__);
+            $isDebugging=TRUE;
+            $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key, debugging file added.',array('function'=>__FUNCTION__));         
         }
         $arr=array('entry'=>$entry,'selector'=>$selector,'definition'=>array());
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){

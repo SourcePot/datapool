@@ -43,7 +43,7 @@ span{
     text-decoration:none;
     color:inherit;
 }
-h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg{
+h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,a.btn,.js-button{
     float:left;
     clear:both;
     font-size:inherit;
@@ -92,13 +92,12 @@ code{
     font-weight:bold;
     font-size:1.05rem;
 }
-button,input,textarea,select,a.btn,.js-button{
+button,input,textarea,select,a.btn,a.plot,.js-button{
     float:left;
     clear:none;
     font-size:1rem;
     padding:0.2rem 0.4rem;
     margin: 0 0.2rem;
-    line-height:1.2rem;
     background-color:#fff;
     border-radius:unset;
     border-left:1px solid #ccc;
@@ -106,10 +105,10 @@ button,input,textarea,select,a.btn,.js-button{
     border-right:2px solid #aaa;
     border-bottom:2px solid #aaa;
 }
-button,input[type="submit"],a.btn,.js-button{
+button,input[type="submit"],a.btn,a.plot,.js-button{
     text-align:center;
 }
-button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,.js-button:hover{
+button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.plot:hover,.js-button:hover{
     cursor:pointer;
     color:#fff;
     background-color:#000;   
@@ -117,6 +116,20 @@ button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,.js
 select{
     max-width:280px;
     cursor:pointer;
+    margin:2px;
+}
+input.filter{
+    width:3rem;
+    border:1px dotted #084;
+}
+p.filter{
+	clear:none;
+	line-height:0.8rem;
+	padding:0;
+	color:#084;
+	font-weight:bold;
+    margin:0 0 0 -1rem;
+    background-color:#fff;
 }
 .td-content-wrapper{
     white-space:break-spaces;
@@ -485,6 +498,7 @@ details.comment{
 details.forum,details.toolbox{
     width:100%;
     padding:0;
+    overflow:auto;
 }
 details.toolbox{
     position:fixed;
@@ -734,7 +748,7 @@ a.emoji{
     float:left;
     clear:none;
     font-size:2rem;
-    line-height:1.2rem;
+    line-height:2.5rem;
     color:#000;
 }
 
@@ -801,6 +815,10 @@ a.phrase-preview:hover{
     width:600px;
     max-width:100%;
     max-height:100%;
+}
+div.plot{
+    clear:none;
+    margin:4rem;
 }
 div.video-container{
     position:fixed;

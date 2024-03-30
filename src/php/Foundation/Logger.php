@@ -127,7 +127,9 @@ class Logger
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
         $entry['Content']=$context;
         $entry['Content']['msg']=$record->message;
-        $entry=($this->levelConfig[$level]['addTrace'])?$this->addTrace($entry):$entry;
+        if ($this->levelConfig[$level]['addTrace']){
+            $entry['Content']['trace']=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        }
         $entry['Name']=substr($entry['Content']['msg'],0,50);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
@@ -135,16 +137,6 @@ class Logger
         if (!empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
         }
-    }
-    
-    private function addTrace($entry)
-    {
-        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);
-        for($index=1;$index<4;$index++){
-            if (!isset($trace[$index])){break;}
-            $entry['Content']['trace'][]=$trace[$index];
-        }
-        return $entry;
     }
     
     public function getLogsHtml(array $arr):array

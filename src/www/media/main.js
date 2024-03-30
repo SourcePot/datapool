@@ -167,7 +167,7 @@ jQuery(document).ready(function(){
 		element.preventDefault();
 		element.stopPropagation();
 		let selector='#'+jQuery(this).attr('target');
-		let text=jQuery(selector).val()+jQuery(this).html();
+		let text=jQuery(selector).val()+jQuery(this).html().replace(/<\/?[^>]+(>|$)/g,"");
 		jQuery(selector).val(text);
 	}
 
@@ -326,6 +326,7 @@ jQuery(document).ready(function(){
 							attachEventsToContainer(containerId);
 							resetAll();
 						} catch(e){
+                            console.log(e);
 							console.log(this.response);
 						}
 						containerBusy(containerId,false);
@@ -614,6 +615,129 @@ jQuery(document).ready(function(){
             jQuery('details.toolbox').css({'z-index':'100'}).prop("open",true);
         }
     }
+
+/** DOWNLOAD **/
+    const xmlns = "http://www.w3.org/2000/xmlns/";
+    const xlinkns = "http://www.w3.org/1999/xlink";
+    const svgns = "http://www.w3.org/2000/svg";
+    function serialize(svg){
+        svg=svg.cloneNode(true);
+        const fragment=window.location.href+"#";
+        const walker = document.createTreeWalker(svg, NodeFilter.SHOW_ELEMENT);
+        while (walker.nextNode()){
+            for (const attr of walker.currentNode.attributes){
+                if (attr.value.includes(fragment)){
+                    attr.value = attr.value.replace(fragment,"#");
+                }
+            }
+        }
+        svg.setAttributeNS(xmlns, "xmlns", svgns);
+        svg.setAttributeNS(xmlns, "xmlns:xlink", xlinkns);
+        const serializer = new window.XMLSerializer;
+        const string = serializer.serializeToString(svg);
+        return new Blob([string], {type: "image/svg+xml"});
+    };    
+
+/** PLOTS **/
+    import("https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm").then((Plot)=>{
+        import("https://cdn.jsdelivr.net/npm/d3@7/+esm").then((d3)=>{
+            var saveData=(function(){
+                            var a = document.createElement("a");
+                            document.body.appendChild(a);
+                            a.style = "display: none";
+                            return function (plot,fileName) {
+                                var url = window.URL.createObjectURL(serialize(plot));
+                                a.href = url;
+                                a.download = fileName;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                            };
+                        }());
+            function drawPlots(){
+                jQuery('div.plot').each(function(i){
+                    var plotObj=this;
+                    var arr={'function':'getPlotData','id':jQuery(plotObj).attr('id')};
+                    jQuery.ajax({
+                            method:"POST",
+                            url:'js.php',
+                            context:document.body,
+                            data:arr,
+                            dataType:"json"
+                        }).done(function(plotDef){
+                            plotDef2plot(plotObj,plotDef,jQuery(plotObj).attr('id'));
+                        }).fail(function(data){
+                            console.log(data);
+                        }).always(function(){
+                            
+                        });
+                });
+            }
+
+            function plotDef2plot(plotObj,plotDef,id){
+                var marks=[],plotProp={grid:true,color:{legend:true}};
+                for (const traceName in plotDef.traces){
+                    // create xy-data object
+                    var traceData=[],xyDef=plotDef.traces[traceName].traceProp;
+                    for (const index in plotDef.traces[traceName].data){
+                        if (plotDef.traces[traceName]['x']['Type'].localeCompare('timestamp')==0){
+                            var column=plotDef.traces[traceName]['x']['Name'];
+                            plotDef.traces[traceName].data[index][column]=new Date(plotDef.traces[traceName].data[index][column]);
+                        }
+                        if (plotDef.traces[traceName]['y']['Type'].localeCompare('timestamp')==0){
+                            var column=plotDef.traces[traceName]['y']['Name'];
+                            plotDef.traces[traceName].data[index][column]=new Date(plotDef.traces[traceName].data[index][column]);
+                        }
+                        traceData.push(plotDef.traces[traceName].data[index]);
+                        plotDef.traces[traceName].data[index]['Name']=traceName;
+                    }
+                    xyDef['stroke']=xyDef['symbol']='Name';
+                    xyDef['tip']="xy";
+                    switch(plotDef.traces[traceName].type){
+                        case 'rectY':
+                            marks.push(Plot.rectY(traceData,xyDef));
+                            break;
+                        case 'lineY':
+                            marks.push(Plot.lineY(traceData,xyDef));
+                            marks.push(Plot.dot(traceData,xyDef));
+                            break;
+                        case 'areaY':
+                            xyDef['fill']='Name';
+                            xyDef['fillOpacity']=0.3;
+                            marks.push(Plot.areaY(traceData,xyDef));
+                            break;
+                        default:
+                            xyDef['fill']='Name';
+                            xyDef['fillOpacity']=0.3;
+                            marks.push(Plot.areaY(traceData,xyDef));
+                    }
+                };
+                marks.push(Plot.axisX(plotDef.axisX));
+                marks.push(Plot.axisY(plotDef.axisY));
+                plotProp=Object.assign(plotDef['plotProp'],{marks});
+                const plot=Plot.plot(plotProp);
+                jQuery(plotObj).replaceWith(plot);
+                jQuery('#svg-'+id).on('click',function(element){saveData(plot,plotDef.caption+'.svg');});    
+            }
+            (function heartbeat(){
+                setTimeout(heartbeat,777);
+                drawPlots();
+            })();
+        });
+    });
+
+/** OPTION FILTER **/
+    jQuery('.filter').on('keyup',function(e){
+        var selectId=jQuery(this).attr('id').split('-').pop(),filterText=jQuery(this).val().toUpperCase(),count=0;
+        jQuery('#'+selectId).children('option').each(function(i){
+            if (jQuery(this).html().toUpperCase().indexOf(filterText)===-1){
+                jQuery(this).hide();
+            } else {
+                jQuery(this).show();
+                count++;
+            }
+        });
+        jQuery('#count-'+selectId).html(count);
+    });
 
 /** MISC-HELPERS **/
 	let heartbeats=0;

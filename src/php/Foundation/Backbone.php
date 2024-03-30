@@ -154,15 +154,13 @@ class Backbone{
         return $arr;
     }
     
-    public function mediaFile2href(string|bool $mediaFile,bool $throwException=FALSE):string|bool
+    public function mediaFile2href(string|bool $mediaFile):string|bool
     {
         $mediaFileAbs=$GLOBALS['dirs']['media'].$mediaFile;
         if (is_file($mediaFileAbs)){
             return $GLOBALS['relDirs']['media'].'/'.$mediaFile;
         } else {
-            if ($throwException){
-                throw new \ErrorException('Function '.__FUNCTION__.': Could not open file '.$mediaFileAbs,0,E_ERROR,__FILE__,__LINE__);
-            }
+            $this->oc['logger']->log('error','Function "{class}::{function}" failed to open media file "{mediaFile}"',array('class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile));         
             return FALSE;
         }
     }

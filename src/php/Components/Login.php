@@ -91,8 +91,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 
     private function loginFailed($user,$email){
         $_SESSION['currentUser']['Privileges']=1;
-        $this->oc['logger']->log('warning','Login failed for {email}.',array('email'=>$email));    
-        sleep(5);
+        $this->oc['logger']->log('error','Login failed for {email}.',array('email'=>$email));    
+        sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         exit;
     }

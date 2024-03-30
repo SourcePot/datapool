@@ -74,7 +74,7 @@ class Element{
                        'link'=>array('rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'object'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'script'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
+                       'script'=>array('src'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'svg'=>array('src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'video'=>array('src'=>FALSE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'source'=>array('src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE),
@@ -141,9 +141,11 @@ class Element{
         }
         // create tag-arr from $arr
         if (empty($arr['tag'])){
-            //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
-            throw new \ErrorException('Function '.__FUNCTION__.': Missing or empty arr[tag]-argument.',0,E_ERROR,__FILE__,__LINE__);
-        } else if (isset($this->def[$arr['tag']])){
+            $arr['tag']='p';
+            $arr['element-content']='ERROR tag-attribute missing';
+            $arr['style']['background-color']='#f00';
+        }
+        if (isset($this->def[$arr['tag']])){
             if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}
             $def=array_merge($this->def[''],$this->def[$arr['tag']],$this->specialAttr);
             $nameRequired=(!empty($def['name']));

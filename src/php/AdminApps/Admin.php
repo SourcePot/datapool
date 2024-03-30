@@ -43,7 +43,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $html.=$this->getPageSettingsHtml();
             $html.=$this->appAdminHtml();
             $html.=$this->backupArticle();
-            $html.=$this->adminChart();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -272,11 +271,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         return TRUE;
-    }
-    
-    private function adminChart(){
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test chart','generic',array('refreshInterval'=>10),array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Container','method'=>'getChart'),array());    
-        return $html;
     }
     
     public function debugFilesHtml($arr){

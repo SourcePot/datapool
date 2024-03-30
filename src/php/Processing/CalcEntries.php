@@ -199,7 +199,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $addKeys=(isset($this->ruleOptions[strtolower(__FUNCTION__)]))?$this->ruleOptions[strtolower(__FUNCTION__)]:array();
         $contentStructure=array('"A" selected by...'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
                                 'Default value "A"'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Operation'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>array('+'=>'+','-'=>'-','*'=>'*','/'=>'/')),
+                                'Operation'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>array('+'=>'+','-'=>'-','*'=>'*','/'=>'/')),
                                 '"B" selected by...'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
                                 'Default value "B"'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 ''=>array('method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
@@ -240,11 +240,14 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Condition'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys),
                                 'Use value if...'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>$this->conditionalValue),
                                 ''=>array('method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
+                                'Use'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
                                 'Value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 );
         $contentStructure['Condition']+=$callingElement['Content']['Selector'];
+        $contentStructure['Use']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
@@ -320,6 +323,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // loop through conditional value rules
         if (!empty($base['conditionalvaluerules'])){
             foreach($base['conditionalvaluerules'] as $ruleEntryId=>$rule){
+                $value='NaN';
                 $conditionalvalueRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Conditionalvalue rule');
                 if (isset($ruleResults[$rule['Content']['Condition']])){
                     $value=$ruleResults[$rule['Content']['Condition']];
@@ -338,7 +342,12 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
                 $log.='|'.$conditionalvalueRuleIndex.' = '.intval($ruleResults[$conditionalvalueRuleIndex]);
                 if ($ruleResults[$conditionalvalueRuleIndex]){
-                    $sourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$rule['Content']['Value'];
+                    if (strlen($rule['Content']['Value'])>0){
+                        $useValue=$rule['Content']['Value'];
+                    } else if (isset($flatSourceEntry[$rule['Content']['Use']])){
+                        $useValue=$flatSourceEntry[$rule['Content']['Use']];
+                    }
+                    $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$useValue,$rule['Content']['Target data type']);
                 }
                 $result['Conditional value rules'][$conditionalvalueRuleIndex]=array('Condition'=>$value,
                                                                        'Use value if'=>$this->conditionalValue[$rule['Content']['Use value if...']],
@@ -435,7 +444,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function ruleId2ruleIndex($ruleId,$ruleType='Calc rule')
     {
-        $ruleIndex=substr($ruleId,0,strpos($ruleId,'__'));
+        $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId);
         $ruleIndex=$ruleType.' '.$ruleIndex;
         return $ruleIndex;
     }

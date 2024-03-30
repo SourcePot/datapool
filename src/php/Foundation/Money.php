@@ -23,7 +23,7 @@ class Money{
     private $tableRatesSelector=array();
     
     private $currencies=array();
-    private $currencyAlias=array('EUR'=>array('EUR','€'),'AUD'=>array('AUD','AU$'),'USD'=>array('USD','US$','$'));
+    private $currencyAlias=array('GBP'=>array('GBP','£'),'EUR'=>array('EUR','€'),'AUD'=>array('AUD','AU$'),'USD'=>array('USD','US$','$'));
         
     public function __construct(array $oc)
     {
