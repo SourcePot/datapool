@@ -543,7 +543,7 @@ class DataExplorer{
                 if (empty($entry['Name'])){$entry['Name']=$fileArr["name"];}
                 if (!empty($entry['Type'])){$entry['Type']=trim($entry['Type'],'%');}
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
             }
         }
         // create html

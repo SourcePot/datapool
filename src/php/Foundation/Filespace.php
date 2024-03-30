@@ -403,136 +403,153 @@ class Filespace{
         $abs=str_replace('./',$GLOBALS['dirs']['public'],$file);
         return $abs;
     }
-    
+
     /**
-    * This is the file upload facility. I handels a wide range of possible file sources, e.g. form upload, incomming files via FTP directory,...
+    * The following methods add files to entries.
+    * Method fileUpload2entry() processes a form file upload, fileContent2entry() adds a file to an entry based on the provided file content and
+    * method file2entry() just adds a file to an entry. Methods fileUpload2entry() and fileContent2entry() are wrapper methods for file2entry().
     */
-    public function file2entries(array|string $fileHandle,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    public function fileUpload2entry(array $fileArr,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
     {
-        $debugArr=array('fileHandle'=>$fileHandle,'entry_in'=>$entry,'error'=>'');
-        if (isset($fileHandle['name']) && isset($fileHandle['tmp_name'])){
-            // uploaded file via html form
-            $entry['Params']['File']['Source']=$fileHandle['tmp_name'];
-            $entry['pathArr']=pathinfo($fileHandle['name']);
-            $entry['mimeType']=mime_content_type($fileHandle['tmp_name']);
-            if (empty($mimeType) && !empty($fileHandle['type'])){$mimeType=$fileHandle['type'];}
-            // move uploaded file to tmp dir
-            $tmpDir=$this->getPrivatTmpDir();
-            $newSourceFile=$tmpDir.$entry['pathArr']['basename'];
-            $success=move_uploaded_file($fileHandle['tmp_name'],$newSourceFile);
-            if ($success){
-                $entry['Params']['File']['Source']=$newSourceFile;
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source old'=>$fileHandle['tmp_name'],'File source new'=>$entry['Params']['File']['Source']),FALSE);
-            } else {
-                $debugArr['error']='Error: failed to move file from tmp dir to '.$newSourceFile;
-            }
-        } else if (is_file($fileHandle)){
-            // valid file name with path
-            $entry['Params']['File']['Source']=$fileHandle;
-            $entry['pathArr']=pathinfo($fileHandle);
-            $entry['mimeType']=mime_content_type($fileHandle);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
+        $this->resetStatistic();
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        if (empty($fileArr['tmp_name'])){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" called with empty fileArr["tmp_name"], skipped this entry',$context);         
+            return $entry;
+        }
+        if (empty($fileArr['name'])){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" called with empty fileArr["name"], skipped this entry',$context);         
+            return $entry;
+        }
+        // move uploaded file to private tmp dir
+        $entry['Params']['File']['Source']=$fileArr['tmp_name'];
+        $tmpDir=$this->getPrivatTmpDir();
+        $pathinfo=pathinfo($fileArr['name']);
+        $file=$context['file']=$tmpDir.$pathinfo['basename'];
+        $success=move_uploaded_file($fileArr['tmp_name'],$file);
+        if ($success){
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'File "'.$fileArr['name'].'" upload'),FALSE);
+            $entry=$this->file2entry($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
         } else {
-            $debugArr['error']='Error: no valid file provided.';
+            $this->oc['logger']->log('warning','Function "{class}::{function}" moving uploaded file "{file}" failed, skipped this entry',$context);         
         }
-        // further processing if valid file was found or return FALSE
-        if ($isDebugging){
-            $debugArr['entry_out']=$entry;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
-        if ($debugArr['error']){
-            $this->oc['logger']->log('error',$debugArr['error'].' "{fileHandle}"',array('fileHandle'=>$fileHandle));
-            return array();
-        } else {
-            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-            return $this->fileContent2entries($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
-        }
+        return $entry;    
     }
     
-    public function fileContent2entries(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    public function fileContent2entry(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
     {
-        $debugArr=array('entry'=>$entry,'createOnlyIfMissing'=>$createOnlyIfMissing);
-        if (!empty($entry['fileContent']) && !empty($entry['fileName'])){
+        $this->resetStatistic();
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        if (empty($entry['fileContent'])){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" failed entry["fileContent"] is empty, skipped this entry',$context);             
+        } else if (empty($entry['fileName'])){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" failed entry["fileName"] is empty, skipped this entry',$context);             
+        } else {
             // save file content to tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
             $entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
             $bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
-            if ($bytes===FALSE){return array();}
-            $entry['mimeType']=mime_content_type($entry['Params']['File']['Source']);
-            $entry['pathArr']=pathinfo($entry['Params']['File']['Source']);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source new'=>$entry['Params']['File']['Source']),FALSE);
-        }
-        $entry['currentUser']=(empty($_SESSION['currentUser']))?array('EntryId'=>'ANONYM','Name'=>'ANONYM'):$_SESSION['currentUser'];
-        $entry['Owner']=(empty($entry['Owner']))?$entry['currentUser']['EntryId']:$entry['Owner'];
-        $entry['Params']['File']['UploaderId']=$entry['currentUser']['EntryId'];
-        $entry['Params']['File']['UploaderName']=$entry['currentUser']['Name'];
-        $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-        $entry['Params']['File']['Size']=filesize($entry['Params']['File']['Source']);
-        $entry['Params']['File']['Name']=$entry['pathArr']['basename'];
-        $entry['Params']['File']['Date (created)']=filectime($entry['Params']['File']['Source']);
-        if (empty($entry['Name'])){
-            $entry['Name']=$entry['pathArr']['basename'];
-        }
-        if (isset($entry['mimeType'])){
-            $entry['Params']['File']['MIME-Type']=$entry['mimeType'];
-        }
-        if (isset($entry['pathArr']['extension'])){
-            $entry['Params']['File']['Extension']=$entry['pathArr']['extension'];
-        } else if (!empty($entry['Params']['File']['MIME-Type'])){
-            $mimeComps=explode('/',$entry['Params']['File']['MIME-Type']);
-            $entry['Params']['File']['Extension']=array_pop($mimeComps);
-        } else {
-            $entry['Params']['File']['Extension']='';
-        }
-        if (stripos($entry['Params']['File']['MIME-Type'],'rfc822')!==FALSE && !empty($entry['extractEmails'])){
-            // if file is email, extract all email parts and create entries seperately 
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from email "'.$entry['Params']['File']['Name'].'"'),FALSE);
-            $entry=$this->email2files($entry,$createOnlyIfMissing,$isSystemCall,FALSE); 
-        }
-        if (stripos($entry['Params']['File']['MIME-Type'],'zip')!==FALSE && !empty($entry['extractArchives'])){
-            // if file is zip-archive, extract all file and create entries seperately 
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted from zip-archive "'.$entry['Params']['File']['Name'].'"'),FALSE);
-            $debugArr['archive2files return']=$this->archive2files($entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
-        } else {
-            // save file
-            $this->statistics['inserted files']++;
-            $entry['Params']['File']['Style class']='';
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
-            $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing,TRUE,$entry['Params']['File']['Source']);
-            $debugArr['entry updated']=$entry;
-        }
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.intval($isDebugging));
+            if ($bytes===FALSE){
+                $context['filename']=$entry['Params']['File']['Source'];
+                $this->oc['logger']->log('error','Function "{class}::{function}" failed to create temporary file "{filename}", skipped this entry',$context);                 
+            } else {
+                $this->file2entry($entry['Params']['File']['Source'],$entry,$createOnlyIfMissing,$isSystemCall);
+            }
         }
         return $entry;
     }
     
-    private function email2files(array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging):array
+    public function file2entry(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
     {
-        $emailStatistic=array('errors'=>array(),'parts'=>array());
-        $emailDir=$this->getPrivatTmpDir();
-        if (!is_dir($emailDir)){
-            $this->statistics['added dirs']+=intval(mkdir($emailDir,0775,TRUE));
+        $debugArr=array('file'=>$file,'entry_in'=>$entry,'debugFileName'=>__FUNCTION__.' ');
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        if (empty($entry['Source'])){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" called with empty entry["Source"], skipped this entry',$context);         
+            return $entry;
         }
-        $fileContent=@file_get_contents($entry['Params']['File']['Source']);
+        if (!is_file($file)){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" called with invalid file handle "{file}", skipped this entry',$context);         
+            return $entry;
+        }
+        $entry=$this->addFileProps($entry,$file);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
+        if ($this->specialFileHandling($file,$entry,$createOnlyIfMissing,$isSystemCall)){
+            // file attachment to entries is done by method specialFileHandling()
+            $debugArr['debugFileName'].='specialFileHandling';
+        } else {
+            $entry=$this->addFile2entry($entry,$file);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
+            $debugArr['debugFileName'].=$entry['Params']['File']['Name'];
+        }
+        // debugging
+        if ($isDebugging){
+            $debugArr['entry_out']=$entry;
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,$debugArr['debugFileName']);
+        }
+        return $entry;
+    }
+
+    private function addFileProps(array $entry,string $file):array
+    {
+        $currentUser=(empty($_SESSION['currentUser']))?array('EntryId'=>'ANONYM','Name'=>'ANONYM'):$_SESSION['currentUser'];
+        $entry['Owner']=(empty($entry['Owner']))?$currentUser['EntryId']:$entry['Owner'];
+        if (empty($entry['Params']['File']['UploaderId'])){
+            $entry['Params']['File']['UploaderId']=$currentUser['EntryId'];
+            $entry['Params']['File']['UploaderName']=$currentUser['Name'];
+            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+        }
+        $pathinfo=pathinfo($file);
+        $entry['Params']['File']['Name']=$pathinfo['basename'];
+        $entry['Params']['File']['Extension']=$pathinfo['extension'];
+        $entry['Name']=(empty($entry['Name']))?$pathinfo['basename']:$entry['Name'];
+        $entry['Params']['File']['Size']=filesize($file);
+        $entry['Params']['File']['Date (created)']=filectime($file);
+        $entry['Params']['File']['MIME-Type']=mime_content_type($file);
+        $entry['Params']['File']['Style class']='';
+        $entry['Type']=(empty($entry['Type']))?FALSE:$entry['Type'];
+        return $entry;
+    }
+
+    private function specialFileHandling(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array|bool
+    {
+        $debugArr=array('file'=>$file,'cntr'=>array('extractEmails'=>TRUE,'extractArchives'=>TRUE));
+        $entry=array_merge($debugArr['cntr'],$entry);
+        $debugArr['entry']=$entry;
+        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.hrtime(TRUE));}
+        if ($entry['extractEmails'] && stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE){
+            $this->email2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
+            return TRUE;
+        } else if ($entry['extractArchives'] && stripos($entry['Params']['File']['MIME-Type'],'/zip')!==FALSE){
+            $this->archive2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
+    private function email2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    {
+        $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
+        $fileContent=@file_get_contents($file);
         if (empty($fileContent)){
             $emailStatistic['errors']='File "'.$entry['Params']['File']['Name'].'" not found or empty';
         } else {
             // get and add email header
             $emailHeader=substr($fileContent,0,strpos($fileContent,"\r\n\r\n"));
             $emailContent=substr($fileContent,strpos($fileContent,"\r\n\r\n"));
-            $entry['Params']['Email']=$this->emailProperties2arr($emailHeader,array());
+            $emailContent=trim($emailContent,"\r\n ");
+            $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
             $entry['EntryId']=md5($fileContent);
             $entry['Name']=$entry['Params']['Email']['subject']['value'].' ('.$entry['EntryId'].')';
             $entry['Type']=$entry['Source'];
             // init zip file
-            $zipFile=$this->selector2file($entry);
+            $zipFile=$this->getPrivatTmpDir().'attachments.zip';
             // scan email parts
             preg_match_all('/boundary="([^"]+)"/',$fileContent,$bounderies);
             if (empty($bounderies[1])){
                 if (isset($entry['Params']['Email']['content-transfer-encoding']['value'])){
-                    $emailContent=$this->decodeEmailContent($emailContent,$entry['Params']['Email']['content-transfer-encoding']['value']);
+                    $emailContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($emailContent,$entry['Params']['Email']['content-transfer-encoding']['value']);
                 }
                 if (!isset($entry['Params']['Email']['content-type']['value'])){
                     $entry['Params']['Email']['content-type']['value']='text';
@@ -542,128 +559,81 @@ class Filespace{
                 $emailStatistic['emailContent']=$emailContent;                
             } else {
                 foreach($bounderies[1] as $boundery){
+                    $boundery='--'.$boundery;
                     $endBoundery=$boundery.'--';
-                    $partEndPos=strpos($fileContent,$endBoundery);
-                    $part=trim(substr($fileContent,0,$partEndPos),'-');
-                    $partStartPos=strrpos($part,$boundery);
-                    $part=trim(substr($part,$partStartPos+strlen($boundery)));
-                    $partContentStart=strpos($part,"\r\n\r\n");
-                    $partHeader=substr($part,0,$partContentStart);
-                    $partContent=substr($part,$partContentStart);
-                    // get header
-                    $headerArr=array('content-disposition'=>array('value'=>''));
-                    $headerArr=$this->emailProperties2arr($partHeader,$headerArr);
-                    // decode content
-                    $partContent=$this->decodeEmailContent($partContent,$headerArr['content-transfer-encoding']['value']);
-                    if ($headerArr['content-disposition']['value']=='attachment'){
-                        if (!isset($zip)){
-                            $zip=new \ZipArchive;
-                            $zip->open($zipFile,\ZipArchive::CREATE);
+                    $parts=explode($endBoundery,$fileContent);
+                    $part=array_shift($parts);
+                    $parts=explode($boundery,$part);
+                    array_shift($parts);
+                    foreach($parts as $partIndex=>$part){
+                        $partContentStart=strpos($part,"\r\n\r\n");
+                        $partHeader=substr($part,0,$partContentStart);
+                        $partContent=substr($part,$partContentStart);
+                        $partContent=trim($partContent,"\r\n ");
+                        // get header
+                        $headerArr=array('content-disposition'=>array('value'=>''),'content-transfer-encoding'=>array('value'=>''));
+                        $headerArr=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($partHeader,$headerArr);
+                        // decode content
+                        $partContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($partContent,$headerArr['content-transfer-encoding']['value']);
+                        if ($headerArr['content-disposition']['value']=='attachment'){
+                            if (!isset($zip)){
+                                $zip=new \ZipArchive;
+                                $zip->open($zipFile,\ZipArchive::CREATE);
+                            }
+                            $zip->addFromString($headerArr['content-disposition']['filename'],$partContent);
+                            $emailStatistic['files']++;
+                        } else {
+                            $contentType=ucfirst(substr($headerArr['content-type']['value'],strpos($headerArr['content-type']['value'],'/')+1));
+                            $entry['Content'][$contentType]=$partContent;
                         }
-                        $zip->addFromString($headerArr['content-disposition']['filename'],$partContent);
-                    } else {
-                        $contentType=ucfirst(substr($headerArr['content-type']['value'],strpos($headerArr['content-type']['value'],'/')+1));
-                        $entry['Content'][$contentType]=$partContent;
+                        $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
                     }
-                    $emailStatistic['parts'][$boundery]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
-                }
-                if (isset($zip)){
-                    $zip->close();
-                    $entry['Params']['File']['Source']=$zipFile;
-                    $entry['Params']['File']['Size']=filesize($zipFile);
-                    $entry['Params']['File']['MIME-Type']='application/zip';
-                    $entry['Params']['File']['Extension']='zip';
-                    $entry['Params']['File']['Name']='attachment.zip';
                 }
             }
             $emailStatistic['emailHeader']=$entry['Params']['Email'];
+            unset($entry['Params']['File']);
+            if (isset($zip)){
+                $zip->close();
+                $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall,TRUE);
+            } else {
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["html"]'),FALSE);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
+            }
+            $emailStatistic['entry_out']=$entry;
         }
         if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($emailStatistic);
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($emailStatistic,__FUNCTION__.'-'.hrtime(TRUE));
         }
         if ($emailStatistic['errors']){
             $this->oc['logger']->log('warning',implode('|',$emailStatistic['errors']));    
         }
-        return $entry;
+        return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
     }
     
-    private function decodeEmailContent(string $content,string $encoding)
-    {
-        switch($encoding){
-            case 'base64':
-                $content=base64_decode($content);
-                break;
-            case 'quoted-printable':
-                $content=quoted_printable_decode($content);
-                break;
-            default:
-                $content=$content;
-        }
-        return $content;
-    }
-    
-    private function emailProperties2arr(string $email,array $template=array(),bool $lowerCaseKeys=TRUE):array
-    {
-        $emailLines=preg_split('/\r\n/',$email);
-        foreach($emailLines as $line){
-            $valueStart=strpos($line,':');
-            if ($valueStart===FALSE){continue;}
-            $key=substr($line,0,$valueStart);
-            $value=trim(substr($line,$valueStart+1),'" ');
-            $values=explode(';',$value);
-            foreach($values as $valueIndex=>$value){
-                $valueComps=explode('=',trim($value));
-                if (count($valueComps)===1){
-                    $valueComps=array('value',$valueComps[0]);
-                }
-                if ($lowerCaseKeys){
-                    $key=strtolower($key);
-                    $valueComps[0]=strtolower($valueComps[0]);
-                }
-                $template[$key][$valueComps[0]]=$valueComps[1];
-            }
-        }
-        return $template;
-    }
-    
-    private function archive2files(array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging):array
+    private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
     {
         $zipStatistic=array('errors'=>array(),'files'=>array());
         // extract zip archive to a temporary dir
-        if (is_file($entry['Params']['File']['Source'])){
-            $zipDir=$this->getPrivatTmpDir();
-            if (!is_dir($zipDir)){
-                $this->statistics['added dirs']+=intval(mkdir($zipDir,0775,TRUE));
-            }
-            $zip=new \ZipArchive;
-            if ($zip->open($entry['Params']['File']['Source'])===TRUE){
-                $i=0;
-                $this->oc['logger']->log('info','Processing zip-archive with "{numFiles}" files',array('numFiles'=>$zip->count()));    
-                while($fileName=$zip->getNameIndex($i)){
-                    $file=$zipDir.preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$fileName);
-                    $fileContent=$zip->getFromIndex($i);
-                    if (empty($fileContent)){continue;}
-                    $zipStatistic['files'][$i]=$file;
-                    file_put_contents($file,$fileContent);
-                    $i++;
+        $zip=new \ZipArchive;
+        if ($zip->open($file)===TRUE){
+            $i=0;
+            $this->oc['logger']->log('info','Processing zip-archive with "{numFiles}" files',array('numFiles'=>$zip->count()));    
+            while($fileName=$zip->getNameIndex($i)){
+                $entry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$fileName);
+                $entry['fileContent']=$zip->getFromIndex($i);
+                if (!empty($entry['fileContent'])){
+                    $zipStatistic['files'][$i]=$entry['fileName'];
+                    $entry['Name']=$entry['fileName'];
+                    $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
+                    $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted file "'.$fileName.'" from zip-archive (file '.($i+1).' of '.$zip->count().')'),FALSE);
+                    $this->fileContent2entry($newEntry);
                 }
-                $zip->close();
-            } else {
-                $zipStatistic['errors'][]='Failed to open zip archive';
+                $i++;
             }
+            $zip->close();
         } else {
-            $zipStatistic['errors'][]='Zip archive is not a file';
+            $zipStatistic['errors'][]='Failed to open zip archive';
         }
-        // add extracted files as entries
-        foreach($zipStatistic['files'] as $i=>$file){
-            if (is_dir($file)){continue;}
-            $pathArr=pathinfo($file);
-            $entry['EntryId']=md5($i.'|'.$pathArr['basename']);
-            $entry['Name']=$pathArr['basename'];
-            $this->file2entries($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
-        }
-        // wrapping up
-        $this->delDir($zipDir);
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($zipStatistic);
         }

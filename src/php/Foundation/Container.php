@@ -211,7 +211,7 @@ class Container{
             if (!empty($formData['cmd'])){
                 if (isset($formData['cmd']['Upload'])){
                     $fileArr=current(current($formData['files']));
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$arr['selector']);
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$arr['selector']);
                 } else if (isset($formData['cmd']['stepIn'])){
                     if (empty($settings['selectorKey'])){$selectorKeyComps=array();} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
                     $selectorKeyComps[]=key($formData['cmd']['stepIn']);

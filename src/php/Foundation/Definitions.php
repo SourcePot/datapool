@@ -319,7 +319,7 @@ class Definitions{
                         $flatFile=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files']);
                         $fileArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatFile);
                         if ($fileArr['error']==0){
-                            $debugArr['entry_updated']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
+                            $debugArr['entry_updated']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
                         }
                     } else {
                         $entry=$this->oc[$dataStorageClass]->unifyEntry($entry);

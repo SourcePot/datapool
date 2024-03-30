@@ -25,7 +25,7 @@ class Backbone{
                             'iconFile'=>'main.ico',
                             'logoFile'=>'logo.jpg',
                             'charset'=>'utf-8',
-                            'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','ep.css'),
+                            'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','light.css','ep.css'),
                             'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
                             'emailWebmaster'=>'admin@datapool.info',
                             'path to Xpdf pdftotext executable'=>'',
@@ -50,7 +50,6 @@ class Backbone{
         $settings['Content']=$this->settings;
         $settings=$oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
         $this->settings=$settings['Content'];
-        $this->settings['cssFiles'][]=$_SESSION['page state']['cssFile'];
         return $this->oc;
     }
     
@@ -154,10 +153,12 @@ class Backbone{
         return $arr;
     }
     
-    public function mediaFile2href(string|bool $mediaFile):string|bool
+    public function mediaFile2href(string $mediaFile):string|bool
     {
         $mediaFileAbs=$GLOBALS['dirs']['media'].$mediaFile;
-        if (is_file($mediaFileAbs)){
+        if (empty($mediaFile)){
+            return FALSE;
+        } else if (is_file($mediaFileAbs)){
             return $GLOBALS['relDirs']['media'].'/'.$mediaFile;
         } else {
             $this->oc['logger']->log('error','Function "{class}::{function}" failed to open media file "{mediaFile}"',array('class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile));         

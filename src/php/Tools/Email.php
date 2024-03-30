@@ -175,14 +175,16 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
                         $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
                     } else {
+                        $entryName=$entry['Name'];
                         foreach($entry['attachments'] as $attName=>$attContent){
                             $attName=imap_utf8($attName);
-                            $entry['pathArr']=pathinfo($attName);
-                            $entry['Name'].=' ('.$attName.')';
+                            $entry['Name']=$entryName;
                             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
+                            $entry['EntryId'].='_'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attName,TRUE);
+                            $entry['Name'].=' ('.$attName.')';
                             $entry['fileContent']=$attContent;
                             $entry['fileName']=$attName;
-                            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entries($entry,TRUE,TRUE,FALSE);
+                            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry,TRUE,TRUE,FALSE);
                         } // loop through attachmentzs
                     }
                 } // loop through messages
@@ -226,14 +228,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $data=($partno)?
             \imap_fetchbody($mbox,$mid,strval($partno)):  // multipart
             \imap_body($mbox,$mid);  // simple
+        
         // Any part may be encoded, even plain text messages, so check everything.
-        if ($p->encoding==4){
-            $data=quoted_printable_decode($data);
-        } else if ($p->encoding==3){
-            $data=base64_decode($data);
-        }
-        // PARAMETERS
-        // get all parameters, like charset, filenames of attachments, etc.
+        $data=$this->decodeEmailData($data,strval($p->encoding));
+        // PARAMETERS: get all parameters, like charset, filenames of attachments, etc.
         $params=array();
         if ($p->parameters){
             foreach ($p->parameters as $x){
@@ -245,12 +243,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 $params[strtolower($x->attribute)]=$x->value;
             }
         }
-        // ATTACHMENT
-        // Any part with a filename is an attachment,
-        // so an attached text file (type 0) is not mistaken as the message.
+        // ATTACHMENT: any part with a filename is an attachment, so an attached text file (type 0) is not mistaken as the message.
         if (!empty($params['filename']) || !empty($params['name'])){
             // filename may be given as 'Filename' or 'Name' or both
-            $filename=($params['filename'])?$params['filename']:$params['name'];
+            $filename=(isset($params['filename']))?$params['filename']:$params['name'];
             // filename may be encoded, so see imap_mime_header_decode()
             $this->msgEntry['attachments'][$filename]=$data;  // this is a problem if two files have same name
         }
@@ -280,7 +276,54 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             }
         }
     }
+
+    public function emailProperties2arr(string $email,array $template=array(),bool $lowerCaseKeys=TRUE):array
+    {
+        $email=preg_replace('/([A-Za-z-]+: )/','|[]|$1',$email);
+        $keyValueArr=explode('|[]|',trim($email,"|[]\n\r"));
+        foreach($keyValueArr as $line){
+            $line=imap_utf8($line);
+            $valueStart=strpos($line,':');
+            if ($valueStart===FALSE){continue;}
+            $key=substr($line,0,$valueStart);
+            $value=substr($line,$valueStart+1);
+            $values=explode(';',$value);
+            foreach($values as $valueIndex=>$value){
+                $valueComps=explode('=',trim($value));
+                if (count($valueComps)===1){
+                    $valueComps=array('value',$valueComps[0]);
+                }
+                if ($lowerCaseKeys){
+                    $key=strtolower($key);
+                    $valueComps[0]=strtolower($valueComps[0]);
+                }
+                $template[$key][$valueComps[0]]=trim($valueComps[1],"\"\n\r ");
+            }
+        }
+        return $template;
+    }
     
+    public function decodeEmailData(string $content,string $encoding)
+    {
+        switch($encoding){
+            case 'base64':
+                $content=base64_decode($content);
+                break;
+            case '3':
+                $content=base64_decode($content);
+                break;
+            case 'quoted-printable':
+                $content=quoted_printable_decode($content);
+                break;
+            case '4':
+                $content=quoted_printable_decode($content);
+                break;
+            default:
+                $content=$content;
+        }
+        return $content;
+    }
+
     /******************************************************************************************************************************************
     * TRANSMITTER: Email transmitter 
     */

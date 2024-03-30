@@ -377,7 +377,7 @@ class HTMLbuilder{
                 $key=key($formData['cmd']['upload']);
                 $fileArr=current($formData['files']['upload'][$key]);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$entry);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
                 $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
@@ -694,7 +694,7 @@ class HTMLbuilder{
                     if ($file['error']!=0){$file=FALSE;}
                 }
                 if ($file){
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($file,$entry);
+                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($file,$entry);
                 } else {
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');

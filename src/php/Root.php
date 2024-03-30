@@ -39,7 +39,7 @@ final class Root{
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('cssFile'=>'light.css','toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
+            $_SESSION['page state']=array('toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
         }
         // set exeption handler and initialize directories
         $this->initDirs();

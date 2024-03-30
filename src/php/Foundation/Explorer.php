@@ -216,14 +216,14 @@ class Explorer{
                 if (isset($guideEntry['Write'])){$selector['Write']=$guideEntry['Write'];}
                 foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
                     if ($fileArr['error']){continue;}
-                    $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$selector);
+                    $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
                 }
             }        
         } else if (isset($formData['cmd']['update file'])){
             if ($formData['hasValidFiles']){
                 foreach($formData['files']['update file'] as $fileIndex=>$fileArr){
                     if ($fileArr['error']){continue;}
-                    $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entries($fileArr,$selector);
+                    $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
                 }
             }    
         }
