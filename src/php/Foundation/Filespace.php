@@ -429,7 +429,7 @@ class Filespace{
         $success=move_uploaded_file($fileArr['tmp_name'],$file);
         if ($success){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'File "'.$fileArr['name'].'" upload'),FALSE);
-            $entry=$this->file2entry($file,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
+            $entry=$this->file2entry($file,$entry,$createOnlyIfMissing,$isSystemCall);
         } else {
             $this->oc['logger']->log('warning','Function "{class}::{function}" moving uploaded file "{file}" failed, skipped this entry',$context);         
         }
@@ -651,6 +651,7 @@ class Filespace{
     public function addFile2entry(array $entry,string $file,bool $isDebugging=FALSE):array
     {
         $debugArr=array('entry_in'=>$entry,'file'=>$file);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // process file
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
@@ -662,8 +663,13 @@ class Filespace{
                 $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
             } else {
                 $parserMethod=$entry['pdfParser'];
-                $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
+                try{
+                    $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
+                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
+                } catch (\Exception $e){
+                    $context['msg']=$e->getMessage();
+                    $this->oc['logger']->log('warning','Function "{class}::{function}" parser failed: {msg}',$context);         
+                }
             }
             $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
         } else if (stripos($entry['Params']['File']['Extension'],'csv')!==FALSE){

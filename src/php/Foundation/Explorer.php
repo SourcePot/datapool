@@ -119,6 +119,8 @@ class Explorer{
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
         $arr=$this->miscToolsEntry($callingClass,$stateKeys);
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
+        $arr=$this->settingsEntry($callingClass,$stateKeys);
+        $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
             $arr=$this->sendEmail($callingClass,$stateKeys);
             $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
@@ -163,15 +165,14 @@ class Explorer{
         return $entry;
     }
     
-    private function selector2guideEntry(array $selector):array|bool
+    private function addGuideEntry2selector(array $selector,array $guideEntry):array
     {
-        foreach($selector as $key=>$value){
-            if ($value===FALSE){
-                $selector[$key]=self::GUIDEINDICATOR;
-            }
-        }
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
-        return $entry;
+        $guideTemplate=array();
+        if (isset($guideEntry['Content']['settings'])){$guideTemplate=$guideEntry['Content']['settings'];}
+        if (isset($guideEntry['Read'])){$guideTemplate['Read']=$guideEntry['Read'];}
+        if (isset($guideEntry['Write'])){$guideTemplate['Write']=$guideEntry['Write'];}
+        $selector=array_merge($guideTemplate,$selector);
+        return $selector;
     }
     
     private function appProcessing(string $callingClass):void
@@ -179,7 +180,8 @@ class Explorer{
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         // process selectors
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-        $guideEntry=$this->selector2guideEntry($selector);
+        //$guideEntry=$this->selector2guideEntry($selector);
+        $guideEntry=$this->getGuideEntry($selector);
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getSelectors');
         if (isset($formData['cmd']['select'])){
             $resetFromHere=FALSE;
@@ -204,6 +206,7 @@ class Explorer{
             }
         }
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
+        $selector=$this->addGuideEntry2selector($selector,$guideEntry);
         // add entry app
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
         if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
@@ -211,9 +214,6 @@ class Explorer{
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
         } else if (isset($formData['cmd']['add files'])){
             if ($formData['hasValidFiles']){
-                $guideEntry=$this->getGuideEntry($selector);
-                if (isset($guideEntry['Read'])){$selector['Read']=$guideEntry['Read'];}
-                if (isset($guideEntry['Write'])){$selector['Write']=$guideEntry['Write'];}
                 foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
                     if ($fileArr['error']){continue;}
                     $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
@@ -314,6 +314,36 @@ class Explorer{
         return $arr;
     }
 
+    private function settingsEntry(string $callingClass,array $stateKeys):array
+    {
+        $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
+        $options=array('extractEmails'=>array('No','Yes'),'extractArchives'=>array('No','Yes'),'pdfParser'=>$pdfParser['options']);
+        $settings=array('extractEmails'=>1,'extractArchives'=>0,'pdfParser'=>$pdfParser['default']);
+        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+        $guideEntry=$this->getGuideEntry($selector);
+        $selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';
+        $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ALL_MEMBER_R';
+        // form processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (!empty($formData['val'])){
+            $guideEntry['Content']['settings']=$formData['val'];
+            $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($guideEntry);
+        }
+        // compile html
+        $matrix=array();
+        $arr=array('selector'=>$guideEntry,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'cmd'=>'save');
+        foreach($settings as $key=>$setting){
+            $arr['options']=$options[$key];
+            $arr['value']=(isset($guideEntry['Content']['settings'][$key]))?$guideEntry['Content']['settings'][$key]:$setting;
+            $arr['key']=array($key);
+            $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($arr));
+        }
+        $matrix['cmd']=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Upload settings'));
+        $arr=array('html'=>$html,'icon'=>'#','title'=>'Settings','class'=>'explorer');
+        return $arr;
+    }
+    
     private function sendEmail(string $callingClass,array $setKeys):array
     {
         $arr=array('html'=>'','callingClass'=>$callingClass,'callingFunction'=>__FUNCTION__,'icon'=>'@','title'=>'Send entry as email','class'=>'explorer');

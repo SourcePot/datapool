@@ -148,10 +148,14 @@ class Database{
     */
     public function getEntryTemplate(string|bool $table=FALSE):array|bool
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'table'=>$table);
         if ($table){
             if (isset($GLOBALS['dbInfo'][$table])){return $GLOBALS['dbInfo'][$table];}
         } else {
             return $GLOBALS['dbInfo'];
+        }
+        if (isset($this->oc['logger'])){
+            $this->oc['logger']->log('warning','Function "{class}::{function}" called with table="{table}" returned false, table missing.',$context);        
         }
         return FALSE;
     }
@@ -1018,6 +1022,11 @@ class Database{
         $currentEntryIndex=$this->getOrderedListIndexFromEntryId($currentEntryId,FALSE);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($orderedListSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
         $olInfo=array('firstEntryId'=>FALSE,'lastEntryId'=>FALSE,'newEntryIndex'=>FALSE,'newEntryId'=>FALSE,'baseEntryId'=>FALSE,'currentEntryIndex'=>$currentEntryIndex,'selector'=>$selector,'error'=>array());
+        if (empty($orderedListSelector['Source']) && !empty($orderedListSelector['Class'])){
+            $olInfo['storageClass']='SourcePot\Datapool\Foundation\Filespace';
+        } else {
+            $olInfo['storageClass']=__CLASS__;
+        }
         foreach($this->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
             if ($olInfo['firstEntryId']===FALSE){
                 $olInfo['firstEntryId']=$olInfo['lastEntryId']=$entry['EntryId'];

@@ -316,7 +316,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),
                                 'homePageContentSourceInfo'=>array('method'=>'element','tag'=>'p','element-content'=>$homePageContentSourceInfo,'class'=>'std'),
                                 'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>$homePageContentSource,'style'=>array('min-width'=>'50vw')),
-                                'path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>array('min-width'=>'50vw')),
+                                'Spatie path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>array('min-width'=>'50vw')),
                                 );
         // get selector
         $arr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init');

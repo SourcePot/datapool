@@ -35,7 +35,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                                               ),
                             );
 
-    private $msgEntry=array();
+    private $msgEntry=array('Expires'=>'2999-01-01 01:00:00','Owner'=>'SYSTEM');
     
     public function __construct($oc){
         $this->oc=$oc;

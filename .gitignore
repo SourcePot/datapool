@@ -5,3 +5,11 @@
 /src/filespace
 /src/logging
 /src/tmp_private
+/src/php/GenericApps/*
+!/src/php/GenericApps/Multimedia.php
+!/src/php/GenericApps/Forum.php
+!/src/php/GenericApps/Calendar.php
+/src/php/DataApps/*
+!/src/php/DataApps/Invoices.php
+!/src/php/DataApps/Unycom.php
+!/src/php/DataApps/SAP.php

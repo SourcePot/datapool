@@ -696,8 +696,8 @@ class HTMLbuilder{
                 if ($file){
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($file,$entry);
                 } else {
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
+                    $entry=$this->oc[$olInfoArr['storageClass']]->unifyEntry($entry);
+                    $arr['selector']=$this->oc[$olInfoArr['storageClass']]->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
                 }
             } else if (isset($formData['cmd']['delete'])){
                 $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));

@@ -59,31 +59,36 @@ class PdfTools{
    
     public function text2arrSpatie($file=FALSE,array $arr=array()):array
     {
+        $arr['error']=TRUE;
         // get parser setting, add them if missing
-        if (!isset($this->pageSettings['Content'][__FUNCTION__])){
-            $this->pageSettings['Content'][__FUNCTION__]=array('path to Xpdf pdftotext executable'=>'');
+        if (!isset($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
+            $this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']='';
             $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($this->pageSettings,TRUE);
         }
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$file,'executable'=>$this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']);
         // parse file if valid
         if (!is_file($file)){
             // invalid pdf-file
-            $arr['error'][]='Method '.__FUNCTION__.' failed: Invalid file';
+            $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);    
         } else if (!class_exists('\Spatie\PdfToText\Pdf')){
             // parser class is missing
-            $arr['error'][]='\Spatie\PdfToText\Pdf is missing';
-        } else if (empty($this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable'])){
+            $this->oc['logger']->log('error','Parser {function} failed with: class "\Spatie\PdfToText\Pdf" is missing',$context);    
+        } else if (empty($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             // path to external parser executable is missing
-            $arr['error'][]='Path to Xpdf pdftotext executable is missing'; 
-        } else if (!is_file($this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable'])){
+            $this->oc['logger']->log('warning','Parser {function} failed with: Path to Xpdf pdftotext executable is missing',$context);    
+        } else if (!is_file($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             // path to external parser executable is not a file
-            $arr['error'][]='No valid file at '.$this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable']; 
+            $this->oc['logger']->log('error','Parser {function} failed with: {executable} is no valid file',$context);    
         } else {
             try{
-                $parser=new \Spatie\PdfToText\Pdf($this->pageSettings['Content'][__FUNCTION__]['path to Xpdf pdftotext executable']);
+                $parser=new \Spatie\PdfToText\Pdf($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']);
                 $text=$parser->setOptions(['-enc UTF-8'])->setPdf($file)->text();
                 $arr['Content']['File content']=$this->textCleanup($text);
+                $arr['Params']['Content']['parser']=__FUNCTION__;
+                $arr['error']=FALSE;
+                $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);    
             } catch (\Exception $e){
-                $arr['error'][]=$e->getMessage();
+                $this->oc['logger']->log('notice','Parser {function} failed with: '.$e->getMessage(),$context);    
             }
         }
         return $arr;
@@ -91,11 +96,13 @@ class PdfTools{
 
     public function text2arrSmalot($file=FALSE,array $arr=array()):array
     {
+        $arr['error']=TRUE;
         // get parser setting, add them if missing
-        if (!isset($this->pageSettings['Content'][__FUNCTION__])){
-            $this->pageSettings['Content'][__FUNCTION__]=array();
+        if (!isset($this->pageSettings['Content']['Smalot'])){
+            $this->pageSettings['Content']['Smalot']='';
             $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($this->pageSettings,TRUE);
         }
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$file,'Smalot'=>$this->pageSettings['Content']['Smalot']);
         // parse file if valid
         if (is_file($file)){
             // parser configuration
@@ -109,12 +116,14 @@ class PdfTools{
                 $pdf=$parser->parseFile($file);
                 $arr['Content']['File content']=$this->textCleanup($pdf->getText());
                 $arr['Params']['File']['PDF properties']=$pdf->getDetails();
-                // clean-up
+                $arr['Params']['Content']['parser']=__FUNCTION__;
+                $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);    
+                $arr['error']=FALSE;
             } catch (\Exception $e){
                 $arr['error'][]=$e->getMessage();
             }
         } else {
-            $arr['error'][]='Method '.__FUNCTION__.' failed: Invalid file';
+            $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);    
         }
         return $arr;
     }
