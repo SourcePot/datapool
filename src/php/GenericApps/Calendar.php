@@ -107,17 +107,17 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
 
     public function job($vars){
         // add bank holidays
+        $eventClasses=array('\SourcePot\BankHolidays\es','\SourcePot\BankHolidays\de','\SourcePot\BankHolidays\uk');
         if (!isset($vars['bankholidays'])){$vars['bankholidays']['lastRun']=0;}
         if (!isset($vars['signalCleanup'])){$vars['signalCleanup']['lastRun']=0;}
-        if (time()-$vars['bankholidays']['lastRun']>3000000){
+        if (time()-$vars['bankholidays']['lastRun']>602800){
             $entry=array('Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R');
             $events=array();
-            $uk=new \SourcePot\BankHolidays\es();
-            $events+=$uk->getBankHolidays();
-            $de=new \SourcePot\BankHolidays\de();
-            $events+=$de->getBankHolidays();
-            $es=new \SourcePot\BankHolidays\uk();
-            $events+=$es->getBankHolidays();
+            foreach($eventClasses as $eventClass){
+                if (!class_exists($eventClass)){continue;}
+                $eventsObj=new $eventClass();
+                $events+=$eventsObj->getBankHolidays();
+            }
             foreach($events as $country=>$eventArr){
                 foreach($eventArr as $entryId=>$event){
                     $entry['EntryId']=$entryId;
