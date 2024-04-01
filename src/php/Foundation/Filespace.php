@@ -182,6 +182,13 @@ class Filespace{
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read'):\Generator
     {
         $dir=$this->class2dir($selector['Class']);
+        if (!is_dir($dir)){
+            if (isset($this->oc['logger'])){
+                $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'dir'=>$dir);
+                $this->oc['logger']->log('error','Function {class}::{function} failed: directory "{dir}" missing',$context);
+            }
+            return FALSE;
+        }
         $files=scandir($dir);
         $selector['rowCount']=count($files)-2;
         foreach($files as $file){

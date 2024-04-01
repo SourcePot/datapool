@@ -104,7 +104,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
         if (empty($arr['selector']['Content'])){
-            $row['setRowStyle']='background-color:#a00;';
+            $row['trStyle']=array('background-color'=>'#a00');
         }
         $matrix=array('Parameter'=>$row);
         $arr[__FUNCTION__]=$arr['selector']['Content'];

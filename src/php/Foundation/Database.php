@@ -860,17 +860,17 @@ class Database{
     *
     * @return array|boolean The entry, an empty array or flase if no entry was found.
     */
-    public function hasEntry(array $selector,bool $isSystemCall=TRUE,bool $returnMetaOnNoMatch=FALSE):array|bool
+    public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
     {
         if (empty($selector['Source'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);    
         }
         if (empty($selector['EntryId'])){
-            foreach($this->entryIterator($selector,$isSystemCall,'Read',$returnMetaOnNoMatch,FALSE,FALSE,FALSE,array(),FALSE) as $entry){
+            foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,FALSE,FALSE,array(),$removeGuideEntries) as $entry){
                 return $entry;
             }
         } else {
-            return $this->entryById($selector,$isSystemCall,'Read',$returnMetaOnNoMatch);
+            return $this->entryById($selector,$isSystemCall,$rightType);
         }
         return FALSE;
     }

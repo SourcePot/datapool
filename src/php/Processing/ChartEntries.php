@@ -142,7 +142,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['caption']='Chart control';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
+        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
         $matrix=array('Parameter'=>$row);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
     }
@@ -165,10 +165,12 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runChartEntries($callingElement,$testRun=FALSE){
-        $base=array();
+        $base=array('chartrules'=>array());
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $chartparams=current($base['chartparams']);
-        $prop=array('plotProp'=>array('height'=>$chartparams['Content']['height'],'width'=>$chartparams['Content']['width']));
+        $prop=array();
+        $prop['plotProp']['height']=(isset($chartparams['Content']['height']))?$chartparams['Content']['height']:300;
+        $prop['plotProp']['width']=(isset($chartparams['Content']['width']))?$chartparams['Content']['width']:500;
         foreach($base['chartrules'] as $ruleId=>$rule){
             $trace=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
             $trace['selector']=$callingElement['Content']['Selector'];

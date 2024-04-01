@@ -135,14 +135,7 @@ class Explorer{
         return $html;
     }
     
-    private function deleteGuideEntry(array $selector):array|bool
-    {
-        $entry=$this->getGuideEntry($selector);
-        $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry,TRUE);
-        return $entry;
-    }
-    
-    public function getGuideEntry(array $selector,array $templateB=array()):array|bool
+    public function getGuideEntry(array $selector,array $template=array()):array|bool
     {
         if (empty($selector['Source'])){
             $entry=array('Read'=>0,'Write'=>0);
@@ -151,17 +144,16 @@ class Explorer{
             if (empty($entry)){$entry=$selector;}
         } else {
             $unseledtedDetected=FALSE;
-            $selector=array_merge($this->selectorTemplate,$selector);
-            $templateA=array('Name'=>self::GUIDEINDICATOR,'Type'=>$selector['Source'].' '.self::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
-            $entry=array_replace_recursive($templateA,$templateB);
-            foreach($selector as $column=>$selected){
-                if (empty($selected)){$unseledtedDetected=TRUE;}
-                $entry[$column]=($unseledtedDetected)?self::GUIDEINDICATOR:$selected;
+            $entry=array('Name'=>self::GUIDEINDICATOR,'Type'=>$selector['Source'].' '.self::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            foreach($this->selectorTemplate as $column=>$initValue){
+                if (empty($selector[$column])){$unseledtedDetected=TRUE;}
+                $entry[$column]=($unseledtedDetected)?self::GUIDEINDICATOR:$selector[$column];
             }
+            $entry=array_merge($template,$entry);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',self::GUIDEINDICATOR,FALSE);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
         }
         return $entry;
     }
@@ -213,6 +205,7 @@ class Explorer{
         if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
             $selector=array_merge($selector,$formData['val']);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
+            $guideEntry=$this->getGuideEntry($selector);
         } else if (isset($formData['cmd']['add files'])){
             if ($formData['hasValidFiles']){
                 foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
@@ -232,12 +225,17 @@ class Explorer{
         // editEntry
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'editEntry');
         if (isset($formData['cmd']['edit'])){
-            $oldGuideEntry=$this->deleteGuideEntry($selector);
             $newSelector=array_merge($selector,$formData['val']);
-            if (isset($newSelector['EntryId'])){unset($newSelector['EntryId']);}
-            $this->getGuideEntry($newSelector,array('Content'=>$oldGuideEntry['Content'],'Params'=>$oldGuideEntry['Params'],'Read'=>$oldGuideEntry['Read'],'Write'=>$oldGuideEntry['Write'],'Owner'=>$oldGuideEntry['Owner']));
+            $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector);
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,array(),FALSE) as $entry){
+                if (strpos($entry['Type'],self::GUIDEINDICATOR)!==FALSE){
+                    $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
+                    $entry=array_merge($entry,$this->selectorTemplate);
+                    $guideEntry=$this->getGuideEntry($newSelector,$entry);
+                    $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
+                }
+            }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
-            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
         }
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
     }
@@ -326,20 +324,20 @@ class Explorer{
         $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ALL_MEMBER_R';
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['val']) && !empty($guideEntry['EntryId'])){
+        if (isset($formData['cmd']['save'])){
             $guideEntry['Content']['settings']=$formData['val'];
             $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($guideEntry);
         }
         // compile html
         $matrix=array();
-        $arr=array('selector'=>$guideEntry,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'cmd'=>'save');
+        $arr=array('selector'=>$guideEntry,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         foreach($settings as $key=>$setting){
             $arr['options']=$options[$key];
             $arr['value']=(isset($guideEntry['Content']['settings'][$key]))?$guideEntry['Content']['settings'][$key]:$setting;
             $arr['key']=array($key);
             $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($arr));
         }
-        $matrix['cmd']=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($arr));
+        $matrix['cmd']=array('value'=>array('tag'=>'button','key'=>array('save'),'element-content'=>'Save','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Upload settings'));
         $arr=array('html'=>$html,'icon'=>'#','title'=>'Settings','class'=>'explorer');
         return $arr;
@@ -376,9 +374,8 @@ class Explorer{
             return array('html'=>'','icon'=>$icon[0],'class'=>'explorer');
         }
         // check if there are any entries with write access
-        $writableEntries=0;
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write') as $entry){$writableEntries++;}
-        if ($writableEntries===0){
+        $hasWritableEntries=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,FALSE,'Write',FALSE);
+        if (empty($hasWritableEntries)){
             // no entries with write access found
             return array('html'=>'','icon'=>$icon[0],'class'=>'explorer');
         }
