@@ -374,7 +374,7 @@ final class MiscTools{
         if (!empty($formData['cmd'])){
             $statistics=$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str();
             if ($statistics){
-                $this->oc['logger']->log('info',ucfirst(key($formData['cmd'])).' resulted in {statistics}',array('statistics'=>$statistics));    
+                $this->oc['logger']->log('info','Form processing "cmd={cmd}": {statistics}',array('cmd'=>key($formData['cmd']),'statistics'=>$statistics));    
             }
         }   
     }

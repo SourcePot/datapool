@@ -198,7 +198,6 @@ class Explorer{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
         }
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         $selector=$this->addGuideEntry2selector($selector,$guideEntry);
         // add entry app
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
@@ -235,6 +234,7 @@ class Explorer{
                     $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
                 }
             }
+            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
         }
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);

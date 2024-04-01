@@ -308,6 +308,7 @@ class Definitions{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Called '.__FUNCTION__.' with empty entry.'));
             } else {
                 // form processing
+                $this->oc[$dataStorageClass]->resetStatistic();
                 $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
                 $debugArr['formData']=$formData;
                 if (isset($formData['cmd']['delete'])){
@@ -326,9 +327,9 @@ class Definitions{
                         $debugArr['entry_updated']=$this->oc[$dataStorageClass]->updateEntry($entry);
                     }
                     $statistics=$this->oc[$dataStorageClass]->getStatistic();
-                    $entryType=(isset($entry['Source']))?ucfirst(strval($entry['Source'])):$entry['Class'];
-                    $context=array('type'=>$entryType,'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-                    $this->oc['logger']->log('info','{type}-entry processed: {statistics}',$context);    
+                    $entryType=(isset($entry['Source']))?strval($entry['Source']):strval($entry['Class']);
+                    $context=array('type'=>$entryType,'EntryId'=>$entry['EntryId'],'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
+                    $this->oc['logger']->log('info','{type}-entry selected by "EntryId={EntryId}" processed: {statistics}',$context);    
                 }
                 if (isset($this->oc['SourcePot\Datapool\Tools\MediaTools'])){
                     $iconArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$entry));

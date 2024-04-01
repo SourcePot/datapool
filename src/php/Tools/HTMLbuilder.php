@@ -518,8 +518,13 @@ class HTMLbuilder{
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-            $context=array('key'=>$arr['key'],'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-            $this->oc['logger']->log('info','{key}-key processed: {statistics}',$context);    
+            $context=array('key'=>$arr['key'],'Source'=>$entry['Source'],'selector'=>'','statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
+            $context['what']=(empty($entry['EntryId']))?'entries':'entry';
+            $context['selector'].=(empty($entry['Group']))?'':' | Group='.$entry['Group'];
+            $context['selector'].=(empty($entry['Folder']))?'':' | Folder='.$entry['Folder'];
+            $context['selector'].=(empty($entry['EntryId']))?'':' | EntryId='.$entry['EntryId'];
+            $context['selector']=trim($context['selector'],'| ');
+            $this->oc['logger']->log('info','{Source}-{what} selected by "{selector}" {key}-key processed: {statistics}',$context);    
         }
         $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
         $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
@@ -1067,6 +1072,8 @@ class HTMLbuilder{
                             'gridX'=>array(),
                             'axisY'=>array(),
                             'gridY'=>array(),
+                            'ruleY'=>array(0),
+                            'ruleX'=>array(),
                             );
         $plot=array_replace_recursive($plotTemplate,$plot);
         $plot['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(hrtime(TRUE),TRUE);
