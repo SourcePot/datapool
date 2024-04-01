@@ -19,6 +19,8 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
 
+    private $dataTypes=array('string'=>'String','int'=>'Integer','float'=>'Float','bool'=>'Boolean','date'=>'Date','timestamp'=>'Timestamp');
+    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -114,23 +116,16 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->chartParams($arr['selector']);
         $arr['html'].=$this->chartRules($arr['selector']);
-        //$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-        //$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for parsing'));
         return $arr;
     }
 
     private function chartParams($callingElement){
-        $contentStructure=array('caption'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Chart','excontainer'=>TRUE),
-                                'width'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE),
+        $contentStructure=array('width'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE),
                                 'height'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE),
                                 'x-range'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','title'=>'e.g.: min|max','excontainer'=>TRUE),
                                 'y-range'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','title'=>'e.g.: min|max','excontainer'=>TRUE),
-                                'separate by'=>array('method'=>'select','value'=>'','options'=>array(''=>"don't",'Group'=>'Group','Folder'=>'Folder'),'keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                'orderBy'=>array('method'=>'keySelect','value'=>'Date','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string','excontainer'=>FALSE),
                                 );
-        $contentStructure['separate by']+=$callingElement['Content']['Selector'];
-        $contentStructure['orderBy']+=$callingElement['Content']['Selector'];
         // get selector
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -155,7 +150,9 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function chartRules($callingElement){
         $contentStructure=array('trace name'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE),
                                 'x-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE),
+                                'x-data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'date','options'=>$this->dataTypes),
                                 'y-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Group','standardColumsOnly'=>FALSE),
+                                'y-data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'float','options'=>$this->dataTypes),
                                 );
         $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
         $contentStructure['y-selector']+=$callingElement['Content']['Selector'];
@@ -168,31 +165,25 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runChartEntries($callingElement,$testRun=FALSE){
-        $props=array('Script start timestamp'=>hrtime(TRUE));
-        
-        
+        $base=array();
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
+        $chartparams=current($base['chartparams']);
+        $prop=array('plotProp'=>array('height'=>$chartparams['Content']['height'],'width'=>$chartparams['Content']['width']));
+        foreach($base['chartrules'] as $ruleId=>$rule){
+            $trace=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
+            $trace['selector']=$callingElement['Content']['Selector'];
+            $trace['x']['key']=$rule['Content']['x-selector'];
+            $trace['x']['Type']=$rule['Content']['x-data type'];
+            $trace['y']['key']=$rule['Content']['y-selector'];
+            $trace['y']['Type']=$rule['Content']['y-data type'];
+            $trace['Name']=$rule['Content']['trace name'];
+            $prop['traces'][$trace['Name']]=$trace;
+        }
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        
-        
-        
-        $traceA=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
-        $traceA['Name']='Error';
-        $traceA['selector']['Name']='error';
-        $traceA['isSystemCall']=TRUE;
-        $traceB=$traceA;
-        $traceB['Name']='Warning';
-        $traceB['type']='lineY';
-        $traceB['selector']['Name']='warning';
-            
-        
         $result=array();
-        
-        $result['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->xyTraces2plot(array(),$traceB,$traceA);
-        
-        
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+        $result['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->xyTraces2plot($prop);
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$props['Script start timestamp'])/1000000));
+        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
         return $result;
     }
 

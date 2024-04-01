@@ -145,9 +145,10 @@ class Explorer{
     public function getGuideEntry(array $selector,array $templateB=array()):array|bool
     {
         if (empty($selector['Source'])){
-            return array('Read'=>0,'Write'=>0);
+            $entry=array('Read'=>0,'Write'=>0);
         } else if (!empty($selector['EntryId'])){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+            if (empty($entry)){$entry=$selector;}
         } else {
             $unseledtedDetected=FALSE;
             $selector=array_merge($this->selectorTemplate,$selector);
@@ -325,7 +326,7 @@ class Explorer{
         $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ALL_MEMBER_R';
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['val'])){
+        if (!empty($formData['val']) && !empty($guideEntry['EntryId'])){
             $guideEntry['Content']['settings']=$formData['val'];
             $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($guideEntry);
         }

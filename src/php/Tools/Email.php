@@ -279,25 +279,26 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
     public function emailProperties2arr(string $email,array $template=array(),bool $lowerCaseKeys=TRUE):array
     {
-        $email=preg_replace('/([A-Za-z-]+: )/','|[]|$1',$email);
+        $email=preg_replace('/(^|\n|r)([^\n\r:]+: )/','|[]|$2',$email);
         $keyValueArr=explode('|[]|',trim($email,"|[]\n\r"));
         foreach($keyValueArr as $line){
             $line=imap_utf8($line);
             $valueStart=strpos($line,':');
             if ($valueStart===FALSE){continue;}
-            $key=substr($line,0,$valueStart);
-            $value=substr($line,$valueStart+1);
-            $values=explode(';',$value);
-            foreach($values as $valueIndex=>$value){
-                $valueComps=explode('=',trim($value));
-                if (count($valueComps)===1){
-                    $valueComps=array('value',$valueComps[0]);
-                }
-                if ($lowerCaseKeys){
-                    $key=strtolower($key);
-                    $valueComps[0]=strtolower($valueComps[0]);
-                }
-                $template[$key][$valueComps[0]]=trim($valueComps[1],"\"\n\r ");
+            $keyA=trim(substr($line,0,$valueStart));
+            if ($lowerCaseKeys){$keyA=strtolower($keyA);}
+            $template[$keyA]=array();
+            $line=substr($line,$valueStart+2);
+            preg_match_all('/([a-z]+)=([^;]+)/',$line,$matches);
+            foreach($matches[0] as $matchIndex=>$match){
+                $line=str_replace($match,'',$line);
+                $keyB=$matches[1][$matchIndex];
+                if ($lowerCaseKeys){$keyB=strtolower($keyB);}
+                $template[$keyA][$keyB]=trim($matches[2][$matchIndex],"\"\t\n\r; ");
+            }
+            $line=trim($line,"\"\t\n\r; ");
+            if (!empty($line)){
+                $template[$keyA]['value']=$line;
             }
         }
         return $template;

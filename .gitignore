@@ -1,6 +1,7 @@
 /src/www/assets
 /src/www/tmp
 /src/setup/*/
+/src/setup/objectList.csv
 /src/debugging
 /src/filespace
 /src/logging

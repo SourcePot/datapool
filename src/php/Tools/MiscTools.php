@@ -704,7 +704,7 @@ final class MiscTools{
                     'splitstring'=>$this->convert2splitString($value),
                     'int'=>$this->str2int($value),
                     'float'=>$this->str2float($value),
-                    'bool'=>!empty($value),
+                    'bool'=>(intval($value)>0),
                     'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                     'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
                     'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2timestamp($value),

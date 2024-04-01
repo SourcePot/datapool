@@ -511,12 +511,10 @@ class Filespace{
         return $entry;
     }
 
-    private function specialFileHandling(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array|bool
+    private function specialFileHandling(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array|bool
     {
         $debugArr=array('file'=>$file,'cntr'=>array('extractEmails'=>TRUE,'extractArchives'=>TRUE));
         $entry=array_merge($debugArr['cntr'],$entry);
-        $debugArr['entry']=$entry;
-        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.hrtime(TRUE));}
         if ($entry['extractEmails'] && stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE){
             $this->email2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             return TRUE;
@@ -594,7 +592,7 @@ class Filespace{
             unset($entry['Params']['File']);
             if (isset($zip)){
                 $zip->close();
-                $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall,TRUE);
+                $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall);
             } else {
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["html"]'),FALSE);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);

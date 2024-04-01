@@ -107,6 +107,7 @@ class HTMLbuilder{
     public function table(array $arr,bool $returnArr=FALSE):string|array
     {
         $html='';
+        $styles=array('trStyle'=>array());
         if (!empty($arr['matrix'])){
             $indexArr=array('x'=>0,'y'=>0);
             $tableArr=array('tag'=>'table','keep-element-content'=>TRUE,'element-content'=>'');
@@ -125,17 +126,13 @@ class HTMLbuilder{
             foreach($arr['matrix'] as $rowLabel=>$rowArr){
                 $indexArr['x']=0;
                 $indexArr['y']++;
-                if (isset($rowArr['setRowStyle'])){
-                    $rowStyle=$rowArr['setRowStyle'];
-                    unset($rowArr['setRowStyle']);
-                } else {
-                    $rowStyle=array();
-                }
+                $rowArr['trStyle']=(isset($rowArr['trStyle']))?$rowArr['trStyle']:$styles['trStyle'];
                 if (!empty($arr['skipEmptyRows']) && empty($rowArr)){continue;}
                 if (empty($arr['hideKeys'])){$rowArr=array(' Key '=>$rowLabel)+$rowArr;}
-                $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowStyle);
+                $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowArr['trStyle']);
                 $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
                 foreach($rowArr as $colLabel=>$cell){
+                    if (isset($styles[$colLabel])){continue;}
                     if (empty($arr['thKeepCase'])){
                         $colLabel=ucfirst(strval($colLabel));
                     } else {
@@ -667,7 +664,7 @@ class HTMLbuilder{
             $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE,$isSystemCall);
         }
         $matrix['New']=$this->entry2row($arr,FALSE,FALSE,TRUE);
-        $matrix['New']['setRowStyle']=array('background-color'=>'#ddf;');
+        $matrix['New']['trStyle']=array('background-color'=>'#fb0');
         $tableArr=array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']);
         if (isset($tableArrStyle)){$tableArr['style']=$tableArrStyle;}
         $html=$this->table($tableArr);
@@ -963,24 +960,36 @@ class HTMLbuilder{
         return $options;
     }
 
+    /**
+    * This plot method returns html-string representing a plot placeholder. The placeholder will be replaced by javerscript.
+    * @param array prop Contains plot properties such as 'caption', 'style', 'plotProp', 'axisX'etc...
+    * @param array traces is a list of arguments each defining a trace. Use method getTraceTemplate to build a trace
+    * @return string
+    */
     public function xyTraces2plot(array $prop=array(),...$traces):string
     {
         $plot=$prop;
+        if (!empty($prop['traces'])){
+            unset($plot['traces']);
+            $traces=$prop['traces'];
+        }
         foreach($traces as $traceIndex=>$trace){
             $data=array();
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($trace['selector'],$trace['isSystemCall'],'Read',$trace['orderBy'],$trace['isAsc'],$trace['limit'],$trace['offset']) as $entry){
-                $trace=$this->addEntry2data($trace,$entry);
+                $trace=$this->addEntry2trace($trace,$entry);
             }
             $plot['traces'][$trace['Name']]=$trace;
             if (isset($trace['stroke'])){$plot['traces'][$trace['Name']]['prop']['stroke']=$trace['stroke'];}
-            
-            // {x: "Date", y: "Close", stroke: "red"}
-            
         }
         return $this->plot($plot);
     }
     
-    public function getTraceTemplate(){
+    /**
+    * This method returns a trace-array template to be used in conjuntion whith plot methods.
+    * @return array
+    */
+    public function getTraceTemplate():array
+    {
         $trace=array('Name'=>'Logs',
                      'selector'=>array('Source'=>'signals','Group'=>'signal','Folder'=>'%Logger%'),
                      'isSystemCall'=>FALSE,'orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>0,
@@ -989,12 +998,18 @@ class HTMLbuilder{
                      'data'=>array(),
                      //'type'=>'rectY',
                      //'type'=>'lineY',
-                     'type'=>'areaY',
+                     'type'=>'lineY',
                      );
         return $trace;
     }
 
-    private function addEntry2data(array $trace,array $entry):array
+    /**
+    * This method adds data of an entry to the trace.
+    * @param array traces Is the trace. Use method getTraceTemplate to build a trace
+    * @param array entry Is the entry to be parsed for new data for the trace
+    * @return array Is the updated trace array
+    */
+    private function addEntry2trace(array $trace,array $entry):array
     {
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
@@ -1013,7 +1028,6 @@ class HTMLbuilder{
                         $isValid=FALSE;
                         break;
                     }
-                    
                 }
                 if ($isValid){
                     if (!isset($trace[$dim]['Name'])){
@@ -1024,6 +1038,7 @@ class HTMLbuilder{
                         'float'=>floatval($flatArrValue),
                         'bool'=>boolval($flatArrValue),
                         'string'=>strval($flatArrValue),
+                        'date'=>strval($flatArrValue),
                         'timestamp'=>date('Y-m-d H:i:s',$flatArrValue),
                     };
                     $indexKey=$entry['EntryId'];
@@ -1038,14 +1053,20 @@ class HTMLbuilder{
         return $trace;
     }
     
+    /**
+    * This method returns the plot html placeholder.
+    * @param array plot Is the plot definition array compiled by a plot method. It contains alse the traces to be displayed.
+    * @return string Is the html plot placeholder
+    */
     private function plot(array $plot):string
     {
         // create plot definition
         $plotTemplate=array('caption'=>'Sample chart',
-                            'style'=>array(),
                             'plotProp'=>array('grid'=>TRUE,'color'=>array('legend'=>TRUE),'marginBottom'=>50,'x'=>array('padding'=>0.2)),
                             'axisX'=>array('tickRotate'=>0),
-                            'axisY'=>array('tickRotate'=>0),
+                            'gridX'=>array(),
+                            'axisY'=>array(),
+                            'gridY'=>array(),
                             );
         $plot=array_replace_recursive($plotTemplate,$plot);
         $plot['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(hrtime(TRUE),TRUE);
@@ -1053,7 +1074,6 @@ class HTMLbuilder{
         //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_SESSION[__CLASS__]['plot']);
         // draw plot container
         $elArr=array('tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot '.$plot['caption'],'id'=>$plot['id']);
-        $elArr['style']=$plot['style'];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
         $elArr=array('tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$plot['id']);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
@@ -1062,6 +1082,11 @@ class HTMLbuilder{
         return $html;
     }
     
+    /**
+    * This method returns the plot data. The method is called by javascript.
+    * @param array arr Contains the relevant plot-id, the id of the html plot placeholder.
+    * @return array plot data
+    */
     public function getPlotData(array $arr):array
     {
         return $_SESSION[__CLASS__]['plot'][$arr['id']];

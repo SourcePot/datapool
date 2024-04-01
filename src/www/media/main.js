@@ -679,11 +679,11 @@ jQuery(document).ready(function(){
                     // create xy-data object
                     var traceData=[],xyDef=plotDef.traces[traceName].traceProp;
                     for (const index in plotDef.traces[traceName].data){
-                        if (plotDef.traces[traceName]['x']['Type'].localeCompare('timestamp')==0){
+                        if (plotDef.traces[traceName]['x']['Type'].localeCompare('timestamp')==0 || plotDef.traces[traceName]['x']['Type'].localeCompare('date')==0){
                             var column=plotDef.traces[traceName]['x']['Name'];
                             plotDef.traces[traceName].data[index][column]=new Date(plotDef.traces[traceName].data[index][column]);
                         }
-                        if (plotDef.traces[traceName]['y']['Type'].localeCompare('timestamp')==0){
+                        if (plotDef.traces[traceName]['y']['Type'].localeCompare('timestamp')==0 || plotDef.traces[traceName]['y']['Type'].localeCompare('date')==0){
                             var column=plotDef.traces[traceName]['y']['Name'];
                             plotDef.traces[traceName].data[index][column]=new Date(plotDef.traces[traceName].data[index][column]);
                         }
@@ -691,14 +691,14 @@ jQuery(document).ready(function(){
                         plotDef.traces[traceName].data[index]['Name']=traceName;
                     }
                     xyDef['stroke']=xyDef['symbol']='Name';
-                    xyDef['tip']="xy";
                     switch(plotDef.traces[traceName].type){
                         case 'rectY':
+                            xyDef['tip']="xy";
                             marks.push(Plot.rectY(traceData,xyDef));
                             break;
                         case 'lineY':
+                            xyDef['tip']="xy";
                             marks.push(Plot.lineY(traceData,xyDef));
-                            marks.push(Plot.dot(traceData,xyDef));
                             break;
                         case 'areaY':
                             xyDef['fill']='Name';
@@ -709,14 +709,21 @@ jQuery(document).ready(function(){
                             xyDef['fill']='Name';
                             xyDef['fillOpacity']=0.3;
                             marks.push(Plot.areaY(traceData,xyDef));
-                    }
+                            xyDef['tip']="xy";
+                            marks.push(Plot.dot(traceData,xyDef));
+                        }
                 };
                 marks.push(Plot.axisX(plotDef.axisX));
                 marks.push(Plot.axisY(plotDef.axisY));
+                marks.push(Plot.gridX(plotDef.gridX));
+                marks.push(Plot.gridY(plotDef.gridY));
                 plotProp=Object.assign(plotDef['plotProp'],{marks});
                 const plot=Plot.plot(plotProp);
                 jQuery(plotObj).replaceWith(plot);
-                jQuery('#svg-'+id).on('click',function(element){saveData(plot,plotDef.caption+'.svg');});    
+                jQuery('#svg-'+id).on('click',function(element){
+                    saveData(plot,plotDef.caption+'.svg');
+                });
+                console.log(plotDef);
             }
             (function heartbeat(){
                 setTimeout(heartbeat,777);
@@ -726,18 +733,21 @@ jQuery(document).ready(function(){
     });
 
 /** OPTION FILTER **/
-    jQuery('.filter').on('keyup',function(e){
-        var selectId=jQuery(this).attr('id').split('-').pop(),filterText=jQuery(this).val().toUpperCase(),count=0;
-        jQuery('#'+selectId).children('option').each(function(i){
-            if (jQuery(this).html().toUpperCase().indexOf(filterText)===-1){
-                jQuery(this).hide();
-            } else {
-                jQuery(this).show();
-                count++;
-            }
+    function addFilter(){
+        jQuery('.filter').on('keyup',function(e){
+            var selectId=jQuery(this).attr('id').split('-').pop(),filterText=jQuery(this).val().toUpperCase(),count=0;
+            jQuery('#'+selectId).children('option').each(function(i){
+                if (jQuery(this).html().toUpperCase().indexOf(filterText)===-1){
+                    jQuery(this).hide();
+                } else {
+                    jQuery(this).show();
+                    count++;
+                }
+            });
+            jQuery('#count-'+selectId).html(count);
         });
-        jQuery('#count-'+selectId).html(count);
-    });
+    }
+    addFilter();
 
 /** MISC-HELPERS **/
 	let heartbeats=0;
@@ -769,6 +779,7 @@ jQuery(document).ready(function(){
 		loadImageData();
 		initJsButtonEvents();
         loadDynamicMap();
+        addFilter();
     }
 	
 });
