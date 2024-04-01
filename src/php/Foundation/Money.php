@@ -16,7 +16,6 @@ class Money{
     
     private $ecbExchangeRatesUrl='https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html';
     private $ecbExchangeRates90url='';
-    private $ecbExchangeRatesHistUrl='https://data.ecb.europa.eu/data/data-categories/ecbeurosystem-policy-and-exchange-rates/exchange-rates/reference-rates?searchTerm=&filterSequence=frequency&sort=relevance&filterType=basic&showDatasetModal=false&filtersReset=false&resetAll=false&frequency%5B%5D=D';
     
     private $entryTable;
     private $entryTemplate=array();
@@ -140,6 +139,7 @@ class Money{
     
     private function getOldRatesIfRequired():bool
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         $selector=$this->tableRatesSelector;
         $selector['Name']='1999-01-21 CET';
         $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE);
@@ -150,9 +150,10 @@ class Money{
                 if (strpos($fileName,'ECB Data Portal')===FALSE){continue;}
                 $csvFile=$dir.$fileName;
                 if (!is_file($csvFile)){continue;}
-                $this->ratesCsv2table($csvFile);
+                $context['rowCount']=$this->ratesCsv2table($csvFile);
                 break;
             }
+            $this->oc['logger']->log('notice','Function "{class}::{function}" rebuild exchange rate dataset, added "{rowCount}" rows',$context);        
             return TRUE;
         } else {
             return FALSE;
@@ -161,6 +162,7 @@ class Money{
     
     private function ratesCsv2table(string $csvFile):int
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         $csv=new \SplFileObject($csvFile);
         $csv->setCsvControl(',','"','\\');
         $currencies=array('EUR'=>'Euro');
