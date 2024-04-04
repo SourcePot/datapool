@@ -1095,6 +1095,20 @@ class Database{
         }
     }
     
+    public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):bool
+    {
+        if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
+            $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
+            if (isset($entry['Params']['File']) && $removed){
+                unset($entry['Params']['File']);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+    
     public function moveEntry(array $selector,bool $moveUp=TRUE,bool $isSystemCall=FALSE):string|bool
     {
         $sourceEntry=$this->entryById($selector,TRUE);

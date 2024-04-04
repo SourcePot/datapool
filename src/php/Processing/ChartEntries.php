@@ -19,8 +19,6 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
 
-    private $dataTypes=array('string'=>'String','int'=>'Integer','float'=>'Float','bool'=>'Boolean','date'=>'Date','timestamp'=>'Timestamp');
-    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -150,9 +148,9 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function chartRules($callingElement){
         $contentStructure=array('trace name'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE),
                                 'x-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE),
-                                'x-data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'date','options'=>$this->dataTypes),
+                                'x-data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'date','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'y-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Group','standardColumsOnly'=>FALSE),
-                                'y-data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'float','options'=>$this->dataTypes),
+                                'y-data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'float','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 );
         $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
         $contentStructure['y-selector']+=$callingElement['Content']['Selector'];

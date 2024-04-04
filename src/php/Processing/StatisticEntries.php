@@ -20,7 +20,6 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  );
 
     private $statisticOptions=array(''=>'','EP'=>'European Patents','Costs'=>'Costs');
-    private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'Date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
     private $skipConditions=array('always'=>'always',
                                  'stripos'=>'is substring of',
                                  'stripos!'=>'is not substring of',
@@ -248,7 +247,7 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $sourceElement=array();
         }
         //
-        $contentStructure=array('Data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->dataTypes),
+        $contentStructure=array('Data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Skip if'=>array('method'=>'keySelect','value'=>'Date','standardColumsOnly'=>FALSE,'excontainer'=>TRUE),
                                 'Condition'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'ne','options'=>$this->skipConditions),
                                 'Value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),

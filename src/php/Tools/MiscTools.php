@@ -20,6 +20,8 @@ final class MiscTools{
     
     private $oc=NULL;
     
+    private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'String&rarr;date','excelDate'=>'Excel&rarr;date','timestamp'=>'Timestamp&rarr;date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
+    
     public function __construct()
     {
         $this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
@@ -30,7 +32,12 @@ final class MiscTools{
     {
         $this->oc=$oc;
     }
-        
+    
+    public function getDataTypes():array
+    {
+        return $this->dataTypes;
+    }
+    
     /******************************************************************************************************************************************
     * XML tools
     */
@@ -707,7 +714,8 @@ final class MiscTools{
                     'bool'=>(intval($value)>0),
                     'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                     'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
-                    'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2timestamp($value),
+                    'exceldate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->excel2date($value),
+                    'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
                     'codepfad'=>$this->convert2codepfad($value),
                     'unycom'=>$this->convert2unycom($value),
                 };

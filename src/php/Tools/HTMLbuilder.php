@@ -381,14 +381,7 @@ class HTMLbuilder{
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['remove'])){
                 $entry=$formData['selector'];
-                if (!empty($entry['EntryId'])){
-                    $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                    $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
-                    if (isset($entry['Params']['File']) && $removed){
-                        unset($entry['Params']['File']);
-                    }
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-                }
+                $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($entry);
             } else if (isset($formData['cmd']['delete all entries'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntriesOnly($selector);
             } else if (isset($formData['cmd']['select'])){

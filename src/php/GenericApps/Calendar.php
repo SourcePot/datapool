@@ -84,7 +84,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
-        //
     }
 
     public function init(array $oc){
@@ -713,40 +712,36 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $entry;
     }
     
-    private function excel2date($excel){
+    public function excel2date($excel){
         $excel=strval($excel);
         $excelDatestamp=preg_replace('/[^0-9]/','',$excel);
         if (strlen($excelDatestamp)===strlen($excel) && strlen($excelDatestamp)>0){
             $unixDaystamp=intval($excelDatestamp)-25569;
-            if ($unixDaystamp<0){
-                // out of range
-                return $excel;
-            } else {
+            if ($unixDaystamp>=0){
                 // whithin range
                 $unixTimestamp=86400*$unixDaystamp;
-                return $this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($unixTimestamp));                
+                return $this->timestamp2date($unixTimestamp);                
             }
-        } else {
-            return $excel;
         }
+        // Failed
+        return array();
     }
     
-    public function str2timestamp($string):array
+    public function timestamp2date($string):array
     {
         $timestamp=intval($string);
         $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($timestamp));
-        $dates=$this->str2date($string);
-        if (isset($dates['Timestamp'])){
-            return array('Timestamp'=>$dates['Timestamp'])+$dates;
-        } else {
-            return array();
-        }
+        return $this->str2date($string);
     }
     
-    public function str2date($string):array
+    public function str2date($string,string $timezone=DB_TIMEZONE):array
     {
-        $string=$orgString=$this->excel2date($string);
+        $orgString=$string;
         $string=trim(mb_strtolower($string));
+        if (strlen($string)===8 && strlen(preg_replace('/[^0-9]/','',$string))===8){
+            // pure date string, e.g. 20231226 -> 2023-12-26
+            $string=$string[0].$string[1].$string[2].$string[3].'-'.$string[4].$string[5].'-'.$string[6].$string[7];
+        }
         foreach($this->months as $needle=>$month){
             $string=str_replace($needle,'|'.$month.'|',$string);
         }
