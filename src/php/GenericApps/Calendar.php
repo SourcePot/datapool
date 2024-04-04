@@ -736,8 +736,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     public function str2date($string,string $timezone=DB_TIMEZONE):array
     {
-        $orgString=$string;
-        $string=trim(mb_strtolower($string));
+        $orgString=strval($string);
+        $string=trim(mb_strtolower($orgString));
         if (strlen($string)===8 && strlen(preg_replace('/[^0-9]/','',$string))===8){
             // pure date string, e.g. 20231226 -> 2023-12-26
             $string=$string[0].$string[1].$string[2].$string[3].'-'.$string[4].$string[5].'-'.$string[6].$string[7];
