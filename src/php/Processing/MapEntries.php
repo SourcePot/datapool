@@ -102,6 +102,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getMapEntriesInfo($callingElement){
         $matrix=array();
+        $matrix['Please note:']['value']='Remeber to set the Name-column, if you select "Create csv" or "Create zip". The file name will be the target entry Name. Mapping will result in as many files as there are different Names.';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         return $html;
     }
@@ -125,7 +126,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=array('run');
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping'));
         foreach($result as $caption=>$matrix){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
         }
@@ -155,8 +156,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
                                 'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
+                                'Order by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE),
+                                'Order'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0=>'Descending',1=>'Ascending')),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
+        $contentStructure['Order by']+=$callingElement['Content']['Selector'];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -221,7 +225,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
         $deleteEntries=array('Source'=>$callingElement['Content']['Selector']['Source'],'EntryIds'=>array());
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
             //if (time()-$base['Script start timestamp']>30){break;}
             if ($sourceEntry['isSkipRow']){
                 $result['Mapping statistics']['Skip rows']['value']++;
@@ -325,7 +329,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             unset($sourceEntry['Content']);
             unset($sourceEntry['Params']);
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
-            $targetEntry['Name']=$base['Attachment name'];
+            //$targetEntry['Name']=$base['Attachment name'];
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
             if (!$testRun){
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);

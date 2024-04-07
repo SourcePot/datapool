@@ -89,8 +89,7 @@ class User{
         $this->userRols();
         // check database user entry definition 
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
-        $this->getCurrentUser();
-        //
+        $currentUser=$this->getCurrentUser();
         $this->initAdminAccount();
     }
     

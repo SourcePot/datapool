@@ -16,7 +16,7 @@ class Database{
     
     private $statistic=array();
     private $toReplace=array();
-
+    
     private $dbObj;
     private $dbName=FALSE;
     
@@ -432,7 +432,18 @@ class Database{
         return $result;    
     }
     
-    private function addUNYCOMrefs($entry){
+    private function enrichEntry(array $entry):array
+    {
+        $entry['currentUserId']='ANONYM';
+        $entry['currentUser']='Doe, John';
+        if (!empty($_SESSION['currentUser']['EntryId'])){
+            $entry['currentUserId']=$_SESSION['currentUser']['EntryId'];
+            $entry['currentUser']=$_SESSION['currentUser']['Content']['Contact details']['First name'].' '.$_SESSION['currentUser']['Content']['Contact details']['Family name'];
+        }
+        $entry['nowTimeStamp']=time();
+        $entry['nowDateUTC']=date('Y-m-d');
+        $entry['nowTimeUTC']=date('H:i:s');
+        $entry['+10DaysDateUTC']=date('Y-m-d',strtotime("+10 days"));
         if (!empty($entry['Content']['File content'])){
             $entry['UNYCOM cases']=array();
             $entry['UNYCOM patents']=array();
@@ -464,7 +475,7 @@ class Database{
         }
         return $entry;
     }
-    
+
     private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
         if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
         $sqlArr=$this->selector2sql($selector,$removeGuideEntries);
@@ -495,7 +506,7 @@ class Database{
             foreach($row as $column=>$value){
                 $row=$this->addColumnValue2result($row,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
-            $row=$this->addUNYCOMrefs($row);
+            $row=$this->enrichEntry($row);
             $entries[$row['EntryId']]=$row;
         }
         return $entries;
@@ -528,7 +539,7 @@ class Database{
                 foreach($row as $column=>$value){
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
-                $result=$this->addUNYCOMrefs($result);
+                $result=$this->enrichEntry($result);
                 $result=$this->addSelector2result($selector,$result);
                 yield $result;
                 $result['isFirst']=FALSE;
@@ -540,13 +551,6 @@ class Database{
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=array(),bool $removeGuideEntries=TRUE,bool $isDebugging=FALSE):\Generator
     {
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return array();}
-        // debugging trigger
-        /*
-        if (strcmp($selector['Source'],'multimedia')===0){
-            $isDebugging=TRUE;
-        }
-        */
-        //        
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
         if (empty($selectExprArr)){
             $selectExprSQL=$selector['Source'].'.*';
@@ -567,7 +571,7 @@ class Database{
                 $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
             $result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
-            $result=$this->addUNYCOMrefs($result);
+            $result=$this->enrichEntry($result);
             $result=$this->addSelector2result($selector,$result);
             yield $result;
             $result['isFirst']=FALSE;
@@ -598,7 +602,7 @@ class Database{
                 foreach($row as $column=>$value){
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
-                $result=$this->addUNYCOMrefs($result);
+                $result=$this->enrichEntry($result);
                 $result=$this->addSelector2result($selector,$result);
             } else {
                 if (!$returnMetaOnNoMatch){$result=array();}

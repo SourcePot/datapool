@@ -86,7 +86,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc){
+    public function init(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         $this->definition['Content']['Event']['Start timezone']['@options']=$this->options['Timezone'];
@@ -102,6 +103,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         // get page state
         $this->pageStateTemplate=array('Source'=>$this->entryTable,'Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
         $this->pageState=$oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
+        //
     }
 
     public function job($vars){
@@ -739,7 +741,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $orgString=strval($string);
         $string=trim(mb_strtolower($orgString));
         if (strlen($string)===8 && strlen(preg_replace('/[^0-9]/','',$string))===8){
-            // pure date string, e.g. 20231226 -> 2023-12-26
+            // pure date string of format YYYYMMDD -> YYYY-MM-DD
             $string=$string[0].$string[1].$string[2].$string[3].'-'.$string[4].$string[5].'-'.$string[6].$string[7];
         }
         foreach($this->months as $needle=>$month){
@@ -816,6 +818,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $datetimeObj=new \DateTime($dates['System'],$timezoneObj);
             $dates['System short']=$datetimeObj->format('Y-m-d');
             $dates['System']=$dates['System short'].' 12:00:00';
+            $dates['YYYYMMDD']=$dateArr['year'].$dateArr['month'].$dateArr['day'];
             $dates['String']=$orgString;
             $dates['Timezone']=DB_TIMEZONE;
             $dates['Timestamp']=$datetimeObj->getTimestamp();
