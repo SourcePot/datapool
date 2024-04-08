@@ -546,7 +546,7 @@ class Filespace{
             $emailContent=trim($emailContent,"\r\n ");
             $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
             $entry['EntryId']=md5($fileContent);
-            $entry['Name']=$entry['Params']['Email']['subject']['value'].' ('.$entry['EntryId'].')';
+            $entry['Name']=$entry['Params']['Email']['subject']['value'].' ['.$entry['EntryId'].']';
             $entry['Type']=$entry['Source'];
             // init zip file
             $zipFile=$this->getPrivatTmpDir().'attachments.zip';

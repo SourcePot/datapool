@@ -146,10 +146,10 @@ final class MiscTools{
         }
     }
     
-    public function bool2element($value,array $element=array()):array
+    public function bool2element($value,array $element=array(),bool $invertColors=FALSE):array
     {
         $boolval=$this->str2bool($value);
-        $element['class']=$boolval?'status-on':'status-off';
+        $element['class']=($boolval xor $invertColors)?'status-on':'status-off';
         if (!isset($element['element-content'])){$element['element-content']=$boolval?'TRUE':'FALSE';}
         if (!isset($element['tag'])){$element['tag']='p';}
         return $element;

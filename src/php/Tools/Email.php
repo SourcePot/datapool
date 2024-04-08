@@ -125,7 +125,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         if (empty($mbox)){
             $meta['Error']=imap_last_error();
         } else {
-            $check=imap_mailboxmsginfo($mbox);
+            /*$check=imap_mailboxmsginfo($mbox);
             $meta=array('Driver'=>$check->Driver,
                         'Mailbox'=>$check->Mailbox,
                         'Messages'=>$check->Nmsgs,
@@ -134,6 +134,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         'Deleted'=>$check->Deleted,
                         'Size'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($check->Size),
                         );
+            */
+            $status=imap_status($mbox,$setting['Content']['Mailbox'],SA_ALL);
+            $meta=array('messages'=>$status->messages,
+                        'Recent'=>$status->recent,
+                        'Unseen'=>$status->unseen,
+                        'UIDnext'=>$status->uidnext,
+                        'UIDvalidity'=>$status->uidvalidity
+                        ); 
             imap_close($mbox);
         }
         return $meta;
@@ -170,6 +178,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                     } else {
                         $entry['Content']=array('Html'=>$entry['htmlmsg']);
                     }
+                    $contentHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Content'],TRUE);
+                    $entry['Name'].=' ['.$contentHash.']';
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
                     if (empty($entry['attachments'])){
                         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
@@ -198,6 +208,15 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
     private function getMsg($mbox,$mid){
         // input $mbox = IMAP stream, $mid = message id
+        $headerProps=array('fromaddress'=>'fromaddress','from'=>'from','ccaddress'=>'ccaddress',
+                           'cc'=>'cc','bccaddress'=>'bccaddress','bcc'=>'bcc','reply_toaddress'=>'reply_toaddress',
+                           'reply_to'=>'reply_to','senderaddress'=>'senderaddress','sender'=>'sender',
+                           'return_pathaddress'=>'return_pathaddress','return_path'=>'return_path','date'=>'date',
+                           'subject'=>'subject','in_reply_to'=>'in_reply_to','message_id'=>'message_id',
+                           'newsgroups'=>'newsgroups','followup_to'=>'followup_to','references'=>'references',
+                           'Recent'=>'Recent','Unseen'=>'Unseen','Flagged'=>'Flagged','Answered'=>'Answered',
+                           'Deleted'=>'Deleted','Draft'=>'Draft','Msgno'=>'Msgno','MailDate'=>'MailDate',
+                           'Size'=>'Size','udate'=>'udate','fetchfrom'=>'fetchfrom','fetchsubject'=>'fetchsubject');
         // output all the following:
         $this->msgEntry['charset']='';
         $this->msgEntry['htmlmsg']='';
@@ -208,7 +227,16 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $this->msgEntry['Name']=$this->iconvMimeDecode($h->subject,0,'utf-8');
         $mailingDate=new \DateTime('@'.$h->udate);
         $this->msgEntry['Date']=$mailingDate->format('Y-m-d H:i:s');
-        $this->msgEntry['Folder']=htmlspecialchars($this->iconvMimeDecode($h->senderaddress,0,'utf-8'));
+        $this->msgEntry['Folder']=$this->iconvMimeDecode($h->senderaddress,0,'utf-8');
+        foreach($headerProps as $key=>$prop){
+            if (property_exists($h,$prop)===FALSE){
+                $this->msgEntry['Params']['Email'][$key]['value']='?';
+            } else if (is_array($h->$prop) || is_numeric($h->$prop)){
+                $this->msgEntry['Params']['Email'][$key]['value']=$h->$prop;
+            } else {
+                $this->msgEntry['Params']['Email'][$key]['value']=$this->iconvMimeDecode($h->$prop,0,'utf-8');
+            }
+        }
         $s=\imap_fetchstructure($mbox,$mid);
         if (!isset($s->parts)){
             // simple

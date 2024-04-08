@@ -233,7 +233,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result=array('Inbox statistics'=>array('Items processed'=>array('value'=>0),
                                                 'Itmes forwarded'=>array('value'=>0),
                                                 'Itmes already processed and skipped'=>array('value'=>0),
-                                                )
+                                               ),
+                      'Processing results'=>array(),
                      );
         if ($testRun==2){
             if (isset($this->oc[$inboxParams['Inbox source']])){
@@ -271,7 +272,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Statistics']['Error']['value']='Condition rules missing';
             return $result;
         }
-        $ruleArr=array();
+        $entryResultArr=array('Name'=>$entry['Name']);
         foreach($base['inboxconditionrules'] as $ruleId=>$rule){
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
             $conditionMet[$ruleId]=FALSE;
@@ -285,7 +286,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 };
                 if ($conditionMet[$ruleId]){break;}
             }
-            $ruleArr['Condition rule '.$ruleIndex]['Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet[$ruleId]===FALSE);
+            $entryResultArr['Condition rule '.$ruleIndex]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet[$ruleId]);    
         }
         // process forwarding rules
         if (empty($base['inboxforwardingrules'])){
@@ -302,8 +303,15 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     break;
                 }
             }
-            $ruleArr['Forward rule '.$ruleIndex]['Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($forward[$ruleId]===FALSE);
-            if ($forward[$ruleId]){$forward[$ruleId]=$rule['Content']['Forward to'];}
+            $entryResultArr['Forward rule '.$ruleIndex]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($forward[$ruleId]);    
+            if ($forward[$ruleId]){
+                $forward[$ruleId]=$rule['Content']['Forward to'];
+                $forwardToEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$rule['Content']['Forward to']);
+                $forwardToEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($forwardToEntry,TRUE);
+                $entryResultArr['Forwarded to']=$forwardToEntry['Content']['Style']['Text'];    
+            } else {
+                $entryResultArr['Forwarded to']='-';    
+            }
         }
         // forward relevant entries
         $inboxEntry=$entry;
@@ -337,10 +345,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Inbox statistics'][$statisticsKey]['value']=1;
             }
         }
-        if (count($result)<6 || (count($result)<30 && mt_rand(1,100)>70)){
-            $caption='E.g.: '.substr($entry['Name'],0,25);
-            $result[$caption]=$ruleArr;
-        }
+        $index=count($result['Processing results'])+1;
+        $result['Processing results'][$index]=$entryResultArr;
         if ($isDebugging){
             $debugArr['result']=$result;
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
