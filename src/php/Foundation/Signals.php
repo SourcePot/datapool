@@ -292,7 +292,8 @@ class Signals{
         $options=array();
         $selector['Source']=$this->getEntryTable();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
-            $classStartPos=strrpos($entry['Folder'],'\\')+1;
+            $classStartPos=strrpos($entry['Folder'],'\\');
+            $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
             $classEndPos=strpos($entry['Folder'],'::');
             $options[$entry['EntryId']]=substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
         }

@@ -97,7 +97,6 @@ class Logger
             foreach($f->getParameters() as $pIndex=>$param){
                 $paramsStr.='{'.$param->name.'},';
                 $context[$param->name]=$args[$pIndex];
-                
             }
             $return=call_user_func_array(array($classInstance,$method),$args);
             $context['return']=$return;

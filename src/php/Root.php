@@ -157,8 +157,6 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
             $arr=$this->oc[$_SESSION['page state']['app']['Class']]->run($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
-            // add page statistic for the web page called by a user
-            //$this->addPageStatistic($arr,$callingWWWscript);
         } else if ($pathInfo['basename']=='js.php'){
             // js-call Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
@@ -173,12 +171,8 @@ final class Root{
             $this->oc['logger']->log('error','Invalid script "{script}" called',array('script'=>$pathInfo['basename']));    
         }
         // script time consumption in ms
-        $scriptTimeConsumption=round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
-        $scriptInitTimeConsumption=round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000);
-        $context=array('scriptTimeConsumption'=>$scriptTimeConsumption,'scriptInitTimeConsumption'=>$scriptInitTimeConsumption,'script'=>$pathInfo['basename']);
-        if ($scriptTimeConsumption>5000){
-            $this->oc['logger']->log('warning','Script "{script}" took {scriptTimeConsumption}ms Initialization took {scriptInitTimeConsumption}ms.',$context);    
-        }
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script init time consumption [ms]',round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000),'int');
         return $arr;
     }
     
