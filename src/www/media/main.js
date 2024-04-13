@@ -674,7 +674,7 @@ jQuery(document).ready(function(){
             }
 
             function plotDef2plot(plotObj,plotDef,id){
-                var marks=[],plotProp={grid:true,color:{legend:true}};
+                var marks=[Plot.ruleY(plotDef.ruleY),Plot.ruleX(plotDef.ruleX)],plotProp={grid:true,color:{legend:true}};
                 for (const traceName in plotDef.traces){
                     // create xy-data object
                     var traceData=[],xyDef=plotDef.traces[traceName].traceProp;

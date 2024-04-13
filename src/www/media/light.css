@@ -706,14 +706,15 @@ div.calendar-timeline{
 
 /** STATUS **/
 .status-off{
-    background-color:#2a0;
+    color:#000;
+    background-color:#9bbb00;
 }
 .status-on{
-    background-color:#f00;
+    color:#fff;
+    background-color:#0b008a;
 }
 .status-on,.status-off{
-    color:#fff;
-    min-width:100%;
+    min-width:4rem;
     padding:0.1rem;
     text-align:center;
 }
