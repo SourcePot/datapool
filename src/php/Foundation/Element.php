@@ -290,10 +290,10 @@ class Element{
                         array_unshift($keys,'cmd');
                         $result['selector']=(isset($arr['selector']))?$arr['selector']:$result['selector'];
                     } else {
-                        $newValue=filter_input(INPUT_POST,$name,$arr['filter']);
+                        $newValue=filter_input(INPUT_POST,$name,intval($arr['filter']));
                         array_unshift($keys,'val');
                     }
-                    if (strcmp($newValue,$oldValue)!==0){
+                    if (strcmp(strval($newValue),$oldValue)!==0){
                         $changedKeys=$arr['key'];
                         array_unshift($changedKeys,'changed');
                         $changedValueArr=$this->arrKeys2arr($changedKeys,$oldValue);

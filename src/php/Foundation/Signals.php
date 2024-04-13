@@ -62,6 +62,7 @@ class Signals{
         $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent);
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal['Owner']='SYSTEM';
+        $signal['Expires']=$signal['+10DaysDateUTC'].' 12:00:00';
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
         // update attached trigger
         $relevantTrigger=$this->updateTrigger($signal);

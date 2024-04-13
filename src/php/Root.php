@@ -172,7 +172,7 @@ final class Root{
         }
         // script time consumption in ms
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script init time consumption [ms]',round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000),'int');
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal('All_scripts',__FUNCTION__,'Script init time consumption [ms]',round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000),'int');
         return $arr;
     }
     

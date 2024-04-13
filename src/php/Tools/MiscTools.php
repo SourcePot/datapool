@@ -619,6 +619,9 @@ final class MiscTools{
         foreach($this->arr2flat($arr) as $flatKey=>$value){
             $columns=explode($S,strval($flatKey));
             $columnCount=count($columns);
+            if (is_bool($value)){
+                $value=$this->bool2element($value);
+            }
             $rows[$rowIndex]=array('columns'=>$columns,'value'=>$value);
             if ($columnCount>$maxColumnCount){$maxColumnCount=$columnCount;}
             $rowIndex++;
