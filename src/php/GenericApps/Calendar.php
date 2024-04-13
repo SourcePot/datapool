@@ -739,10 +739,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $this->str2date($string);
     }
     
-    public function str2date($string,string $timezone=NULL):array
+    public function str2date($string,$timezone=NULL):array
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $timezone??$pageTimeZone;
+        $timezone??=$pageTimeZone;
         $dummyDateArr=array('year'=>'9999','month'=>'12','day'=>'31','time'=>'23:59:59');
         $dateArr=$context=$this->guessDateComps($string);
         $context['class']=__CLASS__;
