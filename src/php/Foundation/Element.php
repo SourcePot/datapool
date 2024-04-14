@@ -285,7 +285,7 @@ class Element{
                     } else {
                         $oldValue='';
                     }
-                    if (strcmp(strval($arr['type']),'submit')===0 || strcmp(strval($arr['tag']),'button')===0){
+                    if ($arr['type']==='submit' || $arr['tag']==='button'){
                         $newValue=$oldValue;
                         array_unshift($keys,'cmd');
                         $result['selector']=(isset($arr['selector']))?$arr['selector']:$result['selector'];
@@ -293,7 +293,7 @@ class Element{
                         $newValue=filter_input(INPUT_POST,$name,intval($arr['filter']));
                         array_unshift($keys,'val');
                     }
-                    if (strcmp(strval($newValue),$oldValue)!==0){
+                    if (strval($newValue)!==$oldValue){
                         $changedKeys=$arr['key'];
                         array_unshift($changedKeys,'changed');
                         $changedValueArr=$this->arrKeys2arr($changedKeys,$oldValue);

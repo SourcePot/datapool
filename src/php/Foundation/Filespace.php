@@ -88,6 +88,7 @@ class Filespace{
             if (!empty($vars['Last deleted files']) || !empty($vars['Last failed deletions'])){
                 $context=array('table'=>$dir2process['table'],'deleted'=>count($vars['Last deleted files']),'failed'=>count($vars['Last failed deletions']));
                 $this->oc['logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted unlinked files',$context['deleted'],'int'); 
             }
             $vars['Last processed dir']=$dir2process['dir'];
         }

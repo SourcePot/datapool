@@ -58,6 +58,7 @@ class Database{
     public function job(array $vars):array
     {
         $vars['statistics']=$this->deleteExpiredEntries();
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$vars['statistics']['deleted'],'int'); 
         return $vars;
     }
 

@@ -48,7 +48,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         return $loginArr['html'];
     }
     
-    private function loginRequest($arr){
+    private function loginRequest(array $arr)
+    {
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
             $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array('user'=>$_SESSION['currentUser']['Name']));    
             return 'Password and/or email password were empty';
@@ -68,11 +69,19 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
                 $this->loginFailed($user,$arr['Email']);
             } else if (strcmp($loginEntry['Name'],$arr['Passphrase'])===0){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
+                $this->oc['logger']->log('info','One-time login for {email} at {timestamp} successful.',array('email'=>$email,'timestamp'=>time()));    
                 $this->loginSuccess($user,$arr['Email']);
             } else {
                 $this->loginFailed($user,$arr['Email']);
             }
         }
+        $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'error','Name'=>'Login failed%'),TRUE);
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login failed',$loginCount,'int'); 
+        $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'info','Name'=>'Login for%'),TRUE);
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login ok',$loginCount,'int'); 
+        $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'info','Name'=>'One-time login%'),TRUE);
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login one-time psw',$loginCount,'int'); 
+        exit;
     }
     
     private function resetSession(){
@@ -84,17 +93,15 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginSuccess($user,$email){
         $this->resetSession();
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['logger']->log('info','Login successful for {email}.',array('email'=>$email));    
+        $this->oc['logger']->log('info','Login for {email} at {timestamp} successful.',array('email'=>$email,'timestamp'=>time()));    
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
-        exit;
     }
 
     private function loginFailed($user,$email){
         $_SESSION['currentUser']['Privileges']=1;
-        $this->oc['logger']->log('error','Login failed for {email}.',array('email'=>$email));    
+        $this->oc['logger']->log('error','Login failed for {email} at {timestamp}.',array('email'=>$email,'timestamp'=>time()));    
         sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
-        exit;
     }
 
     private function registerRequest($arr){

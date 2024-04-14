@@ -44,7 +44,7 @@ final class Root{
         if (empty($_SESSION['page state'])){
             $_SESSION['page state']=array('toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
         }
-        // set exeption handler and initialize directories
+        // set exception handler and initialize directories
         $this->initDirs();
         // load all external components
         $_SESSION['page state']['autoload.php loaded']=FALSE;
@@ -54,7 +54,7 @@ final class Root{
             require_once $autoloadFile;
         }
         $this->initExceptionHandler();
-        // initilize object collection, create objects and invoke init methods
+        // initilize Object Collection, create objects and invoke init methods
         $oc=$this->getInstantiatedObjectCollection($oc);
         // add logger
         $oc['logger']=$this->getMonologLogger($oc,'Root');
