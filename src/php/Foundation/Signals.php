@@ -38,6 +38,11 @@ class Signals{
         return $this->entryTable;
     }
     
+    public function getEntryTemplate()
+    {
+        return $this->entryTemplate;
+    }
+
     public function getSignalSelector(string $callingClass,string $callingFunction,string|bool $name=FALSE):array
     {
         $signalSelector=array('Source'=>$this->entryTable,'Group'=>'signal','Folder'=>$callingClass.'::'.$callingFunction,'Name'=>$name);

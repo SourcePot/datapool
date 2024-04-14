@@ -44,13 +44,14 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
-            $html=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
+            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+            $html='';
             if (empty($selector['Group'])){
-                $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                $settings=array('hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());    
             } else {
-                if (strcmp($selector['Group'],'Presentation')===0 && !empty($selector['Folder'])){
+                if ($selector['Group']==='Presentation' && !empty($selector['Folder'])){
                     $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,array());
                 } else if (!empty($selector['EntryId'])){
@@ -65,7 +66,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                     $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());
                 }
-                if (strcmp($selector['Group'],'Job processing')===0){
+                if ($selector['Group']==='Job processing'){
                     $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,array());    
                 }

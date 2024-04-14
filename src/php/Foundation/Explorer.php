@@ -27,6 +27,8 @@ class Explorer{
     const GUIDEINDICATOR='!GUIDE';
     private $state=array();
     
+    private $showSourceSelector=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
+    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -94,8 +96,8 @@ class Explorer{
             $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
             $selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
             $selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE));
-            if (strcmp($column,'Source')!==0 || strcmp($callingClass,'SourcePot\Datapool\AdminApps\Admin')===0){
-                // non-Admin pages should not provide the Source-selector
+            if (strcmp($column,'Source')!==0 || !empty($this->showSourceSelector[$callingClass])){
+                // Source-selector should only be presented if enabled by showSourceSelector
                 $html.=$selectorHtml;
             }
             $stateKeys['nextKey']=$column;

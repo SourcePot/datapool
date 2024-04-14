@@ -52,6 +52,7 @@ h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textar
 }
 h1,h2,h3{
     margin:0.4em 0 0.2rem 5px;
+    width:100vw;
 }
 h1{
     font-size:1.4rem;
@@ -848,4 +849,10 @@ iframe.video-container{
     /* width = 100 / (9 / 16) = 177.777777 */
     width: 177.78vh;
   }
+}
+div.center{
+    font-size:16px;
+    text-align: center;
+    background-color: #fff;
+    width: 100%;
 }

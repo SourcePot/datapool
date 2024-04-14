@@ -662,7 +662,7 @@ class HTMLbuilder{
             $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE,$isSystemCall);
         }
         $matrix['New']=$this->entry2row($arr,FALSE,FALSE,TRUE);
-        $matrix['New']['trStyle']=array('background-color'=>'#fb0');
+        $matrix['New']['trStyle']=array('background-color'=>'#999');
         $tableArr=array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']);
         if (isset($tableArrStyle)){$tableArr['style']=$tableArrStyle;}
         $html=$this->table($tableArr);

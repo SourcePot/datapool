@@ -28,16 +28,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#8582;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
-            // if selector Source is empty, set to "logging"
-            $currentPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-            if (empty($currentPageState['Source'])){
-                $currentPageState['Source']=$this->entryTable;
-                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$currentPageState);
-            }
             // get page content
-            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $html='';
-            $html.=$this->tableViewer();
             $settings=array('method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
             $html.=$this->getPageSettingsHtml();
@@ -46,24 +38,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
-    }
-    
-    public function tableViewer(){
-        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-        $html='';
-        if (empty($selector['Source'])){
-            return $html;
-        } else if (empty($selector['EntryId'])){
-            $selector['app']=__CLASS__;
-            $selector['disableAutoRefresh']=TRUE;
-            $settings=array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
-            $settings['columns']=array(array('Column'=>'Date','Filter'=>''),array('Column'=>'Group','Filter'=>''),array('Column'=>'Name','Filter'=>''));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Admin table entries','entryList',$selector,$settings,array());        
-        } else {
-            $settings=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','presentEntry'=>__CLASS__.'::'.__FUNCTION__);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$selector['Source'],'generic',$selector,$settings,array('style'=>array('margin'=>'0')));
-        }
-        return $html;
     }
     
     public function backupArticle(){
