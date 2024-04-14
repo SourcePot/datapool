@@ -141,7 +141,7 @@ class Logger
     public function getLogsHtml(array $arr):array
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $sourceTimezone=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbTimezone();
+        $sourceTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
         $today=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
         $today=substr($today,0,11);
         $columns=array('Date','Group','Content'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'msg');

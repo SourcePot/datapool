@@ -12,9 +12,6 @@ namespace SourcePot\Datapool\Tools;
 
 final class MiscTools{
 
-    const ONEDIMSEPARATOR='|[]|';
-    const GUIDEINDICATOR='!GUIDE';
-
     public $emojis=array();
     private $emojiFile='';
     
@@ -274,7 +271,7 @@ final class MiscTools{
             }
         }
         if (empty($timezone)){
-            $timezone=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbTimezone();
+            $timezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
         }
         $dateTime->setTimezone(new \DateTimeZone($timezone));
         return $dateTime->format('Y-m-d H:i:s');
@@ -401,7 +398,7 @@ final class MiscTools{
 
     public function getSeparator():string
     {
-        return self::ONEDIMSEPARATOR;
+        return \SourcePot\Datapool\Root::ONEDIMSEPARATOR;
     }
     
     public function arr2selector(array $arr,array $defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'app'=>'')):array
@@ -409,7 +406,7 @@ final class MiscTools{
         $selector=array();
         foreach($defaultValues as $key=>$defaultValue){
             $selector[$key]=(empty($arr[$key]))?$defaultValue:$arr[$key];
-            $selector[$key]=(strpos(strval($selector[$key]),self::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
+            $selector[$key]=(strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
         }
         return $selector;
     }
@@ -428,7 +425,7 @@ final class MiscTools{
         $newSelector=array('app'=>(isset($selector['app'])?$selector['app']:''));
         foreach($columns as $column){
             $newSelector[$column]=(isset($selector[$column]))?$selector[$column]:FALSE;
-            if ($newSelector[$column]==self::GUIDEINDICATOR || $newSelector[$column]===FALSE){
+            if ($newSelector[$column]==\SourcePot\Datapool\Root::GUIDEINDICATOR || $newSelector[$column]===FALSE){
                 $newSelector[$column]=FALSE;
                 $newSelector[$lastColumn]=FALSE;
                 break;
@@ -492,7 +489,7 @@ final class MiscTools{
     /**
     * @return arr This method converts an array to the corresponding flat array.
     */
-    public function arr2flat(array $arr,string $S=self::ONEDIMSEPARATOR):array
+    public function arr2flat(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
         if (!is_array($arr)){return $arr;}
         $flat=array();
@@ -500,7 +497,7 @@ final class MiscTools{
         return $flat;
     }
     
-    private function arr2flatHelper($arr,&$flat,$oldKey='',string $S=self::ONEDIMSEPARATOR)
+    private function arr2flatHelper($arr,&$flat,$oldKey='',string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR)
     {
         $result=array();
         foreach ($arr as $key=>$value){
@@ -518,7 +515,7 @@ final class MiscTools{
     /**
     * @return arr This method converts a flat array to the corresponding array.
     */
-    public function flat2arr($arr,string $S=self::ONEDIMSEPARATOR)
+    public function flat2arr($arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR)
     {
         if (!is_array($arr)){return $arr;}
         $result=array();
@@ -528,7 +525,7 @@ final class MiscTools{
         return $result;
     }
     
-    private function flatKey2arr($key,$value,string $S=self::ONEDIMSEPARATOR):array
+    private function flatKey2arr($key,$value,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
         if (!is_string($key)){return array($key=>$value);}
         $k=explode($S,$key);
@@ -567,7 +564,7 @@ final class MiscTools{
     /**
     * @return string This method returns a string representing the provided flat key for a web page.
     */
-    public function flatKey2label(string $key,string $S=self::ONEDIMSEPARATOR):string
+    public function flatKey2label(string $key,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):string
     {
         return str_replace($S,' &rarr; ',$key);
     }
@@ -575,7 +572,7 @@ final class MiscTools{
     /**
     * @return array This method returns an array representing last subkey value pairs
     */
-    public function flatArrLeaves(array $flatArr,string $S=self::ONEDIMSEPARATOR):array
+    public function flatArrLeaves(array $flatArr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
         $leaves=array();
         foreach($flatArr as $flatKey=>$flatValue){
@@ -610,7 +607,7 @@ final class MiscTools{
     /**
     * @return array This method returns an array which is a matrix used to create an html-table and a representation of the provided array.
     */
-    public function arr2matrix(array $arr,string $S=self::ONEDIMSEPARATOR):array
+    public function arr2matrix(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
         $matrix=array();
         $rowIndex=0;

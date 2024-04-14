@@ -88,9 +88,11 @@ class NetworkTools{
         if (empty($_SESSION['page state']['selected'][$callingClass])){
             $_SESSION['page state']['selected'][$callingClass]=$initState;
         }
-        if (method_exists($callingClass,'getEntryTable')){
+        if (method_exists($callingClass,'getEntryTable') && empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass])){
+            // set Source selector to database table relevant for calling class
             $_SESSION['page state']['selected'][$callingClass]['Source']=$this->oc[$callingClass]->getEntryTable();
         } else if (!isset($_SESSION['page state']['selected'][$callingClass]['Source'])){
+            // 
             $_SESSION['page state']['selected'][$callingClass]['Source']=FALSE;
         }
         $_SESSION['page state']['selected'][$callingClass]['app']=$callingClass;

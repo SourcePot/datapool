@@ -20,10 +20,6 @@ class Database{
     private $dbObj;
     private $dbName=FALSE;
     
-    const DB_TIMEZONE='UTC';
-    
-    const GUIDEINDICATOR='!GUIDE';
-    
     private $entryTable='settings';
     private $entryTemplate=array();
 
@@ -65,11 +61,6 @@ class Database{
         return $vars;
     }
 
-    public function getDbTimezone():string
-    {
-        return self::DB_TIMEZONE;
-    }
-    
     public function getDbStatus():string|bool
     {
         if (isset($this->dbObj)){
@@ -84,7 +75,7 @@ class Database{
         $toReplace['{{NOW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $toReplace['{{YESTERDAY}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
         $toReplace['{{TOMORROW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
-        $toReplace['{{TIMEZONE}}']=self::DB_TIMEZONE;
+        $toReplace['{{TIMEZONE}}']=\SourcePot\Datapool\Root::DB_TIMEZONE;
         $toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
         $toReplace['{{Expires}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
         $toReplace['{{EntryId}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
@@ -341,12 +332,12 @@ class Database{
     * e.g. 'Date|[]|Start' -> refers to column 'Date'.
     */
     private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
-        if ($removeGuideEntries){$selector['EntryId=!']='%'.self::GUIDEINDICATOR;}
+        if ($removeGuideEntries){$selector['EntryId=!']='%'.\SourcePot\Datapool\Root::GUIDEINDICATOR;}
         $entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
         $opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
         $sqlArr=array('sql'=>array(),'inputs'=>array());            
         foreach($selector as $column=>$value){
-            if ($value===FALSE || $value==self::GUIDEINDICATOR){continue;}
+            if ($value===FALSE || $value==\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
             if (!empty($match[2])){$operator=$match[2];} else {$operator='=';}
             $placeholder=':'.md5($column.$opAlias[$operator]);
@@ -565,7 +556,7 @@ class Database{
         $this->addStatistic('matches',$result['rowCount']);
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
             $result['rowIndex']++;
-            if (strpos($row['EntryId'],self::GUIDEINDICATOR)===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
+            if (strpos($row['EntryId'],\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
             foreach($row as $column=>$value){
                 $result['hash']=crc32($result['hash'].$value);
                 $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);

@@ -21,15 +21,18 @@ use Monolog\Handler\NativeMailerHandler;
 
 final class Root{
 
-    // add classes here to be initiated as part of the Object Collection
-    private $registerVendorClasses=array('SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
-    
-    private $currentScript='';
+    // all classes listet at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
+    public const ADD_VENDOR_CLASSES=array('SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms',);
+    // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
+    public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
+    // database time zone setting should preferably be UTC as Unix timestamps are UTC based
+    public const DB_TIMEZONE='UTC';
+    public const ONEDIMSEPARATOR='|[]|';
+    public const GUIDEINDICATOR='!GUIDE';
     
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
-
-    public $traces=array();
+    private $currentScript='';
     
     public function __construct()
     {
@@ -110,8 +113,8 @@ final class Root{
     private function registerVendorClasses(array $oc,bool $isDebugging=FALSE):array
     {
         // instantiate external classes
-        $debugArr=array('registerVendorClasses'=>$this->registerVendorClasses);
-        foreach($this->registerVendorClasses as $classIndex=>$classWithNamespace){
+        $debugArr=array('registerVendorClasses'=>self::ADD_VENDOR_CLASSES);
+        foreach(self::ADD_VENDOR_CLASSES as $classIndex=>$classWithNamespace){
             if (class_exists($classWithNamespace)){
                 $oc[$classWithNamespace]=new $classWithNamespace($oc);
                 //$oc[$classWithNamespace]->dataProcessor(array(),'info');

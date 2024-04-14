@@ -60,12 +60,12 @@ class Explorer{
 
     public function getGuideIndicator():string
     {
-        return self::GUIDEINDICATOR;
+        return \SourcePot\Datapool\Root::GUIDEINDICATOR;
     }
 
     public function getExplorer(string $callingClass):string
     {
-        $this->appProcessing($callingClass);
+        $selector=$this->appProcessing($callingClass);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Explorer'));
         $selectorsHtml=$this->getSelectors($callingClass);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE));
@@ -81,7 +81,7 @@ class Explorer{
         $selector=array();
         foreach($this->selectorTemplate as $column=>$initValue){
             $selectorHtml='';
-            $options=array(self::GUIDEINDICATOR=>'&larrhk;');
+            $options=array(\SourcePot\Datapool\Root::GUIDEINDICATOR=>'&larrhk;');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
                 if (strcmp($column,'EntryId')===0){
                     $entrySelector=array_merge($selector,array('EntryId'=>$row['EntryId']));
@@ -90,13 +90,13 @@ class Explorer{
                 } else {
                     $label=$column;
                 }
-                if ($row[$label]===self::GUIDEINDICATOR){continue;}
+                if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
                 $options[$row[$column]]=$row[$label];
             }
             $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
             $selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
             $selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE));
-            if (strcmp($column,'Source')!==0 || !empty($this->showSourceSelector[$callingClass])){
+            if (strcmp($column,'Source')!==0 || !empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass])){
                 // Source-selector should only be presented if enabled by showSourceSelector
                 $html.=$selectorHtml;
             }
@@ -146,13 +146,13 @@ class Explorer{
             if (empty($entry)){$entry=$selector;}
         } else {
             $unseledtedDetected=FALSE;
-            $entry=array('Name'=>self::GUIDEINDICATOR,'Type'=>$selector['Source'].' '.self::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Type'=>$selector['Source'].' '.\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
             foreach($this->selectorTemplate as $column=>$initValue){
                 if (empty($selector[$column])){$unseledtedDetected=TRUE;}
-                $entry[$column]=($unseledtedDetected)?self::GUIDEINDICATOR:$selector[$column];
+                $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
             }
             $entry=array_merge($template,$entry);
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',self::GUIDEINDICATOR,FALSE);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
@@ -170,7 +170,7 @@ class Explorer{
         return $selector;
     }
     
-    private function appProcessing(string $callingClass):void
+    private function appProcessing(string $callingClass):array
     {
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         // process selectors
@@ -181,7 +181,7 @@ class Explorer{
         if (isset($formData['cmd']['select'])){
             $resetFromHere=FALSE;
             foreach($formData['val']['selector'] as $column=>$selected){
-                if (strcmp($selected,self::GUIDEINDICATOR)===0){$resetFromHere=TRUE;}
+                if (strcmp($selected,\SourcePot\Datapool\Root::GUIDEINDICATOR)===0){$resetFromHere=TRUE;}
                 $newSelector[$column]=$resetFromHere?FALSE:$selected;
                 if (isset($selector[$column])){
                     if ($newSelector[$column]!=$selector[$column]){$resetFromHere=TRUE;}
@@ -189,7 +189,7 @@ class Explorer{
             }
             $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
-            // save selector
+            // save selector - for Quicklinks
             if (!empty($newSelector['EntryId'])){
                 $entry=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId'],'Folder'=>$callingClass,'Name'=>$newSelector['EntryId'],'Type'=>$this->entryTable.' selectors');
                 $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
@@ -229,7 +229,7 @@ class Explorer{
             $newSelector=array_merge($selector,$formData['val']);
             $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,array(),FALSE) as $entry){
-                if (strpos($entry['Type'],self::GUIDEINDICATOR)!==FALSE){
+                if (strpos($entry['Type'],\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
                     $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
                     $entry=array_merge($entry,$this->selectorTemplate);
                     $guideEntry=$this->getGuideEntry($newSelector,$entry);
@@ -240,6 +240,7 @@ class Explorer{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
         }
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
+        return $selector;
     }
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
