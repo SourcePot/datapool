@@ -723,7 +723,7 @@ jQuery(document).ready(function(){
                 jQuery('#svg-'+id).on('click',function(element){
                     saveData(plot,plotDef.caption+'.svg');
                 });
-                console.log(plotDef);
+                //console.log(plotDef);
             }
             (function heartbeat(){
                 setTimeout(heartbeat,777);

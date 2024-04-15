@@ -52,7 +52,7 @@ h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textar
 }
 h1,h2,h3{
     margin:0.4em 0 0.2rem 5px;
-    width:100vw;
+    width:98%;
 }
 h1{
     font-size:1.4rem;
@@ -524,7 +524,6 @@ summary.forum,summary.toolbox{
 }
 summary.toolbox{
     color:#fff;
-    line-height:3vh;
 }
 summary:hover{
     cursor:pointer;

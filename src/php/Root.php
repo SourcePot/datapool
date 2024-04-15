@@ -37,6 +37,7 @@ final class Root{
     public function __construct()
     {
         $GLOBALS['script start time']=hrtime(TRUE);
+        date_default_timezone_set('UTC');
         $oc=array(__CLASS__=>$this);
         session_start();
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);

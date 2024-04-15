@@ -717,34 +717,20 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $entry;
     }
     
-    public function excel2date($excel){
-        $excel=strval($excel);
-        $excelDatestamp=preg_replace('/[^0-9]/','',$excel);
-        if (strlen($excelDatestamp)===strlen($excel) && strlen($excelDatestamp)>0){
-            $unixDaystamp=intval($excelDatestamp)-25569;
-            if ($unixDaystamp>=0){
-                // whithin range
-                $unixTimestamp=86400*$unixDaystamp;
-                return $this->timestamp2date($unixTimestamp);                
-            }
-        }
-        // Failed
-        return array();
-    }
-    
     public function timestamp2date($string):array
     {
         $timestamp=intval($string);
         $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($timestamp));
-        return $this->str2date($string);
+        return $this->str2date($string,'UTC');
     }
     
-    public function str2date($string,$timezone=NULL):array
+    public function str2date($string,$timezone=NULL,bool $isExcelDate=FALSE):array
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $timezone??=$pageTimeZone;
         $dummyDateArr=array('year'=>'9999','month'=>'12','day'=>'31','time'=>'23:59:59');
-        $dateArr=$context=$this->guessDateComps($string);
+        $dateArr=$context=$this->guessDateComps($string,$isExcelDate);
+        if (isset($dateArr['timezoneIn'])){$timezone=$dateArr['timezoneIn'];}
         $context['class']=__CLASS__;
         $context['method']=__FUNCTION__;
         if (!$dateArr['isValid']){
@@ -795,7 +781,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $dateArr;
     }
     
-    private function guessDateComps($string):array
+    private function guessDateComps($string,bool $isExcelDate=FALSE):array
     {
         $arr=array('isValid'=>TRUE,'string'=>$string,'time'=>'12:00:00');
         $string=strval($string);
@@ -811,10 +797,22 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $string=trim(str_replace($matches[0][0],'',$string));
             $arr['time']=$matches[0][0];
         }
-        // format YYYYMMDD -> YYYY-MM-DD
+        if ($isExcelDate){$string=preg_replace('/\D+/','',$string);}
         preg_match_all('/\d{4}[0-1][0-9][0-3][0-9]/',$string,$matches);
-        if (isset($matches[0][0])){
+        if (isset($matches[0][0]) && !$isExcelDate){
+            // format YYYYMMDD -> YYYY-MM-DD
             $string=$matches[0][0][0].$matches[0][0][1].$matches[0][0][2].$matches[0][0][3].'-'.$matches[0][0][4].$matches[0][0][5].'-'.$matches[0][0][6].$matches[0][0][7];
+        } else if (ctype_digit($string) && (intval($string)-25569>0)){
+            // EXCEL format
+            $unixTimestamp=86400*(intval($string)-25569);
+            $arr['timezoneIn']='UTC';
+            $utcTimezoneObj=new \DateTimeZone($arr['timezoneIn']);
+            $utcObj=new \DateTime('@'.strval($unixTimestamp),$utcTimezoneObj);
+            $string=$utcObj->format('Y-m-d');
+        } else if ($isExcelDate){
+            $arr['isValid']=FALSE;
+            $arr['error']='Date string is not valid Excel format';
+            return $arr;            
         }
         // get month from month name
         foreach($this->months as $needle=>$month){

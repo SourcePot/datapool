@@ -33,7 +33,11 @@ class Dictionary{
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
         // set language
         if (empty($_SESSION['page state']['lngCode'])){
-            $_SESSION['page state']['lngCode']=$this->getValidLngCode($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+            if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){
+                $_SESSION['page state']['lngCode']=$this->getValidLngCode($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+            } else {
+                $_SESSION['page state']['lngCode']='en';
+            }
         }
         $this->initDictionaryIfEmpty();
         $this->registerToolbox();

@@ -714,7 +714,7 @@ final class MiscTools{
                     'bool'=>(intval($value)>0),
                     'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                     'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
-                    'exceldate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->excel2date($value),
+                    'exceldate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
                     'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
                     'codepfad'=>$this->convert2codepfad($value),
                     'unycom'=>$this->convert2unycom($value),
