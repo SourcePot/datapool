@@ -26,6 +26,7 @@ final class Root{
     // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
     public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
+    public const NULL_DATE='9000-12-31 23:59:59';
     public const DB_TIMEZONE='UTC';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';

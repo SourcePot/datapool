@@ -1038,6 +1038,7 @@ class HTMLbuilder{
                         'string'=>strval($flatArrValue),
                         'date'=>strval($flatArrValue),
                         'timestamp'=>date('Y-m-d H:i:s',$flatArrValue),
+                        NULL=>$flatArrValue,
                     };
                     $indexKey=$entry['EntryId'];
                     if (isset($index[$dim])){$indexKey.='_'.$index[$dim];}

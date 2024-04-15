@@ -706,7 +706,7 @@ final class MiscTools{
     public function convert($value,$dataType){
         $dataType=strtolower($dataType);
         $newValue=match($dataType){
-                    'string'=>strval($value),
+                    'string'=>$this->str2str($value),
                     'stringnowhitespaces'=>$this->convert2stringNoWhitespaces($value),
                     'splitstring'=>$this->convert2splitString($value),
                     'int'=>$this->str2int($value),
@@ -720,6 +720,16 @@ final class MiscTools{
                     'unycom'=>$this->convert2unycom($value),
                 };
         return $newValue;
+    }
+    
+    private function str2str($string):string
+    {
+        $string=strval($value);
+        if ($string===\SourcePot\Datapool\Root::NULL_DATE){
+            return '';
+        } else {
+            return $string;
+        }
     }
 
     public function str2int($string,$lang=''):int

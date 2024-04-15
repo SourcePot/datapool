@@ -728,7 +728,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $timezone??=$pageTimeZone;
-        $dummyDateArr=array('year'=>'9999','month'=>'12','day'=>'31','time'=>'23:59:59');
+        $dummyDate=\SourcePot\Datapool\Root::NULL_DATE;
+        $dummyDateArr=array('year'=>substr($dummyDate,0,4),'month'=>substr($dummyDate,5,2),'day'=>substr($dummyDate,8,2),'time'=>substr($dummyDate,11,8));
         $dateArr=$context=$this->guessDateComps($string,$isExcelDate);
         if (isset($dateArr['timezoneIn'])){$timezone=$dateArr['timezoneIn'];}
         $context['class']=__CLASS__;
@@ -783,7 +784,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private function guessDateComps($string,bool $isExcelDate=FALSE):array
     {
-        $arr=array('isValid'=>TRUE,'string'=>$string,'time'=>'12:00:00');
+        $arr=array('System'=>'','System short'=>'','isValid'=>TRUE,'string'=>$string,'time'=>'12:00:00');
         $string=strval($string);
         $string=trim(mb_strtolower($string));
         if (empty($string)){
