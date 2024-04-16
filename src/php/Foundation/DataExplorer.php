@@ -591,8 +591,8 @@ class DataExplorer{
             $source=$this->oc['SourcePot\Datapool\Root']->class2source($classWithNamespace);
             $selectors[$source]=array('Source'=>$source,'Folder'=>$callingClass);
         }
-        $callingClassName=substr($callingClass,strrpos($callingClass,'\\')+1);
-        $className=substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
+        $callingClassName=mb_substr($callingClass,strrpos($callingClass,'\\')+1);
+        $className=mb_substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
         $result=array();
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();

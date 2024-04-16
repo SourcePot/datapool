@@ -181,8 +181,8 @@ class Definitions{
                     $sPos=strpos($definitionAttr,$S);
                     if ($sPos!==FALSE){
                         $tmp=$definitionAttr;
-                        $definitionAttr=substr($definitionAttr,0,$sPos);
-                        $subKey=substr($tmp,$sPos+strlen($S));
+                        $definitionAttr=mb_substr($definitionAttr,0,$sPos);
+                        $subKey=mb_substr($tmp,$sPos+strlen($S));
                         $element[$definitionAttr][$subKey]=$definitionValue;
                     } else {
                         $element[$definitionAttr]=$definitionValue;

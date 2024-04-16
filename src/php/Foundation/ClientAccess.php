@@ -190,7 +190,7 @@ class ClientAccess{
     */
     private function checkToken($data){
         $data['answer']['error']='invalid_grant';
-        $tokenSelector=array('Source'=>$this->entryTable,'Name'=>substr($data['Authorization'],7));
+        $tokenSelector=array('Source'=>$this->entryTable,'Name'=>mb_substr($data['Authorization'],7));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tokenSelector,TRUE) as $token){
             $data['answer']=$token['Content'];
             unset($data['answer']['access_token']);

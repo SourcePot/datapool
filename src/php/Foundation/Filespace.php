@@ -69,7 +69,7 @@ class Filespace{
                 $file=$dir2process['dir'].'/'.$fileName;
                 $extensionPos=strpos($fileName,'.file');
                 if (empty($extensionPos)){continue;}
-                $entryId=substr($fileName,0,$extensionPos);
+                $entryId=mb_substr($fileName,0,$extensionPos);
                 $sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
                 $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
                 if (empty($stmt->fetchAll())){
@@ -195,7 +195,7 @@ class Filespace{
         foreach($files as $file){
             $suffixPos=strrpos($file,'.json');
             if (empty($suffixPos)){continue;}
-            $selector['EntryId']=substr( $file,0,$suffixPos);
+            $selector['EntryId']=mb_substr( $file,0,$suffixPos);
             $entry=$this->entryById($selector,$isSystemCall,$rightType);
             yield array_replace_recursive($selector,$entry);
         }
@@ -542,8 +542,8 @@ class Filespace{
             $emailStatistic['errors']='File "'.$entry['Params']['File']['Name'].'" not found or empty';
         } else {
             // get and add email header
-            $emailHeader=substr($fileContent,0,strpos($fileContent,"\r\n\r\n"));
-            $emailContent=substr($fileContent,strpos($fileContent,"\r\n\r\n"));
+            $emailHeader=mb_substr($fileContent,0,strpos($fileContent,"\r\n\r\n"));
+            $emailContent=mb_substr($fileContent,strpos($fileContent,"\r\n\r\n"));
             $emailContent=trim($emailContent,"\r\n ");
             $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
             $entry['EntryId']=md5($fileContent);
@@ -560,7 +560,7 @@ class Filespace{
                 if (!isset($entry['Params']['Email']['content-type']['value'])){
                     $entry['Params']['Email']['content-type']['value']='text';
                 }
-                $contentType=ucfirst(substr($entry['Params']['Email']['content-type']['value'],strpos($entry['Params']['Email']['content-type']['value'],'/')+1));
+                $contentType=ucfirst(mb_substr($entry['Params']['Email']['content-type']['value'],strpos($entry['Params']['Email']['content-type']['value'],'/')+1));
                 $entry['Content'][$contentType]=$emailContent;
                 $emailStatistic['emailContent']=$emailContent;                
             } else {
@@ -573,8 +573,8 @@ class Filespace{
                     array_shift($parts);
                     foreach($parts as $partIndex=>$part){
                         $partContentStart=strpos($part,"\r\n\r\n");
-                        $partHeader=substr($part,0,$partContentStart);
-                        $partContent=substr($part,$partContentStart);
+                        $partHeader=mb_substr($part,0,$partContentStart);
+                        $partContent=mb_substr($part,$partContentStart);
                         $partContent=trim($partContent,"\r\n ");
                         // get header
                         $headerArr=array('content-disposition'=>array('value'=>''),'content-transfer-encoding'=>array('value'=>''));
@@ -589,7 +589,7 @@ class Filespace{
                             $zip->addFromString($headerArr['content-disposition']['filename'],$partContent);
                             $emailStatistic['files']++;
                         } else {
-                            $contentType=ucfirst(substr($headerArr['content-type']['value'],strpos($headerArr['content-type']['value'],'/')+1));
+                            $contentType=ucfirst(mb_substr($headerArr['content-type']['value'],strpos($headerArr['content-type']['value'],'/')+1));
                             $entry['Content'][$contentType]=$partContent;
                         }
                         $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);

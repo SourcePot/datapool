@@ -55,7 +55,7 @@ class Dictionary{
 
     public function getValidLngCode($lngCode):string
     {
-        $lngCode=substr(strval($lngCode),0,2);
+        $lngCode=mb_substr(strval($lngCode),0,2);
         $lngCode=strtolower($lngCode);
         if (isset($this->lngCodes[$lngCode])){
             return $lngCode;
@@ -96,7 +96,7 @@ class Dictionary{
         $entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);
         $entry['Group']='Translations from en';
         $entry['Folder']=$entry['langCode'];
-        $entry['Name']=substr($entry['phrase'],0,100);
+        $entry['Name']=mb_substr($entry['phrase'],0,100);
         $entry['Type']='dictionary';
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         $entry['Owner']='SYSTEM';

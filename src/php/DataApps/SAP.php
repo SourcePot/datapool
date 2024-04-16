@@ -15,7 +15,9 @@ class SAP implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array();
+    private $entryTemplate=array('Folder'=>array('index'=>'FOLDER_IND','type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
+                                 'Name'=>array('index'=>'NAME_IND','type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
+                                 );
 
     public function __construct($oc){
         $this->oc=$oc;

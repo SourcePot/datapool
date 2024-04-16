@@ -159,7 +159,7 @@ class PdfTools{
                     foreach($specFlat as $key=>$value){
                         if (strpos($key,'Type')!==FALSE || strpos($key,'Desc')!==FALSE || strpos($key,'Subtype')!==FALSE){
                             $lastSepPos=strrpos($key,$this->S);
-                            if ($lastSepPos){$key=substr($key,$lastSepPos+strlen($this->S));}
+                            if ($lastSepPos){$key=mb_substr($key,$lastSepPos+strlen($this->S));}
                             $specs[$index][$key]=$value;
                         }
                     }
@@ -180,7 +180,7 @@ class PdfTools{
                             foreach($content as $contentKey=>$contentVvalue){
                                 $lastSepPos=strrpos($contentKey,$this->S);
                                 if ($lastSepPos===FALSE){$lastSepPos=0;} else {$lastSepPos+=strlen($this->S);}
-                                $embeddedFileContent.=substr($contentKey,$lastSepPos).': '.trim(strval($contentVvalue)).";\n";
+                                $embeddedFileContent.=mb_substr($contentKey,$lastSepPos).': '.trim(strval($contentVvalue)).";\n";
                             }
                         } catch (\Exception $e){
                             $arr['error'][]=$e->getMessage();

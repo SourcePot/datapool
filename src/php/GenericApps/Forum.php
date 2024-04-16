@@ -115,7 +115,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $forumEntry['Group']=$_SESSION['currentUser']['Privileges'];
         $forumEntry['Folder']='Sent';
         $forumEntry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-        $forumEntry['Name']=substr($forumEntry['Content']['Message'],0,30);
+        $forumEntry['Name']=mb_substr($forumEntry['Content']['Message'],0,30);
         return $forumEntry;
     }
     

@@ -357,7 +357,7 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             $applicationKey=preg_replace('/[^0-9]+/','|',$entry[$sourceSettings['Fallnummer column']]);
-            $countryKey=trim(substr($entry[$sourceSettings['Fallnummer column']],12,2));
+            $countryKey=trim(mb_substr($entry[$sourceSettings['Fallnummer column']],12,2));
             if (empty($countryKey)){
                 $result['Entry statistic']['Skipped non EP validation file']['value']++;
                 continue;
@@ -385,7 +385,7 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             // add validations
-            $regionKey=trim(substr($entry[$sourceSettings['Fallnummer column']],10,2));
+            $regionKey=trim(mb_substr($entry[$sourceSettings['Fallnummer column']],10,2));
             $columnsTemplate[$regionKey]=0;
             $columnsTemplate[$countryKey]=0;
             $statisticEntries[$applicationKey]['Content']['All']=1;

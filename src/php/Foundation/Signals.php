@@ -302,7 +302,7 @@ class Signals{
             $classStartPos=strrpos($entry['Folder'],'\\');
             $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
             $classEndPos=strpos($entry['Folder'],'::');
-            $options[$entry['EntryId']]=substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
+            $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
         }
         asort($options);
         return $options;

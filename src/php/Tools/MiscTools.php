@@ -229,7 +229,7 @@ final class MiscTools{
     {
         // Returns the age of a provided EntryId
         if (strpos($entryId,'eid')===FALSE || strpos($entryId,'EID')===FALSE){return 0;}
-        $timestamp=substr($entryId,3,strpos($entryId,'-')-1);
+        $timestamp=mb_substr($entryId,3,strpos($entryId,'-')-1);
         $timestamp=intval($timestamp);
         return time()-$timestamp;
     }
@@ -296,7 +296,7 @@ final class MiscTools{
         while($row=array_shift($rows)){
             $startPos=strpos($row,'<tr');
             if ($startPos===FALSE){continue;}
-            $row=substr($row,$startPos);
+            $row=mb_substr($row,$startPos);
             if (strpos($row,'</th>')===FALSE){
                 // is content row
                 $cells=explode('</td>',$row);
@@ -865,7 +865,7 @@ final class MiscTools{
                 if (!empty($part)){$arr['Part']=$part;}
                 if (empty($arr['Country long']) && strlen($nonNumericSuffix)>1){
                     // get country, if country is empty
-                    $arr['Country']=substr($nonNumericSuffix,0,2);
+                    $arr['Country']=mb_substr($nonNumericSuffix,0,2);
                 }
             }
         }

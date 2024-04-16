@@ -129,7 +129,7 @@ class Logger
         if ($this->levelConfig[$level]['addTrace']){
             $entry['Content']['trace']=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         }
-        $entry['Name']=substr($entry['Content']['msg'],0,50);
+        $entry['Name']=mb_substr($entry['Content']['msg'],0,50);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         // write to databse if it is present
@@ -143,7 +143,7 @@ class Logger
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $sourceTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
         $today=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
-        $today=substr($today,0,11);
+        $today=mb_substr($today,0,11);
         $columns=array('Date','Group','Content'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'msg');
         $arr['settings']=array_replace_recursive(array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'),$arr['settings']);
         $arr['selector']['Source']=$this->entryTable;

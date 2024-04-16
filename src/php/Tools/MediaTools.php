@@ -81,7 +81,7 @@ class MediaTools{
             $arr=$this->addPreviewTextStyle($arr);
             $arr['tag']='p';
             if (mb_strlen($text)>200){
-                $arr['element-content']=substr($text,0,200).' .....';
+                $arr['element-content']=mb_substr($text,0,200).' .....';
             } else {
                 $arr['element-content']=$text;
             }

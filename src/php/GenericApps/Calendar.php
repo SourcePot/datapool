@@ -233,7 +233,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);        
             if (!empty($entry['Content']['Event']['Start']) && !empty($entry['Content']['Event']['Start timezone']) && 
                 !empty($entry['Content']['Event']['End']) && !empty($entry['Content']['Event']['End timezone'])){
-                $entry['Name']=substr($entry['Content']['Event']['Description'],0,200);
+                $entry['Name']=mb_substr($entry['Content']['Event']['Description'],0,200);
                 $entry['Start']=$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],DB_TIMEZONE);
                 $entry['End']=$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],DB_TIMEZONE);
                 $entry['Type']=mb_strtolower($this->entryTable.' '.$entry['Content']['Event']['Type']);
@@ -729,7 +729,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $timezone??=$pageTimeZone;
         $dummyDate=\SourcePot\Datapool\Root::NULL_DATE;
-        $dummyDateArr=array('year'=>substr($dummyDate,0,4),'month'=>substr($dummyDate,5,2),'day'=>substr($dummyDate,8,2),'time'=>substr($dummyDate,11,8));
+        $dummyDateArr=array('year'=>mb_substr($dummyDate,0,4),'month'=>mb_substr($dummyDate,5,2),'day'=>mb_substr($dummyDate,8,2),'time'=>mb_substr($dummyDate,11,8));
         $dateArr=$context=$this->guessDateComps($string,$isExcelDate);
         if (isset($dateArr['timezoneIn'])){$timezone=$dateArr['timezoneIn'];}
         $context['class']=__CLASS__;
@@ -843,15 +843,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $dotRPos=strrpos($string,'.');
         if (!empty($hyphenPos) && !empty($hyphenRPos)){
             // YYYY-MM-DD
-            $arr['year']=substr($string,0,$hyphenPos);
-            $arr['month']=substr($string,$hyphenPos+1,$hyphenRPos-$hyphenPos-1);
-            $arr['day']=substr($string,$hyphenRPos+1);
+            $arr['year']=mb_substr($string,0,$hyphenPos);
+            $arr['month']=mb_substr($string,$hyphenPos+1,$hyphenRPos-$hyphenPos-1);
+            $arr['day']=mb_substr($string,$hyphenRPos+1);
             return $arr;
         } else if (!empty($dotPos) && !empty($dotRPos)){
             // DD.MM.YYYY
-            $arr['day']=substr($string,0,$dotPos);
-            $arr['month']=substr($string,$dotPos+1,$dotRPos-$dotPos-1);
-            $arr['year']=substr($string,$dotRPos+1);
+            $arr['day']=mb_substr($string,0,$dotPos);
+            $arr['month']=mb_substr($string,$dotPos+1,$dotRPos-$dotPos-1);
+            $arr['year']=mb_substr($string,$dotRPos+1);
             return $arr;
         } else {
             // unknown

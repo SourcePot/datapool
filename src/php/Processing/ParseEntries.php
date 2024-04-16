@@ -259,10 +259,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 if (isset($matches[0][0])){
                     $keywordPos=$matches[0][1]+strlen($matches[0][0]);
                     $tmpText=$textSections[$lastSection];
-                    $textSections[$lastSection]=substr($tmpText,0,$keywordPos);
+                    $textSections[$lastSection]=mb_substr($tmpText,0,$keywordPos);
                     if ($testRun){$result['Parser text sections'][$base['parsersectionrules'][$lastSection]['Content']['Section name']]=array('value'=>$textSections[$lastSection]);}
                     $lastSection=$entryId;
-                    $textSections[$lastSection]=substr($tmpText,$keywordPos);
+                    $textSections[$lastSection]=mb_substr($tmpText,$keywordPos);
                     if ($testRun){$result['Parser text sections'][$base['parsersectionrules'][$lastSection]['Content']['Section name']]=array('value'=>$textSections[$lastSection]);}
                 }
             }
@@ -283,7 +283,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     continue;
                 }
                 $matchRemoved='<p>No</p>';
-                //$rowKey=substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
+                //$rowKey=mb_substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
                 $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
                 if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
                     $sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];

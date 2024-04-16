@@ -313,10 +313,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $line=imap_utf8($line);
             $valueStart=strpos($line,':');
             if ($valueStart===FALSE){continue;}
-            $keyA=trim(substr($line,0,$valueStart));
+            $keyA=trim(mb_substr($line,0,$valueStart));
             if ($lowerCaseKeys){$keyA=strtolower($keyA);}
             $template[$keyA]=array();
-            $line=substr($line,$valueStart+2);
+            $line=mb_substr($line,$valueStart+2);
             preg_match_all('/([a-z]+)=([^;]+)/',$line,$matches);
             foreach($matches[0] as $matchIndex=>$match){
                 $line=str_replace($match,'',$line);

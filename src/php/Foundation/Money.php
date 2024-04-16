@@ -86,7 +86,7 @@ class Money{
         $links=array();
         $chunks=explode('href="',$body);
         foreach($chunks as $chunk){
-            $href=substr($chunk,0,strpos($chunk,'"'));
+            $href=mb_substr($chunk,0,strpos($chunk,'"'));
             if ($filter){
                 if (stripos($href,$filter)===FALSE){
                     continue;
@@ -107,14 +107,14 @@ class Money{
         $chunks=explode('time="',$body);
         array_shift($chunks);
         foreach($chunks as $chunk){
-            $date=substr($chunk,0,strpos($chunk,'"'));
+            $date=mb_substr($chunk,0,strpos($chunk,'"'));
             $subChunks=explode('currency="',$chunk);
             array_shift($subChunks);
             foreach($subChunks as $subChunk){
-                $currency=substr($subChunk,0,strpos($subChunk,'"'));
+                $currency=mb_substr($subChunk,0,strpos($subChunk,'"'));
                 $rateChunk=explode('rate="',$subChunk);
                 $rateChunk=array_pop($rateChunk);
-                $rate=substr($rateChunk,0,strpos($rateChunk,'"'));
+                $rate=mb_substr($rateChunk,0,strpos($rateChunk,'"'));
                 $rates[$date][$currency]=$rate;
             }
         }
@@ -242,7 +242,7 @@ class Money{
         $selector['Date<=']=$endDatetimeObj->format('Y-m-d H:i:s');
         $ratesMatch=array('Date'=>$dateTimeString,'Rates'=>array(),'Date match'=>FALSE,'Error'=>'No data');
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date',TRUE) as $entry){
-            $date=substr($entry['Date'],0,10);
+            $date=mb_substr($entry['Date'],0,10);
             if ($date>=$dateTimeString){
                 $ratesMatch=array('Date'=>$date,'Date match'=>($date==$dateTimeString),'Rates'=>$entry['Content'],'Error'=>'');
                 break;
