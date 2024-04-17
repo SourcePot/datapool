@@ -34,7 +34,7 @@ class Money{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->tableRatesSelector=array('Source'=>$this->entryTable,'Group'=>'ECB','Folder'=>'Rates','Owner'=>'SYSTEM');
         $this->getOldRatesIfRequired();
         $this->currencies=$this->getCurrencies();
@@ -86,7 +86,7 @@ class Money{
         $links=array();
         $chunks=explode('href="',$body);
         foreach($chunks as $chunk){
-            $href=mb_substr($chunk,0,strpos($chunk,'"'));
+            $href=mb_substr($chunk,0,mb_strpos($chunk,'"'));
             if ($filter){
                 if (stripos($href,$filter)===FALSE){
                     continue;
@@ -107,14 +107,14 @@ class Money{
         $chunks=explode('time="',$body);
         array_shift($chunks);
         foreach($chunks as $chunk){
-            $date=mb_substr($chunk,0,strpos($chunk,'"'));
+            $date=mb_substr($chunk,0,mb_strpos($chunk,'"'));
             $subChunks=explode('currency="',$chunk);
             array_shift($subChunks);
             foreach($subChunks as $subChunk){
-                $currency=mb_substr($subChunk,0,strpos($subChunk,'"'));
+                $currency=mb_substr($subChunk,0,mb_strpos($subChunk,'"'));
                 $rateChunk=explode('rate="',$subChunk);
                 $rateChunk=array_pop($rateChunk);
-                $rate=mb_substr($rateChunk,0,strpos($rateChunk,'"'));
+                $rate=mb_substr($rateChunk,0,mb_strpos($rateChunk,'"'));
                 $rates[$date][$currency]=$rate;
             }
         }
@@ -147,7 +147,7 @@ class Money{
             $dir=$GLOBALS['dirs']['setup'];
             $setupFiles=scandir($dir);
             foreach($setupFiles as $fileIndex=>$fileName){
-                if (strpos($fileName,'ECB Data Portal')===FALSE){continue;}
+                if (mb_strpos($fileName,'ECB Data Portal')===FALSE){continue;}
                 $csvFile=$dir.$fileName;
                 if (!is_file($csvFile)){continue;}
                 $context['rowCount']=$this->ratesCsv2table($csvFile);

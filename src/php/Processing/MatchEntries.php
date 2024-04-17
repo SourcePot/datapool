@@ -27,7 +27,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string{return $this->entryTable;}
@@ -297,11 +297,11 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $needle=$rule['Needle'];
             if (is_array($haystack)){$haystack=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($haystack);}
             if (strcmp($rule['Operation'],'skipIfNotFound')===0){
-                if (strpos($haystack,$needle)===FALSE){
+                if (mb_strpos($haystack,$needle)===FALSE){
                     return TRUE;
                 }
             } else if (strcmp($rule['Operation'],'skipIfFound')===0){
-                if (strpos($haystack,$needle)!==FALSE){
+                if (mb_strpos($haystack,$needle)!==FALSE){
                     return TRUE;
                 }
             }

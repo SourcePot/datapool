@@ -45,7 +45,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     
     public function init($oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
     }
@@ -311,7 +311,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $keyValueArr=explode('|[]|',trim($email,"|[]\n\r"));
         foreach($keyValueArr as $line){
             $line=imap_utf8($line);
-            $valueStart=strpos($line,':');
+            $valueStart=mb_strpos($line,':');
             if ($valueStart===FALSE){continue;}
             $keyA=trim(mb_substr($line,0,$valueStart));
             if ($lowerCaseKeys){$keyA=strtolower($keyA);}
@@ -432,9 +432,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 $flatContentKey=strval($flatContentKey);
                 $flatContentValue=strval($flatContentValue);
                 $flatContentValue=trim($flatContentValue);
-                if (strpos($flatContentValue,'{{')===0){
+                if (mb_strpos($flatContentValue,'{{')===0){
                     continue;
-                } else if (strpos($flatContentValue,'<')!==0){
+                } else if (mb_strpos($flatContentValue,'<')!==0){
                     $flatContentValue='<p>'.$flatContentValue.'</p>';
                 }
                 $msgTextPlain=strip_tags($flatContentValue)."\r\n";

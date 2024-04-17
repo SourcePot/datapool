@@ -44,7 +44,7 @@ final class MiscTools{
         $style='';
         foreach($arr as $property=>$value){
             $property=strtolower($property);
-            if (strpos($property,'height')!==FALSE || strpos($property,'width')!==FALSE || strpos($property,'size')!==FALSE || strpos($property,'top')!==FALSE || strpos($property,'left')!==FALSE || strpos($property,'bottom')!==FALSE || strpos($property,'right')!==FALSE){
+            if (mb_strpos($property,'height')!==FALSE || mb_strpos($property,'width')!==FALSE || mb_strpos($property,'size')!==FALSE || mb_strpos($property,'top')!==FALSE || mb_strpos($property,'left')!==FALSE || mb_strpos($property,'bottom')!==FALSE || mb_strpos($property,'right')!==FALSE){
                 if (is_numeric($value)){$value=strval($value).'px';} else {$value=strval($value);}
             }
             $style.=$property.':'.$value.';';
@@ -228,8 +228,8 @@ final class MiscTools{
     public function getEntryIdAge(string $entryId):int
     {
         // Returns the age of a provided EntryId
-        if (strpos($entryId,'eid')===FALSE || strpos($entryId,'EID')===FALSE){return 0;}
-        $timestamp=mb_substr($entryId,3,strpos($entryId,'-')-1);
+        if (mb_strpos($entryId,'eid')===FALSE || mb_strpos($entryId,'EID')===FALSE){return 0;}
+        $timestamp=mb_substr($entryId,3,mb_strpos($entryId,'-')-1);
         $timestamp=intval($timestamp);
         return time()-$timestamp;
     }
@@ -294,10 +294,10 @@ final class MiscTools{
         $result=array();
         $rows=explode('</tr>',$html);
         while($row=array_shift($rows)){
-            $startPos=strpos($row,'<tr');
+            $startPos=mb_strpos($row,'<tr');
             if ($startPos===FALSE){continue;}
             $row=mb_substr($row,$startPos);
-            if (strpos($row,'</th>')===FALSE){
+            if (mb_strpos($row,'</th>')===FALSE){
                 // is content row
                 $cells=explode('</td>',$row);
                 foreach($cells as $cellIndex=>$cell){
@@ -347,7 +347,7 @@ final class MiscTools{
         if ($value==0){
             return strval($value);
         } else {
-            return $value.$e[$p+6];
+            return $value.' '.$e[$p+6];
         }
     }
     
@@ -406,7 +406,7 @@ final class MiscTools{
         $selector=array();
         foreach($defaultValues as $key=>$defaultValue){
             $selector[$key]=(empty($arr[$key]))?$defaultValue:$arr[$key];
-            $selector[$key]=(strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
+            $selector[$key]=(mb_strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
         }
         return $selector;
     }
@@ -448,7 +448,7 @@ final class MiscTools{
             $fileName.=$trace[1]['class'].' '.$trace[1]['function'];
             $fileName=mb_ereg_replace("[^A-Za-z0-9\-\_ ]",'_', $fileName);
             $file=$GLOBALS['dirs']['debugging'].'/'.$fileName.'.json';
-        } else if (strpos($fileName,'/')===FALSE && strpos($fileName,'\\')===FALSE){
+        } else if (mb_strpos($fileName,'/')===FALSE && mb_strpos($fileName,'\\')===FALSE){
             $fileName=mb_ereg_replace("[^A-Za-z0-9\-\_ ]",'_', $fileName);
             $file=$GLOBALS['dirs']['debugging'].'/'.$fileName.'.json';
         } else {
@@ -543,7 +543,7 @@ final class MiscTools{
     {
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $arrKey=>$arrValue){
-            if (strpos($arrKey,$flatKey)===FALSE){continue;}
+            if (mb_strpos($arrKey,$flatKey)===FALSE){continue;}
             unset($flatArr[$arrKey]);
         }
         $arr=$this->flat2arr($flatArr);
@@ -677,7 +677,7 @@ final class MiscTools{
         }
         $strVar=strval($var);
         if (is_numeric($var)){
-            if (strpos($strVar,'.')!==FALSE){
+            if (mb_strpos($strVar,'.')!==FALSE){
                 $dataType='float';
             } else {
                 $dataType='int';
@@ -827,7 +827,7 @@ final class MiscTools{
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
         preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/',$value,$matches);
-        if (empty($matches[0])){return array();}
+        if (empty($matches[0])){return array('Match'=>'');}
         $arr=array_combine($keyTemplate,$matches);
         $arr['Region']='  ';
         $arr['Country']='  ';
@@ -838,7 +838,7 @@ final class MiscTools{
             $suffix=strtoupper($suffix);
             $suffix=str_split($suffix,2);
             foreach($regions as $rc=>$region){
-                if (strpos($suffix[0],$rc)!==0){continue;}
+                if (mb_strpos($suffix[0],$rc)!==0){continue;}
                 array_shift($suffix);
                 $arr['Region']=$rc;
                 $arr['Region long']=$region;
@@ -851,7 +851,7 @@ final class MiscTools{
                     $cc=file_get_contents($file);
                     $countries=json_decode($cc,TRUE,512,JSON_INVALID_UTF8_IGNORE);
                     foreach($countries as $alpha2code=>$countryArr){
-                        if (strpos($suffix[0],$alpha2code)===FALSE){continue;}
+                        if (mb_strpos($suffix[0],$alpha2code)===FALSE){continue;}
                         $arr['Country']=$alpha2code;
                         $arr['Country long']=$countryArr['Country'];
                         break;
@@ -883,6 +883,24 @@ final class MiscTools{
         if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
         //$this->arr2file($arr);
         return $arr;
+    }
+
+    public function valueArr2value($value,$datatypeOrKey=FALSE)
+    {
+        $datatype2key=array('date'=>'System','timestamp'=>'System','exceldate'=>'System','money'=>'','unycom'=>'Match');
+        $key=(isset($datatype2key[$datatypeOrKey]))?$datatype2key[$datatypeOrKey]:$datatypeOrKey;
+        if (!isset($value[$key]) && $key!==FALSE){
+            // If datatypeOrKey exists, a suitable key-value pair should also exist in the data field
+            $value=FALSE;
+        } else if (isset($value[$key])){
+            // Standard key matches a key-value pair 
+            $value=$value[$key];
+        } else if (is_array($value)){
+            // If no standard key exists, use the first key-value pair 
+            reset($value);
+            $value=current($value);
+        }
+        return $value;
     }
 
 }

@@ -33,7 +33,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function init(array $oc)
     {
         $this->oc=$oc;    
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable():string
@@ -148,7 +148,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // initialize rule options
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$arr['selector']['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            if (strpos($entry['Type'],'rules')===FALSE || strpos($entry['Type'],'|')===FALSE){continue;}
+            if (mb_strpos($entry['Type'],'rules')===FALSE || mb_strpos($entry['Type'],'|')===FALSE){continue;}
             $typeComps=explode('|',$entry['Type']);
             $rulePrefix=str_replace('rules',' rule',$typeComps[1]);
             $ruleIndex=$this->ruleId2ruleIndex($entry['EntryId'],ucfirst($rulePrefix));
@@ -389,10 +389,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // wrapping up
         foreach($sourceEntry as $key=>$value){
-            if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
+            if (mb_strpos($key,'Content')===0 || mb_strpos($key,'Params')===0){continue;}
             if (!is_array($value)){continue;}
             foreach($value as $subKey=>$subValue){
-                $value[$subKey]=$this->getStdValueFromValueArr($subValue);
+                $value[$subKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($subValue);
             }
             // set order of array values
             ksort($value);
@@ -417,17 +417,6 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
     
-    private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR')
-    {
-        if (isset($value[$useKeyIfPresent])){
-            $value=$value[$useKeyIfPresent];
-        } else if (is_array($value)){
-            reset($value);
-            $value=current($value);
-        }
-        return $value;
-    }
-
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType):array
     {
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}

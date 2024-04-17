@@ -37,7 +37,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function init(array $oc){
         $this->oc=$oc;
         $this->recipientOptions=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions();
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string{return $this->entryTable;}
@@ -279,7 +279,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // entry template
             foreach($entry['Content'] as $contentKey=>$content){
                 if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+                if (mb_strpos($content,'EID')!==0 || mb_strpos($content,'eid')===FALSE){continue;}
                 $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
                 if ($template){$base['entryTemplates'][$content]=$template;}
             }

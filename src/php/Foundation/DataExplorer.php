@@ -97,7 +97,7 @@ class DataExplorer{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->completeDefintion();
     }
     
@@ -167,11 +167,11 @@ class DataExplorer{
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
             $entry['Content']['Style']['Text']=$entry['element-content'];
-            if (strpos($entry['element-content'],'&#9881;')!==FALSE){
+            if (mb_strpos($entry['element-content'],'&#9881;')!==FALSE){
                 $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
                 $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
             }
-            if (strpos($entry['element-content'],'&#128337;')!==FALSE){
+            if (mb_strpos($entry['element-content'],'&#128337;')!==FALSE){
                 $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
                 $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasTrigger';
             }
@@ -413,7 +413,7 @@ class DataExplorer{
             // entry template
             foreach($entry['Content'] as $contentKey=>$content){
                 if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+                if (mb_strpos($content,'EID')!==0 || mb_strpos($content,'eid')===FALSE){continue;}
                 $template=$this->entryId2selector($content);
                 if ($template){$settings['entryTemplates'][$content]=$template;}
             }

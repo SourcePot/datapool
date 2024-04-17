@@ -50,7 +50,7 @@ class PdfTools{
         $parserKey='text2arr';
         $parser=array('default'=>'text2arrSmalot','options'=>array());
         foreach(get_class_methods(__CLASS__) as $method){
-            if (strpos($method,$parserKey)===FALSE){continue;}
+            if (mb_strpos($method,$parserKey)===FALSE){continue;}
             $parserName=str_replace('text2arr','',$method);
             $parser['options'][$method]=$parserName;
         }
@@ -157,7 +157,7 @@ class PdfTools{
                     $specArr=$filespec->getDetails();
                     $specFlat=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($specArr);
                     foreach($specFlat as $key=>$value){
-                        if (strpos($key,'Type')!==FALSE || strpos($key,'Desc')!==FALSE || strpos($key,'Subtype')!==FALSE){
+                        if (mb_strpos($key,'Type')!==FALSE || mb_strpos($key,'Desc')!==FALSE || mb_strpos($key,'Subtype')!==FALSE){
                             $lastSepPos=strrpos($key,$this->S);
                             if ($lastSepPos){$key=mb_substr($key,$lastSepPos+strlen($this->S));}
                             $specs[$index][$key]=$value;

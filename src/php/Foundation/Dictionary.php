@@ -30,7 +30,7 @@ class Dictionary{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         // set language
         if (empty($_SESSION['page state']['lngCode'])){
             if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){

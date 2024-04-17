@@ -128,9 +128,9 @@ class NetworkTools{
 
     public function answer(array $header,array $data,string $dataType='application/json',string $charset='UTF-8')
     {
-        if (strpos($dataType,'json')>0){
+        if (mb_strpos($dataType,'json')>0){
             $data=json_encode($data);
-        } else if (strpos($dataType,'xml')>0){
+        } else if (mb_strpos($dataType,'xml')>0){
             $data=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2xml($data);
         }
         $headerTemplate=array(''=>'HTTP/1.1 200 OK',

@@ -173,7 +173,7 @@ class ExifTools{
                 $timeStr.=$value.':';    
             }
             $timeStr=trim($timeStr,':');
-        } else if (strpos((string)$time,':')!==FALSE){
+        } else if (mb_strpos((string)$time,':')!==FALSE){
             $timeStr=$time;
         } else {
             $timeStr=date('Y-m-d H:i:s',$time);

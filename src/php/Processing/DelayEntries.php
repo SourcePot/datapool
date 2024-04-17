@@ -27,7 +27,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string{return $this->entryTable;}

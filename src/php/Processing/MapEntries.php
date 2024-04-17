@@ -41,7 +41,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable():string{return $this->entryTable;}
@@ -314,10 +314,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // wrapping up
         foreach($targetEntry as $key=>$value){
-            if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
+            if (mb_strpos($key,'Content')===0 || mb_strpos($key,'Params')===0){continue;}
             if (!is_array($value)){continue;}
             foreach($value as $subKey=>$subValue){
-                $value[$subKey]=$this->getStdValueFromValueArr($subValue);
+                $value[$subKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($subValue);
             }
             // set order of array values
             ksort($value);
@@ -365,16 +365,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
     }
     
-    private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR'){
-        if (isset($value[$useKeyIfPresent])){
-            $value=$value[$useKeyIfPresent];
-        } else if (is_array($value)){
-            reset($value);
-            $value=current($value);
-        }
-        return $value;
-    }
-
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule){
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
@@ -395,23 +385,23 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (strlen($rule['Use rule if Compare value'])>2){
             // compare strings
             $compareValue=$rule['Compare value'];
-            $targetValue=$this->getStdValueFromValueArr($targetValue);
+            $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue);
             $targetValue=strval($targetValue);
         } else {
             // compare numbers
             $compareValue=floatval($rule['Compare value']);
             if (strcmp($dataType,'date')===0){
-                $targetValue=$this->getStdValueFromValueArr($targetValue,'System');
+                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue,'System');
                 $targetValue=strtotime($targetValue);
                 $compareValue=strtotime($rule['Compare value']);
             } else if (strcmp($dataType,'int')===0){
-                $targetValue=$this->getStdValueFromValueArr($targetValue);
+                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue);
                 $compareValue=round($compareValue);
             } else if (strcmp($dataType,'unycom')===0){
-                $targetValue=$this->getStdValueFromValueArr($targetValue,'Number');
+                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue,'Number');
                 $compareValue=round($compareValue);
             } else {
-                $targetValue=$this->getStdValueFromValueArr($targetValue);
+                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue);
             }
         }
         $return=FALSE;

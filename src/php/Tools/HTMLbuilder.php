@@ -340,7 +340,7 @@ class HTMLbuilder{
                     $hasAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],$arr['requiredRight']);
                     if (empty($hasAccess)){$btnFailed='Access denied';}
                 }
-                if (!empty($arr['requiresFile']) && strpos(strval($arr['selector']['EntryId']),'-guideEntry')===FALSE){
+                if (!empty($arr['requiresFile']) && mb_strpos(strval($arr['selector']['EntryId']),'-guideEntry')===FALSE){
                     $hasFile=is_file($this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']));
                     if (!$hasFile || empty($arr['selector']['Params']['File'])){$btnFailed='File error';}
                 }

@@ -107,7 +107,7 @@ class Backbone{
             if (!empty($headerFiles=$this->settings[$settingsKey])){
                 if (!is_array($headerFiles)){$headerFiles=array($headerFiles);}
                 foreach($headerFiles as $fileName){
-                    $href=(strpos($fileName,'://')===FALSE)?$this->mediaFile2href($fileName):$fileName;
+                    $href=(mb_strpos($fileName,'://')===FALSE)?$this->mediaFile2href($fileName):$fileName;
                     if ($href){
                         $arr['toReplace']['{{head}}'].=str_replace('{{'.$settingsKey.'}}',$href,$template).PHP_EOL;
                     }

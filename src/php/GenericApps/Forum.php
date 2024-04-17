@@ -35,7 +35,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
 
     public function init(array $oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         // complete defintion
         $this->definition['Send']=array('@tag'=>'button','@key'=>array('save'),'@element-content'=>'Send','@hideKeys'=>TRUE);
         $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);

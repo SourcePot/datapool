@@ -31,7 +31,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;    
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable():string{return $this->entryTable;}
@@ -283,7 +283,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     continue;
                 }
                 $matchRemoved='<p>No</p>';
-                //$rowKey=mb_substr($ruleEntryId,0,strpos($ruleEntryId,'_'));
+                //$rowKey=mb_substr($ruleEntryId,0,mb_strpos($ruleEntryId,'_'));
                 $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
                 if (isset($base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'])){
                     $sectionName=$base['parsersectionrules'][$rule['Content']['Rule relevant on section']]['Content']['Section name'];
@@ -353,10 +353,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $multipleEntriesValueArr=array();
             $targetEntry=array_replace_recursive($base['entryTemplates'][$params['Target on success']],$targetEntry);
             foreach($targetEntry as $key=>$value){
-                if (strpos($key,'Content')===0 || strpos($key,'Params')===0){continue;}
+                if (mb_strpos($key,'Content')===0 || mb_strpos($key,'Params')===0){continue;}
                 if (!is_array($value)){continue;}
                 foreach($value as $subKey=>$subValue){
-                    $value[$subKey]=$this->getStdValueFromValueArr($subValue);
+                    $value[$subKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($subValue);
                 }
                 if ($multipleHits2multipleEntriesColumn){
                     if (strcmp($multipleHits2multipleEntriesColumn,$key)===0){
@@ -388,16 +388,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
         
-    private function getStdValueFromValueArr($value,$useKeyIfPresent='NOBODY-SHOULD-USE-THIS-KEY-IN-THE-VALUEARR'){
-        if (isset($value[$useKeyIfPresent])){
-            $value=$value[$useKeyIfPresent];
-        } else if (is_array($value)){
-            reset($value);
-            $value=current($value);
-        }
-        return $value;
-    }
-
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType){
         // value datatype conversions
         $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));

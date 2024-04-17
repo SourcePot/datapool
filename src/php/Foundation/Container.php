@@ -259,7 +259,7 @@ class Container{
             if (!isset($settings['selectorKey'])){$settings['selectorKey']='';}
             $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
             foreach($flatEntry as $flatKey=>$value){
-                if (strpos($flatKey,$settings['selectorKey'])!==0){continue;}
+                if (mb_strpos($flatKey,$settings['selectorKey'])!==0){continue;}
                 $flatKeyComps=explode($S,$flatKey);
                 if (!isset($tableInfo[$flatKeyComps[0]])){continue;}
                 if (empty($settings['selectorKey'])){$subFlatKey=str_replace($settings['selectorKey'],'',$flatKey);} else {$subFlatKey=str_replace($settings['selectorKey'].$S,'',$flatKey);}
@@ -688,7 +688,7 @@ class Container{
                 $needle=(isset($traceDef['needle']))?$traceDef['needle']:'';
                 $haystack=(isset($flatEntry[$traceDef['filter']]))?$flatEntry[$traceDef['filter']]:'';
                 if (!empty($needle) && !empty($haystack)){
-                    if (strpos($haystack,$needle)===FALSE){$partlySkippedEntries=1;continue;}
+                    if (mb_strpos($haystack,$needle)===FALSE){$partlySkippedEntries=1;continue;}
                 }
                 // recover values
                 if (!isset($flatEntry[$traceDef['x-selector']]) || !isset($flatEntry[$traceDef['y-selector']])){
@@ -707,9 +707,9 @@ class Container{
                 $valueArr['y']=$this->strByGroup($flatEntry[$traceDef['y-selector']],$traceDef['y-processing']);
                 // get datatypes
                 if (!isset($tracesSetting[$traceName]['x']) || !isset($tracesSetting[$traceName]['y'])){
-                    if (strpos($traceDef['y-processing'],'group ')!==FALSE){
+                    if (mb_strpos($traceDef['y-processing'],'group ')!==FALSE){
                         $tracesSetting[$traceName]['orderBy']='y';
-                    } else if (strpos($traceDef['x-processing'],'group ')!==FALSE){
+                    } else if (mb_strpos($traceDef['x-processing'],'group ')!==FALSE){
                         $tracesSetting[$traceName]['orderBy']='x';
                     } else {
                         $tracesSetting[$traceName]['orderBy']='x';
@@ -758,7 +758,7 @@ class Container{
         $strComps=preg_split('/[\|;]/',$str);
         foreach($strComps as $index=>$value){
             $dataType=$this->oc['SourcePot\Datapool\Tools\MiscTools']->var2dataType($value);
-            if (strpos($dataType,'date')!==FALSE){
+            if (mb_strpos($dataType,'date')!==FALSE){
                 $value=$this->strByGroup($value,'second');
                 $strComps[$index]=strtotime($value);
             }
@@ -770,8 +770,8 @@ class Container{
     {
         $keys=array('year','month','day','hour','minute','second');
         $dateTimeDefualtComps=array('1000','06','15','12','12','30');
-        if (strpos($groupMode,'group ')===FALSE || empty($value)){return strval($value);}
-        if (strpos($value,'-')===FALSE){return strval($value);}
+        if (mb_strpos($groupMode,'group ')===FALSE || empty($value)){return strval($value);}
+        if (mb_strpos($value,'-')===FALSE){return strval($value);}
         $dateTimeComps=preg_split('/[:\-\s]/',trim($value,' :-'));
         $needleFound=FALSE;
         $dateTime=array();
@@ -781,7 +781,7 @@ class Container{
             } else {
                 $dateTime[]=$dateTimeDefualtComps[$keyIndex];
             }
-            if (strpos($groupMode,$needle)!==FALSE){
+            if (mb_strpos($groupMode,$needle)!==FALSE){
                 $needleFound=TRUE;
             }
         }

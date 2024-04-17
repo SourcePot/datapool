@@ -39,7 +39,7 @@ class Explorer{
     public function init($oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string
@@ -229,7 +229,7 @@ class Explorer{
             $newSelector=array_merge($selector,$formData['val']);
             $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,array(),FALSE) as $entry){
-                if (strpos($entry['Type'],\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
+                if (mb_strpos($entry['Type'],\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
                     $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
                     $entry=array_merge($entry,$this->selectorTemplate);
                     $guideEntry=$this->getGuideEntry($newSelector,$entry);
@@ -438,7 +438,7 @@ class Explorer{
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('app'=>FALSE,'Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$selector['Source']),FALSE,'Read','Group',TRUE) as $entry){
-            if (strpos($entry['Type'],'md ')===0){continue;}
+            if (mb_strpos($entry['Type'],'md ')===0){continue;}
             $elementArr=$this->selector2linkInfo($selector['app'],$entry);
             $elementArr['element-content']=ucfirst($entry['Name']);
             $elementArr['class']='toc-3';

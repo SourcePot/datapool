@@ -43,7 +43,7 @@ class CSVtools{
     {
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         if (!is_file($file)){return FALSE;}
-        if (strpos(mime_content_type($file),'text/')!==0){return FALSE;}
+        if (mb_strpos(mime_content_type($file),'text/')!==0){return FALSE;}
         foreach($this->csvIterator($selector) as $rowIndex=>$rowArr){
             if (count($rowArr)>1){
                 //change file content encoding to utf-8 if encoding is different from utf-8

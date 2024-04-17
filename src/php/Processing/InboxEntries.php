@@ -34,7 +34,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string{return $this->entryTable;}
@@ -277,7 +277,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
             $conditionMet[$ruleId]=FALSE;
             foreach($flatEntry as $flatKey=>$value){
-                if (strpos($flatKey,$rule['Content']['Column'])!==0){continue;}
+                if (mb_strpos($flatKey,$rule['Content']['Column'])!==0){continue;}
                 $needlePosA=(empty($rule['Content']['Value A']))?FALSE:mb_stripos($value,$rule['Content']['Value A']);
                 $needlePosB=(empty($rule['Content']['Value B']))?FALSE:mb_stripos($value,$rule['Content']['Value B']);
                 $conditionMet[$ruleId]=match($rule['Content']['Condition']){
@@ -297,7 +297,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId,TRUE);
             $forward[$ruleId]=TRUE;
             foreach($rule['Content'] as $key=>$condRuleId){
-                if (strpos($key,'Condition')===FALSE || empty($condRuleId)){continue;}
+                if (mb_strpos($key,'Condition')===FALSE || empty($condRuleId)){continue;}
                 if (empty($conditionMet[$condRuleId])){
                     $forward[$ruleId]=FALSE;
                     break;
@@ -375,7 +375,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // entry template
             foreach($entry['Content'] as $contentKey=>$content){
                 if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+                if (mb_strpos($content,'EID')!==0 || mb_strpos($content,'eid')===FALSE){continue;}
                 $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
                 if ($template){$base['entryTemplates'][$content]=$template;}
             }

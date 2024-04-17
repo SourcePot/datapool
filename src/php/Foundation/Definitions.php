@@ -27,7 +27,7 @@ class Definitions{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable()
@@ -110,13 +110,13 @@ class Definitions{
         $defaultArrKeys2remove=array();
         $defaultArr=array();
         foreach($flatDefinition as $definitionKey=>$definitionValue){
-            if (strpos($definitionKey,'@default')!==FALSE){
+            if (mb_strpos($definitionKey,'@default')!==FALSE){
                 $defaultKey=str_replace($flatArrayKeySeparator.'@default','',$definitionKey);
                 $defaultArr[$defaultKey]=$definitionValue;
-            } else if (strpos($definitionKey,'@type')!==FALSE && strcmp($definitionValue,'btn')===0){
+            } else if (mb_strpos($definitionKey,'@type')!==FALSE && strcmp($definitionValue,'btn')===0){
                 $defaultKey=str_replace($flatArrayKeySeparator.'@type','',$definitionKey);
                 $defaultArrKeys2remove[$defaultKey]=FALSE;    // to remove if default value is empty
-            } else if (strpos($definitionKey,'@type')!==FALSE && strcmp($definitionValue,'method')===0){
+            } else if (mb_strpos($definitionKey,'@type')!==FALSE && strcmp($definitionValue,'method')===0){
                 $defaultKey=str_replace($flatArrayKeySeparator.'@type','',$definitionKey);
                 $defaultArrKeys2remove[$defaultKey]=TRUE;    // to remove if default value is empty
             }
@@ -174,11 +174,11 @@ class Definitions{
                 }
                 $definitionKey=array_shift($definitionKeyComps);
                 $definitionKey=trim($definitionKey,$S.'*');
-                if (strpos($flatSelectorKey,$definitionKey)===FALSE){
+                if (mb_strpos($flatSelectorKey,$definitionKey)===FALSE){
                     // not the correct definition key
                 } else {
                     $definitionAttr=array_pop($definitionKeyComps);
-                    $sPos=strpos($definitionAttr,$S);
+                    $sPos=mb_strpos($definitionAttr,$S);
                     if ($sPos!==FALSE){
                         $tmp=$definitionAttr;
                         $definitionAttr=mb_substr($definitionAttr,0,$sPos);

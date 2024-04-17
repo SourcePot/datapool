@@ -66,7 +66,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
     }
     

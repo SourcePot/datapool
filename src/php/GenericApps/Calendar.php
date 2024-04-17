@@ -89,7 +89,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->definition['Content']['Event']['Start timezone']['@options']=$this->options['Timezone'];
         $this->definition['Content']['Event']['End timezone']['@options']=$this->options['Timezone'];
         $this->definition['Content']['Event']['Recurrence']['@options']=$this->options['Recurrence'];
@@ -303,7 +303,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
         if ($this->pageState['EntryId']=='{{EntryId}}' && empty($this->pageState['addDate'])){
             $arr['html'].=$this->getEventsOverview($arr);
-        } else if(strpos(strval($event['EntryId']),'___')!==FALSE){
+        } else if(mb_strpos(strval($event['EntryId']),'___')!==FALSE){
             if (isset($event['Content']['File content'])){unset($event['Content']['File content']);}
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($event['Content']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>TRUE,'hideHeader'=>TRUE));
@@ -379,7 +379,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     continue;
                 }
             }
-            if (strpos($event['State'],'Upcomming')!==FALSE){
+            if (mb_strpos($event['State'],'Upcomming')!==FALSE){
                 $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts&nbsp;in'=>$this->getTimeDiff($event['Start'],'now',DB_TIMEZONE,DB_TIMEZONE));
             } else {
                 $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Ends&nbsp;in'=>$this->getTimeDiff($event['End'],'now',DB_TIMEZONE,DB_TIMEZONE));
@@ -435,7 +435,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $selector=$this->pageState;
             $selector['EntryId']=key($formData['cmd']['EntryId']);
             $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',$selector['EntryId']);
-            if (strpos($selector['EntryId'],'___')===FALSE){
+            if (mb_strpos($selector['EntryId'],'___')===FALSE){
                 $event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $this->pageState['calendarDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'calendarDate',$event['Start']);
                 $this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
@@ -465,7 +465,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             if ($style['width']<10){$style['width']=10;}
             $class='calendar-event';
             if (!empty($this->pageState['EntryId'])){
-                if (strpos($EntryId,$this->pageState['EntryId'])!==FALSE){
+                if (mb_strpos($EntryId,$this->pageState['EntryId'])!==FALSE){
                     $class='calendar-event-selected';
                 }
             }
@@ -821,7 +821,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $arr['month']=$month;
         }
         // detect comma as year separator
-        $commaPos=strpos($string,',');
+        $commaPos=mb_strpos($string,',');
         if (!empty($commaPos)){
             $dateComps=explode(',',$string);
             $arr['year']=array_pop($dateComps);
@@ -837,9 +837,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $arr['day']=array_shift($dateComps);
             return $arr;
         }
-        $hyphenPos=strpos($string,'-');
+        $hyphenPos=mb_strpos($string,'-');
         $hyphenRPos=strrpos($string,'-');
-        $dotPos=strpos($string,'.');
+        $dotPos=mb_strpos($string,'.');
         $dotRPos=strrpos($string,'.');
         if (!empty($hyphenPos) && !empty($hyphenRPos)){
             // YYYY-MM-DD

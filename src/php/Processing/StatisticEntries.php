@@ -40,7 +40,7 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;    
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable():string{return $this->entryTable;}
@@ -334,7 +334,7 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 continue;
             }
             // is European application?
-            if (strpos($entry[$sourceSettings['Fallnummer column']],'EP')===FALSE && strpos($entry[$sourceSettings['Fallnummer column']],'WE')===FALSE){
+            if (mb_strpos($entry[$sourceSettings['Fallnummer column']],'EP')===FALSE && mb_strpos($entry[$sourceSettings['Fallnummer column']],'WE')===FALSE){
                 $result['Entry statistic']['Skipped not EP file']['value']++;
                 continue;
             }

@@ -29,7 +29,7 @@ class XLStools{
     {
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         if (!is_file($file)){return FALSE;}
-        if (strpos(mime_content_type($file),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')===FALSE){
+        if (mb_strpos(mime_content_type($file),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')===FALSE){
             return FALSE;
         } else {
             return TRUE;

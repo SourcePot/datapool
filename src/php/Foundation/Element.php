@@ -195,7 +195,7 @@ class Element{
         if (is_array($attrValue)){
             $newAttrValue='';
             foreach($attrValue as $key=>$value){
-                if (strpos($key,'height')!==FALSE || strpos($key,'width')!==FALSE || strpos($key,'size')!==FALSE || strpos($key,'top')!==FALSE || strpos($key,'left')!==FALSE || strpos($key,'bottom')!==FALSE || strpos($key,'right')!==FALSE){
+                if (mb_strpos($key,'height')!==FALSE || mb_strpos($key,'width')!==FALSE || mb_strpos($key,'size')!==FALSE || mb_strpos($key,'top')!==FALSE || mb_strpos($key,'left')!==FALSE || mb_strpos($key,'bottom')!==FALSE || mb_strpos($key,'right')!==FALSE){
                     if (is_numeric($value)){
                         $value=strval($value).'px';
                     } else {

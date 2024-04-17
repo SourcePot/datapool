@@ -34,7 +34,7 @@ class ClientAccess{
     
     public function init($oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         //var_dump($this->getAuthorizationHeader(array('client_id'=>'Gunterstraße 13','client_secret'=>'RsuQ632')));
     }
 
@@ -101,10 +101,10 @@ class ClientAccess{
         $this->deleteExpiredEntries();
         $data['grant_type']=(isset($data['grant_type']))?$data['grant_type']:'';
         $data['Authorization']=(isset($data['Authorization']))?$data['Authorization']:'';
-        if (strcmp($data['grant_type'],'authorization_code')===0 && strpos($data['Authorization'],'Basic ')===0){
+        if (strcmp($data['grant_type'],'authorization_code')===0 && mb_strpos($data['Authorization'],'Basic ')===0){
             // new token request
             $data=$this->newToken($data);
-        } else if (strpos($data['Authorization'],'Bearer ')===0 && isset($data['method'])){
+        } else if (mb_strpos($data['Authorization'],'Bearer ')===0 && isset($data['method'])){
             // check token
             $data=$this->checkToken($data);
             // call the method on the object provided as Client credential's scope

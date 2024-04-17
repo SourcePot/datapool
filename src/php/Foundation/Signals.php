@@ -30,7 +30,7 @@ class Signals{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable():string
@@ -301,7 +301,7 @@ class Signals{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
             $classStartPos=strrpos($entry['Folder'],'\\');
             $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
-            $classEndPos=strpos($entry['Folder'],'::');
+            $classEndPos=mb_strpos($entry['Folder'],'::');
             $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
         }
         asort($options);

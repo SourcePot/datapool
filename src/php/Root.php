@@ -146,7 +146,7 @@ final class Root{
         $this->structure['callingWWWscript']=$this->currentScript;
         $pathInfo=pathinfo($this->currentScript);
         // get current temp dir
-        if (strpos($this->currentScript,'resource.php')===FALSE && strpos($this->currentScript,'job.php')===FALSE){
+        if (mb_strpos($this->currentScript,'resource.php')===FALSE && mb_strpos($this->currentScript,'job.php')===FALSE){
             $GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         }
         // process all buttons
@@ -155,7 +155,7 @@ final class Root{
         // get trace
         // add "page html" to the return array
         $arr=array();
-        if (strpos($this->currentScript,'index.php')>0){
+        if (mb_strpos($this->currentScript,'index.php')>0){
             // build webpage
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
@@ -251,7 +251,7 @@ final class Root{
         $dir=$GLOBALS['dirs']['php'];
         $dirs=scandir($dir);
         foreach($dirs as $dirIndex=>$dirName){
-            if (strpos($dirName,'.php')!==FALSE || strpos($dirName,'.md')!==FALSE || empty(trim($dirName,'.'))){continue;}
+            if (mb_strpos($dirName,'.php')!==FALSE || mb_strpos($dirName,'.md')!==FALSE || empty(trim($dirName,'.'))){continue;}
             $type=match($dirName){'Interfaces'=>'200|Interface',
                                   'Foundation'=>'400|Kernal object',
                                   'Tools'=>'500|Kernal object',
@@ -263,7 +263,7 @@ final class Root{
             $files=scandir($subDir);
             // loop through all components found in $dir
             foreach($files as $filesIndex=>$file){
-                if (strpos($file,'.php')===FALSE){continue;}
+                if (mb_strpos($file,'.php')===FALSE){continue;}
                 $cleanType=trim($type,'|0123456789');
                 $class=str_replace('.php','',$file);
                 $classWithNamespace=__NAMESPACE__.'\\'.$dirName.'\\'.$class;
@@ -416,7 +416,7 @@ final class Root{
             file_put_contents($logFileName,$logFileContent);
             //fallback page
             $html='';
-            if (strpos($this->currentScript,'js.php')!==FALSE){
+            if (mb_strpos($this->currentScript,'js.php')!==FALSE){
                 $html.='Have run into a problem, please check debugging dir...';
             } else {
                 $html.=$this->getBackupPageContent();

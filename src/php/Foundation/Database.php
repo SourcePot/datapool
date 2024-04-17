@@ -42,6 +42,7 @@ class Database{
         $this->oc=$oc;
         $this->resetStatistic();
         $this->connect();
+        $this->collectDatabaseInfo();
         // set defualt entry access rights
         $accessOptions=$oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
         $this->rootEntryTemplate['Read']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
@@ -51,8 +52,7 @@ class Database{
     public function init(array $oc):void
     {
         $this->oc=$oc;
-        $this->collectDatabaseInfo();
-        $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable);
     }
     
     public function job(array $vars):array
@@ -82,7 +82,7 @@ class Database{
         $toReplace['{{EntryId}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
         if (!isset($_SESSION['currentUser']['EntryId'])){
             $toReplace['{{Owner}}']='SYSTEM';
-        } else if (strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
+        } else if (mb_strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
             $toReplace['{{Owner}}']=$_SESSION['currentUser']['EntryId'];
         } else {
             $toReplace['{{Owner}}']='ANONYM';
@@ -159,11 +159,37 @@ class Database{
     *
     * @return array The method returns the entry template array based on the table and template provided. The method completes the class property dbInfo which contains all entry templates for all tables.
     */
-    public function getEntryTemplateCreateTable(string $table,array $template=array()):array
+    public function getEntryTemplateCreateTable(string $table,string $callingClass='',$isDebugging=FALSE):array
     {
-        $GLOBALS['dbInfo'][$table]=array_merge($this->rootEntryTemplate,$template);
-        $this->createTable($table,$GLOBALS['dbInfo'][$table]);
-        return $GLOBALS['dbInfo'][$table];
+        // If template is registered already, return this template
+        if (isset($GLOBALS['dbInfo'][$table]['EntryId']['baseClass'])){
+            return $GLOBALS['dbInfo'][$table];
+        }
+        // Get template
+        $entryTemplate=array_merge($this->rootEntryTemplate);
+        if (method_exists($callingClass,'getEntryTemplate')){
+            $entryTemplate['EntryId']['baseClass']=$callingClass;
+            $entryTemplate=array_merge($entryTemplate,$this->oc[$callingClass]->getEntryTemplate());                
+        }
+        // check if database table is missing
+        if (!isset($GLOBALS['dbInfo'][$table])){
+            // create column definition sql
+            $columnsDefSql='';
+            foreach($entryTemplate as $column=>$colTemplate){
+                if (!empty($columnsDefSql)){$columnsDefSql.=" ,";}
+                $columnsDefSql.="`".$column."` ".$colTemplate['type'];
+                if ($colTemplate['index']=='PRIMARY'){
+                    $columnsDefSql.=" PRIMARY KEY";
+                } else if (!empty($colTemplate['index'])){
+                    $columnsDefSql.=", INDEX ".$colTemplate['index']." (".$column.")";
+                }
+            }
+            // create table
+            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=utf8 COLLATE utf8_unicode_ci;";
+            $this->executeStatement($sql,array(),$isDebugging);
+            $this->oc['logger']->log('notice','Created missing database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+        }
+        return $GLOBALS['dbInfo'][$table]=$entryTemplate;
     }
 
     /**
@@ -277,31 +303,7 @@ class Database{
         if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){$this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);}
         return $stmt;
     }
-    
-    private function createTable(string $table,array $entryTemplate,string $engine='MyISAM'):void
-    {
-        $sql="CREATE TABLE IF NOT EXISTS `".$table."` (";
-        foreach ($entryTemplate as $column=>$template){
-            if ($template['index']===FALSE){
-                // nothing to do
-            } else if (strcmp($template['index'],'PRIMARY')===0){
-                // set primary index
-                $primarySQL="PRIMARY KEY  (`".$column."`),";
-            } else {
-                // set index
-                $indexSQL="INDEX ".$template['index']."  (`".$column."`),";
-            }
-            $sql.="`".$column."` ".$template['type'].",";
-        }
-        if (isset($primarySQL)){$sql.=$primarySQL;}
-        if (isset($indexSQL)){$sql.=$indexSQL;}
-        $sql=trim($sql,',');
-        $sql.=')';
-        $sql.=" ENGINE=:engine DEFAULT CHARSET=utf8 COLLATE  utf8_unicode_ci;";
-        $inputs=array(":engine"=>$engine);
-        $this->executeStatement($sql,$inputs,FALSE);
-    }
-    
+
     private function deleteExpiredEntries():array
     {
         foreach($GLOBALS['dbInfo'] as $table=>$entryTemplate){
@@ -346,7 +348,7 @@ class Database{
             $column=trim($columns[0],' <>=!');
             if (!isset($entryTemplate[$column])){continue;}
             if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
-            if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
+            if ((mb_strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || mb_strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
                 $column='`'.$column.'`';
                 if (empty($value)){
                     if ($operator==='<' || $operator==='>' || $operator==='!'){$value='';} else {continue;}
@@ -391,7 +393,7 @@ class Database{
         if (!empty($sqlArr['sql'])){$sqlArr['sql'].=" AND";}
         $sqlArr['sql'].=" (((`".$rightType."` & ".intval($user['Privileges']).")>0) OR (`Owner` LIKE :Owner))";
         $sqlArr['inputs'][':Owner']=$user['Owner'];
-        if (strpos($sqlArr['sql'],'WHERE')===FALSE){$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
+        if (mb_strpos($sqlArr['sql'],'WHERE')===FALSE){$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
         return $sqlArr;
     }
     
@@ -414,9 +416,9 @@ class Database{
             $result[$column]=$value;
         } else if (is_array($entryTemplate[$column]['value'])){
             $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($value);
-        } else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
+        } else if (mb_strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
             $result[$column]=intval($value);
-        } else if (strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
+        } else if (mb_strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || mb_strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
             $result[$column]=floatval($value);
         } else {
             $result[$column]=$value;
@@ -557,7 +559,7 @@ class Database{
         $this->addStatistic('matches',$result['rowCount']);
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
             $result['rowIndex']++;
-            if (strpos($row['EntryId'],\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
+            if (mb_strpos($row['EntryId'],\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE){$result['isSkipRow']=FALSE;} else {$result['isSkipRow']=TRUE;}
             foreach($row as $column=>$value){
                 $result['hash']=crc32($result['hash'].$value);
                 $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
@@ -1028,7 +1030,7 @@ class Database{
                 $olInfo['firstEntryId']=$olInfo['lastEntryId']=$entry['EntryId'];
                 $olInfo['baseEntryId']=$this->getOrderedListKeyFromEntryId($olInfo['firstEntryId']);
             }
-            if (strpos($entry['EntryId'],$olInfo['baseEntryId'])===FALSE){
+            if (mb_strpos($entry['EntryId'],$olInfo['baseEntryId'])===FALSE){
                 $this->oc['logger']->log('notice','"Deleted invalid ordered list entry: Source="{Source}", EntryId="{EntryId}"',array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']));
                 $olInfo['error'][]='Invalid ordered list entry '.$entry['EntryId'];
                 $this->deleteEntries(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']),TRUE);

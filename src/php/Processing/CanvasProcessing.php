@@ -27,7 +27,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function init(array $oc){
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string{return $this->entryTable;}
@@ -153,7 +153,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $canvasElement){
             // continue if Processor is not CanvasProcessing class
             if (empty($canvasElement['Content']['Widgets']['Processor'])){continue;}
-            if (strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
+            if (mb_strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
             // canvas processing class found -> run processor
             $result=$this->runCanvasProcessing($canvasElement,$isTestRun);
             break;
@@ -174,7 +174,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             // entry template
             foreach($entry['Content'] as $contentKey=>$content){
                 if (is_array($content)){continue;}
-                if (strpos($content,'EID')!==0 || strpos($content,'eid')===FALSE){continue;}
+                if (mb_strpos($content,'EID')!==0 || mb_strpos($content,'eid')===FALSE){continue;}
                 $template=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($content);
                 if ($template){$base['entryTemplates'][$content]=$template;}
             }

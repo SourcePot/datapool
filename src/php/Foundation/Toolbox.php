@@ -22,7 +22,7 @@ class Toolbox{
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=strtolower(trim($table,'\\'));
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function init(array $oc)

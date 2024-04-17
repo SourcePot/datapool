@@ -32,8 +32,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $html='';
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
+            $this->tableCmdsProcessing();
             if (empty($selector['Source'])){
-                $html.=$this->dbUser();
+                //$html.=$this->dbUser();   // <-- requires proper rights
                 $html.=$this->dbInfo();
             } else {
                 $html.=$this->tableInfo($selector);
@@ -66,12 +67,16 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             $key=$keyValue['Variable_name'];
             if ($key=='version' || $key=="version_ssl_library" || $key=='storage_engine'){
                 $matrices['General'][trim($key,'@')]=array('value'=>$keyValue['Value']);
-            } else if (strpos($key,'character_set')!==FALSE){
+            } else if (mb_strpos($key,'character_set')!==FALSE){
                 $matrices['Character sets'][trim($key,'@')]=array('value'=>$keyValue['Value']);
-            } else if (strpos($key,'timeout')!==FALSE){
+            } else if (mb_strpos($key,'timeout')!==FALSE){
                 $matrices['Timeouts'][trim($key,'@')]=array('value'=>$keyValue['Value']);
-            } else if (strpos($key,'_size')!==FALSE){
-                $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($keyValue['Value'],3,1024).'B';
+            } else if (mb_strpos($key,'_size')!==FALSE){
+                if (intval($keyValue['Value'])>0){
+                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($keyValue['Value'],3,1024).'B';
+                } else {
+                    $value=$keyValue['Value'];
+                }
                 $matrices['Sizes'][trim($key,'@')]=array('value'=>$value);
             }
         }
@@ -127,9 +132,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             if ($tableInfo['TABLE_NAME']!==$table){continue;}
             unset($tableInfo['TABLE_NAME']);
             foreach($tableInfo as $key=>$value){
-                if (strpos($key,'_LENGTH')!==FALSE){
+                if (mb_strpos($key,'_LENGTH')!==FALSE){
                     $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($value,3,1024).'B';
-                } else if (strpos($key,'_ROWS')!==FALSE){
+                } else if (mb_strpos($key,'_ROWS')!==FALSE){
                     $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($value,3,1000);
                 }
                 $matrices[$tableKey][$key]=array('value'=>$value);
@@ -147,25 +152,36 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
 
     private function addTableCmds(array $matrix,array $selector):array
     {
-        $context=array('currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),4),'table'=>$selector['Source'],'class'=>__CLASS__,'function'=>__FUNCTION__,);
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (isset($formData['cmd']['DROP'])){
-            $sql='DROP TABLE '.$selector['Source'].';';
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
-            $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}"',$context);
-        } else if (isset($formData['cmd']['TRUNCATE'])){
-            $sql='TRUNCATE TABLE '.$selector['Source'].';';
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
-            $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}"',$context);
-        }
         $btns=array('TRUNCATE'=>'Empty table','DROP'=>'Drop table');
         $btnArr=array('tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         foreach($btns as $sqlCmd=>$key){
             $btnArr['element-content']=$key;
-            $btnArr['key']=array($sqlCmd);
+            $btnArr['key']=array($sqlCmd,$selector['Source']);
             $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr));
         }
         return $matrix;
+    }
+    
+    private function tableCmdsProcessing()
+    {
+        $context=array('currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),4),'class'=>__CLASS__,'function'=>__FUNCTION__,);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
+        if (isset($formData['cmd']['DROP'])){
+            $context['table']=key($formData['cmd']['DROP']);
+            $sql='DROP TABLE '.$context['table'].';';
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+            $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}"',$context);
+            // Reset $GLOBALS['dbInfo'] to create table
+            $baseClass=$GLOBALS['dbInfo'][$context['table']]['EntryId']['baseClass'];
+            unset($GLOBALS['dbInfo'][$context['table']]);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($context['table'],$baseClass);
+            $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}" and re-created this table.',$context);
+        } else if (isset($formData['cmd']['TRUNCATE'])){
+            $context['table']=key($formData['cmd']['TRUNCATE']);
+            $sql='TRUNCATE TABLE '.$context['table'].';';
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+            $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
+        }
     }
 }
 ?>

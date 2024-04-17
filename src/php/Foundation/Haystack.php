@@ -15,7 +15,8 @@ class Haystack{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array();
+    private $entryTemplate=array('Folder'=>array('index'=>'FOLDER_IND','type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
+                                 );
     
     public function __construct(array $oc)
     {
@@ -27,7 +28,7 @@ class Haystack{
     public function init(array $oc)
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,$this->entryTemplate);
+        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable():string

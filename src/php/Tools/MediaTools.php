@@ -37,11 +37,11 @@ class MediaTools{
         if (!is_file($file)){return $arr;}
         if (!isset($arr['selector']['Params']['File']['MIME-Type'])){
             $arr['html']='MIME-type missing';
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'audio')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'audio')===0){
             $arr=$this->getAudio($arr);
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'video')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'video')===0){
             $arr=$this->getVideo($arr);
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
             // add wrapper div
             $wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer');
@@ -53,7 +53,7 @@ class MediaTools{
             if (isset($arr['containerId'])){$imageArr['id'].='-'.$arr['containerId'];}
             $imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapper']['style']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
             if ($isSmallPreview){
                 $arr['html']='&plusb;';
             } else {
@@ -62,9 +62,9 @@ class MediaTools{
                 $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json);
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
             }
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/pdf')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/html')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'text/html')===0){
             $arr=$this->getHtml($arr);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
             if (strcmp(isset($arr['callingFunction'])?$arr['callingFunction']:'','entryList')===0){
@@ -72,11 +72,11 @@ class MediaTools{
             } else {
                 $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
             }
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'application/zip')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'application/zip')===0){
             $arr['html'].='&#10066;';    
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['File']['Extension']==='md'){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['File']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
-        } else if (strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
+        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
             $text=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($file);
             $arr=$this->addPreviewTextStyle($arr);
             $arr['tag']='p';
@@ -108,7 +108,7 @@ class MediaTools{
         if (!isset($arr['html'])){$arr['html']='';}
         if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
         if (!isset($arr['selector']['Params']['File']['MIME-Type'])){$arr['selector']['Params']['File']['MIME-Type']='text';}
-        if (strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
+        if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
             $arr['maxDim']=100;
             $iconSrc=$this->getImage($arr);
@@ -171,8 +171,8 @@ class MediaTools{
     private function addElementFromKeySettingValue(array $arrElements,$key,$value):array
     {
         // comments are excluded due to varying keys
-        if (strpos($key,'Content|Comments')===0){return $arrElements;}
-        if (strpos($arrElements['arr']['selector']['Source'],'settings')===0){return $arrElements;}
+        if (mb_strpos($key,'Content|Comments')===0){return $arrElements;}
+        if (mb_strpos($arrElements['arr']['selector']['Source'],'settings')===0){return $arrElements;}
         // if setting key does not exist yet add the standard key-value
         if (!isset($arrElements['arr']['setting']['Key tags'][$key])){
             $arrElements['arr']['settingNeedsUpdate']=TRUE;
@@ -182,7 +182,7 @@ class MediaTools{
             $arrElements['arr']['setting']['Key tags'][$key]=array('presentation-index'=>$presentationIndex);
             
             $class=$arrElements['arr']['selector']['Source'];
-            if (strpos($key,':::')===0){
+            if (mb_strpos($key,':::')===0){
                 $arrElements['arr']['setting']['Key tags'][$key]['class']=$class;
             } else {
                 $style=array('float'=>'left','clear'=>'both','font-size'=>'1em','padding'=>'0.5em','display'=>'initial');
@@ -195,7 +195,7 @@ class MediaTools{
         $arrElements['elements'][$presentationIndex]=$arrElements['arr']['setting']['Key tags'][$key];
         $arrElements['elements'][$presentationIndex]['entryKey']=$key;
         if (isset($arrElements['arr']['setting']['Key tags'][$key])){
-            if (strpos($key,':::')===0){
+            if (mb_strpos($key,':::')===0){
                 $widgetArr=$arrElements['arr'];
                 if (strcmp($key,':::userAbstract')===0){
                     $widgetArr['wrapResult']=array('tag'=>'div','style'=>array('float'=>'left','clear'=>'both','width'=>'100%','color'=>'#000','background-color'=>'#fff8'));
@@ -419,17 +419,17 @@ class MediaTools{
             //-- create image from file
             $orgImage=FALSE;
             try{
-                if (strpos($imgArr['fileType'],'/png')!==FALSE){
+                if (mb_strpos($imgArr['fileType'],'/png')!==FALSE){
                     $orgImage=imagecreatefrompng($imgArr['sourceFile']);
-                } else if (strpos($imgArr['fileType'],'/gif')!==FALSE){
+                } else if (mb_strpos($imgArr['fileType'],'/gif')!==FALSE){
                     $orgImage=imagecreatefromgif($imgArr['sourceFile']);
-                } else if (strpos($imgArr['fileType'],'/bmp')!==FALSE){
+                } else if (mb_strpos($imgArr['fileType'],'/bmp')!==FALSE){
                     $orgImage=imagecreatefromwbmp($imgArr['sourceFile']);
-                } else if (strpos($imgArr['fileType'],'/webp')!==FALSE){
+                } else if (mb_strpos($imgArr['fileType'],'/webp')!==FALSE){
                     $orgImage=imagecreatefromwebp($imgArr['sourceFile']);
-                } else if (strpos($imgArr['fileType'],'/jpg')!==FALSE){
+                } else if (mb_strpos($imgArr['fileType'],'/jpg')!==FALSE){
                     $orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
-                } else if (strpos($imgArr['fileType'],'/jpeg')!==FALSE){
+                } else if (mb_strpos($imgArr['fileType'],'/jpeg')!==FALSE){
                     $orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
                 } else {
                     $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($imgArr['sourceFile']);
