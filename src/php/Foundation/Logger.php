@@ -35,7 +35,7 @@ class Logger
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init(array $oc)
@@ -113,7 +113,7 @@ class Logger
     
     public function addLog(LogRecord $record)
     {
-        $level=strtolower($record->level->name);
+        $level=mb_strtolower($record->level->name);
         $context=array_merge($record->context,$record->extra);
         $context['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($this->levelConfig[$level]['hashIp']);
         $entry=$this->levelConfig[$level];

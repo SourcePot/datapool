@@ -83,7 +83,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
     public function init(array $oc)
@@ -784,7 +784,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private function guessDateComps($string,bool $isExcelDate=FALSE):array
     {
-        $arr=array('System'=>'','System short'=>'','isValid'=>TRUE,'string'=>$string,'time'=>'12:00:00');
+        $arr=array('System short'=>'','System'=>'','isValid'=>TRUE,'string'=>$string,'time'=>'12:00:00');
         $string=strval($string);
         $string=trim(mb_strtolower($string));
         if (empty($string)){

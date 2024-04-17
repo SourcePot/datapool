@@ -91,7 +91,7 @@ class DataExplorer{
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init(array $oc)
@@ -438,7 +438,7 @@ class DataExplorer{
         }
         $type=$this->oc['SourcePot\Datapool\Root']->class2source($callingClass);
         $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>strtolower($type));
+        $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>mb_strtolower($type));
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
         $entry['Content']=array();

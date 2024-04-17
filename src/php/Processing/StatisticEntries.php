@@ -35,7 +35,7 @@ class StatisticEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init(array $oc){

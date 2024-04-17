@@ -37,7 +37,7 @@ class PdfTools{
     
     public function getFormat(string $paper='a4'):array
     {
-        $paper=strtolower($paper);
+        $paper=mb_strtolower($paper);
         if (isset($this->formats[$paper])){
             return $this->formats[$paper];
         } else {

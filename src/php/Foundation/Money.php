@@ -28,7 +28,7 @@ class Money{
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));        
+        $this->entryTable=mb_strtolower(trim($table,'\\'));        
     }
     
     public function init(array $oc)
@@ -181,7 +181,7 @@ class Money{
                         $keys[$columnIndex]=$cellValueArr[3];
                         $currencies[$cellValueArr[3]]=$cellValueArr[0];
                     } else {
-                        $keys[$columnIndex]=ucfirst(strtolower($cellValueArr[0]));
+                        $keys[$columnIndex]=ucfirst(mb_strtolower($cellValueArr[0]));
                     }
                 }
             }

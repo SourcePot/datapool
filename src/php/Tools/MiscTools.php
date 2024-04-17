@@ -43,7 +43,7 @@ final class MiscTools{
     {
         $style='';
         foreach($arr as $property=>$value){
-            $property=strtolower($property);
+            $property=mb_strtolower($property);
             if (mb_strpos($property,'height')!==FALSE || mb_strpos($property,'width')!==FALSE || mb_strpos($property,'size')!==FALSE || mb_strpos($property,'top')!==FALSE || mb_strpos($property,'left')!==FALSE || mb_strpos($property,'bottom')!==FALSE || mb_strpos($property,'right')!==FALSE){
                 if (is_numeric($value)){$value=strval($value).'px';} else {$value=strval($value);}
             }
@@ -302,7 +302,7 @@ final class MiscTools{
                 $cells=explode('</td>',$row);
                 foreach($cells as $cellIndex=>$cell){
                     if (stripos($cell,'"code"')!==FALSE){
-                        $cell=strtolower(strip_tags($cell));
+                        $cell=mb_strtolower(strip_tags($cell));
                         $cell=trim($cell);
                         $key2arr=explode(' ',$cell);
                     }
@@ -704,7 +704,7 @@ final class MiscTools{
     }
 
     public function convert($value,$dataType){
-        $dataType=strtolower($dataType);
+        $dataType=mb_strtolower($dataType);
         $newValue=match($dataType){
                     'string'=>$this->str2str($value),
                     'stringnowhitespaces'=>$this->convert2stringNoWhitespaces($value),
@@ -724,7 +724,7 @@ final class MiscTools{
     
     private function str2str($string):string
     {
-        $string=strval($value);
+        $string=strval($string);
         if ($string===\SourcePot\Datapool\Root::NULL_DATE){
             return '';
         } else {
@@ -741,9 +741,9 @@ final class MiscTools{
     public function str2float($string,$lang=''):float
     {
         $string=strval($string);
-        $lang=strtolower($lang);
+        $lang=mb_strtolower($lang);
         // get number from string
-        $string=preg_replace('/[^0-9\.\,\-]/','',$string);
+        $string=preg_replace('/[^0-9\.\,\-]/u','',$string);
         // validate language for number format
         $dotChunk=mb_strrchr($string,'.');
         $dotCount=mb_strlen($string)-mb_strlen(str_replace('.','',$string));
@@ -790,15 +790,17 @@ final class MiscTools{
     }
     public function convert2stringNoWhitespaces($value):string
     {
-        $value=preg_replace("/\s/",'',strval($value));
+        $value=strval($value);
+        $value=preg_replace('/\s+/u','',$value);
         return $value;
     }
 
     public function convert2splitString($value):array|bool
     {
-        $value=strtolower(strval($value));
+        $value=strval($value);
+        $value=mb_strtolower($value);
         $value=trim($value);
-        $value=preg_split("/[^a-zäöü0-9ß]+/",$value);
+        $value=preg_split("/[^a-zäöü0-9ß]+/u",$value);
         return $value;
     }
     
@@ -826,7 +828,7 @@ final class MiscTools{
         $value=strval($value);
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-        preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/',$value,$matches);
+        preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u',$value,$matches);
         if (empty($matches[0])){return array('Match'=>'');}
         $arr=array_combine($keyTemplate,$matches);
         $arr['Region']='  ';
@@ -834,7 +836,7 @@ final class MiscTools{
         $arr['Part']='  ';
         $prefixSuffix=explode($matches[0],$value);
         if (!empty($prefixSuffix[1])){
-            $suffix=preg_replace('/\s+/','',$prefixSuffix[1]);
+            $suffix=preg_replace('/\s+/u','',$prefixSuffix[1]);
             $suffix=strtoupper($suffix);
             $suffix=str_split($suffix,2);
             foreach($regions as $rc=>$region){
@@ -859,7 +861,7 @@ final class MiscTools{
                 }
                 // get part
                 $suffix=implode('',$suffix);
-                $part=preg_replace('/[^0-9]+/','',$suffix);
+                $part=preg_replace('/[^0-9]+/u','',$suffix);
                 $nonNumericSuffix=str_replace($part,'',$suffix);
                 if (strlen($part)<2){$part='0'.$part;}
                 if (!empty($part)){$arr['Part']=$part;}
@@ -869,7 +871,7 @@ final class MiscTools{
                 }
             }
         }
-        foreach($keyTemplate as $key){$arr[$key]=preg_replace('/\s+/','',$arr[$key]);}
+        foreach($keyTemplate as $key){$arr[$key]=preg_replace('/\s+/u','',$arr[$key]);}
         if (strlen($arr['Year'])===2){
             if (intval($arr['Year'])<50){
                 $arr['Year']='20'.$arr['Year'];
@@ -885,14 +887,14 @@ final class MiscTools{
         return $arr;
     }
 
-    public function valueArr2value($value,$datatypeOrKey=FALSE)
+    public function valueArr2value($value,$datatypeOrKey='')
     {
-        $datatype2key=array('date'=>'System','timestamp'=>'System','exceldate'=>'System','money'=>'','unycom'=>'Match');
+        $datatype2key=array('date'=>'System short','timestamp'=>'System short','exceldate'=>'System short','money'=>'','unycom'=>'Match');
         $key=(isset($datatype2key[$datatypeOrKey]))?$datatype2key[$datatypeOrKey]:$datatypeOrKey;
-        if (!isset($value[$key]) && $key!==FALSE){
+        if (!isset($value[$key]) && $key!==''){
             // If datatypeOrKey exists, a suitable key-value pair should also exist in the data field
             $value=FALSE;
-        } else if (isset($value[$key])){
+        } else if (is_array($value) && isset($value[$key])){
             // Standard key matches a key-value pair 
             $value=$value[$key];
         } else if (is_array($value)){

@@ -27,7 +27,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init(array $oc)
@@ -195,7 +195,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function calculationRules(array $callingElement):string
     {
-        $addKeys=(isset($this->ruleOptions[strtolower(__FUNCTION__)]))?$this->ruleOptions[strtolower(__FUNCTION__)]:array();
+        $addKeys=(isset($this->ruleOptions[mb_strtolower(__FUNCTION__)]))?$this->ruleOptions[mb_strtolower(__FUNCTION__)]:array();
         $contentStructure=array('"A" selected by...'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys),
                                 'Default value "A"'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'Operation'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>array('+'=>'+','-'=>'-','*'=>'*','/'=>'/')),

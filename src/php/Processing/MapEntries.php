@@ -36,7 +36,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init(array $oc){
@@ -365,7 +365,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
     }
     
-    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule){
+    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule)
+    {
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
         $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
@@ -390,8 +391,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             // compare numbers
             $compareValue=floatval($rule['Compare value']);
-            if (strcmp($dataType,'date')===0){
-                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue,'System');
+            if (stripos($dataType,'date')===0){
+                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue,'System short');
                 $targetValue=strtotime($targetValue);
                 $compareValue=strtotime($rule['Compare value']);
             } else if (strcmp($dataType,'int')===0){

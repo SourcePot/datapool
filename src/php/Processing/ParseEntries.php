@@ -26,7 +26,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init(array $oc){
@@ -388,7 +388,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
         
-    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType){
+    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType)
+    {
         // value datatype conversions
         $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
         // add new value to entry

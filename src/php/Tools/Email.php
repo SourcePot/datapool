@@ -40,7 +40,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
     
     public function init($oc){
@@ -263,12 +263,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $params=array();
         if ($p->parameters){
             foreach ($p->parameters as $x){
-                $params[strtolower($x->attribute)]=$x->value;
+                $params[mb_strtolower($x->attribute)]=$x->value;
             }
         }
         if (isset($p->dparameters)){
             foreach ($p->dparameters as $x){
-                $params[strtolower($x->attribute)]=$x->value;
+                $params[mb_strtolower($x->attribute)]=$x->value;
             }
         }
         // ATTACHMENT: any part with a filename is an attachment, so an attached text file (type 0) is not mistaken as the message.
@@ -282,7 +282,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         if ($p->type==0 && $data){
             // Messages may be split in different parts because of inline attachments,
             // so append parts together with blank row.
-            if (strtolower($p->subtype)=='plain'){
+            if (mb_strtolower($p->subtype)=='plain'){
                 $this->msgEntry['plainmsg'].=trim($data) ."\n\n";
             } else {
                 $this->msgEntry['htmlmsg'].=$data ."<br><br>";
@@ -314,14 +314,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $valueStart=mb_strpos($line,':');
             if ($valueStart===FALSE){continue;}
             $keyA=trim(mb_substr($line,0,$valueStart));
-            if ($lowerCaseKeys){$keyA=strtolower($keyA);}
+            if ($lowerCaseKeys){$keyA=mb_strtolower($keyA);}
             $template[$keyA]=array();
             $line=mb_substr($line,$valueStart+2);
             preg_match_all('/([a-z]+)=([^;]+)/',$line,$matches);
             foreach($matches[0] as $matchIndex=>$match){
                 $line=str_replace($match,'',$line);
                 $keyB=$matches[1][$matchIndex];
-                if ($lowerCaseKeys){$keyB=strtolower($keyB);}
+                if ($lowerCaseKeys){$keyB=mb_strtolower($keyB);}
                 $template[$keyA][$keyB]=trim($matches[2][$matchIndex],"\"\t\n\r; ");
             }
             $line=trim($line,"\"\t\n\r; ");

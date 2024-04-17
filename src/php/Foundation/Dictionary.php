@@ -24,7 +24,7 @@ class Dictionary{
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=strtolower(trim($table,'\\'));
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
     public function init(array $oc)
@@ -56,7 +56,7 @@ class Dictionary{
     public function getValidLngCode($lngCode):string
     {
         $lngCode=mb_substr(strval($lngCode),0,2);
-        $lngCode=strtolower($lngCode);
+        $lngCode=mb_strtolower($lngCode);
         if (isset($this->lngCodes[$lngCode])){
             return $lngCode;
         } else {
@@ -110,7 +110,7 @@ class Dictionary{
     {
         // This method provides the translation of the phrase argument or updates the translation if translation argument is provided.
         if (empty($langCode)){$langCode=$_SESSION['page state']['lngCode'];}
-        $langCode=strtolower($langCode);
+        $langCode=mb_strtolower($langCode);
         if (!is_string($phrase)){return $phrase;}
         if (strcmp($langCode,'en')===0 || empty(strip_tags($phrase))){return $phrase;}
         $elementId=md5($phrase.'|'.$langCode);

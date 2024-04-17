@@ -260,7 +260,7 @@ class Database{
     private function connect():string
     {
         $namespaceComps=explode('\\',__NAMESPACE__);
-        $dbName=strtolower($namespaceComps[0]);
+        $dbName=mb_strtolower($namespaceComps[0]);
         $access=array('Class'=>__CLASS__,'EntryId'=>'connect');
         $access['Read']=65535;
         $access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
