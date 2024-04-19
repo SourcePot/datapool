@@ -437,7 +437,7 @@ class Database{
         $entry['nowTimeStamp']=time();
         $entry['nowDateUTC']=date('Y-m-d');
         $entry['nowTimeUTC']=date('H:i:s');
-        $entry['+10DaysDateUTC']=date('Y-m-d',strtotime("+10 days"));
+        $entry['+10DaysDateUTC']=date('Y-m-d 12:00:00',86400+time());
         if (!empty($entry['Content']['File content'])){
             $entry['UNYCOM cases']=array();
             $entry['UNYCOM patents']=array();
@@ -719,6 +719,7 @@ class Database{
         $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
         $stmt=$this->executeStatement($sql,$inputs,FALSE);
         $this->addStatistic('inserted',$stmt->rowCount());
+        $entry=$this->enrichEntry($entry);
         return $entry;
     }
 
@@ -799,7 +800,7 @@ class Database{
         // get existing entry
         $existingEntry=$this->entryById($selector,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
-            // no existing entry found, insert and return entry
+            // no existing entry found -> insert and return entry
             if (is_file($attachment)){
                 // valid file attachment found
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
@@ -814,7 +815,7 @@ class Database{
             $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
             $entry=$this->insertEntry($entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
-            // existing entry, update
+            // existing entry -> update
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
             // add attachment 
             if (is_file($attachment)){
@@ -830,8 +831,8 @@ class Database{
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
-            // existing entry, no update 
-            $entry=$this->entryById(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']),$isSystemCall,'Read');
+            // existing entry -> no update 
+            $entry=$existingEntry;
         }
         return $entry;
     }

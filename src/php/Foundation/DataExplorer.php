@@ -117,7 +117,7 @@ class DataExplorer{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $canvasElement){
             if (empty($canvasElement['Content']['Selector']['Source'])){continue;}
             $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
-            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$value,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
+            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$value);
         }
         // cleanup
         if (isset($signal['Date'])){

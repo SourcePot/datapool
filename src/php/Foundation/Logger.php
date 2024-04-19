@@ -62,7 +62,7 @@ class Logger
         foreach($relevantGroups as $Group){
             $selector['Group']=$Group;
             $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE);
-            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,'Entries',$Group,$value,'int','ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
+            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,'Entries',$Group,$value,'int');
         }
         // cleanup
         if (isset($signal['Date'])){
