@@ -26,8 +26,11 @@ final class Root{
     // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
     public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
-    public const NULL_DATE='9000-12-31 23:59:59';
     public const DB_TIMEZONE='UTC';
+    public const PROFILING_RATE=0.2;        // 0 ... 1 with 1 -> 100% profiling and 0 -> 0% profiling
+    public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
+    public const PROFILING_BACKTRACE=4;
+    public const NULL_DATE='9999-12-30 12:12:12';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
     
@@ -35,8 +38,13 @@ final class Root{
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
     private $currentScript='';
     
+    private $profileActive=NULL;
+    private $profile=array();
+    private $profileFileName=FALSE;
+    
     public function __construct()
     {
+        $this->profileActive=(mt_rand(0,999)<floatval(self::PROFILING_RATE)*1000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
         $oc=array(__CLASS__=>$this);
@@ -178,6 +186,10 @@ final class Root{
         // script time consumption in ms
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal('All_scripts',__FUNCTION__,'Script init time consumption [ms]',round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000),'int');
+        if (self::PROFILING_PROFILE[$pathInfo['basename']]){
+            $this->profileFileName=time().'-profile-'.$pathInfo['filename'].'.csv';
+            $this->writeProfile($this->profileFileName);
+        };
         return $arr;
     }
     
@@ -462,6 +474,77 @@ final class Root{
             }
         }
         return $arr;
-    }    
+    }
+
+    private function addTrace2row($row):array
+    {
+        $btOffset=2;
+        $btIndex=self::PROFILING_BACKTRACE+$btOffset;
+        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,$btIndex+1);
+        for($i=$btIndex;$i>$btOffset;$i--){
+            $row['Trace '.$i]=(isset($trace[$i]))?$trace[$i]['function'].'['.$trace[$i]['line'].']':'';
+        }
+        $row['Hash']=md5(implode('|',$row));
+        return $row;
+    }
+
+    public function startStopWatch($callingClass,$callingFunction,$name)
+    {
+        $startTimeStamp=hrtime(TRUE);
+        if ($this->profileActive){
+            if (!isset($this->profile['meta'])){
+                $this->profile['meta']=array('Date'=>date('Y-m-d H:i:s'),'Zero'=>$startTimeStamp);
+            }
+            $row=array('CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name);
+            $row=$this->addTrace2row($row);
+            $row['Start [ms]']=$startTimeStamp;
+            $row['Diff [ms]']=FALSE;
+            $row['Count']=1;
+            $this->profile[$row['Hash']][$startTimeStamp]=$row;
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    public function stopStopWatch($callingClass,$callingFunction,$name)
+    {
+        if ($this->profileActive){
+            $stopTimeStamp=hrtime(TRUE);
+            $profileMeta=$this->profile['meta'];
+            $row=array('CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name);
+            $row=$this->addTrace2row($row);
+            foreach($this->profile[$row['Hash']] as $startTimeStamp=>$row){
+                if ($row['Diff [ms]']===FALSE){
+                    $row['Start [ms]']=round(($row['Start [ms]']-$profileMeta['Zero'])/1000000,3);
+                    $row['Diff [ms]']=round(($stopTimeStamp-$startTimeStamp)/1000000,3);
+                    $this->profile[$row['Hash']][$startTimeStamp]=$row;
+                    break;
+                } else {
+                   $row['Count']++;
+                }
+            }
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    private function writeProfile($fileName)
+    {
+        if (!$this->profileActive || empty($this->profile)){return FALSE;}
+        unset($this->profile['meta']);
+        $lb="\n\r";
+        $delimiter="\t";
+        $file=$GLOBALS['dirs']['logging'].$fileName;
+        $fileContent=implode($delimiter,array_keys(current(current($this->profile))));
+        foreach($this->profile as $hash=>$profileArr){
+            foreach($profileArr as $stopTimeStamp=>$row){
+                $fileContent.=$lb.implode($delimiter,$row);
+            }
+        }
+        file_put_contents($file,$fileContent);
+    }
+
 }
 ?>

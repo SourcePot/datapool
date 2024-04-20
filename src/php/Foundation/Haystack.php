@@ -15,8 +15,7 @@ class Haystack{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array('Folder'=>array('index'=>'FOLDER_IND','type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-                                 );
+    private $entryTemplate=array();
     
     public function __construct(array $oc)
     {
@@ -41,7 +40,7 @@ class Haystack{
         return $this->entryTemplate;
     }
     
-    public function processSQLquery($sql,$inputs)
+    public function processSQLquery(array $stmtArr)
     {
         
     }

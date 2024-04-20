@@ -17,10 +17,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array('Group'=>array('index'=>FALSE,'value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
-                                 'Folder'=>array('index'=>FALSE,'value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
-                                 'Start'=>array('index'=>FALSE,'value'=>'{{TODAY}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
-                                 'End'=>array('index'=>FALSE,'value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
+    private $entryTemplate=array('Group'=>array('value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
+                                 'Folder'=>array('value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
+                                 'Start'=>array('value'=>'{{TODAY}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
+                                 'End'=>array('value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
                                  );
 
     private $slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');

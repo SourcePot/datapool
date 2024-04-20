@@ -152,7 +152,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
 
     private function addTableCmds(array $matrix,array $selector):array
     {
-        $btns=array('TRUNCATE'=>'Empty table','DROP'=>'Drop table');
+        $btns=array('INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table');
         $btnArr=array('tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         foreach($btns as $sqlCmd=>$key){
             $btnArr['element-content']=$key;
@@ -166,7 +166,11 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     {
         $context=array('currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),4),'class'=>__CLASS__,'function'=>__FUNCTION__,);
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
-        if (isset($formData['cmd']['DROP'])){
+        if (isset($formData['cmd']['INDICES'])){
+            $context['table']=key($formData['cmd']['INDICES']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->setTableIndices($context['table']);
+            $this->oc['logger']->log('notice','User "{currentUser}" set standard inices for table "{table}".',$context);
+        } else if (isset($formData['cmd']['DROP'])){
             $context['table']=key($formData['cmd']['DROP']);
             $sql='DROP TABLE '.$context['table'].';';
             $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);

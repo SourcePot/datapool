@@ -23,18 +23,18 @@ class Database{
     private $entryTable='settings';
     private $entryTemplate=array();
 
-    private $rootEntryTemplate=array('EntryId'=>array('index'=>'PRIMARY','type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0),
-                                 'Group'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
-                                 'Folder'=>array('index'=>FALSE,'type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-                                 'Name'=>array('index'=>'NAME_IND','type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
-                                 'Type'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Source}}','Description'=>'This is the data-type of Content'),
-                                 'Date'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
-                                 'Content'=>array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
-                                 'Params'=>array('index'=>FALSE,'type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
-                                 'Expires'=>array('index'=>FALSE,'type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
-                                 'Read'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('index'=>FALSE,'type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
-                                 'Owner'=>array('index'=>FALSE,'type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
+    private $rootEntryTemplate=array('EntryId'=>array('type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0),
+                                 'Group'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
+                                 'Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
+                                 'Name'=>array('type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
+                                 'Type'=>array('type'=>'VARCHAR(100)','value'=>'{{Source}}','Description'=>'This is the data-type of Content'),
+                                 'Date'=>array('type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
+                                 'Content'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
+                                 'Params'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
+                                 'Expires'=>array('type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
+                                 'Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
+                                 'Owner'=>array('type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
     
     public function __construct(array $oc)
@@ -153,11 +153,10 @@ class Database{
     }
     
     /**
-    * This function returns the entry template based on the root entry template and
-    * the argument $template. In addition this funtion calls create table which creates and updates the
-    * database table based on the entry template.
+    * This function returns the entry template based on the root entry template.
+    * If creates all tables that does not exist.
     *
-    * @return array The method returns the entry template array based on the table and template provided. The method completes the class property dbInfo which contains all entry templates for all tables.
+    * @return array The method returns the entry template array for the table.
     */
     public function getEntryTemplateCreateTable(string $table,string $callingClass='',$isDebugging=FALSE):array
     {
@@ -176,26 +175,43 @@ class Database{
             // create column definition sql
             $columnsDefSql='';
             foreach($entryTemplate as $column=>$colTemplate){
-                if (!empty($columnsDefSql)){$columnsDefSql.=" ,";}
+                if (!empty($columnsDefSql)){$columnsDefSql.=", ";}
                 $columnsDefSql.="`".$column."` ".$colTemplate['type'];
-                if ($colTemplate['index']=='PRIMARY'){
-                    $columnsDefSql.=" PRIMARY KEY";
-                } else if (!empty($colTemplate['index'])){
-                    $columnsDefSql.=", INDEX ".$colTemplate['index']." (".$column.")";
-                }
             }
             // create table
             $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=utf8 COLLATE utf8_unicode_ci;";
-            $this->executeStatement($sql,array(),$isDebugging);
+            $this->executeStatement($sql,array());
             $this->oc['logger']->log('notice','Created missing database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+            // set standard indices
+            $this->setTableIndices($table);
         }
         return $GLOBALS['dbInfo'][$table]=$entryTemplate;
+    }
+    
+    /**
+    * The method removes old indices as well as the primary key and adds the standard indices
+    *
+    * @param array $tabel Is the database table  
+    * @return PDOstatement Is teh statement after execution of the prepared sql-statement
+    */
+    public function setTableIndices(string $table)
+    {
+        // set primary key
+        $sql="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `PRIMARY`;";
+        $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`);";
+        // set indices
+        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `NAME_IND`;"; 
+        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `FOLDER_IND`;"; 
+        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `GROUP_IND`;"; 
+        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `STD`;"; 
+        $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(40),`Group`(30),`Folder`(30),`Name`(40));";
+        $this->oc['logger']->log('notice','Added index to database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+        return $this->executeStatement($sql,array());
     }
 
     /**
     * This function selects the $entry-specific unifyEntry() function based on $entry['Source']
     * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
-    *
     */
     public function unifyEntry(array $entry,bool $addEntryDefaults=FALSE):array
     {
@@ -278,6 +294,11 @@ class Database{
         return $this->getDbStatus();
     }
     
+    /**
+    * The method collects all relevant data of the database tables.
+    *
+    * @return array Is content of the global variable 'dbInfo'
+    */
     private function collectDatabaseInfo():array
     {
         $sql='SHOW TABLES;';
@@ -290,18 +311,27 @@ class Database{
         return $GLOBALS['dbInfo'];
     }
 
-    public function executeStatement(string $sql,array $inputs=array(),bool $debugging=FALSE):object
+    public function executeStatement(string $sql,array $inputs=array()):object
     {
-        $debugArr=array('sql'=>$sql,'inputs'=>$inputs);
-        $stmt=$this->dbObj->prepare($sql);
-        foreach($inputs as $bindKey=>$bindValue){
-            if ($debugging){$debugArr['sql']=str_replace($bindKey,strval($bindValue),$debugArr['sql']);}
-            $stmt->bindValue($bindKey,$bindValue);
+        $stmtArr=$this->bindValues($sql,$inputs);
+        $this->oc['SourcePot\Datapool\Root']->startStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
+        $stmtArr['stmt']->execute();
+        if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){
+            $this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($stmtArr);
         }
-        if ($debugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__);}
-        $stmt->execute();
-        if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){$this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($sql,$inputs);}
-        return $stmt;
+        $this->oc['SourcePot\Datapool\Root']->stopStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
+        return $stmtArr['stmt'];
+    }
+    
+    private function bindValues(string $sql,array $inputs=array()):array
+    {
+        $return=array('sql'=>$sql,'input'=>$inputs,'stmt'=>$this->dbObj->prepare($sql),'sqlSimulated'=>$sql);
+        foreach($inputs as $bindKey=>$bindValue){
+            $simulatedValue="'".$bindValue."'";
+            $return['sqlSimulated']=str_replace($bindKey,$simulatedValue,$return['sqlSimulated']);
+            $return['stmt']->bindValue($bindKey,$bindValue);
+        }
+        return $return;
     }
 
     private function deleteExpiredEntries():array
@@ -426,6 +456,12 @@ class Database{
         return $result;    
     }
     
+    /**
+    * The method adds entry meta data and returns the enriched entry.
+    *
+    * @param array $entry Is the orginal entry  
+    * @return array $entry Is the enriched entry
+    */
     private function enrichEntry(array $entry):array
     {
         $entry['currentUserId']='ANONYM';
