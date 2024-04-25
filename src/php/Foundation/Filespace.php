@@ -806,6 +806,7 @@ class Filespace{
             header('Content-Disposition: attachment; filename="'.$pathinfo['basename'].'"');
             header('Content-Length: '.fileSize($file));
             readfile($file);
+            exit;
         } else if (isset($formData['cmd']['clear']['all'])){
             $clearAll=TRUE;
         } else if (isset($formData['cmd']['remove'])){
