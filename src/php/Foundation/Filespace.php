@@ -795,5 +795,62 @@ class Filespace{
         return $statistics;
     }
     
+    public function loggerFilesWidget()
+    {
+        $clearAll=FALSE;
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['cmd']['download'])){
+            $file=$GLOBALS['dirs']['logging'].key($formData['cmd']['download']);
+            $pathinfo=pathinfo($file);
+            header('Content-Type: text/'.$pathinfo['extension']);
+            header('Content-Disposition: attachment; filename="'.$pathinfo['basename'].'"');
+            header('Content-Length: '.fileSize($file));
+            readfile($file);
+        } else if (isset($formData['cmd']['clear']['all'])){
+            $clearAll=TRUE;
+        } else if (isset($formData['cmd']['remove'])){
+            $file=key($formData['cmd']['remove']);
+            unlink($GLOBALS['dirs']['logging'].$file);
+        }
+        $btnArr=array('tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,);
+        $matrix=array();
+        $files=scandir($GLOBALS['dirs']['logging']);
+        foreach($files as $fileName){
+            if (strlen($fileName)<3){continue;}
+            $file=$GLOBALS['dirs']['logging'].$fileName;
+            if ($clearAll){
+                unlink($file);
+                continue;
+            }
+            $matrix[$fileName]=pathinfo($file);
+            $matrix[$fileName]['Size']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str(filesize($file),3,1024).'B';
+            $matrix[$fileName]['Date']=date('Y-m-d H:i:s',filemtime($file));
+            $btnArr['key']=array('download',$fileName);
+            $btnArr['element-content']='&#8892;';
+            $btnArr['hasCover']=FALSE;
+            $matrix[$fileName]['Download']=$btnArr;
+            $btnArr['key']=array('remove',$fileName);
+            $btnArr['hasCover']=TRUE;
+            $btnArr['element-content']='&xcup;';
+            $matrix[$fileName]['Delete']=$btnArr;
+        }
+        if ($matrix){
+            foreach(current($matrix) as $column=>$value){
+                if ($column==='dirname'){
+                    $matrix['lastRow'][$column]='Remove all logging files';
+                } else if ($column==='Delete'){
+                    $btnArr['key']=array('clear','all');
+                    $matrix['lastRow'][$column]=$btnArr;
+                } else {
+                    $matrix['lastRow'][$column]='';
+                }
+            }
+            ksort($matrix);
+            return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Logging files','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE));
+        } else {
+            return '';
+        }
+    }
+    
 }
 ?>

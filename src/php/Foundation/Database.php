@@ -247,7 +247,7 @@ class Database{
             if (is_string($entry[$column])){
                 $entry[$column]=strtr($entry[$column],$toReplace);
             }
-        } // loop throug entry-template-array
+        } // loop through entry-template-array
         $debugArr['entry out']=$entry;
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);
@@ -315,9 +315,13 @@ class Database{
     {
         $stmtArr=$this->bindValues($sql,$inputs);
         $this->oc['SourcePot\Datapool\Root']->startStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
-        $stmtArr['stmt']->execute();
-        if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){
-            $this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($stmtArr);
+        try{
+            $stmtArr['stmt']->execute();
+            if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){
+                $this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($stmtArr);
+            }
+        } catch (\Exception $e){
+            $this->oc['logger']->log('critical','SQL execution error: "{error}".',array('class'=>__CLASS__,'function'=>__FUNCTION__,'error'=>$e->getMessage()));
         }
         $this->oc['SourcePot\Datapool\Root']->stopStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
         return $stmtArr['stmt'];
@@ -471,6 +475,7 @@ class Database{
             $entry['currentUser']=$_SESSION['currentUser']['Content']['Contact details']['First name'].' '.$_SESSION['currentUser']['Content']['Contact details']['Family name'];
         }
         $entry['nowTimeStamp']=time();
+        $entry['nowDateTimeUTC']=date('Y-m-d H:i:s');
         $entry['nowDateUTC']=date('Y-m-d');
         $entry['nowTimeUTC']=date('H:i:s');
         $entry['+10DaysDateUTC']=date('Y-m-d 12:00:00',86400+time());
@@ -901,7 +906,7 @@ class Database{
             throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);    
         }
         if (empty($selector['EntryId'])){
-            foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,FALSE,FALSE,array(),$removeGuideEntries) as $entry){
+            foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,2,FALSE,array(),$removeGuideEntries) as $entry){
                 return $entry;
             }
         } else {

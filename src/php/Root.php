@@ -27,7 +27,7 @@ final class Root{
     public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     public const DB_TIMEZONE='UTC';
-    public const PROFILING_RATE=0.2;        // 0 ... 1 with 1 -> 100% profiling and 0 -> 0% profiling
+    public const PROFILING_RATE=0.05;        // 0 ... 1 with "1"=100% profiling and "0"=0% profiling
     public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
     public const PROFILING_BACKTRACE=4;
     public const NULL_DATE='9999-12-30 12:12:12';
@@ -534,7 +534,7 @@ final class Root{
     {
         if (!$this->profileActive || empty($this->profile)){return FALSE;}
         unset($this->profile['meta']);
-        $lb="\n\r";
+        $lb="\n";
         $delimiter="\t";
         $file=$GLOBALS['dirs']['logging'].$fileName;
         $fileContent=implode($delimiter,array_keys(current(current($this->profile))));

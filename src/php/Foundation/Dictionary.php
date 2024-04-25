@@ -20,6 +20,8 @@ class Dictionary{
     private $sourceLng='en';
     private $lngCodes=array('en'=>'English','de'=>'Deutsch','es'=>'Español');
     
+    private $lngCache=array();
+    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -108,21 +110,19 @@ class Dictionary{
     
     public function lng($phrase,string $langCode='',string|bool$translation=FALSE)
     {
-        // This method provides the translation of the phrase argument or updates the translation if translation argument is provided.
-        if (empty($langCode)){$langCode=$_SESSION['page state']['lngCode'];}
-        $langCode=mb_strtolower($langCode);
-        if (!is_string($phrase)){return $phrase;}
-        if (strcmp($langCode,'en')===0 || empty(strip_tags($phrase))){return $phrase;}
+        $langCode=(empty($langCode))?$_SESSION['page state']['lngCode']:mb_strtolower($langCode);
+        if (!is_string($phrase) || strcmp($langCode,'en')===0){return $phrase;}
+        if (strlen($phrase)!==strlen(strip_tags($phrase))){return $phrase;}
         $elementId=md5($phrase.'|'.$langCode);
-        if ($translation===FALSE){
+        if ($translation===FALSE && isset($this->lngCache[$elementId])){
+            // translation request answered by cache
+            $phrase=$this->lngCache[$elementId];
+        } else if ($translation===FALSE && !isset($this->lngCache[$elementId])){
             // translation request
             $selector=array('Source'=>$this->entryTable,'EntryId'=>$elementId);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-            if (empty($entry)){
-                return $phrase;
-            } else {
-                return $entry['Content']['translation'];
-            }
+            if (!empty($entry)){$phrase=$entry['Content']['translation'];}
+            $this->lngCache[$elementId]=$phrase;
         } else {
             // update translation
             $phrase=strip_tags($phrase);

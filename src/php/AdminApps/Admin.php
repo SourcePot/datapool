@@ -31,6 +31,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             // get page content
             $html='';
             $settings=array('method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Filespace']->loggerFilesWidget();
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
             $html.=$this->getPageSettingsHtml();
             $html.=$this->appAdminHtml();

@@ -258,6 +258,10 @@ class User{
             $abtract='{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}} <{{Content'.$S.'Contact details'.$S.'Email}}>';
         } else if ($template===7){
             $abtract='{{Content'.$S.'Contact details'.$S.'Email}}';
+        } else if ($template===8){
+            $abtract='{{Content'.$S.'Contact details'.$S.'Phone}}';
+        } else if ($template===9){
+            $abtract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
         }
         $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$user,'returnHtmlOnly'=>TRUE));
         $abtract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,array('class'=>'user-abstract'));

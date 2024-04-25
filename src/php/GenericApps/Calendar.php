@@ -19,7 +19,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable;
     private $entryTemplate=array('Group'=>array('value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
                                  'Folder'=>array('value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
-                                 'Start'=>array('value'=>'{{TODAY}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
+                                 'Start'=>array('value'=>'{{NOW}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
                                  'End'=>array('value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
                                  );
 
@@ -724,6 +724,14 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $this->str2date($string,'UTC');
     }
     
+    public function str2dateString($string,string $key='System'):string
+    {
+        $timestamp=intval($string);
+        $dateArr=$this->str2date($string);
+        $string=($dateArr['isValid'] && isset($dateArr[$key]))?$dateArr[$key]:'';
+        return $string;
+    }
+
     public function str2date($string,$timezone=NULL,bool $isExcelDate=FALSE):array
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
@@ -736,7 +744,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $context['method']=__FUNCTION__;
         if (!$dateArr['isValid']){
             $dateArr=array_merge($dateArr,$dummyDateArr);
-            $this->oc['logger']->log('warning','Method "{method}" failed to parse date from "{string}" with "{error}"',$context);         
+            $this->oc['logger']->log('notice','Method "{method}" failed to parse date from "{string}" with "{error}"',$context);         
         }
         // year corrections
         $year=intval($dateArr['year']);

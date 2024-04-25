@@ -166,7 +166,6 @@ class Signals{
             $trigger['EntryId']=key(current($formData['cmd']));
             $trigger=array_replace_recursive($trigger,$formData['val'][$trigger['EntryId']]);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($trigger);
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($trigger);  
         } else if (isset($formData['cmd']['Reset'])){
             $trigger['EntryId']=key(current($formData['cmd']));
             $this->resetTrigger($trigger['EntryId']);

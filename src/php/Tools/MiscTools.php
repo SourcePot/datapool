@@ -17,7 +17,14 @@ final class MiscTools{
     
     private $oc=NULL;
     
-    private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','splitString'=>'Split string','int'=>'Integer','float'=>'Float','bool'=>'Boolean','money'=>'Money','date'=>'String&rarr;date','excelDate'=>'Excel&rarr;date','timestamp'=>'Timestamp&rarr;date','codepfad'=>'Codepfad','unycom'=>'UNYCOM file number');
+    private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','stringWordChrsOnly'=>'String, word chars only',
+                             'splitString'=>'Split string','int'=>'String&rarr;integer','float'=>'String&rarr;float','fraction'=>'Fraction&rarr;float',
+                             'bool'=>'String&rarr;boolean','money'=>'String&rarr;money','date'=>'String&rarr;date','excelDate'=>'Excel&rarr;date',
+                             'dateString'=>'String&rarr;date, empty if invalid','timestamp'=>'Timestamp&rarr;date','codepfad'=>'String&rarr;codepfad',
+                             'unycom'=>'String&rarr;UNYCOM','unycomCountry'=>'String&rarr;UNYCOM country','unycomRegion'=>'String&rarr;UNYCOM region',
+                             'userIdNameComma'=>'UserId&rarr;Name, First name','userIdName'=>'UserId&rarr;First name Name','useridemail'=>'UserId&rarr;email',
+                             'userIdPhone'=>'UserId&rarr;phone','userIdMobile'=>'UserId&rarr;mobile',
+                             );
     
     public function __construct()
     {
@@ -259,9 +266,8 @@ final class MiscTools{
 
     public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone=''):string
     {
-        // This is the standard method to get a formated date-string.
-        // It returns the date based on the selected timezone.
-        $dateTime=new \DateTime($datetime);
+        $timezone=(empty($timezone))?(\SourcePot\Datapool\Root::DB_TIMEZONE):$timezone;
+        $dateTime=new \DateTime($datetime,new \DateTimeZone($timezone));
         if (!empty($addDateInterval)){
             $dateInterval=trim($addDateInterval,'-');
             if (strlen($dateInterval)<strlen($addDateInterval)){
@@ -270,10 +276,7 @@ final class MiscTools{
                 $dateTime->add(new \DateInterval($dateInterval));
             }
         }
-        if (empty($timezone)){
-            $timezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
-        }
-        $dateTime->setTimezone(new \DateTimeZone($timezone));
+        $dateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         return $dateTime->format('Y-m-d H:i:s');
     }
     
@@ -708,16 +711,26 @@ final class MiscTools{
         $newValue=match($dataType){
                     'string'=>$this->str2str($value),
                     'stringnowhitespaces'=>$this->convert2stringNoWhitespaces($value),
+                    'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
                     'splitstring'=>$this->convert2splitString($value),
                     'int'=>$this->str2int($value),
                     'float'=>$this->str2float($value),
+                    'fraction'=>$this->fraction2float($value),
                     'bool'=>(intval($value)>0),
                     'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                     'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
                     'exceldate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
+                    'datestring'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
                     'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
                     'codepfad'=>$this->convert2codepfad($value),
                     'unycom'=>$this->convert2unycom($value),
+                    'unycomcountry'=>$this->convert2unycomByKey($value,'Country'),
+                    'unycomregion'=>$this->convert2unycomByKey($value,'Region'),
+                    'useridnamecomma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),3),
+                    'useridname'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),1),
+                    'useridemail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),7),
+                    'useridphone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),8),
+                    'useridmobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),9),
                 };
         return $newValue;
     }
@@ -736,6 +749,18 @@ final class MiscTools{
     {
         $value=$this->str2float($string,$lang);
         return intval($value);
+    }
+    
+    public function fraction2float($string)
+    {
+        $string=preg_replace('/[^0-9\.\/\-]/u','',$string);
+        $comps=explode('/',$string);
+        $float=NULL;
+        foreach($comps as $divider){
+            $divider=floatval($divider);
+            $float=(isset($float))?($float/$divider):$divider;
+        }
+        return $float;
     }
     
     public function str2float($string,$lang=''):float
@@ -795,6 +820,13 @@ final class MiscTools{
         return $value;
     }
 
+    public function convert2stringWordChrsOnly($value):string
+    {
+        $value=strval($value);
+        $value=preg_replace('/[^A-Za-zäüöÄÜÖßÁÓÍÀÒÌáíóàòìâôî\s\-]/u','',$value);
+        return $value;
+    }
+
     public function convert2splitString($value):array|bool
     {
         $value=strval($value);
@@ -823,17 +855,24 @@ final class MiscTools{
         return $arr;
     }
     
+    public function convert2unycomByKey($value,string $key='Country'):string
+    {
+        $unycomArr=$this->convert2unycom($value);
+        return (isset($unycomArr[$key]))?$unycomArr[$key]:'';
+    }
+    
     public function convert2unycom($value):array
     {
         $value=strval($value);
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
         preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u',$value,$matches);
-        if (empty($matches[0])){return array('Match'=>'');}
+        if (empty($matches[0])){return array('Match'=>'','isValid'=>FALSE);}
         $arr=array_combine($keyTemplate,$matches);
         $arr['Region']='  ';
         $arr['Country']='  ';
         $arr['Part']='  ';
+        $arr['isValid']=TRUE;
         $prefixSuffix=explode($matches[0],$value);
         if (!empty($prefixSuffix[1])){
             $suffix=preg_replace('/\s+/u','',$prefixSuffix[1]);

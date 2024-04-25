@@ -287,7 +287,8 @@ class Container{
                 }
                 $cmdHtml='';
                 if (count($flatKeyComps)>1 && $level>0 && $entryCanWrite){
-                    $element=array('tag'=>'button','element-content'=>'&xcup;','key'=>array('deleteKey',$flatKey),'hasCover'=>TRUE,'title'=>'Delete key','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+                    $deleteKey=$settings['selectorKey'].$S.$subFlatKeyComps[0];
+                    $element=array('tag'=>'button','element-content'=>'&xcup;','key'=>array('deleteKey',$deleteKey),'hasCover'=>TRUE,'title'=>'Delete key','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
                     $cmdHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                 }
                 $label=array_shift($subFlatKeyComps);
