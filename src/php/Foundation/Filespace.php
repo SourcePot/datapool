@@ -523,16 +523,71 @@ class Filespace{
     {
         $debugArr=array('file'=>$file,'cntr'=>array('extractEmails'=>TRUE,'extractArchives'=>TRUE));
         $entry=array_merge($debugArr['cntr'],$entry);
-        if ($entry['extractEmails'] && stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE){
+        if ($entry['extractEmails'] && stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE){
+            $statistic=$this->msg2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
+            if (empty($statistic['errors'])){return TRUE;}            
+        } else if ($entry['extractEmails'] && stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE){
             $this->email2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             return TRUE;
         } else if ($entry['extractArchives'] && stripos($entry['Params']['File']['MIME-Type'],'/zip')!==FALSE){
             $this->archive2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             return TRUE;
-        } else {
-            return FALSE;
         }
+        return FALSE;
     }
+    
+    private function msg2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
+        if (class_exists('\Hfig\MAPI\MapiMessageFactory') && class_exists('\Hfig\MAPI\OLE\Pear\DocumentFactory')){
+            // message parsing and file IO are kept separate
+            $messageFactory= new \Hfig\MAPI\MapiMessageFactory();
+            $documentFactory= new \Hfig\MAPI\OLE\Pear\DocumentFactory(); 
+            $ole= $documentFactory->createFromFile($file);
+            $message= $messageFactory->parseMessage($ole);
+            // set timezone
+            $dateTimeObj=$message->getSendTime();
+            $timeZoneObj=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+            $dateTimeObj->setTimezone($timeZoneObj);
+            // unify entry
+            $properties=$message->properties();
+            $idHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($message->getInternetMessageId());
+            $entry['EntryId']=$idHash;
+            $entry['Date']=$dateTimeObj->format('Y-m-d H:i:s');
+            $entry['Content']=array('Html'=>$message->getBodyHtml(),'Plain'=>trim($message->getBody()),'RTF'=>$message->getBodyRTF());
+            $entry['Params']['Email']=array('subject'=>array('value'=>$properties->subject),
+                                            'fromaddress'=>array('value'=>$message->getSender()),
+                                            'from'=>array('value'=>$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr($message->getSender())),
+                                            'delivery-date'=>array('value'=>$dateTimeObj->format(DATE_RFC822)),
+                                            'message-id'=>array('value'=>$message->getInternetMessageId()),
+                                            );
+            foreach($message->getRecipients() as $recipient){
+                $entry['Params']['Email'][$recipient->getType()]['value']=$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr((string)$recipient);
+            }
+            if (empty($message->getAttachments())){
+                // no attachements: email content -> entry
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["Html"]'),FALSE);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE);
+            } else {
+                // create one entry per attachement and add email content to entry 
+                foreach($message->getAttachments() as $index=>$attachment){
+                    $entry['fileName']=(empty($attachment->getFilename()))?$entry['Name']:$attachment->getFilename();
+                    $emailStatistic['files']++;
+                    $entry['fileContent']=$attachment->getData();
+                    $entry['EntryId']=$idHash.'-'.$index;
+                    $entry['Params']['File']=array('Name'=>$entry['fileName'],'Size'=>strlen($entry['fileContent']),'Date (created)'=>date('Y-m-d H:i:s'),'MIME-Type'=>$attachment->getMimeType());
+                    $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created from email attachment "'.$entry['fileName'].'"'),FALSE);
+                    $this->fileContent2entry($newEntry);
+                }
+            }
+        } else {
+            $context['msg']='\Hfig\MAPI... classes not loaded';
+            $emailStatistic['errors'][]=$context['msg'];
+            $this->oc['logger']->log('notice','Problem uploading msg-file: "{msg}"',$context);    
+        }
+        return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
+    }    
 
     private function email2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
     {
@@ -594,6 +649,7 @@ class Filespace{
                         }
                         $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
                     }
+                    $entry['Content']['RTF']='';
                 }
             }
             $emailStatistic['emailHeader']=$entry['Params']['Email'];

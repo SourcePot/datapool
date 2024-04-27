@@ -173,11 +173,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 foreach($messages as $mid){
                     $entry=$this->getMsg($mbox,$mid);
                     $entry=array_replace_recursive($entry,$entrySelector);
-                    if (empty($entry['htmlmsg'])){
-                        $entry['Content']=array('Plain'=>$entry['plainmsg']);
-                    } else {
-                        $entry['Content']=array('Html'=>$entry['htmlmsg']);
-                    }
+                    $entry['Content']['Html']=(empty($entry['htmlmsg']))?'':$entry['htmlmsg'];
+                    $entry['Content']['Plain']=(empty($entry['plainmsg']))?'':$entry['plainmsg'];
+                    $entry['Content']['RTF']='';
                     $contentHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Content'],TRUE);
                     $entry['Name'].=' ['.$contentHash.']';
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
@@ -351,6 +349,23 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 $content=$content;
         }
         return $content;
+    }
+    
+    public function emailAddressString2arr($emailAdr):array
+    {
+        $return=array();
+        $addresses=explode(', ',$emailAdr);
+        foreach($addresses as $index=>$chunk){
+            preg_match('/[^\s<>,]*@[^\s<>,]*/',$chunk,$match);
+            if (empty($match[0])){continue;}
+            $return[$index]['string']=htmlentities($chunk);
+            $return[$index]['personal']=trim(str_replace($match[0],'',$chunk),' <>');
+            $emailComps=explode('@',$match[0]);
+            $return[$index]['email']=$match[0];
+            $return[$index]['mailbox']=$emailComps[0];
+            $return[$index]['host']=$emailComps[1];
+        }
+        return $return;
     }
 
     /******************************************************************************************************************************************
