@@ -123,7 +123,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             if (!isset($row['type'])){continue;}
             $matrix[$row['class']]=$row;
         }
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE,'class'=>'toolbox'));
+        $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE,'class'=>'toolbox'));
+        return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
     }
     
     public function appAdminHtml(){

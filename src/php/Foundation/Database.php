@@ -301,6 +301,7 @@ class Database{
     */
     private function collectDatabaseInfo():array
     {
+        $GLOBALS['dbInfo']=array();
         $sql='SHOW TABLES;';
         $stmt=$this->executeStatement($sql);
         $tables=$stmt->fetchAll(\PDO::FETCH_ASSOC);

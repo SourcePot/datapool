@@ -130,6 +130,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     $entry['EntryId']=$entryId;
                     $entry['Folder']=$country;
                     $entry['Content']=$event;
+                    $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P3Y');
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
                     $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
                     $context['eventCount']++;
