@@ -30,7 +30,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private $pageState=array();
     private $pageStateTemplate=array();
 
-    public $definition=array('Type'=>array('@tag'=>'p','@default'=>'calendar event','@Read'=>'NO_R'),
+    public $definition=array('Type'=>array('@tag'=>'p','@Read'=>'NO_R'),
                              'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
                              'Content'=>array('Event'=>array('Description'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
                                                              'Type'=>array('@function'=>'select','@options'=>array('meeting'=>'Meeting','travel'=>'Travel','event'=>'Event','toTo'=>'To do'),'@default'=>'meeting','@excontainer'=>TRUE),
@@ -101,7 +101,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->setting=array('Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone);
         $this->setting=$oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
-        $this->pageStateTemplate=array('Source'=>$this->entryTable,'Type'=>$this->definition['Type']['@default'],'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
+        $this->pageStateTemplate=array('Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
         $this->pageState=$oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
         //
     }
@@ -149,10 +149,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             // get relevant timespan
             $vars['Period end']=time();
             $dbTimezone=new \DateTimeZone(DB_TIMEZONE);
-            $startDateTime=new \DateTime('@'.$vars['Period start']);
+            $startDateTime=new \DateTime();
+            $startDateTime->setTimestamp($vars['Period start']); 
             $startDateTime->setTimezone($dbTimezone);
             $startWindow=$startDateTime->format('Y-m-d H:i:s');
-            $endDateTime=new \DateTime('@'.$vars['Period end']);
+            $endDateTime=new \DateTime();
+            $endDateTime->setTimestamp($vars['Period end']); 
             $endDateTime->setTimezone($dbTimezone);
             $endWindow=$endDateTime->format('Y-m-d H:i:s');
             // scan calendar entries
@@ -229,7 +231,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                 $entry['Content']['Event']['End']=$entry['addDate'].'T23:59';
                 $entry['Content']['Event']['End timezone']=$this->setting['Timezone'];
                 $entry['Content']['Event']['Description']='';
-                $entry['Content']['Event']['Type']='event';
             }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);        
             if (!empty($entry['Content']['Event']['Start']) && !empty($entry['Content']['Event']['Start timezone']) && 
@@ -237,14 +238,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                 $entry['Name']=mb_substr($entry['Content']['Event']['Description'],0,200);
                 $entry['Start']=$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],DB_TIMEZONE);
                 $entry['End']=$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],DB_TIMEZONE);
-                $entry['Type']=mb_strtolower($this->entryTable.' '.$entry['Content']['Event']['Type']);
                 if (!empty($entry['entryIsUpdated'])){$entry=$this->updateCalendarEventEntry($entry,TRUE);}
             }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
         } else {
             // Serial events
             if (isset($entry['Content']['Name'])){$entry['Name']=$entry['Content']['Name'];}
-            if (isset($entry['Content']['Type'])){$entry['Type']=mb_strtolower($this->entryTable.' '.$entry['Content']['Type']);}
             if (isset($entry['Content']['Visibility'])){$entry['Read']=$entry['Content']['Visibility'];}
         }
         return $entry;
@@ -331,7 +330,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
             $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$_SESSION['currentUser']['EntryId'],$formData['val']['setting'],'Calendar',FALSE);
         }
-        $calendarDate=new \DateTime('@'.$this->calendarStartTimestamp());
+        $calendarDate=new \DateTime();
+        $calendarDate->setTimestamp($this->calendarStartTimestamp()); 
         $calendarDate->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         $calendarDateArr=$arr;
         $calendarDateArr['tag']='input';
@@ -523,14 +523,16 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
 
     private function pos2date($pos){
         $timestamp=$this->calendarStartTimestamp()+$pos*86400/$this->setting['Day width'];
-        $dateTime=new \DateTime('@'.$timestamp);
+        $dateTime=new \DateTime();
+        $dateTime->setTimestamp($timestamp); 
         $dateTime->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         return $dateTime->format('Y-m-d H:i:s');
     }
     
     private function getCalendarWidth(){
         $calendarStartTimestamp=$this->calendarStartTimestamp();
-        $calendarDateTime=new \DateTime('@'.$calendarStartTimestamp);
+        $calendarDateTime=new \DateTime();
+        $calendarDateTime->setTimestamp($calendarStartTimestamp); 
         $calendarDateTime->add(\DateInterval::createFromDateString($this->setting['Days to show'].' days'));
         $calendarDateTime->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         return ceil(($calendarDateTime->getTimestamp()-$calendarStartTimestamp)*$this->setting['Day width']/86400);
@@ -551,7 +553,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
 
     private function getEvents($timestamp,$isSystemCall=FALSE){
-        $calendarDateTime=new \DateTime('@'.$timestamp);
+        $calendarDateTime=new \DateTime();
+        $calendarDateTime->setTimestamp($timestamp); 
         $serverTimezone=new \DateTimeZone(DB_TIMEZONE);
         $calendarDateTime->setTimezone($serverTimezone);
         $viewStart=$calendarDateTime->format('Y-m-d H:i:s');
@@ -807,18 +810,21 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $string=trim(str_replace($matches[0][0],'',$string));
             $arr['time']=$matches[0][0];
         }
-        if ($isExcelDate){$string=preg_replace('/\D+/','',$string);}
+        if ($isExcelDate){
+            $string=preg_replace('/[^\d\.]+/','',$string);
+        }
         preg_match_all('/\d{4}[0-1][0-9][0-3][0-9]/',$string,$matches);
         if (isset($matches[0][0]) && !$isExcelDate){
             // format YYYYMMDD -> YYYY-MM-DD
             $string=$matches[0][0][0].$matches[0][0][1].$matches[0][0][2].$matches[0][0][3].'-'.$matches[0][0][4].$matches[0][0][5].'-'.$matches[0][0][6].$matches[0][0][7];
-        } else if (ctype_digit($string) && (intval($string)-25569>0)){
+        } else if (empty(preg_replace('/[\d\.]+/','',$string))){
             // EXCEL format
-            $unixTimestamp=86400*(intval($string)-25569);
+            $unixTimestamp=intval(86400*(floatval($string)-25569));
             $arr['timezoneIn']='UTC';
-            $utcTimezoneObj=new \DateTimeZone($arr['timezoneIn']);
-            $utcObj=new \DateTime('@'.strval($unixTimestamp),$utcTimezoneObj);
+            $utcObj=new \DateTime();
+            $utcObj->setTimestamp($unixTimestamp); 
             $string=$utcObj->format('Y-m-d');
+            $arr['time']=$utcObj->format('H:i:s');
         } else if ($isExcelDate){
             $arr['isValid']=FALSE;
             $arr['error']='Date string is not valid Excel format';

@@ -121,7 +121,6 @@ class Logger
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
         $entry['Source']=$this->entryTable;
         $entry['Group']=$level;
-        $entry['Type']=$entry['Source'].' '.$level;
         $entry['Folder']=isset($_SESSION['currentUser']['EntryId'])?$_SESSION['currentUser']['EntryId']:'ANONYM';
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
         $entry['Content']=$context;
@@ -130,7 +129,7 @@ class Logger
             $entry['Content']['trace']=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         }
         $entry['Name']=mb_substr($entry['Content']['msg'],0,50);
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         // write to databse if it is present
         if (!empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){

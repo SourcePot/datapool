@@ -345,45 +345,43 @@ jQuery(document).ready(function(){
 
 
 /** IMAGE VIEWER **/
-	let imgs={};
-	let imgId2index={};
+	let imgs=[];
 	loadImageData();
 	function loadImageData(){
-		imgs={};
-		imgId2index={};
-		let index=0;
+		imgs=[];
 		jQuery('div[class*=preview]').each(function(imgIndex){
-			let img={'id':jQuery(this).attr('id'),'Source':jQuery(this).attr('source'),'EntryId':jQuery(this).attr('entry-id'),'index':index};
-			imgs[index]=img;
-			imgId2index[img['id']]=index;
-			jQuery(this).unbind('click').bind('click',loadImage);
-			index++;
-		});	
-	}
-	function loadImage(item){
-		let index;
-		if (typeof(item)==='object'){
-			let id=jQuery(this).attr('id');
-			index=imgId2index[id];
-		} else {
-			index=item;
-		}
-		let data={'loadImage':imgs[index]};
-		jQuery.ajax({
+			let img={'id':jQuery(this).attr('id'),'Source':jQuery(this).attr('source'),'EntryId':jQuery(this).attr('entry-id'),'index':imgs.length};
+			imgs.push(img);
+			jQuery(this).unbind('click').bind('click',loadImageByItem);
+		});
+    }
+    
+    function loadImageByItem(){
+        var itemId=jQuery(this).attr('id');
+        jQuery(imgs).each(function(index){
+            if (imgs[index]['id'].localeCompare(itemId)===0){
+                loadImage(index);
+                return false;
+            }
+        });
+    }
+    
+	function loadImage(index){
+        let data={'loadImage':imgs[index]};
+        jQuery.ajax({
 			method:"POST",
 			url:'js.php',
 			context:document.body,
 			data:data,
 			dataType: "json"
-		}).done(function(data){
-			addImageToOverlay(data);
+		}).done(function(img){
+            addImageToOverlay(img,index);
 		}).fail(function(data){
 			console.log(data);
 		});
 	}
-	function addImageToOverlay(img){
-		let index=parseInt(img['index']);
-		let lastIndex=Object.keys(imgs).length-1,page=index+1,lastPage=lastIndex+1;
+	function addImageToOverlay(img,index){
+        let lastIndex=imgs.length-1,page=index+1,lastPage=lastIndex+1;
 		let html='';
 		let imgBtn='<a style="float:inherit;" id="prev-img-btn">&#10096;&#10096;</a><a style="float:inherit;" id="next-img-btn">&#10097;&#10097;</a>';
 		html=html+'<p style="float:inherit;" id="img-index">'+page+' of '+lastPage+'</p>';

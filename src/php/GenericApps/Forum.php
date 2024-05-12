@@ -84,9 +84,9 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     private function newEntryHtml(){
         $draftSelector=array('Source'=>$this->entryTable,
                           'Folder'=>'Draft',
-                          'Type'=>$this->entryTable.' entry',
                           'Owner'=>$_SESSION['currentUser']['EntryId'],
                           );
+        $draftSelector=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($draftSelector);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
             if ($entry['isSkipRow']){continue;}
             $forumEntry=$entry;

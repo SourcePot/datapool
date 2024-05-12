@@ -27,7 +27,7 @@ class Database{
                                  'Group'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
                                  'Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
                                  'Name'=>array('type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
-                                 'Type'=>array('type'=>'VARCHAR(100)','value'=>'{{Source}}','Description'=>'This is the data-type of Content'),
+                                 'Type'=>array('type'=>'VARCHAR(100)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'),
                                  'Date'=>array('type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
                                  'Content'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
                                  'Params'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
@@ -210,7 +210,7 @@ class Database{
     }
 
     /**
-    * This function selects the $entry-specific unifyEntry() function based on $entry['Source']
+    * This function selects the entry-specific unifyEntry() function based on $entry['Source']
     * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
     */
     public function unifyEntry(array $entry,bool $addEntryDefaults=FALSE):array
@@ -220,6 +220,12 @@ class Database{
         }
         $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($entry['Source']);
         $registeredMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('unifyEntry');    
+        
+        $entry=$this->addType2entry($entry);
+        
+        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,hrtime(TRUE).'-'.$entry['Source']);
+        
+        $entry=$this->addType2entry($entry);
         if (isset($registeredMethods[$classWithNamespace])){
             $entry=$this->oc[$classWithNamespace]->unifyEntry($entry);
         } else if ($addEntryDefaults){
@@ -266,6 +272,51 @@ class Database{
         }
         $toReplace=$this->enrichToReplace($toReplace);
         return $toReplace;
+    }
+    
+    /**
+    * The method adds entry-Type and returns the entry. Entry-Type is the second- level selector after EntryId, Name, Folder and Group.
+    * The selector is used for language-specific as well as file MIME-type specific entry handling.
+    *
+    * @param array $entry Is the orginal entry  
+    * @return array $entry Is the enriched entry
+    */
+    public function addType2entry(array $entry):array
+    {
+        // recover existing type
+        $typeComps=explode('|',(strval($entry['Type']??'')));
+        if (count($typeComps)===4){
+            $typeArr=$typeComps;
+        } else {
+            $typeArr=array();
+        }
+        // is guiede entry?
+        if (mb_strpos(strval($entry['EntryId']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
+            // if guide entry, this is the most probable option 
+            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
+        } else if (mb_strpos(strval($entry['Name']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
+            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
+        } else if (mb_strpos(strval($entry['Folder']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
+            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
+        } else if (mb_strpos(strval($entry['Group']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
+            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
+        } else {
+            $typeArr[0]=str_pad('',strlen(\SourcePot\Datapool\Root::GUIDEINDICATOR),'0');
+        }
+        // use language code?
+        $typeArr[1]=(empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$entry['Source']]))?('00'):$_SESSION['page state']['lngCode'];
+        // MIME-type of linked file
+        if (empty($entry['Params']['File']['MIME-Type'])){
+            $typeArr[2]='000';
+        } else {
+            $mimeComps=explode('/',$entry['Params']['File']['MIME-Type']);
+            $typeArr[2]=array_pop($mimeComps);
+        }
+        // keep original entry Source
+        $typeArr[3]=$typeArr[3]??$entry['Source'];
+        // finalize Type
+        $entry['Type']=implode('|',$typeArr);
+        return $entry;
     }
 
     /**
@@ -355,8 +406,8 @@ class Database{
     
     private function addSelector2result(array $selector,array $result):array
     {
+        $selector['app']=$selector['app']??'';
         $result=array_merge($selector,$result);
-        //$result['app']=(isset($selector['app']))?$selector['app']:'';
         return $result;
     }
     
@@ -370,7 +421,7 @@ class Database{
     * e.g. 'Date|[]|Start' -> refers to column 'Date'.
     */
     private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
-        if ($removeGuideEntries){$selector['EntryId=!']='%'.\SourcePot\Datapool\Root::GUIDEINDICATOR;}
+        if ($removeGuideEntries){$selector['Type=!']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';}
         $entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
         $opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
         $sqlArr=array('sql'=>array(),'inputs'=>array());            
@@ -740,6 +791,7 @@ class Database{
     private function insertEntry(array $entry):array
     {
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
+        $entry=$this->addType2entry($entry);
         $entry=$this->addEntryDefaults($entry);
         if (!empty($entry['Owner'])){
             if (strcmp($entry['Owner'],'ANONYM')===0){
@@ -817,7 +869,7 @@ class Database{
     }
     
     /**
-    * The method inserts an entry that does not exist OR updates an existing entry (based on the columns provided).
+    * The method updates an existing entry (based on the columns provided) OR inserts an entry that does not exist. .
     * Default values are added if any entry property is missing.
     *
     * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
@@ -903,9 +955,7 @@ class Database{
     */
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
     {
-        if (empty($selector['Source'])){
-            throw new \ErrorException('Function '.__FUNCTION__.': Source missing in selector',0,E_ERROR,__FILE__,__LINE__);    
-        }
+        if (empty($selector['Source'])){return FALSE;}
         if (empty($selector['EntryId'])){
             foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,2,FALSE,array(),$removeGuideEntries) as $entry){
                 return $entry;
@@ -1061,7 +1111,7 @@ class Database{
         $loopIndex=$loopEntryIndex=1;
         $currentEntryId=(empty($orderedListSelector['EntryId']))?FALSE:$orderedListSelector['EntryId'];
         $currentEntryIndex=$this->getOrderedListIndexFromEntryId($currentEntryId,FALSE);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($orderedListSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($orderedListSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
         $olInfo=array('firstEntryId'=>FALSE,'lastEntryId'=>FALSE,'newEntryIndex'=>FALSE,'newEntryId'=>FALSE,'baseEntryId'=>FALSE,'currentEntryIndex'=>$currentEntryIndex,'selector'=>$selector,'error'=>array());
         if (empty($orderedListSelector['Source']) && !empty($orderedListSelector['Class'])){
             $olInfo['storageClass']='SourcePot\Datapool\Foundation\Filespace';
@@ -1087,7 +1137,7 @@ class Database{
             }
         }
         if ($olInfo['firstEntryId']===FALSE){
-            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,$relevantKeys=array('Source','Group','Folder','Name','Type'),'0','',TRUE);
+            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,$relevantKeys=array('Source','Group','Folder','Name'),'0','',TRUE);
             $olInfo['baseEntryId']=$selector['EntryId'];
             $olInfo['firstEntryId']=$olInfo['lastEntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],0);
         }
@@ -1120,7 +1170,7 @@ class Database{
         if (empty($toDeleteEntry)){return FALSE;}
         $entryDetected=FALSE;
         $lastEntrySelector=array('Source'=>$selector['Source'],'EntryId'=>'');
-        $olSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($toDeleteEntry,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
+        $olSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($toDeleteEntry,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
         foreach($this->entryIterator($olSelector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
             if ($entryDetected){
                 $this->swapEntries($lastEntrySelector,$entry,$isSystemCall);

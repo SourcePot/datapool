@@ -17,14 +17,21 @@ final class MiscTools{
     
     private $oc=NULL;
     
-    private $dataTypes=array('string'=>'String','stringNoWhitespaces'=>'String without whitespaces','stringWordChrsOnly'=>'String, word chars only',
-                             'splitString'=>'Split string','int'=>'String&rarr;integer','float'=>'String&rarr;float','fraction'=>'Fraction&rarr;float',
-                             'bool'=>'String&rarr;boolean','money'=>'String&rarr;money','date'=>'String&rarr;date','excelDate'=>'Excel&rarr;date',
-                             'dateString'=>'String&rarr;date, empty if invalid','timestamp'=>'Timestamp&rarr;date','codepfad'=>'String&rarr;codepfad',
-                             'unycom'=>'String&rarr;UNYCOM','unycomCountry'=>'String&rarr;UNYCOM country','unycomRegion'=>'String&rarr;UNYCOM region',
-                             'userIdNameComma'=>'UserId&rarr;Name, First name','userIdName'=>'UserId&rarr;First name Name','useridemail'=>'UserId&rarr;email',
-                             'userIdPhone'=>'UserId&rarr;phone','userIdMobile'=>'UserId&rarr;mobile',
+    private $dataTypes=array('string'=>'&rarr; String','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+                             'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
+                             'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
+                             'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash',
+                             'codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomCountry'=>'&rarr; UNYCOM country','unycomRegion'=>'&rarr; UNYCOM region','unycomFallNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
+                             'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
+                             'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
                              );
+    
+    private $conditionTypes=array('empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
+                                  '>'=>'>','='=>'=','!='=>'&ne;','<'=>'<',
+                                  '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
+                                  );
+    
+    private $matchTypes=array('identical'=>'Identical','contains'=>'Contains','unycom'=>'UNYCOM Case','|'=>'Separated by |','number'=>'Numbers');
     
     public function __construct()
     {
@@ -40,6 +47,16 @@ final class MiscTools{
     public function getDataTypes():array
     {
         return $this->dataTypes;
+    }
+    
+    public function getConditions():array
+    {
+        return $this->conditionTypes;
+    }
+    
+    public function getMatchTypes():array
+    {
+        return $this->matchTypes;
     }
     
     /******************************************************************************************************************************************
@@ -163,6 +180,18 @@ final class MiscTools{
     * String tools
     */
     
+    public function explode($string,$delimiter):array
+    {
+        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $string=preg_replace('/(".+)('.$delimiter.')(.+")/u','$1'.$S.'$3',$string);
+        $comps=explode($delimiter,$string);
+        foreach($comps as $index=>$comp){
+            $comps[$index]=str_replace($S,$delimiter,$comp);
+            $comps[$index]=str_replace('\s+',' ',$comps[$index]);
+        }
+        return $comps;
+    }
+    
     public function startsWithUpperCase(string $str):bool
     {
         $startChr=mb_substr($str,0,1,"UTF-8");
@@ -241,7 +270,7 @@ final class MiscTools{
         return time()-$timestamp;
     }
     
-    public function addEntryId(array $entry,array $relevantKeys=array('Source','Group','Folder','Name','Type'),$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
+    public function addEntryId(array $entry,array $relevantKeys=array('Source','Group','Folder','Name'),$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
     {
         if (!empty($entry['EntryId']) && $keepExistingEntryId){return $entry;}
         $base=array();
@@ -266,8 +295,14 @@ final class MiscTools{
 
     public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone=''):string
     {
-        $timezone=(empty($timezone))?(\SourcePot\Datapool\Root::DB_TIMEZONE):$timezone;
-        $dateTime=new \DateTime($datetime,new \DateTimeZone($timezone));
+        if ($datetime[0]==='@'){
+            $timestamp=intval(trim($datetime,'@'));
+            $dateTime=new \DateTime();
+            $dateTime->setTimestamp($timestamp); 
+        } else {
+            $timezone=(empty($timezone))?(\SourcePot\Datapool\Root::DB_TIMEZONE):$timezone;
+            $dateTime=new \DateTime($datetime,new \DateTimeZone($timezone));
+        }
         if (!empty($addDateInterval)){
             $dateInterval=trim($addDateInterval,'-');
             if (strlen($dateInterval)<strlen($addDateInterval)){
@@ -404,7 +439,7 @@ final class MiscTools{
         return \SourcePot\Datapool\Root::ONEDIMSEPARATOR;
     }
     
-    public function arr2selector(array $arr,array $defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'app'=>'')):array
+    public function arr2selector(array $arr,array $defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'app'=>'')):array
     {
         $selector=array();
         foreach($defaultValues as $key=>$defaultValue){
@@ -707,30 +742,32 @@ final class MiscTools{
     }
 
     public function convert($value,$dataType){
-        $dataType=mb_strtolower($dataType);
         $newValue=match($dataType){
                     'string'=>$this->str2str($value),
-                    'stringnowhitespaces'=>$this->convert2stringNoWhitespaces($value),
+                    'stringNoWhitespaces'=>$this->convert2stringNoWhitespaces($value),
                     'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
-                    'splitstring'=>$this->convert2splitString($value),
+                    'splitString'=>$this->convert2splitString($value),
                     'int'=>$this->str2int($value),
                     'float'=>$this->str2float($value),
                     'fraction'=>$this->fraction2float($value),
                     'bool'=>(intval($value)>0),
                     'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                     'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
-                    'exceldate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
-                    'datestring'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
+                    'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
+                    'dateString'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
                     'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
+                    'shortHash'=>$this->getHash($value,TRUE),
+                    'hash'=>$this->getHash($value,False),
                     'codepfad'=>$this->convert2codepfad($value),
                     'unycom'=>$this->convert2unycom($value),
-                    'unycomcountry'=>$this->convert2unycomByKey($value,'Country'),
-                    'unycomregion'=>$this->convert2unycomByKey($value,'Region'),
-                    'useridnamecomma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),3),
-                    'useridname'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),1),
-                    'useridemail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),7),
-                    'useridphone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),8),
-                    'useridmobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(trim($value),9),
+                    'unycomCountry'=>$this->convert2unycomByKey($value,'Country'),
+                    'unycomRegion'=>$this->convert2unycomByKey($value,'Region'),
+                    'unycomFallNoWhitspaces'=>$this->convert2unycomByKey($value,'Reference without \s'),
+                    'useridNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,3),
+                    'useridName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,1),
+                    'useridEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,7),
+                    'useridPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,8),
+                    'useridMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,9),
                 };
         return $newValue;
     }
@@ -745,10 +782,10 @@ final class MiscTools{
         }
     }
 
-    public function str2int($string,$lang=''):int
+    public function str2int($string,$lang='en'):int
     {
         $value=$this->str2float($string,$lang);
-        return intval($value);
+        return intval(round($value));
     }
     
     public function fraction2float($string)
@@ -879,6 +916,7 @@ final class MiscTools{
             $suffix=strtoupper($suffix);
             $suffix=str_split($suffix,2);
             foreach($regions as $rc=>$region){
+                if (empty($suffix[0])){break;}
                 if (mb_strpos($suffix[0],$rc)!==0){continue;}
                 array_shift($suffix);
                 $arr['Region']=$rc;
@@ -919,10 +957,9 @@ final class MiscTools{
             }
         }
         $reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
-        $arr=array('Reference'=>$reference,'Full'=>$reference,'Family'=>$arr['Year'].'F'.$arr['Number'])+$arr;
+        $arr=array('Reference'=>$reference,'Reference without \s'=>preg_replace('/\s+/u','',$reference),'Full'=>$reference,'Family'=>$arr['Year'].'F'.$arr['Number'])+$arr;
         $arr['Prefix']=trim($prefixSuffix[0],'- ');
         if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
-        //$this->arr2file($arr);
         return $arr;
     }
 
@@ -942,6 +979,104 @@ final class MiscTools{
             $value=current($value);
         }
         return $value;
+    }
+
+    public function isTrue($valueA,$valueB,$condition):bool
+    {
+        // string or simple tests
+        if ($condition==='empty'){
+            return empty($valueA);
+        } else if ($condition==='!empty'){
+            return !empty($valueA);
+        } else if ($condition==='strpos'){
+            return stripos((string)$valueA,(string)$valueB)!==FALSE;
+        } else if ($condition==='!strpos'){
+            return stripos((string)$valueA,(string)$valueB)===FALSE;
+        }
+        // numeric tests
+        if (is_int($valueA)){$valueB=intval(round($valueB));}
+        if (is_float($valueA)){$valueB=floatval($valueB);}
+        if (is_bool($valueA)){
+            $valueA=intval($valueA);
+            $valueB=intval($valueB);
+        }
+        if ($condition==='>'){
+            return $valueA>$valueB;
+        } else if ($condition==='='){
+            return $valueA==$valueB;
+        } else if ($condition==='!='){
+            return $valueA!=$valueB;
+        } else if ($condition==='>'){
+            return $valueA<$valueB;
+        } else if ($condition==='&'){
+            return boolval($valueA&$valueB);
+        } else if ($condition==='|'){
+            return boolval($valueA|$valueB);
+        } else if ($condition==='^'){
+            return boolval($valueA^$valueB);
+        } else if ($condition==='~'){
+            return $valueA==-1*$valueB;
+        }
+        $this->oc['logger']->log('error','"{class}::{function}()" called with undefined condition.',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
+        return FALSE;
+    }
+    
+    public function matchEntry($needle,$matchSelector,$matchColumn,$matchType='contains',$isSystemCall=FALSE):array
+    {
+        // prepare match selector
+        $needles=array();
+        if ($matchType=='identical'){
+            $matchSelector[$matchColumn]=$needle;
+        } else if ($matchType=='contains'){
+            $matchSelector[$matchColumn]='%'.$needle.'%';
+        } else if ($matchType=='unycom'){
+            $unycomArr=$this->convert2unycom($needle);
+            $unycomArr=array_merge(array('Year'=>'1900','Type'=>'X','Number'=>'99999','Region'=>'  ','Country'=>'  ','Part'=>'  '),$unycomArr);
+            if (empty(trim($unycomArr['Region'])) && empty(trim($unycomArr['Country']))){
+                $unycomArr['Region']='WO';
+                $unycomArr['Country']='  ';
+            }
+            $needles=array($unycomArr['Year'],$unycomArr['Type'],$unycomArr['Number'],$unycomArr['Region'],$unycomArr['Country'],$unycomArr['Part']);
+            $matchSelector[$matchColumn]='%'.trim($unycomArr['Number']).'%';
+        } else if ($matchType=='|'){
+            $needles=explode($matchType,$needle);
+            $matchSelector[$matchColumn]='%'.$needles[0].'%';
+        } else if ($matchType=='number'){
+            $needles=preg_split('/\D+/',$needle);
+            $matchSelector[$matchColumn]='';
+            foreach($needles as $sampleNeedle){
+                if (mb_strlen($matchSelector[$matchColumn])<mb_strlen($sampleNeedle)){$matchSelector[$matchColumn]=$sampleNeedle;}
+            }
+            $matchSelector[$matchColumn]='%'.$matchSelector[$matchColumn].'%';
+        }
+        // get possible matches
+        $bestMatch=array('probability'=>0);
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
+            if ($count=count($needles)){
+                $probability=0;
+                $sample=$matchEntry[$matchColumn];
+                foreach($needles as $index=>$needle){
+                    $sample=explode($needle,$sample);
+                    if (count($sample)>1){
+                        array_shift($sample);
+                        $probability++;
+                    }
+                    $sample=implode($needle,$sample);
+                }
+                $probability=$probability/$count*(1-mb_strlen($sample)/mb_strlen($matchEntry[$matchColumn]));
+                if ($bestMatch['probability']<$probability){
+                    $bestMatch=$matchEntry;
+                    $bestMatch['probability']=$probability;
+                    if ($probability==1){break;}
+                }
+            } else {
+                $bestMatch=$matchEntry;
+                $bestMatch['probability']=1;
+                break;
+            }
+            //var_dump(round(100*$probability).' | '.$matchEntry[$matchColumn]);
+        }
+        return $bestMatch;
     }
 
 }

@@ -163,7 +163,7 @@ class User{
     
     private function anonymousUserLogin():array
     {
-        $user=array('Source'=>$this->entryTable,'Type'=>'user');
+        $user=array('Source'=>$this->entryTable);
         $user['Owner']='ANONYM';
         $user['LoginId']=mt_rand(1,10000000);
         $user['Expires']=date('Y-m-d H:i:s',time()+300);
@@ -224,7 +224,7 @@ class User{
         if (empty($arr)){
             $user=$_SESSION['currentUser'];
         } else if (!is_array($arr)){
-            $user=array('Source'=>$this->entryTable,'EntryId'=>$arr);
+            $user=array('Source'=>$this->entryTable,'EntryId'=>trim($arr));
         } else if (isset($arr['selector'])){
             $user=$arr['selector'];
         } else {
@@ -290,7 +290,6 @@ class User{
         $template=array('html'=>'');
         $arr=array_merge($template,$arr);
         if (isset($arr['selector']['EntryId'])){
-            if (!isset($arr['selector']['Type'])){$arr['selector']['Type']='user';}
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($arr['selector']);
         } else {

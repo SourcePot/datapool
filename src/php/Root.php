@@ -27,12 +27,14 @@ final class Root{
     public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     public const DB_TIMEZONE='UTC';
-    public const PROFILING_RATE=0.05;        // 0 ... 1 with "1"=100% profiling and "0"=0% profiling
-    public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
-    public const PROFILING_BACKTRACE=4;
     public const NULL_DATE='9999-12-30 12:12:12';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
+    public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE);
+    // profiling settings
+    public const PROFILING_RATE=0.005;        // 0 ... 1 with "1"=100% profiling and "0"=0% profiling
+    public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
+    public const PROFILING_BACKTRACE=4;
     
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
@@ -44,7 +46,7 @@ final class Root{
     
     public function __construct()
     {
-        $this->profileActive=(mt_rand(0,999)<floatval(self::PROFILING_RATE)*1000);
+        $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
         $oc=array(__CLASS__=>$this);
@@ -215,7 +217,7 @@ final class Root{
         }
     }
 
-    public function source2class(string $source):string
+    public function source2class($source):string
     {
         if (isset($this->structure['source2class'][$source])){
             return $this->structure['source2class'][$source];
@@ -371,21 +373,21 @@ final class Root{
         $wwwDirIndicator='/src/www';
         // relative dirs from root
         $GLOBALS['dirDefs']=array('root'=>array('relPath'=>'.','permissions'=>0770),
-                                    'vendor'=>array('relPath'=>'./vendor','permissions'=>0770),
-                                    'src'=>array('relPath'=>'./src','permissions'=>0770),
-                                    'setup'=>array('relPath'=>'./src/setup','permissions'=>0770),
-                                    'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
-                                    'privat tmp'=>array('relPath'=>'./src/tmp_private','permissions'=>0770),
-                                    'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
-                                    'logging'=>array('relPath'=>'./src/logging','permissions'=>0770),
-                                    'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
-                                    'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),
-                                    'php'=>array('relPath'=>'./src/php','permissions'=>0770),
-                                    'public'=>array('relPath'=>'./src/www','permissions'=>0775),
-                                    'media'=>array('relPath'=>'./src/www/media','permissions'=>0775),
-                                    'assets'=>array('relPath'=>'./src/www/assets','permissions'=>0775),
-                                    'tmp'=>array('relPath'=>'./src/www/tmp','permissions'=>0775),
-                                    );
+                                'vendor'=>array('relPath'=>'./vendor','permissions'=>0770),
+                                'src'=>array('relPath'=>'./src','permissions'=>0770),
+                                'setup'=>array('relPath'=>'./src/setup','permissions'=>0770),
+                                'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
+                                'privat tmp'=>array('relPath'=>'./src/tmp_private','permissions'=>0770),
+                                'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
+                                'logging'=>array('relPath'=>'./src/logging','permissions'=>0770),
+                                'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
+                                'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),
+                                'php'=>array('relPath'=>'./src/php','permissions'=>0770),
+                                'public'=>array('relPath'=>'./src/www','permissions'=>0775),
+                                'media'=>array('relPath'=>'./src/www/media','permissions'=>0775),
+                                'assets'=>array('relPath'=>'./src/www/assets','permissions'=>0775),
+                                'tmp'=>array('relPath'=>'./src/www/tmp','permissions'=>0775),
+                                );
         $absRootPath=strtr(__DIR__,array('\\'=>'/'));
         $absRootPath=strtr($absRootPath,array($relThisDirSuffix=>''));
         // get absolute dirs

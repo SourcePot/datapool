@@ -13,19 +13,18 @@
     text-decoration:none;
 }
 @media print{
-  :root{
-    --brand:blue;
-    accent-color:var(--brand);
-    font-size:9px;
-  }
-  #top-filler,#explorer,#bottom-menu,.toolbox,#nav{
-    display:none !important;
-  }
-  img{
+    :root{
+        --brand:blue;
+        accent-color:var(--brand);
+        font-size:9px;
+    }
+    .first-menu,#top-filler,#explorer,#bottom-menu,.toolbox,#nav{
+        display:none !important;
+    }
+    img{
         max-width:100%;
-  }
+    }
 }
-
 body{
     color:#333;
     background-image:url("lightbg.png");
@@ -60,7 +59,7 @@ h1{
 h2{
     font-size:1.3rem;
 }
-h3{
+h3,caption{
     font-size:1.2rem;
 }
 p,li,code{
@@ -180,7 +179,6 @@ table.std,div.table{
 }
 caption{
     margin:5px 0;
-    font-size:1.2rem;
 }
 fieldset{
     font-size:1rem;

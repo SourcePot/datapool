@@ -99,7 +99,6 @@ class Dictionary{
         $entry['Group']='Translations from en';
         $entry['Folder']=$entry['langCode'];
         $entry['Name']=mb_substr($entry['phrase'],0,100);
-        $entry['Type']='dictionary';
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         $entry['Owner']='SYSTEM';
         $entry['Content']=array('translation'=>$entry['translation']);

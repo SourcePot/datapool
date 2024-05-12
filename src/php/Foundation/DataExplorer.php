@@ -256,7 +256,7 @@ class DataExplorer{
         } else if (isset($formData['cmd']['edit'])){
             $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',TRUE);
         } else if (!empty($formData['cmd'])){
-            $entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
+            $entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
             $entry=array_merge($this->tags[key($formData['cmd'])],$entry);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);    
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
@@ -311,7 +311,7 @@ class DataExplorer{
         // create html
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
         $html='';
-        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
+        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
             $html.=$this->canvasElement2html(__CLASS__,__FUNCTION__,$entry,$selectedCanvasElement);
         }
@@ -373,7 +373,6 @@ class DataExplorer{
                 $style['z-index']='5';
                 $style['box-sizing']='content-box';
                 $rowCountSelector=$canvasElement['Content']['Selector'];
-                if (!empty($rowCountSelector['Type'])){$rowCountSelector['Type'].='%';}
                 $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,FALSE);
             }
         }
@@ -407,8 +406,7 @@ class DataExplorer{
         $settings['Script start timestamp']=hrtime(TRUE);
         $entriesSelector=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $key=explode('|',$entry['Type']);
-            $key=array_pop($key);
+            $key=strtolower($entry['Group']);
             $settings[$key][$entry['EntryId']]=$entry;
             // entry template
             foreach($entry['Content'] as $contentKey=>$content){
@@ -436,10 +434,8 @@ class DataExplorer{
         if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){
             return array();
         }
-        $type=$this->oc['SourcePot\Datapool\Root']->class2source($callingClass);
-        $type.='|'.$callingFunction;
-        $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId'],'Type'=>mb_strtolower($type));
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+        $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId']);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name'),0);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
         $entry['Content']=array();
         $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
@@ -454,7 +450,7 @@ class DataExplorer{
     */
     public function canvasSelector(string $callingClass):array
     {
-        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass,'Type'=>'dataexplorer');
+        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
         return $selector;
     }
     
@@ -541,7 +537,6 @@ class DataExplorer{
                 $entry['EntryId']=hash_file('md5',$fileArr["tmp_name"]);
                 if (empty($entry['Folder'])){$entry['Folder']='Upload';}
                 if (empty($entry['Name'])){$entry['Name']=$fileArr["name"];}
-                if (!empty($entry['Type'])){$entry['Type']=trim($entry['Type'],'%');}
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
             }
@@ -604,7 +599,9 @@ class DataExplorer{
             $success=move_uploaded_file($formData["files"]["import files"][0]['tmp_name'],$tmpFile);
             if ($success){
                 foreach($selectors as $index=>$selector){$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);}
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile,$formData["files"]["import files"][0]['name']);
+            } else {
+                $this->oc['logger']->log('notice','Import of "{name}" failed',$formData["files"]["import files"][0]);    
             }
         }
         $btnArr=array('tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('float'=>'left','clear'=>'both','margin'=>'0.5em 5px;'));

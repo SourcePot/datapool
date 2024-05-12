@@ -148,7 +148,7 @@ class ClientAccess{
         // get credentials entry and try match
         $authorizationEntry=FALSE;
         if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
-            $credentialsSelector=array('Source'=>$this->entryTable,'Type'=>$this->entryTable.' credentials','Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%');
+            $credentialsSelector=array('Source'=>$this->entryTable,'Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
                 if (strcmp($entry['Content']['client_id'],$authorizationArr['client_id'])===0 && strcmp($entry['Content']['client_secret'],$authorizationArr['client_secret'])===0){
                     $authorizationEntry=$entry;
@@ -170,7 +170,6 @@ class ClientAccess{
             $authorizationEntry['Expires']=date('Y-m-d H:i:s',$expires);
             $tokenContent=array('access_token'=>$accessToken,'expires_in'=>$this->authorizationLifespan,'expires'=>$expires,'expires_datetime'=>$authorizationEntry['Expires']);
             $authorizationEntry['Name']=$accessToken;
-            $authorizationEntry['Type']=$this->entryTable.' token';
             $authorizationEntry['Group']='Client token';
             $authorizationEntry['Content']=array_replace_recursive($authorizationEntry['Content'],$tokenContent);
             $authorizationEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($authorizationEntry);
@@ -253,9 +252,9 @@ class ClientAccess{
                                 'client_id'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'client_secret'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 );
-        $selector=array('Source'=>$this->entryTable,'Type'=>$this->entryTable.' credentials','Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Owner'=>$arr['selector']['Owner']);
+        $selector=array('Source'=>$this->entryTable,'Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Owner'=>$arr['selector']['Owner']);
         $selector['Name']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array('selector'=>$arr['selector']),4);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,array('Group','Folder','Name','Type'),0);
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,array('Group','Folder','Name'),0);
         $selector=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($selector,'ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
         $arr=array('selector'=>$selector);
         $arr['callingClass']=__CLASS__;

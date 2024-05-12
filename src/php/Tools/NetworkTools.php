@@ -63,10 +63,13 @@ class NetworkTools{
         }
         return $classWithNamespace;
     }
-
+    
     public function setPageStateBySelector(array $selector)
     {
         $classWithNamespace=$this->selector2class($selector);
+        if (method_exists($classWithNamespace,'run')){
+            $_SESSION['page state']['app']['Class']=$classWithNamespace;
+        }
         return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
     }
     

@@ -273,8 +273,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=array('Script start timestamp'=>hrtime(TRUE));
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $key=explode('|',$entry['Type']);
-            $key=array_pop($key);
+            $key=strtolower($entry['Group']);
             $base[$key][$entry['EntryId']]=$entry;
             // entry template
             foreach($entry['Content'] as $contentKey=>$content){

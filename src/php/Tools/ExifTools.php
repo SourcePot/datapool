@@ -67,7 +67,7 @@ class ExifTools{
     {
         if (isset($entry['Params']['Geo'])){$oldGeo=$entry['Params']['Geo'];} else {$oldGeo=array('lat'=>9999,'lon'=>9999);}
         // get lat and lon from exif
-        $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude');        
+        $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude','imgDirectionRef'=>'GPSImgDirectionRef','imgDirection'=>'GPSImgDirection','dateStamp'=>'GPSDateStamp');        
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){
                 if (isset($entry['Params']['Geo'][$targetKey])){unset($entry['Params']['Geo'][$targetKey]);}

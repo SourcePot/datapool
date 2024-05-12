@@ -111,7 +111,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=array('run');
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Match entries widget'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Match entries'));
         foreach($result as $caption=>$matrix){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
         }
@@ -130,7 +130,6 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getMatchEntriesSettingsHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->matchingParams($arr['selector']);
-        $arr['html'].=$this->matchingRules($arr['selector']);
         //$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
         //$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Matching'));
         return $arr;
@@ -143,7 +142,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Column to match'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
                               'Match with'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                               'Match with column'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
-                              'Match type'=>array('method'=>'select','value'=>'identical','options'=>$matchTypOptions,'excontainer'=>TRUE),
+                              'Match type'=>array('method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE),
+                              'Match probability'=>array('method'=>'select','value'=>80,'options'=>array(100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50'),'excontainer'=>TRUE),
                               'Match failure'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Combine content'=>array('method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>array('No','Yes')),
@@ -173,47 +173,25 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
     }
 
-    private function matchingRules($callingElement){
-        $contentStructure=array('Operation'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'skipIfFound','options'=>array('skipIfFound'=>'Skip entry if needle found','skipIfNotFound'=>'Skip entry if needle is not found')),
-                                 'Entry'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'Entry A','options'=>array('Entry A'=>'Entry A','Entry B'=>'Entry B')),
-                                 'Column'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
-                                 'Needle'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                );
-        $contentStructure['Column']+=$callingElement['Content']['Selector'];
-        if (empty($callingElement['Content']['Selector']['Source'])){return $html;}
-        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
-        $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Filter-rules: Skip entries if one of the conditions is met';
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
-        return $html;
-    }
-        
     public function runMatchEntries($callingElement,$testRun=TRUE){
-        $base=array('matchingparams'=>array(),'matchingrules'=>array());
+        $base=array('matchingparams'=>array());
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Matching statistics'=>array('Entries A'=>array('value'=>0),
-                                                 'Entries B'=>array('value'=>0),
-                                                 'Skipped entries A'=>array('value'=>0),
-                                                 'Skipped entries B'=>array('value'=>0),
-                                                 'Matched'=>array('value'=>0),
-                                                 'Failed'=>array('value'=>0),
-                                                 'Skip rows'=>array('value'=>0),
-                                                 )
+        $result=array('Matching'=>array('Entries'=>array('value'=>0),
+                                        'Matched'=>array('value'=>0),
+                                        'Failed'=>array('value'=>0),
+                                        'Skip rows'=>array('value'=>0),
+                                        ),
+                     'Matches'=>array(),
                      );
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entryA){
-            if ($entryA['isSkipRow']){
-                $result['Matching statistics']['Skip rows']['value']++;
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
+            if ($entry['isSkipRow']){
+                $result['Matching']['Skip rows']['value']++;
                 continue;
             }
-            if ($this->skipMatch($entryA,$base,'Entry A')){
-                $result['Matching statistics']['Skipped entries A']['value']++;
-                continue;
-            }
-            $result['Matching statistics']['Entries A']['value']++;
-            $result=$this->matchEntry($base,$entryA,$result,$testRun);
+            $result['Matching']['Entries']['value']++;
+            $result=$this->matchEntry($base,$entry,$result,$testRun);
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
@@ -221,92 +199,42 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
     
-    private function matchEntry($base,$entryA,$result,$testRun){
-        $success=FALSE;
+    private function matchEntry($base,$entry,$result,$testRun){
         $params=current($base['matchingparams']);
-        // match column and value
-        $needle=$entryA[$params['Content']['Column to match']];
-        $columnToMatch=$params['Content']['Match with column'];
-        // create entry b selector
-        $selectorB=$base['entryTemplates'][$params['Content']['Match with']];
-        if (strcmp($params['Content']['Match type'],'identical')===0){
-            // match type identical
-            $selectorB[$columnToMatch]=$needle;
-        } else if (strcmp($params['Content']['Match type'],'epPublication')===0){
-            // match type European patent publication
-            $needle=preg_replace('/[^0-9]+/','',$needle);
-            if (strlen($needle)<7){$needle='XXXXXXX';}
-            $selectorB[$columnToMatch]='%'.$needle[0].'%'.$needle[1].$needle[2].$needle[3].'%'.$needle[4].$needle[5].$needle[6].'%';
-        } else {
-            // other match types, e.g. contains
-            $selectorB[$columnToMatch]='%'.$needle.'%';
-        }
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selectorB,TRUE) as $entryB){
-            // continue if skip condition is met
-            if ($this->skipMatch($entryB,$base,'Entry B')){
-                $result['Matching statistics']['Skipped entries B']['value']++;
-                continue;
+        // get best match
+        $needle=$entry[$params['Content']['Column to match']];
+        $matchSelector=$base['entryTemplates'][$params['Content']['Match with']];
+        $matchColumn=$params['Content']['Match with column'];
+        $matchType=$params['Content']['Match type'];
+        $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$matchSelector,$matchColumn,$matchType,TRUE);
+        // process best match
+        $probability=round(100*$bestMatch['probability']);
+        $entry['Params']['Processed'][__CLASS__]=$probability;
+        if (intval($params['Content']['Match probability'])<100*$bestMatch['probability']){
+            // successful match
+            if (!empty($params['Content']['Combine content'])){
+                $entry['Content']=array_replace_recursive($entry['Content'],$bestMatch['Content']);
             }
-            // filter from group of matches
-            if (strcmp($params['Content']['Match type'],'epPublication')===0){
-                $contentValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entryB['Content']);
-                $contentValue=implode('|',$contentValue);
-                preg_match('/([0-9]{4}[A-Z]{1,2}[0-9]{5})(WE|EP)(\s{2})/',$contentValue,$match);
-                if (empty($match[0])){continue;}
-                preg_match('/'.$needle[0].'\s{0,1}'.$needle[1].$needle[2].$needle[3].'\s{0,1}'.$needle[4].$needle[5].$needle[6].'/',$contentValue,$match);
-                if (empty($match[0])){continue;}    
-            }
-            // match detected
-            if (!empty($params['Content']['Combine content'])){$entryA['Content']=array_replace_recursive($entryB['Content'],$entryA['Content']);}
-            $success=TRUE;
-            break;
-        }
-        if ($success){
-            $result['Matching statistics']['Matched']['value']++;
-            $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entryA,'Processing log',array('success'=>'Match column "'.$columnToMatch.'" successful'),FALSE);
+            $result['Matching']['Matched']['value']++;
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('success'=>'Match column "'.$params['Content']['Column to match'].'" successful'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){
-                $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
             } else {
-                $result['Matching statistics']['Kept entry']['value']++;
+                $result['Matching']['Kept entry']['value']++;
             }
-            if (!isset($result['Sample result (match)']) || mt_rand(0,100)>90){
-                $result['Sample result (match)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
-            }
+            $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
         } else {
-            $result['Matching statistics']['Failed']['value']++;
-            $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entryA,'Processing log',array('failure'=>'Match column "'.$columnToMatch.'" failed'),FALSE);
+            // fails match
+            $result['Matching']['Failed']['value']++;
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('failure'=>'Match column "'.$params['Content']['Column to match'].'" failed'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
-                $entryA=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entryA,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
             } else {
-                $result['Matching statistics']['Kept entry']['value']++;
+                $result['Matching']['Kept entry']['value']++;
             }
-            if (!isset($result['Sample result (failed)']) || mt_rand(0,100)>90){
-                $result['Sample result (failed)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entryA);
-            }
+            $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
         }
         return $result;
-    }
-    
-    private function skipMatch($entry,$base,$entryType='Entry A'){
-        $skip=FALSE;
-        if (!isset($base['matchingrules'])){return $skip;}
-        foreach($base['matchingrules'] as $entryId=>$rule){
-            $rule=$rule['Content'];
-            if (strcmp($rule['Entry'],$entryType)!==0){continue;}
-            $haystack=$entry[$rule['Column']];
-            $needle=$rule['Needle'];
-            if (is_array($haystack)){$haystack=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($haystack);}
-            if (strcmp($rule['Operation'],'skipIfNotFound')===0){
-                if (mb_strpos($haystack,$needle)===FALSE){
-                    return TRUE;
-                }
-            } else if (strcmp($rule['Operation'],'skipIfFound')===0){
-                if (mb_strpos($haystack,$needle)!==FALSE){
-                    return TRUE;
-                }
-            }
-        }
-        return $skip;
     }
 
 }

@@ -59,10 +59,9 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']['Source']=$this->entryTable;
         $arr['selector']['Group']=$method;
         $arr['selector']['Folder']=$_SESSION['currentUser']['EntryId'];
-        $arr['selector']['Type']=$this->entryTable.' array';
-		$arr['selector']['Name']=$name;
+        $arr['selector']['Name']=$name;
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($arr['selector'],'ALL_R','ALL_CONTENTADMIN_R');
-        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Group','Folder','Name','Type'),0);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Group','Folder','Name'),0);
 		return $arr;
 	}
 
@@ -228,7 +227,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                     $valueArr[]=boolval($arrNameValueType['value']);
                 }
             } else if ($arrNameValueType['type']==='int'){
-                $valueArr[]=intval($arrNameValueType['value']);
+                $valueArr[]=intval(round(floatval($arrNameValueType['value'])));
             } else if ($arrNameValueType['type']==='float'){
                 $valueArr[]=floatval($arrNameValueType['value']);
             } else if ($arrNameValueType['type']==='null'){
@@ -263,7 +262,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                         $value=($outputFormat===2)?strval($value):htmlentities(strval($value));
                     } else {
                         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($value);
-                        $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE));
+                        $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'class'=>'','style'=>array('border-left'=>'1px solid #aaa')));
                     }
                 }
             } else if ($value===FALSE){

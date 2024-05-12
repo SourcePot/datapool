@@ -102,7 +102,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getMapEntriesInfo($callingElement){
         $matrix=array();
-        $matrix['Please note:']['value']='Remeber to set the Name-column, if you select "Create csv" or "Create zip". The file name will be the target entry Name. Mapping will result in as many files as there are different Names.';
+        $matrix['']['value']='If you select "Create csv" or "Create zip", remeber to set the target entry Name-column.<br/>The file name will be the target entry Name. Mapping will result in as many files as there are different Names.';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         return $html;
     }
@@ -281,7 +281,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $zipEntry['Params']['File']['Extension']=$pathArr['extension'];
                 $zipEntry['Params']['File']['MIME-Type']=mime_content_type($zipFile);
                 $zipEntry['Params']['File']['Date (created)']=filectime($zipEntry['Params']['File']['Source']);
-                $zipEntry['Type']=$zipEntry['Source'].' '.str_replace('/',' ',$zipEntry['Params']['File']['MIME-Type']);
+                $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($zipEntry);
                 // save entry and file
                 $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry,TRUE,FALSE,TRUE,$zipEntry['Params']['File']['Source']);
                 $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
@@ -335,6 +335,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
             }
         } else {
+            if (isset($sourceEntry['Params']['File'])){unset($sourceEntry['Params']['File']);}
             $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
         }

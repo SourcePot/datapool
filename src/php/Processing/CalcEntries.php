@@ -150,11 +150,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // initialize rule options
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$arr['selector']['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            if (mb_strpos($entry['Type'],'rules')===FALSE || mb_strpos($entry['Type'],'|')===FALSE){continue;}
-            $typeComps=explode('|',$entry['Type']);
-            $rulePrefix=str_replace('rules',' rule',$typeComps[1]);
+            if (mb_strpos($entry['Group'],'Rules')===FALSE){continue;}
+            $rulePrefix=str_replace('Rules',' rule',$entry['Group']);
             $ruleIndex=$this->ruleId2ruleIndex($entry['EntryId'],ucfirst($rulePrefix));
-            $this->ruleOptions[$typeComps[1]][$ruleIndex]=$ruleIndex;
+            $this->ruleOptions[strtolower($entry['Group'])][$ruleIndex]=$ruleIndex;
         }
         // get html
         if (!isset($arr['html'])){$arr['html']='';}

@@ -184,7 +184,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function parserRules($callingElement){
         // complete section selector
-        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Type'=>'%|parsersectionrules');
+        $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Group'=>'parserSectionRules');
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
         }
@@ -252,14 +252,15 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $textSections[$lastSection]=$fullText;
             // create text sections
             foreach($base['parsersectionrules'] as $entryId=>$sectionRule){
-                preg_match('/'.$sectionRule['Content']['Regular expression'].'/u',$textSections[$lastSection],$matches,PREG_OFFSET_CAPTURE);
+                $tmpText=$textSections[$lastSection];
+                $regexp='/'.$sectionRule['Content']['Regular expression'].'/u';
+                preg_match($regexp,$tmpText,$matches,PREG_OFFSET_CAPTURE);
                 if (isset($matches[0][0])){
                     $keywordPos=$matches[0][1]+strlen($matches[0][0]);
-                    $tmpText=$textSections[$lastSection];
-                    $textSections[$lastSection]=mb_substr($tmpText,0,$keywordPos);
+                    $textSections[$lastSection]=substr($tmpText,0,$keywordPos);
                     if ($testRun){$result['Parser text sections'][$base['parsersectionrules'][$lastSection]['Content']['Section name']]=array('value'=>$textSections[$lastSection]);}
                     $lastSection=$entryId;
-                    $textSections[$lastSection]=mb_substr($tmpText,$keywordPos);
+                    $textSections[$lastSection]=substr($tmpText,$keywordPos);
                     if ($testRun){$result['Parser text sections'][$base['parsersectionrules'][$lastSection]['Content']['Section name']]=array('value'=>$textSections[$lastSection]);}
                 }
             }

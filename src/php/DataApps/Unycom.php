@@ -52,7 +52,7 @@ class Unycom implements \SourcePot\Datapool\Interfaces\App{
             $html.=$explorerArr['contentHtml'];
             if (isset($explorerArr['canvasElement']['Content']['Selector']['Source'])){
                 $explorerSelector=$explorerArr['canvasElement']['Content']['Selector'];
-                $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($explorerSelector['Source']);
+                $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class((string)$explorerSelector['Source']);
                 $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
                 $arr['selector']=array_merge($explorerSelector,$pageStateSelector);
                 if (!empty($arr['selector']['EntryId'])){

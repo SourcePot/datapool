@@ -77,10 +77,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     }
 
     public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
+        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0,'',FALSE);
         $entry['Content']=$setting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
         $this->oc['logger']->log('info','Setting "{name}" updated',array('name'=>$name));    
@@ -88,9 +88,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     }
     
     public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE){
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name,'Type'=>$this->entryTable);
+        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),0,'',FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0,'',FALSE);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
         $entry['Content']=$initSetting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);

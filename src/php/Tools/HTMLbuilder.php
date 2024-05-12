@@ -212,13 +212,16 @@ class HTMLbuilder{
             foreach($arr['options'] as $name=>$label){
                 $optionArr=$arr;
                 $optionArr['tag']='option';
-                if (strcmp(strval($name),strval($selected))===0){$optionArr['selected']=TRUE;}
+                if (strval($name)===strval($selected)){$optionArr['selected']=TRUE;}
+                if (strval($name)==='useValue'){$optionArr['title']='Use value provided';}
                 $optionArr['value']=$name;
                 $optionArr['element-content']=$label;
                 $optionArr['dontTranslateValue']=TRUE;
                 $toReplace['{{options}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($optionArr);                
             }
-            foreach($toReplace as $needle=>$value){$html=str_replace($needle,$value,$html);}
+            foreach($toReplace as $needle=>$value){
+                $html=str_replace($needle,$value,$html);
+            }
             if (count($arr['options'])>$optionsFilterLimit && !empty($selectArr['id'])){
                 $filterArr=array('tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>array('filter'),'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
@@ -267,10 +270,10 @@ class HTMLbuilder{
             }
         }
         $arr['keep-element-content']=TRUE;
-        if (!empty($arr['addSourceValueColumn'])){
-            $arr['options']=array('useValue'=>'&xrArr;');
-        } else {
+        if (empty($arr['addSourceValueColumn'])){
             $arr['options']=array();
+        } else {
+            $arr['options']=array('useValue'=>'&#9998;');
         }
         if (!empty($arr['addColumns'])){
             $arr['options']+=$arr['addColumns'];
@@ -391,10 +394,9 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['show'])){
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setEditMode($selector,FALSE);
             } else if (isset($formData['cmd']['export'])){
-                $selectors=array($selector);
                 $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
-                $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.current($selectors)['Source'].' dump.zip';
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries($selectors,$fileName,FALSE,10000000000);
+                $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.$selector['Source'].' dump.zip';
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries(array($selector),$fileName,FALSE,10000000000);
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         }
@@ -654,7 +656,7 @@ class HTMLbuilder{
         $isSystemCall=$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin();
         $matrix=array('New'=>array());
         $arr['movedEntryId']=$this->entry2row($arr,TRUE,FALSE,FALSE,$isSystemCall);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Name'=>FALSE,'Type'=>FALSE));
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Name'=>FALSE));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
             $orderedListComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             if (count($orderedListComps)!==2){continue;}
@@ -838,12 +840,11 @@ class HTMLbuilder{
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($presentArr['selector'],FALSE);
             if ($entry){
                 $presentArr['selector']=$entry;
-            }            
+            }
         }
         $presentArr=$this->mapContainer2presentArr($presentArr);
         $selector=$this->getPresentationSelector($presentArr);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
-            $rowCount=$setting['rowCount'];
             $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']);
             $presentArr['class']=$setting['Content']['Style class'];
             $cntrArr=explode('|',$setting['Content']['Entry key']);
@@ -887,7 +888,7 @@ class HTMLbuilder{
                 if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
             }
         }
-        if (empty($rowCount)){
+        if (empty($setting['rowCount'])){
             $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
         }
         $html=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($html);

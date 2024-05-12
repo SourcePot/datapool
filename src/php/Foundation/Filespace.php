@@ -515,7 +515,6 @@ class Filespace{
         $entry['Params']['File']['Date (created)']=filectime($file);
         $entry['Params']['File']['MIME-Type']=mime_content_type($file);
         $entry['Params']['File']['Style class']='';
-        $entry['Type']=(empty($entry['Type']))?FALSE:$entry['Type'];
         return $entry;
     }
 
@@ -552,18 +551,37 @@ class Filespace{
             $dateTimeObj->setTimezone($timeZoneObj);
             // unify entry
             $properties=$message->properties();
+            $subject=$context['Name']=$properties->subject;
             $idHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($message->getInternetMessageId());
             $entry['EntryId']=$idHash;
             $entry['Date']=$dateTimeObj->format('Y-m-d H:i:s');
-            $entry['Content']=array('Html'=>$message->getBodyHtml(),'Plain'=>trim($message->getBody()),'RTF'=>$message->getBodyRTF());
-            $entry['Params']['Email']=array('subject'=>array('value'=>$properties->subject),
+            $entry['Content']=array();
+            try{
+                $entry['Content']['Plain']=trim($message->getBody());
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Processing message "{Name}" Plain-part failed with: "{msg}"',$context);    
+            }
+            try{
+                $entry['Content']['Html']=$message->getBodyHtml();
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Processing message "{Name}" Html-part failed with: "{msg}"',$context);    
+            }
+            try{
+                $entry['Content']['RTF']=$message->getBodyRTF();
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Processing message "{Name}" RTF-part failed with: "{msg}"',$context);    
+            }
+            $entry['Params']['Email']=array('subject'=>array('value'=>$subject),
                                             'fromaddress'=>array('value'=>$message->getSender()),
                                             'from'=>array('value'=>$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr($message->getSender())),
                                             'delivery-date'=>array('value'=>$dateTimeObj->format(DATE_RFC822)),
                                             'message-id'=>array('value'=>$message->getInternetMessageId()),
                                             );
             foreach($message->getRecipients() as $recipient){
-                $entry['Params']['Email'][$recipient->getType()]['value']=$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr((string)$recipient);
+                $entry['Params']['Email'][strtolower($recipient->getType())]['value']=$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr((string)$recipient);
             }
             if (empty($message->getAttachments())){
                 // no attachements: email content -> entry
@@ -603,7 +621,6 @@ class Filespace{
             $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
             $entry['EntryId']=md5($fileContent);
             $entry['Name']=$entry['Params']['Email']['subject']['value'].' ['.$entry['EntryId'].']';
-            $entry['Type']=$entry['Source'];
             // init zip file
             $zipFile=$this->getPrivatTmpDir().'attachments.zip';
             // scan email parts
@@ -636,16 +653,16 @@ class Filespace{
                         $headerArr=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($partHeader,$headerArr);
                         // decode content
                         $partContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($partContent,$headerArr['content-transfer-encoding']['value']);
-                        if ($headerArr['content-disposition']['value']=='attachment'){
+                        if (strpos($headerArr['content-disposition']['value'],'attachment')===FALSE){
+                            $contentType=ucfirst(mb_substr($headerArr['content-type']['value'],mb_strpos($headerArr['content-type']['value'],'/')+1));
+                            $entry['Content'][$contentType]=$partContent;
+                        } else {
                             if (!isset($zip)){
                                 $zip=new \ZipArchive;
                                 $zip->open($zipFile,\ZipArchive::CREATE);
                             }
                             $zip->addFromString($headerArr['content-disposition']['filename'],$partContent);
                             $emailStatistic['files']++;
-                        } else {
-                            $contentType=ucfirst(mb_substr($headerArr['content-type']['value'],mb_strpos($headerArr['content-type']['value'],'/')+1));
-                            $entry['Content'][$contentType]=$partContent;
                         }
                         $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
                     }
@@ -686,7 +703,7 @@ class Filespace{
                 if (!empty($entry['fileContent'])){
                     $zipStatistic['files'][$i]=$entry['fileName'];
                     $entry['Name']=$entry['fileName'];
-                    $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
+                    $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
                     $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted file "'.$fileName.'" from zip-archive (file '.($i+1).' of '.$zip->count().')'),FALSE);
                     $this->fileContent2entry($newEntry);
                 }
@@ -810,7 +827,7 @@ class Filespace{
         }
     }
     
-    public function importEntries(string $dumpFile,bool $isSystemCall=FALSE):array
+    public function importEntries(string $dumpFile,$orgFileName='',bool $isSystemCall=FALSE):array
     {
         $statistics=array('zip errors'=>0,'json decode errors'=>0,'entries updated'=>0,'attached files added'=>0);
         $dir=$this->getPrivatTmpDir();
@@ -846,8 +863,8 @@ class Filespace{
         } else {
             $statistics['zip errors']++;
         }
-        $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
-        $this->oc['logger']->log('notice','Import resulted in {statistics}',$context);    
+        $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'orgFileName'=>$orgFileName);
+        $this->oc['logger']->log('notice','Import of "{orgFileName}" resulted in "{statistics}"',$context);    
         return $statistics;
     }
     

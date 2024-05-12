@@ -64,36 +64,33 @@ class Definitions{
     */
     public function addDefintion(string $callingClass,array $definition)
     {
-        $entry=array('Source'=>$this->entryTable,'Group'=>'Templates','Folder'=>$callingClass,'Name'=>$this->class2name($callingClass),'Type'=>'definition','Owner'=>'SYSTEM');
+        $entry=array('Source'=>$this->entryTable,'Group'=>'Templates','Folder'=>$callingClass,'Name'=>$this->class2name($callingClass),'Owner'=>'SYSTEM');
         $entry['EntryId']=md5(json_encode($entry));
         $entry['Content']=$definition;
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
     }
     
     /**
-    * This method returns the definition for the provided entry, based on the entry['Type'] or entry['Class'].
-    * Only the first part (everything up to the first space character) of entry['Type'] is used.
+    * This method returns the definition for the provided entry, based on the entryentry['Class'] or ['Type'].
+    * @param array $entry Is the orginal entry
     * @return array
     */
-    public function getDefinition(array $entry,bool $isDebugging=FALSE):array
+    public function getDefinition(array $entry):array
     {
         $selector=array('Source'=>$this->entryTable,'Group'=>'Templates');
         if (!empty($entry['Class'])){
             $selector['Name']=$this->class2name($entry['Class']);    
         } else if (!empty($entry['Type'])){
-            $typeComps=explode(' ',$entry['Type']);
-            $selector['Name']=array_shift($typeComps);
+            $typeComps=explode('|',$entry['Type']);
+            $selector['Name']=array_pop($typeComps);
         } else {
             $isDebugging=TRUE;
             $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key, debugging file added.',array('function'=>__FUNCTION__));         
         }
-        $arr=array('entry'=>$entry,'selector'=>$selector,'definition'=>array());
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
-            $arr['definition']=$entry;
-            break;
+            return $entry;
         }
-        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);}
-        return $arr['definition'];
+        return array();
     }
     
     /**

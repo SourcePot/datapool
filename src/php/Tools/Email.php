@@ -223,7 +223,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         // HEADER
         $h=\imap_headerinfo($mbox,$mid);
         $this->msgEntry['Name']=$this->iconvMimeDecode($h->subject,0,'utf-8');
-        $mailingDate=new \DateTime('@'.$h->udate);
+        $mailingDate=new \DateTime();
+        $mailingDate->setTimestamp($h->udate); 
         $this->msgEntry['Date']=$mailingDate->format('Y-m-d H:i:s');
         $this->msgEntry['Folder']=$this->iconvMimeDecode($h->senderaddress,0,'utf-8');
         foreach($headerProps as $key=>$prop){
@@ -305,26 +306,38 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
     public function emailProperties2arr(string $email,array $template=array(),bool $lowerCaseKeys=TRUE):array
     {
-        $email=preg_replace('/(^|\n|r)([^\n\r:]+: )/','|[]|$2',$email);
-        $keyValueArr=explode('|[]|',trim($email,"|[]\n\r"));
+        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $email=preg_replace('/(\n|\r)([^\n\r:]+: )/u',$S.'$2',$email);
+        $keyValueArr=explode($S,$email);
         foreach($keyValueArr as $line){
+            $line=trim($line);
             $line=imap_utf8($line);
             $valueStart=mb_strpos($line,':');
             if ($valueStart===FALSE){continue;}
             $keyA=trim(mb_substr($line,0,$valueStart));
-            if ($lowerCaseKeys){$keyA=mb_strtolower($keyA);}
             $template[$keyA]=array();
             $line=mb_substr($line,$valueStart+2);
-            preg_match_all('/([a-z]+)=([^;]+)/',$line,$matches);
-            foreach($matches[0] as $matchIndex=>$match){
-                $line=str_replace($match,'',$line);
-                $keyB=$matches[1][$matchIndex];
-                if ($lowerCaseKeys){$keyB=mb_strtolower($keyB);}
-                $template[$keyA][$keyB]=trim($matches[2][$matchIndex],"\"\t\n\r; ");
-            }
-            $line=trim($line,"\"\t\n\r; ");
-            if (!empty($line)){
-                $template[$keyA]['value']=$line;
+            $comps=$this->oc['SourcePot\Datapool\Tools\MiscTools']->explode($line,';');
+            foreach($comps as $index=>$comp){
+                $comp=trim($comp);
+                $subComs=explode('=',$comp);
+                if (count($subComs)>1){
+                    $keyB=$subComs[0];
+                    $value=$subComs[1];
+                } else {
+                    $keyB='value';
+                    $value=$subComs[0];
+                }
+                if ($keyA=='from' || $keyA=='From' || $keyA=='to' || $keyA=='To' || $keyA=='cc' || $keyA=='Cc' || $keyA=='bcc' || $keyA=='Bcc'){
+                    $value=$this->emailAddressString2arr($value);
+                } else {
+                    $value=trim($value,'" ');
+                }
+                if ($lowerCaseKeys){
+                    $keyA=mb_strtolower($keyA);
+                    $keyB=mb_strtolower($keyB);
+                }
+                $template[$keyA][$keyB]=$value;
             }
         }
         return $template;
@@ -354,14 +367,16 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     public function emailAddressString2arr($emailAdr):array
     {
         $return=array();
-        $addresses=explode(', ',$emailAdr);
+        $addresses=$this->oc['SourcePot\Datapool\Tools\MiscTools']->explode($emailAdr,',\s+');
         foreach($addresses as $index=>$chunk){
-            preg_match('/[^\s<>,]*@[^\s<>,]*/',$chunk,$match);
-            if (empty($match[0])){continue;}
-            $return[$index]['string']=htmlentities($chunk);
-            $return[$index]['personal']=trim(str_replace($match[0],'',$chunk),' <>');
-            $emailComps=explode('@',$match[0]);
-            $return[$index]['email']=$match[0];
+            preg_match('/[^\s<>,]*@[^\s<>,]*/u',$chunk,$matchEmailAddress);
+            if (empty($matchEmailAddress[0])){continue;}
+            $return[$index]['original']=$emailAdr;
+            $return[$index]['html']=htmlentities($chunk);
+            $comps=$this->oc['SourcePot\Datapool\Tools\MiscTools']->explode($chunk,'<');
+            $return[$index]['personal']=trim($comps[0],' "');
+            $emailComps=explode('@',$matchEmailAddress[0]);
+            $return[$index]['email']=$matchEmailAddress[0];
             $return[$index]['mailbox']=$emailComps[0];
             $return[$index]['host']=$emailComps[1];
         }
@@ -503,7 +518,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             }
             // save message
             $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{NOW}}');
-            $entry['Type']= $entry['Source'].' '.(($success)?'success':'failure');
+            $entry['Group'].=($success)?' success':' failure';
             $entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
             $entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
@@ -535,7 +550,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             }
         }
         $entry['Name']=$this->iconvMimeDecode($mailArr['Subject']);
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Type'),0);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name'),0);
         $fileName=date('Y-m-d').' '.preg_replace('/\W/','_',$entry['Name']).'.eml';
         $pathArr=pathinfo($fileName);
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);

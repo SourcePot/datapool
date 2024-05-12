@@ -33,15 +33,14 @@ class MediaTools{
         }
         $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['width']));
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){return $arr;}
-        $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
-        if (!is_file($file)){return $arr;}
-        if (!isset($arr['selector']['Params']['File']['MIME-Type'])){
-            $arr['html']='MIME-type missing';
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'audio')===0){
+        $arr=$this->addTmpFile($arr);
+        if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
+            $arr['html']='Undefined content...';
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'audio')===0){
             $arr=$this->getAudio($arr);
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'video')===0){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'video')===0){
             $arr=$this->getVideo($arr);
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
             // add wrapper div
             $wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer');
@@ -53,18 +52,18 @@ class MediaTools{
             if (isset($arr['containerId'])){$imageArr['id'].='-'.$arr['containerId'];}
             $imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapper']['style']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'application/json')===0){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/json')===0){
             if ($isSmallPreview){
                 $arr['html']='&plusb;';
             } else {
-                $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($file);
+                $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
                 $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
                 $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json);
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
             }
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'application/pdf')===0){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'text/html')===0){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'xml')!==FALSE){
             $arr=$this->getHtml($arr);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
             if (strcmp(isset($arr['callingFunction'])?$arr['callingFunction']:'','entryList')===0){
@@ -72,12 +71,12 @@ class MediaTools{
             } else {
                 $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
             }
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'application/zip')===0){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
             $arr['html'].='&#10066;';    
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['File']['Extension']==='md'){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
-        } else if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'text/')===0){
-            $text=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($file);
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0){
+            $text=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
             $arr=$this->addPreviewTextStyle($arr);
             $arr['tag']='p';
             if (mb_strlen($text)>200){
@@ -107,8 +106,8 @@ class MediaTools{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
-        if (!isset($arr['selector']['Params']['File']['MIME-Type'])){$arr['selector']['Params']['File']['MIME-Type']='text';}
-        if (mb_strpos($arr['selector']['Params']['File']['MIME-Type'],'image')===0){
+        if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){$arr['selector']['Params']['TmpFile']['MIME-Type']='text';}
+        if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
             $arr['maxDim']=100;
             $iconSrc=$this->getImage($arr);
@@ -217,26 +216,21 @@ class MediaTools{
     
     public function loadImage(array $arr):array|bool
     {
-        $image=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
+        $arr=$this->addTmpFile($arr);
         // get source file
-        $imageFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($image);
-        if (is_file($imageFile)){
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             // get target file
-            $absFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-            $absFile.=$image['EntryId'].'_org.'.$image['Params']['File']['Extension'];
-            //$absFile.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId().'.'.$image['Params']['File']['Extension'];
-            $relFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
-            copy($imageFile,$absFile);
-            $arr['src']=$relFile;
+            $arr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $arr['title']='';
-            if (!empty($image['Params']['reverseGeoLoc']['display_name'])){$arr['title']=$image['Params']['reverseGeoLoc']['display_name'];}
-            if (!empty($image['Params']['DateTime']['GPS'])){
-                $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-                $arr['title'].=' '.$image['Params']['DateTime']['GPS'].' ('.$pageTimeZone.')';
-            }
-            if (!empty($image['Params']['GPS']['GPSAltitude'])){$arr['title'].=' | Altitude: '.$image['Params']['GPS']['GPSAltitude'];}
+            if (!empty($arr['selector']['Params']['Address']['display_name'])){$arr['title']=$arr['selector']['Params']['Address']['display_name'];}
+            if (!empty($arr['selector']['Params']['Geo']['alt'])){$arr['title'].=' | Altitude: '.$arr['selector']['Params']['Geo']['alt'];}
             $arr['title']=htmlentities($arr['title']);
-            if (isset($image['Params']['File']['Style class'])){$arr['class']=$image['Params']['File']['Style class'];} else {$arr['class']='';}
+            if (isset($arr['selector']['Params']['TmpFile']['Style class'])){
+                $arr['class']=$arr['selector']['Params']['TmpFile']['Style class'];
+            } else {
+                $arr['class']='';
+            }
             return $arr;
         } else {
             return FALSE;
@@ -260,8 +254,7 @@ class MediaTools{
             $md=$formData['val']['content'][$source][$entryId];
             file_put_contents($mdFile,$md);
         } else {
-            $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
-            $md=file_get_contents($mdFile);
+            $md=file_get_contents($arr['selector']['Params']['TmpFile']['Source']);
         }
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
             $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId);
@@ -284,17 +277,11 @@ class MediaTools{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
-        $video=$arr['selector'];
-        $videoFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($video);
-        if (is_file($videoFile)){
-            // copy video to temp folder
-            $absFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-            $absFile.=$video['EntryId'].'.'.$video['Params']['File']['Extension'];
-            copy($videoFile,$absFile);
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $videoArr=$arr;
             $videoArr['tag']='video';
-            $videoArr['type']=$video['Params']['File']['MIME-Type'];
-            $videoArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
+            $videoArr['type']=$arr['selector']['Params']['TmpFile']['MIME-Type'];
+            $videoArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $videoArr['style']=$arr['settings']['style'];
             $videoArr['element-content']=$arr['selector']['Name'];
             $videoArr['controls']=TRUE;
@@ -303,20 +290,16 @@ class MediaTools{
         return $arr;
     }
     
-    private function getAudio(array $arr,$maxDim=FALSE):array
+    private function getAudio(array $arr):array
     {
         if (!isset($arr['html'])){$arr['html']='';}
-        $audio=$arr['selector'];
-        $audioFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($audio);
-        if (is_file($audioFile)){
+        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             // copy audio to temp folder
-            $absFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-            $absFile.=$audio['EntryId'].'.'.$audio['Params']['File']['Extension'];
-            copy($audioFile,$absFile);
             $audioArr=$arr;
             $audioArr['tag']='audio';
-            $audioArr['type']=$audio['Params']['File']['MIME-Type'];
-            $audioArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($absFile);
+            $audioArr['type']=$arr['selector']['Params']['TmpFile']['MIME-Type'];
+            $audioArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $audioArr['element-content']=$arr['selector']['Name'];
             $audioArr['controls']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($audioArr);
@@ -329,19 +312,15 @@ class MediaTools{
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $arr['settings']['style']=array_merge(array('margin'=>'10px 0 0 5px','height'=>'70vh','border'=>'1px solid #444'),$arr['settings']['style']);
-        $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
-        $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        $pdfFile=$tmpDir.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr['selector'],TRUE).'.pdf';
-        $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$pdfFile);
-        if (is_file($pdfFile)){
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $pdfArr=$arr;
             $pdfArr['tag']='embed';
-            $pdfArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($pdfFile);
+            $pdfArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $pdfArr['type']='application/pdf';
             $pdfArr['style']=$pdfArr['settings']['style'];
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pdfArr);
         } else {
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['TmpFile']['Name'].' could not be copied into the presentation folder.'));
         }
         $arr['wrapperSettings']=array('style'=>'width:95%;');
         return $arr;
@@ -351,20 +330,16 @@ class MediaTools{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         $style=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
-        $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
-        $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        $htmlFile=$tmpDir.$arr['selector']['Params']['File']['Name'];
-        $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$htmlFile);
-        if (is_file($htmlFile)){
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $htmlArr=$arr;
             $htmlArr['tag']='iframe';
-            $htmlArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($htmlFile);
+            $htmlArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $htmlArr['type']='application/pdf';
             $htmlArr['element-content']='Html content';
-            $htmlArr['style']=(isset($pdfArr['style']))?array_merge($style,$pdfArr['style']):$style;
+            $htmlArr['style']=(isset($htmlArr['style']))?array_merge($style,$htmlArr['style']):$style;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($htmlArr);
         } else {
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['File']['Name'].' could not be copied into the presentation folder.'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['TmpFile']['Name'].' could not be copied into the presentation folder.'));
         }
         $arr['wrapperSettings']=array('style'=>'width:95%;');
         return $arr;
@@ -378,29 +353,26 @@ class MediaTools{
         if (isset($arr['settings']['style']['max-height'])){
             $arr['maxDim']=$arr['settings']['style']['max-height'];
         }
-        $html='';
-        $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         // return svg file without processing 
-        if (stripos($arr['selector']['Params']['File']['MIME-Type'],'/svg')!==FALSE){
-            return $this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($sourceFile);
+        if (stripos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/svg')!==FALSE){
+            return $this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
         }
         // target file saved in the tmp directory
-        $arr['targetFile']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        $arr['targetFile'].=$arr['selector']['EntryId'].'.'.$arr['selector']['Params']['File']['Extension'];
+        $arr['targetFile']=$arr['selector']['Params']['TmpFile']['Source'];
         $arr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['targetFile']);
         // resampling will destroy exif data, rotation and flipping required
-        $tmpArr=@getimagesize($sourceFile);
+        $tmpArr=@getimagesize($arr['selector']['Params']['TmpFile']['Source']);
         if (empty($tmpArr)){
             // is not an image
             $arr['tag']='p';
-            $arr['element-content']=$arr['selector']['Params']['File']['Name'].' seems to be not an image file...';
+            $arr['element-content']=$arr['selector']['Params']['TmpFile']['Name'].' seems to be not an image file...';
             return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
         } else {
             // is an image
-            (empty($arr['selector']['Params']['File']['Style class']))?$arr['styleClass']='rotate0':$arr['styleClass']=$arr['selector']['Params']['File']['Style class'];
+            (empty($arr['selector']['Params']['TmpFile']['Style class']))?$arr['styleClass']='rotate0':$arr['styleClass']=$arr['selector']['Params']['TmpFile']['Style class'];
             $transformArr=$this->styleClass2Params($arr);
             $absSinRot=abs(sin(deg2rad($transformArr['deg'])));
-            $imgArr=array('sourceFile'=>$sourceFile,
+            $imgArr=array('sourceFile'=>$arr['selector']['Params']['TmpFile']['Source'],
                           'targetFile'=>$arr['targetFile'],
                           'fileType'=>$tmpArr['mime'],
                           'absSinRot'=>$absSinRot,
@@ -432,7 +404,7 @@ class MediaTools{
                 } else if (mb_strpos($imgArr['fileType'],'/jpeg')!==FALSE){
                     $orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
                 } else {
-                    $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($imgArr['sourceFile']);
+                    $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
                     if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
                     $orgImage=imagecreatefromstring($string);    
                 }
@@ -478,10 +450,11 @@ class MediaTools{
             if ($imgArr['orgRot']!==0){$newImage=imagerotate($newImage,-$imgArr['orgRot'],0);}
             if ($imgArr['orgFlipped']!==FALSE){imageflip($newImage,$imgArr['orgFlipped']);}
             // save to target
+            $html='';
             $imageTagArr=$arr;
             $imageTagArr['tag']='img';
-            $imageTagArr['title']=$arr['selector']['Params']['File']['Name'];
-            $imageTagArr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr);
+            $imageTagArr['title']=$arr['selector']['Params']['TmpFile']['Name'];
+            $imageTagArr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($imgArr);
             if (isset($arr['containerId'])){$imageTagArr['container-id']=$arr['containerId'];}
             if (empty($arr['encodeBase64'])){
                 imagejpeg($newImage,$arr['targetFile'],$imgArr['quality']);
@@ -640,6 +613,31 @@ class MediaTools{
         $entry['exif']=(empty($exif))?array():$exif;
         return $entry;
     }
-
+    
+    private function addTmpFile(array $arr):array
+    {
+        $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
+        $tmpFileName=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr['selector'],TRUE);
+        $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
+        if (is_file($sourceFile) && !empty($arr['selector']['Params']['File']['Extension'])){
+            $tmpFile=$tmpDir.$tmpFileName.'.'.$arr['selector']['Params']['File']['Extension'];
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile);
+            $arr['selector']['Params']['TmpFile']=$arr['selector']['Params']['File'];
+        } else if(isset($arr['selector']['Content']['Html'])){
+            $tmpFile=$tmpDir.$tmpFileName.'.html';
+            file_put_contents($tmpFile,$arr['selector']['Content']['Html']);
+            $arr['selector']['Params']['TmpFile']['Extension']='html';
+            $arr['selector']['Params']['TmpFile']['MIME-Type']='application/xhtml+xml';
+        } else if(isset($arr['selector']['Content']['Plain'])){
+            $tmpFile=$tmpDir.$tmpFileName.'.txt';
+            file_put_contents($tmpFile,$arr['selector']['Content']['Plain']);
+            $arr['selector']['Params']['File']['Extension']='txt';
+            $arr['selector']['Params']['File']['MIME-Type']='text/plain';
+        } else {
+            return $arr;
+        }
+        $arr['selector']['Params']['TmpFile']['Source']=$tmpFile;
+        return $arr;
+    }
 }
 ?>

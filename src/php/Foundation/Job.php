@@ -35,8 +35,7 @@ class Job{
         $allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
         $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
         $allJobsSetting=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Owner'=>'SYSTEM');
-        $allJobsSetting['Type']=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable();
-        $allJobsSetting=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name','Type'),0);
+        $allJobsSetting=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,array('Source','Group','Folder','Name'),0);
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($allJobsSetting,TRUE);
         $allJobsSettingContent=$allJobsSetting['Content'];
@@ -68,7 +67,7 @@ class Job{
                            'Name'=>$dueJob,
                            'Type'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable()
                            );
-            $jobVars=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
+            $jobVars=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name'),'0','',FALSE);
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($jobVars,TRUE);
             $jobStartTime=hrtime(TRUE);

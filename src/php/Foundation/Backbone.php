@@ -61,12 +61,9 @@ class Backbone{
             return $this->settings;
         }
     }
-    
-    
-    
+
     public function addHtmlPageBackbone(array $arr):array
     {
-        $arr['formName']=md5($this->settings['pageTitle']);
         $arr['toReplace']=array('{{head}}'=>'',
                                 '{{body}}'=>'',
                                 '{{content}}'=>'Page content is missing...',
@@ -89,7 +86,7 @@ class Backbone{
         $arr['page html'].='</head>'.PHP_EOL;
         // page body
         $arr['page html'].='<body>'.PHP_EOL;
-        $arr['page html'].='<form name="'.$arr['formName'].'" method="post" enctype="multipart/form-data">'.PHP_EOL;
+        $arr['page html'].='<form name="'.md5($this->settings['pageTitle']).'" method="post" enctype="multipart/form-data">'.PHP_EOL;
         $arr['page html'].='{{body}}'.PHP_EOL;
         $arr['page html'].='</form>'.PHP_EOL;
         $arr['page html'].='</body>'.PHP_EOL;

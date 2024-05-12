@@ -57,7 +57,7 @@ private $entryTable;
                 } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
                     $width=320;
                     $height=320;
-                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width,'margin'=>'10px auto','border'=>'1px dotted #999'));
+                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width,'margin'=>'10px auto'));
                     $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
                     $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            

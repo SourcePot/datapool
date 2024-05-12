@@ -23,7 +23,7 @@ class Container{
     {
         $this->oc=$oc;
     }
-    
+
     public function jsCall(array $arr):array
     {
         $jsAnswer=array();
@@ -44,14 +44,14 @@ class Container{
                 
             }
         } else if (isset($_POST['loadImage'])){
-            $jsAnswer=$this->oc['SourcePot\Datapool\Tools\MediaTools']->loadImage($_POST['loadImage']);
+            $jsAnswer=$this->oc['SourcePot\Datapool\Tools\MediaTools']->loadImage(array('selector'=>$_POST['loadImage']));
         } else {
             //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_POST,hrtime(TRUE).'-'.__FUNCTION__);
         }
         $arr['page html']=json_encode($jsAnswer,JSON_INVALID_UTF8_IGNORE);
         return $arr;
     }
-    
+
     public function container($key=FALSE,$function='',$selector=array(),$settings=array(),$wrapperSettings=array(),$containerId=FALSE,$isJScall=FALSE):string
     {
         // This function provides a dynamic web-page container, it returns html-script.
@@ -173,13 +173,12 @@ class Container{
     
     public function mdContainer(array $arr)
     {
-        $entry=$arr['selector'];
-        $entry['Type']='md '.$_SESSION['page state']['lngCode'];
-        if (empty($entry['Group'])){$entry['Group']=__CLASS__;}
-        if (empty($entry['Folder'])){$entry['Folder']=$_SESSION['page state']['lngCode'];}
-        if (empty($entry['Name'])){$entry['Name']='Description';}
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($arr['selector']);
+        unset($entry['EntryId']);
+        unset($entry['Type']);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
         $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
             $fileContent="[//]: # (This a Markdown document!)\n\n";
@@ -187,7 +186,7 @@ class Container{
             file_put_contents($fileName,$fileContent);
         }
         $arr=array('settings'=>array('style'=>array('width'=>'100vw','max-width'=>'100%')));
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,TRUE,TRUE,'');
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
         $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
         return $arr;
     }
@@ -495,14 +494,18 @@ class Container{
     {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (empty($arr['selector'])){return $arr;}
+        
+        $targetId=(isset($arr['containerId']))?$arr['containerId']:$arr['callingFunction'];
+        
+        
         $arr['class']=(isset($arr['class']))?$arr['class']:'comment';
         $arr['style']=(isset($arr['style']))?$arr['style']:array();
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$targetId);
         if (isset($formData['cmd']['Add comment'])){
             if (empty($formData['val']['comment'])){
                 $this->oc['logger']->log('warning','Adding comment failed: comment was empty',$formData['val']);         
             } else {
-            $arr['selector']['Source']=key($formData['cmd']['Add comment']);
+                $arr['selector']['Source']=key($formData['cmd']['Add comment']);
                 $arr['selector']['EntryId']=key($formData['cmd']['Add comment'][$arr['selector']['Source']]);
                 $arr['selector']['timeStamp']=current($formData['cmd']['Add comment'][$arr['selector']['Source']]);
                 $arr['selector']['Content']['Comments'][$arr['selector']['timeStamp']]=array('Comment'=>$formData['val']['comment'],'Author'=>$_SESSION['currentUser']['EntryId']);
@@ -518,13 +521,13 @@ class Container{
             $commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$footer,'keep-element-content'=>TRUE,'class'=>$arr['class'].'-footer'));
             $commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>$arr['class']));
         }
-        $targetId=(isset($arr['containerId']))?$arr['containerId'].'-textarea':$arr['callingFunction'].'-textarea';
+        $textId=$targetId.'-text';
         $newComment='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){
             $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'New comment','style'=>array('float'=>'left','clear'=>'both','margin'=>'0 5px')));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>array('comment'),'id'=>$targetId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$targetId,'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$targetId));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>array('comment'),'id'=>$textId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId));
+            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$textId,'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$textId));
+            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId));
             $appArr=array('html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']);
             $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
@@ -611,7 +614,7 @@ class Container{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         $selectBtnHtml='';
-        $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>FALSE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
+        $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
         $settingsTemplate['style']=array('width'=>600,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
         $settings=array_replace_recursive($settingsTemplate,$arr['settings']);
         $arr['wrapper']=array('style'=>$settings['style']);
@@ -634,6 +637,7 @@ class Container{
             $selectBtnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'select','selector'=>$entry,'style'=>array('font-size'=>'0.1rem','margin'=>'0 5px 5px 0','line-height'=>'0.3rem')));
         }
         if (!empty($entry['rowCount'])){
+            $captionHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>$arr['containerKey'],'keep-element-content'=>TRUE,'style'=>array('margin'=>'5px 0')));
             $arr['html']=$selectBtnHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'height'=>$settings['style']['height'])));
             // button div
             $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>array('clear'=>'left','min-width'=>'8em','padding'=>'3px 0')));

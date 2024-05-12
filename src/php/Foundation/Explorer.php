@@ -82,13 +82,12 @@ class Explorer{
         foreach($this->selectorTemplate as $column=>$initValue){
             $selectorHtml='';
             $options=array(\SourcePot\Datapool\Root::GUIDEINDICATOR=>'&larrhk;');
+            $columnIsEntryId=strcmp($column,'EntryId')===0;
+            $label=($columnIsEntryId)?'Name':$column;
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
-                if (strcmp($column,'EntryId')===0){
+                if ($columnIsEntryId){
                     $entrySelector=array_merge($selector,array('EntryId'=>$row['EntryId']));
                     $row=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entrySelector);
-                    $label='Name';
-                } else {
-                    $label=$column;
                 }
                 if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
                 $options[$row[$column]]=$row[$label];
@@ -146,18 +145,29 @@ class Explorer{
             if (empty($entry)){$entry=$selector;}
         } else {
             $unseledtedDetected=FALSE;
-            $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Type'=>$selector['Source'].' '.\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
             foreach($this->selectorTemplate as $column=>$initValue){
                 if (empty($selector[$column])){$unseledtedDetected=TRUE;}
                 $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
             }
             $entry=array_merge($template,$entry);
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
         }
         return $entry;
+    }
+    
+    private function updateGuideEntries(array $oldSelector,array $newSelector):array
+    {
+        $oldSelector['Type']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($oldSelector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,array(),FALSE) as $entry){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
+            $entry=array_merge($entry,$this->selectorTemplate);
+            $guideEntry=$this->getGuideEntry($newSelector,$entry);
+        }
+        return $newSelector;
     }
     
     private function addGuideEntry2selector(array $selector,array $guideEntry):array
@@ -191,7 +201,7 @@ class Explorer{
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
             // save selector - for Quicklinks
             if (!empty($newSelector['EntryId'])){
-                $entry=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId'],'Folder'=>$callingClass,'Name'=>$newSelector['EntryId'],'Type'=>$this->entryTable.' selectors');
+                $entry=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId'],'Folder'=>$callingClass,'Name'=>$newSelector['EntryId']);
                 $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
                 $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
                 $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
@@ -202,6 +212,7 @@ class Explorer{
         }
         $selector=$this->addGuideEntry2selector($selector,$guideEntry);
         // add entry app
+        $selector['Params']['uploadApp']=$callingClass;
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
         if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
             $selector=array_merge($selector,$formData['val']);
@@ -228,16 +239,12 @@ class Explorer{
         if (isset($formData['cmd']['edit'])){
             $newSelector=array_merge($selector,$formData['val']);
             $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector);
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,array(),FALSE) as $entry){
-                if (mb_strpos($entry['Type'],\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
-                    $entry=array_merge($entry,$this->selectorTemplate);
-                    $guideEntry=$this->getGuideEntry($newSelector,$entry);
-                    $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
-                }
-            }
+            // update guide entries and all other entries
+            $this->updateGuideEntries($selector,$newSelector);
             $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
+            // set new page state to new selector
+            $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
         }
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         return $selector;
@@ -299,10 +306,8 @@ class Explorer{
         $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
-        $selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';
-        $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ADMIN_R';
         $btnHtml='';
-        $btnArr=array('selector'=>$selector);
+        $btnArr=array('selector'=>$guideEntry);
         foreach(array('download all','print','export','delete') as $cmd){
             $btnArr['cmd']=$cmd;
             $btnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
@@ -318,30 +323,35 @@ class Explorer{
 
     private function settingsEntry(string $callingClass,array $stateKeys):array
     {
-        $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
-        $options=array('extractEmails'=>array('No','Yes'),'extractArchives'=>array('No','Yes'),'pdfParser'=>$pdfParser['options']);
-        $settings=array('extractEmails'=>1,'extractArchives'=>0,'pdfParser'=>$pdfParser['default']);
+        $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
-        $selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';
-        $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ALL_MEMBER_R';
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (isset($formData['cmd']['save'])){
-            $guideEntry['Content']['settings']=$formData['val'];
-            $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($guideEntry);
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($guideEntry,'Write',FALSE)){
+            $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
+            $options=array('extractEmails'=>array('No','Yes'),'extractArchives'=>array('No','Yes'),'pdfParser'=>$pdfParser['options']);
+            $settings=array('extractEmails'=>1,'extractArchives'=>0,'pdfParser'=>$pdfParser['default']);
+            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+            $guideEntry=$this->getGuideEntry($selector);
+            $selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';
+            $selector['Write']=(isset($guideEntry['Write']))?$guideEntry['Write']:'ALL_MEMBER_R';
+            // form processing
+            $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+            if (isset($formData['cmd']['save'])){
+                $guideEntry['Content']['settings']=$formData['val'];
+                $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($guideEntry);
+            }
+            // compile html
+            $matrix=array();
+            $arr=array('selector'=>$guideEntry,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            foreach($settings as $key=>$setting){
+                $arr['options']=$options[$key];
+                $arr['value']=(isset($guideEntry['Content']['settings'][$key]))?$guideEntry['Content']['settings'][$key]:$setting;
+                $arr['key']=array($key);
+                $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($arr));
+            }
+            $matrix['cmd']=array('value'=>array('tag'=>'button','key'=>array('save'),'element-content'=>'Save','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Upload settings'));
         }
-        // compile html
-        $matrix=array();
-        $arr=array('selector'=>$guideEntry,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        foreach($settings as $key=>$setting){
-            $arr['options']=$options[$key];
-            $arr['value']=(isset($guideEntry['Content']['settings'][$key]))?$guideEntry['Content']['settings'][$key]:$setting;
-            $arr['key']=array($key);
-            $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($arr));
-        }
-        $matrix['cmd']=array('value'=>array('tag'=>'button','key'=>array('save'),'element-content'=>'Save','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Upload settings'));
         $arr=array('html'=>$html,'icon'=>'#','title'=>'Settings','class'=>'explorer');
         return $arr;
     }
@@ -404,7 +414,7 @@ class Explorer{
     public function getQuicklinksHtml():string
     {
         $linksByCategory=array();
-        $selector=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId'],'Type'=>$this->entryTable.' selectors');
+        $selector=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId']);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
             if (empty($entry['Content']['Source'])){
                 $entry['Content']['Source']=$this->oc['SourcePot\Datapool\Root']->class2source($entry['Content']['app']);
@@ -428,84 +438,6 @@ class Explorer{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>$name,'keep-element-content'=>TRUE,'class'=>'toc','href'=>$link['href']));
             }
         }
-        return $html;
-    }
-    
-    public function getTocHtml(string $callingClass,array $filter=array(),array $style=array()):string
-    {
-        // get data
-        $list=array();
-        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('app'=>FALSE,'Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$selector['Source']),FALSE,'Read','Group',TRUE) as $entry){
-            if (mb_strpos($entry['Type'],'md ')===0){continue;}
-            $elementArr=$this->selector2linkInfo($selector['app'],$entry);
-            $elementArr['element-content']=ucfirst($entry['Name']);
-            $elementArr['class']='toc-3';
-            $list[$entry['Group']][$entry['Folder']][$entry['Name']][$entry['EntryId']]=$elementArr;
-        }
-        // create html
-        $html='';
-        $matchFound=FALSE;
-        $nextElementArr=FALSE;
-        $tag=array('tag'=>'a','keep-element-content'=>TRUE);
-        $btnArr=array('<a class="btn" style="color:#aaa;">&#10096;&#10096;</a>','<a class="btn" style="color:#aaa;">&#10097;&#10097;</a>','');
-        $sourceElement=$this->selector2linkInfo($selector['app'],array('Source'=>$selector['Source']));
-        $sourceElement['element-content']=ucfirst($selector['Source']);
-        $sourceElement['class']='toc-0';
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($sourceElement);
-        foreach($list as $group=>$groupArr){
-            ksort($groupArr);
-            $showGroup=$selector['Group']===$group || empty($selector['Group']);
-            $groupElement=$this->selector2linkInfo($selector['app'],array('Source'=>$selector['Source'],'Group'=>$group));
-            $groupElement['element-content']=ucfirst($group);
-            $groupElement['class']='toc-1';
-            //if (!$showGroup){$groupElement['style']='display:none;';}
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($groupElement);
-            foreach($groupArr as $folder=>$folderArr){
-                ksort($folderArr);
-                $showFolder=$selector['Folder']===$folder || empty($selector['Folder']);
-                $folderElement=$this->selector2linkInfo($selector['app'],array('Source'=>$selector['Source'],'Group'=>$group,'Folder'=>$folder));
-                $folderElement['element-content']=ucfirst($folder);
-                $folderElement['class']='toc-2';
-                if (!$showGroup || !$showFolder || empty($selector['Group'])){$folderElement['style']='display:none;';}
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($folderElement);
-                foreach($folderArr as $name=>$nameArr){
-                    foreach($nameArr as $entryId=>$elementArr){
-                        if (empty($nextElementArr) && ($matchFound || empty($selector['EntryId']))){
-                            $nextElementArr=$elementArr;
-                            $nextElementArr['class']='btn';
-                            if ($matchFound){
-                                $nextElementArr['element-content']='&#10097;&#10097;';
-                                $nextElementArr['title']='Next page';
-                            } else {
-                                $nextElementArr['element-content']='&#8614;';
-                                $nextElementArr['title']='First page';
-                                $btnArr[0]='';    
-                            }
-                            $btnArr[1]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($nextElementArr);    
-                        }
-                        if (!$showGroup || !$showFolder || empty($selector['Folder'])){$elementArr['style']='display:none;';}
-                        if ($this->oc['SourcePot\Datapool\Foundation\Database']->isSameSelector($selector,$elementArr)){
-                            $elementArr['style']=array('background-color'=>'#ccc');
-                            $btnArr[2]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(array('cmd'=>'print'));
-                            if (isset($lastElementArr)){
-                                $lastElementArr['style']='';
-                                $lastElementArr['class']='btn';
-                                $lastElementArr['element-content']='&#10096;&#10096;';
-                                $lastElementArr['title']='Previous page';
-                                $btnArr[0]=$this->oc['SourcePot\Datapool\Foundation\Element']->element($lastElementArr);
-                            }
-                            $matchFound=TRUE;
-                        }
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
-                        $lastElementArr=$elementArr;
-                    }
-                }
-            }
-        }
-        $html=implode('',$btnArr).$html;
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>$style));
         return $html;
     }
     

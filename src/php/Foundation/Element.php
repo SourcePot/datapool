@@ -267,16 +267,18 @@ class Element{
         return $html;
     }
 
+    /**
+     * This method returns the processing results from  $_POST and $_FILES. It returns an array containing old values, new values, files und commmands.
+     *
+     */
     public function formProcessing(string $callingClass,string $callingFunction):array
     {
-        // This method returns the result from processing of $_POST and $_FILES.
-        // It returns an array with the old values, the new values, files und commmands.
         $result=array('cmd'=>array(),'val'=>array(),'changed'=>array(),'files'=>array(),'hasValidFiles'=>FALSE,'selector'=>array(),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         if (isset($_SESSION[$callingClass][$callingFunction])){
             foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){
+                // Process _POST array
                 if (isset($_POST[$name]) && isset($arr['tag'])){
-                    // process $_POST
                     $keys=$arr['key'];
                     if (isset($arr['value'])){
                         $oldValue=strval($arr['value']);
@@ -290,7 +292,8 @@ class Element{
                         array_unshift($keys,'cmd');
                         $result['selector']=(isset($arr['selector']))?$arr['selector']:$result['selector'];
                     } else {
-                        $newValue=filter_input(INPUT_POST,$name,intval($arr['filter']));
+                        $filter=(empty($arr['filter']))?FILTER_DEFAULT:intval($arr['filter']);
+                        $newValue=filter_input(INPUT_POST,$name,$filter);
                         array_unshift($keys,'val');
                     }
                     if (strval($newValue)!==$oldValue){
@@ -302,6 +305,7 @@ class Element{
                     $newValueArr=$this->arrKeys2arr($keys,$newValue);
                     $result=array_replace_recursive($result,$newValueArr);
                 }
+                // Process _FILES array
                 if (isset($_FILES[$name])){
                     // process $_FILES
                     foreach($_FILES[$name] as $fileKey=>$fileArr){

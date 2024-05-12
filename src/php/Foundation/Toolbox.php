@@ -32,7 +32,7 @@ class Toolbox{
     
     public function registerToolbox(string $callingClass,array $toolboxEntry):array 
     {
-        $template=array('Source'=>$this->entryTable,'Group'=>'Toolbox','Folder'=>$callingClass,'EntryId'=>$callingClass,'Type'=>$this->entryTable.' array','Owner'=>'SYSTEM');
+        $template=array('Source'=>$this->entryTable,'Group'=>'Toolbox','Folder'=>$callingClass,'EntryId'=>$callingClass,'Owner'=>'SYSTEM');
         $toolboxEntry=array_merge($template,$toolboxEntry);
         $toolboxEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($toolboxEntry,TRUE);
         return $toolboxEntry;

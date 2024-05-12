@@ -165,7 +165,7 @@ class CSVtools{
                 $entry['Params']['File']['Size']=filesize($targetFile);
                 $entry['Params']['File']['Extension']='csv';
                 $entry['Params']['File']['MIME-Type']='text/csv';
-                $entry['Type']=$entry['Source'].' '.str_replace('/',' ',$entry['Params']['File']['MIME-Type']);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
                 $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
                 $entry['Content']=$statistics;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,FALSE,TRUE,$targetFile);
@@ -283,7 +283,7 @@ class CSVtools{
         $sampleHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
         // create control
         $selectArr=array('key'=>array('settings','limit'),'value'=>$settings['limit'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'keep-element-content'=>TRUE);
-        $selectArr['options']=array(5=>'5',10=>'10',25=>'25',50=>'50');
+        $selectArr['options']=array(5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',250=>'250',500=>'500');
         $limitSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         $selectArr['key']=array('settings','enclosure');
         $selectArr['value']=$settings['enclosure'];
