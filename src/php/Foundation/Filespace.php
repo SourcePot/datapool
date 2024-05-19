@@ -590,6 +590,9 @@ class Filespace{
             } else {
                 // create one entry per attachement and add email content to entry 
                 foreach($message->getAttachments() as $index=>$attachment){
+                    if ($attachment->getFilename()=='smime.p7m'){
+                        $this->oc['logger']->log('notice','Failed to process content of message "{Name}" due to encryption',$context);    
+                    }
                     $entry['fileName']=(empty($attachment->getFilename()))?$entry['Name']:$attachment->getFilename();
                     $emailStatistic['files']++;
                     $entry['fileContent']=$attachment->getData();
@@ -747,10 +750,15 @@ class Filespace{
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
                 } catch (\Exception $e){
                     $context['msg']=$e->getMessage();
-                    $this->oc['logger']->log('warning','Function "{class}::{function}" parser failed: {msg}',$context);         
+                    $this->oc['logger']->log('notice','Function "{class}::{function}" parser failed: {msg}',$context);
                 }
             }
-            $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
+            try{
+                $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Function "{class}::{function}" failed to scan for pdf-attachments: {msg}',$context);
+            }    
         } else if (stripos($entry['Params']['File']['Extension'],'csv')!==FALSE){
                 $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();
                 $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';

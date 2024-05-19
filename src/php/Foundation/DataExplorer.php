@@ -580,7 +580,10 @@ class DataExplorer{
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R')){
             return '';
         }
-        //
+        $selectors=array();
+        foreach($GLOBALS['dbInfo'] as $table=>$infoArr){
+            $selectors[$table]=array('Source'=>$table,'Folder'=>$callingClass);
+        }
         $selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass));
         foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataProcessor') as $classWithNamespace=>$ret){
             $source=$this->oc['SourcePot\Datapool\Root']->class2source($classWithNamespace);
