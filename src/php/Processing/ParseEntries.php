@@ -136,8 +136,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['html'].=$this->parserParams($arr['selector']);
         $arr['html'].=$this->parserSectionRules($arr['selector']);
         $arr['html'].=$this->parserRules($arr['selector']);
-        //$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-        //$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for parsing'));
         return $arr;
     }
 

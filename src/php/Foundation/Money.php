@@ -312,6 +312,7 @@ class Money{
         $result['Amount (DE)']=number_format($result['Amount'],2,',','').' '.$result['Currency'];
         $result['Amount (DE full)']=number_format($result['Amount'],2,',','.').' '.$result['Currency'];
         $result['Amount (FR)']=number_format($result['Amount'],2,'.',' ').' '.$result['Currency'];
+        $result['String']=$string;
         return $result;
     }
 

@@ -511,57 +511,6 @@ class Database{
         }
         return $result;    
     }
-    
-    /**
-    * The method adds entry meta data and returns the enriched entry.
-    *
-    * @param array $entry Is the orginal entry  
-    * @return array $entry Is the enriched entry
-    */
-    private function enrichEntry(array $entry):array
-    {
-        $entry['currentUserId']='ANONYM';
-        $entry['currentUser']='Doe, John';
-        if (!empty($_SESSION['currentUser']['EntryId'])){
-            $entry['currentUserId']=$_SESSION['currentUser']['EntryId'];
-            $entry['currentUser']=$_SESSION['currentUser']['Content']['Contact details']['First name'].' '.$_SESSION['currentUser']['Content']['Contact details']['Family name'];
-        }
-        $entry['nowTimeStamp']=time();
-        $entry['nowDateTimeUTC']=date('Y-m-d H:i:s');
-        $entry['nowDateUTC']=date('Y-m-d');
-        $entry['nowTimeUTC']=date('H:i:s');
-        $entry['+10DaysDateUTC']=date('Y-m-d 12:00:00',86400+time());
-        if (!empty($entry['Content']['File content'])){
-            $entry['UNYCOM cases']=array();
-            $entry['UNYCOM patents']=array();
-            $entry['UNYCOM families']=array();
-            $entry['UNYCOM inventions']=array();
-            $entry['UNYCOM contracts']=array();
-            preg_match_all('/([0-9]{4}[XPEF]{1,2}[0-9]{5})((\s{1,2}|WO|WE|EP|AP|EA|OA)[A-Z ]{0,2}[0-9]{0,2})/',$entry['Content']['File content'],$matches);
-            if (!empty($matches[0][0])){
-                foreach($matches[0] as $matchIndex=>$match){
-                    if ($match[4]=='P' || $match[5]=='P'){$entry['UNYCOM patents'][$match]=$match;}
-                    $familyRef=preg_replace('/[A-Z]+/','F',$matches[1][$matchIndex]);
-                    $inventionRef=preg_replace('/[A-Z]+/','E',$matches[1][$matchIndex]);
-                    $entry['UNYCOM cases'][$match]=$match;
-                    $entry['UNYCOM families'][$familyRef]=$familyRef;
-                    $entry['UNYCOM inventions'][$inventionRef]=$inventionRef;
-                }
-            }
-            preg_match_all('/[0-9]{4}V[0-9]{5}/',$entry['Content']['File content'],$matches);
-            if (!empty($matches[0][0])){
-                foreach($matches[0] as $matchIndex=>$match){
-                    $entry['UNYCOM contracts'][$match]=$match;
-                }
-            }
-            $entry['UNYCOM cases']=implode(';',$entry['UNYCOM cases']);
-            $entry['UNYCOM patents']=implode(';',$entry['UNYCOM patents']);
-            $entry['UNYCOM families']=implode(';',$entry['UNYCOM families']);
-            $entry['UNYCOM inventions']=implode(';',$entry['UNYCOM inventions']);
-            $entry['UNYCOM contracts']=implode(';',$entry['UNYCOM contracts']);
-        }
-        return $entry;
-    }
 
     private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
         if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
@@ -593,7 +542,7 @@ class Database{
             foreach($row as $column=>$value){
                 $row=$this->addColumnValue2result($row,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
-            $row=$this->enrichEntry($row);
+            $row=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($row);
             $entries[$row['EntryId']]=$row;
         }
         return $entries;
@@ -626,7 +575,7 @@ class Database{
                 foreach($row as $column=>$value){
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
-                $result=$this->enrichEntry($result);
+                $result=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($result);
                 $result=$this->addSelector2result($selector,$result);
                 yield $result;
                 $result['isFirst']=FALSE;
@@ -658,7 +607,7 @@ class Database{
                 $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
             $result['isLast']=($result['rowIndex']+1)===$result['rowCount'];
-            $result=$this->enrichEntry($result);
+            $result=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($result);
             $result=$this->addSelector2result($selector,$result);
             yield $result;
             $result['isFirst']=FALSE;
@@ -689,7 +638,7 @@ class Database{
                 foreach($row as $column=>$value){
                     $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
-                $result=$this->enrichEntry($result);
+                $result=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($result);
                 $result=$this->addSelector2result($selector,$result);
             } else {
                 if (!$returnMetaOnNoMatch){$result=array();}
@@ -813,7 +762,7 @@ class Database{
         $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
         $stmt=$this->executeStatement($sql,$inputs,FALSE);
         $this->addStatistic('inserted',$stmt->rowCount());
-        $entry=$this->enrichEntry($entry);
+        $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
         return $entry;
     }
 
