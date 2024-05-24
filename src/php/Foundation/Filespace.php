@@ -39,7 +39,6 @@ class Filespace{
     {
         $this->oc=$oc;
         $this->removeTmpDirs();
-        
     }
         
     public function getEntryTemplate():array
@@ -138,7 +137,7 @@ class Filespace{
             $dir=$this->class2dir($selector['Class'],$mkDirIfMissing);    
             $file=$selector['EntryId'].'.json';
         } else {
-            $this->oc['logger']->log('warning','Mandatory keys missing in selector argument',$selector);   
+            $this->oc['logger']->log('error','Mandatory keys missing in selector argument',$selector);   
             $dir='';
             $file='';
         }
@@ -249,7 +248,7 @@ class Filespace{
     
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE):array
     {
-        // This method updates and returns the entry of setup-file selected by the entry arguments.
+        // This method updates and returns the entry from the setup-directory.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         // 
         $existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
@@ -593,7 +592,7 @@ class Filespace{
                     $entry['fileName']=(empty($attachment->getFilename()))?$entry['Name']:$attachment->getFilename();
                     $emailStatistic['files']++;
                     if ($attachment->getFilename()=='smime.p7m'){
-                        $this->oc['logger']->log('notice','Message "{Name}" is encrypted and/or signed',$context);
+                        $this->oc['logger']->log('notice','Message "{Name}" is encrypted and/or signed. Will try to extract attachments.',$context);
                         $this->emailContent2files($attachment->getData(),$entry,$createOnlyIfMissing,$isSystemCall);
                     } else {
                         $entry['fileContent']=$attachment->getData();
@@ -626,7 +625,7 @@ class Filespace{
 
     private function emailContent2files(string $fileContent,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
     {
-        $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
+        $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0,'class'=>__CLASS__,'function'=>__FUNCTION__);
         // get and add email header
         $emailHeader=mb_substr($fileContent,0,mb_strpos($fileContent,"\r\n\r\n"));
         $emailContent=mb_substr($fileContent,mb_strpos($fileContent,"\r\n\r\n"));
@@ -639,6 +638,8 @@ class Filespace{
         $entry['Name'].=' ['.$entry['EntryId'].']';
         // init zip file
         $zipFile=$this->getPrivatTmpDir().'attachments.zip';
+        if (is_file($zipFile)){unlink($zipFile);}
+        $emailStatistic['zipFile']=$zipFile;
         // scan email parts
         preg_match_all('/boundary="([^"]+)"/',$fileContent,$bounderies);
         if (empty($bounderies[1])){
@@ -690,6 +691,7 @@ class Filespace{
         $emailStatistic['emailHeader']=$entry['Params']['Email'];
         unset($entry['Params']['File']);
         if (isset($zip)){
+            $this->oc['logger']->log('info','Created zip-file "{zipFile}" from "{files}" email attachments. Will safe zip-archive as new entry or extract archive and safe content to entries.',$emailStatistic);
             $zip->close();
             $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall);
         } else {
