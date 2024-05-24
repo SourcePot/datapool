@@ -428,7 +428,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     * @return boolean
     */
     public function entry2mail($mail,$isDebugging=FALSE){
-        // This methode converts an entry to an emial address, the $mail-keys are:
+        // This method converts an entry to an email, the $mail-keys are:
         // 'selector' ... selects the entry
         // 'To' ... is the recipients emal address, use array for multiple addressees
         $header=array();

@@ -526,7 +526,7 @@ class Filespace{
             $statistic=$this->msg2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             if (empty($statistic['errors'])){return TRUE;}            
         } else if ($entry['extractEmails'] && stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE){
-            $this->email2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
+            $this->emailFile2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             return TRUE;
         } else if ($entry['extractArchives'] && stripos($entry['Params']['File']['MIME-Type'],'/zip')!==FALSE){
             $this->archive2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
@@ -590,16 +590,18 @@ class Filespace{
             } else {
                 // create one entry per attachement and add email content to entry 
                 foreach($message->getAttachments() as $index=>$attachment){
-                    if ($attachment->getFilename()=='smime.p7m'){
-                        $this->oc['logger']->log('notice','Failed to process content of message "{Name}" due to encryption',$context);    
-                    }
                     $entry['fileName']=(empty($attachment->getFilename()))?$entry['Name']:$attachment->getFilename();
                     $emailStatistic['files']++;
-                    $entry['fileContent']=$attachment->getData();
-                    $entry['EntryId']=$idHash.'-'.$index;
-                    $entry['Params']['File']=array('Name'=>$entry['fileName'],'Size'=>strlen($entry['fileContent']),'Date (created)'=>date('Y-m-d H:i:s'),'MIME-Type'=>$attachment->getMimeType());
-                    $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created from email attachment "'.$entry['fileName'].'"'),FALSE);
-                    $this->fileContent2entry($newEntry);
+                    if ($attachment->getFilename()=='smime.p7m'){
+                        $this->oc['logger']->log('notice','Message "{Name}" is encrypted and/or signed',$context);
+                        $this->emailContent2files($attachment->getData(),$entry,$createOnlyIfMissing,$isSystemCall);
+                    } else {
+                        $entry['fileContent']=$attachment->getData();
+                        $entry['EntryId']=$idHash.'-'.$index;
+                        $entry['Params']['File']=array('Name'=>$entry['fileName'],'Size'=>strlen($entry['fileContent']),'Date (created)'=>date('Y-m-d H:i:s'),'MIME-Type'=>$attachment->getMimeType());
+                        $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created from email attachment "'.$entry['fileName'].'"'),FALSE);
+                        $this->fileContent2entry($newEntry);
+                    }
                 }
             }
         } else {
@@ -610,86 +612,98 @@ class Filespace{
         return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
     }    
 
-    private function email2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    private function emailFile2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
     {
         $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
         $fileContent=@file_get_contents($file);
         if (empty($fileContent)){
             $emailStatistic['errors']='File "'.$entry['Params']['File']['Name'].'" not found or empty';
         } else {
-            // get and add email header
-            $emailHeader=mb_substr($fileContent,0,mb_strpos($fileContent,"\r\n\r\n"));
-            $emailContent=mb_substr($fileContent,mb_strpos($fileContent,"\r\n\r\n"));
-            $emailContent=trim($emailContent,"\r\n ");
-            $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
-            $entry['EntryId']=md5($fileContent);
-            $entry['Name']=$entry['Params']['Email']['subject']['value'].' ['.$entry['EntryId'].']';
-            // init zip file
-            $zipFile=$this->getPrivatTmpDir().'attachments.zip';
-            // scan email parts
-            preg_match_all('/boundary="([^"]+)"/',$fileContent,$bounderies);
-            if (empty($bounderies[1])){
-                if (isset($entry['Params']['Email']['content-transfer-encoding']['value'])){
-                    $emailContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($emailContent,$entry['Params']['Email']['content-transfer-encoding']['value']);
-                }
-                if (!isset($entry['Params']['Email']['content-type']['value'])){
-                    $entry['Params']['Email']['content-type']['value']='text';
-                }
-                $contentType=ucfirst(mb_substr($entry['Params']['Email']['content-type']['value'],mb_strpos($entry['Params']['Email']['content-type']['value'],'/')+1));
-                $entry['Content'][$contentType]=$emailContent;
-                $emailStatistic['emailContent']=$emailContent;                
-            } else {
-                foreach($bounderies[1] as $boundery){
-                    $boundery='--'.$boundery;
-                    $endBoundery=$boundery.'--';
-                    $parts=explode($endBoundery,$fileContent);
-                    $part=array_shift($parts);
-                    $parts=explode($boundery,$part);
-                    array_shift($parts);
-                    foreach($parts as $partIndex=>$part){
-                        $partContentStart=mb_strpos($part,"\r\n\r\n");
-                        $partHeader=mb_substr($part,0,$partContentStart);
-                        $partContent=mb_substr($part,$partContentStart);
-                        $partContent=trim($partContent,"\r\n ");
-                        // get header
-                        $headerArr=array('content-disposition'=>array('value'=>''),'content-transfer-encoding'=>array('value'=>''));
-                        $headerArr=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($partHeader,$headerArr);
-                        // decode content
-                        $partContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($partContent,$headerArr['content-transfer-encoding']['value']);
-                        if (strpos($headerArr['content-disposition']['value'],'attachment')===FALSE){
-                            $contentType=ucfirst(mb_substr($headerArr['content-type']['value'],mb_strpos($headerArr['content-type']['value'],'/')+1));
-                            $entry['Content'][$contentType]=$partContent;
-                        } else {
-                            if (!isset($zip)){
-                                $zip=new \ZipArchive;
-                                $zip->open($zipFile,\ZipArchive::CREATE);
-                            }
-                            $zip->addFromString($headerArr['content-disposition']['filename'],$partContent);
-                            $emailStatistic['files']++;
-                        }
-                        $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
-                    }
-                    $entry['Content']['RTF']='';
-                }
-            }
-            $emailStatistic['emailHeader']=$entry['Params']['Email'];
-            unset($entry['Params']['File']);
-            if (isset($zip)){
-                $zip->close();
-                $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall);
-            } else {
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["html"]'),FALSE);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
-            }
-            $emailStatistic['entry_out']=$entry;
+            $emailStatistic=$this->emailContent2files($fileContent,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
         }
+        return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
+    }
+
+    private function emailContent2files(string $fileContent,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    {
+        $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
+        // get and add email header
+        $emailHeader=mb_substr($fileContent,0,mb_strpos($fileContent,"\r\n\r\n"));
+        $emailContent=mb_substr($fileContent,mb_strpos($fileContent,"\r\n\r\n"));
+        $emailContent=trim($emailContent,"\r\n ");
+        $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
+        $entry['EntryId']=md5($fileContent);
+        if (isset($entry['Params']['Email']['subject']['value'])){
+            $entry['Name']=$entry['Params']['Email']['subject']['value'];
+        }
+        $entry['Name'].=' ['.$entry['EntryId'].']';
+        // init zip file
+        $zipFile=$this->getPrivatTmpDir().'attachments.zip';
+        // scan email parts
+        preg_match_all('/boundary="([^"]+)"/',$fileContent,$bounderies);
+        if (empty($bounderies[1])){
+            if (isset($entry['Params']['Email']['content-transfer-encoding']['value'])){
+                $emailContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($emailContent,$entry['Params']['Email']['content-transfer-encoding']['value']);
+            }
+            if (!isset($entry['Params']['Email']['content-type']['value'])){
+                $entry['Params']['Email']['content-type']['value']='text';
+            }
+            $contentType=ucfirst(mb_substr($entry['Params']['Email']['content-type']['value'],mb_strpos($entry['Params']['Email']['content-type']['value'],'/')+1));
+            $entry['Content'][$contentType]=$emailContent;
+            $emailStatistic['emailContent']=$emailContent;                
+        } else {
+            $shortHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['EntryId'],TRUE);
+            foreach($bounderies[1] as $boundery){
+                $boundery='--'.$boundery;
+                $endBoundery=$boundery.'--';
+                $parts=explode($endBoundery,$fileContent);
+                $part=array_shift($parts);
+                $parts=explode($boundery,$part);
+                array_shift($parts);
+                foreach($parts as $partIndex=>$part){
+                    $partContentStart=mb_strpos($part,"\r\n\r\n");
+                    $partHeader=mb_substr($part,0,$partContentStart);
+                    $partContent=mb_substr($part,$partContentStart);
+                    $partContent=trim($partContent,"\r\n ");
+                    // get header
+                    $headerArr=array('content-disposition'=>array('value'=>''),'content-transfer-encoding'=>array('value'=>''));
+                    $headerArr=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($partHeader,$headerArr);
+                    // decode content
+                    $partContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($partContent,$headerArr['content-transfer-encoding']['value']);
+                    if (strpos($headerArr['content-disposition']['value'],'attachment')===FALSE){
+                        $contentType=ucfirst(mb_substr($headerArr['content-type']['value'],mb_strpos($headerArr['content-type']['value'],'/')+1));
+                        $entry['Content'][$contentType]=$partContent;
+                    } else {
+                        if (!isset($zip)){
+                            $zip=new \ZipArchive;
+                            $zip->open($zipFile,\ZipArchive::CREATE);
+                        }
+                        $fileName=$shortHash.'_'.$headerArr['content-disposition']['filename'];
+                        $zip->addFromString($fileName,$partContent);
+                        $emailStatistic['files']++;
+                    }
+                    $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
+                }
+                $entry['Content']['RTF']='';
+            }
+        }
+        $emailStatistic['emailHeader']=$entry['Params']['Email'];
+        unset($entry['Params']['File']);
+        if (isset($zip)){
+            $zip->close();
+            $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall);
+        } else {
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["html"]'),FALSE);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
+        }
+        $emailStatistic['entry_out']=$entry;
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($emailStatistic,__FUNCTION__.'-'.hrtime(TRUE));
         }
         if ($emailStatistic['errors']){
             $this->oc['logger']->log('warning',implode('|',$emailStatistic['errors']));    
         }
-        return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
+        return $emailStatistic;
     }
     
     private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
