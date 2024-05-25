@@ -22,7 +22,7 @@ use Monolog\Handler\NativeMailerHandler;
 final class Root{
 
     // all classes listet at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
-    public const ADD_VENDOR_CLASSES=array('SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms','SourcePot\Datapool\Processing\FhGInvoices');
+    public const ADD_VENDOR_CLASSES=array('SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms','SourcePot\FhGInvoices\FhGInvoices');
     // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
     public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
