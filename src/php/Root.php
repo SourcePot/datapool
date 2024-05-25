@@ -43,6 +43,8 @@ final class Root{
     private $profileActive=NULL;
     private $profile=array();
     private $profileFileName=FALSE;
+
+    private $loggerCache=array();
     
     public function __construct()
     {
@@ -77,6 +79,7 @@ final class Root{
             $oc[$classWithNamespace]->init($oc);
         }
         $oc['logger']=$this->configureMonologLogger($oc,$oc['logger']);
+        $this->emptyLoggerCache($oc);
         $this->oc=$oc;
     }
     
@@ -117,28 +120,37 @@ final class Root{
         return $logger;
     }
     
+    /**
+    * This method stores log entries up to the time when $this->oc['logger'] is fully setup
+    */
+    private function log($level,$msg,$context):void
+    {
+        $this->loggerCache[]=array('level'=>$level,'msg'=>$msg,'context'=>$context);
+    }
+
+    private function emptyLoggerCache(array $oc):void
+    {
+        foreach($this->loggerCache as $logArr){
+            $oc['logger']->log($logArr['level'],$logArr['msg'],$logArr['context']);
+        }
+    }
 
     /**
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     * This method can be used to add external objects to the Datapool object collection. 
     */
-    private function registerVendorClasses(array $oc,bool $isDebugging=FALSE):array
+    private function registerVendorClasses(array $oc):array
     {
+        $context=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         // instantiate external classes
-        $debugArr=array('registerVendorClasses'=>self::ADD_VENDOR_CLASSES);
         foreach(self::ADD_VENDOR_CLASSES as $classIndex=>$classWithNamespace){
+            $context['classWithNamespace']=$classWithNamespace;
             if (class_exists($classWithNamespace)){
                 $oc[$classWithNamespace]=new $classWithNamespace($oc);
-                //$oc[$classWithNamespace]->dataProcessor(array(),'info');
                 $this->updateStructure($oc,$classWithNamespace);             
-                $debugArr['Successful class instantiations'][$classIndex]=$classWithNamespace;
             } else {
-                $isDebugging=TRUE;
-                $debugArr['Failed class instantiations'][$classIndex]=$classWithNamespace;
+                $this->log('error','Method "{callingClass}::{callingFunction}": Failed to register class "{classWithNamespace}"',$context);
             }
-        }
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $oc;
     }
