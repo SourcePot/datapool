@@ -153,6 +153,7 @@ final class Root{
     */
     public function run():array
     {
+        $context=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $this->structure['callingWWWscript']=$this->currentScript;
         $pathInfo=pathinfo($this->currentScript);
         // get current temp dir
@@ -166,6 +167,14 @@ final class Root{
         // add "page html" to the return array
         $arr=array();
         if (mb_strpos($this->currentScript,'index.php')>0){
+            // check access
+            $appRight=$this->structure['registered methods']['run'][$_SESSION['page state']['app']['Class']]['Read'];
+            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appRight)){
+                $context['app']=$_SESSION['page state']['app']['Class'];
+                $context['fallbackApp']='SourcePot\Datapool\Components\Home';
+                $_SESSION['page state']['app']['Class']=$context['fallbackApp'];
+                $this->oc['logger']->log('notice','Access denied: app "{app}". Loading "{fallbackApp}"',$context);    
+            }
             // build webpage
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
@@ -364,6 +373,11 @@ final class Root{
                 $this->structure['implemented interfaces'][$interface][$classWithNamespace]=$classWithNamespace;
             }
         }
+        return $this->structure;
+    }
+
+    public function getStructure():array
+    {
         return $this->structure;
     }
     

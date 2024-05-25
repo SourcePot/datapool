@@ -170,7 +170,7 @@ class Access{
         return $this->hasRights($user,'PUBLIC_R');
     }
     
-    private function hasRights($user=FALSE,$right='ADMIN_R')
+    public function hasRights($user=FALSE,$right='ADMIN_R')
     {
         if (empty($user)){
             if (empty($_SESSION['currentUser'])){return FALSE;}
