@@ -230,6 +230,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=array('parserparams'=>array(),'parsersectionrules'=>array());
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         if (!isset($base['parserrules'])){$base['parserrules']=array();}
+        if (!isset($base['mapperrules'])){$base['mapperrules']=array();}
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array('Parser statistics'=>array('Entries'=>array('value'=>0),'Success'=>array('value'=>0),'Failed'=>array('value'=>0),'No text, skipped'=>array('value'=>0),'Skip rows'=>array('value'=>0)));
