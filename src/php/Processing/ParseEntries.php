@@ -136,6 +136,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['html'].=$this->parserParams($arr['selector']);
         $arr['html'].=$this->parserSectionRules($arr['selector']);
         $arr['html'].=$this->parserRules($arr['selector']);
+        $arr['html'].=$this->mapperRules($arr['selector']);
         return $arr;
     }
 
@@ -203,6 +204,24 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Parser rules: Parse selected entry and copy result to target entry';
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        return $html;
+    }
+
+    private function mapperRules($callingElement){
+        $contentStructure=array('Source column'=>array('method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
+                                '...or constant'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
+                                'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE),
+                                'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                );
+        //$contentStructure['Source column']['addColumns']
+        $contentStructure['Source column']+=$callingElement['Content']['Selector'];
+        $contentStructure['Target column']+=$callingElement['Content']['Selector'];
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr['canvasCallingClass']=$callingElement['Folder'];
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Mapper rules: map directly to the target entry';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
@@ -342,6 +361,15 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     break;
                 }
             } // loop through parser rules
+            foreach($base['mapperrules'] as $ruleEntryId=>$rule){
+                $matchText='';
+                if (empty($rule['Content']['...or constant'])){
+                    $matchText=(isset($flatSourceEntry[$rule['Content']['Source column']]))?$flatSourceEntry[$rule['Content']['Source column']]:'';
+                } else {
+                    $matchText=$rule['Content']['...or constant'];
+                }
+                $targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
+            } // loop through mapper rules
         }
         // process result
         $sourceEntry['Content']=array();
@@ -403,6 +431,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         return $entry;
     }
+
 
 }
 ?>
