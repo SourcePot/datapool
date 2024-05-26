@@ -286,6 +286,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $multipleHits2multipleEntriesColumn=FALSE;
             $textSections2show=$textSections;
             $targetEntry=array();
+            // fixed mapping: source to target entry
+            if (isset($sourceEntry['Content']['UNYCOM'])){$targetEntry['Content']['UNYCOM']=$sourceEntry['Content']['UNYCOM'];}
+            if (isset($sourceEntry['Content']['Costs'])){$targetEntry['Content']['Costs']=$sourceEntry['Content']['Costs'];}
+            if (isset($sourceEntry['Content']['Costs description'])){$targetEntry['Content']['Costs description']=$sourceEntry['Content']['Costs description'];}
+            // parser rules
             foreach($base['parserrules'] as $ruleEntryId=>$rule){
                 $ruleFailed='';
                 // get relevant text section

@@ -428,10 +428,20 @@ class Container{
                         } else {
                             $matrix[$rowIndex][$columnIndex]='{Nothing here...}';
                         }
+                        $subMatix=array();
                         foreach($flatEntry as $flatColumnKey=>$value){
-                            if (strcmp($flatColumnKey,$cntrArr['Column'])!==0){continue;}
-                            $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
-                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,array());
+                            if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
+                                $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
+                                $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,array());
+                            } else if (strpos($flatColumnKey,$cntrArr['Column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR)===0){
+                                $subKey=str_replace($cntrArr['Column'],'',$flatColumnKey);
+                                $subKey=trim($subKey,\SourcePot\Datapool\Root::ONEDIMSEPARATOR);
+                                $subMatix[$subKey]=$value;
+                            }
+                        }
+                        if (!empty($subMatix)){
+                            $subMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($subMatix);
+                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$subMatix,'hideKeys'=>TRUE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE));
                         }
                     }
                 } // end of loop through columns

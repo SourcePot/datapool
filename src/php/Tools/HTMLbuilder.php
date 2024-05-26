@@ -174,7 +174,7 @@ class HTMLbuilder{
         // Required keys are 'options', 'key', 'callingClass' and 'callingFunction'.
         // Key 'label', 'selected', 'triggerId' are optional.
         // If 'hasSelectBtn' is set, a button will be added which will be clicked if an item is selected.
-        $optionsFilterLimit=10;
+        $optionsFilterLimit=20;
         if (!isset($arr['key'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Missing key-key in argument arr',0,E_ERROR,__FILE__,__LINE__);
         }

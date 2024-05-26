@@ -53,7 +53,7 @@ final class FileContent{
 
     private function addUnycom(array $entry,string $text):array
     {
-        preg_match('/([0-9]{4})([XPEF]{1,2})([0-9]{5})(\s{1,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})([0-9]{0,2})/',$text,$matches);
+        preg_match('/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{1,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})([0-9]{0,2})/',$text,$matches);
         if (isset($matches[0])){
             $unycom=$matches[0];
             $needlePos=stripos($text,$unycom);
@@ -68,6 +68,7 @@ final class FileContent{
 
     private function addCosts(array $entry,string $text):array
     {
+        $costDescription=array();
         foreach($this->costs as $key=>$regex){
             $parts=preg_split($regex,$text,-1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
             $entry['Content']['Costs'][$key]=array();
@@ -80,15 +81,24 @@ final class FileContent{
                     if (strlen($description)<30){$description=strval(array_pop($descriptionArr)).' '.$description;}
                 }
                 $description=preg_replace('/\s+/u',' ',trim($description));
+                $costDescription[]=$description;
                 $description=$this->costAlias($description);
                 if (empty($description)){continue;}
                 $entry['Content']['Costs'][$key][$description]=(isset($entry['Content']['Costs'][$key][$description]))?$entry['Content']['Costs'][$key][$description]:0;
                 $entry['Content']['Costs'][$key][$description]+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($parts[$index+1]);
             }
+            $netto=0;
             foreach($entry['Content']['Costs'][$key] as $description=>$costs){
+                if (mb_stripos($description,'vat')!==FALSE){
+                    $netto-=$costs;
+                } else if (mb_stripos($description,'brutto')!==FALSE){
+                    $netto+=$costs;
+                }
                 $entry['Content']['Costs'][$key][$description]=$key.' '.$costs;
             }
+            $entry['Content']['Costs'][$key]['netto']=$key.' '.$netto;
         }
+        $entry['Content']['Costs description']=implode(' | ',$costDescription);
         return $entry;
     }
 
