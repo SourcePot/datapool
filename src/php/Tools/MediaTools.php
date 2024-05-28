@@ -104,6 +104,7 @@ class MediaTools{
     
     public function getIcon(array $arr):array|string
     {
+        $arr=$this->addTmpFile($arr);
         if (!isset($arr['html'])){$arr['html']='';}
         if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){$arr['selector']['Params']['TmpFile']['MIME-Type']='text';}

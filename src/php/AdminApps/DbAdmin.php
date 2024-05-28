@@ -109,7 +109,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
         $matrices=array('Columns'=>array());
-        $sql='SHOW INDEX FROM '.$db.'.'.$table.';';
+        $sql='SHOW INDEX FROM `'.$table.'`;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
             $column=$columnInfo['Column_name'];
@@ -117,7 +117,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             unset($columnInfo['Table']);
             $matrices['Index'][$column]=$columnInfo;
         }
-        $sql='SHOW COLUMNS FROM '.$db.'.'.$table.';';
+        $sql='SHOW COLUMNS FROM `'.$table.'`;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
             $column=$columnInfo['Field'];

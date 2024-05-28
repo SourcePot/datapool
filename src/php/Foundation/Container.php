@@ -173,15 +173,20 @@ class Container{
     
     public function mdContainer(array $arr)
     {
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($arr['selector']);
-        unset($entry['EntryId']);
-        unset($entry['Type']);
+        if (empty($arr['selector']['EntryId']) && empty($arr['selector']['Name'])){
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($arr['selector']);
+            unset($entry['EntryId']);
+            unset($entry['Type']);
+        } else {
+            $entry=$arr['selector'];
+        }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
-        $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Type'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',TRUE);
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
+            $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
             $fileContent="[//]: # (This a Markdown document!)\n\n";
+            if ($entry['Name']==='Top paragraph'){$fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="width:20vw;margin-left:40vw;"/></div>';}
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }

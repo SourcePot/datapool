@@ -50,8 +50,10 @@ private $entryTable;
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
-                // markdown logo
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Top'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'20vh','overflow'=>'unset')));
+                // top web page section
+                $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Top paragraph');
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,array(),array('style'=>array()));
+                // center web page section
                 if (empty($pageSettings['homePageContent'])){
                     // do nothing
                 } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
@@ -75,35 +77,15 @@ private $entryTable;
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>' ','keep-element-content'=>TRUE,'style'=>array('height'=>'200px','overflow'=>'unset','background'=>'none')));
                     }
                 }
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$this->getDocumentHtml('Bottom'),'keep-element-content'=>TRUE,'style'=>array('min-height'=>'70vh','overflow'=>'unset')));
+                // bottom web page section
+                $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Bottom paragraph');
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,array(),array('style'=>array()));
             } else {
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
-    }
-    
-    private function getDocumentHtml(string $name='Content'):string
-    {
-        $entry=array('Source'=>$this->entryTable,'Group'=>__CLASS__,'Folder'=>$_SESSION['page state']['lngCode'],'Name'=>$name);
-        $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>'Home.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
-        $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-        if (!is_file($fileName)){
-            $fileContent="[//]: # (This a Markdown document!)\n\n";
-            if ($name=='Top'){
-                $fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="width:20vw;margin-left:40vw;"/></div>';
-            } else {
-                $fileContent.='# Home ('.$_SESSION['page state']['lngCode'].')';
-            }
-            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
-            file_put_contents($fileName,$fileContent);
-        }
-        $arr=array('settings'=>array('style'=>array('width'=>'100vw')));
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,TRUE,TRUE,'');
-        $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
-        return $arr['html'];
     }
     
 }

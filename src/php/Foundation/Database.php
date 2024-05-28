@@ -154,7 +154,7 @@ class Database{
     
     /**
     * This function returns the entry template based on the root entry template.
-    * If creates all tables that does not exist.
+    * It creates all tables which do not exist.
     *
     * @return array The method returns the entry template array for the table.
     */
@@ -188,6 +188,17 @@ class Database{
         return $GLOBALS['dbInfo'][$table]=$entryTemplate;
     }
     
+    public function getTableIndices(string $table):array
+    {
+        $indices=array();
+        $sql="SHOW INDEXES FROM `".$table."`;";
+        $stmt=$this->executeStatement($sql,array());
+        while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
+            $indices[$row["Key_name"]]=$row;
+        }
+        return $indices;
+    }
+
     /**
     * The method removes old indices as well as the primary key and adds the standard indices
     *
@@ -196,16 +207,22 @@ class Database{
     */
     public function setTableIndices(string $table)
     {
-        // set primary key
-        $sql="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `PRIMARY`;";
+        $context=array('table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>'');
+        // drop all existing indices
+        $sql="";
+        $indices=$this->getTableIndices($table);
+        foreach($indices as $keyName=>$indexArr){
+            $context['dropped']=$keyName.' | ';
+            $sql.="ALTER TABLE `".$table."` DROP INDEX `".$keyName."`;"; 
+        }
+        if (!empty($sql)){$this->executeStatement($sql,array());}
+        $context['dropped']=trim($context['dropped'],'| ');
+        $this->oc['logger']->log('notice','Existing indices "{dropped}" of database table "{table}" dropped',$context);
+        // set new indices
+        $sql="";
         $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`);";
-        // set indices
-        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `NAME_IND`;"; 
-        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `FOLDER_IND`;"; 
-        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `GROUP_IND`;"; 
-        $sql.="ALTER TABLE `".$table."` DROP INDEX IF EXISTS `STD`;"; 
         $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(40),`Group`(30),`Folder`(30),`Name`(40));";
-        $this->oc['logger']->log('notice','Added index to database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+        $this->oc['logger']->log('notice','Added index to database table "{table}"',$context);
         return $this->executeStatement($sql,array());
     }
 
@@ -373,7 +390,9 @@ class Database{
                 $this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($stmtArr);
             }
         } catch (\Exception $e){
-            $this->oc['logger']->log('critical','SQL execution error: "{error}".',array('class'=>__CLASS__,'function'=>__FUNCTION__,'error'=>$e->getMessage()));
+            $context=$stmtArr;
+            $context['error']=$e->getMessage();
+            $this->oc['logger']->log('critical','SQL execution for "{sqlSimulated}" triggered error: "{error}".',$context);
         }
         $this->oc['SourcePot\Datapool\Root']->stopStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
         return $stmtArr['stmt'];
@@ -562,8 +581,8 @@ class Database{
             }
         } else if (!isset($GLOBALS['dbInfo'][$selector['Source']])){
             // selected table does not exist
-        } else {    
-            $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
+        } else {
+            $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries);
             $selectExprSQL='';
             $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
             $sqlArr['sql'].=';';

@@ -185,7 +185,7 @@ class Filespace{
         if (!is_dir($dir)){
             if (isset($this->oc['logger'])){
                 $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'dir'=>$dir);
-                $this->oc['logger']->log('error','Function {class}::{function} failed: directory "{dir}" missing',$context);
+                $this->oc['logger']->log('notice','Function {class}::{function} failed: directory "{dir}" missing',$context);
             }
             return FALSE;
         }

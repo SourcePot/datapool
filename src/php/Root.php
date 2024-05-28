@@ -30,7 +30,7 @@ final class Root{
     public const NULL_DATE='9999-12-30 12:12:12';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
-    public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE);
+    public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE,'home'=>TRUE);
     // profiling settings
     public const PROFILING_RATE=0.005;        // 0 ... 1 with "1"=100% profiling and "0"=0% profiling
     public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);

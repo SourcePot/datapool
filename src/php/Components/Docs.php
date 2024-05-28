@@ -61,19 +61,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             // add content article
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,array(),array('style'=>array()));
-            /*
-            if (empty($selector['EntryId'])){
-                $settings=array();
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,$settings,array('style'=>array()));
-            } else {
-                $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-                $presentArr['settings']=array('style'=>array('width'=>'98%','border'=>'none'),'presentEntry'=>__CLASS__.'::'.__FUNCTION__);
-                $presentArr['selector']=$selector;
-                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
-                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('width'=>'84%','overflow'=>'unset')));
-            }
-            */
-            // Manage assets container
+            // manage assets container
             $settings=array('method'=>'manageAssets','classWithNamespace'=>__CLASS__);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Manage assets','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array()));
             $arr['toReplace']['{{content}}']=$html;

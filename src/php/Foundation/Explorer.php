@@ -77,20 +77,24 @@ class Explorer{
     {
         $selectorPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $stateKeys=array('selectedKey'=>key($selectorPageState),'nextKey'=>key($selectorPageState));
+        $lngNeedle='|'.$_SESSION['page state']['lngCode'].'|';
         $html='';
         $selector=array();
         foreach($this->selectorTemplate as $column=>$initValue){
             $selectorHtml='';
             $options=array(\SourcePot\Datapool\Root::GUIDEINDICATOR=>'&larrhk;');
-            $columnIsEntryId=strcmp($column,'EntryId')===0;
-            $label=($columnIsEntryId)?'Name':$column;
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
-                if ($columnIsEntryId){
-                    $entrySelector=array_merge($selector,array('EntryId'=>$row['EntryId']));
-                    $row=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entrySelector);
+            if ($column==='EntryId'){
+                $label='Name';
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
+                    if (!empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$selector['Source']]) && strpos($row['Type'],$lngNeedle)===FALSE){continue;}
+                    $options[$row[$column]]=$row[$label];
                 }
-                if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
-                $options[$row[$column]]=$row[$label];
+            } else {
+                $label=$column;
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read','Name',$this->settingsTemplate[$column]['isAsc']) as $row){
+                    if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
+                    $options[$row[$column]]=$row[$label];
+                }
             }
             $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
             $selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));

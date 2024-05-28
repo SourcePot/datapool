@@ -60,8 +60,8 @@ final class FileContent{
             $fhi=substr($text,$needlePos-10,10);
             preg_match('/([A-Zabc1-9]{3,6})(\s*(-|—|—)\s*)/',$fhi,$match);
             $fhi=(isset($match[1]))?$match[1].' - ':'';
-            $entry['Content']['UNYCOM']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($fhi.$unycom);
-            $entry['Content']['UNYCOM list']=implode(';',$matches);
+            $entry['UNYCOM']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($fhi.$unycom);
+            $entry['UNYCOM list']=implode(';',$matches);
         }
         return $entry;
     }
@@ -71,11 +71,11 @@ final class FileContent{
         $costDescription=array();
         foreach($this->costs as $key=>$regex){
             $parts=preg_split($regex,$text,-1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-            $entry['Content']['Costs'][$key]=array();
+            $entry['Costs'][$key]=array();
             if (count($parts)===1){continue;}
             for($index=0;$index<(count($parts)-1);$index+=2){
                 $description=mb_strtolower($parts[$index]);
-                if (empty($entry['Content']['Costs'][$key])){
+                if (empty($entry['Costs'][$key])){
                     $descriptionArr=explode("\n",$description);
                     $description=array_pop($descriptionArr);
                     if (strlen($description)<30){$description=strval(array_pop($descriptionArr)).' '.$description;}
@@ -84,21 +84,21 @@ final class FileContent{
                 $costDescription[]=$description;
                 $description=$this->costAlias($description);
                 if (empty($description)){continue;}
-                $entry['Content']['Costs'][$key][$description]=(isset($entry['Content']['Costs'][$key][$description]))?$entry['Content']['Costs'][$key][$description]:0;
-                $entry['Content']['Costs'][$key][$description]+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($parts[$index+1]);
+                $entry['Costs'][$key][$description]=(isset($entry['Costs'][$key][$description]))?$entry['Costs'][$key][$description]:0;
+                $entry['Costs'][$key][$description]+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($parts[$index+1]);
             }
             $netto=0;
-            foreach($entry['Content']['Costs'][$key] as $description=>$costs){
+            foreach($entry['Costs'][$key] as $description=>$costs){
                 if (mb_stripos($description,'vat')!==FALSE){
                     $netto-=$costs;
                 } else if (mb_stripos($description,'brutto')!==FALSE){
                     $netto+=$costs;
                 }
-                $entry['Content']['Costs'][$key][$description]=$key.' '.$costs;
+                $entry['Costs'][$key][$description]=$key.' '.$costs;
             }
-            $entry['Content']['Costs'][$key]['netto']=$key.' '.$netto;
+            $entry['Costs'][$key]['netto']=$key.' '.$netto;
         }
-        $entry['Content']['Costs description']=implode(' | ',$costDescription);
+        $entry['Costs description']=implode(' | ',$costDescription);
         return $entry;
     }
 
