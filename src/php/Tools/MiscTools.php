@@ -434,6 +434,17 @@ final class MiscTools{
         return $arr;
     }
 
+    public function wasTouchedByClass(array $entry,string $classWithNamespace,bool $testRun=FALSE):bool
+    {
+        if (isset($entry['Params'][$classWithNamespace])){
+            return TRUE;
+        } else {
+            $entry['Params'][$classWithNamespace]=array('user'=>$_SESSION['currentUser']['EntryId'],'timestamp'=>time());
+            if (!$testRun){$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);}
+            return FALSE;
+        }
+    }
+
     public function getSeparator():string
     {
         return \SourcePot\Datapool\Root::ONEDIMSEPARATOR;

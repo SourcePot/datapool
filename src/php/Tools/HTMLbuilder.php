@@ -26,6 +26,8 @@ class HTMLbuilder{
                         'download all'=>array('key'=>array('download all'),'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
                         'export'=>array('key'=>array('export'),'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
                         'select'=>array('key'=>array('select'),'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE),
+                        'approve'=>array('key'=>array('approve'),'title'=>'Approve entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array('font-size'=>'2rem','color'=>'green'),'excontainer'=>FALSE),
+                        'decline'=>array('key'=>array('decline'),'title'=>'Decline entry','hasCover'=>FALSE,'element-content'=>'&#10006;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array('font-size'=>'2rem','color'=>'red'),'excontainer'=>FALSE),
                         'delete'=>array('key'=>array('delete'),'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array(),'excontainer'=>FALSE),
                         'remove'=>array('key'=>array('remove'),'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array(),'excontainer'=>FALSE),
                         'delete all'=>array('key'=>array('delete all'),'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>array(),'excontainer'=>FALSE),
@@ -113,6 +115,7 @@ class HTMLbuilder{
             $tableArr=array('tag'=>'table','keep-element-content'=>TRUE,'element-content'=>'');
             if (isset($arr['id'])){$tableArr['id']=$arr['id'];}
             if (isset($arr['style'])){$tableArr['style']=$arr['style'];}
+            if (isset($arr['title'])){$tableArr['title']=$arr['title'];}
             $tbodyArr=array('tag'=>'tbody','keep-element-content'=>TRUE);
             if (isset($arr['class'])){
                 $tableArr['class']=$arr['class'];
@@ -397,6 +400,11 @@ class HTMLbuilder{
                 $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
                 $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.$selector['Source'].' dump.zip';
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries(array($selector),$fileName,FALSE,10000000000);
+            } else if (isset($formData['cmd']['approve']) || isset($formData['cmd']['decline'])){
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+                $cmd=key($formData['cmd']);
+                $entry['Params']['User'][$_SESSION['currentUser']['EntryId']]=array('action'=>$cmd,'timestamp'=>time(),'user'=>$_SESSION['currentUser']['EntryId'],'app'=>$selector['app']);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         }
@@ -548,20 +556,25 @@ class HTMLbuilder{
     */
     public function entryControls(array $arr,bool $isDebugging=FALSE):string
     {
+        $tableStyle=array('clear'=>'none','margin'=>'0','min-width'=>'200px','box-shadow'=>'none','border'=>'1px dotted #444');
         if (!isset($arr['selector'])){return 'Selector missing';}
         $debugArr=array('arr_in'=>$arr);
         $arr['html']='';
         if (!isset($arr['selector']['Content'])){
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         }
-        if (empty($arr['selector'])){return 'Entry does not exsist (yet).';}
+        if (empty($arr['selector'])){
+            return 'Entry does not exsist (yet).';
+        }
         $template=array('callingClass'=>__CLASS__,
                         'callingFunction'=>__FUNCTION__,
                         'hideHeader'=>TRUE,
                         'hideKeys'=>TRUE,
                         'previewStyle'=>array('max-height'=>100,'max-width'=>200),
+                        'settings'=>array('hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>TRUE,'hideDelete'=>FALSE),
                         );
         $arr=array_replace_recursive($template,$arr);
+        // create preview
         $matrix=array('Preview'=>array('Value'=>''),'Btns'=>array('Value'=>''));
         if (empty($arr['hidePreview'])){
             $previewArr=$arr;
@@ -569,16 +582,32 @@ class HTMLbuilder{
             $previewArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
             $matrix['Preview']['Value'].=$previewArr['html'];
         }
-        foreach(array('select','remove','delete','download','upload') as $cmd){
-            $ucfirstCmd=ucfirst($cmd);
-            if (!empty($arr['settings']['hide'.$ucfirstCmd])){continue;}
-            $arr['excontainer']=TRUE;
-            $arr['cmd']=$cmd;
-            $matrix['Btns']['Value'].=$this->btn($arr);
-            $debugArr['btn'][]=$arr;
+        // detected user action
+        $tableTitle=$arr['selector']['Name'];
+        $userAction='none';
+        if (isset($arr['selector']['Params']['User'][$_SESSION['currentUser']['EntryId']]['action'])){
+            $userAction=$arr['selector']['Params']['User'][$_SESSION['currentUser']['EntryId']]['action'];
+            $tableTitle='Your decission for the entry: '.$userAction;
         }
+        if ($userAction==='approve'){
+            $tableStyle['border']='2px solid #0f0';
+        } else if ($userAction==='decline'){
+            $tableStyle['border']='2px solid #f00';
+        }
+        // create buttons
+        foreach($arr['settings'] as $key=>$value){
+            if (strpos($key,'hide')!==0){continue;}
+            $cmd=strtolower(str_replace('hide','',$key));
+            if ($value===FALSE && $userAction!==$cmd){
+                $arr['excontainer']=TRUE;
+                $arr['cmd']=$cmd;
+                $matrix['Btns']['Value'].=$this->btn($arr);
+                $debugArr['btn'][]=$arr;
+            }
+        }
+        // finalize
         $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'style'=>array('clear'=>'none','margin'=>'0','min-width'=>'200px','box-shadow'=>'none','border'=>'1px dotted #444')));
+        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'title'=>$tableTitle,'style'=>$tableStyle));
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
