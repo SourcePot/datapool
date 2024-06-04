@@ -919,7 +919,7 @@ class Database{
     * @param boolean $isSystemCall The value is provided to access control. 
     * @param boolean $returnMetaOnNoMatch If true and EntryId is provided, meta data is return on no match instead of false. 
     *
-    * @return array|boolean The entry, an empty array or flase if no entry was found.
+    * @return array|boolean The entry, an empty array or false if no entry was found.
     */
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
     {
@@ -934,6 +934,18 @@ class Database{
         return FALSE;
     }
         
+    /**
+    * The method moves or copies an entry to the target selected by argument targetSelector
+    *
+    * @param array $sourceEntry Is the source entry.  
+    * @param array $targetSelector Is the tsrget selector.  
+    * @param boolean $isSystemCall The value is provided to access control. 
+    * @param boolean $isTestRun If true, the source entry will not be copied or moved. 
+    * @param boolean $keepSource If true, the entry will be copied, not moved. 
+    * @param boolean $updateSourceFirst If true, the source entry will be updated before further processing. 
+    *
+    * @return array The target entry.
+    */
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
     {
         $userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
