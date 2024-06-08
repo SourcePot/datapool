@@ -1221,6 +1221,14 @@ class Database{
         return $entry;
     }
     
+    /**
+    * The method moves or copies an entry to the target selected by argument targetSelector
+    *
+    * @param array $selectorA Is the first selector.  
+    * @param array $selectorB Is the second selector.  
+    *
+    * @return boolean TRUE if selectors are equal, FALSE if they are not equal.
+    */
     public function isSameSelector(array $selectorA,array $selectorB):bool
     {
         $relevantKeys=array('Source','Group','Folder','Name','EntryId');

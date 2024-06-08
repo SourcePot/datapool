@@ -151,7 +151,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $contentStructure=array('Outbox class'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')),
                                 'Recipient'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions),
-                                'When done'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Keep entries','Delete sent entries')),
+                                'When done'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('Keep entries','Delete sent entries')),
                                 'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctorB
@@ -183,7 +183,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Text'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'placeholder'=>$msgPlaceholder,'rows'=>4,'cols'=>20,'excontainer'=>TRUE),
                                 ' '=>array('method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'),
                                 'use column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE),
-                                'Add to'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>array('Subject'=>'Subject','Message'=>'Message')),
+                                'Add to'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'Subject','options'=>array('Subject'=>'Subject','Message'=>'Message')),
                                 );
         $contentStructure['use column']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
