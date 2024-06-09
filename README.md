@@ -67,7 +67,7 @@ Any class which implements the App interface must provide a run method. The run 
 
 <img src="./assets/img/run_method.png" alt="Run method if an app where content is added" style="width:100%"/>
 
-### Data category Apps
+### Data category Apps, e.g. Invoces
 Data apps use of the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a canvas on which you can create data processing processes graphically. This is done by adding canvas elements and configuring their properties. A canvas element is a view of a database table. The database table view applies a selector `Content → Selector` (see the figure below). Functionallity can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and a processor. There is a set of basic processors such as to *match* or *map* or *forward* entries. There is also a basic processor to create pdf-documents, to send emails or SMS.
 
 <img src="./assets/img/CanvasElementProperties.png" alt="Canvas element properties"/>
