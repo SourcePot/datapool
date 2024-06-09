@@ -56,7 +56,8 @@ After you have set up your admin account you should login and update the webmast
 Datapool is based on an **object collection** or `oc`, i.e. a collection objects instantiated from PHP-classes in the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web-application is called.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `init(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the init method of the class.
 
-The configuration file `../setup/objectList.csv` determines the order of creation of objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection.
-Otherwise, an instance of a vendor class can be created within the source code when required.
+The configuration file `../setup/objectList.csv` determines the order of creation of objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can be created within the source code when required.
 
-<img src="./assets/img/objectList.png" alt="Object list file"/>
+The following flowchart shows the sequence of object instantiation, method calls and content creation.
+
+<img src="./assets/img/Browser_call_flow.png" alt="Object list file"/>
