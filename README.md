@@ -58,6 +58,11 @@ Datapool is based on an **object collection** or `oc`, i.e. a collection objects
 
 The configuration file `../setup/objectList.csv` determines the order of creation of objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can be created within the source code when required.
 
-The following flowchart shows the sequence of object instantiation, method calls and content creation.
+The following flowchart shows the sequence of object instantiations, method calls and content creation. 
 
-<img src="./assets/img/Browser_call_flow.png" alt="Object list file" style="width:100%"/>
+<img src="./assets/img/Browser_call_flow.png" alt="Browser call flow" style="width:100%"/>
+
+Any class which implements the App interface must provide a run method. The run method defines the add specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar->run()`. 
+
+<img src="./assets/img/run_method.png" alt="Run method if an app where content is added" style="width:100%"/>
+
