@@ -9,7 +9,7 @@ Datapool was originally developed to process invoices (pdf documents) within a p
 Moving data between the packages is even more challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department. The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
-<img src="./assets/img/ExampleApplication.png" alt="Example application" style="width:70%;"/>
+<img src="./assets/img/ExampleApplication.png" alt="Example application" style="width:90%;"/>
 
 The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case.
 
