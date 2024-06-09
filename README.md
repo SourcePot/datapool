@@ -29,7 +29,7 @@ This example requires the following steps:
 - Processes can be easily designed and adopted via a graphical user interface
 - Processes can easily be exported or imported to other systems running Datapool
 
-<img src="./assets/img/chart_processor.png" alt="Graphical process designer" style=""/>
+<img src="./assets/img/Example_data_flow.png" alt="Graphical process designer" style=""/>
 
 ## Hosting the web-application
 
