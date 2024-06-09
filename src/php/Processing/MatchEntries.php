@@ -232,9 +232,11 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
-            $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
+            if (count($result['Matches'])<$this->maxResultTableLength){
+                $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
+            }
         } else {
-            // fails match
+            // failed match
             $result['Matching']['Failed']['value']++;
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('failure'=>'Match column "'.$params['Content']['Column to match'].'" failed'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
