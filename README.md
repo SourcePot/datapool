@@ -1,9 +1,9 @@
 # Datapool
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to return flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user and smaller organizational units within a company. Datapool can carry out periodic data processing with processes defined at team or department level. Datappol can bridge (temporary) gaps, can be used as a process test bench or for production. 
 
-Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is analyzed and compared with the patent files. It processes the data in conjunction with UNYCOM and SAP. In this production environment, approx. 1000 invoices per month are processed and compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
-
 <img src="./assets/img/ComparisonWithSAP.png" alt="Example application"/>
+
+Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is analyzed and compared with the patent files. It processes the data in conjunction with UNYCOM and SAP. In this production environment, approx. 1000 invoices per month are processed and compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
 
 ## Sample application
 Moving data between the packages is even more challenging.
