@@ -60,7 +60,7 @@ The configuration file `../setup/objectList.csv` determines the order of creatio
 
 The following flowchart shows the sequence of object instantiations, method calls and content creation. 
 
-<img src="./assets/img/Browser_call_flow.png" alt="Browser call flow" style="width:100%"/>
+<img src="./assets/img/Browser_call_flow.png" alt="Browser call flow"/>
 
 Any class which implements the App interface must provide a run method. The run method defines the add specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar->run()`. 
 
