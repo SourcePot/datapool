@@ -3,7 +3,7 @@ Many organizations run large complex software packages and flexibility is not ne
 
 Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is analyzed and compared with the patent files. It processes the data in conjunction with UNYCOM and SAP. In this production environment, approx. 1000 invoices per month are processed and compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
 
-<img src="./assets/img/ComparisonWithSAP.png" alt="Example application" style="width:70%;"/>
+<img src="./assets/img/ComparisonWithSAP.png" alt="Example application"/>
 
 ## Sample application
 Moving data between the packages is even more challenging.
