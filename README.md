@@ -1,6 +1,13 @@
 # Datapool
-Many organizations run big software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments are very expensive and might not survive the next software update. Moving data between the packages is even more challenging.
-This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department.  The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
+Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to return flexibility but might be a closed ecosystems themself. Datapool is a light-weight open source web application which returns full control to the user. Datapool can carry out periodic data processing with processes defined at team or department level. Datappol can bridge (temporary) gaps, can be used as a process test bench or for production. 
+
+Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is analyzed and compared with the patent files. It processes the data in conjunction with UNYCOM and SAP. In this production environment, approx. 1000 invoices per month are processed and compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
+
+<img src="./assets/img/ComparisonWithSAP.png" alt="Example application" style="width:70%;"/>
+
+## Sample application
+Moving data between the packages is even more challenging.
+This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department. The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
 <img src="./assets/img/ExampleApplication.png" alt="Example application" style="width:70%;"/>
 
