@@ -60,4 +60,4 @@ The configuration file `../setup/objectList.csv` determines the order of creatio
 
 The following flowchart shows the sequence of object instantiation, method calls and content creation.
 
-<img src="./assets/img/Browser_call_flow.png" alt="Object list file"/>
+<img src="./assets/img/Browser_call_flow.png" alt="Object list file" style="width:100%"/>
