@@ -58,6 +58,7 @@ Datapool is based on an **object collection** or `oc`, i.e. a collection objects
 
 The configuration file `../setup/objectList.csv` determines the order of creation of objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can be created within the source code when required.
 
+### Web page creation
 The following flowchart shows the sequence of object instantiations, method calls and content creation. 
 
 <img src="./assets/img/Browser_call_flow.png" alt="Browser call flow"/>
@@ -65,4 +66,8 @@ The following flowchart shows the sequence of object instantiations, method call
 Any class which implements the App interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar->run()`. 
 
 <img src="./assets/img/run_method.png" alt="Run method if an app where content is added" style="width:100%"/>
+
+### Apps of category Data
+Data apps make use of the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a canvas where you can create data processing processes graphically. This is done by adding canvas elements. A canvas element is a view on a database table. The database table view applies a selector `Content → Selector` = `array('Source'=>...,'Group'=>'...','Folder'=>'...')`. Functionallity can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and a processor. There is a set of basic processor which can *match*, *map* or *forward* entries to other canvas elements.
+
 
