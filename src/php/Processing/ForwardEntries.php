@@ -19,6 +19,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
+    private $maxResultTableLength=50;
+
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -212,6 +214,11 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Forwarding statistics']['Entries']['value']++;
             $result=$this->forwardEntry($base,$sourceEntry,$result,$testRun);
         }
+        if (count($result['Forwarded'])>=$this->maxResultTableLength){
+            $currentValues=current($result['Forwarded']);
+            foreach($currentValues as $key=>$value){$currentValues[$key]='...';}
+            $result['Forwarded']['...']=$currentValues;
+        }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
@@ -245,7 +252,9 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
             $targets[$targetName]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet);
-            $result['Forwarded'][$sourceEntry['Name']]=$targets;
+            if (count($result['Forwarded'])<$this->maxResultTableLength){
+                $result['Forwarded'][$sourceEntry['Name']]=$targets;
+            }
             if ($conditionMet){
                 $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,$params['Content']['Keep source entries']);
             }

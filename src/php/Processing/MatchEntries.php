@@ -19,6 +19,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
+    private $maxResultTableLength=50;
+
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -130,8 +132,6 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getMatchEntriesSettingsHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->matchingParams($arr['selector']);
-        //$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-        //$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Matching'));
         return $arr;
     }
     
@@ -139,14 +139,15 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $return=array('html'=>'','Parameter'=>array(),'result'=>array());
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
-        $contentStructure=array('Column to match'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
+        $contentStructure=array('Column to match'=>array('method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
                               'Match with'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                              'Match with column'=>array('method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
+                              'Match with column'=>array('method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
                               'Match type'=>array('method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE),
                               'Match probability'=>array('method'=>'select','value'=>80,'options'=>array(100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50'),'excontainer'=>TRUE),
                               'Match failure'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Combine content'=>array('method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>array('No','Yes')),
+                              'Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
                               'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                             );
         $contentStructure['Column to match']+=$callingElement['Content']['Selector'];
@@ -190,8 +191,20 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Matching']['Skip rows']['value']++;
                 continue;
             }
+            if ($testRun && $result['Matching']['Entries']['value']>$this->maxResultTableLength){
+                $result['Matching']['Entries']['value'].=' (testrun, incomplete)';
+                $result['Matching']['Matched']['value'].=' (testrun, incomplete)';
+                $result['Matching']['Failed']['value'].=' (testrun, incomplete)';
+                $result['Matching']['Skip rows']['value'].=' (testrun, incomplete)';
+                break;
+            }
             $result['Matching']['Entries']['value']++;
             $result=$this->matchEntry($base,$entry,$result,$testRun);
+        }
+        if (count($result['Matches'])>=$this->maxResultTableLength){
+            $currentValues=current($result['Matches']);
+            foreach($currentValues as $key=>$value){$currentValues[$key]='...';}
+            $result['Matches']['...']=$currentValues;
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
@@ -203,10 +216,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $params=current($base['matchingparams']);
         // get best match
         $needle=$entry[$params['Content']['Column to match']];
-        $matchSelector=$base['entryTemplates'][$params['Content']['Match with']];
-        $matchColumn=$params['Content']['Match with column'];
-        $matchType=$params['Content']['Match type'];
-        $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$matchSelector,$matchColumn,$matchType,TRUE);
+        $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
         // process best match
         $probability=round(100*$bestMatch['probability']);
         $entry['Params']['Processed'][__CLASS__]=$probability;
@@ -218,7 +228,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Matching']['Matched']['value']++;
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('success'=>'Match column "'.$params['Content']['Column to match'].'" successful'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun,$params['Content']['Keep source entries']);
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
@@ -228,11 +238,13 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Matching']['Failed']['value']++;
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('failure'=>'Match column "'.$params['Content']['Column to match'].'" failed'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun,$params['Content']['Keep source entries']);
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
-            $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
+            if (count($result['Matches'])<$this->maxResultTableLength){
+                $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
+            }
         }
         return $result;
     }

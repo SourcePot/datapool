@@ -1085,7 +1085,6 @@ final class MiscTools{
                 $bestMatch['probability']=1;
                 break;
             }
-            //var_dump(round(100*$probability).' | '.$matchEntry[$matchColumn]);
         }
         return $bestMatch;
     }

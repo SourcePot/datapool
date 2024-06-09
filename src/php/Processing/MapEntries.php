@@ -18,18 +18,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
-
-    private $skipCondition=array('always'=>'always',
-                                 'stripos'=>'is substring of target value',
-                                 'stripos!'=>'is not substring  of target value',
-                                 'strcmp'=>'is equal to target value',
-                                 'lt'=>'is < than target value',
-                                 'le'=>'is <= than target value',
-                                 'eq'=>'is = to target value',
-                                 'ne'=>'is <> to target value',
-                                 'gt'=>'is > than target value',
-                                 'ge'=>'is >= than target value',
-                                 );
         
     private $paramsTemplate=array('Mode'=>'entries','Array→string glue'=>'|');
     
@@ -147,14 +135,13 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->mappingParams($arr['selector']);
         $arr['html'].=$this->mappingRules($arr['selector']);
-        //$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-        //$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for mapping'));
         return $arr;
     }
 
     private function mappingParams($callingElement){
-        $contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries (EntryId will be created from Name)','csv'=>'Create csv','zip'=>'Create zip')),
+        $contentStructure=array('Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
+                                'Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+                                'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip')),
                                 'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'Order by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE),
                                 'Order'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0=>'Descending',1=>'Ascending')),
@@ -188,8 +175,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Use rule if Compare value'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'always','options'=>$this->skipCondition),
-                                'Compare value'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 );
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -324,12 +309,12 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry[$key]=implode($params['Content']['Array→string glue'],$value);
         }
         $result['Mapping statistics']['Entries']['value']++;
+        //
         $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('mode'=>$params['Content']['Mode']),FALSE);
+        $sourceEntry['Content']=array();
         if ($base['csvRequested'] || $base['zipRequested']){
-            unset($sourceEntry['Content']);
             unset($sourceEntry['Params']);
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
-            //$targetEntry['Name']=$base['Attachment name'];
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
             if (!$testRun){
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
@@ -337,7 +322,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             if (isset($sourceEntry['Params']['File'])){unset($sourceEntry['Params']['File']);}
             $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
+            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun,$params['Content']['Keep source entries']);
         }
         $result['Target']['Source']['value']=$targetEntry['Source'];
         $result['Target']['EntryId']['value']=$targetEntry['EntryId'];
@@ -371,72 +356,12 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
         if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
         $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
-        if ($this->useRule($rule,$dataType,$newValue[$key])){
-            if (is_array($entry[$baseKey])){
-                $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);
-            } else {
-                $entry[$baseKey]=$newValue;
-            }
+        if (is_array($entry[$baseKey])){
+            $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);
+        } else {
+            $entry[$baseKey]=$newValue;
         }
         return $entry;
-    }
-
-    private function useRule($rule,$dataType,$targetValue){
-        // unify datatype
-        if (strcmp(($rule['Use rule if Compare value']),'always')===0){return TRUE;}
-        if (strlen($rule['Use rule if Compare value'])>2){
-            // compare strings
-            $compareValue=$rule['Compare value'];
-            $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue);
-            $targetValue=strval($targetValue);
-        } else {
-            // compare numbers
-            $compareValue=floatval($rule['Compare value']);
-            if (stripos($dataType,'date')===0){
-                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue,'System short');
-                $targetValue=strtotime($targetValue);
-                $compareValue=strtotime($rule['Compare value']);
-            } else if (strcmp($dataType,'int')===0){
-                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue);
-                $compareValue=round($compareValue);
-            } else if (strcmp($dataType,'unycom')===0){
-                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue,'Number');
-                $compareValue=round($compareValue);
-            } else {
-                $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($targetValue);
-            }
-        }
-        $return=FALSE;
-        switch($rule['Use rule if Compare value']){
-            case 'stripos':
-                if (stripos($targetValue,$compareValue)!==FALSE){$return=TRUE;}
-                break;
-            case 'stripos!':
-                if (stripos($targetValue,$compareValue)===FALSE){$return=TRUE;}
-                break;
-            case 'strcmp':
-                if (strcmp($targetValue,$compareValue)===0){$return=TRUE;}
-                break;
-            case 'eq':
-                if ($targetValue==$compareValue){$return=TRUE;}
-                break;
-            case 'le':
-                if ($targetValue>=$compareValue){$return=TRUE;}
-                break;
-            case 'lt':
-                if ($targetValue>$compareValue){$return=TRUE;}
-                break;
-            case 'ge':
-                if ($targetValue<=$compareValue){$return=TRUE;}
-                break;
-            case 'gt':
-                if ($targetValue<$compareValue){$return=TRUE;}
-                break;
-            case 'ne':
-                if ($targetValue!=$compareValue){$return=TRUE;}
-                break;
-        }
-        return $return;
     }
 
 }
