@@ -1,9 +1,9 @@
 # Datapool
-Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to return flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user and smaller organizational units within a company. Datapool can carry out periodic data processing with processes defined at team or department level. Datapool can be used to bridge temporary gaps, for testing processes or for production.
+Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within a company. Datapool can carry out periodic data crunching with processes defined at team or department level. Datapool can also be used to bridge temporary gaps, for testing processes as well as for production.
 
 <img src="./assets/img/ComparisonWithSAP.png" alt="Example application"/>
 
-Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is analyzed and compared with the patent files. It processes the data in conjunction with UNYCOM and SAP. In this production environment, approx. 1000 invoices per month are processed and compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
+Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is extracted, analyzed and compared with the patent files. The invoice data is then processed in conjunction with UNYCOM and SAP. In this production environment, Datapool has been used to process approx. 1000 invoices per month. The data is compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
 
 ## Sample application
 Moving data between the packages is even more challenging.
@@ -68,11 +68,11 @@ Any class which implements the App interface must provide a run method. The run 
 <img src="./assets/img/run_method.png" alt="Run method if an app where content is added" style="width:100%"/>
 
 ### Data category Apps, e.g. Invoices
-Data apps use of the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a canvas on which you can create data processing processes graphically. This is done by adding canvas elements and configuring their properties. A canvas element is a view of a database table. The database table view applies a selector `Content → Selector` (see the figure below). Functionallity can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and a processor. There is a set of basic processors such as to *match* or *map* or *forward* entries. There is also a basic processor to create pdf-documents, to send emails or SMS.
+Data apps use the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a blank canvas to create data crunching processes graphically. This is done by adding canvas elements and by configuring their properties. A canvas element is a view of a database table. The database table view applies a selector `Content → Selector` (see the figure below). Features can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and/or a processor. There is a set of basic processors to e.g. *match*, *map* or *forward* entries. There are also a basic processors to create pdf-documents, to send emails or SMS.
 
 <img src="./assets/img/CanvasElementProperties.png" alt="Canvas element properties"/>
 
-The DataExplorer has two modes: **view** and **edit** The figure below shows how to switch from **view** to **edit** mode. In edit mode each canvas element can be dragged, selected or deleted. To change the canvas element properties the canvas element must be selected by clicking on the diamond shaped red button of the canvas element.
+The DataExplorer has two modes: **view** and **edit** The figure below shows how to togle between **view** and **edit** mode. In edit mode each canvas element can be dragged, selected or deleted. To change canvas element properties the canvas element needs to be selected by clicking on the diamond shaped red button of the respective canvas element.
 
 <img src="./assets/img/DataExplorer.png" alt="Canvas element properties"/>
 
