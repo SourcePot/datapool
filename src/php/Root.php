@@ -14,14 +14,12 @@ namespace SourcePot\Datapool;
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
-use Monolog\Processor\WebProcessor;
 use Monolog\Processor\LoadAverageProcessor;
 use Monolog\Handler\StreamHandler;
-use Monolog\Handler\NativeMailerHandler;
 
 final class Root{
 
-    // all classes listet at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
+    // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
     public const ADD_VENDOR_CLASSES=array('SourcePot\MediaPlayer\MediaPlayer','SourcePot\PIview\PIview','SourcePot\Sms\Sms','SourcePot\FhGInvoices\FhGInvoices');
     // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
     public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
@@ -35,7 +33,17 @@ final class Root{
     public const PROFILING_RATE=0.005;        // 0 ... 1 with "1"=100% profiling and "0"=0% profiling
     public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
     public const PROFILING_BACKTRACE=4;
-    
+    // required extensions
+    public const REQUIRED_EXTENSIONS=array('ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
+                                        'fileinfo'=>TRUE,'gd'=>FALSE,'gettext'=>TRUE,'gmp'=>FALSE,
+                                        'intl'=>FALSE,'imap'=>TRUE,'mbstring'=>TRUE,'exif'=>TRUE,
+                                        'mysqli'=>TRUE,'oci8_12c'=>FALSE,'oci8_19'=>FALSE,'odbc'=>FALSE,
+                                        'openssl'=>FALSE,'pdo_firebird'=>FALSE,'pdo_mysql'=>TRUE,'pdo_oci'=>FALSE,
+                                        'pdo_odbc'=>FALSE,'pdo_pgsql'=>FALSE,'pdo_sqlite'=>TRUE,'pgsql'=>FALSE,
+                                        'shmop'=>FALSE,'snmp'=>FALSE,'soap'=>FALSE,'sockets'=>FALSE,'sodium'=>FALSE,
+                                        'sqlite3'=>FALSE,'tidy'=>FALSE,'xsl'=>FALSE,'zip'=>TRUE,'opcache'=>FALSE
+                                        );
+
     private $oc=array();
     private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
     private $currentScript='';
@@ -80,6 +88,7 @@ final class Root{
         }
         $oc['logger']=$this->configureMonologLogger($oc,$oc['logger']);
         $this->emptyLoggerCache($oc);
+        $this->checkExtensions($oc);
         $this->oc=$oc;
     }
     
@@ -141,7 +150,7 @@ final class Root{
     */
     private function registerVendorClasses(array $oc):array
     {
-        $context=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // instantiate external classes
         foreach(self::ADD_VENDOR_CLASSES as $classIndex=>$classWithNamespace){
             $context['classWithNamespace']=$classWithNamespace;
@@ -149,7 +158,7 @@ final class Root{
                 $oc[$classWithNamespace]=new $classWithNamespace($oc);
                 $this->updateStructure($oc,$classWithNamespace);             
             } else {
-                $this->log('error','Method "{callingClass}::{callingFunction}": Failed to register class "{classWithNamespace}"',$context);
+                $this->log('error','Method "{class}::{function}": Failed to register class "{classWithNamespace}"',$context);
             }
         }
         return $oc;
@@ -159,13 +168,25 @@ final class Root{
     {
         return $this->oc;
     }
-        
+    
+    private function checkExtensions(array $oc):void
+    {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        foreach(self::REQUIRED_EXTENSIONS as $extension=>$isREquired){
+            if (!$isREquired){continue;}
+            if (!extension_loaded($extension)){
+                $context['extension']=$extension;
+                $oc['logger']->log('critical','PHP extension "{extension}" not loaded',$context);
+            }
+        }
+    }
+
     /**
     * @return array An associative array that contains the full generated webpage referenced by the key "page html".
     */
     public function run():array
     {
-        $context=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         $this->structure['callingWWWscript']=$this->currentScript;
         $pathInfo=pathinfo($this->currentScript);
         // get current temp dir

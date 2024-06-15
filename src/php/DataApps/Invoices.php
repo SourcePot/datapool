@@ -50,7 +50,7 @@ class Invoices implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
-            if (isset($explorerArr['canvasElement']['Content']['Selector']['Source'])){
+            if (isset($explorerArr['canvasElement']['Content']['Selector']['Source']) && empty($explorerArr['isEditMode'])){
                 $explorerSelector=$explorerArr['canvasElement']['Content']['Selector'];
                 $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class((string)$explorerSelector['Source']);
                 $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
@@ -61,7 +61,9 @@ class Invoices implements \SourcePot\Datapool\Interfaces\App{
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],array('hideUpload'=>TRUE),array());
+                    $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
+                    $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Folder','Filter'=>''));
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,array());
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];

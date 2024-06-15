@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class SAP implements \SourcePot\Datapool\Interfaces\App{
+class Cases implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
@@ -46,13 +46,13 @@ class SAP implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array{
         $html='';
         if ($arr===TRUE){
-            return array('Category'=>'Data','Emoji'=>'%','Label'=>'SAP','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+            return array('Category'=>'Data','Emoji'=>'F','Label'=>'Cases','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
             if (isset($explorerArr['canvasElement']['Content']['Selector']['Source']) && empty($explorerArr['isEditMode'])){
                 $explorerSelector=$explorerArr['canvasElement']['Content']['Selector'];
-                $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class((string)$explorerSelector['Source']);
+                $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($explorerSelector['Source']);
                 $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
                 $arr['selector']=array_merge($explorerSelector,$pageStateSelector);
                 if (!empty($arr['selector']['EntryId'])){

@@ -536,14 +536,28 @@ class Filespace{
     
     private function msg2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=$entry;
+        $context['class']=__CLASS__;
+        $context['function']=__FUNCTION__;
         $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
         if (class_exists('\Hfig\MAPI\MapiMessageFactory') && class_exists('\Hfig\MAPI\OLE\Pear\DocumentFactory')){
             // message parsing and file IO are kept separate
             $messageFactory= new \Hfig\MAPI\MapiMessageFactory();
             $documentFactory= new \Hfig\MAPI\OLE\Pear\DocumentFactory(); 
-            $ole= $documentFactory->createFromFile($file);
-            $message= $messageFactory->parseMessage($ole);
+            try{
+                $ole= $documentFactory->createFromFile($file);
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Processing message "{Name}" method createFromFile(file) failed with: "{msg}"',$context);
+                return $emailStatistic['errors'][]=$context['msg']; 
+            }
+            try{
+                $message= $messageFactory->parseMessage($ole);
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Processing message "{Name}" method parseMessage(ole) failed with: "{msg}"',$context);
+                return $emailStatistic['errors'][]=$context['msg']; 
+            }
             // set timezone
             $dateTimeObj=$message->getSendTime();
             $timeZoneObj=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);

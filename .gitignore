@@ -12,5 +12,7 @@
 !/src/php/GenericApps/Calendar.php
 /src/php/DataApps/*
 !/src/php/DataApps/Invoices.php
+!/src/php/DataApps/Expenses.php
+!/src/php/DataApps/Cases.php
 !/src/php/DataApps/Unycom.php
 !/src/php/DataApps/SAP.php

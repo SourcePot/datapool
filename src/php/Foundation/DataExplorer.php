@@ -20,7 +20,7 @@ class DataExplorer{
                                  );
     
     public $definition=array('Content'=>array('Style'=>array('Text'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                            'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Red','canvas-green'=>'Green','canvas-dark'=>'Dark','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'processor'),'@default'=>'canvas-std'),
+                                                            'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'),'@default'=>'canvas-std'),
                                                             'top'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
                                                             'left'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
                                                             ),
@@ -189,7 +189,7 @@ class DataExplorer{
     */
     public function getDataExplorer(string $callingClass):array
     {
-        $return=array('selector'=>array(),'contentHtml'=>'');
+        $return=array('isEditMode'=>$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode'),'contentHtml'=>'');
         // add canvas element
         $return['canvasElement']=$this->canvasFormProcessing($callingClass);
         // create explorer html
