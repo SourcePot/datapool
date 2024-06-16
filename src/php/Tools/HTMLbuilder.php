@@ -289,14 +289,8 @@ class HTMLbuilder{
             }
         }
         $arr['keep-element-content']=TRUE;
-        if (empty($arr['addSourceValueColumn'])){
-            $arr['options']=array();
-        } else {
-            $arr['options']=array('useValue'=>'&#9998;');
-        }
-        if (!empty($arr['addColumns'])){
-            $arr['options']+=$arr['addColumns'];
-        }
+        $arr['options']=(empty($arr['addSourceValueColumn']))?array():array('useValue'=>'&#9998;');
+        $arr['options']+=(empty($arr['addColumns']))?array():$arr['addColumns'];
         $sampleValue='';
         foreach($keys as $key=>$value){
             if (!empty($arr['standardColumsOnly']) && !isset($stdKeys[$key])){continue;}
