@@ -249,10 +249,24 @@ class HTMLbuilder{
         return $this->select($arr);
     }
     
+    /**
+    * The method returns an html-selector for entry keys. The entry is selected by parameter $arr. 
+    * $arr options are:
+    * 'value' or 'selected' - Is the value selecting the option
+    * 'standardColumsOnly' - If TRUE, html-selector options will only contain standard columns 
+    * 'addSourceValueColumn' - If TRUE, an option 'useValue' will is added 
+    * 'addColumns' - (array), options to be added to the html-selector 
+    * 'showSample' - If TRUE, entry sample values are added 
+    *
+    * @param array $arr Is the entry selector and options  
+    * @return array HTML-selector
+    */
     public function keySelect(array $arr,array $appendOptions=array()):string
     {
         if (empty($arr['Source'])){return '';}
-        $keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
+        $arr['value']=(isset($arr['value']))?$arr['value']:'';
+        $keys=array();
+        $stdKeys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>''));
         $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STD');
         if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
@@ -260,16 +274,18 @@ class HTMLbuilder{
             $keys=$_SESSION[__CLASS__][__FUNCTION__][$requestId];
         } else {
             // get available keys
-            if (empty($arr['standardColumsOnly'])){
-                $foundEntries=FALSE;
-                $keyTestArr=array(array('EntryId',TRUE),array('EntryId',FALSE),array('Date',TRUE),array('Date',TRUE),array('Group',TRUE),array('Group',FALSE),array('Folder',TRUE),array('Folder',TRUE),array('Name',TRUE),array('Name',FALSE));
-                foreach($keyTestArr as $keyTest){
-                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read',$keyTest[0],$keyTest[1],2) as $tmpEntry){
-                        $foundEntries=TRUE;
-                        $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
-                    }                
-                }
-                if ($foundEntries){$_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;}
+            $foundEntries=FALSE;
+            $keyTestArr=array(array('EntryId',TRUE),array('EntryId',FALSE),array('Date',TRUE),array('Date',TRUE),array('Group',TRUE),array('Group',FALSE),array('Folder',TRUE),array('Folder',TRUE),array('Name',TRUE),array('Name',FALSE));
+            foreach($keyTestArr as $keyTest){
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read',$keyTest[0],$keyTest[1],2) as $tmpEntry){
+                    $foundEntries=TRUE;
+                    $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
+                }                
+            }
+            if ($foundEntries){
+                $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
+            } else {
+                $keys=$stdKeys;
             }
         }
         $arr['keep-element-content']=TRUE;
@@ -281,11 +297,18 @@ class HTMLbuilder{
         if (!empty($arr['addColumns'])){
             $arr['options']+=$arr['addColumns'];
         }
+        $sampleValue='';
         foreach($keys as $key=>$value){
+            if (!empty($arr['standardColumsOnly']) && !isset($stdKeys[$key])){continue;}
+            if ($key==$arr['value'] && !empty($arr['showSample'])){$sampleValue=(is_array($value))?'':$value;}
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
         }
         $arr['options']+=$appendOptions;
-        return $this->select($arr);
+        $html=$this->select($arr);
+        if (!empty($sampleValue)){
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','class'=>'sample','element-content'=>$sampleValue));
+        }
+        return $html;
     }
     
     public function canvasElementSelect(array $arr):string

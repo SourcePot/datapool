@@ -135,6 +135,17 @@ p.filter{
     margin:0 0 0 -1.3rem;
     background-color:#fff;
 }
+p.sample{
+    float:left;
+    clear:none;
+    font-style:italic;
+    font-size:1rem;
+    padding:0.2rem 0.4rem;
+    margin: 0 0.2rem;
+    color:#444;
+    background-color:#fff;
+    border:1px dotted #084;
+}
 .td-content-wrapper{
     white-space:break-spaces;
     max-height:300px;
