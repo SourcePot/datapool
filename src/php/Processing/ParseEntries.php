@@ -231,7 +231,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Parser statistics'=>array('Entries'=>array('value'=>0),'Success'=>array('value'=>0),'Failed'=>array('value'=>0),'No text, skipped'=>array('value'=>0),'Skip rows'=>array('value'=>0)));
+        $result=array('Parser statistics'=>array('Entries'=>array('value'=>0),
+                                                 'Success'=>array('value'=>0),
+                                                 'Failed'=>array('value'=>0),
+                                                 'No text, skipped'=>array('value'=>0),
+                                                 'Skip rows'=>array('value'=>0))
+                                                );
+        $result['Mutliple entries → one target']=array();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if ($sourceEntry['isSkipRow']){
                 $result['Parser statistics']['Skip rows']['value']++;
@@ -239,6 +245,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $result['Parser statistics']['Entries']['value']++;
             $result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
+        }
+        foreach($result['Mutliple entries → one target'] as $EntryId=>$hitsName){
+            if ($hitsName['hits']<2){unset($result['Mutliple entries → one target'][$EntryId]);}
         }
         $statistics=array('Statistics'=>$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix());
         $statistics['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
@@ -411,11 +420,19 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetEntry,TRUE,$testRun);
                 $result['Parser statistics']['Success']['value']++;
             }
+            // multiple hit per target statistic
+            if (isset($result['Mutliple entries → one target'][$targetEntry['EntryId']])){
+                $result['Mutliple entries → one target'][$targetEntry['EntryId']]['hits']++;
+            } else {
+                $result['Mutliple entries → one target'][$targetEntry['EntryId']]['hits']=1;
+                $result['Mutliple entries → one target'][$targetEntry['EntryId']]['name']=$targetEntry['Name'];
+            }
             // get sample
             if (!isset($result['Sample result (success)']) || mt_rand(1,100)>80){
                 $result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
         } else {
+            // Parser failed
             $result['Parser statistics']['Failed']['value']++;
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($parserFailed,'| ')),FALSE);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);

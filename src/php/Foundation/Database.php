@@ -181,7 +181,9 @@ class Database{
             // create table
             $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=utf8 COLLATE utf8_unicode_ci;";
             $this->executeStatement($sql,array());
-            $this->oc['logger']->log('notice','Created missing database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+            if (isset($this->oc['logger'])){
+                $this->oc['logger']->log('notice','Created missing database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+            }
             // set standard indices
             $this->setTableIndices($table);
         }

@@ -35,7 +35,7 @@ final class Root{
     public const PROFILING_BACKTRACE=4;
     // required extensions
     public const REQUIRED_EXTENSIONS=array('ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
-                                        'fileinfo'=>TRUE,'gd'=>FALSE,'gettext'=>TRUE,'gmp'=>FALSE,
+                                        'fileinfo'=>TRUE,'gd'=>TRUE,'gettext'=>TRUE,'gmp'=>FALSE,
                                         'intl'=>FALSE,'imap'=>TRUE,'mbstring'=>TRUE,'exif'=>TRUE,
                                         'mysqli'=>TRUE,'oci8_12c'=>FALSE,'oci8_19'=>FALSE,'odbc'=>FALSE,
                                         'openssl'=>FALSE,'pdo_firebird'=>FALSE,'pdo_mysql'=>TRUE,'pdo_oci'=>FALSE,
