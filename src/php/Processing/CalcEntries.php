@@ -49,50 +49,21 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
      *
-     * @return bool TRUE the requested action exists or FALSE if not
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info')
-    {
+     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        // get action
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                return $this->runCalcEntries($callingElement,$testRunOnly=FALSE);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runCalcEntries($callingElement,$testRunOnly=TRUE);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getCalcEntriesWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getCalcEntriesSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getCalcEntriesInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runCalcEntries($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runCalcEntries($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getCalcEntriesWidget($callingElement),
+                'settings'=>$this->getCalcEntriesSettings($callingElement),
+                'info'=>$this->getCalcEntriesInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getCalcEntriesWidget($callingElement)

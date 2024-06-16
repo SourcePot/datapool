@@ -42,48 +42,21 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
      *
-     * @return bool TRUE the requested action exists or FALSE if not
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                return $this->runParseEntries($callingElement,$testRunOnly=FALSE);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runParseEntries($callingElement,$testRunOnly=TRUE);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getParseEntriesWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getParseEntriesSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getParseEntriesInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runParseEntries($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runParseEntries($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getParseEntriesWidget($callingElement),
+                'settings'=>$this->getParseEntriesSettings($callingElement),
+                'info'=>$this->getParseEntriesInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getParseEntriesWidget($callingElement){
@@ -321,6 +294,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
                 } else {
                     // match rule with text section
+                    $ruleMatchIndex=$rule['Content']['Match index'];
                     preg_match_all('/'.$rule['Content']['regular expression'].'/u',$relevantText,$matches);
                     if (!isset($matches[0][0])){
                         if (strcmp($rule['Content']['Target data type'],'bool')===0){
@@ -330,9 +304,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                             $matchText='No match.';
                             $ruleFailed.='|'.$matchText.' rule '.$ruleEntryId;
                         }
-                    } else if (isset($matches[$rule['Content']['Match index']])){
-                        foreach($matches[$rule['Content']['Match index']] as $hitIndex=>$matchText){
-                            if (count($matches[$rule['Content']['Match index']])>1 && $rule['Content']['Allow multiple hits']){
+                    } else if (isset($matches[$ruleMatchIndex])){
+                        foreach($matches[$ruleMatchIndex] as $hitIndex=>$matchText){
+                            $hits=count($matches[$ruleMatchIndex]);
+                            if ($hits>1 && $rule['Content']['Allow multiple hits']){
                                 $targetKey=$rule['Content']['Target key'].' '.$hitIndex;
                             } else if ($rule['Content']['Allow multiple hits']){
                                 $targetKey=$rule['Content']['Target key'].' 0';
@@ -343,7 +318,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                         }
                         if ($rule['Content']['Allow multiple hits']>1){$multipleHits2multipleEntriesColumn=$rule['Content']['Target column'];}    
                     } else {
-                        $matchText='Match, but Match index '.$rule['Content']['Match index'].' is not set.';
+                        $matchText='Match, but Match index '.$ruleMatchIndex.' is not set.';
                         $ruleFailed.='|'.$matchText.' rule '.$ruleEntryId;
                     }
                     if (!empty($matches[0][0]) && !empty($rule['Content']['Remove match'])){

@@ -33,55 +33,28 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     public function getEntryTable():string{return $this->entryTable;}
-    
+
     /**
      * This method is the interface of this data processing class
      *
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
      *
-     * @return bool TRUE the requested action exists or FALSE if not
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runForwardEntries($callingElement,$testRunOnly=0);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runForwardEntries($callingElement,$testRunOnly=1);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getForwardEntriesWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getForwardEntriesSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getForwardEntriesInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runForwardEntries($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runForwardEntries($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getForwardEntriesWidget($callingElement),
+                'settings'=>$this->getForwardEntriesSettings($callingElement),
+                'info'=>$this->getForwardEntriesInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getForwardEntriesWidget($callingElement){

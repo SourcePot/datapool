@@ -31,53 +31,28 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     public function getEntryTable():string{return $this->entryTable;}
-    
+
+    /**
+     * This method is the interface of this data processing class
+     *
+     * @param array $callingElementSelector Is the selector for the canvas element which called the method 
+     * @param string $action Selects the requested process to be run  
+     *
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
+     */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
-        // This method is the interface of this data processing class
-        // The Argument $action selects the method to be invoked and
-        // argument $callingElementSelector$ provides the entry which triggerd the action.
-        // $callingElementSelector ... array('Source'=>'...', 'EntryId'=>'...', ...)
-        // If the requested action does not exist the method returns FALSE and 
-        // TRUE, a value or an array otherwise.
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runDelayEntries($callingElement,$testRunOnly=0);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runDelayEntries($callingElement,$testRunOnly=1);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getDelayEntriesWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getDelayEntriesSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getDelayEntriesInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runDelayEntries($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runDelayEntries($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getDelayEntriesWidget($callingElement),
+                'settings'=>$this->getDelayEntriesSettings($callingElement),
+                'info'=>$this->getDelayEntriesInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getDelayEntriesWidget($callingElement){

@@ -33,55 +33,28 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     public function getEntryTable():string{return $this->entryTable;}
-    
-    /**
+ 
+   /**
      * This method is the interface of this data processing class
      *
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
      *
-     * @return bool TRUE the requested action exists or FALSE if not
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runMatchEntries($callingElement,$testRunOnly=FALSE);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runMatchEntries($callingElement,$testRunOnly=TRUE);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getMatchEntriesWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getMatchEntriesSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getMatchEntriesInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runMatchEntries($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runMatchEntries($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getMatchEntriesWidget($callingElement),
+                'settings'=>$this->getMatchEntriesSettings($callingElement),
+                'info'=>$this->getMatchEntriesInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getMatchEntriesWidget($callingElement){

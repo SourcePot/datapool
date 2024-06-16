@@ -75,55 +75,27 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
 
-    /**
+   /**
      * This method is the interface of this data processing class
      *
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
      *
-     * @return bool TRUE the requested action exists or FALSE if not
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info')
-    {
+    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                return $this->runPdfEntries($callingElement,$testRunOnly=FALSE);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runPdfEntries($callingElement,$testRunOnly=TRUE);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getPdfEntriesWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getPdfEntriesSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getPdfEntriesInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runPdfEntries($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runPdfEntries($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getPdfEntriesWidget($callingElement),
+                'settings'=>$this->getPdfEntriesSettings($callingElement),
+                'info'=>$this->getPdfEntriesInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getPdfEntriesWidget(array $callingElement):string
