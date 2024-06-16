@@ -294,12 +294,13 @@ class HTMLbuilder{
         $sampleValue='';
         foreach($keys as $key=>$value){
             if (!empty($arr['standardColumsOnly']) && !isset($stdKeys[$key])){continue;}
-            if ($key==$arr['value'] && !empty($arr['showSample'])){$sampleValue=(is_array($value))?'':$value;}
+            if ($key==$arr['value'] && !empty($arr['showSample'])){$sampleValue=(is_array($value))?'':strval($value);}
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
         }
         $arr['options']+=$appendOptions;
         $html=$this->select($arr);
         if (!empty($sampleValue)){
+            if (strlen($sampleValue)>40){$sampleValue=substr($sampleValue,0,37).'...';}
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','class'=>'sample','element-content'=>$sampleValue));
         }
         return $html;
