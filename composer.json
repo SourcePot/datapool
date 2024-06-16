@@ -21,6 +21,7 @@
         "sourcepot/sms":">=v2.0.0",
         "sourcepot/piview":">=v2.0.0",
         "sourcepot/fhginvoices":">=0.1.2",
+        "sourcepot/statistic":">=0.1.0",
         "sourcepot/bankholidays":">=v1.0.0"
     },
     "autoload":{
