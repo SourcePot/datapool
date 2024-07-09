@@ -894,10 +894,12 @@ final class MiscTools{
                 if (isset($codepfadComps[0])){$arr['FhI']=$codepfadComps[0];}
                 if (isset($codepfadComps[1])){$arr['FhI Teil']=$codepfadComps[1];}
                 if (isset($codepfadComps[2])){$arr['Codepfad 3']=$codepfadComps[2];}
+                $arr['Codepfad all']=implode('|',$codepfadComps);
             } else {
                 if (isset($codepfadComps[0])){$arr[$codePfadIndex]['FhI']=$codepfadComps[0];}
                 if (isset($codepfadComps[1])){$arr[$codePfadIndex]['FhI Teil']=$codepfadComps[1];}
                 if (isset($codepfadComps[2])){$arr[$codePfadIndex]['Codepfad 3']=$codepfadComps[2];}
+                $arr[$codePfadIndex]['Codepfad all']=implode('|',$codepfadComps);
             }
         }
         return $arr;

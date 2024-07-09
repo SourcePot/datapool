@@ -146,6 +146,9 @@ class CSVtools{
             if (!empty($csvSetting['noEnclosureOutput'])){$csvSetting['enclosure']='';}
             $prodessedEntries=0;
             foreach($_SESSION['csvVarSpace'] as $EntryId=>$csvDefArr){
+                // reset csv var-space
+                unset($_SESSION['csvVarSpace'][$EntryId]);
+                //
                 $csvContent='';
                 $entry=$csvDefArr['entry'];
                 foreach($csvDefArr['rows'] as $rowIndex=>$valArr){
@@ -160,18 +163,20 @@ class CSVtools{
                 // save csv content
                 $statistics['csv entries']++;
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+                if (empty($targetFile)){
+                    $this->oc['logger']->log('notice','CSV-entry creation named "{Name}" containing {rowCount} rows failed.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows']))); 
+                    break;
+                }
                 file_put_contents($targetFile,trim($csvContent));
                 if (empty($entry['Params']['File']['Name'])){$entry['Params']['File']['Name']=str_replace('.csv','',$entry['Name']).'.csv';}
                 $entry['Params']['File']['Size']=filesize($targetFile);
                 $entry['Params']['File']['Extension']='csv';
                 $entry['Params']['File']['MIME-Type']='text/csv';
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
                 $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
                 $entry['Content']=$statistics;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,FALSE,TRUE,$targetFile);
-                // reset csv var-space
-                unset($_SESSION['csvVarSpace'][$EntryId]);
-                $this->oc['logger']->log('notice','CSV-entry created named "{Name}" containing {rowCount} rows.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows'])));    
+                $this->oc['logger']->log('info','CSV-entry created named "{Name}" containing {rowCount} rows.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows'])));    
             }
             return $statistics;
         } else if (isset($entry['Content'])){

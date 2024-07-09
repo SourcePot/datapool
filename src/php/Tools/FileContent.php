@@ -53,7 +53,7 @@ final class FileContent{
 
     private function addUnycom(array $entry,string $text):array
     {
-        preg_match('/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{1,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})([0-9]{0,2})/',$text,$matches);
+        preg_match('/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{1,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})(\s{0,1}[0-9]{0,2})/',$text,$matches);
         if (isset($matches[0])){
             $unycom=$matches[0];
             $needlePos=stripos($text,$unycom);
@@ -77,7 +77,7 @@ final class FileContent{
                 $description=mb_strtolower($parts[$index]);
                 if (empty($entry['Costs'][$key])){
                     $descriptionArr=explode("\n",$description);
-                    $description=array_pop($descriptionArr);
+                    $description=strval(array_pop($descriptionArr));
                     if (strlen($description)<30){$description=strval(array_pop($descriptionArr)).' '.$description;}
                 }
                 $description=preg_replace('/\s+/u',' ',trim($description));
@@ -89,6 +89,7 @@ final class FileContent{
             }
             $netto=0;
             foreach($entry['Costs'][$key] as $description=>$costs){
+                $description=strval($description);
                 if (mb_stripos($description,'vat')!==FALSE){
                     $netto-=$costs;
                 } else if (mb_stripos($description,'brutto')!==FALSE){

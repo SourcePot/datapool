@@ -265,28 +265,24 @@ class HTMLbuilder{
     {
         if (empty($arr['Source'])){return '';}
         $arr['value']=(isset($arr['value']))?$arr['value']:'';
-        $keys=array();
-        $stdKeys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
+        $stdKeys=$keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>''));
-        $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STD');
+        $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STANDARD');
         if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
             // get options from cache
             $keys=$_SESSION[__CLASS__][__FUNCTION__][$requestId];
         } else {
             // get available keys
             $foundEntries=FALSE;
-            $keyTestArr=array(array('EntryId',TRUE),array('EntryId',FALSE),array('Date',TRUE),array('Date',TRUE),array('Group',TRUE),array('Group',FALSE),array('Folder',TRUE),array('Folder',TRUE),array('Name',TRUE),array('Name',FALSE));
-            foreach($keyTestArr as $keyTest){
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read',$keyTest[0],$keyTest[1],2) as $tmpEntry){
+            $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE,'Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE,$isDebugging=FALSE);
+            for($i=0;$i<2;$i++){
+                $offset=($rowCount>1)?mt_rand(0,$rowCount-1):0;
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read',FALSE,TRUE,1,$offset) as $tmpEntry){
                     $foundEntries=TRUE;
                     $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
                 }                
             }
-            if ($foundEntries){
-                $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
-            } else {
-                $keys=$stdKeys;
-            }
+            $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
         }
         $arr['keep-element-content']=TRUE;
         $arr['options']=(empty($arr['addSourceValueColumn']))?array():array('useValue'=>'&#9998;');

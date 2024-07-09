@@ -18,7 +18,7 @@ class Database{
     private $toReplace=array();
     
     private $dbObj;
-    private $dbName=FALSE;
+    private $dbName='';
     
     private $entryTable='settings';
     private $entryTemplate=array();
@@ -950,7 +950,6 @@ class Database{
     */
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
     {
-        $userId=empty($_SESSION['currentUser']['EntryId'])?'ANONYM':$_SESSION['currentUser']['EntryId'];
         // test for required keys and set selector
         if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Mandatory sourceEntry-key(s) missing, either Source or EntryId',0,E_ERROR,__FILE__,__LINE__);    
@@ -986,7 +985,7 @@ class Database{
                 // create target entry
                 if ($fileRenameSuccess){
                     $targetEntry=$this->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
-                    $targetEntry=$this->addLog2entry($targetEntry,'Processing log',array('success'=>'Moved from EntryId='.$sourceEntry['EntryId'].' to '.$targetEntry['EntryId']),FALSE);
+                    $targetEntry=$this->addLog2entry($targetEntry,'Processing log',array('success'=>(($keepSource)?'Copied':'Moved').' file from EntryId='.$sourceEntry['EntryId'].' to '.$targetEntry['EntryId']),FALSE);
                     if (!$isTestRun){
                         if (!$keepSource){
                             $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
@@ -995,7 +994,7 @@ class Database{
                     }            
                 } else {
                     // copying or renaming of attached file failed
-                    $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to rename attached file, kept enrtry'),FALSE);
+                    $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to '.(($keepSource)?'copy':'move').' attached file, kept enrtry'),FALSE);
                     if ($isTestRun){
                         $targetEntry=$sourceEntry;
                     } else {

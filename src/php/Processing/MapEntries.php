@@ -293,7 +293,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
             }
         } else {
-            if (isset($sourceEntry['Params']['File'])){unset($sourceEntry['Params']['File']);}
             $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun,$params['Content']['Keep source entries']);
         }

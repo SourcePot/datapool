@@ -130,12 +130,13 @@ class PdfTools{
     
     private function textCleanup(string $text):string
     {
+        $encodings=['UTF-8','ISO-8859-1','windows-1252'];
+        //$encodings=['ISO-8859-1','windows-1252','UTF-8'];
+        $encoding=mb_detect_encoding($text,$encodings);
+        $text=mb_convert_encoding($text,'UTF-8',$encoding);
         $text=preg_replace('/[\t ]+/',' ',$text);
         $text=preg_replace('/(\n )+|(\r )+/',"\n",$text);
         $text=preg_replace('/[\n\r]+/',"\n",$text);   
-        $encodings=['ISO-8859-1','windows-1252','UTF-8'];
-        $encoding=mb_detect_encoding($text,$encodings);
-        $text=mb_convert_encoding($text,'UTF-8',$encoding);
         return $text;
     }
     

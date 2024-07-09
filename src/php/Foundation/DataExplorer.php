@@ -455,6 +455,26 @@ class DataExplorer{
     }
     
     /**
+    * Provides temporary entries selector
+    *
+    * @param string    $callingClass       The calling method's class-name
+    * @param string    $callingFunction    The calling method's name
+    * @param string    $entryName    The entry name or FALSE to return the selector for all entries including the info if there is an entry
+    * @return array    Selector
+    */
+    public function dataTmpSelector(string $callingClass,string $callingFunction,string|bool $entryName=FALSE):array
+    {
+        $entryFolder=md5($callingClass.'::'.$callingFunction);
+        $selector=array('Source'=>$this->entryTable,'Group'=>'Tmp','Folder'=>$entryFolder,'Name'=>$entryName);
+        if ($entryName===FALSE){
+            $selector['hasEntry']=!empty($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE));
+        } else {
+            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,array('Group','Folder','Name'),0);
+        }
+        return $selector;
+    }
+ 
+    /**
     * Canvas elements from calling class.
     *
     * @param string    $callingClass       The calling method's class-name
