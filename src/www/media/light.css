@@ -137,14 +137,12 @@ p.filter{
 }
 p.sample{
     float:left;
-    clear:none;
+    clear:both;
     font-style:italic;
-    font-size:1rem;
-    padding:0.2rem 0.4rem;
+    font-size:0.9rem;
+    padding: 0;
     margin: 0 0.2rem;
-    color:#444;
-    background-color:#fff;
-    border:1px dotted #084;
+    color:#ca843d;
 }
 .td-content-wrapper{
     white-space:break-spaces;
@@ -303,7 +301,11 @@ p.icon{
     float:none;
     margin:10px auto;
 }
-
+meter{
+    float:left;
+    clear:both;
+    margin:3px 0.25rem 0 0;
+}
 /** IMAGE VIEWER **/
 #overlay{
     position:fixed;
@@ -501,6 +503,7 @@ summary{
 }
 summary.forum,summary.toolbox{
     margin:0;
+    height: 2rem;
 }
 summary.toolbox{
     color:#fff;

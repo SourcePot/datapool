@@ -45,6 +45,7 @@ class Element{
                        'option'=>array('value'=>TRUE,'selected'=>FALSE),
                        'output'=>array('name'=>TRUE),
                        'progress'=>array('name'=>TRUE),
+                       'meter'=>array('min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>TRUE),
                        'select'=>array('name'=>TRUE),
                        'textarea'=>array('name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE),
                        
