@@ -199,6 +199,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 } else {
                     $sourceEntry['Linked file']='';
                 }
+                
+            }
+            if ((!$testRun && !$params['Content']['Keep source entries']) || $base['zipRequested']){
                 $deleteEntries['EntryIds'][]="'".$sourceEntry['EntryId']."'";
             }
             // map entry
@@ -246,8 +249,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
                 $result['Mapping statistics']['Output format']['value']='Zip + csv';
             }
-            $this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
         }
+        $this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));

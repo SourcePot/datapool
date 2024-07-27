@@ -198,7 +198,12 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             $canvasElement=array('Source'=>'dataexplorer','EntryId'=>$canvasElement2process['Content']['Process']);
             $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
             $processor=$canvasElement['Content']['Widgets']['Processor'];
-            $result=$this->oc[$processor]->dataProcessor($canvasElement,$isTestRun?'test':'run');
+            if (isset($this->oc[$processor])){
+                $result=$this->oc[$processor]->dataProcessor($canvasElement,$isTestRun?'test':'run');
+            } else {
+                $this->oc['logger']->log('notice','Method "{method}", canvas element "{canvasElement}" has no valid processor',array('method'=>__FUNCTION__,'canvasElement'=>$canvasElement['Content']['Style']['Text']));
+                $result=array('Statistics'=>array());
+            }
             $result['Statistics'][$isTestRun?'Tested':'Processed']=array('Value'=>'Step '.(intval($base['Step count'])-count($base['canvasprocessingrules'])).': '.$canvasElement['Content']['Style']['Text']);
             $result['Statistics']['Timestamp']=array('Value'=>time());
             $result['Statistics']['Date']=array('Value'=>date('Y-m-d H:i:s'));

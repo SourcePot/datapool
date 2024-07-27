@@ -186,7 +186,7 @@ class Container{
         if (!is_file($fileName)){
             $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
             $fileContent="[//]: # (This a Markdown document!)\n\n";
-            if ($entry['Name']==='Top paragraph'){$fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="width:20vw;margin-left:40vw;"/></div>';}
+            if ($entry['Name']==='Top paragraph'){$fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';}
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }

@@ -758,7 +758,7 @@ class Database{
     * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
     * @return array|boolean The method returns the inserted entry or false
     */
-    private function insertEntry(array $entry):array
+    public function insertEntry(array $entry):array
     {
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
         $entry=$this->addType2entry($entry);

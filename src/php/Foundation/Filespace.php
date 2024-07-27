@@ -902,7 +902,7 @@ class Filespace{
             $statistics['zip errors']++;
         }
         $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'orgFileName'=>$orgFileName);
-        $this->oc['logger']->log('notice','Import of "{orgFileName}" resulted in "{statistics}"',$context);    
+        $this->oc['logger']->log('info','Import of "{orgFileName}" resulted in "{statistics}"',$context);    
         return $statistics;
     }
     

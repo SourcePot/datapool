@@ -123,7 +123,7 @@ class PdfTools{
                 $arr['error'][]=$e->getMessage();
             }
         } else {
-            $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);    
+            $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);
         }
         return $arr;
     }
