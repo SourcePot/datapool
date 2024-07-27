@@ -138,7 +138,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     private function canvasProcessingRules($callingElement){
         $contentStructure=array('Process'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                );
-        if (!isset($callingElement['Content']['Selector']['Source'])){return $html;}
+        if (!isset($callingElement['Content']['Selector']['Source'])){return '';}
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
