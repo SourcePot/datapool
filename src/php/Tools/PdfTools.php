@@ -11,9 +11,10 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class PdfTools{
-    
+
+    private $oc;
+
     private $pageSettings=array();
-    private $patieOK=FALSE;
     private $S='';
     
     private $formats=array('a4'=>array('width'=>210,'height'=>297),
@@ -57,7 +58,7 @@ class PdfTools{
         return $parser;
     }
    
-    public function text2arrSpatie($file=FALSE,array $arr=array()):array
+    public function text2arrSpatie($file='',array $arr=array()):array
     {
         $arr['error']=TRUE;
         // get parser setting, add them if missing
@@ -94,7 +95,7 @@ class PdfTools{
         return $arr;
     }
 
-    public function text2arrSmalot($file=FALSE,array $arr=array()):array
+    public function text2arrSmalot($file='',array $arr=array()):array
     {
         $arr['error']=TRUE;
         // get parser setting, add them if missing

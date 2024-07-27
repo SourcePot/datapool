@@ -58,8 +58,13 @@ class GeoTools{
                            'query'=>$entry['Params']['Geo']
                            );
             $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
-            $response=$client->request('GET','/reverse',$options);
-            $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response->getBody()->getContents());
+            try{
+                $response=$client->request('GET','/reverse',$options);
+                $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response->getBody()->getContents());
+            } catch (\Exception $e){
+                $response=array('method'=>__FUNCTION__,'exception'=>$e->getMessage());
+                $this->oc['logger']->log('notice','Method "{method}" failed with {exception}',$response);
+            }
             $debugArr['response']=$response;
             if (isset($response['addressparts'])){
                 $entry['Params'][$targetKey]=$this->normalizeAddress($response['addressparts']);

@@ -564,7 +564,7 @@ final class MiscTools{
     /**
     * @return arr This method converts a flat array to the corresponding array.
     */
-    public function flat2arr($arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
+    public function flat2arr($arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR)
     {
         if (!is_array($arr)){return $arr;}
         $result=array();

@@ -201,7 +201,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             if (isset($this->oc[$processor])){
                 $result=$this->oc[$processor]->dataProcessor($canvasElement,$isTestRun?'test':'run');
             } else {
-                $this->oc['logger']->log('notice','Method "{method}", canvas element "{canvasElement}" has no valid processor',array('method'=>__FUNCTION__,'canvasElement'=>$canvasElement['Content']['Style']['Text']));
+                $this->oc['logger']->log('notice','Method "{method}", canvas element "{canvasElement}" has no processor. Check if you need this processinf step.',array('method'=>__FUNCTION__,'canvasElement'=>$canvasElement['Content']['Style']['Text']));
                 $result=array('Statistics'=>array());
             }
             $result['Statistics'][$isTestRun?'Tested':'Processed']=array('Value'=>'Step '.(intval($base['Step count'])-count($base['canvasprocessingrules'])).': '.$canvasElement['Content']['Style']['Text']);
