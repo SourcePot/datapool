@@ -1,8 +1,19 @@
 jQuery(document).ready(function(){
-	
+
+	function callbackDummy(data){
+        console.log(data);
+    }
+
 /** BASIC PAGE CONTENT STYLING **/
-	jQuery('article').fadeIn(300);
-	
+	if (jQuery('article.transparent').length){
+		jQuery('div.bg-media').hide();
+		jQuery('article').fadeIn(300,function(){
+			var posHeight={'pos':jQuery('article.transparent').position(),'height':jQuery('article.transparent').outerHeight()};
+			jQuery('div.bg-media').css({'height':(posHeight['pos']['top']+posHeight['height'])}).fadeIn(300);
+		});
+	} else {
+		jQuery('article').fadeIn(300);
+	}
 	jQuery('div.second-menu').css({'height':0,'overflow':'hidden'});
 	jQuery('a.first-menu').on('click',function(element){
         element.preventDefault();
@@ -31,10 +42,6 @@ jQuery(document).ready(function(){
 		let height=jQuery(this).parent('.cover-wrapper').height()+'px';
 		jQuery(this).animate({'top':height},500).delay(5000).animate({'top':0},200);
 	}
-
-    function callbackDummy(data){
-        console.log(data);
-    }
 
 /** STEP-BY-STEP  ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;

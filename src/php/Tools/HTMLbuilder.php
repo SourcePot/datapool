@@ -588,7 +588,7 @@ class HTMLbuilder{
                         'hideHeader'=>TRUE,
                         'hideKeys'=>TRUE,
                         'previewStyle'=>array('max-height'=>100,'max-width'=>200),
-                        'settings'=>array('hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>TRUE,'hideDelete'=>FALSE),
+                        'settings'=>array('hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>FALSE,'hideDelete'=>FALSE),
                         );
         $arr=array_replace_recursive($template,$arr);
         // create preview

@@ -20,8 +20,6 @@ class Backbone{
                             'metaRobots'=>'index',
                             'pageTimeZone'=>'Europe/Berlin',
                             'loginForm'=>0,
-                            'mainBackgroundImageFile'=>'',
-                            'loginBackgroundImageFile'=>'main-login.jpg',
                             'iconFile'=>'main.ico',
                             'logoFile'=>'logo.jpg',
                             'charset'=>'utf-8',
@@ -66,6 +64,7 @@ class Backbone{
     {
         $arr['toReplace']=array('{{head}}'=>'',
                                 '{{body}}'=>'',
+                                '{{bgMedia}}'=>'',
                                 '{{content}}'=>'Page content is missing...',
                                 '{{firstMenuBar}}'=>'',
                                 '{{firstMenuBarExt}}'=>'',
@@ -86,6 +85,7 @@ class Backbone{
         $arr['page html'].='</head>'.PHP_EOL;
         // page body
         $arr['page html'].='<body>'.PHP_EOL;
+        $arr['page html'].='{{bgMedia}}'.PHP_EOL;
         $arr['page html'].='<form name="'.md5($this->settings['pageTitle']).'" method="post" enctype="multipart/form-data">'.PHP_EOL;
         $arr['page html'].='{{body}}'.PHP_EOL;
         $arr['page html'].='</form>'.PHP_EOL;
@@ -116,29 +116,17 @@ class Backbone{
 
     public function addHtmlPageBody(array $arr):array
     {
-        $imageFile=(strcmp($_SESSION['page state']['app']['Category'],'Login')===0)?$this->settings['loginBackgroundImageFile']:$this->settings['mainBackgroundImageFile'];
-        if ($src=$this->mediaFile2href($imageFile)){
-            $mainStyle=array('background-size'=>'cover','background-image'=>'url('.$src.')');
-        } else {
-            $mainStyle=array();
-        }
-        $arr['toReplace']['{{background}}']='';
+        $arr['toReplace']['{{bgMedia}}']='{{bgMedia}}';
         $arr['toReplace']['{{body}}'].='{{firstMenuBar}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='{{secondMenuBar}}'.PHP_EOL;
         // main
-        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'main','style'=>$mainStyle)).PHP_EOL;
-        $arr['toReplace']['{{body}}'].='<div class="filler" id="top-filler"></div>'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='{{background}}'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='{{explorer}}'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='{{content}}'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='</main>'.PHP_EOL;
-        // en of page        
-        $arr['toReplace']['{{body}}'].='<div class="filler" id="bottom-filler"></div>'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='{{toolbox}}'.PHP_EOL;
+        $main='<div id="top-filler"></div>'.PHP_EOL.'{{explorer}}'.PHP_EOL.'{{content}}'.PHP_EOL;
+        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'main','element-content'=>$main,'keep-element-content'=>TRUE)).PHP_EOL;
+        // end of page        
+        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Logger']->getMyLogs().PHP_EOL;
         $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='<script>jQuery("article").hide();</script>'.PHP_EOL;
         $arr=$this->oc['SourcePot\Datapool\Foundation\Menu']->menu($arr);
-        $arr=$this->oc['SourcePot\Datapool\Foundation\Toolbox']->getToolbox($arr);
         return $arr;
     }
     

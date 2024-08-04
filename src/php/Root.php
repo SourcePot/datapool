@@ -64,7 +64,7 @@ final class Root{
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('toolbox'=>'SourcePot\Datapool\Foundation\Logger','selected'=>array());
+            $_SESSION['page state']=array('selected'=>array());
         }
         // set exception handler and initialize directories
         $this->initDirs();
@@ -212,6 +212,7 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
+            $arr['toReplace']['{{bgMedia}}']='';
             $arr=$this->oc[$_SESSION['page state']['app']['Class']]->run($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($pathInfo['basename']=='js.php'){

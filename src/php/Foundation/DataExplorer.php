@@ -272,6 +272,7 @@ class DataExplorer{
             $btn=$tag;
             $btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('position'=>'relative','padding'=>'0','margin'=>'0.1em','font-size'=>'18px'));
             $btn=array_replace_recursive($btn,$btnTemplate);
+            $btn['class']='canvas-cntr-btn';
             if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
             $matrix[$tag['type']]['Btn'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btn);
         }

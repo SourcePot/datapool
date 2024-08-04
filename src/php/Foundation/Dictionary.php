@@ -42,7 +42,6 @@ class Dictionary{
             }
         }
         $this->initDictionaryIfEmpty();
-        $this->registerToolbox();
     }
     
     public function getEntryTable()
@@ -53,6 +52,17 @@ class Dictionary{
     public function getEntryTemplate()
     {
         return $this->entryTemplate;
+    }
+
+    public function run(array|bool $arr=TRUE):array{
+        if ($arr===TRUE){
+            return array('Category'=>'Admin','Emoji'=>'&#482;','Label'=>'Dictionary','Read'=>'ADMIN_R','Class'=>__CLASS__);
+        } else {
+            // get page content
+            $html=$this->dictToolbox();
+            $arr['toReplace']['{{content}}']=$html;
+            return $arr;
+        }
     }
 
     public function getValidLngCode($lngCode):string
@@ -195,25 +205,14 @@ class Dictionary{
         $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode),'class'=>'toolbox');
         $matrix['Translation']['Translation']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>array('translation',$langCode),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
         $matrix['Translation']['Cmd']=array('tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'','class'=>'toolbox'));
-        return array('html'=>$html,'wrapperSettings'=>array('class'=>'toolbox'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>''));
+        return array('html'=>$html,'wrapperSettings'=>array());
     }
     
     public function dictToolbox(array $arr=array()):string
     {
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array('class'=>'toolbox'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array());
         return $html;
-    }
-    
-    public function registerToolbox():array
-    {
-        $toolbox=array('Name'=>'Dictionary',
-                       'Content'=>array('class'=>__CLASS__,'method'=>'dictToolbox','args'=>array(),'settings'=>array()),
-                       );
-        $toolbox=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($toolbox,'ALL_CONTENTADMIN_R','ADMIN_R');
-        $toolbox=$this->oc['SourcePot\Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
-        if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['EntryId'])){$_SESSION['page state']['toolbox']=$toolbox['EntryId'];}
-        return $toolbox;
     }
 
 }

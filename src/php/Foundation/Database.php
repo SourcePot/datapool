@@ -147,7 +147,7 @@ class Database{
             return $GLOBALS['dbInfo'];
         }
         if (isset($this->oc['logger'])){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" called with table="{table}" returned false, table missing.',$context);        
+            $this->oc['logger']->log('warning','Function "{class}::{function}" called with table="{table}" returned false, table missing.',$context);
         }
         return FALSE;
     }

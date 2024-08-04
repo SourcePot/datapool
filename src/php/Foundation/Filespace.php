@@ -96,7 +96,7 @@ class Filespace{
 
     public function resetStatistic():array
     {
-        $this->statistics=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0);
+        $this->statistics=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0,'uploaded file'=>0);
         return $this->statistics;
     }
     
@@ -105,6 +105,12 @@ class Filespace{
         return $this->statistics;
     }
     
+    public function uploadedFile():array
+    {
+        $this->statistics['uploaded file']++;
+        return $this->statistics;
+    }
+
     private function class2dir(string $class,bool $mkDirIfMissing=FALSE):string
     {
         $classComps=explode('\\',$class);
@@ -225,7 +231,7 @@ class Filespace{
         }
         return $entry;
     }
-    
+    /*
     private function insertEntry(array $entry):array
     {
         if (empty($entry['Class']) || empty($entry['EntryId'])){
@@ -245,7 +251,7 @@ class Filespace{
             return array();
         }
     }
-    
+    */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE):array
     {
         // This method updates and returns the entry from the setup-directory.
@@ -377,7 +383,7 @@ class Filespace{
         return $this->statistics;
     }
     
-    public function dirSize(array $dir):int
+    public function dirSize(string $dir):int
     {
         $size=0;
         if (is_dir($dir)){

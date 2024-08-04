@@ -51,8 +51,8 @@ div.ep-message{
 div.ep-header-wrapper{
     margin:0;
     width:100%;
-    background-color:#eee;
-    border-top:1px solid #444;
+    background-color:#aaaa;
+    border-top:1px solid #aaae;
 }
 details.ep-comment{
     clear:left;

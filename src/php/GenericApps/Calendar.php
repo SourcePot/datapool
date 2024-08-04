@@ -290,7 +290,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']=array('Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$_SESSION['currentUser']['EntryId']);
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Serial events definition';
-        $arr['style']=array('background-color'=>'#e2dbff');
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $arr;
     }
@@ -477,7 +476,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             
             if ($event['State']=='Serial event'){
                 $btnArr['key'][1]=$event['SerailEntryId'];
-                $btnArr['style']['background-color']='#e2dbff';
             }
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
         }

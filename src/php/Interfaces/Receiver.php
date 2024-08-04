@@ -16,11 +16,11 @@ interface Receiver{
     * Initializes the instance that implments the Receiver interface.
     * This interface is used by classes providing functionality to Receiver entries through emails, webpages,...
     */
-    public function receive(string $callingClass):array;
+    public function receive(string $id):array;
     
     public function receiverPluginHtml(array $arr):string;
     
-    public function receiverSelector(string $callingClass):array;
+    public function receiverSelector(string $id):array;
     
 }
 ?>

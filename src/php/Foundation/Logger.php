@@ -42,7 +42,6 @@ class Logger
     {
         $this->oc=$oc;
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->registerToolbox();
     }
     
     public function getEntryTable():string
@@ -167,20 +166,13 @@ class Logger
         $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$_SESSION['currentUser']['EntryId']);
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
         $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#000'));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
+        $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
+        // add to app
+        $appArr=array('class'=>'toolbox','icon'=>'Logger');
+        $appArr['html']=$contentHtml;
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         return $html;
     } 
     
-    public function registerToolbox():array
-    {
-        $toolbox=array('Name'=>'Logger',
-                       'Content'=>array('class'=>__CLASS__,'method'=>'getMyLogs','args'=>array('maxCount'=>10),'settings'=>array())
-                       );
-        $toolbox=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($toolbox,'ALL_R','ADMIN_R');
-        $toolbox=$this->oc['SourcePot\Datapool\Foundation\Toolbox']->registerToolbox(__CLASS__,$toolbox);
-        if (empty($_SESSION['page state']['toolbox']) && !empty($toolbox['EntryId'])){$_SESSION['page state']['toolbox']=$toolbox['EntryId'];}
-        return $toolbox;
-    }
-
 }
 ?>

@@ -260,7 +260,8 @@ class MediaTools{
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
             $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId);
             $contentArr['key']=array('content',$arr['selector']['Source'],$arr['selector']['EntryId']);
-            $contentArr['style']=array('text-align'=>'left','width'=>'98%','height'=>'70vh','color'=>'#ccc','background-color'=>'#020044');
+            $contentArr['style']=array('text-align'=>'left','width'=>'98%','height'=>'70vh');
+            $contentArr['class']='code';
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
             $btnArr['cmd']='show';
         } else {

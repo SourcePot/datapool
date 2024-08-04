@@ -129,7 +129,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             if (!isset($row['type'])){continue;}
             $matrix[$row['class']]=$row;
         }
-        $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE,'class'=>'toolbox'));
+        $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE));
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
     }
     
@@ -283,8 +283,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     }
     
     public function getPageSettingsHtml(){
-        $homePageContentSource='https://www.youtube.com/embed/a3ohg2TGNo8?si=nn2-JvAM1wVuMkcc&playlist=a3ohg2TGNo8&controls=0&autoplay=1&mute=1&controls=0&loop=1';
-        $homePageContentSourceInfo="Enter the image or video source here.\nIt can be an url or file name (any file needs to be located in the assets dir).\nSample: ".$homePageContentSource;
         $homePageContentOptions=array(''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video');
         $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
         $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),
@@ -296,8 +294,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'excontainer'=>TRUE),
-                                'homePageContentSourceInfo'=>array('method'=>'element','tag'=>'p','element-content'=>$homePageContentSourceInfo,'class'=>'std'),
-                                'homePageContentSource'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>$homePageContentSource,'style'=>array('min-width'=>'50vw')),
                                 'Spatie path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>array('min-width'=>'50vw')),
                                 );
         // get selector

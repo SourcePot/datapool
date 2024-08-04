@@ -20,7 +20,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                                  );
 
     public $receiverDef=array('Type'=>array('@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'),
-                              'Content'=>array('callingClass'=>array('@tag'=>'p','@default'=>'','@excontainer'=>TRUE),
+                              'Content'=>array('EntryId'=>array('@tag'=>'p','@default'=>'','@excontainer'=>TRUE),
                                                'Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
                                                'User'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
                                                'Password'=>array('@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE),
@@ -68,8 +68,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         }
         if (!empty($vars['Inboxes'])){
             $inbox=array_shift($vars['Inboxes']);
-            if (isset($inbox['Content']['callingClass'])){
-                $vars['Result']=$this->todaysEmails($inbox['Content']['callingClass']);
+            if (isset($inbox['Content']['EntryId'])){
+                $vars['Result']=$this->todaysEmails($inbox['Content']['EntryId']);
             }                
             $vars['Inboxes to process']=count($vars['Inboxes']);
         }
@@ -79,46 +79,46 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     /******************************************************************************************************************************************
     * DATASOURCE: Email receiver
     *
-    * 'callingClass' ... arr-property selects the inbox
+    * 'EntryId' ... arr-property selects the inbox
     * 
     */
     
-    public function receive(string $callingClass):array
+    public function receive(string $id):array
     {
-        $result=$this->todaysEmails($callingClass);
+        $result=$this->todaysEmails($id);
         return $result;
     }
     
     public function receiverPluginHtml(array $arr):string
     {
-        $setting=$this->getReceiverSetting($arr['callingClass']);
+        $setting=$this->getReceiverSetting($arr['selector']['EntryId']);
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
-        $meta=$this->getReceiverMeta($arr['callingClass']);
+        $meta=$this->getReceiverMeta($arr['selector']['EntryId']);
         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Meta'));   
         return $html;
     }
     
-    public function receiverSelector(string $callingClass):array
+    public function receiverSelector(string $id):array
     {
-        $Group=preg_replace('/\W/','_','INBOX-'.$callingClass);
+        $Group='INBOX|'.preg_replace('/\W/','_',$id);
         return array('Source'=>$this->entryTable,'Group'=>$Group);
     }    
     
-    private function getReceiverSetting($callingClass){
-        $EntryId=preg_replace('/\W/','_','INBOX-'.$callingClass);
-        $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$EntryId);
-        $setting['Content']=array('callingClass'=>$callingClass,
+    private function getReceiverSetting($id){
+        $id=preg_replace('/\W/','_','INBOX-'.$id);
+        $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$id);
+        $setting['Content']=array('EntryId'=>$id,
                                   'Mailbox'=>'{}',
                                   'User'=>'',
                                   'Password'=>'');
         return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
     }
     
-    private function getReceiverMeta($callingClass){
+    private function getReceiverMeta($id){
         //$mbox=imap_open("{mail.wallenhauer.com}INBOX",'c@wallenhauer.com','Hu8wl3PyT62tVV1');
         $meta=array();
-        $setting=$this->getReceiverSetting($callingClass);
+        $setting=$this->getReceiverSetting($id);
         $mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
         imap_errors();
         imap_alerts();
@@ -147,9 +147,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         return $meta;
     }
 
-    private function todaysEmails($callingClass){
-        $entrySelector=$this->receiverSelector($callingClass);
-        $setting=$this->getReceiverSetting($callingClass);
+    private function todaysEmails($id){
+        $entrySelector=$this->receiverSelector($id);
+        $setting=$this->getReceiverSetting($id);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
             $result=array('Error'=>'Setting "Mailbox" and/or "User" is empty.');
@@ -178,6 +178,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                     $entry['Content']['RTF']='';
                     $contentHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Content'],TRUE);
                     $entry['Name'].=' ['.$contentHash.']';
+                    $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.time(),'P4D');
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
                     if (empty($entry['attachments'])){
                         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
@@ -438,7 +439,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                             );
         $success=FALSE;
         if (empty($mail['selector'])){
-            $logArr=array('msg'=>'No email sent. Could not find the selected entry or no read access for the selected entry','priority'=>10,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
             $this->oc['logger']->log('notice','No email sent. Could not find the selected entry or no read access for the selected entry',array());    
         } else {
             // copy email settings from mail[selector][Content] to mail and unset these settings

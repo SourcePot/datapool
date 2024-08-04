@@ -57,6 +57,7 @@ private $entryTable;
                 if (empty($pageSettings['homePageContent'])){
                     // do nothing
                 } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
+                    // show image shuffle
                     $width=320;
                     $height=320;
                     $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width,'margin'=>'10px auto'));
@@ -64,17 +65,16 @@ private $entryTable;
                     $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            
                 } else if (strcmp($pageSettings['homePageContent'],'video')===0){
-                    if (empty($pageSettings['homePageContentSource'])){
-                        $this->oc['logger']->log('error','The pageSetting "homePageContent" == "video" but "homePageContentSource" is empty',array());    
+                    // show intro video
+                    $videoSrc=$GLOBALS['relDirs']['assets'].'/home.mp4';
+                    $mime=@mime_content_type($videoSrc);
+                    if ($mime){
+                        $mediaHtml='<video width="100%" loop="true" autoplay="true" style="z-index:1;" controls muted><source src="'.$videoSrc.'" type="'.$mime.'" /></video>';
+                        $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'bg-media','element-content'=>$mediaHtml,'keep-element-content'=>TRUE));
+                        $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','class'=>'transparent','element-content'=>' ','keep-element-content'=>TRUE));
                     } else {
-                        $homePageContentSource=$pageSettings['homePageContentSource'];
-                        if (stripos($homePageContentSource,'://')===FALSE){
-                            $homePageContentSource='./assets/'.$homePageContentSource;
-                        }
-                        $videoHtml='<iframe class="video-container" src="'.$homePageContentSource.'" title="Intro" frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>';
-                        $arr['toReplace']['{{background}}']='<div class="video-container">'.$videoHtml.'</div>';
-                        // spacer for background video
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>' ','keep-element-content'=>TRUE,'style'=>array('height'=>'200px','overflow'=>'unset','background'=>'none')));
+                        $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',array('file'=>$videoSrc));
                     }
                 }
                 // bottom web page section

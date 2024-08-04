@@ -28,6 +28,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
         } else {
+            $bgStyle=array('background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')');
+            $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'bg-media','style'=>$bgStyle,'element-content'=>' ')).PHP_EOL;
             $arr['toReplace']['{{content}}']=$this->getLoginForm();
             return $arr;
         }
@@ -69,7 +71,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
                 $this->loginFailed($user,$arr['Email']);
             } else if (strcmp($loginEntry['Name'],$arr['Passphrase'])===0){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
-                $this->oc['logger']->log('info','One-time login for {email} at {timestamp} successful.',array('email'=>$email,'timestamp'=>time()));    
+                $this->oc['logger']->log('info','One-time login for {email} at {timestamp} successful.',array('email'=>$arr['Email'],'timestamp'=>time()));    
                 $this->loginSuccess($user,$arr['Email']);
             } else {
                 $this->loginFailed($user,$arr['Email']);
@@ -123,7 +125,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         if (empty($err)){
-            $this->oc['logger']->log('info','You have been registered as new user ({email}).',array('email'=>$email));    
+            $this->oc['logger']->log('info','You have been registered as new user ({email}).',array('email'=>$arr['Email']));    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
             exit;    
         } else {
@@ -193,7 +195,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loginEntry,TRUE);
         // send email
         $loginEntry['Content']['To']=$arr['Email'];
-        $loginEntry['Content']['From']=$this->pageSettings['emailWebmaster'];
+        $loginEntry['Content']['From']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');;
         $loginEntry['Content']['Subject']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Your one-time password for {{pageTitle}}",$placeholder);
         $mail=array('selector'=>$loginEntry);
         if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}

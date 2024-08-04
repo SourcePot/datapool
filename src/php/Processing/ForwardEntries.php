@@ -142,7 +142,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function forwardingRules($callingElement){
-        $triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
         $contentStructure=array('...'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'&','options'=>array('&&'=>'AND','||'=>'OR'),'keep-element-content'=>TRUE),
                                 'Value source'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE),
                                 '| '=>array('method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE),
