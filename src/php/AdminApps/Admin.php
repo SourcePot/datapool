@@ -283,7 +283,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     }
     
     public function getPageSettingsHtml(){
-        $homePageContentOptions=array(''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video');
+        $homePageContentOptions=array(''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)');
         $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
         $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),
                                 'metaViewport'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>array('min-width'=>'50vw')),
