@@ -63,7 +63,7 @@ class MediaTools{
             }
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'xml')!==FALSE){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE){
             $arr=$this->getHtml($arr);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
             if (strcmp(isset($arr['callingFunction'])?$arr['callingFunction']:'','entryList')===0){

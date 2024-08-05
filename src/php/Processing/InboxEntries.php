@@ -255,9 +255,13 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
             $targets[$targetName]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet);
-            $result['Forwarded'][$sourceEntry['Name']]=$targets;
+            if (count($result['Forwarded'])<10){
+                $result['Forwarded'][$sourceEntry['Name']]=$targets;
+            } else {
+                $key=key($targets);
+                $result['Forwarded']['...'][$key]='...';
+            }
             if ($conditionMet){
-
                 $processingLogText='Conditions met, forwarded entry to "'.$targetName.'"';
                 if ($this->itemAlreadyProcessed($sourceEntry,$processingLogText)){
                     $result['Processing statistics']['Itmes already processed and skipped']['value']++;
@@ -266,8 +270,6 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE,TRUE);
                     $result['Processing statistics']['Itmes forwarded']['value']++;
                 }
-
-                
             }
         }
         return $result;

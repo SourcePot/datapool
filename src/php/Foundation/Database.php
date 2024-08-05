@@ -255,7 +255,7 @@ class Database{
 
     public function addEntryDefaults(array $entry,bool $isDebugging=FALSE):array
     {
-        $entryTemplate=$GLOBALS['dbInfo'][$entry['Source']];
+        $entryTemplate=(isset($GLOBALS['dbInfo'][$entry['Source']]))?$GLOBALS['dbInfo'][$entry['Source']]:$this->rootEntryTemplate;
         $toReplace=$this->getReplacmentArr($entry,$entryTemplate);
         $debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry,'toReplace'=>$toReplace);
         foreach($entryTemplate as $column=>$defArr){
