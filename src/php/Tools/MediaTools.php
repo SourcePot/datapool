@@ -410,7 +410,8 @@ class MediaTools{
                     if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
                     $orgImage=imagecreatefromstring($string);    
                 }
-            } catch(Exception $e) {
+            } catch(\Exception $e) {
+                $this->oc['logger']->log('warning','Function "{class}::{function}" caught exception {message}.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()));
                 return $arr;
             }
             //-- scale image
