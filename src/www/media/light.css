@@ -39,7 +39,7 @@ main{
     width: 100%;
     overflow:hidden;
     background: none;
-    padding-bottom:var(--top-nav-height);
+    padding-bottom:130px;
 }
 span{
     font-family:inherit;
