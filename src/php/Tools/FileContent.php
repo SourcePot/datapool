@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 final class FileContent{
+
+    private $oc;
     
     private $costs=array('EUR'=>'/(EUR\s*[\-0-9,.]+\d{2})/u','USD'=>'/(USD\s*[\-0-9,.]+\d{2})/u',);
     private $costAlias=array('endbetrag'=>'brutto','endsumm'=>'brutto','total'=>'brutto','mwst'=>'vat','msatzsteu'=>'vat','amtlich'=>'amt','amtsgeb'=>'amt','zwischensumme'=>FALSE);

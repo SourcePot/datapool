@@ -35,7 +35,7 @@ class MediaTools{
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){return $arr;}
         $arr=$this->addTmpFile($arr);
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
-            $arr['html']='Undefined content...';
+            $arr['html']='';
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'audio')===0){
             $arr=$this->getAudio($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'video')===0){
@@ -87,7 +87,7 @@ class MediaTools{
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
         } else {
             // attached file with undefined mime-type
-            $arr['html'].='&#9782;';
+            $arr['html'].='Plugin missing: '.$arr['selector']['Params']['TmpFile']['MIME-Type'];
         }
         return $arr;
     }

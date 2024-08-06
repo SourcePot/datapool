@@ -69,7 +69,7 @@ private $entryTable;
                     $videoSrc=$GLOBALS['relDirs']['assets'].'/home.mp4';
                     $mime=@mime_content_type($videoSrc);
                     if ($mime){
-                        $mediaHtml='<video width="100%" loop="true" autoplay="true" style="z-index:1;" controls muted><source src="'.$videoSrc.'" type="'.$mime.'" /></video>';
+                        $mediaHtml='<video width="100%" loop="true" autoplay="true" style="z-index:1;min-width:720px;" controls muted><source src="'.$videoSrc.'" type="'.$mime.'" /></video>';
                         $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'bg-media','element-content'=>$mediaHtml,'keep-element-content'=>TRUE));
                         $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','class'=>'transparent','element-content'=>' ','keep-element-content'=>TRUE));
