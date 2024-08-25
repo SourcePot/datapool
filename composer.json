@@ -17,11 +17,11 @@
         "spatie/pdf-to-text":">=1.52.0",
         "hfig/mapi":">=v1.3.0",
         "sourcepot/ops":">=v1.0.0",
-        "sourcepot/mediaplayer":">=v2.0.0",
+        "sourcepot/mediaplayer":">=v4.1.0",
         "sourcepot/sms":">=v2.0.0",
-        "sourcepot/piview":">=v2.0.0",
-        "sourcepot/fhginvoices":">=0.1.2",
-        "sourcepot/statistic":">=0.1.0",
+        "sourcepot/piview":">=v2.1.0",
+        "sourcepot/fhginvoices":">=v2.0.0",
+        "sourcepot/statistic":">=1.0.0",
         "sourcepot/bankholidays":">=v1.0.0"
     },
     "autoload":{
