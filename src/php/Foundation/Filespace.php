@@ -785,17 +785,23 @@ class Filespace{
         $zip->open($dumpFile,\ZipArchive::CREATE);
         foreach($selectors as $index=>$selector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE,array(),FALSE,FALSE) as $entry){
+                // get files to attach
                 $attachedFileName=$entry['Source'].'~'.$entry['EntryId'].'.file';
                 $attachedFile=$this->selector2file($entry);
                 if (is_file($attachedFile)){
                     $statistics['Attached filesize']+=filesize($attachedFile);
                     $attachedFiles[]=array('attachedFile'=>$attachedFile,'attachedFileName'=>$attachedFileName);
                 }
+                // add entry data
                 $jsonFileContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry);
-                $jsonFileName=$entry['Source'].'~'.$entry['EntryId'].'.json';
-                $zip->addFromString($jsonFileName,$jsonFileContent);
-                $statistics['added entries']++;
-                $statistics['tables'][$entry['Source']]=$entry['Source'];
+                if (empty($jsonFileContent)){
+                    $statistics['Errors'][]='Entry Source='.$entry['Source'].', EntryId='.$entry['EntryId'].' skipped due to invalid json.';
+                } else {
+                    $jsonFileName=$entry['Source'].'~'.$entry['EntryId'].'.json';
+                    $zip->addFromString($jsonFileName,$jsonFileContent);
+                    $statistics['added entries']++;
+                    $statistics['tables'][$entry['Source']]=$entry['Source'];
+                }
             }
         }
         if ($statistics['Attached filesize']<$maxAttachedFilesize){
@@ -817,18 +823,19 @@ class Filespace{
     {
         $dumpFile=$this->exportEntries($selectors,$isSystemCall,$maxAttachedFilesize);
         if (is_file($dumpFile)){
-            $pathArr=pathinfo($dumpFile);
-            if (empty($fileName)){$fileName=$pathArr['filename'];}
+            if (empty($fileName)){$fileName=basename($dumpFile);}
             header('Content-Type: application/zip');
             header('Content-Disposition: attachment; filename="'.$fileName.'"');
-            header('Content-Length: '.fileSize($dumpFile));
+            header('Content-Length: '.filesize($dumpFile));
             readfile($dumpFile);
+            exit;
         }
     }
-    
+
     public function importEntries(string $dumpFile,$orgFileName='',bool $isSystemCall=FALSE):array
     {
         $statistics=array('zip errors'=>0,'json decode errors'=>0,'entries updated'=>0,'attached files added'=>0);
+        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $dir=$this->getPrivatTmpDir();
         $zip = new \ZipArchive;
         if ($zip->open($dumpFile)===TRUE){
@@ -854,7 +861,7 @@ class Filespace{
                     $this->tryCopy($sourceFile,$targetFile,0750);
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('msg'=>'Entry attachment imported','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
                 }
-                // update insert entry
+                // update or insert entry
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry imported','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
                 $statistics['entries updated']++;
@@ -862,8 +869,9 @@ class Filespace{
         } else {
             $statistics['zip errors']++;
         }
-        $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'orgFileName'=>$orgFileName);
-        $this->oc['logger']->log('info','Import of "{orgFileName}" resulted in "{statistics}"',$context);    
+        $dbStatistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
+        $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'dbStatistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($dbStatistics),'orgFileName'=>$orgFileName);
+        $this->oc['logger']->log('info','Import of "{orgFileName}" resulted in "{statistics}", the database statistic is "{dbStatistics}"',$context);    
         return $statistics;
     }
     

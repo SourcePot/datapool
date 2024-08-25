@@ -110,6 +110,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         if (!isset($vars['bankholidays'])){$vars['bankholidays']['lastRun']=0;}
         if (!isset($vars['signalCleanup'])){$vars['signalCleanup']['lastRun']=0;}
         if (time()-$vars['bankholidays']['lastRun']>2600000){
+            $vars['last action']='Bankholidays';
             $entry=array('Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R');
             $events=array();
             foreach($eventClasses as $eventClass){
@@ -141,6 +142,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             // delete signals without a linked calendar entry
             $this->oc['SourcePot\Datapool\Foundation\Signals']->removeSignalsWithoutSource(__CLASS__,__FUNCTION__);
             $vars['signalCleanup']['lastRun']=time();
+            $vars['last action']='Signal clean-up';
             return $vars;
         } else if (isset($vars['Period start'])){
             // get relevant timespan
@@ -157,11 +159,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $events=array();
             $selector=array('Source'=>$this->entryTable,'Group!'=>'Serial%','End>'=>$startWindow);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $event){
+                $vars['Relevant calendar entries found']=$event['rowCount'];
                 $events[$event['Name']]=intval($event['Start']<$endWindow);
             }
             // get serial events for the time window between the last run and now
             $selector=array('Source'=>$this->entryTable,'Group'=>'Serial events');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $serialEvent){
+                $vars['Relevant serial events found']=$serialEvent['rowCount'];
                 $serialEntries=$this->serialEntryToEntries($serialEvent,$vars['Period start'],$vars['Period end']);
                 $events[$serialEvent['Name']]=intval(!empty($serialEntries));
             }
@@ -169,6 +173,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             foreach($events as $name=>$value){
                 $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$name,$value,'bool'); 
             }
+            $vars['Signals for events updated']=count($events);
+            $vars['last action']='Signal updates';
+        } else {
+            $vars['last action']='Skipped, Period start was not set';    
         }
         $vars['Period start']=time();
         return $vars;

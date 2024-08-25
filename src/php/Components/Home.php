@@ -63,7 +63,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                     // do nothing
                 } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
                     // show image shuffle
-                    $width=600;
+                    $width=380;
                     $height=320;
                     $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>'fit-content','margin'=>'10px auto'));
                     $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
