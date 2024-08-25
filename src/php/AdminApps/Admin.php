@@ -25,6 +25,20 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
+    public function init()
+    {
+        // save picture of admin email address to assets directory 
+        $email=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
+        $dim=array('x'=>intval(10*strlen($email)),'y'=>18);
+        $im=imagecreate($dim['x'],$dim['y']);
+        $bgColor=imagecolorallocate($im,255,255,255);
+        $fColor=imagecolorallocate($im,100,100,100);
+        imagefill($im,0,0,$bgColor);
+        imagestring($im,4,0,2,$email,$fColor);
+        imagepng($im,$GLOBALS['dirs']['assets'].'email.png');
+        imagedestroy($im);
+    }
+
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#8582;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__);

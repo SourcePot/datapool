@@ -205,22 +205,9 @@ class Container{
                 $fileContent.="The processing blocks contain all functionallity, i.e. \"providing a database table view\", \"storing settings\" and \"linking a processor\". The settings define the target or targets canvas elements for the result data. There are basic processor, e.g. for data acquisition, mapping, parsing or data distribution. In addition, user-defined processor can be added.\n\n";
                 $fileContent.="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
             } else  if ($entry['Name']==='Legal paragraph'){
-                // legal paragraph initial md-contenz
-                $email=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
-                // create email pic
-                $emailPNG=$GLOBALS['dirs']['assets'].'email.png';
-                $dim=array('x'=>intval(10*strlen($email)),'y'=>18);
-                $im=imagecreate($dim['x'],$dim['y']);
-                $bgColor=imagecolorallocate($im,255,255,255);
-                $fColor=imagecolorallocate($im,100,100,100);
-                imagefill($im,0,0,$bgColor);
-                imagestring($im,4,0,2,$email,$fColor);
-                imagepng($im,$emailPNG);
-                imagedestroy($im);
-                // 
                 $fileContent="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
                 $fileContent.="# Contact\n## Address\n";
-                $fileContent.="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($emailPNG)."\" style=\"float:none;\">\n";
+                $fileContent.="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'email.png')."\" style=\"float:none;\">\n";
                 $fileContent.="# Legal\nThis is a private web page. The web page uses cookies for session handling.\n\n";
             }
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');

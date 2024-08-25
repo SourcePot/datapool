@@ -30,7 +30,8 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
     
-    public function init(){
+    public function init()
+    {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
