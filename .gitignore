@@ -1,7 +1,8 @@
 /src/www/assets/*
+!/src/www/assets/logo.jpg
 !/src/www/assets/login.jpg
 !/src/www/assets/home.mp4
-!/src/www/assets/dateType_example.png
+!/src/www/assets/Example_data_flow.png
 /src/www/tmp
 /src/setup/*/
 /src/setup/objectList.csv
