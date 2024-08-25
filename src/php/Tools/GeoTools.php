@@ -13,6 +13,8 @@ namespace SourcePot\Datapool\Tools;
 class GeoTools{
     
     private $oc;
+
+    private $referrer='';
     
     private $alias=array('Number'=>'House number','Street number'=>'House number','House_number'=>'House number','House number'=>'House number',
                          'Road'=>'Street','Street'=>'Street',
@@ -40,6 +42,10 @@ class GeoTools{
 
     public function init()
     {
+        // get HTTP Referrer
+        $this->referrer=$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        $queryPos=mb_strpos($this->referrer,'?');
+        if ($queryPos!==FALSE){$this->referrer=mb_substr($this->referrer,0,$queryPos);}
         // load country codes
         $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
         if (!is_file($file)){
@@ -61,7 +67,8 @@ class GeoTools{
             $options=array('headers'=>array('Accept'=>'application/xml','Content-Type'=>'text/plain'),
                            'query'=>$entry['Params']['Geo']
                            );
-            $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
+            
+            $client = new \GuzzleHttp\Client(['headers'=>['Referer'=>$this->referrer],'base_uri'=>'https://nominatim.openstreetmap.org']);
             try{
                 $response=$client->request('GET','/reverse',$options);
                 $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($response->getBody()->getContents());
@@ -103,7 +110,7 @@ class GeoTools{
             $debugArr['query']=$query;
             $options=array('headers'=>array(),'query'=>$query);
             try{
-                $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
+                $client = new \GuzzleHttp\Client(['headers'=>['Referer'=>$this->referrer],'base_uri'=>'https://nominatim.openstreetmap.org']);
                 $response=$client->request('GET','/search',$options);
                 $response=$response->getBody()->getContents();
                 $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
