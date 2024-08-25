@@ -24,10 +24,15 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
-    
-    public function init($oc){
+
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable(){

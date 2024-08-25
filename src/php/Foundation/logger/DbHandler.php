@@ -21,7 +21,6 @@ class DbHandler extends AbstractProcessingHandler
         parent::__construct($level,$bubble);
     }
 
-
     /**
      * Writes the record down to the log of the implementing handler
      *

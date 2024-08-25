@@ -29,11 +29,11 @@ class Database{
                                  'Name'=>array('type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
                                  'Type'=>array('type'=>'VARCHAR(100)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'),
                                  'Date'=>array('type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
-                                 'Content'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
+                                 'Content'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content data'),
                                  'Params'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
                                  'Expires'=>array('type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
-                                 'Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>0,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
+                                 'Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  'Owner'=>array('type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
     
@@ -49,9 +49,13 @@ class Database{
         $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
     }
 
-    public function init(array $oc):void
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
         $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable);
     }
     
@@ -73,11 +77,6 @@ class Database{
 
     public function enrichToReplace(array $toReplace=array()):array
     {
-        $toReplace['{{NOW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        $toReplace['{{YESTERDAY}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday');
-        $toReplace['{{TOMORROW}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow');
-        $toReplace['{{TIMEZONE}}']=\SourcePot\Datapool\Root::DB_TIMEZONE;
-        $toReplace['{{TIMEZONE-SERVER}}']=date_default_timezone_get();
         $toReplace['{{Expires}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
         $toReplace['{{EntryId}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
         if (!isset($_SESSION['currentUser']['EntryId'])){
@@ -86,10 +85,6 @@ class Database{
             $toReplace['{{Owner}}']=$_SESSION['currentUser']['EntryId'];
         } else {
             $toReplace['{{Owner}}']='ANONYM';
-        }
-        if (isset($this->oc['SourcePot\Datapool\Tools\HTMLbuilder'])){
-            $toReplace['{{pageTitle}}']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
-            $toReplace['{{pageTimeZone}}']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         }
         return $toReplace;
     }
@@ -158,14 +153,14 @@ class Database{
     *
     * @return array The method returns the entry template array for the table.
     */
-    public function getEntryTemplateCreateTable(string $table,string $callingClass='',$isDebugging=FALSE):array
+    public function getEntryTemplateCreateTable(string $table,string $callingClass=''):array
     {
         // If template is registered already, return this template
         if (isset($GLOBALS['dbInfo'][$table]['EntryId']['baseClass'])){
             return $GLOBALS['dbInfo'][$table];
         }
         // Get template
-        $entryTemplate=array_merge($this->rootEntryTemplate);
+        $entryTemplate=$this->rootEntryTemplate;
         if (method_exists($callingClass,'getEntryTemplate')){
             $entryTemplate['EntryId']['baseClass']=$callingClass;
             $entryTemplate=array_merge($entryTemplate,$this->oc[$callingClass]->getEntryTemplate());                
@@ -232,65 +227,35 @@ class Database{
     * This function selects the entry-specific unifyEntry() function based on $entry['Source']
     * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
     */
-    public function unifyEntry(array $entry,bool $addEntryDefaults=FALSE):array
+    public function unifyEntry(array $entry):array
     {
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
         }
+        $entry=$this->addType2entry($entry);
         $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($entry['Source']);
-        $registeredMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('unifyEntry');    
-        
-        $entry=$this->addType2entry($entry);
-        
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,hrtime(TRUE).'-'.$entry['Source']);
-        
-        $entry=$this->addType2entry($entry);
-        if (isset($registeredMethods[$classWithNamespace])){
-            $entry=$this->oc[$classWithNamespace]->unifyEntry($entry);
-        } else if ($addEntryDefaults){
-            $entry=$this->addEntryDefaults($entry);
+        if (isset($this->oc[$classWithNamespace])){
+            if (method_exists($this->oc[$classWithNamespace],'unifyEntry')){
+                $entry=$this->oc[$classWithNamespace]->unifyEntry($entry);
+            }
         }
+        $entry=$this->addEntryDefaults($entry);
+        $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
         return $entry;    
     }
 
-    public function addEntryDefaults(array $entry,bool $isDebugging=FALSE):array
+    public function addEntryDefaults(array $entry):array
     {
         $entryTemplate=(isset($GLOBALS['dbInfo'][$entry['Source']]))?$GLOBALS['dbInfo'][$entry['Source']]:$this->rootEntryTemplate;
-        $toReplace=$this->getReplacmentArr($entry,$entryTemplate);
-        $debugArr=array('entryTemplate'=>$entryTemplate,'entry in'=>$entry,'toReplace'=>$toReplace);
         foreach($entryTemplate as $column=>$defArr){
-            if (!isset($defArr['value'])){
-                continue;
-            } else if (!isset($entry[$column])){
+            if (!isset($defArr['value'])){continue;}
+            if (!isset($entry[$column])){
                 $entry[$column]=$defArr['value'];
-            } else if ($defArr['value']===TRUE && empty($entry[$column])){
-                $entry[$column]=$defArr['value'];
-            } else if (!empty($defArr['value']) && $entry[$column]===FALSE){
+            } else if ($entry[$column]===FALSE){
                 $entry[$column]=$defArr['value'];
             }
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,$column);
-            if (is_string($entry[$column])){
-                $entry[$column]=strtr($entry[$column],$toReplace);
-            }
-        } // loop through entry-template-array
-        $debugArr['entry out']=$entry;
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,__FUNCTION__.'-'.$entry['Source']);
         }
         return $entry;
-    }
-
-    private function getReplacmentArr(array $entry,array $entryTemplate=array()):array
-    {
-        $toReplace=array();
-        foreach($entry as $column=>$value){
-            if (is_array($value)){continue;}
-            $value=strval($value);
-            if (empty($value) && !empty($entryTemplate[$column]['value'])){$value=strval($entryTemplate[$column]['value']);}
-            $toReplace['{{'.$column.'}}']=$value;
-        }
-        $toReplace=$this->enrichToReplace($toReplace);
-        return $toReplace;
     }
     
     /**
@@ -311,13 +276,6 @@ class Database{
         }
         // is guiede entry?
         if (mb_strpos(strval($entry['EntryId']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
-            // if guide entry, this is the most probable option 
-            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
-        } else if (mb_strpos(strval($entry['Name']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
-            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
-        } else if (mb_strpos(strval($entry['Folder']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
-            $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
-        } else if (mb_strpos(strval($entry['Group']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
             $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
         } else {
             $typeArr[0]=str_pad('',strlen(\SourcePot\Datapool\Root::GUIDEINDICATOR),'0');
@@ -522,7 +480,7 @@ class Database{
         if (!isset($entryTemplate[$column]['value'])){
             $result[$column]=$value;
         } else if (is_array($entryTemplate[$column]['value'])){
-            $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($value);
+            $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr((string)$value);
         } else if (mb_strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
             $result[$column]=intval($value);
         } else if (mb_strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || mb_strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
@@ -672,14 +630,14 @@ class Database{
     * The method creates an array containing an EntryId-list as SQL-suffix of the entries selected by the method parameters.
     *
     * @param array $selector Is the selector  
-    * @param boolean $isSystemCall If true read and write access is granted  
-    * @param boolean $rightType Sets the relevant right-type for the creation of the EntryId-list
-    * @param boolean $orderBy Selects the column the EntryId-list will be ordered by
-    * @param boolean $isAsc Selects order direction for the EntryId-list
-    * @param boolean $limit Limits the size of the Entry-list
-    * @param boolean $offset Set the start of the Entry-list
+    * @param bool $isSystemCall If true read and write access is granted  
+    * @param string $rightType Sets the relevant right-type for the creation of the EntryId-list
+    * @param string|bool $orderBy Selects the column the EntryId-list will be ordered by
+    * @param bool $isAsc Selects order direction for the EntryId-list
+    * @param int|bool|string $limit Limits the size of the Entry-list
+    * @param int|bool|string $offset Set the start of the Entry-list
     * @param array $selectExprArr Sets the select column of the database table (is irrelevant in this context)
-    * @param boolean $removeGuideEntries If true Guide-entries will be removed from the Entry-list
+    * @param bool $removeGuideEntries If true Guide-entries will be removed from the Entry-list
     *
     * @return array Array containing the EntryId-list as SQL-suiffix
     */
@@ -762,7 +720,7 @@ class Database{
     {
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
         $entry=$this->addType2entry($entry);
-        $entry=$this->addEntryDefaults($entry);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
         if (!empty($entry['Owner'])){
             if (strcmp($entry['Owner'],'ANONYM')===0){
                 $entry['Expires']=date('Y-m-d H:i:s',time()+600);
@@ -795,25 +753,24 @@ class Database{
     *
     * @param array $selector Is the selector  
     * @param array $entry Is the template used for the entry update  
-    * @param boolean $isSystemCall If true read and write access is granted  
-    * @param boolean $rightType Sets the relevant right-type for the creation of the EntryId-list
-    * @param boolean $orderBy Selects the column, the EntryId-list will be ordered by
-    * @param boolean $isAsc Selects order direction for the EntryId-list
-    * @param boolean $limit Limits the size of the Entry-list
-    * @param boolean $offset Set the start of the Entry-list
+    * @param bool $isSystemCall If true read and write access is granted  
+    * @param string $rightType Sets the relevant right-type for the creation of the EntryId-list
+    * @param string|bool $orderBy Selects the column, the EntryId-list will be ordered by
+    * @param bool $isAsc Selects order direction for the EntryId-list
+    * @param int|bool $limit Limits the size of the Entry-list
+    * @param int|bool $offset Set the start of the Entry-list
     * @param array $selectExprArr Sets the select column of the database table (is irrelevant in this context)
-    * @param boolean $removeGuideEntries If true Guide-entries will be removed from the Entry-list
+    * @param bool $removeGuideEntries If true Guide-entries will be removed from the Entry-list
     *
     * @return int|boolean The updated entry count or false on failure
     */
-    public function updateEntries($selector,$entry,$isSystemCall=FALSE,$rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE):int|bool
+    public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=array(),$removeGuideEntries=FALSE,$isDebugging=FALSE):int|bool
     {
         // only the Admin has the right to change data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
             unset($entry['Privileges']);
         }
         if (empty($entry)){return FALSE;}
-        //
         $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging);
         $entryTemplate=$this->getEntryTemplate($selector['Source']);
         if (empty($entryList['primaryKeys'])){
@@ -892,6 +849,7 @@ class Database{
                 $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
             }
             // update entry
+            $entry=$this->unifyEntry($entry);
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {

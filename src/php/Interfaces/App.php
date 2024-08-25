@@ -16,7 +16,6 @@ interface App{
     * Initializes the instance that implments the interface. The oc-argument is an array of objects, it contains all instantiated classes of datappol, e.g.
     * instances that provide database access, filespace access, html-templates etc.
     */
-    public function init(array $oc);
     
     public function run(array|bool $arr):array;
     

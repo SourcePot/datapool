@@ -19,9 +19,19 @@ class MediaTools{
         $this->oc=$oc;
     }
 
-    public function init(array $oc)
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
+        // add calendar placeholder
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{NOW}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{YESTERDAY}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TOMORROW}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE}}',\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE-SERVER}}',date_default_timezone_get());
     }
 
     public function getPreview(array $arr):array
@@ -63,7 +73,7 @@ class MediaTools{
             }
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xhtml')!==FALSE){
             $arr=$this->getHtml($arr);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
             if (strcmp(isset($arr['callingFunction'])?$arr['callingFunction']:'','entryList')===0){

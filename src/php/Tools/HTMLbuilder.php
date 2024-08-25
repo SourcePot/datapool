@@ -51,10 +51,10 @@ class HTMLbuilder{
         $this->oc=$oc;
         $_SESSION[__CLASS__]['keySelect']=array();
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
-        $this->oc=$oc;    
+        $this->oc=$oc;
     }
     
     public function getBtns(array $arr):array
@@ -536,6 +536,7 @@ class HTMLbuilder{
         if ($saveRequest){
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
+            $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $context=array('key'=>$arr['key'],'Source'=>$entry['Source'],'selector'=>'','statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
@@ -739,7 +740,6 @@ class HTMLbuilder{
                 if ($file){
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($file,$entry);
                 } else {
-                    $entry=$this->oc[$olInfoArr['storageClass']]->unifyEntry($entry);
                     $arr['selector']=$this->oc[$olInfoArr['storageClass']]->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
                 }
             } else if (isset($formData['cmd']['delete'])){
@@ -897,7 +897,7 @@ class HTMLbuilder{
             if (count($cntrArr)===1){
                 // Simple value or array presentation
                 if (!isset($presentArr['selector'][$setting['Content']['Entry key']])){
-                    // Entzry key missing
+                    // Entry key missing
                     $matrix=array();
                 } else if (is_array($presentArr['selector'][$setting['Content']['Entry key']])){
                     // Simple array presentation
@@ -920,7 +920,8 @@ class HTMLbuilder{
                     // Simple value presentation
                     $matrix=array($setting['Content']['Entry key']=>array('value'=>$presentArr['selector'][$setting['Content']['Entry key']]));
                 }
-                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>empty($setting['Content']['Show key']),'keep-element-content'=>TRUE,'caption'=>'','style'=>$presentArr['style'],'class'=>$presentArr['class']));
+                $tbaleHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>empty($setting['Content']['Show key']),'keep-element-content'=>TRUE,'caption'=>'','style'=>$presentArr['style'],'class'=>$presentArr['class']));
+                $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($tbaleHtml);
             } else {
                 // App presentation
                 $callingClass=array_shift($cntrArr);
@@ -937,7 +938,6 @@ class HTMLbuilder{
         if (empty($setting['rowCount'])){
             $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
         }
-        $html=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($html);
         if (isset($presentArr['containerId'])){
             $presentArr['html']=$html;
             $presentArr['wrapperSettings']['hideReloadBtn']=TRUE;

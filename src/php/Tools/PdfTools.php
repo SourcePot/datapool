@@ -23,17 +23,22 @@ class PdfTools{
                            'a6'=>array('width'=>105,'height'=>148),
                            );
     
-    public function __construct()
+    public function __construct(array $oc)
     {    
+        $this->oc=$oc;
     }
-   
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
         $this->S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         // get complete page settings
         $selector=array('Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init');
-        $this->pageSettings=$oc['SourcePot\Datapool\Foundation\Filespace']->entryById($selector,TRUE);
+        $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById($selector,TRUE);
     }
     
     public function getFormat(string $paper='a4'):array

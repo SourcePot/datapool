@@ -19,7 +19,7 @@ class Container{
         $this->oc=$oc;
     }
 
-    public function init(array $oc)
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -29,7 +29,7 @@ class Container{
         $jsAnswer=array();
         if (isset($_POST['function'])){
             if (strcmp($_POST['function'],'container')===0){
-                $jsAnswer['html']=$this->container(FALSE,'',array(),array(),array(),$_POST['container-id'],TRUE);
+                $jsAnswer['html']=$this->container('','',array(),array(),array(),$_POST['container-id'],TRUE);
             } else if (strcmp($_POST['function'],'containerMonitor')===0){
                 $jsAnswer['arr']=array('isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']);
             } else if (strcmp($_POST['function'],'loadEntry')===0){
@@ -52,7 +52,7 @@ class Container{
         return $arr;
     }
 
-    public function container($key=FALSE,$function='',$selector=array(),$settings=array(),$wrapperSettings=array(),$containerId=FALSE,$isJScall=FALSE):string
+    public function container(string $key='',$function='',$selector=array(),$settings=array(),$wrapperSettings=array(),$containerId=FALSE,$isJScall=FALSE):string
     {
         // This function provides a dynamic web-page container, it returns html-script.
         // The state of forms whithin the container is stored in  $_SESSION['Container'][$container-id]
@@ -175,18 +175,54 @@ class Container{
     {
         if (empty($arr['selector']['EntryId']) && empty($arr['selector']['Name'])){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($arr['selector']);
-            unset($entry['EntryId']);
-            unset($entry['Type']);
         } else {
             $entry=$arr['selector'];
         }
+        unset($entry['EntryId']);
+        unset($entry['Type']);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',TRUE);
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
             $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
             $fileContent="[//]: # (This a Markdown document!)\n\n";
-            if ($entry['Name']==='Top paragraph'){$fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';}
+            if ($entry['Name']==='Top paragraph'){
+                // top paragraph initial md-contenz
+                $fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';
+            } else if ($entry['Name']==='Bottom paragraph'){
+                // bottom paragraph initial md-contenz
+                $fileContent.="# What is Datapool?\n\nDatapool is an open-source web application for efficient automated data processing. Processes are configurated graphically as a data flow throught processing blocks.\n";
+                $fileContent.="Following the principle of *Divide-and-Conquer* multiple Datapool instances (e.g. hosted in a cloud) can interact with eachother or legacy software to handle complex problems.\n";
+                $fileContent.="This approach keeps complexity under control, responsability can be shared and the overall processing speed can be adjusted.\n";
+                $fileContent.="Data exchange is done in a transparant human readble form through lists, emails, pdf-documents or SMS improving debugging on system level.\n";
+                $fileContent.="Calendar-based trigger cann be used for time-based flow control. All calendar entries or properties such as the number of data records and their changes, generate signals. Trigger can be derived from these signals. Trigger can initiate data processing as well as the creation of messages, e.g. e-mail or SMS.\n\n";
+                $fileContent.="## The design goal for a single instance of Datapool is maximum configurability, not processing speed.\n\nFor example, a calendar date is saved as an array in all relevant formats from which mapping can choose:\n\n";
+                $fileContent.="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'dateType_example.png')."\" alt=\"Datapool date type example\" style=\"max-width:400px;\"/>\n\n";
+                $fileContent.="## Configuration is done by selection, not by conversion!\n\n";
+                $fileContent.="# Cooperative approach\n\nDatapool is an open source software project managed on **<a href=\"https://github.com/SourcePot/datapool\" target=\"_blank\">Github SourcePot/datapool</a>**. Datappol provides interfaces for adding processors, data receiver and transmitter.\n";
+                $fileContent.="Datapool content such as dataflows can be easily be exported and imported, i.e. shared within the organization or with others or stored as backup file. A user role infrastructure provides the different levels of access control, i.e. import and export is restricted to the \"Admin\" and \"Content admin\".\n";
+                $fileContent.="# Graphical data flow builder (DataExploerer-class)\n\nA dataflow consists of two types of (canvas) elements: \"connecting elements\" and \"processing blocks\" The connecting elements have no function other then helping to visualize the data flow.\n";
+                $fileContent.="The processing blocks contain all functionallity, i.e. \"providing a database table view\", \"storing settings\" and \"linking a processor\". The settings define the target or targets canvas elements for the result data. There are basic processor, e.g. for data acquisition, mapping, parsing or data distribution. In addition, user-defined processor can be added.\n\n";
+                $fileContent.="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
+            } else  if ($entry['Name']==='Legal paragraph'){
+                // legal paragraph initial md-contenz
+                $email=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
+                // create email pic
+                $emailPNG=$GLOBALS['dirs']['assets'].'email.png';
+                $dim=array('x'=>intval(10*strlen($email)),'y'=>18);
+                $im=imagecreate($dim['x'],$dim['y']);
+                $bgColor=imagecolorallocate($im,255,255,255);
+                $fColor=imagecolorallocate($im,100,100,100);
+                imagefill($im,0,0,$bgColor);
+                imagestring($im,4,0,2,$email,$fColor);
+                imagepng($im,$emailPNG);
+                imagedestroy($im);
+                // 
+                $fileContent="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
+                $fileContent.="# Contact\n## Address\n";
+                $fileContent.="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($emailPNG)."\" style=\"float:none;\">\n";
+                $fileContent.="# Legal\nThis is a private web page. The web page uses cookies for session handling.\n\n";
+            }
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }
@@ -408,7 +444,7 @@ class Container{
                         $matrix[$filterKey][$columnIndex]='';
                         // filter text field
                         if ($filterSkipped && !empty($cntrArr['Filter'])){$style=array('color'=>'#fff','background-color'=>'#a00');} else {$style=array();}
-                        $filterTextField=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>array('columns',$columnIndex,'Filter'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+                        $filterTextField=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','title'=>'Filter list','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>array('columns',$columnIndex,'Filter'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                         // "order by"-buttons
                         if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}
                         if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
@@ -419,7 +455,7 @@ class Container{
                         $element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'Order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         // column selector
-                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'title'=>'Select column or field','style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                         // remove column button
                         if ($columnIndex>0){
                             $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'Remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
@@ -465,7 +501,7 @@ class Container{
             }
             $caption=$arr['containerKey'];
             $caption.=' ('.$rowCount.')';
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption));
         }
         if ($isDebugging){
             $debugArr['arr out']=$arr;
@@ -509,10 +545,7 @@ class Container{
     {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (empty($arr['selector'])){return $arr;}
-        
         $targetId=(isset($arr['containerId']))?$arr['containerId']:$arr['callingFunction'];
-        
-        
         $arr['class']=(isset($arr['class']))?$arr['class']:'comment';
         $arr['style']=(isset($arr['style']))?$arr['style']:array();
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$targetId);
@@ -546,7 +579,7 @@ class Container{
             $appArr=array('html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']);
             $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
-        $arr['html'].=$commentsHtml.$newComment;
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($commentsHtml.$newComment);
         return $arr;
     }
     
@@ -630,7 +663,7 @@ class Container{
         if (!isset($arr['html'])){$arr['html']='';}
         $selectBtnHtml='';
         $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
-        $settingsTemplate['style']=array('width'=>600,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
+        $settingsTemplate['style']=array('width'=>320,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
         $settings=array_replace_recursive($settingsTemplate,$arr['settings']);
         $arr['wrapper']=array('style'=>$settings['style']);
         $debugArr=array('arr'=>$arr,'settings'=>$settings);

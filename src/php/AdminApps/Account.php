@@ -22,7 +22,8 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\User']->getEntryTemplate();
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
     }
     

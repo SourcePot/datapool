@@ -93,11 +93,15 @@ class DataExplorer{
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->completeDefintion();
     }
     
@@ -258,7 +262,6 @@ class DataExplorer{
         } else if (!empty($formData['cmd'])){
             $entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
             $entry=array_merge($this->tags[key($formData['cmd'])],$entry);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);    
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
         }
         // build control html

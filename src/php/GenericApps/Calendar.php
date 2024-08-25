@@ -23,7 +23,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                  'End'=>array('value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
                                  );
 
-    private $slopeOptions=array('&#9472;&#9472;&#9488;__','__&#9484;&#9472;&#9472;');
     private $setting=array();
     private $toReplace=array();
 
@@ -37,10 +36,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                                              'Start'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{NOW}})','@excontainer'=>TRUE),
                                                              'Start timezone'=>array('@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
                                                              'End'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{TOMORROW}})','@excontainer'=>TRUE),
-                                                             'End timezone'=>array('@fuction'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
-                                                             'Recurrence'=>array('@function'=>'select','@options'=>array('+0 day'=>'Same day','+1 day"'=>'Daily','+1 week"'=>'Weeklyy','+1 month"'=>'Monthly','+1 year"'=>'Yearly'),'@default'=>'+0 day','@excontainer'=>TRUE),
-                                                             'Recurrence times'=>array('@tag'=>'input','@type'=>'number','@min'=>0,'@max'=>100,'@default'=>0,'@excontainer'=>TRUE),
-                                                             'Recurrence id'=>array('@tag'=>'p'),
+                                                             'End timezone'=>array('@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
                                                              'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
                                                             ),
                                                 'Location/Destination'=>array('Company'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
@@ -61,7 +57,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private $options=array('Type'=>array('event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'),
                            'Days to show'=>array(10=>'Show 10 days',20=>'Show 20 days',45=>'Show 45 days',90=>'Show 90 days',180=>'Show 180 days',370=>'Show 370 days'),
                            'Day width'=>array(200=>'Small day width',400=>'Middle day width',800=>'Big day width',1600=>'Biggest day width'),
-                           'Recurrence'=>array('+0 day'=>'Single event','+1 day'=>'Daily','+1 week'=>'Weekly','+1 month'=>'Monthly','+1 year'=>'Yearly'),
                            'Timezone'=>array('Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
                                              'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
                                              'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
@@ -86,24 +81,27 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc)
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->definition['Content']['Event']['Start timezone']['@options']=$this->options['Timezone'];
         $this->definition['Content']['Event']['End timezone']['@options']=$this->options['Timezone'];
-        $this->definition['Content']['Event']['Recurrence']['@options']=$this->options['Recurrence'];
-        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
         // get settings
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $currentUser=$oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+        $currentUser=$this->oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
         $settingKey=(strcmp($currentUser['Owner'],'ANONYM')===0)?'ANONYM':$currentUser['EntryId'];
         $this->setting=array('Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone);
-        $this->setting=$oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
+        $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
         $this->pageStateTemplate=array('Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
-        $this->pageState=$oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
-        //
+        $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
+        $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
     }
 
     public function job($vars){
@@ -131,7 +129,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     $entry['Folder']=$country;
                     $entry['Content']=$event;
                     $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P3Y');
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
                     $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
                     $context['eventCount']++;
                 }
@@ -148,14 +145,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         } else if (isset($vars['Period start'])){
             // get relevant timespan
             $vars['Period end']=time();
-            $dbTimezone=new \DateTimeZone(DB_TIMEZONE);
             $startDateTime=new \DateTime();
             $startDateTime->setTimestamp($vars['Period start']); 
-            $startDateTime->setTimezone($dbTimezone);
+            $startDateTime->setTimezone(new \DateTimeZone(DB_TIMEZONE));
             $startWindow=$startDateTime->format('Y-m-d H:i:s');
             $endDateTime=new \DateTime();
             $endDateTime->setTimestamp($vars['Period end']); 
-            $endDateTime->setTimezone($dbTimezone);
+            $endDateTime->setTimezone(new \DateTimeZone(DB_TIMEZONE));
             $endWindow=$endDateTime->format('Y-m-d H:i:s');
             // scan calendar entries
             $events=array();
@@ -165,17 +161,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             }
             // get serial events for the time window between the last run and now
             $selector=array('Source'=>$this->entryTable,'Group'=>'Serial events');
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $event){
-                $events[$event['Name']]=0;
-                $timestamp=$vars['Period start'];
-                while($timestamp<$vars['Period end']){
-                    if ($this->serialEventIsActive($event,$timestamp)){
-                        $isActive=TRUE;
-                        $events[$event['Name']]=1;
-                        break;
-                    }
-                    $timestamp+=1800;  
-                }
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $serialEvent){
+                $serialEntries=$this->serialEntryToEntries($serialEvent,$vars['Period start'],$vars['Period end']);
+                $events[$serialEvent['Name']]=intval(!empty($serialEntries));
             }
             // update signals
             foreach($events as $name=>$value){
@@ -225,27 +213,21 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         if (empty($entry['Group'])){$entry['Group']='Events';}
         if (strcmp($entry['Group'],'Events')===0 || strcmp($entry['Group'],'Bank holidays')===0){
             // Standard events
-            if (empty($entry['Content']['Event']) && !empty($entry['addDate'])){
-                $entry['Content']['Event']['Start']=$entry['addDate'].'T00:00';
-                $entry['Content']['Event']['Start timezone']=$this->setting['Timezone'];
-                $entry['Content']['Event']['End']=$entry['addDate'].'T23:59';
-                $entry['Content']['Event']['End timezone']=$this->setting['Timezone'];
-                $entry['Content']['Event']['Description']='';
-            }
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);        
-            if (!empty($entry['Content']['Event']['Start']) && !empty($entry['Content']['Event']['Start timezone']) && 
-                !empty($entry['Content']['Event']['End']) && !empty($entry['Content']['Event']['End timezone'])){
-                $entry['Name']=mb_substr($entry['Content']['Event']['Description'],0,200);
-                $entry['Start']=$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],DB_TIMEZONE);
-                $entry['End']=$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],DB_TIMEZONE);
-                if (!empty($entry['entryIsUpdated'])){$entry=$this->updateCalendarEventEntry($entry,TRUE);}
-            }
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
+            $entry['Content']['Event']['Start']=(isset($entry['Content']['Event']['Start']))?$entry['Content']['Event']['Start']:$entry['addDate'].'T00:00';
+            $entry['Content']['Event']['Start timezone']=(isset($entry['Content']['Event']['Start timezone']))?$entry['Content']['Event']['Start timezone']:$this->setting['Timezone'];
+            $entry['Content']['Event']['End']=(isset($entry['Content']['Event']['End']))?$entry['Content']['Event']['End']:$entry['addDate'].'T23:59';
+            $entry['Content']['Event']['End timezone']=(isset($entry['Content']['Event']['End timezone']))?$entry['Content']['Event']['End timezone']:$this->setting['Timezone'];
+            $entry['Name']=(isset($entry['Name']))?$entry['Name']:'';
+            $entry['Content']['Event']['Description']=(isset($entry['Content']['Event']['Description']))?$entry['Content']['Event']['Description']:'';
+            $entry['Name']=(empty($entry['Content']['Event']['Description']))?$entry['Name']:mb_substr($entry['Content']['Event']['Description'],0,200);
+            $entry['Start']=(empty($entry['Content']['Event']['Start']))?$entry['Start']:$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],DB_TIMEZONE);
+            $entry['End']=(empty($entry['Content']['Event']['End']))?$entry['End']:$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],DB_TIMEZONE);
         } else {
             // Serial events
             if (isset($entry['Content']['Name'])){$entry['Name']=$entry['Content']['Name'];}
             if (isset($entry['Content']['Visibility'])){$entry['Read']=$entry['Content']['Visibility'];}
         }
+        $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
         return $entry;
     }
     
@@ -267,6 +249,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $monthdayOptions=array(''=>'');
         $weekdayOptions=array(''=>'','1'=>'Monday','2'=>'Tuesday','3'=>'Wednesday','4'=>'Thursday','5'=>'Friday','6'=>'Saturday','7'=>'Sunday');
         $hourOptions=array(''=>'');
+        $minOptions=array(''=>'');
+        $weekdayOptions=array(''=>'','1'=>'Monday','2'=>'Tuesday','3'=>'Wednesday','4'=>'Thursday','5'=>'Friday','6'=>'Saturday','7'=>'Sunday');
+        $durationOptions=array(10=>'10 min',15=>'15 min',60=>'1 hour',120=>'2 hours',360=>'6 hours',480=>'8 hours',720=>'12 hours',1440=>'24 hours');
         for($index=0;$index<60;$index++){
             $shortIndex=strval($index);
             $fullIndex=(strlen($shortIndex)<2)?'0'.$shortIndex:$shortIndex;
@@ -276,14 +261,16 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                 if ($index<32){$monthdayOptions[$fullIndex]=$fullIndex;}
             }
             if ($index<25){$hourOptions[$fullIndex]=$fullIndex;}
+            if ($index<60){$minOptions[$fullIndex]=$fullIndex;}
         }
         $contentStructure=array('Name'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Serial event','excontainer'=>TRUE),
                                 'Type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>current($this->options['Type']),'options'=>$this->options['Type']),
                                 'Month'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthOptions),
                                 'Day'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthdayOptions),
-                                'Week number'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$weekOptions),
                                 'Week day'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$weekdayOptions),
                                 'Hour'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$hourOptions),
+                                'Minute'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$minOptions),
+                                'Duration'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$durationOptions),
                                 'Timezone'=>array('method'=>'select','excontainer'=>TRUE,'value'=>DB_TIMEZONE,'options'=>$this->options['Timezone']),
                                 'Visibility'=>array('method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE)),
                                 );
@@ -298,16 +285,20 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $arr=array_merge($template,$arr);
         $event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($this->pageState);
-        if (empty($event)){$event=$this->pageState;}
-        $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
-        if ($this->pageState['EntryId']=='{{EntryId}}' && empty($this->pageState['addDate'])){
+        if (empty($event)){
+            $emptyEvent=TRUE;
+            $event=$this->pageState;
+        }
+        if (!empty($emptyEvent) && empty($this->pageState['addDate'])){
             $arr['html'].=$this->getEventsOverview($arr);
         } else if(mb_strpos(strval($event['EntryId']),'___')!==FALSE){
+            // serial event selected
             if (isset($event['Content']['File content'])){unset($event['Content']['File content']);}
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($event['Content']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>TRUE,'hideHeader'=>TRUE));
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(array('selector'=>$event));
         } else {
+            $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
         }
         return $arr;        
@@ -323,6 +314,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $this->pageState['EntryId']='{{EntryId}}';
             $this->pageState['calendarDate']='{{YESTERDAY}}';
             $this->pageState['addDate']='';
+            $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
         } else if (!empty($formData['cmd'])){
             $newPageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
@@ -411,9 +403,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $calendarDateTime->add($dayInterval);
             $newDayPos=$this->date2pos($calendarDateTime->format('Y-m-d H:i:s'));
             $dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
-            if ($date==$this->pageState['addDate']){
-                $dayStyle['background-color']='#f008';
-            }
+            if ($date==$this->pageState['addDate']??''){$dayStyle['background-color']='#f008';}
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle));
             $dayStyle=array('left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1);
             if (strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0){$dayStyle['background-color']='#af6';}
@@ -473,7 +463,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $title.=str_replace('T',' ',$event['Content']['Event']['Start']).' ('.$event['Content']['Event']['Start timezone'].")\n";
             $title.=str_replace('T',' ',$event['Content']['Event']['End']).' ('.$event['Content']['Event']['End timezone'].')';
             $btnArr=array('tag'=>'button','element-content'=>$event['Name'],'title'=>$title,'key'=>array('EntryId',$EntryId),'entry-id'=>$EntryId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>$class,'style'=>$style);
-            
             if ($event['State']=='Serial event'){
                 $btnArr['key'][1]=$event['SerailEntryId'];
             }
@@ -509,7 +498,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $calendarDateTime->getTimestamp();
     }
     
-    private function date2pos($date='now',$timezone=FALSE){
+    private function date2pos($date='now',$timezone=''){
         if (empty($timezone)){
             $timezone=new \DateTimeZone($this->setting['Timezone']);
         } else {
@@ -595,41 +584,40 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $events;
     }
     
-    private function serialEntryToEntries($entry,$timestamp){
-        $formatTestArr=array('Month'=>'m','Week number'=>'W','Week day'=>'N','Day'=>'d','Hour'=>'H');
+    private function serialEntryToEntries($entry,int $timestamp,int $maxTimestamp=0){
+        $formatTestArr=array('Month'=>'m','Week day'=>'N','Day'=>'d','Hour'=>'H','Minute'=>'i');
         $entries=array();
         $entryIdSuffix=0;
-        $maxTimestamp=$timestamp+(intval($this->setting['Days to show']??'10')-1)*86400+90000;
+        $maxTimestamp=(empty($maxTimestamp))?($timestamp+(intval($this->setting['Days to show']??'10')-1)*86400+90000):$maxTimestamp;
         // scan calendar range
+        $durationMinutes=intval($entry['Content']['Duration']);
+        $durationSeconds=$durationMinutes*60;
+        $timestamp-=$durationSeconds;
         while($timestamp<$maxTimestamp){
             $entryId=$entry['EntryId'].'|'.$entryIdSuffix;
             $dateTimeMatch=$this->serialEventIsActive($entry,$timestamp);
             if ($dateTimeMatch){
-                if (!isset($entries[$entryId])){
-                    $entries[$entryId]=$entry;
-                    $entries[$entryId]['EntryId']=$entryId;
-                    $entries[$entryId]['SerailEntryId']=$entry['EntryId'];
-                    $entries[$entryId]['Start']=$this->getTimezoneDate('@'.$timestamp,'UTC',DB_TIMEZONE);
-                    $entries[$entryId]['Content']['Event']['Start']=$entries[$entryId]['Start'];
-                    $entries[$entryId]['Content']['Event']['Start timezone']=DB_TIMEZONE;
-                }
+                $endTimestamp=$timestamp+$durationSeconds;
+                $entries[$entryId]=$entry;
+                $entries[$entryId]['EntryId']=$entryId;
+                $entries[$entryId]['SerailEntryId']=$entry['EntryId'];
+                $entries[$entryId]['Start']=$this->getTimezoneDate('@'.$timestamp,'UTC',DB_TIMEZONE);
+                $entries[$entryId]['Content']['Event']['Start']=$entries[$entryId]['Start'];
+                $entries[$entryId]['Content']['Event']['Start timezone']=DB_TIMEZONE;
+                $entries[$entryId]['End']=$this->getTimezoneDate('@'.$endTimestamp,'UTC',DB_TIMEZONE);
+                $entries[$entryId]['Content']['Event']['End']=$entries[$entryId]['End'];
+                $entries[$entryId]['Content']['Event']['End timezone']=DB_TIMEZONE;
+                $timestamp=$endTimestamp;
+                $entryIdSuffix++;
+            } else {
+                $timestamp+=60;
             }
-            $timestamp+=1800;  
-            if (!$dateTimeMatch || $timestamp>=$maxTimestamp){
-                if (isset($entries[$entryId])){
-                    $entries[$entryId]['End']=$this->getTimezoneDate('@'.$lastTimestamp,'UTC',DB_TIMEZONE);
-                    $entries[$entryId]['Content']['Event']['End']=$entries[$entryId]['End'];
-                    $entries[$entryId]['Content']['Event']['End timezone']=DB_TIMEZONE;
-                    $entryIdSuffix++;
-                }
-            }
-            $lastTimestamp=$timestamp;
         }
         return $entries;
     }
     
     private function serialEventIsActive($entry,$timestamp){
-        $formatTestArr=array('Month'=>'m','Week number'=>'W','Week day'=>'N','Day'=>'d','Hour'=>'H');
+        $formatTestArr=array('Month'=>'m','Week day'=>'N','Day'=>'d','Hour'=>'H','Minute'=>'i');
         $dateTime=new \DateTime('@'.$timestamp);
         $eventTimezone=new \DateTimeZone($entry['Content']['Timezone']);
         $dateTime->setTimezone($eventTimezone);
@@ -639,6 +627,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             if (strlen($entry['Content'][$contentKey])!==0){        
                 if (strcmp($dateTime->format($formatCharacter),$entry['Content'][$contentKey])!==0){
                     $dateTimeMatch=FALSE;
+                    break;
                 }
             }
         }
@@ -687,37 +676,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         }
         return trim($str,',&nbsp;');
     }
-
-    private function updateCalendarEventEntry($entry){
-        $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
-        if (empty($entry['Content']['Event']['Recurrence id'])){$entry['Content']['Event']['Recurrence id']=$entry['EntryId'];}
-        // delete all related entries
-        $toDeleteSelector=array('Source'=>$entry['Source'],'Content'=>'%'.$entry['Content']['Event']['Recurrence id'].'%');
-        $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
-        // create recurring entries
-        $startSourceTimezone=new \DateTimeZone($entry['Content']['Event']['Start timezone']);
-        $endSourceTimezone=new \DateTimeZone($entry['Content']['Event']['End timezone']);
-        $startDateTime=new \DateTime($entry['Content']['Event']['Start'],$startSourceTimezone);
-        $endDateTime=new \DateTime($entry['Content']['Event']['End'],$endSourceTimezone);
-        $intervallRecurrence=\DateInterval::createFromDateString(trim($entry['Content']['Event']['Recurrence'],'+'));
-        $loopEntry=$entry;
-        for($loop=0;$loop<=$entry['Content']['Event']['Recurrence times'];$loop++){
-            if ($loop===0){
-                $loopEntry['EntryId']=$entry['EntryId'];
-            } else {
-                $loopEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
-            }
-            $loopEntry['Content']['Event']['Start']=$startDateTime->format('Y-m-d H:i:s');
-            $loopEntry['Content']['Event']['End']=$endDateTime->format('Y-m-d H:i:s');
-            $loopEntry['Start']=$this->getTimezoneDate($loopEntry['Content']['Event']['Start'],$loopEntry['Content']['Event']['Start timezone'],DB_TIMEZONE);
-            $loopEntry['End']=$this->getTimezoneDate($loopEntry['Content']['Event']['End'],$loopEntry['Content']['Event']['End timezone'],DB_TIMEZONE);
-            $loopEntry['Content']['Event']['Recurrence index']=$loop;
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loopEntry);
-            $startDateTime->add($intervallRecurrence);
-            $endDateTime->add($intervallRecurrence);
-        }
-        return $entry;
-    }
     
     public function timestamp2date($string):array
     {
@@ -737,7 +695,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function str2date($string,$timezone=NULL,bool $isExcelDate=FALSE):array
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $timezone??=$pageTimeZone;
+        $timezone=$timezone??$pageTimeZone;
         $dummyDate=\SourcePot\Datapool\Root::NULL_DATE;
         $dummyDateArr=array('year'=>mb_substr($dummyDate,0,4),'month'=>mb_substr($dummyDate,5,2),'day'=>mb_substr($dummyDate,8,2),'time'=>mb_substr($dummyDate,11,8));
         $dateArr=$context=$this->guessDateComps($string,$isExcelDate);
@@ -778,6 +736,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $dateArr['System short']=$datetimeObj->format('Y-m-d');
         $dateArr['System']=$datetimeObj->format('Y-m-d H:i:s');
         $dateArr['YYYYMMDD']=$dateArr['year'].$dateArr['month'].$dateArr['day'];
+        $dateArr['Timezone in']=$timezone;
         $dateArr['Timezone']=$pageTimeZone;
         $dateArr['Timestamp']=$datetimeObj->getTimestamp();
         $dateArr['US']=$datetimeObj->format('m/d/Y');

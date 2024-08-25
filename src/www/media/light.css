@@ -29,10 +29,6 @@
         max-width:100%;
     }
 }
-body{
-    color:var(--color);
-    background-color: var(--bgColor);
-}
 main{
     position: absolute;
     z-index:2;
@@ -55,7 +51,7 @@ h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textar
     line-height:1.5rem;
 }
 h1,h2,h3{
-    margin:1.4em 0 0.2rem 10px;
+    margin:1.4em 0 1rem 10px;
     width:98%;
 }
 h1{
@@ -160,6 +156,7 @@ div.preview,main,div,select,video,img,p{
 }
 div.preview,video,img{
     clear:left;
+    background:none;
 }
 div.cover-wrapper{
     clear:none;
@@ -168,7 +165,7 @@ div.cover-wrapper{
     width:auto;
 }
 p{
-    padding:0.75rem 10px;
+    padding:0.2rem 10px;
 }
 p.std,p.calendar-hour,p.cover,p.icon,p.first-menu,p.toolbox,p.comment,p.comment-footer,p.user-abstract{
     padding:0;
@@ -325,7 +322,7 @@ meter{
     height:100%;
     cursor:pointer;
     background-color:#000d;
-    z-index:20;
+    z-index:100;
 }
 #overlay-image{
     display:block;
@@ -642,6 +639,7 @@ div.calendar-day,button.calendar-day{
     text-align:center;
     overflow:hidden;
     border-right:1px solid #888;
+    background: none;
 }
 button.calendar-day{
     height:65px;

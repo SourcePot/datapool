@@ -20,7 +20,8 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable();
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
     }
 

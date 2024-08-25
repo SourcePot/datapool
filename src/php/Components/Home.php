@@ -13,8 +13,8 @@ namespace SourcePot\Datapool\Components;
 class Home implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
+    private $entryTable;
     
-private $entryTable;
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  );
@@ -25,9 +25,13 @@ private $entryTable;
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+    
+    public function init(){
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable(){
@@ -39,7 +43,7 @@ private $entryTable;
     }
 
     public function unifyEntry($entry){
-        $entry['Read']=intval($entry['Content']['Read access']);
+        $entry['Read']=intval($entry['Content']['Read access']??$this->oc['SourcePot\Datapool\Foundation\Access']->accessString2int($this->entryTemplate['Read']['value']));
         return $entry;
     }
 
@@ -58,9 +62,9 @@ private $entryTable;
                     // do nothing
                 } else if (strcmp($pageSettings['homePageContent'],'imageShuffle')===0){
                     // show image shuffle
-                    $width=320;
+                    $width=600;
                     $height=320;
-                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>$width,'margin'=>'10px auto'));
+                    $wrapperSetting=array('style'=>array('float'=>'none','padding'=>'10px','border'=>'none','width'=>'fit-content','margin'=>'10px auto'));
                     $setting=array('hideReloadBtn'=>TRUE,'style'=>array('width'=>$width,'height'=>$height),'autoShuffle'=>TRUE,'getImageShuffle'=>'home');
                     $selector=array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable());
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            
@@ -83,6 +87,9 @@ private $entryTable;
             } else {
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
             }
+            $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Legal paragraph');
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,array(),array('style'=>array()));
+            // finalize
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }

@@ -32,10 +32,14 @@ class GeoTools{
     {
         $this->oc=$oc;
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
         // load country codes
         $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
         if (!is_file($file)){
@@ -98,10 +102,15 @@ class GeoTools{
             $query=$this->getRequestAddress($address);
             $debugArr['query']=$query;
             $options=array('headers'=>array(),'query'=>$query);
-            $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
-            $response=$client->request('GET','/search',$options);
-            $response=$response->getBody()->getContents();
-            $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
+            try{
+                $client = new \GuzzleHttp\Client(['base_uri'=>'https://nominatim.openstreetmap.org']);
+                $response=$client->request('GET','/search',$options);
+                $response=$response->getBody()->getContents();
+                $response=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($response);
+            } catch (\Exception $e){
+                $response=array('method'=>__FUNCTION__,'exception'=>$e->getMessage());
+                $this->oc['logger']->log('notice','Method "{method}" failed with {exception}',$response);
+            }
             $debugArr['response']=$response;
             if (isset($response['0'])){
                 $entry['Params']['Geo']=$response['0'];

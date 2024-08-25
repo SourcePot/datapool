@@ -33,12 +33,17 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         // complete defintion
         $this->definition['Send']=array('@tag'=>'button','@key'=>array('save'),'@element-content'=>'Send','@hideKeys'=>TRUE);
-        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
     public function job($vars){
@@ -92,7 +97,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
             $forumEntry=$entry;
         }
         if (empty($forumEntry)){
-            $forumEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($draftSelector);
+            $forumEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($draftSelector);
         } 
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin'=>'0','border'=>'none')));
@@ -115,7 +120,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $forumEntry['Group']=$_SESSION['currentUser']['Privileges'];
         $forumEntry['Folder']='Sent';
         $forumEntry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-        $forumEntry['Name']=mb_substr($forumEntry['Content']['Message'],0,30);
+        $forumEntry['Name']=(empty($forumEntry['Content']['Message']))?'':mb_substr($forumEntry['Content']['Message'],0,30);
         return $forumEntry;
     }
     

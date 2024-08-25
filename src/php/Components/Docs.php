@@ -26,10 +26,14 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+    }
+
+    public function init(){
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
     public function job($vars){
@@ -45,8 +49,6 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     }
 
     public function unifyEntry($entry){
-        // This function makes class specific corrections before the entry is inserted or updated.
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
         return $entry;
     }
 

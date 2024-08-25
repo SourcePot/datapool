@@ -25,9 +25,14 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+    
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function run(array|bool $arr=TRUE):array{
@@ -71,13 +76,14 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     }
 
     private function testParams($arr){
+        // get entry
         $arr=$this->finalizeSelector($arr,__FUNCTION__,'settings');
-		$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        if ($entry){$arr['selector']=$entry;}
+		$arr['selector']['Content']=array();
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (!empty($formData['cmd'])){
-            $elementId=key($formData['val']);
+        $elementId=key($formData['val']);
+        if (isset($formData['val'][$elementId])){
             $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
         }
@@ -91,11 +97,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             $methods=array_combine($methods,$methods);
             ksort($methods);
         }
-        $return=array('html'=>'','Parameter'=>array(),'result'=>array());
-        $matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
+        //$return=array('html'=>'','Parameter'=>array(),'result'=>array());
+        //$matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
         $contentStructure=array('class'=>array('method'=>'select','value'=>'','options'=>$classes,'excontainer'=>FALSE),
                                 'method'=>array('method'=>'select','value'=>'','options'=>$methods,'excontainer'=>FALSE),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
+                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string','excontainer'=>FALSE),
                                 );
         // get HTML
         $arr['contentStructure']=$contentStructure;

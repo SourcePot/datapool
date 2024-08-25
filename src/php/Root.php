@@ -26,6 +26,7 @@ final class Root{
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     public const DB_TIMEZONE='UTC';
     public const NULL_DATE='9999-12-30 12:12:12';
+    public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE,'home'=>TRUE);
@@ -39,13 +40,14 @@ final class Root{
                                         'intl'=>FALSE,'imap'=>TRUE,'mbstring'=>TRUE,'exif'=>TRUE,
                                         'mysqli'=>TRUE,'oci8_12c'=>FALSE,'oci8_19'=>FALSE,'odbc'=>FALSE,
                                         'openssl'=>FALSE,'pdo_firebird'=>FALSE,'pdo_mysql'=>TRUE,'pdo_oci'=>FALSE,
-                                        'pdo_odbc'=>FALSE,'pdo_pgsql'=>FALSE,'pdo_sqlite'=>TRUE,'pgsql'=>FALSE,
+                                        'pdo_odbc'=>FALSE,'pdo_pgsql'=>FALSE,'pdo_sqlite'=>FALSE,'pgsql'=>FALSE,
                                         'shmop'=>FALSE,'snmp'=>FALSE,'soap'=>FALSE,'sockets'=>FALSE,'sodium'=>FALSE,
                                         'sqlite3'=>FALSE,'tidy'=>FALSE,'xsl'=>FALSE,'zip'=>TRUE,'opcache'=>FALSE
                                         );
 
-    private $oc=array();
-    private $structure=array('implemented interfaces'=>array(),'registered methods'=>array(),'source2class'=>array(),'class2source'=>array());
+    private $oc;
+    private $placeholder=array();
+    private $implementedInterfaces=array();
     private $currentScript='';
     
     private $profileActive=NULL;
@@ -56,15 +58,15 @@ final class Root{
     
     public function __construct()
     {
+        $this->oc=array(__CLASS__=>$this);
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
-        $oc=array(__CLASS__=>$this);
         session_start();
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('selected'=>array());
+            $_SESSION['page state']=array('lngCode'=>'en','app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>array());
         }
         // set exception handler and initialize directories
         $this->initDirs();
@@ -76,20 +78,35 @@ final class Root{
             require_once $autoloadFile;
         }
         $this->initExceptionHandler();
-        // initilize Object Collection, create objects and invoke init methods
-        $oc=$this->getInstantiatedObjectCollection($oc);
-        // add logger
-        $oc['logger']=$this->getMonologLogger($oc,'Root');
-        $oc['logger_1']=$this->getMonologLogger($oc,'Debugging');
-        //
-        $oc=$this->registerVendorClasses($oc);
-        foreach($this->structure['registered methods']['init'] as $classWithNamespace=>$methodArr){
-            $oc[$classWithNamespace]->init($oc);
+        // initilize Object Collection, create objects and add logger
+        $this->getInstantiatedObjectCollection();
+        $this->oc['logger']=$this->getMonologLogger('Root');
+        $this->oc['logger_1']=$this->getMonologLogger('Debugging');
+        $this->registerVendorClasses();
+        // distribute object collection
+        foreach($this->oc as $classWithNamespace=>$obj){
+            if (!is_object($this->oc[$classWithNamespace])){continue;}
+            if (!method_exists($this->oc[$classWithNamespace],'loadOc')){continue;}
+            $this->oc[$classWithNamespace]->loadOc($this->oc);
         }
-        $oc['logger']=$this->configureMonologLogger($oc,$oc['logger']);
-        $this->emptyLoggerCache($oc);
-        $this->checkExtensions($oc);
-        $this->oc=$oc;
+        // invoke init methoods
+        foreach($this->oc as $classWithNamespace=>$obj){
+            if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
+            if (!is_object($obj)){continue;}
+            // get classes implementing interfaces
+            foreach(class_implements($classWithNamespace) as $interface){
+                if (in_array($interface,class_implements($classWithNamespace))){
+                    $this->implementedInterfaces[$interface][$classWithNamespace]=$classWithNamespace;
+                }
+            }
+            // init methods
+            if (!method_exists($this->oc[$classWithNamespace],'init')){continue;}
+            $this->oc[$classWithNamespace]->init();
+        }
+        $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
+        $this->emptyLoggerCache($this->oc);
+        $this->checkExtensions($this->oc);
+        $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
     }
     
     /**
@@ -97,9 +114,9 @@ final class Root{
     *
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     */
-    private function getMonologLogger(array $oc,string $channel='Root'):Logger
+    private function getMonologLogger(string $channel='Root'):Logger
     {
-        $logLevel=intval($oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
+        $logLevel=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
         $logFile=$GLOBALS['dirs']['logging'].date('Y-m-d').' '.$channel.'.log';
         $logger = new Logger($channel);
         $logger->pushProcessor(new PsrLogMessageProcessor());
@@ -120,11 +137,11 @@ final class Root{
     *
     * @return Logger Is the logger instance
     */
-    private function configureMonologLogger(array $oc,Logger $logger):Logger
+    private function configureMonologLogger(Logger $logger):Logger
     {
         // log to database handler
         require_once(__DIR__.'/Foundation/logger/DbHandler.php');
-        $dbHandler = new \SourcePot\Datapool\Foundation\Logger\DbHandler($oc);
+        $dbHandler = new \SourcePot\Datapool\Foundation\Logger\DbHandler($this->oc);
         $logger->pushHandler($dbHandler);
         return $logger;
     }
@@ -148,25 +165,61 @@ final class Root{
     * @return array An associative array that contains the Datapool object collection, i.e. all initiated objects of Datapool.
     * This method can be used to add external objects to the Datapool object collection. 
     */
-    private function registerVendorClasses(array $oc):array
+    private function registerVendorClasses()
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // instantiate external classes
         foreach(self::ADD_VENDOR_CLASSES as $classIndex=>$classWithNamespace){
             $context['classWithNamespace']=$classWithNamespace;
             if (class_exists($classWithNamespace)){
-                $oc[$classWithNamespace]=new $classWithNamespace($oc);
-                $this->updateStructure($oc,$classWithNamespace);             
+                $this->oc[$classWithNamespace]=new $classWithNamespace($this->oc);
             } else {
                 $this->log('error','Method "{class}::{function}": Failed to register class "{classWithNamespace}"',$context);
             }
         }
-        return $oc;
     }
         
     public function getOc():array
     {
         return $this->oc;
+    }
+    
+    public function addPlaceholder(string $key,string $value):array
+    {
+        $this->placeholder[$key]=$value;
+        return $this->oc;
+    }
+
+    public function getPlaceholder(string $key):string
+    {
+        return (isset($this->placeholder[$key]))?$this->placeholder[$key]:\SourcePot\Datapool\Root::NULL_STRING;
+    }
+
+    public function substituteWithPlaceholder(array $arr):array
+    {
+        $newPlaceHolder=array();
+        $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
+        $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
+        // substitute placeholders
+        if ((string)$flatArr['EntryId']==='{{EntryId}}'){
+            $flatArr['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+        }
+        foreach($flatArr as $flatKey=>$flatValue){
+            if (is_object($flatValue) || empty($flatValue)){continue;}
+            if (isset($accessOptions[$flatValue])){
+                $flatArr[$flatKey]=$accessOptions[$flatValue];
+            } else if (is_string($flatValue)){
+                $flatArr[$flatKey]=strtr($flatValue,$this->placeholder);
+            }
+            $newPlaceHolder['{{'.$flatKey.'}}']=$flatArr[$flatKey];
+        }
+        // substitute new placeholders
+        foreach($flatArr as $flatKey=>$flatValue){
+            if (!is_string($flatValue)){continue;}
+            $flatArr[$flatKey]=strtr($flatValue,$newPlaceHolder);
+        }
+        $arr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatArr);
+        return $arr;
     }
     
     private function checkExtensions(array $oc):void
@@ -187,7 +240,6 @@ final class Root{
     public function run():array
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
-        $this->structure['callingWWWscript']=$this->currentScript;
         $pathInfo=pathinfo($this->currentScript);
         // get current temp dir
         if (mb_strpos($this->currentScript,'resource.php')===FALSE && mb_strpos($this->currentScript,'job.php')===FALSE){
@@ -199,13 +251,13 @@ final class Root{
         // get trace
         // add "page html" to the return array
         $arr=array();
-        if (mb_strpos($this->currentScript,'index.php')>0){
-            // check access
-            $appRight=$this->structure['registered methods']['run'][$_SESSION['page state']['app']['Class']]['Read'];
-            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appRight)){
-                $context['app']=$_SESSION['page state']['app']['Class'];
+        $appClassWithNamespace=$_SESSION['page state']['app']['Class'];
+        if (mb_strpos($this->currentScript,'index.php')>0 && method_exists($this->oc[$appClassWithNamespace],'run')){
+            $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
+            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appDef['Read'])){
+                $context['app']=$appClassWithNamespace;
                 $context['fallbackApp']='SourcePot\Datapool\Components\Home';
-                $_SESSION['page state']['app']['Class']=$context['fallbackApp'];
+                $_SESSION['page state']['app']['Class']=$appClassWithNamespace=$context['fallbackApp'];
                 $this->oc['logger']->log('notice','Access denied: app "{app}". Loading "{fallbackApp}"',$context);    
             }
             // build webpage
@@ -213,7 +265,7 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
             $arr['toReplace']['{{bgMedia}}']='';
-            $arr=$this->oc[$_SESSION['page state']['app']['Class']]->run($arr);
+            $arr=$this->oc[$appClassWithNamespace]->run($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($pathInfo['basename']=='js.php'){
             // js-call Processing
@@ -226,7 +278,7 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
         } else {
             // invalid
-            $this->oc['logger']->log('error','Invalid script "{script}" called',array('script'=>$pathInfo['basename']));    
+            $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',array('script'=>$pathInfo['basename']));    
         }
         // script time consumption in ms
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
@@ -238,23 +290,28 @@ final class Root{
         return $arr;
     }
     
-    public function getRegisteredMethods(string $method=''):array
+    public function getRegisteredMethods(string $method='',$arg=NULL):array
     {
-        if (empty($method)){
-            return $this->structure['registered methods'];
-        } else if (isset($this->structure['registered methods'][$method])){
-            return $this->structure['registered methods'][$method];
-        } else {
-            throw new \ErrorException('Function '.__FUNCTION__.': Argument method = "'.$method.'" is invalid.',0,E_ERROR,__FILE__,__LINE__);
+        $result=array();
+        foreach($this->oc as $classWithNamespace=>$obj){
+            if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
+            if (!is_object($obj)){continue;}
+            if (!method_exists($classWithNamespace,$method)){continue;}
+            if ($arg){
+                $result[$classWithNamespace]=$this->oc[$classWithNamespace]->$method($arg);
+            } else {
+                $result[$classWithNamespace]=array('class'=>$classWithNamespace,'method'=>$method);
+            }
         }
+        return $result;
     }
 
     public function getImplementedInterfaces(string $interface=''):array
     {
         if (empty($interface)){
-            return $this->structure['implemented interfaces'];
-        } else if (isset($this->structure['implemented interfaces'][$interface])){
-            return $this->structure['implemented interfaces'][$interface];
+            return $this->implementedInterfaces;
+        } else if (isset($this->implementedInterfaces[$interface])){
+            return $this->implementedInterfaces[$interface];
         } else {
             throw new \ErrorException('Function '.__FUNCTION__.': Argument interface = "'.$interface.'" is invalid.',0,E_ERROR,__FILE__,__LINE__);
         }
@@ -262,17 +319,21 @@ final class Root{
 
     public function source2class($source):string
     {
-        if (isset($this->structure['source2class'][$source])){
-            return $this->structure['source2class'][$source];
-        } else {
-            return '';
+        foreach($this->oc as $classWithNamespace=>$obj){
+            if (!is_object($obj)){continue;}
+            if (!method_exists($this->oc[$classWithNamespace],'getEntryTable')){continue;}
+            $entryTable=$this->oc[$classWithNamespace]->getEntryTable();
+            if ($entryTable===$source){return $classWithNamespace;}
         }
+        return '';
     }
 
-    public function class2source(string $class):string
+    public function class2source(string $classWithNamespace):string
     {
-        if (isset($this->structure['class2source'][$class])){
-            return $this->structure['class2source'][$class];
+        if (!isset($this->oc[$classWithNamespace])){
+            return '';
+        } else if (method_exists($this->oc[$classWithNamespace],'getEntryTable')){
+            return $this->oc[$classWithNamespace]->getEntryTable();
         } else {
             return '';
         }
@@ -293,10 +354,10 @@ final class Root{
                                      'Database.php'=>'305|',
                                      'Definitions.php'=>'306|',
                                      'Dictionary.php'=>'307|',
-                                     'HTMLbuilder.php'=>'308|',
-                                     'Logging.php'=>'309|',
-                                     'Logger.php'=>'310|',
-                                     'User.php'=>'311|',
+                                     'User.php'=>'308|',
+                                     'HTMLbuilder.php'=>'309|',
+                                     'Logging.php'=>'310|',
+                                     'Logger.php'=>'311|',
                                      'Home.php'=>'701|',
                                      'Account.php'=>'702|',
                                      'Login.php'=>'901|',
@@ -344,7 +405,7 @@ final class Root{
     * This method returns the Datapool object collection from the object list file.
     * If the object list file does not exist, it will be created.
     */
-    private function getInstantiatedObjectCollection(array $oc=array()):array
+    private function getInstantiatedObjectCollection()
     {
         $objListNeedsToBeRebuild=FALSE;
         $objListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
@@ -362,8 +423,7 @@ final class Root{
                     if (is_file($objDef['file'])){
                         require_once $objDef['file'];
                         if (strcmp($objDef['type'],'Kernal object')===0 || strcmp($objDef['type'],'Application object')===0){
-                            $oc[$classWithNamespace]=new $classWithNamespace($oc);
-                            $this->updateStructure($oc,$classWithNamespace);
+                            $this->oc[$classWithNamespace]=new $classWithNamespace($this->oc);
                         }
                     } else {
                         $objListNeedsToBeRebuild=TRUE;
@@ -373,48 +433,8 @@ final class Root{
             fclose($handle);
         }
         if ($objListNeedsToBeRebuild){unlink($objListFile);}
-        return $oc;
-    }
-    
-    private function updateStructure(array $oc,string $classWithNamespace):array
-    {
-        $methods2register=array('init'=>FALSE,
-                                'job'=>FALSE,
-                                'run'=>TRUE,            // class->run(), which returns menu definition
-                                'unifyEntry'=>FALSE,
-                                'dataProcessor'=>array(),
-                                );
-        // analyse class structure
-        if (method_exists($oc[$classWithNamespace],'getEntryTable')){
-            $source=$oc[$classWithNamespace]->getEntryTable();
-            $this->structure['source2class'][$source]=$classWithNamespace;
-            $this->structure['class2source'][$classWithNamespace]=$source;
-        }
-        // get registered methods
-        foreach($methods2register as $method=>$invokeArgs){
-            if (!isset($this->structure['registered methods'][$method])){$this->structure['registered methods'][$method]=array();}
-            if (method_exists($oc[$classWithNamespace],$method)){
-                if ($invokeArgs===FALSE){
-                    $this->structure['registered methods'][$method][$classWithNamespace]=array('class'=>$classWithNamespace,'method'=>$method);
-                } else {
-                    $this->structure['registered methods'][$method][$classWithNamespace]=$oc[$classWithNamespace]->$method($invokeArgs);
-                }
-            }
-        }
-        // get classes with implemented interfaces
-        foreach(class_implements($classWithNamespace) as $interface){
-            if (in_array($interface,class_implements($classWithNamespace))){
-                $this->structure['implemented interfaces'][$interface][$classWithNamespace]=$classWithNamespace;
-            }
-        }
-        return $this->structure;
     }
 
-    public function getStructure():array
-    {
-        return $this->structure;
-    }
-    
     private function initDirs():array
     {
         $relThisDirSuffix='/src/php';

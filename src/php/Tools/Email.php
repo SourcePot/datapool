@@ -42,12 +42,17 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
-    
-    public function init($oc){
+
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
-        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
     }
 
     public function getEntryTable(){
@@ -176,10 +181,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                     $entry['Content']['Html']=(empty($entry['htmlmsg']))?'':$entry['htmlmsg'];
                     $entry['Content']['Plain']=(empty($entry['plainmsg']))?'':$entry['plainmsg'];
                     $entry['Content']['RTF']='';
-                    $contentHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Content'],TRUE);
-                    $entry['Name'].=' ['.$contentHash.']';
+                    $entry=$this->unifyEmailProps($entry);
+                    $entry['Name'].=' ['.$entry['Params']['Email']['hash'].']';
                     $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.time(),'P4D');
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
                     if (empty($entry['attachments'])){
                         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
                         $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
@@ -187,10 +191,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         $entryName=$entry['Name'];
                         foreach($entry['attachments'] as $attName=>$attContent){
                             $attName=imap_utf8($attName);
-                            $entry['Name']=$entryName;
+                            $entry['Name']=$entryName.' ('.$attName.')';
                             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
-                            $entry['EntryId'].='_'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attName,TRUE);
-                            $entry['Name'].=' ('.$attName.')';
                             $entry['fileContent']=$attContent;
                             $entry['fileName']=$attName;
                             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry,TRUE,TRUE,FALSE);
@@ -338,7 +340,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                     $keyA=mb_strtolower($keyA);
                     $keyB=mb_strtolower($keyB);
                 }
-                $template[$keyA][$keyB]=$value;
+                $template[$keyA][$keyB]=(is_array($value))?$value:preg_replace('/[\n\r]+/','',$value);
             }
         }
         return $template;
@@ -382,6 +384,21 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $return[$index]['host']=$emailComps[1];
         }
         return $return;
+    }
+
+    public function unifyEmailProps(array $entry):array
+    {
+        // add email date
+        $date=explode('(',$entry['Params']['Email']['date']['value']);
+        $date=array_shift($date);
+        $receivedDateTime=\DateTime::createFromFormat(\DATE_RFC2822,trim($date));
+        $receivedDateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+        $entry['Date']=$receivedDateTime->format('Y-m-d H:i:s');
+        // cadd email hash
+        $toHash=$entry['Date'];
+        $toHash.=(isset($entry['Content']['Plain']))?preg_replace('/\W+/','',$entry['Content']['Plain']):'';
+        $entry['Params']['Email']['hash']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash,TRUE);
+        return $entry;
     }
 
     /******************************************************************************************************************************************

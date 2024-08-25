@@ -20,7 +20,8 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable();
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
     }
 

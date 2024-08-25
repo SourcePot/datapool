@@ -26,10 +26,13 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        return $this->oc;
+    }
+    
+    public function init(){
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable(){

@@ -30,10 +30,14 @@ class Access{
     {
         $this->oc=$oc;
     }
-    
-    public function init($oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
         $access=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access);
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         $this->access=$access['Content'];

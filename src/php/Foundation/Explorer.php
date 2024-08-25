@@ -35,11 +35,15 @@ class Explorer{
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
-    
-    public function init($oc):void
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+ 
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function getEntryTable():string
@@ -246,6 +250,7 @@ class Explorer{
             // update guide entries and all other entries
             $this->updateGuideEntries($selector,$newSelector);
             $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
+            $newSelector=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($newSelector);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
             // set new page state to new selector
             $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);

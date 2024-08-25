@@ -18,7 +18,8 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
-    public function init(array $oc){
+    Public function loadOc(array $oc):void
+    {
         $this->oc=$oc;
     }
 

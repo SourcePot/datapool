@@ -38,10 +38,17 @@ final class MiscTools{
         $this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
         $this->loadEmojis($this->emojiFile);
     }
-    
-    public function init(array $oc)
+ 
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+   
+    public function init()
+    {
+        // add calendar placeholder
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{EntryId}}',$this->getEntryId());
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{Expires}}',$this->getDateTime('now','PT10M'));
     }
     
     public function getDataTypes():array
@@ -552,7 +559,11 @@ final class MiscTools{
         foreach ($arr as $key=>$value){
             if (strlen(strval($oldKey))===0){$newKey=$key;} else {$newKey=$oldKey.$S.$key;}
             if (is_array($value)){
-                $result[$newKey]=$this->arr2flatHelper($value,$flat,$newKey,$S); 
+                $result[$newKey]=$this->arr2flatHelper($value,$flat,$newKey,$S);
+                if (empty($value) && is_array($value)){
+                    $result[$newKey]='{}';
+                    $flat[$newKey]='{}';
+                }
             } else {
                 $result[$newKey]=$value;
                 $flat[$newKey]=$value;
@@ -569,6 +580,7 @@ final class MiscTools{
         if (!is_array($arr)){return $arr;}
         $result=array();
         foreach($arr as $key=>$value){
+            if ($value==='{}'){$value=array();}
             $result=array_replace_recursive($result,$this->flatKey2arr($key,$value,$S));
         }
         return $result;
@@ -586,7 +598,7 @@ final class MiscTools{
     }
     
     /**
-    * @return arr This method deletes a key-value-pair selecting the key by the corresponding flat key.
+    * @return array This method deletes a key-value-pair selecting the key by the corresponding flat key.
     */
     public function arrDeleteKeyByFlatKey(array $arr,string $flatKey):array
     {
@@ -600,7 +612,7 @@ final class MiscTools{
     }
     
     /**
-    * @return arr This method updates a key-value-pair selecting the key by the corresponding flat key.
+    * @return array This method updates a key-value-pair selecting the key by the corresponding flat key.
     */
     public function arrUpdateKeyByFlatKey(array $arr,string $flatKey,$value):array
     {

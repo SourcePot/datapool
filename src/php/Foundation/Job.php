@@ -19,7 +19,7 @@ class Job{
         $this->oc=$oc;
     }
 
-    public function init(array $oc)
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -65,7 +65,8 @@ class Job{
             $jobVars=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
                            'Group'=>'Job processing','Folder'=>'Var space',
                            'Name'=>$dueJob,
-                           'Type'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable()
+                           'Type'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
+                           'Content'=>array(),
                            );
             $jobVars=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name'),'0','',FALSE);
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');

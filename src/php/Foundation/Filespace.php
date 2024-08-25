@@ -34,10 +34,14 @@ class Filespace{
         $this->oc=$oc;
         $this->resetStatistic();
     }
-    
-    public function init(array $oc):void
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
         $this->removeTmpDirs();
     }
         
@@ -149,39 +153,19 @@ class Filespace{
         }
         return $fileName=$dir.$file;
     }
-    
-    private function stdReplacements($str='')
-    {
-        if (!is_string($str)){return $str;}
-        if (isset($this->oc['SourcePot\Datapool\Foundation\Database'])){
-            $this->toReplace=$this->oc['SourcePot\Datapool\Foundation\Database']->enrichToReplace($this->toReplace);
-        }
-        foreach($this->toReplace as $needle=>$replacement){$str=str_replace($needle,$replacement,$str);}
-        return $str;
-    }
-    
+
     public function unifyEntry(array $entry):array 
     {
         if (!isset($entry['Type'])){
             $classComps=explode('\\',$entry['Class']);
             $entry['Type']=array_pop($classComps);
         }
-        // remove all keys from entry, not provided by entryTemplate
-        foreach($entry as $key=>$value){
-            $toReplaceKey='{{'.$key.'}}';
-            if (is_string($value)){
-                $this->toReplace[$toReplaceKey]=$value;
-            } else {
-                $this->toReplace[$toReplaceKey]='';
-            }
-            if (!isset($this->entryTemplate[$key])){unset($entry[$key]);}
-        }
         // add defaults at missing keys
         foreach($this->entryTemplate as $key=>$defArr){
             if (!isset($entry[$key])){$entry[$key]=$defArr['value'];}
-            $entry[$key]=$this->stdReplacements($entry[$key]);
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
+        $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
         return $entry;
     }
     
@@ -231,27 +215,12 @@ class Filespace{
         }
         return $entry;
     }
-    /*
-    private function insertEntry(array $entry):array
+    
+    public function insertEntry(array $entry):array
     {
-        if (empty($entry['Class']) || empty($entry['EntryId'])){
-            throw new \ErrorException('Function '.__FUNCTION__.': Mandatory keys missing in entry argument, i.e. Class and EntryId',0,E_ERROR,__FILE__,__LINE__);        
-        }
-        $existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
-        if (empty($existingEntry['rowCount'])){
-            // insert entry
-            $dir=$this->class2dir($entry['Class'],TRUE);    
-            $entry=$this->unifyEntry($entry);
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
-            $this->statistics['inserted files']++;
-            return $entry;
-        } else {
-            // do nothing if entry exsits
-            $this->statistics['matched files']++;
-            return array();
-        }
+        return $this->updateEntry($entry);
     }
-    */
+
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE):array
     {
         // This method updates and returns the entry from the setup-directory.
@@ -268,7 +237,7 @@ class Filespace{
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
                 // has access to update entry
                 $entry=array_replace_recursive($existingEntry,$entry);
-                $entry=$this->unifyEntry($entry);
+                $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
                 $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
                 $this->statistics['updated files']++;                    
             } else {
@@ -422,7 +391,7 @@ class Filespace{
     * Method fileUpload2entry() processes a form file upload, fileContent2entry() adds a file to an entry based on the provided file content and
     * method file2entry() just adds a file to an entry. Methods fileUpload2entry() and fileContent2entry() are wrapper methods for file2entry().
     */
-    public function fileUpload2entry(array $fileArr,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    public function fileUpload2entry(array $fileArr,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
         $this->resetStatistic();
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
@@ -449,7 +418,7 @@ class Filespace{
         return $entry;    
     }
     
-    public function fileContent2entry(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    public function fileContent2entry(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
         $this->resetStatistic();
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
@@ -472,7 +441,7 @@ class Filespace{
         return $entry;
     }
     
-    public function file2entry(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE,bool $isDebugging=FALSE):array
+    public function file2entry(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
         $debugArr=array('file'=>$file,'entry_in'=>$entry,'debugFileName'=>__FUNCTION__.' ');
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
@@ -485,8 +454,6 @@ class Filespace{
             return $entry;
         }
         $entry=$this->addFileProps($entry,$file);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addEntryDefaults($entry);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
         if ($this->specialFileHandling($file,$entry,$createOnlyIfMissing,$isSystemCall)){
             // file attachment to entries is done by method specialFileHandling()
             $debugArr['debugFileName'].='specialFileHandling';
@@ -494,11 +461,6 @@ class Filespace{
             $entry=$this->addFile2entry($entry,$file);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
             $debugArr['debugFileName'].=$entry['Params']['File']['Name'];
-        }
-        // debugging
-        if ($isDebugging){
-            $debugArr['entry_out']=$entry;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr,$debugArr['debugFileName']);
         }
         return $entry;
     }
@@ -540,7 +502,7 @@ class Filespace{
         return FALSE;
     }
     
-    private function msg2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    private function msg2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall):array
     {
         $context=$entry;
         $context['class']=__CLASS__;
@@ -598,6 +560,7 @@ class Filespace{
                                             'from'=>array('value'=>$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr($message->getSender())),
                                             'delivery-date'=>array('value'=>$dateTimeObj->format(DATE_RFC822)),
                                             'message-id'=>array('value'=>$message->getInternetMessageId()),
+                                            'hash'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Content'],TRUE),
                                             );
             foreach($message->getRecipients() as $recipient){
                 $entry['Params']['Email'][strtolower($recipient->getType())]['value']=$this->oc['SourcePot\Datapool\Tools\Email']->emailAddressString2arr((string)$recipient);
@@ -631,19 +594,19 @@ class Filespace{
         return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
     }    
 
-    private function emailFile2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    private function emailFile2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,):array
     {
         $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0);
         $fileContent=@file_get_contents($file);
         if (empty($fileContent)){
             $emailStatistic['errors']='File "'.$entry['Params']['File']['Name'].'" not found or empty';
         } else {
-            $emailStatistic=$this->emailContent2files($fileContent,$entry,$createOnlyIfMissing,$isSystemCall,$isDebugging);
+            $emailStatistic=$this->emailContent2files($fileContent,$entry,$createOnlyIfMissing,$isSystemCall);
         }
         return array('errors'=>$emailStatistic['errors'],'files'=>$emailStatistic['files']);
     }
 
-    private function emailContent2files(string $fileContent,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    private function emailContent2files(string $fileContent,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,):array
     {
         $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0,'class'=>__CLASS__,'function'=>__FUNCTION__);
         // get and add email header
@@ -651,17 +614,13 @@ class Filespace{
         $emailContent=mb_substr($fileContent,mb_strpos($fileContent,"\r\n\r\n"));
         $emailContent=trim($emailContent,"\r\n ");
         $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
-        $entry['EntryId']=md5($fileContent);
+        $entry['Folder']=$entry['Params']['Email']['from']['value'][0]['original'];
         if (isset($entry['Params']['Email']['subject']['value'])){
             $entry['Name']=$entry['Params']['Email']['subject']['value'];
         }
-        $entry['Name'].=' ['.$entry['EntryId'].']';
-        // init zip file
-        $zipFile=$this->getPrivatTmpDir().'attachments.zip';
-        if (is_file($zipFile)){unlink($zipFile);}
-        $emailStatistic['zipFile']=$zipFile;
         // scan email parts
         preg_match_all('/boundary="([^"]+)"/',$fileContent,$bounderies);
+        $entry['Content']=array('Html'=>'','Plain'=>'','RTF'=>'');
         if (empty($bounderies[1])){
             if (isset($entry['Params']['Email']['content-transfer-encoding']['value'])){
                 $emailContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($emailContent,$entry['Params']['Email']['content-transfer-encoding']['value']);
@@ -671,9 +630,12 @@ class Filespace{
             }
             $contentType=ucfirst(mb_substr($entry['Params']['Email']['content-type']['value'],mb_strpos($entry['Params']['Email']['content-type']['value'],'/')+1));
             $entry['Content'][$contentType]=$emailContent;
-            $emailStatistic['emailContent']=$emailContent;                
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+            $emailStatistic['emailContent']=$emailContent;
         } else {
-            $shortHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['EntryId'],TRUE);
+            $partContentArr=array();
+            // recover email parts
             foreach($bounderies[1] as $boundery){
                 $boundery='--'.$boundery;
                 $endBoundery=$boundery.'--';
@@ -691,44 +653,41 @@ class Filespace{
                     $headerArr=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($partHeader,$headerArr);
                     // decode content
                     $partContent=$this->oc['SourcePot\Datapool\Tools\Email']->decodeEmailData($partContent,$headerArr['content-transfer-encoding']['value']);
-                    if (strpos($headerArr['content-disposition']['value'],'attachment')===FALSE){
+                    if (empty($headerArr['content-disposition']['value']) && strpos($headerArr['content-type']['value'],'text')!==FALSE){
                         $contentType=ucfirst(mb_substr($headerArr['content-type']['value'],mb_strpos($headerArr['content-type']['value'],'/')+1));
-                        $entry['Content'][$contentType]=$partContent;
-                    } else {
-                        if (!isset($zip)){
-                            $zip=new \ZipArchive;
-                            $zip->open($zipFile,\ZipArchive::CREATE);
-                        }
-                        $fileName=$shortHash.'_'.$headerArr['content-disposition']['filename'];
-                        $zip->addFromString($fileName,$partContent);
-                        $emailStatistic['files']++;
+                        $entry['Content'][$contentType].=$partContent;
+                    } else if (strpos($headerArr['content-disposition']['value'],'attachment')!==FALSE || strpos($headerArr['content-disposition']['value'],'inline')!==FALSE){
+                        $partContentArr[]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
                     }
                     $emailStatistic['parts'][$boundery.'|'.$partIndex]=array('headerArr'=>$headerArr,'partContent'=>$partContent);
                 }
-                $entry['Content']['RTF']='';
+            }
+            // email parts to entries
+            $entry=$this->oc['SourcePot\Datapool\Tools\Email']->unifyEmailProps($entry);
+            $entry['Name'].=' ['.$entry['Params']['Email']['hash'].']';
+            $fileEntry=$entry;
+            $fileEntry['Name']=$entry['Name'].' (message)';
+            $fileEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($fileEntry,array('Group','Folder','Name','Date'),0);
+            $fileEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($fileEntry,TRUE);
+            while($headerAndContent=array_shift($partContentArr)){
+                $fileEntry['Name']=$entry['Name'].' ('.$headerAndContent['headerArr']['content-disposition']['filename'].')';
+                $fileEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($fileEntry,array('Group','Folder','Name','Date'),0);
+                $fileEntry['fileContent']=$headerAndContent['partContent'];
+                $fileEntry['fileName']=$headerAndContent['headerArr']['content-disposition']['filename'];
+                $fileEntry['Params']['Email']=array_merge($fileEntry['Params']['Email'],$headerAndContent['headerArr']);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($fileEntry,TRUE,TRUE,FALSE);
+                $emailStatistic['files']++;
             }
         }
         $emailStatistic['emailHeader']=$entry['Params']['Email'];
-        unset($entry['Params']['File']);
-        if (isset($zip)){
-            $this->oc['logger']->log('info','Created zip-file "{zipFile}" from "{files}" email attachments. Will safe zip-archive as new entry or extract archive and safe content to entries.',$emailStatistic);
-            $zip->close();
-            $this->file2entry($zipFile,$entry,$createOnlyIfMissing,$isSystemCall);
-        } else {
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["html"]'),FALSE);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
-        }
         $emailStatistic['entry_out']=$entry;
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($emailStatistic,__FUNCTION__.'-'.hrtime(TRUE));
-        }
         if ($emailStatistic['errors']){
             $this->oc['logger']->log('warning',implode('|',$emailStatistic['errors']));    
         }
         return $emailStatistic;
     }
     
-    private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,bool $isDebugging=FALSE):array
+    private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall):array
     {
         $zipStatistic=array('errors'=>array(),'files'=>array());
         // extract zip archive to a temporary dir
@@ -752,9 +711,6 @@ class Filespace{
         } else {
             $zipStatistic['errors'][]='Failed to open zip archive';
         }
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($zipStatistic);
-        }
         return $zipStatistic;
     }
     
@@ -762,11 +718,11 @@ class Filespace{
      * Adds meta data to to an entry derived from the file provided.
      *
      * @param array $entry is the entry which meta data is added to
-     * @param array $file is file from which the meta data is derived
+     * @param string $file is file from which the meta data is derived
      *
      * @return $entry is the enriched entry
      */
-    public function addFile2entry(array $entry,string $file,bool $isDebugging=FALSE):array
+    public function addFile2entry(array $entry,string $file):array
     {
         $debugArr=array('entry_in'=>$entry,'file'=>$file);
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
@@ -795,23 +751,22 @@ class Filespace{
                 $context['msg']=$e->getMessage();
                 $this->oc['logger']->log('notice','Function "{class}::{function}" failed to scan for pdf-attachments: {msg}',$context);
             }    
-        } else if (stripos($entry['Params']['File']['Extension'],'csv')!==FALSE){
+        } else if (stripos(strval($entry['Params']['File']['Extension']),'csv')!==FALSE){
                 $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();
                 $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
                 $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
-        } else if (stripos($entry['Params']['File']['Extension'],'xls')!==FALSE){
+        } else if (stripos(strval($entry['Params']['File']['Extension']),'xls')!==FALSE){
                 $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($file,$entry['Params']['File']['Extension'])->current();
                 $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\XLStools';
                 $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
         }
         // add file to entry
+        if (empty($entry['EntryId'])){
+            $entry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+        }
         $targetFile=$this->selector2file($entry,TRUE);
         if (copy($file,$targetFile)){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source'=>$file,'File attached'=>$targetFile),FALSE);    
-        }
-        if ($isDebugging){
-            $debugArr['entry_out']=$entry;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $entry;
     }

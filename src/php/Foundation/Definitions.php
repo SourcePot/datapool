@@ -23,11 +23,15 @@ class Definitions{
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
     public function getEntryTable()
@@ -78,14 +82,14 @@ class Definitions{
     public function getDefinition(array $entry):array
     {
         $selector=array('Source'=>$this->entryTable,'Group'=>'Templates');
-        if (!empty($entry['Class'])){
-            $selector['Name']=$this->class2name($entry['Class']);    
+        if (!empty($entry['app'])){
+            $selector['Name']=$this->class2name($entry['app']);
         } else if (!empty($entry['Type'])){
             $typeComps=explode('|',$entry['Type']);
             $selector['Name']=array_pop($typeComps);
         } else {
-            $isDebugging=TRUE;
-            $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key, debugging file added.',array('function'=>__FUNCTION__));         
+            $entry['function']=__FUNCTION__;
+            $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key.',$entry);        
         }
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
             return $entry;
@@ -221,7 +225,9 @@ class Definitions{
             $definitionKeyComps=explode('@',$definitionKey);
             $definitionKey=array_shift($definitionKeyComps);
             $definitionKey=trim($definitionKey,$S);
-            if (isset($flatEntry[$definitionKey])){$entryArr[$definitionKey]['value']=$flatEntry[$definitionKey];}
+            if (isset($flatEntry[$definitionKey])){
+                $entryArr[$definitionKey]['value']=$flatEntry[$definitionKey];
+            }
             // get attribute
             $definitionKeyAttr=array_pop($definitionKeyComps);
             if (empty($definitionKeyAttr)){continue;}
@@ -256,8 +262,12 @@ class Definitions{
                 } else {
                     $matrices[$caption][$key]['Value']=$value;
                 }
+            } else if (empty($key)){
+                // empty key
             } else {
                 // unknown tags
+                $definition['currentKey']=$key;
+                $this->oc['logger']->log('warning','Definition error: Folder: "{Folder}", Name: "{Name}", key: "{currentKey}", tag or function not set.',$definition);
             }
         }
         $debugArr['tableCntrArr']=$tableCntrArr;
@@ -320,7 +330,7 @@ class Definitions{
                             $debugArr['entry_updated']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
                         }
                     } else {
-                        $entry=$this->oc[$dataStorageClass]->unifyEntry($entry);
+                        $entry['skipUpdateCalendarEventEntry']=FALSE;
                         $debugArr['entry_updated']=$this->oc[$dataStorageClass]->updateEntry($entry);
                     }
                     $statistics=$this->oc[$dataStorageClass]->getStatistic();

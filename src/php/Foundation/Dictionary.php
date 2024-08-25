@@ -29,10 +29,14 @@ class Dictionary{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    public function init(array $oc)
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         // set language
         if (empty($_SESSION['page state']['lngCode'])){
             if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){
@@ -137,7 +141,6 @@ class Dictionary{
             $phrase=strip_tags($phrase);
             $phrase=trim($phrase);
             $entry=array('Source'=>$this->entryTable,'phrase'=>$phrase,'translation'=>$translation,'langCode'=>$langCode);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             return $translation;
         }
@@ -200,9 +203,9 @@ class Dictionary{
         }
         // compile html
         $matrix=array('Translation'=>array());
-        $matrix['Translation']['Label phrase']=array('tag'=>'p','element-content'=>'EN','class'=>'toolbox');
+        $matrix['Translation']['Label phrase']=array('tag'=>'p','element-content'=>'EN');
         $matrix['Translation']['Phrase']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'key'=>array('phrase','en'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode),'class'=>'toolbox');
+        $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode));
         $matrix['Translation']['Translation']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>array('translation',$langCode),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
         $matrix['Translation']['Cmd']=array('tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>''));

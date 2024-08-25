@@ -22,6 +22,7 @@ class Backbone{
                             'loginForm'=>0,
                             'iconFile'=>'main.ico',
                             'logoFile'=>'logo.jpg',
+                            'homePageContent'=>'video',
                             'charset'=>'utf-8',
                             'cssFiles'=>array('jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','light.css','ep.css'),
                             'jsFiles'=>array('jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js'),
@@ -39,16 +40,22 @@ class Backbone{
             $this->settings=$settings['Content'];
         }
     }
-    
-    public function init(array $oc):array
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        // Initialize page settings
+    }
+
+    public function init()
+    {
+        // initialize page settings
         $settings=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
         $settings['Content']=$this->settings;
-        $settings=$oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
+        $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
         $this->settings=$settings['Content'];
-        return $this->oc;
+        // add placeholder
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTitle}}',$this->settings['pageTitle']);
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTimeZone}}',$this->settings['pageTimeZone']);
     }
     
     public function getSettings($key=FALSE)

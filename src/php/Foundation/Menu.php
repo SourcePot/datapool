@@ -30,10 +30,15 @@ class Menu{
     {
         $this->oc=$oc;
     }
-        
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
-        $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run');
+        $this->oc=$oc;
+    }
+    
+    public function init()
+    {
+        $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run',TRUE);
         // get category from input
         $linkid=filter_input(INPUT_GET,'linkid',FILTER_SANITIZE_ENCODED);
         $linkid??FALSE;

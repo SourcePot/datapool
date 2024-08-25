@@ -48,11 +48,15 @@ class LoginForms{
     {
         $this->oc=$oc;
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
+    {
+        $this->oc=$oc;
+    }
+
+    public function init()
     {
         $this->formType=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('loginForm'));
-        $this->oc=$oc;
     }
     
     public function oneTimeLoginEntry(array $arr,$user):array

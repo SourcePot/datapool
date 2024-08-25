@@ -81,16 +81,28 @@ class User{
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->userRols();
         // check database user entry definition 
-        $oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
         $currentUser=$this->getCurrentUser();
-        $this->initAdminAccount();
+        // add calendar placeholder
+        if (!isset($_SESSION['currentUser']['EntryId'])){
+            $owner='SYSTEM';
+        } else if (mb_strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
+            $owner=$_SESSION['currentUser']['EntryId'];
+        } else {
+            $owner='ANONYM';
+        }
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{Owner}}',$owner);
     }
     
     public function getEntryTable():string
@@ -168,17 +180,16 @@ class User{
         $user['LoginId']=mt_rand(1,10000000);
         $user['Expires']=date('Y-m-d H:i:s',time()+300);
         $user['Privileges']=1;
-        $user=$this->unifyEntry($user);
-        $user=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
+        $user=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($user,TRUE);
         $this->loginUser($user);
-        return $user;
+        return $_SESSION['currentUser']=$user;
     }
     
     private function initPsw(){
         return trim(base64_encode(random_bytes(16)),'=');
     }
     
-    private function initAdminAccount():bool
+    public function initAdminAccount():bool
     {
         $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
         if ($noAdminAccountFound){
@@ -191,14 +202,13 @@ class User{
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
             $admin['Content']['Contact details']['First name']='Admin';
             $admin['Content']['Contact details']['Family name']='Admin';
-            $admin=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($admin);
-            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($admin,TRUE);
+            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin,TRUE);
             if ($success){
                 // Save init admin details
                 $adminFile=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
                 $adminFile['Content']['Admin email']=$admin['Email'];
                 $adminFile['Content']['Admin password']=$admin['Password'];
-                $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($adminFile,TRUE);
+                $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->insertEntry($adminFile,TRUE);
                 $this->oc['logger']->log('alert','No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
                 return TRUE;
             }
@@ -211,8 +221,7 @@ class User{
         $user['Owner']=$user['EntryId'];
         $user['LoginId']=$user['LoginId'];
         $user['Privileges']='REGISTERED_R';
-        $user=$this->unifyEntry($user);
-        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
+        $user=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($user);
         $this->loginUser($user);
         return $user;
     }

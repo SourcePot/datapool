@@ -16,8 +16,6 @@ interface Processor{
     * Initializes the instance that implments the interface. The $oc-argument contains instantiated classes of datappol, e.g.
     * instances that provide database access, filespace access, html-templates etc.
     */
-    public function init(array $oc);
-
     public function getEntryTable():string;
     
     public function dataProcessor(array $callingElementSelector,string $action='info');

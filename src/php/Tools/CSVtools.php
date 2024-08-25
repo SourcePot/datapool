@@ -32,10 +32,14 @@ class CSVtools{
         $this->oc=$oc;
         $this->csvTimestamp=time();
     }
-    
-    public function init(array $oc)
+
+    Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+    }
+
+    public function init()
+    {
         $this->entry2csv();
     }
     
@@ -172,7 +176,6 @@ class CSVtools{
                 $entry['Params']['File']['Size']=filesize($targetFile);
                 $entry['Params']['File']['Extension']='csv';
                 $entry['Params']['File']['MIME-Type']='text/csv';
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry);
                 $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
                 $entry['Content']=$statistics;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,FALSE,TRUE,$targetFile);
