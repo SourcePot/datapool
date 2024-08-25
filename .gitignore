@@ -1,4 +1,7 @@
-/src/www/assets
+/src/www/assets/*
+!/src/www/assets/login.jpg
+!/src/www/assets/home.mp4
+!/src/www/assets/dateType_example.png
 /src/www/tmp
 /src/setup/*/
 /src/setup/objectList.csv
@@ -16,5 +19,3 @@
 !/src/php/DataApps/Cases.php
 !/src/php/DataApps/Unycom.php
 !/src/php/DataApps/SAP.php
-!/src/www/assets/login.jpg
-!/src/www/assets/home.mp4
