@@ -130,7 +130,6 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Outbox class'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')),
                                 'Recipient'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions),
                                 'When done'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('Keep entries','Delete sent entries')),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);

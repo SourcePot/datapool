@@ -123,8 +123,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $contentStructure=array('Forward to canvas element'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                                 'Reset all trigger when condition is met'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
-                            );
+                                );
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=array('Column to delay'=>'Name');

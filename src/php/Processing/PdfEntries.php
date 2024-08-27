@@ -173,7 +173,6 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Orientation'=>array('method'=>'select','excontainer'=>TRUE,'value'=>key($this->orientation),'options'=>$this->orientation),
                                 'Top margin [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE),
                                 'Bottom margin [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);

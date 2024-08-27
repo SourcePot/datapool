@@ -389,11 +389,13 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     public function unifyEmailProps(array $entry):array
     {
         // add email date
-        $date=explode('(',$entry['Params']['Email']['date']['value']);
-        $date=array_shift($date);
-        $receivedDateTime=\DateTime::createFromFormat(\DATE_RFC2822,trim($date));
-        $receivedDateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-        $entry['Date']=$receivedDateTime->format('Y-m-d H:i:s');
+        if(isset($entry['Params']['Email']['date']['value'])){
+            $date=explode('(',$entry['Params']['Email']['date']['value']);
+            $date=array_shift($date);
+            $receivedDateTime=\DateTime::createFromFormat(\DATE_RFC2822,trim($date));
+            $receivedDateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+            $entry['Date']=$receivedDateTime->format('Y-m-d H:i:s');
+        }
         // cadd email hash
         $toHash=$entry['Date'];
         $toHash.=(isset($entry['Content']['Plain']))?preg_replace('/\W+/','',$entry['Content']['Plain']):'';

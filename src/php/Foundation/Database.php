@@ -1045,122 +1045,57 @@ class Database{
         return explode('___',$primaryKeyValue);    
     }
     
-    public function orderedListInfo(array $orderedListSelector,bool $isSystemCall=TRUE,bool $isDebugging=FALSE):array
+    public function rebuildOrderedList(array $selector,$newOlKey='',$removeEntryId='SKIP')
     {
-        $loopIndex=$loopEntryIndex=1;
-        $currentEntryId=(empty($orderedListSelector['EntryId']))?FALSE:$orderedListSelector['EntryId'];
-        $currentEntryIndex=$this->getOrderedListIndexFromEntryId($currentEntryId,FALSE);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($orderedListSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE));
-        $olInfo=array('firstEntryId'=>FALSE,'lastEntryId'=>FALSE,'newEntryIndex'=>FALSE,'newEntryId'=>FALSE,'baseEntryId'=>FALSE,'currentEntryIndex'=>$currentEntryIndex,'selector'=>$selector,'error'=>array());
-        if (empty($orderedListSelector['Source']) && !empty($orderedListSelector['Class'])){
-            $olInfo['storageClass']='SourcePot\Datapool\Foundation\Filespace';
+        $notices=array();
+        if (!empty($selector['Source'])){
+            $storageObj='SourcePot\Datapool\Foundation\Database';
         } else {
-            $olInfo['storageClass']=__CLASS__;
+            $storageObj='SourcePot\Datapool\Foundation\Filespace';
         }
-        foreach($this->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
-            if ($olInfo['firstEntryId']===FALSE){
-                $olInfo['firstEntryId']=$olInfo['lastEntryId']=$entry['EntryId'];
-                $olInfo['baseEntryId']=$this->getOrderedListKeyFromEntryId($olInfo['firstEntryId']);
-            }
-            if (mb_strpos($entry['EntryId'],$olInfo['baseEntryId'])===FALSE){
-                $this->oc['logger']->log('notice','"Deleted invalid ordered list entry: Source="{Source}", EntryId="{EntryId}"',array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']));
-                $olInfo['error'][]='Invalid ordered list entry '.$entry['EntryId'];
-                $this->deleteEntries(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']),TRUE);
-            } else {
-                $olInfo['lastEntryId']=$entry['EntryId'];
-                $loopEntryIndex=$this->getOrderedListIndexFromEntryId($entry['EntryId'],FALSE);
-                if ($loopEntryIndex!==$loopIndex && $loopEntryIndex>0){
-                    $olInfo['error'][]='Index mismatch at '.$entry['EntryId'].', index should be '.$loopIndex;
-                }
-                $loopIndex++;
-            }
-        }
-        if ($olInfo['firstEntryId']===FALSE){
-            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,$relevantKeys=array('Source','Group','Folder','Name'),'0','',TRUE);
-            $olInfo['baseEntryId']=$selector['EntryId'];
-            $olInfo['firstEntryId']=$olInfo['lastEntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],0);
-        }
-        $olInfo['lastEntryIndex']=$olInfo['moveUpIndex']=$this->getOrderedListIndexFromEntryId($olInfo['lastEntryId'],FALSE);
-        $olInfo['newEntryIndex']=$olInfo['lastEntryIndex']+1;
-        $olInfo['newEntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['newEntryIndex']);
-        if ($currentEntryIndex>1){
-            $olInfo['moveDownIndex']=$currentEntryIndex-1;
-            $olInfo['hasMoveDownBtn']=TRUE;
-        } else {
-            $olInfo['moveDownIndex']=$currentEntryIndex;
-            $olInfo['hasMoveDownBtn']=FALSE;
-        }
-        if ($currentEntryIndex<$olInfo['lastEntryIndex']){
-            $olInfo['moveUpIndex']=$currentEntryIndex+1;
-            $olInfo['hasMoveUpBtn']=TRUE;
-        } else {
-            $olInfo['moveUpIndex']=$currentEntryIndex;
-            $olInfo['hasMoveUpBtn']=FALSE;
-        }
-        if ($isDebugging || !empty($olInfo['error'])){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('orderedListSelector'=>$orderedListSelector,'infoArr'=>$olInfo));
-            $this->oc['logger']->log('warning','Ordered list error detected: '.implode('|',$olInfo['error']),array());
-            $this->rebuildOrderedList(array('Source'=>$olInfo['selector']['Source'],'EntryId'=>$olInfo['baseEntryId']));
-        }
-        return $olInfo;
-    }
-    
-    private function rebuildOrderedList(array $selector)
-    {
-        $context=array('mapping'=>'','files moved'=>0,'files failed'=>0);
-        $items=array();
         // get all items of the list
-        $context['primaryKeyValue']=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
-        $context['listSelector']=array('Source'=>$selector['Source'],'EntryId'=>'%'.$context['primaryKeyValue']);
-        foreach($this->entryIterator($context['listSelector'],TRUE,'Read','EntryId',TRUE) as $entry){
+        $items=array();
+        $olKey=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
+        $olSelector=array('Source'=>$selector['Source'],'EntryId'=>'%'.$olKey);
+        foreach($this->entryIterator($olSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            $targetFile='';
             if (is_file($sourceFile)){
                 $fileName=basename($sourceFile);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$fileName;
-                if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile)){$items[]=array('entry'=>$entry,'file'=>$targetFile);}
-            } else {
-                $items[]=array('entry'=>$entry,'file'=>'');
+                if (!$this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile)){
+                    $notices[]="Problem copy ordered list source file \"$sourceFile\"";
+                    $targetFile='';
+                }
             }
+            // check if item should be removed
+            if ($removeEntryId===$entry['EntryId']){
+                $notices[]='Removed item "'.$this->getOrderedListIndexFromEntryId($entry['EntryId']).'"';
+            } else {
+                $items[]=array('entry'=>$entry,'file'=>$targetFile);
+            }
+            // delete exsisting entry
+            $this->oc[$storageObj]->deleteEntries($entry);
         }
-        // delete existing list
-        $this->deleteEntries($selector,TRUE);
         // rebuild list
+        if (empty($newOlKey)){$newOlKey=$olKey;}
+        $mapping=array();
         foreach($items as $index=>$item){
             $newListIndex=$index+1;
-            $context['mapping'].=(empty($context['mapping']))?($this->getOrderedListIndexFromEntryId($item['entry']['EntryId']).' &rarr; '.$newListIndex):(' | '.$this->getOrderedListIndexFromEntryId($item['entry']['EntryId']).' &rarr; '.$newListIndex);
-            $item['entry']['EntryId']=$this->addOrderedListIndexToEntryId($context['primaryKeyValue'],$newListIndex);
+            $mapping[]=$this->getOrderedListIndexFromEntryId($item['entry']['EntryId']).' &rarr; '.$newListIndex;
+            $item['entry']['EntryId']=$this->addOrderedListIndexToEntryId($newOlKey,$newListIndex);
             if (is_file($item['file'])){
-                $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                $targetFile=$item['file'];
-                if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile)){$context['files moved']++;} else {$context['files failed']++;}
+                $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($item['entry']);
+                if (empty($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$item['file']))){
+                    $notices[]='Problem copy ordered list target file "'.$item['file'].'"';
+                }
             }
-            $this->insertEntry($item['entry']);
+            $this->oc[$storageObj]->insertEntry($item['entry']);
         }
-        $this->oc['logger']->log('notice','Ordered list with EntryId "{primaryKeyValue}" rebuild, mapped "{mapping}". Files moved "{files moved}", files failed "{files failed}"',$context);
+        $context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($newOlKey===$olKey)?'':'Key change '.$olKey.'&rarr;'.$newOlKey.'.','notices'=>implode('|',$notices));
+        $this->oc['logger']->log('info','Ordered list from Source {Source} with EntryId "{olKey}" rebuild, mapped "{mapping}". {keyChange} Notice: "{notices}"',$context);
     }
 
-    public function deleteOrderedListEntry(array $selector,bool $isSystemCall=TRUE)
-    {
-        $toDeleteEntry=$this->entryById($selector,TRUE);
-        if (empty($toDeleteEntry)){return FALSE;}
-        $entryDetected=FALSE;
-        $lastEntrySelector=array('Source'=>$selector['Source'],'EntryId'=>'');
-        $olSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($toDeleteEntry,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
-        foreach($this->entryIterator($olSelector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
-            if ($entryDetected){
-                $this->swapEntries($lastEntrySelector,$entry,$isSystemCall);
-            }
-            $lastEntrySelector['EntryId']=$entry['EntryId'];
-            if (strcmp($entry['EntryId'],$toDeleteEntry['EntryId'])===0){$entryDetected=TRUE;}
-        }
-        if ($entryDetected){
-            $this->deleteEntries(array('Source'=>$selector['Source'],'EntryId'=>$lastEntrySelector['EntryId']),$isSystemCall);
-            return TRUE;
-        } else {
-            return FALSE;
-        }
-    }
-    
     public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):bool
     {
         if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
@@ -1177,15 +1112,14 @@ class Database{
     
     public function moveEntry(array $selector,bool $moveUp=TRUE,bool $isSystemCall=FALSE):string|bool
     {
-        $sourceEntry=$this->entryById($selector,TRUE);
-        $olInfo=$this->orderedListInfo($sourceEntry,TRUE,FALSE);
-        if (empty($olInfo['selector'])){return FALSE;}
-        $sourceSelector=$targetSelector=$olInfo['selector'];
-        $sourceSelector['EntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['currentEntryIndex']);
+        $baseEntryId=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
+        $currentEntryIndex=$this->getOrderedListIndexFromEntryId($selector['EntryId']);
+        $sourceSelector=$targetSelector=array('Source'=>$selector['Source']);
+        $sourceSelector['EntryId']=$this->addOrderedListIndexToEntryId($baseEntryId,$currentEntryIndex);
         if ($moveUp){
-            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['moveUpIndex']);
+            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($baseEntryId,$currentEntryIndex+1);
         } else {
-            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($olInfo['baseEntryId'],$olInfo['moveDownIndex']);
+            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($baseEntryId,$currentEntryIndex-1);
         }
         $this->swapEntries($sourceSelector,$targetSelector,$isSystemCall);
         return $targetSelector['EntryId'];

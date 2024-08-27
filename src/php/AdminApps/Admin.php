@@ -168,18 +168,17 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']['Content']=array('Source class'=>key($apps),'New class'=>'Inventory','Label'=>'Inventory','Emoji'=>'€','Read'=>32768);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['cmd'])){
+        if (!empty($formData['cmd']) && !isset($formData['cmd']['save'])){
             $entryKey=key($formData['cmd']);
             $arr['selector']['Content']=$formData['val'][$entryKey]['Content'];
             $this->replicateApp($formData['val'][$entryKey]['Content']);
         }
-        //return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         $contentStructure=array('Source class'=>array('method'=>'select','options'=>$apps,'excontainer'=>TRUE),
                                 'New class'=>array('method'=>'element','tag'=>'input','type'=>'text','minlength'=>3),
                                 'Label'=>array('method'=>'element','tag'=>'input','type'=>'text','minlength'=>3),
                                 'Emoji'=>array('method'=>'element','tag'=>'input','type'=>'text','minlength'=>1,'maxlength'=>1),
                                 'Read'=>array('method'=>'select','options'=>$readOptions,'excontainer'=>TRUE),
-                                ''=>array('method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Replicate'),
+                                ' '=>array('method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Replicate'),
                                 );
         // get HTML
         $arr['contentStructure']=$contentStructure;
@@ -208,7 +207,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']['Content']=array('Class'=>key($classes));
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['cmd'])){
+        if (!empty($formData['cmd']) && !isset($formData['cmd']['save'])){
             $entryKey=key($formData['cmd']);
             $class2delete=$formData['val'][$entryKey]['Content']['Class'];
             if (unlink($classes2files[$class2delete])){
@@ -218,9 +217,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $this->oc['logger']->log('error','Failed to remove class "{class}", file {file}',array('class'=>$class2delete,'file'=>$classes2files[$class2delete]));         
             }
         }
-        //return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         $contentStructure=array('Class'=>array('method'=>'select','options'=>$classes,'excontainer'=>TRUE),
-                                ''=>array('method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Delete'),
+                                ' '=>array('method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Delete'),
                                 );
         // get HTML
         $arr['contentStructure']=$contentStructure;

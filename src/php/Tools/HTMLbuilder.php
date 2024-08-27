@@ -685,145 +685,142 @@ class HTMLbuilder{
         return $html;
     }
 
-    public function entryListEditor(array $arr):string
-    {
-        // This method returns a html-table from entries selected by the arr-argument.
-        // Each entry is a row in the table and the data stored under the key Content of every entry can be updated and entries can be added or deleted.
-        // $arr must contain the key 'contentStructure' which defines the html-elements used in order to show and edit the entry content.
-        // Important keys are:
-        // 'contentStructure' ... array([Content key]=>array('method'=>[HTMLbuilder method to be used],'class'=>[Style class],....))
-        // 'callingClass','callingFunction' ... are used for the form processing
-        // 'caption' ... sets the table caption
-        if (isset($arr['style'])){$tableArrStyle=$arr['style'];unset($arr['style']);}
-        if (empty($arr['caption'])){$arr['caption']='Please provide a caption';}
-        if (empty($arr['Name'])){$arr['Name']=$arr['caption'];}
-        if (!isset($arr['contentStructure']) || empty($arr['selector']['Source']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
-            throw new \ErrorException('Method '.__FUNCTION__.', required arr key(s) missing.',0,E_ERROR,__FILE__,__LINE__);    
-        }
-        $isSystemCall=$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin();
-        $matrix=array('New'=>array());
-        $arr['movedEntryId']=$this->entry2row($arr,TRUE,FALSE,FALSE,$isSystemCall);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Name'=>FALSE));
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
-            $orderedListComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
-            if (count($orderedListComps)!==2){continue;}
-            $arr['selector']=$entry;
-            $matrix[$orderedListComps[0]]=$this->entry2row($arr,FALSE,FALSE,FALSE,$isSystemCall);
-        }
-        $matrix['New']=$this->entry2row($arr,FALSE,FALSE,TRUE);
-        $matrix['New']['trStyle']=array('background-color'=>'#999');
-        $tableArr=array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']);
-        if (isset($tableArrStyle)){$tableArr['style']=$tableArrStyle;}
-        $html=$this->table($tableArr);
-        return $html;
-    }
-
+    
     public function entry2row(array $arr,bool $commandProcessingOnly=FALSE,bool $singleRowOnly=FALSE,bool $isNewRow=FALSE,bool $isSystemCall=FALSE):array|string
     {
-        $olInfoArr=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListInfo($arr['selector']);
-        if ($commandProcessingOnly || $singleRowOnly){
-            $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-            if (isset($formData['cmd']['add']) || isset($formData['cmd']['save'])){
-                $entry=$arr['selector'];
-                $entry['EntryId']=key(current($formData['cmd']));
-                if (isset($entry['Content'])){
-                    $entry['Content']=array_replace_recursive($entry['Content'],$formData['val'][$entry['EntryId']]['Content']);
-                } else {
-                    $entry['Content']=$formData['val'][$entry['EntryId']]['Content'];
-                }
-                $file=FALSE;
-                if (isset($formData['files'][$entry['EntryId']])){
-                    $flatFile=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files'][$entry['EntryId']]);
-                    $file=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatFile);
-                    if ($file['error']!=0){$file=FALSE;}
-                }
-                if ($file){
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($file,$entry);
-                } else {
-                    $arr['selector']=$this->oc[$olInfoArr['storageClass']]->updateEntry($entry,$isSystemCall,FALSE,TRUE,'');
-                }
-            } else if (isset($formData['cmd']['delete'])){
-                $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteOrderedListEntry($selector);
-            } else if (isset($formData['cmd']['moveUp'])){
-                $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE,$isSystemCall);
-            } else if (isset($formData['cmd']['moveDown'])){
-                $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>key(current($formData['cmd'])));
-                $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE,$isSystemCall);
-            }
-            if ($commandProcessingOnly){
-                if (isset($movedEntryId)){return $movedEntryId;} else {return '';}
-            }
-        }
-        $row=array();
-        if ($isNewRow){
-            $arr['selector']['EntryId']=$olInfoArr['newEntryId'];
-        }
-        foreach($arr['contentStructure'] as $contentKey=>$elementArr){
-            $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
-            $method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];
-            if (method_exists($classWithNamespace,$method)){
-                // if classWithNamespace::method() exists
-                if (isset($arr['selector']['Content'][$contentKey])){
-                    if (isset($elementArr['element-content'])){
-                        $elementArr['element-content']=$arr['selector']['Content'][$contentKey];
-                        if (!empty($elementArr['value'])){$elementArr['value']=$elementArr['value'];}
-                    } else {
-                        $elementArr['value']=$arr['selector']['Content'][$contentKey];
-                    }
-                }
-                if (!$isNewRow && !isset($elementArr['excontainer'])){
-                    $elementArr['excontainer']=TRUE;
-                }
-                $elementArr['callingClass']=$arr['callingClass'];
-                $elementArr['callingFunction']=$arr['callingFunction'];
-                $elementArr['key']=array($arr['selector']['EntryId'],'Content',$contentKey);
-                if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
-                $row[$contentKey]=$this->oc[$classWithNamespace]->$method($elementArr);
-                if (isset($elementArr['type']) && isset($elementArr['value'])){
-                    if (strcmp($elementArr['type'],'hidden')===0){
-                        $row[$contentKey].=$elementArr['value'];
-                    }
-                }                
-            } else {
-                // if classWithNamespace::method() does not exists
-                $row[$contentKey]=$this->traceHtml('Not found: '.$classWithNamespace.'::'.$method.'(arr)');
-            }
-        }
-        if (empty($arr['noBtns'])){
-            $row['Buttons']='';
-            if (empty($isNewRow)){
-                $btnArr=array_replace_recursive($arr,$this->btns['save']);
-                $btnArr['key'][]=$arr['selector']['EntryId'];
-                $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-                if (!$singleRowOnly){
-                    $btnArr=array_replace_recursive($arr,$this->btns['delete']);
-                    $btnArr['key'][]=$arr['selector']['EntryId'];
-                    $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);  
-                    if ($olInfoArr['hasMoveDownBtn']){
-                        $btnArr=array_replace_recursive($arr,$this->btns['moveDown']);
-                        $btnArr['key'][]=$arr['selector']['EntryId'];
-                        if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
-                        $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
-                    }
-                    if ($olInfoArr['hasMoveUpBtn']){
-                        $btnArr=array_replace_recursive($arr,$this->btns['moveUp']);
-                        $btnArr['key'][]=$arr['selector']['EntryId'];
-                        if (strcmp($arr['selector']['EntryId'],$arr['movedEntryId'])===0){$btnArr['style']=array('background-color'=>'#89fa');}
-                        $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
-                    }
-                }
-            } else {
-                $btnArr=array_replace_recursive($arr,$this->btns['add']);
-                $btnArr['key'][]=$arr['selector']['EntryId'];
-                $row['Buttons'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-            }
-            $row['Buttons']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','keep-element-content'=>TRUE,'element-content'=>$row['Buttons'],'style'=>'min-width:150px;'));
-        }
-        return $row;
+        $arr['returnRow']=TRUE;
+        return $this->entryListEditor($arr,$isSystemCall);
     }
-    
+
+    //public function orderedListHtml(array $arr,bool $isSystemCall=TRUE):string
+    public function entryListEditor(array $arr,bool $isSystemCall=TRUE):string|array
+    {
+        if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
+            $this->oc['logger']->log('error','Method "{class}&rarr;{method}()" arr-argument called with required keys missing',array('class'=>__CLASS__,'method'=>__function__));
+            return array('error'=>array('value'=>__FUNCTION__.' called with arr-argument keys missing: contentStructure, callingClass or callingFunction'));
+        }
+        if ((empty($arr['selector']['Source']) && empty($arr['selector']['Class'])) || empty($arr['selector']['EntryId'])){
+            $this->oc['logger']->log('error','Method "{class}&rarr;{method}()" arr-argument called with required keys missing',array('class'=>__CLASS__,'method'=>__function__));
+            return array('error'=>array('value'=>__FUNCTION__.' called with arr-argument keys missing: Source or Class or EntryId'));
+        }
+        $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr);
+        // get base selector and storage object
+        if (!empty($arr['selector']['Source'])){
+            $storageObj='SourcePot\Datapool\Foundation\Database';
+            $baseSelector=array('Source'=>$arr['selector']['Source']);
+        } else {
+            $storageObj='SourcePot\Datapool\Foundation\Filespace';
+            $baseSelector=array('Class'=>$arr['selector']['Class']);
+        }
+        // initialization
+        $arr['returnRow']=!empty($arr['returnRow']);
+        $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
+        $arr['maxRowCount']=(empty($arr['maxRowCount']))?999:$arr['maxRowCount'];
+        if ($arr['returnRow']){$arr['maxRowCount']=1;}
+        $firstEntry=$arr['selector'];
+        if ($arr['maxRowCount']>1){
+            $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
+        }
+        $this->oc[$storageObj]->entryByIdCreateIfMissing($firstEntry,TRUE);
+        // command processing
+        $movedEntryId='';
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        if (!empty($formData['cmd'])){
+            $selector=$baseSelector;
+            $selector['EntryId']=key(current($formData['cmd']));
+        }
+        if (isset($formData['cmd']['save'])){
+            $entry=array_merge($arr['selector'],$selector,$formData['val'][$selector['EntryId']]);
+            $this->oc[$storageObj]->updateEntry($entry,$isSystemCall);
+        } else if (isset($formData['cmd']['delete'])){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,'',$selector['EntryId']);
+        } else if (isset($formData['cmd']['add'])){
+            $endIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($selector['EntryId']);
+            $newEntry=$arr['selector'];
+            $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($selector['EntryId'],$endIndex+1);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($newEntry);
+        } else if (isset($formData['cmd']['moveUp'])){
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,TRUE,$isSystemCall);
+        } else if (isset($formData['cmd']['moveDown'])){
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntry($selector,FALSE,$isSystemCall);
+        }
+        // html creation
+        $matrix=array();
+        $startIndex=$endIndex=1;
+        $selector=$baseSelector;
+        $selector['EntryId']='%'.$arr['selector']['EntryId'];
+        foreach($this->oc[$storageObj]->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
+            $endIndex=$entry['rowCount'];
+            $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
+            $currentIndex=intval($entryIdComps[0]);
+            $rowIndex=$entryIdComps[0];
+            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=array('background-color'=>'#f00');}
+            foreach($arr['contentStructure'] as $contentKey=>$elementArr){
+                $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
+                $method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];
+                if (method_exists($classWithNamespace,$method)){
+                    // if classWithNamespace::method() exists
+                    if (isset($entry['Content'][$contentKey])){
+                        if (isset($elementArr['element-content'])){
+                            $elementArr['element-content']=$entry['Content'][$contentKey];
+                            if (!empty($elementArr['value'])){$elementArr['value']=$elementArr['value'];}
+                        } else {
+                            $elementArr['value']=$entry['Content'][$contentKey];
+                        }
+                    }
+                    $elementArr['callingClass']=$arr['callingClass'];
+                    $elementArr['callingFunction']=$arr['callingFunction'];
+                    $elementArr['key']=array($entry['EntryId'],'Content',$contentKey);
+                    if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
+                    $matrix[$rowIndex][$contentKey]=$this->oc[$classWithNamespace]->$method($elementArr);
+                    if (isset($elementArr['type']) && isset($elementArr['value'])){
+                        if (strcmp($elementArr['type'],'hidden')===0){
+                            $matrix[$rowIndex][$contentKey].=$elementArr['value'];
+                        }
+                    }                
+                } else {
+                    // if classWithNamespace::method() does not exists
+                    $matrix[$rowIndex][$contentKey]=$this->traceHtml('Not found: '.$classWithNamespace.'::'.$method.'(arr)');
+                }
+            } // end of loop through content structure
+            $cmdBtns='';
+            $moveBtns='';
+            // add buttons
+            $btnArr=array_replace_recursive($arr,$this->btns['save'],array('excontainer'=>FALSE));
+            $btnArr['key'][]=$entry['EntryId'];
+            $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+            if ($entry['rowCount']>1){
+                $btnArr=array_replace_recursive($arr,$this->btns['delete'],array('excontainer'=>FALSE));
+                $btnArr['key'][]=$entry['EntryId'];
+                $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+            }
+            if ($endIndex<$arr['maxRowCount'] && $currentIndex===$endIndex){
+                $btnArr=array_replace_recursive($arr,$this->btns['add'],array('excontainer'=>FALSE));
+                $btnArr['key'][]=$entry['EntryId'];
+                $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+            }
+            if ($currentIndex>$startIndex){
+                $btnArr=array_replace_recursive($arr,$this->btns['moveDown'],array('excontainer'=>FALSE));
+                $btnArr['key'][]=$entry['EntryId'];
+                if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']=array('background-color'=>'#89fa');}
+                $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+            }
+            if ($currentIndex<$endIndex){
+                $btnArr=array_replace_recursive($arr,$this->btns['moveUp'],array('excontainer'=>FALSE));
+                $btnArr['key'][]=$entry['EntryId'];
+                if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']=array('background-color'=>'#89fa');}
+                $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+            }
+            $matrix[$rowIndex]['']=$cmdBtns;
+            if ($entry['rowCount']>1){$matrix[$rowIndex]['Move']=$moveBtns;}
+        } // end of loop through list entries
+        if ($arr['returnRow']){
+            return (empty(current($matrix)))?array('value'=>''):current($matrix);
+        } else {
+            return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        }
+    }
+
     public function row2table(array $row,string $caption='Row as table',bool $flip=FALSE):string
     {
         if ($flip){

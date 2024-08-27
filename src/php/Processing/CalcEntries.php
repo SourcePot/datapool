@@ -145,7 +145,6 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $contentStructure=array('Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);

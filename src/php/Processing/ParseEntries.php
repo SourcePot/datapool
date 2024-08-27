@@ -123,7 +123,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
         // get selector
@@ -163,6 +162,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // complete section selector
         $entriesSelector=array('Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Group'=>'parserSectionRules');
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+            if (!isset($entry['Content']['Section name'])){continue;}
             $this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
         }
         //

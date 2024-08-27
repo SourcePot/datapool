@@ -126,7 +126,6 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                               'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Combine content'=>array('method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>array('No','Yes')),
                               'Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
-                              'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                             );
         $contentStructure['Column to match']+=$callingElement['Content']['Selector'];
         $contentStructure['Match with column']+=$callingElement['Content']['Selector'];

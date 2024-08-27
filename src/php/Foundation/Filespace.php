@@ -15,7 +15,6 @@ class Filespace{
     private $oc;
     
     private $statistics=array();
-    private $toReplace=array();
     
     const ENV_FILE='env.json';
 
@@ -100,19 +99,24 @@ class Filespace{
 
     public function resetStatistic():array
     {
-        $this->statistics=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0,'uploaded file'=>0);
-        return $this->statistics;
+        $_SESSION[__CLASS__]['Statistic']=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0,'uploaded file'=>0);
+        return $_SESSION[__CLASS__]['Statistic'];
     }
     
-    public function getStatistic():array
+    public function addStatistic($key,$amount):array
     {
-        return $this->statistics;
+        if (!isset($_SESSION[__CLASS__]['Statistic'])){$this->resetStatistic();}
+        $_SESSION[__CLASS__]['Statistic'][$key]+=$amount;
+        return $_SESSION[__CLASS__]['Statistic'];
     }
     
-    public function uploadedFile():array
+    public function getStatistic($key=FALSE):array|int
     {
-        $this->statistics['uploaded file']++;
-        return $this->statistics;
+        if (isset($_SESSION[__CLASS__]['Statistic'][$key])){
+            return $_SESSION[__CLASS__]['Statistic'][$key];
+        } else {
+            return $_SESSION[__CLASS__]['Statistic'];
+        }
     }
 
     private function class2dir(string $class,bool $mkDirIfMissing=FALSE):string
@@ -190,12 +194,35 @@ class Filespace{
         }
     }
 
+    /**
+    * The method returns the first entry that matches the selector or false, if no match is found.
+    *
+    * @param array $selector Is the selector.  
+    * @param boolean $isSystemCall The value is provided to access control. 
+    * @param boolean $returnMetaOnNoMatch If true and EntryId is provided, meta data is return on no match instead of false. 
+    *
+    * @return array|boolean The entry, an empty array or false if no entry was found.
+    */
+    public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
+    {
+        if (empty($selector['Class'])){return FALSE;}
+        if (empty($selector['EntryId'])){
+            foreach($this->entryIterator($selector,$isSystemCall,$rightType) as $entry){
+                return $entry;
+            }
+        } else {
+            return $this->entryById($selector,$isSystemCall,$rightType);
+        }
+        return FALSE;
+    }
+
     public function entryById(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',bool $returnMetaOnNoMatch=FALSE):array
     {
         // This method returns the entry from a setup-file selected by the selector arguments.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         //
         $entry=array('rowCount'=>0,'rowIndex'=>0,'access'=>'NO ACCESS RESTRICTION');
+        $selector['EntryId']=trim($selector['EntryId'],'%');
         $entry['file']=$this->selector2file($selector);
         $arr=$this->oc['SourcePot\Datapool\Root']->file2arr($entry['file']);
         $entry['rowCount']=intval($arr);
@@ -231,7 +258,7 @@ class Filespace{
             // insert entry
             $entry=$this->unifyEntry($entry);
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
-            $this->statistics['inserted files']++;
+            $this->addStatistic('inserted files',1);
         } else if (empty($noUpdateCreateIfMissing)){
             if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
@@ -239,16 +266,16 @@ class Filespace{
                 $entry=array_replace_recursive($existingEntry,$entry);
                 $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
                 $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
-                $this->statistics['updated files']++;                    
+                $this->addStatistic('updated files',1);                    
             } else {
                 // failed access to update entry
                 $entry=array('rowCount'=>1,'rowIndex'=>0,'access'=>FALSE);
-                $this->statistics['matched files']++;
+                $this->addStatistic('matched files',1);
             }
         } else {
             // existing entry was not updated
             $entry=$existingEntry;
-            $this->statistics['matched files']++;
+            $this->addStatistic('matched files',1);
         }
         return $entry;
     }
@@ -256,6 +283,35 @@ class Filespace{
     public function entryByIdCreateIfMissing(array $entry,bool $isSystemCall=FALSE):array
     {
         return $this->updateEntry($entry,$isSystemCall,TRUE);
+    }
+
+    /**
+    * This method deletes the selected entries including linked files 
+    * and returns the count of deleted entries or false on error.
+    *
+    * @param array $selector Is the selector to select the entries to be deleted  
+    * @return int|boolean The count of deleted entries or false on failure
+    */
+    public function deleteEntries(array $selector,bool $isSystemCall=FALSE):array
+    {
+        foreach($this->entryIterator($selector,$isSystemCall) as $EntryId=>$entry){
+            $this->addStatistic('deleted files',intval(unlink($entry['file'])));
+        }
+        return $this->getStatistic('deleted files');
+    }
+
+    /**
+    * This method deletes the selected entries including linked files 
+    * and returns the count of deleted entries or false on error.
+    *
+    * @param array $selector Is the selector to select the entries to be deleted  
+    * @return int|boolean The count of deleted entries or false on failure
+    */
+    public function deleteEntry(array $selector,bool $isSystemCall=FALSE):array
+    {
+        foreach($this->entryIterator($selector,$isSystemCall) as $EntryId=>$entry){
+            return $this->addStatistic('deleted files',intval(unlink($entry['file'])));
+        }
     }
 
     public function entry2fileDownload(array $entry):void
@@ -299,7 +355,7 @@ class Filespace{
         $ip=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($hashOnly=TRUE);
         $tmpDir=$GLOBALS['dirs']['privat tmp'].$ip.'/';
         if (!is_dir($tmpDir)){
-            $this->statistics['added dirs']+=intval(mkdir($tmpDir,0770,TRUE));
+            $this->addStatistic('added dirs',intval(mkdir($tmpDir,0770,TRUE)));
         }
         return $tmpDir;
     }
@@ -312,7 +368,7 @@ class Filespace{
         }
         $tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
         if (!is_dir($tmpDir)){
-            $this->statistics['added dirs']+=intval(mkdir($tmpDir,0775,TRUE));
+            $this->addStatistic('added dirs',intval(mkdir($tmpDir,0775,TRUE)));
         }
         return $tmpDir;
     }
@@ -333,7 +389,7 @@ class Filespace{
                 }
             }
         }
-        return $this->statistics;
+        return $this->getStatistic();
     }
     
     public function delDir(string $dir):array
@@ -344,12 +400,12 @@ class Filespace{
             foreach($files2delete as $fileIndex=>$file){
                 $file=$dir.'/'.$file;
                 if (is_file($file)){
-                    $this->statistics['deleted files']+=intval(unlink($file));
+                    $this->addStatistic('deleted files',intval(unlink($file)));
                 }    
             }
-            $this->statistics['deleted dirs']+=intval(rmdir($dir));
+            $this->addStatistic('deleted dirs',intval(rmdir($dir)));
         }
-        return $this->statistics;
+        return $this->getStatistic();
     }
     
     public function dirSize(string $dir):int
@@ -366,12 +422,12 @@ class Filespace{
     public function tryCopy(string $source,string $targetFile,int|bool $rights=FALSE):array
     {
         try{
-            $this->statistics['inserted files']+=intval(copy($source,$targetFile));
+            $this->addStatistic('inserted files',intval(copy($source,$targetFile)));
             if ($rights){chmod($targetFile,$rights);}
         } catch(\Exception $e){
             // Exception handling
         }
-        return $this->statistics;
+        return $this->getStatistic();
     }
 
     public function abs2rel(string $file):string
@@ -614,7 +670,7 @@ class Filespace{
         $emailContent=mb_substr($fileContent,mb_strpos($fileContent,"\r\n\r\n"));
         $emailContent=trim($emailContent,"\r\n ");
         $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
-        $entry['Folder']=$entry['Params']['Email']['from']['value'][0]['original'];
+        $entry['Folder']=(isset($entry['Params']['Email']['from']['value'][0]['original']))?$entry['Params']['Email']['from']['value'][0]['original']:'unknown sender';
         if (isset($entry['Params']['Email']['subject']['value'])){
             $entry['Name']=$entry['Params']['Email']['subject']['value'];
         }
