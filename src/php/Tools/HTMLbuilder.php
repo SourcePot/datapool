@@ -723,6 +723,8 @@ class HTMLbuilder{
         $firstEntry=$arr['selector'];
         if ($arr['maxRowCount']>1){
             $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
+        } else {
+            $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListKeyFromEntryId($arr['selector']['EntryId']);
         }
         $this->oc[$storageObj]->entryByIdCreateIfMissing($firstEntry,TRUE);
         // command processing

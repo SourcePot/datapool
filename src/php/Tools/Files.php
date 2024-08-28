@@ -103,7 +103,6 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
                                 '..or mime-type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions),
                                 '...or mime-type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions),
                                 'Max file size'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$fileSizeOptions),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string'),
                                 );
         // get selctor
         $callingElementEntryId=$arr['selector']['EntryId'];

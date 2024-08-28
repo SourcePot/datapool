@@ -625,6 +625,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     }
     
     private function serialEventIsActive($entry,$timestamp){
+        if (empty($entry['Content'])){return FALSE;}
         $formatTestArr=array('Month'=>'m','Week day'=>'N','Day'=>'d','Hour'=>'H','Minute'=>'i');
         $dateTime=new \DateTime('@'.$timestamp);
         $eventTimezone=new \DateTimeZone($entry['Content']['Timezone']);

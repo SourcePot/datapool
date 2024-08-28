@@ -1068,7 +1068,7 @@ class Database{
         $targetIndex=0;
         $targetEntryId='';
         $notices=array();
-        $cmd=array_merge(array('newOlKey'=>'','removeEntryId'=>'','moveUpEntryId'=>'','moveDownEntryId'=>''),$cmd);
+        $cmd=array_merge(array('newOlKey'=>'','removeEntryId'=>'SKIP','moveUpEntryId'=>'!!SKIP!!','moveDownEntryId'=>'!!SKIP!!'),$cmd);
         if (!empty($selector['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
         } else {
@@ -1110,7 +1110,7 @@ class Database{
             $this->oc[$storageObj]->deleteEntries($entry);
         }
         // rebuild list
-        if (empty($newOlKey)){$cmd['newOlKey']=$olKey;}
+        if (empty($cmd['newOlKey'])){$cmd['newOlKey']=$olKey;}
         $mapping=array();
         foreach($items as $index=>$item){
             $newListIndex=$index+1;
