@@ -972,43 +972,61 @@ class Database{
         return $targetEntry;
     }
 
-    public function swapEntries(array $entryA,array $entryB,bool $isSystemCall=FALSE):bool
+    public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):bool
     {
-        if (empty($entryA['Source']) || empty($entryB['Source']) || empty($entryA['EntryId']) || empty($entryB['EntryId'])){
-            throw new \ErrorException('Function '.__FUNCTION__.': required key(s) Source, EntryId missing',0,E_ERROR,__FILE__,__LINE__);
-        }
-        // swap entry data and update entries
-        $targetEntryB=$this->entryById($entryA,$isSystemCall);
-        $targetEntryA=$this->entryById($entryB,$isSystemCall);
-        if (empty($targetEntryA) || empty($targetEntryB)){return FALSE;}
-        $targetEntryA['Source']=$entryA['Source'];
-        $targetEntryA['EntryId']=$entryA['EntryId'];
-        $targetEntryB['Source']=$entryB['Source'];
-        $targetEntryB['EntryId']=$entryB['EntryId'];
-        $this->updateEntry($targetEntryA);
-        $this->updateEntry($targetEntryB);
-        // copy files A, B to temporary files B, A
-        $sourceFileA=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryA);
-        $sourceFileB=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entryB);
-        if (is_file($sourceFileA)){
-            $targetFileB=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$entryA['Source'].'_'.$entryA['EntryId'];
-            if (copy($sourceFileA,$targetFileB)){
-                unlink($sourceFileA);
-            } else {
-                throw new \ErrorException('Function '.__FUNCTION__.': copy('.$sourceFileA.','.$targetFileB.') failed',0,E_ERROR,__FILE__,__LINE__);
+        if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
+            $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
+            if (isset($entry['Params']['File']) && $removed){
+                unset($entry['Params']['File']);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+                return TRUE;
             }
         }
-        if (is_file($sourceFileB)){
-            $targetFileA=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$entryB['Source'].'_'.$entryB['EntryId'];
-            if (copy($sourceFileB,$targetFileA)){
-                unlink($sourceFileB);
-            } else {
-                throw new \ErrorException('Function '.__FUNCTION__.': copy('.$sourceFileB.','.$targetFileA.') failed',0,E_ERROR,__FILE__,__LINE__);
-            }
+        return FALSE;
+    }
+    
+    public function addLog2entry(array $entry,string $logType='Processing log',array $logContent=array(),bool $updateEntry=FALSE)
+    {
+        if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
+        if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
+        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
+        $logContent['timestamp']=time();
+        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
+        $logContent['timezone']=date_default_timezone_get();
+        $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
+        $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
+        $logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
+        $logContent['userId']=(empty($_SESSION['currentUser']['EntryId']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
+        $entry['Params'][$logType][]=$logContent;
+        // remove expired logs
+        foreach($entry['Params'][$logType] as $logIndex=>$logArr){
+            if (!isset($logArr['Expires'])){continue;}
+            $expires=strtotime($logArr['Expires']);
+            if ($expires<time()){unset($entry['Params'][$logType][$logIndex]);}
         }
-        // copy temporary files A, B to files A, B
-        if (isset($targetFileA)){copy($targetFileA,$sourceFileA);}
-        if (isset($targetFileB)){copy($targetFileB,$sourceFileB);}
+        if ($updateEntry){
+            $entry=$this->updateEntry($entry,TRUE);
+        }
+        return $entry;
+    }
+    
+    /**
+    * The method compares selectors
+    *
+    * @param array $selectorA Is the first selector.  
+    * @param array $selectorB Is the second selector.  
+    *
+    * @return boolean TRUE if selectors are equal, FALSE if they are not equal.
+    */
+    public function isSameSelector(array $selectorA,array $selectorB):bool
+    {
+        $relevantKeys=array('Source','Group','Folder','Name','EntryId');
+        foreach($relevantKeys as $column){
+            if (empty($selectorA[$column])){$selectorA[$column]='';}
+            if (empty($selectorB[$column])){$selectorB[$column]='';}
+            if ($selectorA[$column]!=$selectorB[$column]){return FALSE;}
+        }
         return TRUE;
     }
     
@@ -1045,22 +1063,27 @@ class Database{
         return explode('___',$primaryKeyValue);    
     }
     
-    public function rebuildOrderedList(array $selector,$newOlKey='',$removeEntryId='SKIP')
+    public function rebuildOrderedList(array $selector,array $cmd=array()):string
     {
+        $targetIndex=0;
+        $targetEntryId='';
         $notices=array();
+        $cmd=array_merge(array('newOlKey'=>'','removeEntryId'=>'','moveUpEntryId'=>'','moveDownEntryId'=>''),$cmd);
         if (!empty($selector['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
         } else {
             $storageObj='SourcePot\Datapool\Foundation\Filespace';
         }
         // get all items of the list
+        $lastEntryId='SKIP';
+        $currentIndex=-1;
         $items=array();
         $olKey=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
         $olSelector=array('Source'=>$selector['Source'],'EntryId'=>'%'.$olKey);
         foreach($this->entryIterator($olSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
             $targetFile='';
-            if (is_file($sourceFile)){
+            if (is_file($sourceFile) && !empty($selector['Source'])){
                 $fileName=basename($sourceFile);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$fileName;
                 if (!$this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile)){
@@ -1069,104 +1092,42 @@ class Database{
                 }
             }
             // check if item should be removed
-            if ($removeEntryId===$entry['EntryId']){
+            if ($cmd['removeEntryId']===$entry['EntryId']){
                 $notices[]='Removed item "'.$this->getOrderedListIndexFromEntryId($entry['EntryId']).'"';
             } else {
                 $items[]=array('entry'=>$entry,'file'=>$targetFile);
+                $currentIndex++;
+            }
+            // move entry up or down
+            if ($cmd['moveUpEntryId']===$lastEntryId || $cmd['moveDownEntryId']===$entry['EntryId']){
+                $currentItem=$items[$currentIndex];
+                $items[$currentIndex]=$items[$currentIndex-1];
+                $items[$currentIndex-1]=$currentItem;
+                $targetIndex=($cmd['moveUpEntryId']===$lastEntryId)?($currentIndex):(($cmd['moveDownEntryId']===$entry['EntryId'])?($currentIndex-1):$currentIndex);
             }
             // delete exsisting entry
+            $lastEntryId=$entry['EntryId'];
             $this->oc[$storageObj]->deleteEntries($entry);
         }
         // rebuild list
-        if (empty($newOlKey)){$newOlKey=$olKey;}
+        if (empty($newOlKey)){$cmd['newOlKey']=$olKey;}
         $mapping=array();
         foreach($items as $index=>$item){
             $newListIndex=$index+1;
             $mapping[]=$this->getOrderedListIndexFromEntryId($item['entry']['EntryId']).' &rarr; '.$newListIndex;
-            $item['entry']['EntryId']=$this->addOrderedListIndexToEntryId($newOlKey,$newListIndex);
+            $item['entry']['EntryId']=$this->addOrderedListIndexToEntryId($cmd['newOlKey'],$newListIndex);
             if (is_file($item['file'])){
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($item['entry']);
                 if (empty($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$item['file']))){
                     $notices[]='Problem copy ordered list target file "'.$item['file'].'"';
                 }
             }
+            if ($targetIndex===$index){$targetEntryId=$item['entry']['EntryId'];}
             $this->oc[$storageObj]->insertEntry($item['entry']);
         }
-        $context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($newOlKey===$olKey)?'':'Key change '.$olKey.'&rarr;'.$newOlKey.'.','notices'=>implode('|',$notices));
-        $this->oc['logger']->log('info','Ordered list from Source {Source} with EntryId "{olKey}" rebuild, mapped "{mapping}". {keyChange} Notice: "{notices}"',$context);
-    }
-
-    public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):bool
-    {
-        if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
-            $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-            $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
-            if (isset($entry['Params']['File']) && $removed){
-                unset($entry['Params']['File']);
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-                return TRUE;
-            }
-        }
-        return FALSE;
-    }
-    
-    public function moveEntry(array $selector,bool $moveUp=TRUE,bool $isSystemCall=FALSE):string|bool
-    {
-        $baseEntryId=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
-        $currentEntryIndex=$this->getOrderedListIndexFromEntryId($selector['EntryId']);
-        $sourceSelector=$targetSelector=array('Source'=>$selector['Source']);
-        $sourceSelector['EntryId']=$this->addOrderedListIndexToEntryId($baseEntryId,$currentEntryIndex);
-        if ($moveUp){
-            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($baseEntryId,$currentEntryIndex+1);
-        } else {
-            $targetSelector['EntryId']=$this->addOrderedListIndexToEntryId($baseEntryId,$currentEntryIndex-1);
-        }
-        $this->swapEntries($sourceSelector,$targetSelector,$isSystemCall);
-        return $targetSelector['EntryId'];
-    }
-
-    public function addLog2entry(array $entry,string $logType='Processing log',array $logContent=array(),bool $updateEntry=FALSE)
-    {
-        if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
-        if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
-        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
-        $logContent['timestamp']=time();
-        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
-        $logContent['timezone']=date_default_timezone_get();
-        $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
-        $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
-        $logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
-        $logContent['userId']=(empty($_SESSION['currentUser']['EntryId']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
-        $entry['Params'][$logType][]=$logContent;
-        // remove expired logs
-        foreach($entry['Params'][$logType] as $logIndex=>$logArr){
-            if (!isset($logArr['Expires'])){continue;}
-            $expires=strtotime($logArr['Expires']);
-            if ($expires<time()){unset($entry['Params'][$logType][$logIndex]);}
-        }
-        if ($updateEntry){
-            $entry=$this->updateEntry($entry,TRUE);
-        }
-        return $entry;
-    }
-    
-    /**
-    * The method moves or copies an entry to the target selected by argument targetSelector
-    *
-    * @param array $selectorA Is the first selector.  
-    * @param array $selectorB Is the second selector.  
-    *
-    * @return boolean TRUE if selectors are equal, FALSE if they are not equal.
-    */
-    public function isSameSelector(array $selectorA,array $selectorB):bool
-    {
-        $relevantKeys=array('Source','Group','Folder','Name','EntryId');
-        foreach($relevantKeys as $column){
-            if (empty($selectorA[$column])){$selectorA[$column]='';}
-            if (empty($selectorB[$column])){$selectorB[$column]='';}
-            if ($selectorA[$column]!=$selectorB[$column]){return FALSE;}
-        }
-        return TRUE;
+        $context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($cmd['newOlKey']===$olKey)?'':'Key change '.$olKey.'&rarr;'.$cmd['newOlKey'].'.','notices'=>implode('|',$notices));
+        //$this->oc['logger']->log('info','Ordered list from Source {Source} with EntryId "{olKey}" rebuild, mapped "{mapping}". {keyChange} Notice: "{notices}"',$context);
+        return $targetEntryId;
     }
 
 }

@@ -182,6 +182,7 @@ class Container{
         unset($entry['Type']);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',TRUE);
+        $entry['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
             $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
@@ -189,6 +190,8 @@ class Container{
             if ($entry['Name']==='Top paragraph'){
                 // top paragraph initial md-contenz
                 $fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';
+                $entry['Read']='ALL_R';
+                $entry['Write']='ALL_CONTENTADMIN_R';
             } else if ($entry['Name']==='Bottom paragraph'){
                 // bottom paragraph initial md-contenz
                 $fileContent.="# What is Datapool?\n\nDatapool is an open-source web application for efficient automated data processing. Processes are configurated graphically as a data flow throught processing blocks.\n";
@@ -204,11 +207,15 @@ class Container{
                 $fileContent.="# Graphical data flow builder (DataExploerer-class)\n\nA dataflow consists of two types of (canvas) elements: \"connecting elements\" and \"processing blocks\" The connecting elements have no function other then helping to visualize the data flow.\n";
                 $fileContent.="The processing blocks contain all functionallity, i.e. \"providing a database table view\", \"storing settings\" and \"linking a processor\". The settings define the target or targets canvas elements for the result data. There are basic processor, e.g. for data acquisition, mapping, parsing or data distribution. In addition, user-defined processor can be added.\n\n";
                 $fileContent.="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
+                $entry['Read']='ALL_R';
+                $entry['Write']='ALL_CONTENTADMIN_R';
             } else  if ($entry['Name']==='Legal paragraph'){
                 $fileContent="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
                 $fileContent.="# Contact\n## Address\n";
                 $fileContent.="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'email.png')."\" style=\"float:none;\">\n";
                 $fileContent.="# Legal\nThis is a private web page. The web page uses cookies for session handling.\n\n";
+                $entry['Read']='ALL_R';
+                $entry['Write']='ALL_CONTENTADMIN_R';
             }
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);

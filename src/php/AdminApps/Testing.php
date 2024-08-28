@@ -101,7 +101,6 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         //$matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
         $contentStructure=array('class'=>array('method'=>'select','value'=>'','options'=>$classes,'excontainer'=>FALSE),
                                 'method'=>array('method'=>'select','value'=>'','options'=>$methods,'excontainer'=>FALSE),
-                                'Save'=>array('method'=>'element','tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'value'=>'string','excontainer'=>FALSE),
                                 );
         // get HTML
         $arr['contentStructure']=$contentStructure;
