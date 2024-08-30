@@ -151,7 +151,9 @@ class Filespace{
             $dir=$this->class2dir($selector['Class'],$mkDirIfMissing);    
             $file=$selector['EntryId'].'.json';
         } else {
-            $this->oc['logger']->log('error','Mandatory keys missing in selector argument',$selector);   
+            $selector['class']=__CLASS__;
+            $selector['function']=__FUNCTION__;
+            $this->oc['logger']->log('error','{class} &rarr; {function}() mandatory keys Source or Class or EntryId missing in selector argument',$selector);   
             $dir='';
             $file='';
         }

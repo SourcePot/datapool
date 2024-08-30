@@ -202,6 +202,7 @@ class Signals{
                                 );
         $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
         $arr['selector']=array('Source'=>$this->entryTable,'Group'=>'Transmitter','Folder'=>$_SESSION['currentUser']['EntryId'],'Name'=>'Message on trigger');
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Source','Group','Folder','Name'),'0','',FALSE);
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Send message on trigger (selected trigger will be reseted)';
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);

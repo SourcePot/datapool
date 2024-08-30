@@ -227,7 +227,7 @@ class Database{
     * This function selects the entry-specific unifyEntry() function based on $entry['Source']
     * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
     */
-    public function unifyEntry(array $entry,bool $addDefaults):array
+    public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
