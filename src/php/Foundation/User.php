@@ -154,7 +154,7 @@ class User{
         return $_SESSION['currentUser'];
     }
     
-    public function unifyEntry(array $entry):array
+    public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
         $entry['Source']=$this->entryTable;
         if (!isset($entry['Content']['Address'])){$entry['Content']['Address']=array();}
@@ -164,11 +164,13 @@ class User{
         if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
         $entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
         $entry['Folder']=$this->getUserRolsString($entry);
+        if ($addDefaults){
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);
+        }
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);    
         $entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
         return $entry;
     }
@@ -311,7 +313,7 @@ class User{
     {
         $_SESSION['currentUser']=$user;
         if (strcmp($user['Owner'],'ANONYM')!==0){
-            $this->oc['logger']->log('info','User login {user}',array('user'=>$_SESSION['currentUser']['Name']));    
+            $this->oc['logger']->log('info','User login {user} at {dateTime}',array('user'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         }
     }
     

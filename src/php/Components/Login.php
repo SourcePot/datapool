@@ -72,7 +72,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
                 $this->loginFailed($user,$arr['Email']);
             } else if (strcmp($loginEntry['Name'],$arr['Passphrase'])===0){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
-                $this->oc['logger']->log('info','One-time login for {email} at {timestamp} successful.',array('email'=>$arr['Email'],'timestamp'=>time()));    
+                $this->oc['logger']->log('info','One-time login for {email} at {dateTime} was successful.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
                 $this->loginSuccess($user,$arr['Email']);
             } else {
                 $this->loginFailed($user,$arr['Email']);
@@ -96,13 +96,13 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginSuccess($user,$email){
         $this->resetSession();
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['logger']->log('info','Login for {email} at {timestamp} successful.',array('email'=>$email,'timestamp'=>time()));    
+        $this->oc['logger']->log('info','Login for {email} at {dateTime} was successful.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
     }
 
     private function loginFailed($user,$email){
         $_SESSION['currentUser']['Privileges']=1;
-        $this->oc['logger']->log('error','Login failed for {email} at {timestamp}.',array('email'=>$email,'timestamp'=>time()));    
+        $this->oc['logger']->log('notice','Login failed for {email} at {dateTime}.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
     }
@@ -126,7 +126,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         if (empty($err)){
-            $this->oc['logger']->log('info','You have been registered as new user ({email}).',array('email'=>$arr['Email']));    
+            $this->oc['logger']->log('info','You have been registered as new user ({email}) at {dateTime}.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
             exit;    
         } else {

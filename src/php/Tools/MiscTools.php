@@ -300,7 +300,7 @@ final class MiscTools{
         return $entry;
     }
 
-    public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone=''):string
+    public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone='',string $format='Y-m-d H:i:s'):string
     {
         if ($datetime[0]==='@'){
             $timestamp=intval(trim($datetime,'@'));
@@ -319,7 +319,7 @@ final class MiscTools{
             }
         }
         $dateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-        return $dateTime->format('Y-m-d H:i:s');
+        return $dateTime->format($format);
     }
     
     public function code2utf(int $code):string

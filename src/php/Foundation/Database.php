@@ -227,7 +227,7 @@ class Database{
     * This function selects the entry-specific unifyEntry() function based on $entry['Source']
     * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
     */
-    public function unifyEntry(array $entry):array
+    public function unifyEntry(array $entry,bool $addDefaults):array
     {
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
@@ -236,10 +236,10 @@ class Database{
         $classWithNamespace=$this->oc['SourcePot\Datapool\Root']->source2class($entry['Source']);
         if (isset($this->oc[$classWithNamespace])){
             if (method_exists($this->oc[$classWithNamespace],'unifyEntry')){
-                $entry=$this->oc[$classWithNamespace]->unifyEntry($entry);
+                $entry=$this->oc[$classWithNamespace]->unifyEntry($entry,$addDefaults);
             }
         }
-        $entry=$this->addEntryDefaults($entry);
+        if ($addDefaults){$entry=$this->addEntryDefaults($entry);}
         $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
         return $entry;    
     }
@@ -849,7 +849,7 @@ class Database{
                 $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
             }
             // update entry
-            $entry=$this->unifyEntry($entry);
+            $entry=$this->unifyEntry($entry,FALSE);
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
         } else {
@@ -908,9 +908,11 @@ class Database{
     */
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // test for required keys and set selector
-        if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId'])){
-            throw new \ErrorException('Function '.__FUNCTION__.': Mandatory sourceEntry-key(s) missing, either Source or EntryId',0,E_ERROR,__FILE__,__LINE__);    
+        if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId']) || empty($targetSelector)){
+            $this->oc['logger']->log('error','{class} &rarr; {function} called with empty sourceEntry[Source], sourceEntry[EntryId] or targetEntry. Source entry was not moved.',$context);    
+            return array();
         }
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
             // write access

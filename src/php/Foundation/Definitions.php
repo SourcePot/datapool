@@ -330,8 +330,7 @@ class Definitions{
                             $debugArr['entry_updated']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
                         }
                     } else {
-                        $entry['skipUpdateCalendarEventEntry']=FALSE;
-                        $debugArr['entry_updated']=$this->oc[$dataStorageClass]->updateEntry($entry);
+                        $debugArr['entry_updated']=$this->oc[$dataStorageClass]->updateEntry($entry,FALSE,FALSE,$addLog=FALSE);
                     }
                     $statistics=$this->oc[$dataStorageClass]->getStatistic();
                     $entryType=(isset($entry['Source']))?strval($entry['Source']):strval($entry['Class']);
