@@ -85,7 +85,6 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
                 $entry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($fileArr);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($file,$entry,FALSE,TRUE);
                 unlink($file);
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->uploadedFile();
             }
             $result['Files found']++;
         }
