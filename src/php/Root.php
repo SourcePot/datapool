@@ -89,6 +89,8 @@ final class Root{
             if (!method_exists($this->oc[$classWithNamespace],'loadOc')){continue;}
             $this->oc[$classWithNamespace]->loadOc($this->oc);
         }
+        $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
+        $this->emptyLoggerCache($this->oc);
         // invoke init methoods
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
@@ -103,8 +105,6 @@ final class Root{
             if (!method_exists($this->oc[$classWithNamespace],'init')){continue;}
             $this->oc[$classWithNamespace]->init();
         }
-        $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
-        $this->emptyLoggerCache($this->oc);
         $this->checkExtensions($this->oc);
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
     }

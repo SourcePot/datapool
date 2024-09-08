@@ -71,6 +71,7 @@ class Backbone{
 
     public function addHtmlPageBackbone(array $arr):array
     {
+        $formId=md5($this->settings['pageTitle']);
         $arr['toReplace']=array('{{head}}'=>'',
                                 '{{body}}'=>'',
                                 '{{bgMedia}}'=>'',
@@ -95,7 +96,7 @@ class Backbone{
         // page body
         $arr['page html'].='<body>'.PHP_EOL;
         $arr['page html'].='{{bgMedia}}'.PHP_EOL;
-        $arr['page html'].='<form name="'.md5($this->settings['pageTitle']).'" method="post" enctype="multipart/form-data">'.PHP_EOL;
+        $arr['page html'].='<form name="'.$formId.'" id="'.$formId.'" method="post" enctype="multipart/form-data">'.PHP_EOL;
         $arr['page html'].='{{body}}'.PHP_EOL;
         $arr['page html'].='</form>'.PHP_EOL;
         $arr['page html'].='</body>'.PHP_EOL;

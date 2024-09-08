@@ -315,7 +315,7 @@ class Database{
             $this->dbObj->exec("SET NAMES utf8mb4");
         } catch (\Exception $e){
             $msg=$e->getMessage();
-            echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i>');
+            echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i><br/>Please check the credentials ../src/setup/Database/connect.json');
             exit(0);
         }
         $this->dbName=$access['Content']['dbName'];

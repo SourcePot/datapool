@@ -1,7 +1,28 @@
-function onSubmit(token) {
-	// Use `requestSubmit()` for extra features like browser input validation.
-	//console.log('reCAPTCHA ready, token: '+token);
-} 
+function onSubmit(token){
+	jQuery.ajax({
+		method:"POST",
+		url:'js.php',
+		context:document.body,
+		data:{'function':'createAssessment','token':token},
+		dataType: "json"
+	}).done(function(data){
+		console.log(data);
+		var old_element=document.getElementById(data['action']);
+		if (data['score']>0.8){
+			var new_element = old_element.cloneNode(true);
+			old_element.parentNode.replaceChild(new_element, old_element);
+			new_element.style.backgroundColor='LIMEGREEN';
+			setTimeout(function(){new_element.click();},1000);
+		} else {
+			old_element.style.backgroundColor='RED';
+		}
+		//
+	}).fail(function(data){
+		console.log(data);
+	}).always(function(){
+		//
+	});
+}
 
 jQuery(document).ready(function(){
 

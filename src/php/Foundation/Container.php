@@ -40,6 +40,8 @@ class Container{
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
             } else if (strcmp($_POST['function'],'getPlotData')===0){
                 $jsAnswer=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getPlotData($_POST);
+            } else if (strcmp($_POST['function'],'createAssessment')===0){
+                $jsAnswer=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->createAssessment($_POST);
             } else {
                 
             }

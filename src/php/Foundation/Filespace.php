@@ -227,7 +227,7 @@ class Filespace{
         $selector['EntryId']=trim($selector['EntryId'],'%');
         $entry['file']=$this->selector2file($selector);
         $arr=$this->oc['SourcePot\Datapool\Root']->file2arr($entry['file']);
-        $entry['rowCount']=intval($arr);
+        $entry['rowCount']=(empty($arr))?0:1;
         if (empty($arr)){
             // no entry found
             if (!$returnMetaOnNoMatch){$entry=array();}
@@ -254,7 +254,7 @@ class Filespace{
     {
         // This method updates and returns the entry from the setup-directory.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
-        // 
+        //
         $existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
         if (empty($existingEntry['rowCount'])){
             // insert entry
@@ -276,8 +276,11 @@ class Filespace{
             }
         } else {
             // existing entry was not updated
-            $entry=$existingEntry;
-            $this->addStatistic('matched files',1);
+            if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
+                $entry=$existingEntry;
+                $this->addStatistic('matched files',1);
+            }
         }
         return $entry;
     }

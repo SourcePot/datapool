@@ -305,6 +305,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
                                 'logLevel'=>array('method'=>'select','options'=>array('Production','Monitoring','Debugging'),'excontainer'=>TRUE),
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'),
+                                'Google Project ID'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>''),
                                 'Google reCAPTCHA site key [not used if empty]'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>''),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'value'=>'video','excontainer'=>TRUE),

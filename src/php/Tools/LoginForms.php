@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class LoginForms{
+
+    private const USE_RECAPTCHA=TRUE;
     
     private $oc;
 
@@ -112,9 +114,7 @@ class LoginForms{
     public function getLoginForm(array $arr=array()):array
     {
         $arr['result']=$this->formData();
-        //
-        $styleClass='std';
-        //$styleClass='g-recaptcha';
+        if (self::USE_RECAPTCHA){$styleClass='g-recaptcha';} else {$styleClass='std';}
         $emailLabel=array('tag'=>'label','element-content'=>'Email','for'=>'login-email');
         $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'id'=>'login-email','style'=>array('clear'=>'both','width'=>220),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
