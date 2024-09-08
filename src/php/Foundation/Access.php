@@ -110,7 +110,7 @@ class Access{
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
             if ($accessLevel>0){return $accessLevel;}
         } else {
-            $this->oc['logger']->log('error','Function "{class}->{function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
+            $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
         }
         return FALSE;
     }

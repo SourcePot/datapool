@@ -93,7 +93,7 @@ class Logger
     {
         $class=get_class($classInstance);
         $context=array('class'=>$class,'method'=>$method);
-        $msg='{class}::{method}';
+        $msg='{class} &rarr; {function}()';
         try{
             $paramsStr='';
             $f=new \ReflectionMethod($class,$method);

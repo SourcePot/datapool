@@ -113,12 +113,14 @@ class LoginForms{
     {
         $arr['result']=$this->formData();
         //
+        $styleClass='std';
+        //$styleClass='g-recaptcha';
         $emailLabel=array('tag'=>'label','element-content'=>'Email','for'=>'login-email');
         $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'id'=>'login-email','style'=>array('clear'=>'both','width'=>220),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
         $updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
-        $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold'));
-        $registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('float'=>'right','width'=>'45%','margin'=>'0 4px 0 0'));
-        $loginLinkBtn=array('tag'=>'input','type'=>'submit','key'=>array('pswRequest'),'value'=>'Get login token','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('margin'=>'1em 0'));
+        $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('position'=>'absolute','top'=>'0.2em','left'=>'0','width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold'));
+        $registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('position'=>'absolute','top'=>'0.2em','right'=>'0','width'=>'45%','margin'=>'0 4px 0 0'));
+        $loginLinkBtn=array('tag'=>'input','type'=>'submit','key'=>array('pswRequest'),'value'=>'Get login token','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('margin'=>'1em 0'));
         if ($this->formType===1){
             $passphrase=$this->getSymbolKeypad($arr);
         } else {
@@ -136,6 +138,7 @@ class LoginForms{
             $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
             $matrix['Recover']=array('Value'=>$loginLinkBtn);
         }
+        $matrix['Btns']['trStyle']=array('height'=>'3em');
         $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login','id'=>'login-table'));
         $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'id'=>'login-article'));
         if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}

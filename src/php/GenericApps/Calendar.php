@@ -598,7 +598,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $entryIdSuffix=0;
         $maxTimestamp=(empty($maxTimestamp))?($timestamp+(intval($this->setting['Days to show']??'10')-1)*86400+90000):$maxTimestamp;
         // scan calendar range
-        $durationMinutes=intval($entry['Content']['Duration']);
+        $durationMinutes=intval($entry['Content']['Duration']??60);
         $durationSeconds=$durationMinutes*60;
         $timestamp-=$durationSeconds;
         while($timestamp<$maxTimestamp){

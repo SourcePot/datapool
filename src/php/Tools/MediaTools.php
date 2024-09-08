@@ -421,7 +421,7 @@ class MediaTools{
                     $orgImage=imagecreatefromstring($string);    
                 }
             } catch(\Exception $e) {
-                $this->oc['logger']->log('warning','Function "{class}::{function}" caught exception {message}.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()));
+                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" caught exception {message}.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()));
                 return $arr;
             }
             //-- scale image

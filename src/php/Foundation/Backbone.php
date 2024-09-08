@@ -60,10 +60,12 @@ class Backbone{
     
     public function getSettings($key=FALSE)
     {
-        if (isset($this->settings[$key])){
+        if (empty($key)){
+            return $this->settings;
+        } else if (isset($this->settings[$key])){
             return $this->settings[$key];
         } else {
-            return $this->settings;
+            return FALSE;
         }
     }
 
@@ -142,6 +144,7 @@ class Backbone{
         foreach($arr['toReplace'] as $needle=>$replacement){
             $arr['page html']=strtr($arr['page html'],array($needle=>$replacement));
         }
+        $arr['page html']=preg_replace('/{{[a-zA-Z]+}}/','',$arr['page html']);
         return $arr;
     }
     
@@ -153,7 +156,7 @@ class Backbone{
         } else if (is_file($mediaFileAbs)){
             return $GLOBALS['relDirs']['media'].'/'.$mediaFile;
         } else {
-            $this->oc['logger']->log('error','Function "{class}::{function}" failed to open media file "{mediaFile}"',array('class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile));         
+            $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to open media file "{mediaFile}"',array('class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile));         
             return FALSE;
         }
     }

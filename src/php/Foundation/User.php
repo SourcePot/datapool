@@ -313,7 +313,7 @@ class User{
     {
         $_SESSION['currentUser']=$user;
         if (strcmp($user['Owner'],'ANONYM')!==0){
-            $this->oc['logger']->log('info','User login {user} at {dateTime}',array('user'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+            $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',array('userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         }
     }
     

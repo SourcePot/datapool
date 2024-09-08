@@ -63,7 +63,7 @@ class Filespace{
         $vars['Last failed deletions']=array();
         $dir2process=array_shift($vars['Dirs to process']);
         if (empty($dir2process['dir'])){
-            $this->oc['logger']->log('error','Failed "{class}->{function}()" due to array key in "dir2process[dir]" missing or empty array',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
+            $this->oc['logger']->log('error','Failed "{class} &rarr; {function}()" due to array key in "dir2process[dir]" missing or empty array',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
             $vars['Error']='Key missing or empty: dir2process[dir]';
         } else {
             $files=scandir($dir2process['dir']);
@@ -181,7 +181,7 @@ class Filespace{
         if (!is_dir($dir)){
             if (isset($this->oc['logger'])){
                 $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'dir'=>$dir);
-                $this->oc['logger']->log('notice','Function {class}::{function} failed: directory "{dir}" missing',$context);
+                $this->oc['logger']->log('notice','Function {class} &rarr; {function}() failed: directory "{dir}" missing',$context);
             }
             return FALSE;
         }
@@ -454,11 +454,11 @@ class Filespace{
         $this->resetStatistic();
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (empty($fileArr['tmp_name'])){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" called with empty fileArr["tmp_name"], skipped this entry',$context);         
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty fileArr["tmp_name"], skipped this entry',$context);         
             return $entry;
         }
         if (empty($fileArr['name'])){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" called with empty fileArr["name"], skipped this entry',$context);         
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty fileArr["name"], skipped this entry',$context);         
             return $entry;
         }
         // move uploaded file to private tmp dir
@@ -471,7 +471,7 @@ class Filespace{
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'File "'.$fileArr['name'].'" upload'),FALSE);
             $entry=$this->file2entry($file,$entry,$createOnlyIfMissing,$isSystemCall);
         } else {
-            $this->oc['logger']->log('warning','Function "{class}::{function}" moving uploaded file "{file}" failed, skipped this entry',$context);         
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" moving uploaded file "{file}" failed, skipped this entry',$context);         
         }
         return $entry;    
     }
@@ -481,9 +481,9 @@ class Filespace{
         $this->resetStatistic();
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (empty($entry['fileContent'])){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" failed entry["fileContent"] is empty, skipped this entry',$context);             
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed entry["fileContent"] is empty, skipped this entry',$context);             
         } else if (empty($entry['fileName'])){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" failed entry["fileName"] is empty, skipped this entry',$context);             
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed entry["fileName"] is empty, skipped this entry',$context);             
         } else {
             // save file content to tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
@@ -491,7 +491,7 @@ class Filespace{
             $bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
             if ($bytes===FALSE){
                 $context['filename']=$entry['Params']['File']['Source'];
-                $this->oc['logger']->log('error','Function "{class}::{function}" failed to create temporary file "{filename}", skipped this entry',$context);                 
+                $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to create temporary file "{filename}", skipped this entry',$context);                 
             } else {
                 $this->file2entry($entry['Params']['File']['Source'],$entry,$createOnlyIfMissing,$isSystemCall);
             }
@@ -504,11 +504,11 @@ class Filespace{
         $debugArr=array('file'=>$file,'entry_in'=>$entry,'debugFileName'=>__FUNCTION__.' ');
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (empty($entry['Source'])){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" called with empty entry["Source"], skipped this entry',$context);         
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty entry["Source"], skipped this entry',$context);         
             return $entry;
         }
         if (!is_file($file)){
-            $this->oc['logger']->log('warning','Function "{class}::{function}" called with invalid file handle "{file}", skipped this entry',$context);         
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with invalid file handle "{file}", skipped this entry',$context);         
             return $entry;
         }
         $entry=$this->addFileProps($entry,$file);
@@ -800,14 +800,14 @@ class Filespace{
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
                 } catch (\Exception $e){
                     $context['msg']=$e->getMessage();
-                    $this->oc['logger']->log('notice','Function "{class}::{function}" parser failed: {msg}',$context);
+                    $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" parser failed: {msg}',$context);
                 }
             }
             try{
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
             } catch (\Exception $e){
                 $context['msg']=$e->getMessage();
-                $this->oc['logger']->log('notice','Function "{class}::{function}" failed to scan for pdf-attachments: {msg}',$context);
+                $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed to scan for pdf-attachments: {msg}',$context);
             }    
         } else if (stripos(strval($entry['Params']['File']['Extension']),'csv')!==FALSE){
                 $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();

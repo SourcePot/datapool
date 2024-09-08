@@ -174,7 +174,7 @@ final class Root{
             if (class_exists($classWithNamespace)){
                 $this->oc[$classWithNamespace]=new $classWithNamespace($this->oc);
             } else {
-                $this->log('error','Method "{class}::{function}": Failed to register class "{classWithNamespace}"',$context);
+                $this->log('error','Method "{class} &rarr; {function}()": Failed to register class "{classWithNamespace}"',$context);
             }
         }
     }
@@ -264,8 +264,8 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
-            $arr['toReplace']['{{bgMedia}}']='';
             $arr=$this->oc[$appClassWithNamespace]->run($arr);
+            $arr=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->add($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($pathInfo['basename']=='js.php'){
             // js-call Processing

@@ -207,7 +207,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (isset($this->oc[$inboxParams['Inbox source']])){
                 $inboxResult=$this->oc[$inboxParams['Inbox source']]->receive($callingElement['EntryId']);
             } else {
-                $this->oc['logger']->log('warning','Function {class}::{function} failed. Inbox "{inboxSource}" was not initiated.',array('class'=>__CLASS__,'class'=>__CLASS__,'inboxSource'=>$inboxParams['Inbox source']));         
+                $this->oc['logger']->log('warning','Function {class} &rarr; {function}() failed. Inbox "{inboxSource}" was not initiated.',array('class'=>__CLASS__,'class'=>__CLASS__,'inboxSource'=>$inboxParams['Inbox source']));         
                 $result['Inbox statistics']['error']['value']='Inbox source not set';
             }
             foreach($inboxResult as $key=>$value){

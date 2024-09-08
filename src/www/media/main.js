@@ -1,9 +1,14 @@
+function onSubmit(token) {
+	// Use `requestSubmit()` for extra features like browser input validation.
+	//console.log('reCAPTCHA ready, token: '+token);
+} 
+
 jQuery(document).ready(function(){
 
 	function callbackDummy(data){
         console.log(data);
     }
-
+	
 /** BASIC PAGE CONTENT STYLING **/
 	if (jQuery('article.transparent').length){
 		jQuery('div.bg-media').hide();

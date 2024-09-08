@@ -593,7 +593,7 @@ class Container{
     
     /**
     * This method adds an html-form to the parameter arr['html'].
-    * Through the form a transmitter can be selected and the selected entry can be sent through thi transmitter.
+    * Through the form a transmitter can be selected and the selected entry can be sent through this transmitter.
     * @param array  $arr    Contains the entry selector of the entry to be sent and settings 
     * @return array
     */

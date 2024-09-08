@@ -61,7 +61,7 @@ class Legacy{
         $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($rebuildSelector,array('newOlKey'=>$newKey));
         $context['oldKey']=$oldKey;
         $context['newKey']=$newKey;
-        $this->oc['logger']->log('notice','{class}&rarr;{function} changed ordered list keys: "{oldKey} &rarr; {newKey}"',$context);
+        $this->oc['logger']->log('notice','{class} &rarr; {function}() changed ordered list keys: "{oldKey} &rarr; {newKey}"',$context);
     
         return TRUE;
     }

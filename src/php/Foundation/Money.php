@@ -78,7 +78,7 @@ class Money{
             $promise->wait();
         } else {
             $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
-            $this->oc['logger']->log('error','{class}::{function} failed due to no internet access.',array('class'=>__CLASS__,'function'=>'__FUNCTION__'));    
+            $this->oc['logger']->log('error','{class} &rarr; {function}() failed due to no internet access.',array('class'=>__CLASS__,'function'=>'__FUNCTION__'));    
             return $vars;
         }
         return $vars;
@@ -157,7 +157,7 @@ class Money{
                 $context['rowCount']=$this->ratesCsv2table($csvFile);
                 break;
             }
-            $this->oc['logger']->log('notice','Function "{class}::{function}" rebuild exchange rate dataset, added "{rowCount}" rows',$context);        
+            $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" rebuild exchange rate dataset, added "{rowCount}" rows',$context);        
             return TRUE;
         } else {
             return FALSE;
