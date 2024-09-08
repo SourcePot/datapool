@@ -44,15 +44,15 @@ class Backbone{
     Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+        // initialize page settings
+        $settings=array('Class'=>__CLASS__,'EntryId'=>'init');
+        $settings['Content']=$this->settings;
+        $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
+        $this->settings=$settings['Content'];
     }
 
     public function init()
     {
-        // initialize page settings
-        $settings=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
-        $settings['Content']=$this->settings;
-        $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($settings,TRUE);
-        $this->settings=$settings['Content'];
         // add placeholder
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTitle}}',$this->settings['pageTitle']);
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTimeZone}}',$this->settings['pageTimeZone']);

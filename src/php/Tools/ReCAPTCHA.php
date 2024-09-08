@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class ReCAPTCHA{
-    private const SERVICE_SCCOUNT_FILE='service_account.json';
+    private const SERVICE_ACCOUNT_FILE='service_account.json';
     private $serviceAccountDir='';
     private $serviceAccountFile='';
 
@@ -25,7 +25,7 @@ class ReCAPTCHA{
         $this->serviceAccountDir=$GLOBALS['dirs']['setup'].'ReCAPTCHA/';
         if (!is_dir($this->serviceAccountDir)){mkdir($this->serviceAccountDir,0750,TRUE);}
         // load service account file to environment
-        $this->serviceAccountFile=$this->serviceAccountDir.self::SERVICE_SCCOUNT_FILE;
+        $this->serviceAccountFile=$this->serviceAccountDir.self::SERVICE_ACCOUNT_FILE;
         if (is_file($this->serviceAccountFile)){
             putenv("GOOGLE_APPLICATION_CREDENTIALS=$this->serviceAccountFile");
         }
