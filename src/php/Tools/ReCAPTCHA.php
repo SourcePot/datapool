@@ -29,8 +29,8 @@ class ReCAPTCHA{
     {
         if (!empty($this->siteKey)){
             $arr['toReplace']['{{head}}']='<script src="https://www.google.com/recaptcha/enterprise.js?render='.urlencode($this->siteKey).'"></script>'.$arr['toReplace']['{{head}}'];
+            $arr['toReplace']['{{content}}']=str_replace('class="g-recaptcha"','class="g-recaptcha" data-sitekey="'.htmlspecialchars($this->siteKey).'" data-callback="onSubmit" data-action="submit"',$arr['toReplace']['{{content}}']);
         }
-        $arr['toReplace']['{{content}}']=str_replace('class="g-recaptcha"','class="g-recaptcha" data-sitekey="'.htmlspecialchars($this->siteKey).'" data-callback="onSubmit" data-action="submit"',$arr['toReplace']['{{content}}']);
         return $arr;
     }
 
