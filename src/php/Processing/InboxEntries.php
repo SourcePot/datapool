@@ -133,7 +133,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $options=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Receiver');
         $contentStructure=array('Inbox source'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options),
-                            );
+                                'Forward on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
+                                );
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=array('Column to delay'=>'Name');
@@ -198,6 +199,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result=array('Processing statistics'=>array('Entries'=>array('value'=>0),
                                                      'Itmes already processed and skipped'=>array('value'=>0),
                                                      'Itmes forwarded'=>array('value'=>0),
+                                                     'Itmes not forwarded'=>array('value'=>0),
                                                     ),
                       'Forwarded'=>array(),
                      );
@@ -233,9 +235,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function forwardEntry($base,$sourceEntry,$result,$testRun){
-        $params=current($base['forwardingparams']);
+        $params=current($base['inboxparams'])['Content'];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $debugArr=array('base'=>$base,'testRun'=>$testRun);
         $forwardTo=array();
         $targets=array();
         foreach($base['forwardingrules'] as $ruleId=>$rule){
@@ -255,6 +256,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $forwardTo[$rule['Content']['Forward on success']]=$conditionMet;
             }
         }
+        $forwarded=FALSE;
         $targets=$base['targets'];
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
@@ -274,7 +276,12 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE,TRUE);
                     $result['Processing statistics']['Itmes forwarded']['value']++;
                 }
+                $forwarded=TRUE;
             }
+        }
+        if ($forwarded===FALSE){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Forward on failure']],TRUE,$testRun,TRUE,TRUE);
+            $result['Processing statistics']['Itmes not forwarded']['value']++;
         }
         return $result;
     }

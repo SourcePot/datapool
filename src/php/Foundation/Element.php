@@ -172,7 +172,7 @@ class Element{
         // html-elements which require the name attribute will require the key attribute too
         if ($nameRequired){
             if (isset($arr['key'])){
-                $arr['id']=(empty($arr['id']))?md5($arr['tag'].'|'.implode('|',$arr['key'])):$arr['id'];
+                $arr['id']=(empty($arr['id']))?md5($arr['tag'].'|'.implode('|',$arr['key']).session_id()):$arr['id'];
                 $arr['name']=(empty($arr['name']))?$arr['id']:$arr['name'];
                 $elementArr['attr']['id']=$this->attr2string($arr,'id',$arr['id']);
                 $elementArr['attr']['name']=$this->attr2string($arr,'name',$arr['name']);

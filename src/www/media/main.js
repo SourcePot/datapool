@@ -6,21 +6,19 @@ function onSubmit(token){
 		data:{'function':'createAssessment','token':token},
 		dataType: "json"
 	}).done(function(data){
-		console.log(data);
-		var old_element=document.getElementById(data['action']);
-		if (data['score']>0.8){
+		var old_element=document.getElementById(data['oldTagId']);
+		if (data['grant']==1){
 			var new_element = old_element.cloneNode(true);
 			old_element.parentNode.replaceChild(new_element, old_element);
 			new_element.style.backgroundColor='LIMEGREEN';
-			setTimeout(function(){new_element.click();},1000);
+			new_element.name=data['name'];
+			new_element.id=data['id'];
+			setTimeout(function(){new_element.click();},250);
 		} else {
 			old_element.style.backgroundColor='RED';
 		}
-		//
 	}).fail(function(data){
 		console.log(data);
-	}).always(function(){
-		//
 	});
 }
 

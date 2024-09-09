@@ -11,14 +11,16 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class ReCAPTCHA{
+    private const RECATCHA_CLASS_INDICATOR='g-recaptcha';
     private const SERVICE_ACCOUNT_FILE='service_account.json';
-    private $serviceAccountDir='';
-    private $serviceAccountFile='';
-
+    private const MIN_SCORE=0.8;
+    
     private $oc;
     private $siteKey='';
     private $projectId='';
-    
+    private $serviceAccountDir='';
+    private $serviceAccountFile='';
+
     public function __construct($oc){
         $this->oc=$oc;
         // create directory for Service Account json
@@ -48,20 +50,35 @@ class ReCAPTCHA{
             } else if (strpos($arr['toReplace']['{{content}}'],'g-recaptcha')!==FALSE){
                 $arr['toReplace']['{{head}}']='<script src="https://www.google.com/recaptcha/enterprise.js?render='.urlencode($this->siteKey).'" async defer></script>'.$arr['toReplace']['{{head}}'];
                 //$arr['toReplace']['{{head}}']='<script src="https://www.google.com/recaptcha/api.js"></script>'.$arr['toReplace']['{{head}}'];
-                preg_match_all('/<[^<]+class=\"g-recaptcha\"[^>]+>/',$arr['toReplace']['{{content}}'],$matches);
-                foreach(current($matches) as $matchIndex=>$match){
-                    preg_match_all('/(name=")([^\"]+)(")/',$match,$nameMatches);
-                    if (!empty($nameMatches[2][0])){
-                        $action=$nameMatches[2][0];
-                    } else {
-                        $action='submit';
-                    }
-                    $newTag=str_replace('class="g-recaptcha"','class="g-recaptcha" data-sitekey="'.htmlspecialchars($this->siteKey).'" data-callback="onSubmit" data-action="'.$action.'"',$match);
-                    $arr['toReplace']['{{content}}']=str_replace($match,$newTag,$arr['toReplace']['{{content}}']);
-                }
+                $arr['toReplace']['{{content}}']=$this->extractAndReplaceReCAPTCHAtags($arr['toReplace']['{{content}}']);
             }
         }
         return $arr;
+    }
+
+    private function extractAndReplaceReCAPTCHAtags(string $str):string
+    {
+        preg_match_all('/<[^<]+class=\"'.self::RECATCHA_CLASS_INDICATOR.'\"[^>]+>/',$str,$matches);
+        foreach(current($matches) as $matchIndex=>$match){
+            $attrs=array();
+            preg_match_all('/(\s)([a-z]+)(=")([^\"]+)(")/',$match,$attrMatches);
+            foreach($attrMatches[2] as $index=>$attr){
+                $attrs[$attr]=$attrMatches[4][$index];
+            }
+            if (empty($attrs['value'])){continue;}
+            // add attributes to session
+            $action=preg_replace('/[^a-zA-Z]/','_',$attrs['value']);
+            $_SESSION[__CLASS__][$action]=$attrs;
+            // create new tag, remove id and name
+            $newTag=str_replace('class="g-recaptcha"','class="g-recaptcha" data-sitekey="'.htmlspecialchars($this->siteKey).'" data-callback="onSubmit" data-action="'.$action.'"',$match);
+            if (isset($attrs['name'])){$newTag=str_replace('name="'.$attrs['name'].'"','',$newTag);}
+            $oldTagId=hrtime(TRUE);
+            if (isset($attrs['id'])){$newTag=str_replace('id="'.$attrs['id'].'"','id="'.$oldTagId.'"',$newTag);}
+            $_SESSION[__CLASS__][$action]['oldTagId']=$oldTagId;
+            // replace original tag with new tag
+            $str=str_replace($match,$newTag,$str);
+        }
+        return $str;
     }
 
     /**
@@ -106,6 +123,17 @@ class ReCAPTCHA{
                     $return['error']='CreateAssessment() call failed with the following error: '.$e->getMessage();
                 }
             }
+        }
+        $return['oldTagId']=$_SESSION[__CLASS__][$return['action']]['oldTagId'];
+        if ($return['score']>self::MIN_SCORE){
+            // accept action
+            $return['grant']=1;
+            if (isset($_SESSION[__CLASS__][$return['action']]['id'])){$return['id']=$_SESSION[__CLASS__][$return['action']]['id'];}
+            if (isset($_SESSION[__CLASS__][$return['action']]['name'])){$return['name']=$_SESSION[__CLASS__][$return['action']]['name'];}
+            $_SESSION[__CLASS__]=array();
+        } else {
+            // reject action
+            $return['grant']=0;
         }
         return $return;
     }
