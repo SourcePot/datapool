@@ -716,11 +716,11 @@ class Database{
     * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
     * @return array|boolean The method returns the inserted entry or false
     */
-    public function insertEntry(array $entry):array
+    public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
         $entry=$this->addType2entry($entry);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,TRUE);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
         if (!empty($entry['Owner'])){
             if (strcmp($entry['Owner'],'ANONYM')===0){
                 $entry['Expires']=date('Y-m-d H:i:s',time()+600);
@@ -834,7 +834,7 @@ class Database{
                 }
             }
             $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
-            $entry=$this->insertEntry($entry);
+            $entry=$this->insertEntry($entry,TRUE);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> update
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
@@ -1125,7 +1125,7 @@ class Database{
                 }
             }
             if ($targetIndex===$index){$targetEntryId=$item['entry']['EntryId'];}
-            $this->oc[$storageObj]->insertEntry($item['entry']);
+            $this->oc[$storageObj]->insertEntry($item['entry'],TRUE);
         }
         $context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($cmd['newOlKey']===$olKey)?'':'Key change '.$olKey.'&rarr;'.$cmd['newOlKey'].'.','notices'=>implode('|',$notices));
         //$this->oc['logger']->log('info','Ordered list from Source {Source} with EntryId "{olKey}" rebuild, mapped "{mapping}". {keyChange} Notice: "{notices}"',$context);

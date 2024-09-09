@@ -57,27 +57,27 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array('user'=>$_SESSION['currentUser']['Name']));    
             return 'Password and/or email password were empty';
         }
-        $user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
-        $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
+        // standard user login
+        $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
         $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
         if (empty($user)){return 'Please register';}
         // login check
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
-        // reset session | keep page state
             $this->loginSuccess($user,$arr['Email']);
         } else {
-            // check one-time password
-            $loginEntry=$this->getOneTimeEntry($arr['Email']);
-            if (empty($loginEntry)){
-                $this->loginFailed($user,$arr['Email']);
-            } else if (strcmp($loginEntry['Name'],$arr['Passphrase'])===0){
-                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($loginEntry,TRUE);
+            // has one-time login
+            $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($arr['Email']));
+            $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($user,TRUE);
                 $this->oc['logger']->log('info','One-time login for {email} at {dateTime} was successful.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
                 $this->loginSuccess($user,$arr['Email']);
             } else {
+                // one-time login failed
                 $this->loginFailed($user,$arr['Email']);
-            }
+            }  
         }
+        // update signals
         $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'error','Name'=>'Login failed%'),TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login failed',$loginCount,'int'); 
         $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'info','Name'=>'Login for%'),TRUE);
@@ -167,51 +167,54 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             return 'Failed: unknown email.';
         }
         // create login entry and send email
-        $this->sendOneTimePsw($arr,$existingUser);
+        $this->sendOneTimePsw($arr['Email'],$existingUser);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         exit;
     }
     
-    private function sendOneTimePsw($arr,$user,$isDebugging=FALSE){
-        if ($this->getOneTimeEntry($arr['Email'])){
-            $this->oc['logger']->log('notice','Nothing was sent. Please use the password you have already received before.',array('email'=>$arr['Email']));    
+    private function sendOneTimePsw($email,$user)
+    {
+        if ($this->getOneTimeEntry($email)){
+            $this->oc['logger']->log('notice','Nothing was sent. Please use the password you have already received before.',array('email'=>$email));    
             return FALSE;    
         }
         // create login entry
-        $loginEntry=$this->oc['SourcePot\Datapool\Tools\LoginForms']->oneTimeLoginEntry($arr,$user);
-        // create message
-        $placeholder=array('firstName'=>$user['Content']['Contact details']['First name'],
-                           'pageTitle'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle'),
-                           'psw'=>'<b>"'.$loginEntry['Name'].'"</b> or <b>"'.$loginEntry['Content']['Message'].'"</b>'
-                           );
-        $msg=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Dear {{firstName}},",$placeholder).'<br/><br/>';
-        $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("You have requested a login token at {{pageTitle}}.",$placeholder).'<br/>';
-        $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Please use {{psw}} to login.",$placeholder).'<br/>';
-        $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("This token can be used only once and it is valid for approx. 10mins.",$placeholder).'<br/><br/>';
-        $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Best reagrds,",$placeholder).'<br/>';
-        $msg.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Admin",$placeholder);
+        $pswArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getOneTimePswArr();
+        $loginEntry=$user;
+        $loginEntry['EntryId']=$this->getOneTimeEntryEntryId($email);
+        $loginEntry['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($email,$pswArr['string']);
+        $loginEntry['Content']=array('To'=>$email);
+        $loginEntry['Content']['From']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
+        $loginEntry['Content']['Subject']='Your one-time password for '.$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+        $msg='Dear '.$user['Content']['Contact details']['First name'].'.<br/><br/>';
+        $msg.='You have requested a login token at '.$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle').'.<br/>';
+        $msg.='Please use "<b>'.$pswArr['string'].'</b>" or "<b>'.$pswArr['phrase'].'</b>" to login.<br/>';
+        $msg.='This token can be used only once and it is valid for approx. 10mins.<br/><br/>';
+        $msg.='Best reagrds,<br/><br/>';
+        $msg.='Your Admin';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>'font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:400;line-height:24px;'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'html','element-content'=>$html,'keep-element-content'=>TRUE));
-        $loginEntry['Content']=array('Message'=>$html);
-        $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($loginEntry,TRUE);
+        $loginEntry['Content']['Message']=$html;
+        $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($loginEntry,FALSE);
         // send email
-        $loginEntry['Content']['To']=$arr['Email'];
-        $loginEntry['Content']['From']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');;
-        $loginEntry['Content']['Subject']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngText("Your one-time password for {{pageTitle}}",$placeholder);
         $mail=array('selector'=>$loginEntry);
-        if ($isDebugging){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($mail);}
-        if ($this->oc['SourcePot\Datapool\Tools\Email']->entry2mail($mail)){
-            $this->oc['logger']->log('info','The one time passphrase was sent to {email}, please check your emails.',array('email'=>$arr['Email']));    
+        if ($this->oc['SourcePot\Datapool\Tools\Email']->entry2mail($mail,TRUE)){
+            $this->oc['logger']->log('info','The one time passphrase was sent to {email}, please check your emails.',array('email'=>$email));    
             return TRUE;    
         } else {
-            $this->oc['logger']->log('notice','The request to send the one time passphrase to {email} has failed.',array('email'=>$arr['Email']));    
+            $this->oc['logger']->log('notice','The request to send the one time passphrase to {email} has failed.',array('email'=>$email));    
             return FALSE;
         }
     }
-    
-    private function getOneTimeEntry($email){
+
+    private function getOneTimeEntryEntryId($email):string{
+        return $this->oc['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink';
+    }
+
+    private function getOneTimeEntry($email)
+    {
         $entry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-                     'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink'
+                     'EntryId'=>$this->getOneTimeEntryEntryId($email),
                      );
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry,TRUE);
         return $entry;

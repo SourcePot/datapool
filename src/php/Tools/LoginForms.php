@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Tools;
 class LoginForms{
 
     private const USE_RECAPTCHA=TRUE;
+    private const MIN_PSW_LENGTH=6;
     
     private $oc;
 
@@ -61,28 +62,20 @@ class LoginForms{
         $this->formType=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('loginForm'));
     }
     
-    public function oneTimeLoginEntry(array $arr,$user):array
+    public function getOneTimePswArr():array
     {
         $maxDigitsIndex=count($this->digits)-1;
-        $loginEntry=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-                          'Group'=>$this->pageSettings['pageTitle'],
-                          'Folder'=>'Login links',
-                          'Name'=>'',
-                          'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']).'-oneTimeLink',
-                          'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M'),
-                          'Content'=>array('Message'=>''),
-                          );
-        $loginEntry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($loginEntry,'ADMIN_R','ADMIN_R');
-        $passphraseIcons='';
-        for($index=0;$index<6;$index++){
-            $keyArr=$this->digits[random_int(0,$maxDigitsIndex)];
-            $loginEntry['Name'].=$keyArr['key'];
-            $loginEntry['Content']['Message'].=$keyArr['description'].' | ';
+        $return=array('string'=>'','phrase'=>array());
+        for($index=0;$index<self::MIN_PSW_LENGTH;$index++){
+            $int=random_int(0,$maxDigitsIndex);
+            $keyArr=$this->digits[$int];
+            $return['string'].=$keyArr['key'];
+            $return['phrase'][]=$keyArr['description'];
         }
-        $loginEntry['Content']['Message']=trim($loginEntry['Content']['Message'],'| ');
-        return $loginEntry;
-    }
-    
+        $return['phrase']=implode(' | ',$return['phrase']);
+        return $return;
+    }    
+
     private function formData():array
     {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'loginForm');

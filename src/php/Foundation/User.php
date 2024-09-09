@@ -157,21 +157,20 @@ class User{
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
         $entry['Source']=$this->entryTable;
-        if (!isset($entry['Content']['Address'])){$entry['Content']['Address']=array();}
-        if (empty($entry['Content']['Contact details']['Email']) && !empty($entry['Email'])){
+        if (empty($entry['Content']['Contact details']['Email']) && !empty($entry['Email']) && $addDefaults){
             $entry['Content']['Contact details']['Email']=$entry['Email'];
         }
         if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
-        $entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
-        $entry['Folder']=$this->getUserRolsString($entry);
+        if (!isset($entry['Group'])){$entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');}
+        if (!isset($entry['Folder'])){$entry['Folder']=$this->getUserRolsString($entry);}
+        if (empty($entry['Name'])){$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);
         }
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
-        $entry['Name']=$this->userAbstract(array('selector'=>$entry),3);
         return $entry;
     }
     
@@ -275,7 +274,7 @@ class User{
             $abtract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
         }
         $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$user,'returnHtmlOnly'=>TRUE));
-        $abtract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,array('class'=>'user-abstract'));
+        $abtract=trim($this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,array('class'=>'user-abstract')),' ,;.|');
         if (!empty($arr['wrapResult'])){
             $wrapper=$arr['wrapResult'];
             $wrapper['element-content']=$abtract;
