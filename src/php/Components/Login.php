@@ -71,6 +71,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($user,TRUE);
                 $this->oc['logger']->log('info','One-time login for {email} at {dateTime} was successful.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+                $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
                 $this->loginSuccess($user,$arr['Email']);
             } else {
                 // one-time login failed
