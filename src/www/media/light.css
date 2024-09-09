@@ -805,3 +805,6 @@ div.center{
     color:#ccc;
     background-color:#020044;
 }
+.grecaptcha-badge{
+    z-index:100;
+}
