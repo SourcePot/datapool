@@ -967,9 +967,8 @@ class HTMLbuilder{
         return $presentArr;
     }
     
-    public function getPresentationSettingHtml(array $arr,bool $isDebugging=FALSE):array
+    public function getPresentationSettingHtml(array $arr):array
     {
-        $debugArr=array('arr'=>$arr);
         $callingClassFunction=explode('::',$arr['selector']['Folder']);
         $entryKeyOptions=$this->appOptions;
         if (isset($this->oc[$callingClassFunction[0]])){
@@ -984,14 +983,10 @@ class HTMLbuilder{
                                 'Show key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 );
         $arr['contentStructure']=$contentStructure;
-        $arr['selector']['Name']='Setting';
         $arr['caption']=$arr['selector']['Folder'];
+        $arr['selector']['Name']='Setting';
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Source','Group','Folder','Name'),'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
-        if ($isDebugging){
-            $debugArr['selector']=$arr['selector'];
-            $debugArr['contentStructure']=$arr['contentStructure'];
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
         return $arr;
     }
     
