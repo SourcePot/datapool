@@ -55,6 +55,8 @@ final class Root{
     private $profileFileName=FALSE;
 
     private $loggerCache=array();
+
+    private $currentUser=array();
     
     public function __construct()
     {
@@ -63,6 +65,7 @@ final class Root{
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
         session_start();
+        $this->updateCurrentUser();
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
         if (empty($_SESSION['page state'])){
@@ -109,6 +112,38 @@ final class Root{
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
     }
     
+    /**
+    * This method updates the current user based on the session, environment variable or creates an anonymous user otherwise
+    *
+    * @return array An associative array that contains the current user
+    */
+    public function updateCurrentUser($loginUser=array()):void
+    {
+        if (!empty($loginUser)){
+            // remote client | BE CAREFUL, THIE OPTION BYPASSES THE LOGIN
+            $this->currentUser=$loginUser;
+        } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
+            // empty session -> anonymous user
+            $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','EntryId'=>'ANONYM','Owner'=>'ANONYM','LoginId'=>mt_rand(1,10000000),'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            $this->currentUser['Content']=array('Contact details'=>array('First name'=>'Anonym','Family name'=>'Anonym'),'Address'=>array());
+            $this->currentUser['Params']=array();
+            $_SESSION['currentUser']=$this->currentUser;
+        } else {
+            // get user from session
+            $this->currentUser=$_SESSION['currentUser'];
+        }
+    }
+
+    public function getCurrentUser():array
+    {
+        return $this->currentUser;
+    }
+
+    public function getCurrentUserEntryId():string
+    {
+        return $this->currentUser['EntryId'];
+    }
+
     /**
     * This method returns a Monolog logger instance.
     *

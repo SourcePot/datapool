@@ -93,16 +93,8 @@ class User{
         $this->userRols();
         // check database user entry definition 
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
-        $currentUser=$this->getCurrentUser();
         // add calendar placeholder
-        if (!isset($_SESSION['currentUser']['EntryId'])){
-            $owner='SYSTEM';
-        } else if (mb_strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
-            $owner=$_SESSION['currentUser']['EntryId'];
-        } else {
-            $owner='ANONYM';
-        }
-        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{Owner}}',$owner);
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{Owner}}',$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
     }
     
     public function getEntryTable():string
@@ -146,14 +138,6 @@ class User{
         return implode(', ',$userRols);
     }
     
-    public function getCurrentUser():array
-    {
-        if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
-            $this->anonymousUserLogin();
-        }
-        return $_SESSION['currentUser'];
-    }
-    
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
         $entry['Source']=$this->entryTable;
@@ -172,18 +156,6 @@ class User{
         }
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
         return $entry;
-    }
-    
-    private function anonymousUserLogin():array
-    {
-        $user=array('Source'=>$this->entryTable);
-        $user['Owner']='ANONYM';
-        $user['LoginId']=mt_rand(1,10000000);
-        $user['Expires']=date('Y-m-d H:i:s',time()+300);
-        $user['Privileges']=1;
-        $user=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($user,TRUE);
-        $this->loginUser($user);
-        return $_SESSION['currentUser']=$user;
     }
     
     private function initPsw(){
@@ -232,7 +204,7 @@ class User{
         // This method returns formated html text from an entry based on predefined templates.
         //     
         if (empty($arr)){
-            $user=$_SESSION['currentUser'];
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();;
         } else if (!is_array($arr)){
             $user=array('Source'=>$this->entryTable,'EntryId'=>trim($arr));
         } else if (isset($arr['selector'])){
@@ -311,6 +283,7 @@ class User{
     public function loginUser(array $user)
     {
         $_SESSION['currentUser']=$user;
+        $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
         if (strcmp($user['Owner'],'ANONYM')!==0){
             $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',array('userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         }

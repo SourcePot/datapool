@@ -79,13 +79,7 @@ class Database{
     {
         $toReplace['{{Expires}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10M');
         $toReplace['{{EntryId}}']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
-        if (!isset($_SESSION['currentUser']['EntryId'])){
-            $toReplace['{{Owner}}']='SYSTEM';
-        } else if (mb_strpos($_SESSION['currentUser']['EntryId'],'EID')===FALSE){
-            $toReplace['{{Owner}}']=$_SESSION['currentUser']['EntryId'];
-        } else {
-            $toReplace['{{Owner}}']='ANONYM';
-        }
+        $toReplace['{{Owner}}']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         return $toReplace;
     }
 
@@ -492,7 +486,7 @@ class Database{
     }
 
     private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
-        if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $sqlArr=$this->selector2sql($selector,$removeGuideEntries);
         $sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
         $sqlArr=$this->addSuffix2sql($sqlArr,$GLOBALS['dbInfo'][$selector['Source']],$orderBy,$isAsc,$limit,$offset);
@@ -602,7 +596,7 @@ class Database{
             return $result;
         }
         // get entry
-        if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         if (!empty($selector['EntryId'])){
             $sqlPlaceholder=':'.'EntryId';
             $sqlArr=array('sql'=>"SELECT * FROM `".$selector['Source']."` WHERE `".'EntryId'."`=".$sqlPlaceholder,'inputs'=>array($sqlPlaceholder=>$selector['EntryId']));
@@ -990,7 +984,6 @@ class Database{
     
     public function addLog2entry(array $entry,string $logType='Processing log',array $logContent=array(),bool $updateEntry=FALSE)
     {
-        if (empty($_SESSION['currentUser']['EntryId'])){$userId='ANONYM';} else {$userId=$_SESSION['currentUser']['EntryId'];}
         if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
         $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
         $logContent['timestamp']=time();
@@ -999,7 +992,7 @@ class Database{
         $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
         $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
         $logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
-        $logContent['userId']=(empty($_SESSION['currentUser']['EntryId']))?'ANONYM':$_SESSION['currentUser']['EntryId'];
+        $logContent['userId']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $entry['Params'][$logType][]=$logContent;
         // remove expired logs
         foreach($entry['Params'][$logType] as $logIndex=>$logArr){

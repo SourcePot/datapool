@@ -78,14 +78,17 @@ class Menu{
             }
         }
         // get available and selected categories and apps
-        if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         foreach($registeredRunMethods as $classWithNamespace=>$menuDef){
             // check access rights
             if (empty($this->categories[$menuDef['Category']])){
                 throw new \ErrorException('Function '.__FUNCTION__.': Menu category {'.$menuDef['Category'].'} set in {'.$classWithNamespace.'} has no definition in this class {'.__CLASS__.'}',0,E_ERROR,__FILE__,__LINE__);
             }
             $menuDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef);
-            if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){continue;}
+            if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){
+                // skip app if access rights are not sufficient
+                continue;
+            }
             // get categories
             $this->available['Categories'][$menuDef['Category']]=$this->categories[$menuDef['Category']];
             if (strcmp($menuDef['Category'],$this->requested['Category'])===0){

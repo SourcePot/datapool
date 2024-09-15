@@ -23,8 +23,8 @@ class Filespace{
                                  'Type'=>array('type'=>'string','value'=>'{{Class}}','Description'=>'This is the data-type of Content'),
                                  'Date'=>array('type'=>'datetime','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
                                  'Content'=>array('type'=>'json','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
-                                 'Read'=>array('type'=>'int','value'=>FALSE,'Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'int','value'=>FALSE,'Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
+                                 'Read'=>array('type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  'Owner'=>array('type'=>'string','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
 
@@ -95,6 +95,14 @@ class Filespace{
             $vars['Last processed dir']=$dir2process['dir'];
         }
         return $vars;
+    }
+
+    private function getCurrentUser():array{
+        if (isset($this->oc['SourcePot\Datapool\Foundation\User'])){
+            return $this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        } else {
+            return array('EntryId'=>'ANONYM','Privileges'=>1);
+        }
     }
 
     public function resetStatistic():array
@@ -234,7 +242,7 @@ class Filespace{
         } else {
             // entry found
             $entry['rowCount']=1;
-            if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
+            $user=$this->getCurrentUser();
             $entry['access']=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
             if ($entry['access']){
                 $entry=array_replace_recursive($selector,$entry,$arr);
@@ -255,6 +263,7 @@ class Filespace{
         // This method updates and returns the entry from the setup-directory.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         //
+        $user=$this->getCurrentUser();
         $existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
         if (empty($existingEntry['rowCount'])){
             // insert entry
@@ -262,7 +271,6 @@ class Filespace{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
             $this->addStatistic('inserted files',1);
         } else if (empty($noUpdateCreateIfMissing)){
-            if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
                 // has access to update entry
                 $entry=array_replace_recursive($existingEntry,$entry);
@@ -276,7 +284,6 @@ class Filespace{
             }
         } else {
             // existing entry was not updated
-            if (empty($_SESSION['currentUser'])){$user=array('Privileges'=>1,'Owner'=>'ANONYM');} else {$user=$_SESSION['currentUser'];}
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Read',$user,$isSystemCall)){
                 $entry=$existingEntry;
                 $this->addStatistic('matched files',1);
@@ -528,7 +535,7 @@ class Filespace{
 
     private function addFileProps(array $entry,string $file):array
     {
-        $currentUser=(empty($_SESSION['currentUser']))?array('EntryId'=>'ANONYM','Name'=>'ANONYM'):$_SESSION['currentUser'];
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();;
         $entry['Owner']=(empty($entry['Owner']))?$currentUser['EntryId']:$entry['Owner'];
         if (empty($entry['Params']['File']['UploaderId'])){
             $entry['Params']['File']['UploaderId']=$currentUser['EntryId'];

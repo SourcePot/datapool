@@ -315,6 +315,11 @@ class HTMLbuilder{
         }
         return $this->select($arr);
     }
+
+    public function getClientInfo(array $arr):string
+    {
+        return $this->oc['SourcePot\Datapool\Foundation\ClientAccess']->getClientInfo($arr);
+    }
     
     public function preview(array $arr):array
     {
@@ -417,10 +422,10 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['approve']) || isset($formData['cmd']['decline'])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $cmd=key($formData['cmd']);
-                $entry['Params']['User'][$_SESSION['currentUser']['EntryId']]=array('action'=>$cmd,'timestamp'=>time(),'app'=>$selector['app']);
-                $entry['Params']['User'][$_SESSION['currentUser']['EntryId']]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($_SESSION['currentUser'],1);
-                $entry['Params']['User'][$_SESSION['currentUser']['EntryId']]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($_SESSION['currentUser'],7);
-                $entry['Params']['User'][$_SESSION['currentUser']['EntryId']]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($_SESSION['currentUser'],9);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]=array('action'=>$cmd,'timestamp'=>time(),'app'=>$selector['app']);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),1);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),7);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),9);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
@@ -603,8 +608,8 @@ class HTMLbuilder{
         // detected user action
         $tableTitle=$arr['selector']['Name'];
         $userAction='none';
-        if (isset($arr['selector']['Params']['User'][$_SESSION['currentUser']['EntryId']]['action'])){
-            $userAction=$arr['selector']['Params']['User'][$_SESSION['currentUser']['EntryId']]['action'];
+        if (isset($arr['selector']['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['action'])){
+            $userAction=$arr['selector']['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['action'];
             $tableTitle='Your decission for the entry: '.$userAction;
         }
         if ($userAction==='approve'){

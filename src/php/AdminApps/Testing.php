@@ -63,7 +63,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private function finalizeSelector($arr,$method,$name){
         $arr['selector']['Source']=$this->entryTable;
         $arr['selector']['Group']=$method;
-        $arr['selector']['Folder']=$_SESSION['currentUser']['EntryId'];
+        $arr['selector']['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $arr['selector']['Name']=$name;
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($arr['selector'],'ALL_R','ALL_CONTENTADMIN_R');
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Group','Folder','Name'),0);

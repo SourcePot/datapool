@@ -94,7 +94,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
         // get settings
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $currentUser=$this->oc['SourcePot\Datapool\Foundation\User']->getCurrentUser();
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $settingKey=(strcmp($currentUser['Owner'],'ANONYM')===0)?'ANONYM':$currentUser['EntryId'];
         $this->setting=array('Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone);
         $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
@@ -217,7 +217,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     public function unifyEntry($entry){
         $entry['Source']=$this->entryTable;    
-        $entry['Folder']=$_SESSION['currentUser']['EntryId'];
+        $entry['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         if (empty($entry['Group'])){$entry['Group']='Events';}
         if (strcmp($entry['Group'],'Events')===0 || strcmp($entry['Group'],'Bank holidays')===0){
             // Standard events
@@ -282,7 +282,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                 'Timezone'=>array('method'=>'select','excontainer'=>TRUE,'value'=>DB_TIMEZONE,'options'=>$this->options['Timezone']),
                                 'Visibility'=>array('method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE)),
                                 );
-        $arr['selector']=array('Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$_SESSION['currentUser']['EntryId'],'EntryId'=>$_SESSION['currentUser']['EntryId']);
+        $arr['selector']=array('Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Serial events definition';
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
@@ -307,6 +307,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(array('selector'=>$event));
         } else {
             $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
+            $event['owner']=(empty($event['owner']))?$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId():$event['owner'];
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
         }
         return $arr;        
@@ -327,7 +328,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         } else if (!empty($formData['cmd'])){
             $newPageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
-            $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$_SESSION['currentUser']['EntryId'],$formData['val']['setting'],'Calendar',FALSE);
+            $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),$formData['val']['setting'],'Calendar',FALSE);
         }
         $calendarDate=new \DateTime();
         $calendarDate->setTimestamp($this->calendarStartTimestamp()); 

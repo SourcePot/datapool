@@ -153,7 +153,7 @@ class Explorer{
             if (empty($entry)){$entry=$selector;}
         } else {
             $unseledtedDetected=FALSE;
-            $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$_SESSION['currentUser']['EntryId'],'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
             foreach($this->selectorTemplate as $column=>$initValue){
                 if (empty($selector[$column])){$unseledtedDetected=TRUE;}
                 $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
@@ -209,7 +209,7 @@ class Explorer{
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
             // save selector - for Quicklinks
             if (!empty($newSelector['EntryId'])){
-                $entry=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId'],'Folder'=>$callingClass,'Name'=>$newSelector['EntryId']);
+                $entry=array('Source'=>$this->entryTable,'Group'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Folder'=>$callingClass,'Name'=>$newSelector['EntryId']);
                 $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
                 $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
                 $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
@@ -423,7 +423,7 @@ class Explorer{
     public function getQuicklinksHtml():string
     {
         $linksByCategory=array();
-        $selector=array('Source'=>$this->entryTable,'Group'=>$_SESSION['currentUser']['EntryId']);
+        $selector=array('Source'=>$this->entryTable,'Group'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
             if (empty($entry['Content']['Source'])){
                 $entry['Content']['Source']=$this->oc['SourcePot\Datapool\Root']->class2source($entry['Content']['app']);

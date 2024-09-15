@@ -446,7 +446,7 @@ final class MiscTools{
         if (isset($entry['Params'][$classWithNamespace])){
             return TRUE;
         } else {
-            $entry['Params'][$classWithNamespace]=array('user'=>$_SESSION['currentUser']['EntryId'],'timestamp'=>time());
+            $entry['Params'][$classWithNamespace]=array('user'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'timestamp'=>time());
             if (!$testRun){$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);}
             return FALSE;
         }

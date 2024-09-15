@@ -50,11 +50,11 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
             if (isset($userSelector['EntryId'])){
                 $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);
             } else {
-                $user=$_SESSION['currentUser'];
+                $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             }
         } else {
             // is non-admin user
-            $user=$_SESSION['currentUser'];
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         }
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());    
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
@@ -66,13 +66,6 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         }
         return $html;
     }
-    
-    public function clientAccessTest($arr){
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('_FILES'=>$_FILES,'arr'=>$arr));
-        $arr=array('console'=>'Datapool timestamp: '.time());
-        return $arr;
-    }
-    
     
 }
 ?>

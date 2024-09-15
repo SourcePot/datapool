@@ -82,11 +82,8 @@ class ReCAPTCHA{
     }
 
     /**
-     * Create an assessment to analyse the risk of a UI action.
-    * @param string $recaptchaKey The reCAPTCHA key associated with the site/app
-    * @param string $token The generated token obtained from the client.
-    * @param string $project Your Google Cloud project ID.
-    * @param string $action Action name corresponding to the token.
+    * Create an assessment to analyse the risk of a UI action.
+    * @param array $arr The array containing the the generated token obtained from the client.
     */
     public function createAssessment($arr):array
     {
@@ -94,9 +91,7 @@ class ReCAPTCHA{
         if (empty($this->siteKey)){
             $return['error']='reCaptchaKey is empty';
         } else {
-            $action='submit';
             // Create the reCAPTCHA client.
-            // TODO: Cache the client generation code (recommended) or call client.close() before exiting the method.
             try{
                 $client = new \Google\Cloud\RecaptchaEnterprise\V1\RecaptchaEnterpriseServiceClient();
                 $projectName = $client->projectName($this->projectId);
@@ -122,6 +117,7 @@ class ReCAPTCHA{
                 } catch (\Exception $e) {
                     $return['error']='CreateAssessment() call failed with the following error: '.$e->getMessage();
                 }
+                $client->close(); // call client.close() before exiting the method
             }
         }
         $return['oldTagId']=$_SESSION[__CLASS__][$return['action']]['oldTagId'];

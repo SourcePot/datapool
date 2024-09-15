@@ -552,7 +552,7 @@ class Container{
                 $arr['selector']['Source']=key($formData['cmd']['Add comment']);
                 $arr['selector']['EntryId']=key($formData['cmd']['Add comment'][$arr['selector']['Source']]);
                 $arr['selector']['timeStamp']=current($formData['cmd']['Add comment'][$arr['selector']['Source']]);
-                $arr['selector']['Content']['Comments'][$arr['selector']['timeStamp']]=array('Comment'=>$formData['val']['comment'],'Author'=>$_SESSION['currentUser']['EntryId']);
+                $arr['selector']['Content']['Comments'][$arr['selector']['timeStamp']]=array('Comment'=>$formData['val']['comment'],'Author'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
             }
         }

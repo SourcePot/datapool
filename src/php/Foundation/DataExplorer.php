@@ -262,7 +262,7 @@ class DataExplorer{
         } else if (!empty($formData['cmd'])){
             $entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
             $entry=array_merge($this->tags[key($formData['cmd'])],$entry);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
         }
         // build control html
         $isEditMode=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);

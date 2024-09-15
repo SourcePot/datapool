@@ -220,18 +220,20 @@ class Definitions{
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
         $flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $attrIdentifier=$S.'@';
         $entryArr=array();
         foreach($flatDefinition as $definitionKey=>$definitionValue){
-            $definitionKeyComps=explode('@',$definitionKey);
+            $definitionKeyComps=explode($attrIdentifier,$definitionKey);
             $definitionKey=array_shift($definitionKeyComps);
-            $definitionKey=trim($definitionKey,$S);
+            // add attributes with value to entryArr
+            $definitionKeyAttr=array_pop($definitionKeyComps);
+            if (!empty($definitionKeyAttr)){
+                $entryArr[$definitionKey][$definitionKeyAttr]=$definitionValue;
+            }
+            // add entry value to entryArr
             if (isset($flatEntry[$definitionKey])){
                 $entryArr[$definitionKey]['value']=$flatEntry[$definitionKey];
             }
-            // get attribute
-            $definitionKeyAttr=array_pop($definitionKeyComps);
-            if (empty($definitionKeyAttr)){continue;}
-            $entryArr[$definitionKey][$definitionKeyAttr]=$definitionValue;
         }
         // create matrices
         $matrices=array();
@@ -272,8 +274,6 @@ class Definitions{
         }
         $debugArr['tableCntrArr']=$tableCntrArr;
         // create html
-        $hideHeader=(isset($definition['hideHeader']))?$definition['hideHeader']:TRUE;
-        $hideKeys=(isset($definition['hideKeys']))?$definition['hideKeys']:TRUE;
         $html='';
         foreach($matrices as $caption=>$matrix){
             $tableCntr=$tableCntrArr[$caption];
@@ -352,7 +352,9 @@ class Definitions{
     
     private function elementDef2element(array $element,$outputStr=NULL):array|string
     {
-        $element=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($element);
+        $read=(empty($element['Read']))?'ALL_R':$element['Read'];
+        $write=(empty($element['Write']))?'ALL_R':$element['Write'];
+        $element=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($element,$read,$write);
         // check read access
         $access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Read');
         if (!$access){
@@ -392,6 +394,9 @@ class Definitions{
                 } else if (strcmp($element['type'],'file')!==0){
                     $element['value']=$outputStr;
                 }
+            } else if (strcmp($element['tag'],'meter')===0){
+                $element['value']=$outputStr;
+                $element['title']=$outputStr;
             } else {
                 $element['element-content']=$outputStr;
             }

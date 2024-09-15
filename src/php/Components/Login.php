@@ -54,7 +54,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginRequest(array $arr)
     {
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
-            $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array('user'=>$_SESSION['currentUser']['Name']));    
+            $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array());    
             return 'Password and/or email password were empty';
         }
         // standard user login
@@ -104,6 +104,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 
     private function loginFailed($user,$email){
         $_SESSION['currentUser']['Privileges']=1;
+        $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
         $this->oc['logger']->log('notice','Login failed for {email} at {dateTime}.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));

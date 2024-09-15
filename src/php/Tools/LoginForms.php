@@ -96,7 +96,7 @@ class LoginForms{
             $class=$this->oc['SourcePot\Datapool\Root']->source2class('user');
             $user=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user);
-            if (empty($user['EntryId'])){$user=$_SESSION['currentUser'];}
+            if (empty($user['EntryId'])){$user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();}
             if (isset($user['Params']['User registration']['Email'])){
                 $result['Email']=$user['Params']['User registration']['Email'];
             }
@@ -228,7 +228,8 @@ class LoginForms{
 
     private function isLoggedIn():bool
     {
-        return intval($_SESSION['currentUser']['Privileges'])>1;
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        return intval($currentUser['Privileges'])>1;
     }
 
 }

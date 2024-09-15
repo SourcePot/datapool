@@ -89,7 +89,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     private function newEntryHtml(){
         $draftSelector=array('Source'=>$this->entryTable,
                           'Folder'=>'Draft',
-                          'Owner'=>$_SESSION['currentUser']['EntryId'],
+                          'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),
                           );
         $draftSelector=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($draftSelector);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
@@ -117,7 +117,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     }
     
     public function unifyEntry($forumEntry){
-        $forumEntry['Group']=$_SESSION['currentUser']['Privileges'];
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $forumEntry['Group']=$user['Privileges'];
         $forumEntry['Folder']='Sent';
         $forumEntry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         $forumEntry['Name']=(empty($forumEntry['Content']['Message']))?'':mb_substr($forumEntry['Content']['Message'],0,30);

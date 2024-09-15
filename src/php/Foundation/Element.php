@@ -40,12 +40,11 @@ class Element{
                        'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE),
                        'label'=>array('for'=>TRUE),
                        'legend'=>array('name'=>TRUE),
-                       'meter'=>array('name'=>TRUE),
                        'optgroup'=>array('name'=>TRUE),
                        'option'=>array('value'=>TRUE,'selected'=>FALSE),
                        'output'=>array('name'=>TRUE),
                        'progress'=>array('name'=>TRUE),
-                       'meter'=>array('min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>TRUE),
+                       'meter'=>array('min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE),
                        'select'=>array('name'=>TRUE),
                        'textarea'=>array('name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE),
                        

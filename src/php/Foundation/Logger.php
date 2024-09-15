@@ -124,7 +124,7 @@ class Logger
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
         $entry['Source']=$this->entryTable;
         $entry['Group']=$level;
-        $entry['Folder']=isset($_SESSION['currentUser']['EntryId'])?$_SESSION['currentUser']['EntryId']:'ANONYM';
+        $entry['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
         $entry['Content']=$context;
         $entry['Content']['msg']=$record->message;
@@ -167,7 +167,7 @@ class Logger
     public function getMyLogs():string
     {
         $arr=array();
-        $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$_SESSION['currentUser']['EntryId']);
+        $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
         $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#000'));
         $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);

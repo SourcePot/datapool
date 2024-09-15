@@ -57,12 +57,19 @@ class Access{
         }
     }
 
-    public function addRights(array $entry,string|bool $Read=FALSE,string|bool $Write=FALSE,string|bool $Privileges=FALSE):array
+    /**
+    * This method adds rights to an entry
+    *
+    * @return array An associative array that contains the resulting entry
+    */
+    public function addRights(array $entry,$Read=FALSE,$Write=FALSE,$Privileges=FALSE):array
     {
-        //    This function adds named rights to an entry based on the rights constants names or, if this fails, 
-        //  it changes the existing right of entry Read and/or Write key if these contain a named right.
-        //
-        $rigthTypes=array('Read'=>'MEMBER_R','Write'=>'MEMBER_R','Privileges'=>'PUBLIC_R');
+        //  set defaults if right argument are empty
+        $rigthTypes=array('Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,
+                          'Write'=>(empty($Write))?'ADMIN_R':$Read,
+                          'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges
+                        );
+        // add rights to the entry
         foreach($rigthTypes as $type=>$default){
             // set to default value
             if (!isset($entry[$type])){$entry[$type]=$default;}
@@ -70,12 +77,8 @@ class Access{
             if (isset($this->access[$$type])){$entry[$type]=$this->access[$$type];}
             // replace alias values
             $entry=$this->replaceRightConstant($entry,$type);
+            $entry[$type]=intval($entry[$type]);
         }
-        if (!isset($entry['Read']) || !isset($entry['Write'])){
-            throw new \ErrorException('Function '.__FUNCTION__.': Unable to set valid entry right.',0,E_ERROR,__FILE__,__LINE__);    
-        }
-        if (isset($entry['Read'])){$entry['Read']=intval($entry['Read']);}
-        if (isset($entry['Write'])){$entry['Write']=intval($entry['Write']);}
         return $entry;        
     }
     
@@ -98,8 +101,11 @@ class Access{
         if ($this->isEntryWithoutContent($entry)){return 'EMPTY ENTRY';}
         if ($isSystemCall===TRUE){return 'SYSTEMCALL';}
         if (empty($entry)){return FALSE;}
-        if ($user===FALSE){
-            if (isset($_SESSION['currentUser'])){$user=$_SESSION['currentUser'];} else {return FALSE;}
+        if (empty($user)){
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+            if (empty($user)){
+                return FALSE;
+            }
         }
         if (empty($entry['Owner'])){$entry['Owner']='Entry Owner Missing';}
         if (empty($user['Owner'])){$user['Owner']='User EntryId Missing';}
@@ -177,8 +183,8 @@ class Access{
     public function hasRights($user=FALSE,$right='ADMIN_R')
     {
         if (empty($user)){
-            if (empty($_SESSION['currentUser'])){return FALSE;}
-            $user=$_SESSION['currentUser'];
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+            if (empty($user)){return FALSE;}
         }
         if (($user['Privileges'] & $this->access[$right])>0){
             return TRUE;
