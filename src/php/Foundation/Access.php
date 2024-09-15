@@ -143,6 +143,7 @@ class Access{
     }
     
     public function verfiyPassword($email,$password,$loginId){
+        if (empty($email) || empty($password) || empty($loginId)){return FALSE;}
         $emailId=$this->emailId($email);
         $userPass=$password.$emailId;
         if (password_verify($userPass,$loginId)===TRUE){
