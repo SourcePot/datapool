@@ -198,7 +198,7 @@ class Definitions{
             }
             $element['Read']=(isset($entry['Read']))?$entry['Read']:'ADMIN_R';
             $element['Write']=(isset($entry['Write']))?$entry['Write']:'ADMIN_R';
-            $element['Owner']=(isset($entry['Owner']))?$entry['Owner']:'ANONYM';
+            $element['Owner']=(isset($entry['Owner']))?$entry['Owner']:'SYSTEM';
             $element['key']=$selectorKeyComps;
             $element['callingClass']=$callingClass;
             $element['callingFunction']=$callingFunction;

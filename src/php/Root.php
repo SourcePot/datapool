@@ -124,9 +124,10 @@ final class Root{
             $this->currentUser=$loginUser;
         } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             // empty session -> anonymous user
-            $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','EntryId'=>'ANONYM','Owner'=>'ANONYM','LoginId'=>mt_rand(1,10000000),'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>mt_rand(1,10000000),'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
             $this->currentUser['Content']=array('Contact details'=>array('First name'=>'Anonym','Family name'=>'Anonym'),'Address'=>array());
             $this->currentUser['Params']=array();
+            $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.$this->getIP(TRUE);
             $_SESSION['currentUser']=$this->currentUser;
         } else {
             // get user from session
@@ -649,6 +650,23 @@ final class Root{
             }
         }
         file_put_contents($file,$fileContent);
+    }
+
+    public function getIP(bool $hashOnly=TRUE):string
+    {
+        if (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER)){
+            $ip=$_SERVER["HTTP_X_FORWARDED_FOR"];
+        } else if (array_key_exists('REMOTE_ADDR',$_SERVER)){
+            $ip=$_SERVER["REMOTE_ADDR"];
+        } else if (array_key_exists('HTTP_CLIENT_IP',$_SERVER)){
+            $ip=$_SERVER["HTTP_CLIENT_IP"];
+        }
+        if (empty($ip)){
+            return 'empty';
+        } else if ($hashOnly){
+            $ip=hash('sha256',$ip,FALSE);
+        }
+        return $ip;
     }
 
 }

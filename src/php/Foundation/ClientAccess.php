@@ -156,7 +156,7 @@ class ClientAccess{
     */
     private function newToken($data){
         $authorizationArr=$this->decodeAuthorization($data['Authorization']);
-        $authorizationArr['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP(FALSE);
+        $authorizationArr['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(FALSE);
         // get credentials entry and try match
         $authorizationEntry=FALSE;
         if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
@@ -212,7 +212,7 @@ class ClientAccess{
             $data['answer']['expires_in']=$datetimeObj->getTimestamp()-time();
             return $data;
         }
-        $tokenSelector['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP(FALSE);
+        $tokenSelector['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(FALSE);
         $this->oc['logger']->log('notice','Client token originating from {ip} failed: Source="{Source}", Name="{Name}"',$tokenSelector);    
         return $data;
     }

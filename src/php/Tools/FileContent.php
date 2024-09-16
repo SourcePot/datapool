@@ -36,12 +36,8 @@ final class FileContent{
     public function enrichEntry(array $entry):array
     {
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $entry['currentUserId']='ANONYM';
-        $entry['currentUser']='Doe, John';
-        if (!empty($this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId())){
-            $entry['currentUserId']=$currentUser['EntryId'];
-            $entry['currentUser']=$currentUser['Content']['Contact details']['First name'].' '.$currentUser['Content']['Contact details']['Family name'];
-        }
+        $entry['currentUserId']=$currentUser['EntryId'];
+        $entry['currentUser']=$currentUser['Content']['Contact details']['First name'].' '.$currentUser['Content']['Contact details']['Family name'];
         $entry['nowTimeStamp']=time();
         $entry['nowDateTimeUTC']=date('Y-m-d H:i:s');
         $entry['nowDateUTC']=date('Y-m-d');

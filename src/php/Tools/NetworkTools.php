@@ -24,23 +24,6 @@ class NetworkTools{
         $this->oc=$oc;
     }
 
-    public function getIP(bool $hashOnly=TRUE):string
-    {
-        if (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER)){
-            $ip=$_SERVER["HTTP_X_FORWARDED_FOR"];
-        } else if (array_key_exists('REMOTE_ADDR',$_SERVER)){
-            $ip=$_SERVER["REMOTE_ADDR"];
-        } else if (array_key_exists('HTTP_CLIENT_IP',$_SERVER)){
-            $ip=$_SERVER["HTTP_CLIENT_IP"];
-        }
-        if (empty($ip)){
-            return 'empty';
-        } else if ($hashOnly){
-            $ip=md5($ip);
-        }
-        return $ip;
-    }
-
     public function href(array $arr):string
     {
         $script=$_SERVER['SCRIPT_NAME'];

@@ -118,7 +118,7 @@ class Logger
     {
         $level=mb_strtolower($record->level->name);
         $context=array_merge($record->context,$record->extra);
-        $context['ip']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($this->levelConfig[$level]['hashIp']);
+        $context['ip']=$this->oc['SourcePot\Datapool\Root']->getIP($this->levelConfig[$level]['hashIp']);
         $entry=$this->levelConfig[$level];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');

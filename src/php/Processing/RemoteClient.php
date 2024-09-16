@@ -12,6 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
 
+    private const ENTRY_EXPIRATION_SEC=3600;
     private const ONEDIMSEPARATOR='||';
     
     private $oc;
@@ -68,7 +69,8 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getClientWidget($callingElement)
     {
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Client widget','generic',$callingElement,array('method'=>'getClientWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client widget','generic',$callingElement,array('method'=>'getClientWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $html;
     }
 
     private function getClientInfo($callingElement):string
@@ -116,8 +118,20 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         $base=array('clientparams'=>array());
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $params=current($base['clientparams']);
+        // get client settings form
         if (!empty($params['Content']['Client'])){
-            $html.=$this->getClientDefinitionForm($params['Content']['Client']);
+            $selector=array('Source'=>$this->entryTable,'EntryId'=>$params['Content']['Client'].'_setting');
+            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client SettingsB','generic',$selector,array('method'=>'getClientSettingsContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
+        }
+        // get image shuffle
+        $callingElement=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement);
+        $wrapperSetting=array('style'=>array('padding'=>'10px','border'=>'none','width'=>'auto'));
+        $setting=array('hideReloadBtn'=>FALSE,'style'=>array('width'=>360,'height'=>260),'orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10,'autoShuffle'=>TRUE,'getImageShuffle'=>'Data');
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Image shuffle G','getImageShuffle',$callingElement['callingElement']['Selector'],$setting,$wrapperSetting);
+        // get client status form
+        if (!empty($params['Content']['Client'])){
+            $selector=array('Source'=>$this->entryTable,'EntryId'=>$params['Content']['Client'].'_%','refreshInterval'=>30);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client Status','generic',$selector,array('method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
         }
         return $html;
     }
@@ -192,8 +206,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
 
     public function clientCall($clientRequest):array
     {
-        
-        
+        // enrich client request
         $clientRequest['Read']=(empty($clientRequest['Read']))?$this->entryTemplate['Read']['value']:$clientRequest['Read'];
         $clientRequest['Write']=(empty($clientRequest['Write']))?$this->entryTemplate['Write']['value']:$clientRequest['Write'];
         $idArr=array('client_id'=>$clientRequest['client_id'],'Group'=>$clientRequest['Group'],'Folder'=>$clientRequest['Folder'],'Name'=>$clientRequest['Name']);
@@ -208,7 +221,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $definition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definition,self::ONEDIMSEPARATOR);
         $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($definition,TRUE);
-        // create entry from clientRequest
+        // create the entry from clientRequest
         $valueIndicator=self::ONEDIMSEPARATOR.'@value';
         $entry=array('Source'=>$this->entryTable);
         $entry['EntryId']=$baseEntryId.'_lastentry';
@@ -225,9 +238,13 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         if ($fileArr && empty($fileArr['error'])){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry,FALSE,TRUE);
         } else {
+            $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            if (is_file($sourceFile)){unlink($sourceFile);}
+            if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
         }
-        // get or create setting
+        $this->distributeClientEntries($entry);
+        // create the initial setting
         $setting=$entry;
         $setting['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
         $setting['EntryId']=$baseEntryId.'_setting';
@@ -243,15 +260,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             $options[$entryIdComps[0]]=$clientEntry['Group'].' | '.$clientEntry['Folder'].' | '.$clientEntry['Name'];
         }
         return $options;
-    }
-
-    private function getClientDefinitionForm(string $clientOptionBaseKey):string
-    {
-        $selector=array('Source'=>$this->entryTable,'EntryId'=>$clientOptionBaseKey.'_setting');
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client SettingsB','generic',$selector,array('method'=>'getClientSettingsContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
-        $selector=array('Source'=>$this->entryTable,'EntryId'=>$clientOptionBaseKey.'_%');
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client Status','generic',$selector,array('method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
-        return $html;
     }
 
     public function getClientSettingsContainter(array $arr)
@@ -273,7 +281,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    public function getClientStatusContainter(array $arr)
+    public function getClientStatusContainter(array $arr):array
     {
         $arr['html']='Entry missing...';
         $entryIdcomps=explode('_',$arr['selector']['EntryId']);
@@ -286,6 +294,35 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($defEntry,$lastEntry['Content'],__CLASS__,__FUNCTION__,$isDebugging=FALSE);
         return $arr;
+    }
+
+    private function distributeClientEntries(array $entry)
+    {
+        // get all canvas elements with RemoteClient processor
+        $clientTargetSelectors=array();
+        $remoteClientComps=explode('\\',__CLASS__);
+        $canvasElementsSelector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Content'=>'%'.implode('%',$remoteClientComps).'%');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE) as $canvasElement){
+            $clientTargetSelectors[$canvasElement['EntryId']]=$canvasElement['Content']['Selector'];
+        }
+        // distribute entry
+        $expiresTimestamp=time()+self::ENTRY_EXPIRATION_SEC;
+        foreach($clientTargetSelectors as $entryId=>$selector){
+            $targetEntry=$entry;
+            $targetEntry['Owner']='SYSTEM';
+            $targetEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$expiresTimestamp);
+            foreach($selector as $column=>$value){
+                if (!empty($value)){$targetEntry[$column]=$value;}
+            }
+            $targetEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(array($targetEntry['Source'],$targetEntry['Group'],$targetEntry['Folder'],$targetEntry['Name'],hrtime(TRUE)),TRUE);
+            $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            if (is_file($sourceFile)){
+                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile);
+            }
+            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($targetEntry,'Processing log',array('msg'=>'Entry distributed','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
+        }
     }
 }
 ?>

@@ -97,14 +97,6 @@ class Filespace{
         return $vars;
     }
 
-    private function getCurrentUser():array{
-        if (isset($this->oc['SourcePot\Datapool\Foundation\User'])){
-            return $this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        } else {
-            return array('EntryId'=>'ANONYM','Privileges'=>1);
-        }
-    }
-
     public function resetStatistic():array
     {
         $_SESSION[__CLASS__]['Statistic']=array('matched files'=>0,'updated files'=>0,'deleted files'=>0,'deleted dirs'=>0,'inserted files'=>0,'added dirs'=>0,'uploaded file'=>0);
@@ -242,7 +234,7 @@ class Filespace{
         } else {
             // entry found
             $entry['rowCount']=1;
-            $user=$this->getCurrentUser();
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             $entry['access']=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr,$rightType,$user,$isSystemCall);
             if ($entry['access']){
                 $entry=array_replace_recursive($selector,$entry,$arr);
@@ -263,7 +255,7 @@ class Filespace{
         // This method updates and returns the entry from the setup-directory.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         //
-        $user=$this->getCurrentUser();
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
         if (empty($existingEntry['rowCount'])){
             // insert entry
@@ -364,7 +356,7 @@ class Filespace{
 
     public function getPrivatTmpDir():string
     {
-        $ip=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getIP($hashOnly=TRUE);
+        $ip=$this->oc['SourcePot\Datapool\Root']->getIP($hashOnly=TRUE);
         $tmpDir=$GLOBALS['dirs']['privat tmp'].$ip.'/';
         if (!is_dir($tmpDir)){
             $this->addStatistic('added dirs',intval(mkdir($tmpDir,0770,TRUE)));

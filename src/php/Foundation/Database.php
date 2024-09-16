@@ -716,7 +716,7 @@ class Database{
         $entry=$this->addType2entry($entry);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
         if (!empty($entry['Owner'])){
-            if (strcmp($entry['Owner'],'ANONYM')===0){
+            if (strpos($entry['Owner'],'ANONYM_')!==FALSE){
                 $entry['Expires']=date('Y-m-d H:i:s',time()+600);
             }
         }

@@ -697,7 +697,7 @@ class Container{
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
-        $arr['wrapperSettings']['hideReloadBtn']=TRUE;
+        $arr['wrapperSettings']['hideReloadBtn']=!empty($settings['hideReloadBtn']);
         return $arr;
     }
     

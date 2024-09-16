@@ -94,8 +94,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
         // get settings
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $settingKey=(strcmp($currentUser['Owner'],'ANONYM')===0)?'ANONYM':$currentUser['EntryId'];
+        $settingKey=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $this->setting=array('Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone);
         $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
