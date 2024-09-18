@@ -69,8 +69,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function getParseEntriesInfo($callingElement){
-        $matrix=array();
+        //$regExpTester=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard(htmlentities('https://regexr.com/'));
+        $matrix=array('Regular expression tester'=>array('Message'=>''));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info','class'=>'max-content'));
+        $html.='<a href="https://regexr.com/" target="_blank" class="std">Sample regular expression tester: '.htmlentities('https://regexr.com/').'</a>';
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
 

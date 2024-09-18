@@ -70,6 +70,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix=array();
         $matrix['']['value']='If you select "Create csv" or "Create zip", remeber to set the target entry Name-column.<br/>The file name will be the target entry Name. Mapping will result in as many files as there are different Names.';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
        

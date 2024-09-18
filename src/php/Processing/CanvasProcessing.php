@@ -43,48 +43,21 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
      *
-     * @return bool TRUE the requested action exists or FALSE if not
+     * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
-        switch($action){
-            case 'run':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runCanvasProcessing($callingElement,$testRunOnly=FALSE);
-                }
-                break;
-            case 'test':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->runCanvasProcessing($callingElement,$testRunOnly=TRUE);
-                }
-                break;
-            case 'widget':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getCanvasProcessingWidget($callingElement);
-                }
-                break;
-            case 'settings':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getCanvasProcessingSettings($callingElement);
-                }
-                break;
-            case 'info':
-                if (empty($callingElement)){
-                    return TRUE;
-                } else {
-                    return $this->getCanvasProcessingInfo($callingElement);
-                }
-                break;
+        if (empty($callingElement)){
+            return TRUE;
+        } else {
+            return match($action){
+                'run'=>$this->runCanvasProcessing($callingElement,$testRunOnly=FALSE),
+                'test'=>$this->runCanvasProcessing($callingElement,$testRunOnly=TRUE),
+                'widget'=>$this->getCanvasProcessingWidget($callingElement),
+                'settings'=>$this->getCanvasProcessingSettings($callingElement),
+                'info'=>$this->getCanvasProcessingInfo($callingElement),
+            };
         }
-        return FALSE;
     }
 
     private function getCanvasProcessingWidget($callingElement){
@@ -94,6 +67,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     private function getCanvasProcessingInfo($callingElement){
         $matrix=array();
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
 

@@ -72,8 +72,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getInboxEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=array('Info'=>array('Message'=>'Select an receiver through "Inbox source" first'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
     

@@ -24,11 +24,6 @@ class Explorer{
                                     'EntryId'=>array('orderBy'=>'Name','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE)
                                     );
                                     
-    const GUIDEINDICATOR='!GUIDE';
-    private $state=array();
-    
-    private $showSourceSelector=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
-    
     public function __construct(array $oc)
     {
         $this->oc=$oc;

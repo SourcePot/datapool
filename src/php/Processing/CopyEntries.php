@@ -70,6 +70,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix=array();
         $matrix['Description']=array('<p>This processor copies entries to various targets.</p>');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
     

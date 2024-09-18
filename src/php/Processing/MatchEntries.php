@@ -69,6 +69,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMatchEntriesInfo($callingElement){
         $matrix=array();
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
 

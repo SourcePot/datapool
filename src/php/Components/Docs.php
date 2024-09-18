@@ -20,6 +20,8 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     
     public $definition=array('EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
 
+    private $assetWhitelist=array('email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE);
+
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -63,52 +65,92 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             // add content article
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,array(),array('style'=>array()));
-            // manage assets container
-            $settings=array('method'=>'manageAssets','classWithNamespace'=>__CLASS__);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Manage assets','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array()));
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+                $html.=$this->assetManager($selector);
+                $this->copy2assetsDir();
+            }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
     }
-    
-    public function manageAssets($arr)
+
+    public function assetManager(array $selector):string
     {
-        $arr['html']=(isset($arr['html']))?$arr['html']:'';
-        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-            return $arr;
-        }
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (isset($formData['cmd']['remove'])){
-            $completeFileName=$GLOBALS['dirs']['assets'].key($formData['cmd']['remove']);
-            unlink($completeFileName);
-        } else if (isset($formData['cmd']['add'])){
-            $fileHandle=current($formData['files']['add']);
-            if (empty($fileHandle['error'])){
-                $success=move_uploaded_file($fileHandle['tmp_name'],$GLOBALS['dirs']['assets'].$fileHandle['name']);
-                if ($success){
-                    $this->oc['logger']->log('info','Moved uploaded file "{file}" to dir "{dir}"',array('file'=>$fileHandle['name'],'dir'=>$GLOBALS['dirs']['assets']));         
+        $selector['Source']=$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable();
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (!empty($formData['cmd'])){
+            $selector['EntryId']=hrtime(TRUE).'_asset';
+            $flatFile=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files']);
+            $fileArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatFile);
+            if ($fileArr['error']==0){
+                $selector['Content']=array();
+                $pathInfo=pathinfo($fileArr['name']);
+                $selector['Content']['src']=$this->entry2asset($selector,$pathInfo['extension'],TRUE);
+                if ($pathInfo['extension']=='mp4' || $pathInfo['extension']=='webm'){
+                    $selector['Content']['tag']='<video controls width="360"><source src="'.$selector['Content']['src'].'" type="video/'.$pathInfo['extension'].'" /></video>';
                 } else {
-                    $this->oc['logger']->log('error','Moving uploaded file "{file}" to dir "{dir}" failed.',array('file'=>$fileHandle['name'],'dir'=>$GLOBALS['dirs']['assets']));             
+                    $selector['Content']['tag']='<img src="'.$selector['Content']['src'].'" title="'.$fileArr['name'].'" style=""/>';
                 }
+                $selector['Content']['tag']=htmlentities($selector['Content']['tag']);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
+            }
+            //$this->copy2assetsDir();
+        }
+        $html='';
+        // file upload
+        $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','element-content'=>'','key'=>array('add'),'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('add'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $matrix['']=array('New asset file'=>$fileUpload,'Cmd'=>$btn);
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content'));
+        // asset manager
+        $selector['Name']=FALSE;
+        $selector['EntryId']='%_asset';
+        $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
+        $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'tag','Filter'=>''));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets','entryList',$selector,$settings,array());
+        //
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9887;'));
+        return $html;
+    }
+    
+    private function entry2asset(array $entry,string $extension,bool $relDir=TRUE):string
+    {
+        $fileName=$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable().'-'.str_replace('_asset','',$entry['EntryId']).'.'.$extension;
+        if ($relDir){
+            return $GLOBALS['relDirs']['assets'].'/'.$fileName;
+        } else {
+            return $GLOBALS['dirs']['assets'].$fileName;
+        }
+    }
+
+    private function copy2assetsDir()
+    {
+        // delete asset files not present in database
+        $entriesPresentAsAssetFiles=array();
+        $files=scandir($GLOBALS['relDirs']['assets']);
+        foreach($files as $fileName){
+            if (strlen($fileName)<3){continue;}
+            if (isset($this->assetWhitelist[$fileName])){continue;}
+            $fileNameComps=preg_split('/[-_\.]/',$fileName);
+            if (!isset($GLOBALS['dbInfo'][$fileNameComps[0]])){continue;}
+            $selector=array('Source'=>$fileNameComps[0],'EntryId'=>$fileNameComps[1].'_%');
+            if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE)){
+                // match of asset file with database entry
+                $entriesPresentAsAssetFiles[$entry['EntryId']]=$entry['Source'];
             } else {
-                $this->oc['logger']->log('warning','Failed to upload "{file}" with error code "{code}" failed.',array('file'=>$fileHandle['name'],'code'=>$fileHandle['error']));             
+                // no match of asset file with database entry
+                unlink($GLOBALS['dirs']['assets'].$fileName);
             }
         }
-        $matrix=array();
-        $assets=scandir($GLOBALS['dirs']['assets']);
-        foreach($assets as $file){
-            $completeFileName=$GLOBALS['dirs']['assets'].$file;
-            if (!is_file($completeFileName)){continue;}
-            $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Delete','key'=>array('remove',$file),'hasCover'=>TRUE,'title'=>'Delete file','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-            $relFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($completeFileName);
-            $relFile=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard($relFile);
-            $matrix[$file]=array('Relative file path'=>$relFile,'Cmd'=>$btn);
+        // add files present in database
+        $selector=array('Source'=>$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable(),'EntryId'=>'%_asset');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $assetEntry){
+            if (isset($entriesPresentAsAssetFiles[$assetEntry['EntryId']])){continue;}
+            $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($assetEntry);
+            $targetFile=$this->entry2asset($assetEntry,$assetEntry['Params']['File']['Extension'],FALSE);
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile,0774);
         }
-        $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','element-content'=>'','key'=>array('add'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-        $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('add'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
-        $matrix['']=array('Relative file path'=>$fileUpload,'Cmd'=>$btn);
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content'));
-        return $arr;
     }
+
 }
 ?>

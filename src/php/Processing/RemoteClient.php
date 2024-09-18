@@ -77,6 +77,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $matrix=array();
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
 
@@ -121,13 +122,13 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         // get client settings form
         if (!empty($params['Content']['Client'])){
             $selector=array('Source'=>$this->entryTable,'EntryId'=>$params['Content']['Client'].'_setting');
-            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client SettingsB','generic',$selector,array('method'=>'getClientSettingsContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client SettingsB','generic',$selector,array('method'=>'getClientSettingsContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
         }
         // get image shuffle
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement);
-        $wrapperSetting=array('style'=>array('padding'=>'10px','border'=>'none','width'=>'auto'));
-        $setting=array('hideReloadBtn'=>FALSE,'style'=>array('width'=>360,'height'=>260),'orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10,'autoShuffle'=>TRUE,'getImageShuffle'=>'Data');
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Image shuffle G','getImageShuffle',$callingElement['callingElement']['Selector'],$setting,$wrapperSetting);
+        $callingElement['callingElement']['Selector']['refreshInterval']=5;
+        //$callingElement['callingElement']['Selector']['disableAutoRefresh']=FALSE;
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Preview E','generic',$callingElement['callingElement']['Selector'],array('method'=>'getPreviewContianer','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto','padding'=>'3rem 0.5rem')));
         // get client status form
         if (!empty($params['Content']['Client'])){
             $selector=array('Source'=>$this->entryTable,'EntryId'=>$params['Content']['Client'].'_%','refreshInterval'=>30);
@@ -293,6 +294,23 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             $lastEntry['Content']['Status']['timestamp']=(time()-$lastEntry['Content']['Status']['timestamp']).' sec ('.$lastEntry['Content']['Status']['timestamp'].')';
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($defEntry,$lastEntry['Content'],__CLASS__,__FUNCTION__,$isDebugging=FALSE);
+        return $arr;
+    }
+
+    public function getPreviewContianer(array $arr):array
+    {
+        $paramNeedles=array('%image%','%video%','%application%',);
+        // generic settings
+        $previewArr=$arr;
+        $previewArr['maxDim']='360px';
+        // get newst content
+        foreach($paramNeedles as $paramNeedle){
+            $previewArr['selector']['Params']=$paramNeedle;
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
+                $previewArr['selector']=$entry;
+                $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
+            }
+        }
         return $arr;
     }
 

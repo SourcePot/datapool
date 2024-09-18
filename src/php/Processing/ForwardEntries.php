@@ -70,6 +70,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix=array();
         $matrix['Description']=array('<p style="width:40em;">This processor forwards entries to various targets on the basis of conditions. If there are several rules for a forwarding target, all rules must be fulfilled in order to forward the entry.<br/>Rules are linked by "AND" or "OR" (rule key "..."), the oparation is ignored for the first rule of each target.</p>');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
     

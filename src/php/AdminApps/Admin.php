@@ -54,7 +54,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
-    }
+    } 
     
     public function backupArticle(){
         // form processing
