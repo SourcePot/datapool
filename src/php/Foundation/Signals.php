@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class Signals{
     private $oc;
+
+    private const MAX_SIGNAL_DEPTH=200;
     
     private $entryTable;
     private $entryTemplate=array('Expires'=>array('type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
@@ -68,7 +70,7 @@ class Signals{
         $signal=array_merge($signal,$signalSelector);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
         // update signal
-        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent);
+        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,self::MAX_SIGNAL_DEPTH);
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal['Owner']='SYSTEM';
         $signal['Expires']=$signal['+10DaysDateUTC'];
@@ -269,21 +271,40 @@ class Signals{
         $row['Reset']=$reset;
         return $row;
     }
-    
-    public function getSignalPlot(array $selector=array()):string
+
+    public function getSignalPlot(array $selector=array()):string|array
     {
-        $html='';
-        $selector['Source']='signals';
-        $selector['Group']='signal';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
-            $plotDef=array('caption'=>date('Y-m-d').'_'.$entry['Name'],'plotProp'=>array('height'=>150));
-            $trace=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
-            $trace['Name']=$entry['Folder'].'::'.$entry['Name'];
-            $trace['selector']=$selector;
-            $trace['isSystemCall']=TRUE;
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->xyTraces2plot($plotDef,$trace);
+        if (empty($selector['function'])){
+            // draw plot pane request
+            $selector['Source']='signals';
+            $selector['Group']='signal';
+            $selector['callingClass']=__CLASS__;
+            $selector['callingFunction']=__FUNCTION__;
+            $selector['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+            $selector['height']=150;
+            $_SESSION['plots'][$selector['id']]=$selector;
+            $elArr=array('tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']);
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $elArr=array('tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id']);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $elArr=array('tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html);
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            return $html;
+        } else {
+            // return plot data request
+            $plotData=array('use'=>'signalPlot','meta'=>$selector,'data'=>array());
+            $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
+                $plotData['meta']['title']=$entry['Folder'].' → '.$entry['Name'];
+                foreach($entry['Content']['signal'] as $index=>$signal){
+                    $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
+                    $plotData['data'][$index]['History [sec]']=time()-$signal['timeStamp'];
+                    $plotData['data'][$index]['Value']=$signal['value'];
+                }
+            }
+            return $plotData;
         }
-        return $html;
+        
     }
     
     public function getSignalOptions(array $selector=array()):array

@@ -14,6 +14,8 @@ function onSubmit(token){
 			new_element.name=data['name'];
 			new_element.id=data['id'];
 			setTimeout(function(){new_element.click();},250);
+		} else if (data['oldTagId']==null){
+			alert(data['error']);
 		} else {
 			old_element.style.backgroundColor='RED';
 		}
@@ -181,10 +183,10 @@ jQuery(document).ready(function(){
     });
 
     
-/** CLIPBOARD **/
+/** PRINTING **/
     jQuery('button:contains("❐")').on('click',function(e){
         e.preventDefault();
-        console.log(jQuery(this).parent('article'));
+        //console.log(jQuery(this).parent('article'));
         window.print();
     });
 
@@ -636,7 +638,6 @@ jQuery(document).ready(function(){
 		addSymbol(newSymbolId);
 	}
 	
-	
 /** TOOLBOX **/
     function checkToolboxUpdate(containerId){
         var needsUpdate=jQuery('details.toolbox').children('[container-id="'+containerId+'"]').length;
@@ -665,101 +666,7 @@ jQuery(document).ready(function(){
         const serializer = new window.XMLSerializer;
         const string = serializer.serializeToString(svg);
         return new Blob([string], {type: "image/svg+xml"});
-    };    
-
-/** PLOTS **/
-    import("https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm").then((Plot)=>{
-        import("https://cdn.jsdelivr.net/npm/d3@7/+esm").then((d3)=>{
-            var saveData=(function(){
-                            var a = document.createElement("a");
-                            document.body.appendChild(a);
-                            a.style = "display: none";
-                            return function (plot,fileName) {
-                                var url = window.URL.createObjectURL(serialize(plot));
-                                a.href = url;
-                                a.download = fileName;
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                            };
-                        }());
-            function drawPlots(){
-                jQuery('div.plot').each(function(i){
-                    var plotObj=this;
-                    var arr={'function':'getPlotData','id':jQuery(plotObj).attr('id')};
-                    jQuery.ajax({
-                            method:"POST",
-                            url:'js.php',
-                            context:document.body,
-                            data:arr,
-                            dataType:"json"
-                        }).done(function(plotDef){
-                            plotDef2plot(plotObj,plotDef,jQuery(plotObj).attr('id'));
-                        }).fail(function(data){
-                            console.log(data);
-                        }).always(function(){
-                            
-                        });
-                });
-            }
-
-            function plotDef2plot(plotObj,plotDef,id){
-                var marks=[Plot.ruleY(plotDef.ruleY),Plot.ruleX(plotDef.ruleX)],plotProp={grid:true,color:{legend:true}};
-                for (const traceName in plotDef.traces){
-                    // create xy-data object
-                    var traceData=[],xyDef=plotDef.traces[traceName].traceProp;
-                    for (const index in plotDef.traces[traceName].data){
-                        if (plotDef.traces[traceName]['x']['Type'].localeCompare('timestamp')==0 || plotDef.traces[traceName]['x']['Type'].localeCompare('date')==0){
-                            var column=plotDef.traces[traceName]['x']['Name'];
-                            plotDef.traces[traceName].data[index][column]=new Date(plotDef.traces[traceName].data[index][column]);
-                        }
-                        if (plotDef.traces[traceName]['y']['Type'].localeCompare('timestamp')==0 || plotDef.traces[traceName]['y']['Type'].localeCompare('date')==0){
-                            var column=plotDef.traces[traceName]['y']['Name'];
-                            plotDef.traces[traceName].data[index][column]=new Date(plotDef.traces[traceName].data[index][column]);
-                        }
-                        traceData.push(plotDef.traces[traceName].data[index]);
-                        plotDef.traces[traceName].data[index]['Name']=traceName;
-                    }
-                    xyDef['stroke']=xyDef['symbol']='Name';
-                    switch(plotDef.traces[traceName].type){
-                        case 'rectY':
-                            xyDef['tip']="xy";
-                            marks.push(Plot.rectY(traceData,xyDef));
-                            break;
-                        case 'lineY':
-                            xyDef['tip']="xy";
-                            marks.push(Plot.lineY(traceData,xyDef));
-                            break;
-                        case 'areaY':
-                            xyDef['fill']='Name';
-                            xyDef['fillOpacity']=0.3;
-                            marks.push(Plot.areaY(traceData,xyDef));
-                            break;
-                        default:
-                            xyDef['fill']='Name';
-                            xyDef['fillOpacity']=0.3;
-                            marks.push(Plot.areaY(traceData,xyDef));
-                            xyDef['tip']="xy";
-                            marks.push(Plot.dot(traceData,xyDef));
-                        }
-                };
-                marks.push(Plot.axisX(plotDef.axisX));
-                marks.push(Plot.axisY(plotDef.axisY));
-                marks.push(Plot.gridX(plotDef.gridX));
-                marks.push(Plot.gridY(plotDef.gridY));
-                plotProp=Object.assign(plotDef['plotProp'],{marks});
-                const plot=Plot.plot(plotProp);
-                jQuery(plotObj).replaceWith(plot);
-                jQuery('#svg-'+id).on('click',function(element){
-                    saveData(plot,plotDef.caption+'.svg');
-                });
-                //console.log(plotDef);
-            }
-            (function heartbeat(){
-                setTimeout(heartbeat,777);
-                drawPlots();
-            })();
-        });
-    });
+    };
 
 /** OPTION FILTER **/
     function addFilter(){

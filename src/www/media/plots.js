@@ -1,0 +1,91 @@
+jQuery(document).ready(function(){
+
+    /** DOWNLOAD SVG**/
+    const xmlns = "http://www.w3.org/2000/xmlns/";
+    const xlinkns = "http://www.w3.org/1999/xlink";
+    const svgns = "http://www.w3.org/2000/svg";
+    function serialize(svg){
+        svg=svg.cloneNode(true);
+        const fragment=window.location.href+"#";
+        const walker = document.createTreeWalker(svg, NodeFilter.SHOW_ELEMENT);
+        while (walker.nextNode()){
+            for (const attr of walker.currentNode.attributes){
+                if (attr.value.includes(fragment)){
+                    attr.value = attr.value.replace(fragment,"#");
+                }
+            }
+        }
+        svg.setAttributeNS(xmlns, "xmlns", svgns);
+        svg.setAttributeNS(xmlns, "xmlns:xlink", xlinkns);
+        const serializer = new window.XMLSerializer;
+        const string = serializer.serializeToString(svg);
+        return new Blob([string], {type: "image/svg+xml"});
+    };    
+
+    /** PLOTS **/
+    import("https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm").then((Plot)=>{
+        import("https://cdn.jsdelivr.net/npm/d3@7/+esm").then((d3)=>{
+            var saveData=(function(){
+                            var a = document.createElement("a");
+                            document.body.appendChild(a);
+                            a.style = "display: none";
+                            return function (plot,fileName) {
+                                var url = window.URL.createObjectURL(serialize(plot));
+                                a.href = url;
+                                a.download = fileName;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                            };
+                        }());
+            function drawPlots(){
+                jQuery('div.plot').each(function(i){
+                    var plotObj=this;
+                    var arr={'function':'plotDataProvider','id':jQuery(plotObj).attr('id')};
+                    jQuery.ajax({
+                            method:"POST",
+                            url:'js.php',
+                            context:document.body,
+                            data:arr,
+                            dataType:"json"
+                        }).done(function(plotData){
+                            if (plotData['use']=='signalPlot'){
+                                signalPlot(plotData);
+                            }
+                            
+                        }).fail(function(data){
+                            console.log(data);
+                        }).always(function(){
+                            
+                        });
+                });
+            }
+
+            function signalPlot(plotData){
+                plotData['data']['DateTime']=new Date(plotData['data']['DateTime']);
+                var plotDef={
+                    x:{},
+                    y:{grid: true},
+                    marks:[
+                        Plot.ruleY([0]),
+                        Plot.ruleX([0]),
+                        Plot.areaY(plotData['data'],{x:"History [sec]",y:"Value",curve:"step",fill:'blue','fillOpacity':0.2}),
+                        Plot.lineY(plotData['data'],{x:"History [sec]",y:"Value",curve:"step",'tip':'xy','stroke':'blue'})
+                        ]
+                    };
+                if ("height" in plotData['meta']){plotDef['height']=plotData['meta']['height'];}
+                if ("title" in plotData['meta']){plotDef['title']=plotData['meta']['title'];}
+                const plot=Plot.plot(plotDef);
+                jQuery('[id='+plotData['meta']['id']+']').html(plot);
+                jQuery('#svg-'+plotData['meta']['id']).on('click',function(element){
+                    saveData(plot,plotData['meta']['id']+'.svg');
+                });
+            }
+
+            (function heartbeat(){
+                setTimeout(heartbeat,4900);
+                drawPlots();
+            })();
+
+        });
+    });
+});

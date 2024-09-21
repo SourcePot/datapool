@@ -24,6 +24,11 @@ class Container{
         $this->oc=$oc;
     }
 
+    /**
+    * This method is called by client side javascript. 
+    * @param array  $arr    Is provided by the Root-class, here typically an epmty array 
+    * @return array Returns the $arr argument potentially with the added key['page html'] equals the json-encoded processing result. For security reasons only a suset of methods can be invoked. 
+    */
     public function jsCall(array $arr):array
     {
         $jsAnswer=array();
@@ -38,8 +43,8 @@ class Container{
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementStyle($_POST);
             } else if (strcmp($_POST['function'],'entryById')===0){
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
-            } else if (strcmp($_POST['function'],'getPlotData')===0){
-                $jsAnswer=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getPlotData($_POST);
+            } else if (strcmp($_POST['function'],'plotDataProvider')===0){
+                $jsAnswer=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->plotDataProvider($_POST);
             } else if (strcmp($_POST['function'],'createAssessment')===0){
                 $jsAnswer=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->createAssessment($_POST);
             } else {

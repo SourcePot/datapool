@@ -1007,139 +1007,24 @@ class HTMLbuilder{
         return $options;
     }
 
-    /**
-    * This plot method returns html-string representing a plot placeholder. The placeholder will be replaced by javerscript.
-    * @param array prop Contains plot properties such as 'caption', 'style', 'plotProp', 'axisX'etc...
-    * @param array traces is a list of arguments each defining a trace. Use method getTraceTemplate to build a trace
-    * @return string
-    */
-    public function xyTraces2plot(array $prop=array(),...$traces):string
+    public function plotDataProvider(array $arr):array
     {
-        $plot=$prop;
-        if (!empty($prop['traces'])){
-            unset($plot['traces']);
-            $traces=$prop['traces'];
-        }
-        foreach($traces as $traceIndex=>$trace){
-            $data=array();
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($trace['selector'],$trace['isSystemCall'],'Read',$trace['orderBy'],$trace['isAsc'],$trace['limit'],$trace['offset']) as $entry){
-                $trace=$this->addEntry2trace($trace,$entry);
-            }
-            $plot['traces'][$trace['Name']]=$trace;
-            if (isset($trace['stroke'])){$plot['traces'][$trace['Name']]['prop']['stroke']=$trace['stroke'];}
-        }
-        return $this->plot($plot);
-    }
-    
-    /**
-    * This method returns a trace-array template to be used in conjuntion whith plot methods.
-    * @return array
-    */
-    public function getTraceTemplate():array
-    {
-        $trace=array('Name'=>'Logs',
-                     'selector'=>array('Source'=>'signals','Group'=>'signal','Folder'=>'%Logger%'),
-                     'isSystemCall'=>FALSE,'orderBy'=>FALSE,'isAsc'=>TRUE,'limit'=>FALSE,'offset'=>0,
-                     'x'=>array('key'=>'Content|[]|signal|[]|*|[]|timeStamp','Type'=>'timestamp','Name'=>'Date'),
-                     'y'=>array('key'=>'Content|[]|signal|[]|*|[]|value','Type'=>'int','Name'=>'Count'),
-                     'data'=>array(),
-                     //'type'=>'rectY',
-                     //'type'=>'lineY',
-                     'type'=>'lineY',
-                     );
-        return $trace;
-    }
-
-    /**
-    * This method adds data of an entry to the trace.
-    * @param array traces Is the trace. Use method getTraceTemplate to build a trace
-    * @param array entry Is the entry to be parsed for new data for the trace
-    * @return array Is the updated trace array
-    */
-    private function addEntry2trace(array $trace,array $entry):array
-    {
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
-        $compareFlatKeyCompsXY=array('x'=>explode($S,$trace['x']['key']),'y'=>explode($S,$trace['y']['key']));
-        $dataXY=array();
-        foreach($flatEntry as $flatArrKey=>$flatArrValue){
-            $flatKeyComps=explode($S,$flatArrKey);
-            $index=array();
-            foreach($compareFlatKeyCompsXY as $dim=>$compareFlatKeyComps){
-                if (count($flatKeyComps)!==count($compareFlatKeyComps)){continue;}
-                $isValid=TRUE;
-                foreach($compareFlatKeyComps as $keyIndex=>$compareFlatKeyComp){
-                    if (strcmp($compareFlatKeyComp,'*')===0){
-                        $index[$dim]=$flatKeyComps[$keyIndex];
-                    } else if (strcmp($compareFlatKeyComp,$flatKeyComps[$keyIndex])!==0){
-                        $isValid=FALSE;
-                        break;
-                    }
+        $plotData=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        if (isset($_SESSION['plots'][$arr['id']])){
+            $plotData=array_merge($plotData,$_SESSION['plots'][$arr['id']]);
+            if (!empty($plotData['callingClass']) && !empty($plotData['callingFunction'])){
+                if (is_object($this->oc[$plotData['callingClass']])){
+                    $callingClass=$plotData['callingClass'];
+                    $callingFunction=$plotData['callingFunction'];
+                    $plotData=$this->oc[$callingClass]->$callingFunction($plotData);
+                } else {
+                    $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called, but callingClass="{callingClass}" is not an object.',$plotData);
                 }
-                if ($isValid){
-                    if (!isset($trace[$dim]['Name'])){
-                        $trace[$dim]['Name']=$compareFlatKeyComp;
-                    }
-                    $flatArrValue=match($trace[$dim]['Type']){
-                        'int'=>intval($flatArrValue),
-                        'float'=>floatval($flatArrValue),
-                        'bool'=>boolval($flatArrValue),
-                        'string'=>strval($flatArrValue),
-                        'date'=>strval($flatArrValue),
-                        'timestamp'=>date('Y-m-d H:i:s',$flatArrValue),
-                        NULL=>$flatArrValue,
-                    };
-                    $indexKey=$entry['EntryId'];
-                    if (isset($index[$dim])){$indexKey.='_'.$index[$dim];}
-                    $dataXY[$indexKey][$trace[$dim]['Name']]=$flatArrValue;
-                }
+            } else {
+                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty callingClass="{callingClass}" and/or callingClass="{callingFunction}".',$plotData);
             }
         }
-        $trace['datatype']=array('x'=>$trace['x']['Type'],'y'=>$trace['y']['Type']);
-        $trace['traceProp']=array('x'=>$trace['x']['Name'],'y'=>$trace['y']['Name']);
-        $trace['data']+=$dataXY;
-        return $trace;
-    }
-    
-    /**
-    * This method returns the plot html placeholder.
-    * @param array plot Is the plot definition array compiled by a plot method. It contains alse the traces to be displayed.
-    * @return string Is the html plot placeholder
-    */
-    private function plot(array $plot):string
-    {
-        // create plot definition
-        $plotTemplate=array('caption'=>'Sample chart',
-                            'plotProp'=>array('grid'=>TRUE,'color'=>array('legend'=>TRUE),'marginBottom'=>50,'x'=>array('padding'=>0.2)),
-                            'axisX'=>array('tickRotate'=>0),
-                            'gridX'=>array(),
-                            'axisY'=>array(),
-                            'gridY'=>array(),
-                            'ruleY'=>array(0),
-                            'ruleX'=>array(),
-                            );
-        $plot=array_replace_recursive($plotTemplate,$plot);
-        $plot['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(hrtime(TRUE),TRUE);
-        $_SESSION[__CLASS__]['plot'][$plot['id']]=$plot;
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_SESSION[__CLASS__]['plot']);
-        // draw plot container
-        $elArr=array('tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot '.$plot['caption'],'id'=>$plot['id']);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-        $elArr=array('tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$plot['id']);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-        $elArr=array('tag'=>'div','class'=>'plot-wrapper','keep-element-content'=>TRUE,'element-content'=>$html);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-        return $html;
-    }
-    
-    /**
-    * This method returns the plot data. The method is called by javascript.
-    * @param array arr Contains the relevant plot-id, the id of the html plot placeholder.
-    * @return array plot data
-    */
-    public function getPlotData(array $arr):array
-    {
-        return $_SESSION[__CLASS__]['plot'][$arr['id']];
+        return $plotData;
     }
 
 }
