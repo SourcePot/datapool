@@ -51,6 +51,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $html.=$this->getPageSettingsHtml();
             $html.=$this->appAdminHtml();
             $html.=$this->backupArticle();
+            $settings=array('method'=>'ftpFileUpload','classWithNamespace'=>__CLASS__);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('FTP manual upload','generic',array('Source'=>$this->entryTable),$settings,array('style'=>array('margin'=>'0')));
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -319,6 +321,38 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Web application settings',TRUE);
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+    }
+
+    public function ftpFileUpload(array $arr):array
+    {
+        // form processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['cmd']['uploadBtn'])){
+            foreach($formData['files']['upload'] as $index=>$fileArr){
+                $success=move_uploaded_file($fileArr['tmp_name'],$GLOBALS['dirs']['ftp'].$fileArr['name']);
+            }
+        } else if (isset($formData['cmd']['delete'])){
+            $file=key($formData['cmd']['delete']);
+            unlink($GLOBALS['dirs']['ftp'].$file);
+        }
+        // compile html
+        $arr['html']=$arr['html']??'';
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'FTP manual upload'));
+        $fileArr=array('tag'=>'input','type'=>'file','key'=>array('upload'),'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr);
+        $btnArr=array('tag'=>'input','type'=>'submit','key'=>array('uploadBtn'),'value'=>'Upload','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+        $filesHtml='';
+        $files=scandir($GLOBALS['dirs']['ftp']);
+        foreach($files as $file){
+            if (strcmp($file,'.')===0 || strcmp($file,'..')===0){continue;}
+            $dleArr=array('tag'=>'button','key'=>array('delete',$file),'element-content'=>'&coprod;','hasCover'=>TRUE,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE);
+            $delHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($dleArr);
+            $liArr=array('tag'=>'li','element-content'=>$file.$delHtml,'keep-element-content'=>TRUE);
+            $filesHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($liArr);
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'ol','element-content'=>$filesHtml,'keep-element-content'=>TRUE));
+        return $arr;
     }
 }
 ?>

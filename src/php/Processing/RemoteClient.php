@@ -128,11 +128,12 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement);
         $callingElement['callingElement']['Selector']['refreshInterval']=5;
         //$callingElement['callingElement']['Selector']['disableAutoRefresh']=FALSE;
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Preview E','generic',$callingElement['callingElement']['Selector'],array('method'=>'getPreviewContianer','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto','padding'=>'3rem 0.5rem')));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Preview E','generic',$callingElement['callingElement']['Selector'],array('method'=>'getPreviewContainer','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto','padding'=>'3rem 0.5rem')));
         // get client status form
         if (!empty($params['Content']['Client'])){
             $selector=array('Source'=>$this->entryTable,'EntryId'=>$params['Content']['Client'].'_%','refreshInterval'=>30);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client Status','generic',$selector,array('method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__),array('style'=>array('width'=>'auto')));
+            $html.=$this->getClientPlot($callingElement);
         }
         return $html;
     }
@@ -258,7 +259,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         $options=array();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>$this->entryTable),TRUE) as $clientEntry){
             $entryIdComps=explode('_',$clientEntry['EntryId']);
-            $options[$entryIdComps[0]]=$clientEntry['Group'].' | '.$clientEntry['Folder'].' | '.$clientEntry['Name'];
+            $options[$entryIdComps[0]]=$this->getSignalName($clientEntry);
         }
         return $options;
     }
@@ -297,7 +298,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    public function getPreviewContianer(array $arr):array
+    public function getPreviewContainer(array $arr):array
     {
         $paramNeedles=array('%image%','%video%','%application%',);
         // generic settings
@@ -312,6 +313,55 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         return $arr;
+    }
+
+    public function getClientPlot(array $callingElement):string|array
+    {
+        $clientOptions=$this->getClientOptions();
+        if (!empty($callingElement['clientparams']) && empty($callingElement['function'])){
+            // draw plot pane request
+            $params=current($callingElement['clientparams']);
+            $selector=array();
+            $selector['signalFunction']=$clientOptions[$params['Content']['Client']];
+            $selector['callingClass']=__CLASS__;
+            $selector['callingFunction']=__FUNCTION__;
+            $selector['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+            $selector['height']=200;
+            $_SESSION['plots'][$selector['id']]=$selector;
+            $elArr=array('tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']);
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $elArr=array('tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id']);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $elArr=array('tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html);
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            return $html;
+        } else {
+            // return plot data request
+            $plotData=array('use'=>'clientPlot','meta'=>$callingElement,'data'=>array());
+            $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+            $signalSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('RemoteClient',$callingElement['signalFunction'],FALSE);
+            $signalSelector['Name']='Status';
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Date') as $entry){
+                $plotData['meta']['title']=$entry['Folder'].' → '.$entry['Name'];
+                foreach($entry['Content']['signal'] as $index=>$signal){
+                    $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
+                    $plotData['data'][$index]['History [sec]']=time()-$signal['timeStamp'];
+                    foreach($signal['value'] as $subKey=>$subValue){
+                        $numbersOnly=preg_replace('/[^0-9\.\,\-]/u','',$subValue);
+                        if (strlen($numbersOnly)===strlen($subValue)){
+                            // is number
+                            $plotData['data'][$index][$subKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($subValue);
+                        } else {
+                            // is string
+                            $plotData['data'][$index][$subKey]=$subValue;
+                        }
+                    }
+                    $plotData['data'][$index]+=$signal['value'];
+                }
+            }
+            return $plotData;
+        }
+        return $callingElement;
     }
 
     private function distributeClientEntries(array $entry)
@@ -340,7 +390,22 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($targetEntry,'Processing log',array('msg'=>'Entry distributed','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
+            $selectorStr=$this->getSignalName($targetEntry);
+            foreach($targetEntry['Content'] as $contentKey=>$contentValue){
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal('RemoteClient',$selectorStr,$contentKey,$contentValue,'int'); 
+            }
         }
+    }
+
+    private function getSignalName(array $selector):string
+    {
+        $string='';
+        $string.=(empty($selector['Group']))?'':$selector['Group'];
+        $string.=' | ';
+        $string.=(empty($selector['Folder']))?'':$selector['Folder'];
+        $string.=' | ';
+        $string.=(empty($selector['Name']))?'':$selector['Name'];
+        return $string;
     }
 }
 ?>

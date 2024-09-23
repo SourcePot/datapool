@@ -1023,6 +1023,8 @@ class HTMLbuilder{
             } else {
                 $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty callingClass="{callingClass}" and/or callingClass="{callingFunction}".',$plotData);
             }
+        } else {
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called but $_SESSION vars not set.',$plotData);
         }
         return $plotData;
     }

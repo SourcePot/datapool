@@ -107,7 +107,7 @@ class ReCAPTCHA{
                 try{
                     $response = $client->createAssessment($projectName,$assessment);
                     if ($response->getTokenProperties()->getValid()==false){
-                    //The CreateAssessment() call failed because the token was invalid
+                        //The CreateAssessment() call failed because the token was invalid
                         $return['error']=\Google\Cloud\RecaptchaEnterprise\V1\TokenProperties\InvalidReason::name($response->getTokenProperties()->getInvalidReason());
                     } else {
                         $return['score']=$response->getRiskAnalysis()->getScore();
