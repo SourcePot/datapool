@@ -31,7 +31,7 @@ final class Root{
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE,'home'=>TRUE);
     // profiling settings
-    public const PROFILING_RATE=0.005;        // 0 ... 1 with "1"=100% profiling and "0"=0% profiling
+    public const PROFILING_RATE=0;        // 0 ... 1.0 with "1"=100% profiling and "0"=0% profiling
     public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
     public const PROFILING_BACKTRACE=4;
     // required extensions

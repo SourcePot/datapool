@@ -142,23 +142,30 @@ class Explorer{
     public function getGuideEntry(array $selector,array $template=array()):array|bool
     {
         if (empty($selector['Source'])){
-            $entry=array('Read'=>0,'Write'=>0);
+            // selector is insufficient, return selector
+            return $selector;
         } else if (!empty($selector['EntryId'])){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-            if (empty($entry)){$entry=$selector;}
-        } else {
-            $unseledtedDetected=FALSE;
-            $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
-            foreach($this->selectorTemplate as $column=>$initValue){
-                if (empty($selector[$column])){$unseledtedDetected=TRUE;}
-                $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
+            if (empty($entry)){
+                // guide entry not found, maybe missing access rights, return selector
+                return $selector;
+            } else {
+                // return selected guide entry
+                return $entry;
             }
-            $entry=array_merge($template,$entry);
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
         }
+        // create new guide entry
+        $unseledtedDetected=FALSE;
+        $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+        foreach($this->selectorTemplate as $column=>$initValue){
+            if (empty($selector[$column])){$unseledtedDetected=TRUE;}
+            $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
+        }
+        $entry=array_merge($template,$entry);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
         return $entry;
     }
     
