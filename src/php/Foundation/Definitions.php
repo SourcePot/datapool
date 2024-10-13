@@ -79,7 +79,7 @@ class Definitions{
     * @param array $entry Is the orginal entry
     * @return array
     */
-    public function getDefinition(array $entry):array
+    public function getDefinition(array $entry):array|bool
     {
         $selector=array('Source'=>$this->entryTable,'Group'=>'Templates');
         if (!empty($entry['app'])){
@@ -89,12 +89,10 @@ class Definitions{
             $selector['Name']=array_pop($typeComps);
         } else {
             $entry['function']=__FUNCTION__;
-            $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key.',$entry);        
+            $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key.',$entry);   
         }
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
-            return $entry;
-        }
-        return array();
+        $definition=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
+        return (is_array($definition))?$definition:array();
     }
     
     /**
@@ -302,7 +300,8 @@ class Definitions{
         $debugArr=array('definition'=>$definition,'entry_in'=>$entry,'entry_updated'=>array());
         $html='';
         if (empty($definition)){
-            $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->traceHtml('Problem: Method "'.__FUNCTION__.'" no definition found for the provided entry.');
+            $msg='Problem: Method "'.__FUNCTION__.'" no definition found for the provided entry with';
+            $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->traceHtml($msg);
         } else {
             if ($this->oc['SourcePot\Datapool\Tools\MiscTools']->startsWithUpperCase($definition['Name'])){
                 // entry is stored in setup dirspace

@@ -360,7 +360,7 @@ jQuery(document).ready(function(){
 							resetAll();
 						} catch(e){
                             console.log(e);
-							console.log(this.response);
+							jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">No valid answer from the application.<br/>Check the server protocol, if the memory was exhausted,<br/>check the memory_limit....</p>');
 						}
 						containerBusy(containerId,false);
 					},false);

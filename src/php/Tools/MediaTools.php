@@ -418,7 +418,8 @@ class MediaTools{
                 } else {
                     $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
                     if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
-                    $orgImage=imagecreatefromstring($string);    
+                    $orgImage=@imagecreatefromstring($string);
+                    if ($orgImage===FALSE){return 'Failed to create image';}
                 }
             } catch(\Exception $e) {
                 $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" caught exception {message}.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()));

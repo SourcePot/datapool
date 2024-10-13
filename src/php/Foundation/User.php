@@ -15,8 +15,7 @@ class User{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array('Type'=>array('type'=>'VARCHAR(100)','value'=>'user','Description'=>'This is the data-type of Content'),
-                                 'Privileges'=>array('type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'),
+    private $entryTemplate=array('Privileges'=>array('type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'),
                                  'LoginId'=>array('type'=>'VARCHAR(512)','value'=>'','Description'=>'Is a login id derived from the passphrase.')
                                  );
     

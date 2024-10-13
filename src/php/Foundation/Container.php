@@ -48,7 +48,7 @@ class Container{
             } else if (strcmp($_POST['function'],'createAssessment')===0){
                 $jsAnswer=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->createAssessment($_POST);
             } else {
-                
+                // undefined
             }
         } else if (isset($_POST['loadImage'])){
             $jsAnswer=$this->oc['SourcePot\Datapool\Tools\MediaTools']->loadImage(array('selector'=>$_POST['loadImage']));
@@ -191,8 +191,6 @@ class Container{
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name','Type'),'0','',TRUE);
         $entry['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
         $entry['Owner']='SYSTEM';
-        $entry['Read']='ALL_R';
-        $entry['Write']='ALL_CONTENTADMIN_R';
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
             $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
@@ -224,6 +222,8 @@ class Container{
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }
+        $entry['Read']='ALL_R';
+        $entry['Write']='ALL_CONTENTADMIN_R';
         $arr=array('settings'=>array('style'=>array('width'=>'100vw','max-width'=>'100%')));
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
         $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
@@ -578,20 +578,6 @@ class Container{
             $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($commentsHtml.$newComment);
-        return $arr;
-    }
-    
-    public function tools(array $arr):array
-    {
-        if (!isset($arr['html'])){$arr['html']='';}
-        $html='';
-        $btn=$arr;
-        $btn['style']=array('margin'=>'30px 5px 0 0');
-        $btn['cmd']='download';
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btn);
-        $btn['cmd']='delete';
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btn);
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'...'));
         return $arr;
     }
     

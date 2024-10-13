@@ -14,11 +14,11 @@ class Database{
 
     private $oc;
     
-    private $statistic=array();
-    private $toReplace=array();
-    
     private $dbObj;
     private $dbName='';
+
+    public const CHARACTER_SET='utf8';
+    public const MULTIBYTE_COUNT='4';
     
     private $entryTable='settings';
     private $entryTemplate=array();
@@ -27,7 +27,7 @@ class Database{
                                  'Group'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
                                  'Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
                                  'Name'=>array('type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
-                                 'Type'=>array('type'=>'VARCHAR(100)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'),
+                                 'Type'=>array('type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'),
                                  'Date'=>array('type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
                                  'Content'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content data'),
                                  'Params'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
@@ -168,7 +168,7 @@ class Database{
                 $columnsDefSql.="`".$column."` ".$colTemplate['type'];
             }
             // create table
-            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=utf8 COLLATE utf8_unicode_ci;";
+            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=".self::CHARACTER_SET." COLLATE ".self::CHARACTER_SET."_unicode_ci;";
             $this->executeStatement($sql,array());
             if (isset($this->oc['logger'])){
                 $this->oc['logger']->log('notice','Created missing database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
@@ -305,8 +305,8 @@ class Database{
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         try{
             $this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
-            $this->dbObj->exec("SET CHARACTER SET 'utf8'");
-            $this->dbObj->exec("SET NAMES utf8mb4");
+            $this->dbObj->exec("SET CHARACTER SET '".self::CHARACTER_SET."'");
+            $this->dbObj->exec("SET NAMES ".self::CHARACTER_SET.'mb'.self::MULTIBYTE_COUNT);
         } catch (\Exception $e){
             $msg=$e->getMessage();
             echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i><br/>Please check the credentials ../src/setup/Database/connect.json');
@@ -702,7 +702,7 @@ class Database{
         }
         return $removed??FALSE;
     }
-    
+
     /**
     * This method inserts the provided entry into the selected database table.
     * Default values are added if any entry property is missing.

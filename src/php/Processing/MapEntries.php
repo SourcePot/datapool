@@ -288,6 +288,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // set order of array values
             ksort($value);
             $targetEntry[$key]=implode($params['Content']['Array→string glue'],$value);
+            $targetEntry=$this->valueSizeLimitCompliance($key,$targetEntry);
         }
         $result['Mapping statistics']['Entries']['value']++;
         //
@@ -340,6 +341,21 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);
         } else {
             $entry[$baseKey]=$newValue;
+        }
+        return $entry;
+    }
+
+    private function valueSizeLimitCompliance($key,array $entry):array
+    {
+        if (isset($GLOBALS['dbInfo']['user'][$key]['type'])){
+            $sizeLimitBytes=intval(trim($GLOBALS['dbInfo']['user'][$key]['type'],'varcharVARCHAR()'));
+            if ($sizeLimitBytes>0){
+                $currentSize=mb_strlen($entry[$key],'8bit');
+                if ($currentSize>$sizeLimitBytes){
+                    $entry[$key]=mb_strcut($entry[$key],0,$sizeLimitBytes);
+                    $this->oc['logger']->log('notice','Mapping to "entry[{key}]" value size of "{currentSize} Bytes" exeeded the limit of "{sizeLimitBytes}". The value was truncated to the size limit.',array('key'=>$key,'sizeLimitBytes'=>$sizeLimitBytes,'currentSize'=>$currentSize));
+                }
+            }
         }
         return $entry;
     }
