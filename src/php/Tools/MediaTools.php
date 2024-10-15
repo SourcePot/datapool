@@ -63,14 +63,13 @@ class MediaTools{
             $imageArr['style']=array_merge($wrapperStyleTemplate,$arr['wrapper']['style']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageArr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/json')===0){
-            if ($isSmallPreview){
-                $arr['html']='&plusb;';
-            } else {
-                $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
-                $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-                $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json);
-                $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE));
-            }
+            $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
+            $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+            $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
+        } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
+            $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xhtml')!==FALSE){
@@ -82,7 +81,23 @@ class MediaTools{
                 $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
             }
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
-            $arr['html'].='&#10066;';    
+            $matrix=array();
+            $zip=new \ZipArchive;
+            if ($zip->open($arr['selector']['Params']['TmpFile']['Source'])===TRUE){
+                $zipFileCount=$zip->numFiles;
+                for( $i=0;$i<$zip->numFiles;$i++){ 
+                    $stat=$zip->statIndex($i);
+                    if (!$isSmallPreview || $i<3){
+                        $matrix[]=array('File'=>basename($stat['name']));
+                    } else if ($i>=3){
+                        $matrix['']=array('File'=>'...');
+                        break;
+                    }
+                }
+                $zip->close();
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('clear'=>'both'),'element-content'=>'Zip-archive: '.$zipFileCount.' files'));
+            }
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0){
@@ -270,7 +285,7 @@ class MediaTools{
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
             $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId);
             $contentArr['key']=array('content',$arr['selector']['Source'],$arr['selector']['EntryId']);
-            $contentArr['style']=array('text-align'=>'left','width'=>'98%','height'=>'70vh');
+            $contentArr['style']=array('text-align'=>'left','width'=>'98%','height'=>'50vh');
             $contentArr['class']='code';
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
             $btnArr['cmd']='show';

@@ -668,9 +668,10 @@ final class MiscTools{
     /**
     * @return array This method returns an array which is a matrix used to create an html-table and a representation of the provided array.
     */
-    public function arr2matrix(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
+    public function arr2matrix(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$previewOnly=FALSE):array
     {
         $matrix=array();
+        $previewRowCount=3;
         $rowIndex=0;
         $rows=array();
         $maxColumnCount=0;
@@ -700,9 +701,17 @@ final class MiscTools{
                         $key=$rowArr['columns'][$i];
                     }
                 }
-                $matrix[$rowIndex][$i]=$key;
+                if ($previewOnly && $rowIndex>$previewRowCount){
+                    $matrix[''][$i]='...';
+                } else {
+                    $matrix[$rowIndex][$i]=$key;
+                }
             }
-            $matrix[$rowIndex]['value']=$rowArr['value'];
+            if ($previewOnly && $rowIndex>$previewRowCount){
+                $matrix['']['value']='...';
+            } else {
+                $matrix[$rowIndex]['value']=$rowArr['value'];
+            }
         }
         return $matrix;
     }
