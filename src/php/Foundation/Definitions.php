@@ -267,7 +267,7 @@ class Definitions{
             } else {
                 // unknown tags
                 $definition['currentKey']=$key;
-                $this->oc['logger']->log('warning','Definition error: Folder: "{Folder}", Name: "{Name}", key: "{currentKey}", tag or function not set.',$definition);
+                //$this->oc['logger']->log('warning','Definition error: Folder: "{Folder}", Name: "{Name}", key: "{currentKey}", tag or function not set.',$definition);
             }
         }
         $debugArr['tableCntrArr']=$tableCntrArr;

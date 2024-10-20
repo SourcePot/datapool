@@ -582,13 +582,15 @@ class Container{
         }
         $textId=$targetId.'-text';
         $newComment='';
-        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'New comment','style'=>array('float'=>'left','clear'=>'both','margin'=>'0 5px')));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>array('comment'),'id'=>$textId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$textId,'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$textId));
-            $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId));
-            $appArr=array('html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']);
-            $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
+        if (isset($arr['selector']['Write'])){
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){
+                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'New comment','style'=>array('float'=>'left','clear'=>'both','margin'=>'0 5px')));
+                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>array('comment'),'id'=>$textId,'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.5em'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId));
+                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$textId,'generic',$arr['selector'],array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$textId));
+                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']),'value'=>time(),'style'=>array('float'=>'left','clear'=>'both','margin'=>'5px'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId));
+                $appArr=array('html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']);
+                $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
+            }
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($commentsHtml.$newComment);
         return $arr;
