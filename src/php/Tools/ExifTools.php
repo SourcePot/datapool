@@ -26,13 +26,11 @@ class ExifTools{
 
     public function addExif2entry(array $entry,string $file):array
     {
-        if (isset($this->oc['SourcePot\Datapool\Tools\MediaTools'])){
-            $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addExif2entry($entry,$file);
-        }
+        $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addExif2entry($entry,$file);
         $entry=$this->addMimeType($entry);
         $entry=$this->addOrientation($entry);
         $entry=$this->addCamera($entry);
-        if (empty($entry['Content']['Address']['Town'])){$entry=$this->addGPS($entry);}
+        $entry=$this->addGPS($entry);
         $entry=$this->addDateTime($entry);
         unset($entry['exif']);
         return $entry;
@@ -54,6 +52,7 @@ class ExifTools{
                     'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
                     'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue'
                     );
+        $entry['Params']['Camera']=array();
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){continue;}
             $entry['exif'][$sourceKey]=$this->normalizeEncoding($entry['exif'][$sourceKey]);
@@ -65,8 +64,13 @@ class ExifTools{
     
     private function addGPS(array $entry):array
     {
-        if (isset($entry['Params']['Geo'])){$oldGeo=$entry['Params']['Geo'];} else {$oldGeo=array('lat'=>9999,'lon'=>9999);}
-        // get lat and lon from exif
+        if (isset($entry['Params']['Geo'])){
+            $oldGeo=$entry['Params']['Geo'];
+        } else {
+            $oldGeo=array('lat'=>9999,'lon'=>9999);
+        }
+        $entry['Params']['Geo']=array();
+        // get GPS data, e.g. lat and lon from exif
         $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude','imgDirectionRef'=>'GPSImgDirectionRef','imgDirection'=>'GPSImgDirection','dateStamp'=>'GPSDateStamp');        
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){
@@ -76,7 +80,11 @@ class ExifTools{
             $entry['Params']['Geo'][$targetKey]=$this->degMinSec2float($entry['exif'][$sourceKey],FALSE);
             unset($entry['exif'][$sourceKey]);
         }
-        if (!isset($entry['Params']['Geo']['lat']) || !isset($entry['Params']['Geo']['lon'])){return $entry;}
+        // skip further processing if GPS information is missing
+        if (empty($entry['Params']['Geo'])){
+            $entry['Params']['Address']=array();
+            return $entry;
+        }
         // if lon and lat are present, get multiplier from exif
         if (!empty($entry['exif']['GPSLatitudeRef'])){
             if (strcmp($entry['exif']['GPSLatitudeRef'],'S')===0){$entry['Params']['Geo']['lat']=-1*$entry['Params']['Geo']['lat'];}

@@ -446,10 +446,16 @@ class Filespace{
         return $abs;
     }
 
+// ================================ The following methods add files to entries. Methods fileUpload2entry() and fileContent2entry() are wrapper methods for file2entry().
+    
     /**
-    * The following methods add files to entries.
-    * Method fileUpload2entry() processes a form file upload, fileContent2entry() adds a file to an entry based on the provided file content and
-    * method file2entry() just adds a file to an entry. Methods fileUpload2entry() and fileContent2entry() are wrapper methods for file2entry().
+    * This method moves the uploaded file to the private tmp directory and calls the file2entry method.
+    * @param array $fileArr Is the content of $_FILE
+    * @param array $entry Is the entry to be linked with the uploaded file
+    * @param boolean $createOnlyIfMissing If TRUE, an exsisting entry will not be touched but the file will be added
+    * @param boolean $isSystemCall Is the access control setting
+    *
+    * @return array Returns the final entry
     */
     public function fileUpload2entry(array $fileArr,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
@@ -470,24 +476,33 @@ class Filespace{
         $file=$context['file']=$tmpDir.$pathinfo['basename'];
         $success=move_uploaded_file($fileArr['tmp_name'],$file);
         if ($success){
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'File "'.$fileArr['name'].'" upload'),FALSE);
             $entry=$this->file2entry($file,$entry,$createOnlyIfMissing,$isSystemCall);
         } else {
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" moving uploaded file "{file}" failed, skipped this entry',$context);         
         }
-        return $entry;    
+        return $entry;
     }
     
+    /**
+    * This method saves bytes stored at entry['fileContent'] to the private tmp directory, the file name is set from entry['fileCName'].
+    * @param array $entry Is the entry providing the file content and file name
+    * @param boolean $createOnlyIfMissing If TRUE, an exsisting entry will not be touched but the file will be added
+    * @param boolean $isSystemCall Is the access control setting
+    *
+    * @return array Returns the final entry
+    */
     public function fileContent2entry(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
         $this->resetStatistic();
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (empty($entry['fileContent'])){
+            // key "fileContent" not set
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed entry["fileContent"] is empty, skipped this entry',$context);             
         } else if (empty($entry['fileName'])){
+            // key "fileName" not set
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed entry["fileName"] is empty, skipped this entry',$context);             
         } else {
-            // save file content to tmp dir, e.g. from email
+            // save entry['fileContent'] to private tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
             $entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
             $bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
@@ -501,10 +516,18 @@ class Filespace{
         return $entry;
     }
     
+    /**
+    * This method adds/links a file to an entry.
+    * @param string $file Is the full file name of the file to be linked to the entry
+    * @param array $entry Is the entry to be linked with the file
+    * @param boolean $createOnlyIfMissing If TRUE, an exsisting entry will not be touched but the file will be added
+    * @param boolean $isSystemCall Is the access control setting
+    *
+    * @return array Returns the final entry
+    */
     public function file2entry(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
-        $debugArr=array('file'=>$file,'entry_in'=>$entry,'debugFileName'=>__FUNCTION__.' ');
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'specialFileHandling'=>FALSE);
         if (empty($entry['Source'])){
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty entry["Source"], skipped this entry',$context);         
             return $entry;
@@ -514,21 +537,25 @@ class Filespace{
             return $entry;
         }
         $entry=$this->addFileProps($entry,$file);
+        $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         if ($this->specialFileHandling($file,$entry,$createOnlyIfMissing,$isSystemCall)){
-            // file attachment to entries is done by method specialFileHandling()
-            $debugArr['debugFileName'].='specialFileHandling';
+            // Files are processed by specialFileHandling()
+            // If a file is an archive or email which is separated into file, this method will be called again with each of the separated files
+            $context['specialFileHandling']=TRUE;
         } else {
+            // single file handling
             $entry=$this->addFile2entry($entry,$file);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
-            $debugArr['debugFileName'].=$entry['Params']['File']['Name'];
         }
+        $entry[__FUNCTION__]=$context;
         return $entry;
     }
 
-    private function addFileProps(array $entry,string $file):array
+    public function addFileProps(array $entry,string $file):array
     {
-        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();;
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $entry['Owner']=(empty($entry['Owner']))?$currentUser['EntryId']:$entry['Owner'];
+        $entry['Params']['File']=array();
         if (empty($entry['Params']['File']['UploaderId'])){
             $entry['Params']['File']['UploaderId']=$currentUser['EntryId'];
             $entry['Params']['File']['UploaderName']=$currentUser['Name'];
@@ -627,7 +654,6 @@ class Filespace{
             }
             if (empty($message->getAttachments())){
                 // no attachements: email content -> entry
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Email content copied to entry["Content"]["Html"]'),FALSE);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE);
             } else {
                 // create one entry per attachement and add email content to entry 
@@ -641,7 +667,7 @@ class Filespace{
                         $entry['fileContent']=$attachment->getData();
                         $entry['EntryId']=$idHash.'-'.$index;
                         $entry['Params']['File']=array('Name'=>$entry['fileName'],'Size'=>strlen($entry['fileContent']),'Date (created)'=>date('Y-m-d H:i:s'),'MIME-Type'=>$attachment->getMimeType());
-                        $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry created from email attachment "'.$entry['fileName'].'"'),FALSE);
+                        $newEntry=$entry;
                         $this->fileContent2entry($newEntry);
                     }
                 }
@@ -762,7 +788,7 @@ class Filespace{
                     $zipStatistic['files'][$i]=$entry['fileName'];
                     $entry['Name']=$entry['fileName'];
                     $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
-                    $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Extracted file "'.$fileName.'" from zip-archive (file '.($i+1).' of '.$zip->count().')'),FALSE);
+                    $newEntry=$entry;
                     $this->fileContent2entry($newEntry);
                 }
                 $i++;
@@ -776,7 +802,6 @@ class Filespace{
     
     /**
      * Adds meta data to to an entry derived from the file provided.
-     *
      * @param array $entry is the entry which meta data is added to
      * @param string $file is file from which the meta data is derived
      *
@@ -784,22 +809,15 @@ class Filespace{
      */
     public function addFile2entry(array $entry,string $file):array
     {
-        $debugArr=array('entry_in'=>$entry,'file'=>$file);
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
-        // process file
-        $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
-        $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->location2address($entry);
         // if pdf parse content
-        if (empty($entry['Params']['File'])){
-            // file info is missing
-        } else if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
+        if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
             if (empty($entry['pdfParser'])){
                 $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
             } else {
                 $parserMethod=$entry['pdfParser'];
                 try{
                     $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('parser applied'=>$parserMethod),FALSE);
                 } catch (\Exception $e){
                     $context['msg']=$e->getMessage();
                     $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" parser failed: {msg}',$context);
@@ -826,10 +844,13 @@ class Filespace{
         }
         $targetFile=$this->selector2file($entry,TRUE);
         if (copy($file,$targetFile)){
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('File source'=>$file,'File attached'=>$targetFile),FALSE);    
+            // success   
         }
+        $entry[__FUNCTION__]=$context;
         return $entry;
     }
+
+// ============ Methods providing entry import and export ======================================
 
     public function exportEntries(array $selectors,bool $isSystemCall=FALSE,int $maxAttachedFilesize=10000000000):string
     {
@@ -919,10 +940,8 @@ class Filespace{
                 if (is_file($sourceFile)){
                     $statistics['attached files added']++;
                     $this->tryCopy($sourceFile,$targetFile,0750);
-                    $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Attachment log',array('msg'=>'Entry attachment imported','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
                 }
                 // update or insert entry
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('msg'=>'Entry imported','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
                 $statistics['entries updated']++;
             }

@@ -273,7 +273,6 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 if ($this->itemAlreadyProcessed($sourceEntry,$processingLogText)){
                     $result['Processing statistics']['Itmes already processed and skipped']['value']++;
                 } else {
-                    $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('forwarded'=>$processingLogText),FALSE);
                     $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE,TRUE);
                     $result['Processing statistics']['Itmes forwarded']['value']++;
                 }

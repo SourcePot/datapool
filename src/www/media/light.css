@@ -184,12 +184,21 @@ p.cover{
     text-align:center;
     cursor:pointer;
 }
-table.std,div.table{
+table{
     float:left;
+}
+table.std,div.table{
     clear:none;
     margin:0.5rem;
     box-shadow: 5px 5px 3px #ccc;
     border: 1px solid #aaa;
+}
+table.matrix{
+    clear:both;
+    border:1px dotted #444;
+}
+td.matrix{
+    padding:1px;
 }
 caption{
     margin:5px 0;
@@ -227,7 +236,7 @@ th{
 }
 td,th{
     position:relative;
-    padding:3px;
+    padding:0;
 }
 p.log{
     clear:none;

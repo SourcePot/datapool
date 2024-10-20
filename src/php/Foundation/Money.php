@@ -320,5 +320,37 @@ class Money{
         return $result;
     }
 
+    public function addMoney(array $a,array $b):array
+    {
+        $result=array();
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        // check data
+        if (!isset($a['Currency']) && isset($b['Currency'])){
+            $result=$b;
+            $valueCountA=(isset($a['combineValueCount']))?intval($a['combineValueCount']):0;
+            $valueCountB=(isset($b['combineValueCount']))?intval($b['combineValueCount']):1;
+        } else if (isset($a['Currency']) && !isset($b['Currency'])){
+            $result=$a;
+            $valueCountA=(isset($a['combineValueCount']))?intval($a['combineValueCount']):1;
+            $valueCountB=(isset($b['combineValueCount']))?intval($b['combineValueCount']):0;
+        } else if ($a['Currency']!==$b['Currency']){
+            $context['currencyA']=$a['Currency'];
+            $context['currencyB']=$b['Currency'];
+            $valueCountA=(isset($a['combineValueCount']))?intval($a['combineValueCount']):0;
+            $valueCountB=(isset($b['combineValueCount']))?intval($b['combineValueCount']):0;
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" could not add values, currency mismatch {currencyA}!=={currencyB}',$context);    
+        } else {
+            // format data
+            $valueA=(isset($a['Amount']))?floatval($a['Amount']):0;
+            $valueB=(isset($b['Amount']))?floatval($b['Amount']):0;
+            $valueCountA=(isset($a['combineValueCount']))?intval($a['combineValueCount']):((isset($a['Amount']))?1:0);
+            $valueCountB=(isset($b['combineValueCount']))?intval($b['combineValueCount']):((isset($b['Amount']))?1:0);
+            // calculation
+            $result=$this->str2money($b['Currency'].' '.round(($valueA+$valueB),2));
+        }
+        $result['combineValueCount']=$valueCountA+$valueCountB;
+        return $result;
+    }
+
 }
 ?>

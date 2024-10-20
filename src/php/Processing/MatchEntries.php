@@ -204,7 +204,6 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $entry['Content']=array_replace_recursive($entry['Content'],$bestMatch['Content']);
             }
             $result['Matching']['Matched']['value']++;
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('success'=>'Match column "'.$params['Content']['Column to match'].'" successful'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun,$params['Content']['Keep source entries']);
             } else {
@@ -216,7 +215,6 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             // failed match
             $result['Matching']['Failed']['value']++;
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($entry,'Processing log',array('failure'=>'Match column "'.$params['Content']['Column to match'].'" failed'),FALSE);
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun,$params['Content']['Keep source entries']);
             } else {

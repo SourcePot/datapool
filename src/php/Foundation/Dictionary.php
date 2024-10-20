@@ -25,6 +25,7 @@ class Dictionary{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
+        $this->getLanguageCode();
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
@@ -37,14 +38,6 @@ class Dictionary{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        // set language
-        if (empty($_SESSION['page state']['lngCode'])){
-            if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){
-                $_SESSION['page state']['lngCode']=$this->getValidLngCode($_SERVER['HTTP_ACCEPT_LANGUAGE']);
-            } else {
-                $_SESSION['page state']['lngCode']='en';
-            }
-        }
         $this->initDictionaryIfEmpty();
     }
     
@@ -64,6 +57,9 @@ class Dictionary{
         } else {
             // get page content
             $html=$this->dictToolbox();
+            $settings=array('orderBy'=>'Name','isAsc'=>TRUE,'limit'=>20,'hideUpload'=>TRUE);
+            $settings['columns']=array(array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|translation','Filter'=>''));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' dictionary','entryList',array('Source'=>'dictionary'),$settings,array());    
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -78,6 +74,18 @@ class Dictionary{
         } else {
             return 'en';
         }
+    }
+
+    public function getLanguageCode():string
+    {
+        if (empty($_SESSION['page state']['lngCode'])){
+            if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){
+                $_SESSION['page state']['lngCode']=$this->getValidLngCode($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+            } else {
+                $_SESSION['page state']['lngCode']='en';
+            }
+        }
+        return $_SESSION['page state']['lngCode'];
     }
 
     private function initDictionaryIfEmpty()
@@ -123,7 +131,7 @@ class Dictionary{
     
     public function lng($phrase,string $langCode='',string|bool$translation=FALSE)
     {
-        $langCode=(empty($langCode))?$_SESSION['page state']['lngCode']:mb_strtolower($langCode);
+        $langCode=(empty($langCode))?($this->getLanguageCode()):mb_strtolower($langCode);
         if (!is_string($phrase) || strcmp($langCode,'en')===0){return $phrase;}
         if (strlen($phrase)!==strlen(strip_tags($phrase))){return $phrase;}
         $elementId=md5($phrase.'|'.$langCode);

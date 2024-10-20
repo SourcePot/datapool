@@ -39,7 +39,6 @@ class HTMLbuilder{
     private $appOptions=array('SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
                        'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
                        'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
-                       'SourcePot\Datapool\Tools\HTMLbuilder|entryLogs'=>'entryLogs()',
                        'SourcePot\Datapool\Foundation\Container|tools'=>'tools()',
                        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
                        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
@@ -144,6 +143,10 @@ class HTMLbuilder{
                     $indexArr['x']++;
                     $thArr=array('tag'=>'th','element-content'=>$colLabel,'keep-element-content'=>!empty($arr['keep-element-content']));
                     $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
+                    if (isset($cell['tdStyle'])){
+                        $tdArr['style']=$cell['tdStyle'];
+                        unset($cell['tdStyle']);
+                    }
                     if (isset($arr['class'])){
                         $trHeaderArr['class']=$trArr['class']=$thArr['class']=$tdArr['class']=$arr['class'];
                     }
@@ -579,7 +582,7 @@ class HTMLbuilder{
     */
     public function entryControls(array $arr,bool $isDebugging=FALSE):string
     {
-        $tableStyle=array('clear'=>'none','margin'=>'0','min-width'=>'200px','box-shadow'=>'none','border'=>'1px dotted #444');
+        $tableStyle=array('clear'=>'none','margin'=>'0','min-width'=>'200px');
         if (!isset($arr['selector'])){return 'Selector missing';}
         $debugArr=array('arr_in'=>$arr);
         $arr['html']='';
@@ -630,66 +633,12 @@ class HTMLbuilder{
         }
         // finalize
         $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'title'=>$tableTitle,'style'=>$tableStyle));
+        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'title'=>$tableTitle,'style'=>$tableStyle,'class'=>'matrix'));
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $html;
     }
-    
-    /**
-    * This method returns an html-table containing an overview of the entry content-, processing- and attachment-logs.
-    * @return string
-    */
-    public function entryLogs(array $arr):string
-    {
-        if (!isset($arr['selector'])){return $this->traceHtml('Problem: Method "'.__FUNCTION__.'" arr[selector] missing.');}
-        if (!isset($arr['selector']['Params'])){return $this->traceHtml('Problem: Method "'.__FUNCTION__.'" arr[selector][Params] missing.');}
-        $matrix=array();
-        $subMatrices=array();
-        $standardKeys=array('timestamp'=>FALSE,'time'=>TRUE,'timezone'=>FALSE,'method_0'=>TRUE,'method_1'=>TRUE,'method_2'=>TRUE,'userId'=>TRUE);
-        $relevantKeys=array('Attachment log','Content log','Processing log');
-        foreach($relevantKeys as $logKey){
-            if (!isset($arr['selector']['Params'][$logKey])){continue;}
-            foreach($arr['selector']['Params'][$logKey] as $logIndex=>$logArr){
-                if (!isset($logArr['timestamp'])){continue;}
-                $matrixIndex=$logArr['timestamp'].$logKey;
-                while(isset($matrix[$matrixIndex])){$matrixIndex.='.';}
-                $matrix[$matrixIndex]['Type']=$logKey;
-                foreach($standardKeys as $property=>$isVisible){
-                    if ($isVisible){
-                        $label=explode('_',ucfirst($property));
-                        if (count($label)>1){
-                            $caption=array_shift($label);
-                            $label=array_pop($label);
-                            $subMatrices[$caption][$label]=(empty($logArr[$property]))?'':$logArr[$property];
-                        } else {
-                            $label=array_pop($label);
-                            $matrix[$matrixIndex][$label]=(empty($logArr[$property]))?'':$logArr[$property];
-                            if (strcmp($label,'UserId')===0){
-                                $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($matrix[$matrixIndex][$label],3);
-                                if (!empty($userName)){$matrix[$matrixIndex][$label]=$userName;}
-                            }
-                        }
-                    }
-                    unset($arr['selector']['Params'][$logKey][$logIndex][$property]);
-                }
-                $subMatrices['Message']=$arr['selector']['Params'][$logKey][$logIndex];
-                foreach($subMatrices as $caption=>$subMatrix){
-                    $matrix[$matrixIndex][$caption]='';
-                    foreach($subMatrix as $property=>$propValue){
-                        if (is_array($propValue)){$propValue=implode('|',$propValue);}
-                        $matrix[$matrixIndex][$caption].=$property.': '.$propValue.'<br/>';
-                    }
-                }
-            }
-        }
-        krsort($matrix);
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'caption'=>'Entry logs','keep-element-content'=>TRUE,'style'=>array('clear'=>'none')));
-        $html.=$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($matrix);
-        return $html;
-    }
-
     
     public function entry2row(array $arr,bool $commandProcessingOnly=FALSE,bool $singleRowOnly=FALSE,bool $isNewRow=FALSE,bool $isSystemCall=FALSE):array|string
     {

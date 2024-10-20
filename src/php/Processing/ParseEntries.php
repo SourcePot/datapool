@@ -171,14 +171,15 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         //
         $contentStructure=array('Rule relevant on section'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections),
                                 'Constant or...'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                'regular expression'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE,'title'=>"Add your regular expression to search for matches within the 'Source column' content here. You can check your regular expressions on different web pages. Use brackets to define sub matches. 'Match index'=0 wil return the whole match,\n'Match index'=1 the first sub match defined by the first set if brakets,..."),
                                 'Match index'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0,1,2,3,4,5,6,7,8,9,10)),
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Allow multiple hits'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes','Multiple entries')),
+                                'Allow multiple hits'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes','Multiple entries'),'title'=>"Allow multiple hits\nYES:\twill create array\nNO: \tlast match will override previous match\nMULTIPLE ENTRIES:\twill create a new entry per match (make sure selector is unique)"),
                                 'Remove match'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 'Match required'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
+                                'Combine on update'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
                                 );
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -277,6 +278,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=array();
             // loop through parser rules
             foreach($base['parserrules'] as $ruleEntryId=>$rule){
+                if (!empty($rule['Content']['Combine on update'])){
+                    // this setting will be used/process by the unifyEntry-method
+                    $key=$rule['Content']['Target column'];
+                    if ($key==='Content' || $key==='Params'){$key.=\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$rule['Content']['Target key'];}
+                    $targetEntry['Params']['Combine on update'][$key]=$rule['Content']['Combine on update'];
+                }
                 $ruleFailed='';
                 // get relevant text section
                 $relevantText='';
@@ -391,7 +398,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (isset($sourceEntry['UNYCOM list'])){$sourceEntry['Content']['UNYCOM list']=$sourceEntry['UNYCOM list'];}
             if (isset($sourceEntry['Costs'])){$sourceEntry['Content']['Costs']=$sourceEntry['Costs'];}
             if (isset($sourceEntry['Costs description'])){$sourceEntry['Content']['Costs description']=$sourceEntry['Costs description'];}
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('success'=>'Parsed entry'),FALSE);
             // move to target or targets
             if ($multipleHits2multipleEntriesColumn){
                 foreach($multipleEntriesValueArr as $subKey=>$value){
@@ -417,7 +423,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             // Parser failed
             $result['Parser statistics']['Failed']['value']++;
-            $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('failed'=>trim($parserFailed,'| ')),FALSE);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
             // get sample
             if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){

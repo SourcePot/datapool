@@ -388,7 +388,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile);
             }
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($targetEntry,'Processing log',array('msg'=>'Entry distributed','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($targetEntry,TRUE);
             $selectorStr=$this->getSignalName($targetEntry);
             foreach($targetEntry['Content'] as $contentKey=>$contentValue){

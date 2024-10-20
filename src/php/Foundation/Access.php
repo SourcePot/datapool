@@ -193,7 +193,29 @@ class Access{
             return FALSE;
         }    
     }
-    
+
+    public function rightsHtml(array $arr,string $right='Privileges'):string
+    {
+        $arr['html']='';
+        if (isset($arr['selector'][$right])){
+            foreach($this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE) as $value=>$name){
+                if ((intval($value) & intval($arr['selector'][$right]))>0){
+                    if (!empty($arr['html'])){$arr['html'].='<br/>';}
+                    if (stripos($name,'admin')!==FALSE){
+                        $arr['html'].='<span style="font-weight:bold;color:red;">'.$name.'</span>';
+                    } else {
+                        $arr['html'].=$name;
+                    }
+                }
+            }
+            if ($arr['html']==='Registered'){
+                $arr['html']='<span style="font-weight:bold;color:green;">'.$arr['html'].'</span>';
+            }
+        } else {
+            $arr['html']='{Nothing here...}';
+        }
+        return $arr['html'];
+    }
 
 }
 ?>

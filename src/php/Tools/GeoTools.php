@@ -61,6 +61,7 @@ class GeoTools{
     public function location2address(array $entry,$targetKey='Address',bool $isDebugging=FALSE):array
     {
         $debugArr=array('entry_in'=>$entry);
+        $entry['Params'][$targetKey]=array();
         if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
             $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);

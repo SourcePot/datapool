@@ -223,6 +223,7 @@ class Database{
     */
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -235,6 +236,8 @@ class Database{
         }
         if ($addDefaults){$entry=$this->addEntryDefaults($entry);}
         $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->combineEntryData($entry);
+        $entry[__FUNCTION__]=$context;
         return $entry;    
     }
 
@@ -712,6 +715,7 @@ class Database{
     */
     public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
         $entry=$this->addType2entry($entry);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
@@ -736,6 +740,8 @@ class Database{
         $stmt=$this->executeStatement($sql,$inputs,FALSE);
         $this->addStatistic('inserted',$stmt->rowCount());
         $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
+        $context['entriesInserted']=$stmt->rowCount();
+        $entry[__FUNCTION__]=$context;
         return $entry;
     }
 
@@ -801,8 +807,9 @@ class Database{
     *
     * @return array|boolean The inserted, updated or created entry, an empty array if access rights were insufficient or false on error.
     */
-    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=FALSE,string $attachment=''):array|bool
+    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE,string $attachment=''):array|bool
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys and set selector
@@ -814,42 +821,67 @@ class Database{
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
         // get existing entry
         $existingEntry=$this->entryById($selector,TRUE,'Write',TRUE);
+        $entry['preExistingEntry']=$existingEntry;
         if (empty($existingEntry['rowCount'])){
             // no existing entry found -> insert and return entry
             if (is_file($attachment)){
                 // valid file attachment found
+                $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFileProps($entry,$attachment);
+                $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$attachment);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
+                $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
             } else {
                 $currentFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                if (!is_file($currentFile)){
+                if (is_file($currentFile)){
+                    // entry has file attachment
+                } else {
                     // no valid file attachment. clear related meta data
-                    if (isset($entry['Params']['Attachment log'])){unset($entry['Params']['Attachment log']);}
                     if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
                 }
             }
-            $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry created'),FALSE);
+            // add log
+            if ($addLog){
+                $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
+                $dateTimeArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date(time(),'UTC');
+                $entry['Params']['Log'][__FUNCTION__]['insert']=array('user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']);
+            }
+            // insert new entry
+            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$this->insertEntry($entry,TRUE);
+            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> update
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
+            $entry['Params']=array_merge($existingEntry['Params'],(isset($entry['Params'])?$entry['Params']:array()));
             // add attachment 
             if (is_file($attachment)){
-                if (!isset($entry['Params'])){$entry['Params']=$existingEntry['Params'];}
+                if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
+                $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFileProps($entry,$attachment);
+                $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$attachment);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
+                $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
             }
             // add log
             if ($addLog){
-                if (!isset($entry['Params'])){$entry['Params']=$existingEntry['Params'];}
-                $entry=$this->addLog2entry($entry,'Processing log',array('msg'=>'Entry updated','Expires'=>date('Y-m-d H:i:s',time()+604800)),FALSE);
+                $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
+                $dateTimeArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date(time(),'UTC');
+                $entry['Params']['Log'][__FUNCTION__]['update']=array('user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']);
             }
             // update entry
             $entry=$this->unifyEntry($entry,FALSE);
-            $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
+            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
+            $contextBackup['entriesUpdated']=$this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
+            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else {
             // existing entry -> no update 
+            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$existingEntry;
+            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         }
+        $entry[__FUNCTION__]=$context;
         return $entry;
     }
     
@@ -902,7 +934,7 @@ class Database{
     */
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'sourceUpdatedFirst'=>FALSE,'sourceTargetEntryIdMatch'=>FALSE,'copyAttachedFile'=>FALSE,'movedAttachedFile'=>FALSE,'attachedFileProcessed'=>FALSE,'noWriteAccess'=>FALSE);
         // test for required keys and set selector
         if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId']) || empty($targetSelector)){
             $this->oc['logger']->log('error','{class} &rarr; {function} called with empty sourceEntry[Source], sourceEntry[EntryId] or targetEntry. Source entry was not moved.',$context);    
@@ -912,17 +944,18 @@ class Database{
             // write access
             if ($updateSourceFirst && !$isTestRun){
                 $sourceEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+                $context['sourceUpdatedFirst']=TRUE;
             }
             // apply target selector to source entry
             $targetEntry=array_replace_recursive($sourceEntry,$targetSelector);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
             if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
                 // source and target EntryId identical, attachment does not need to be touched
-                $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Target and source EntryId identical'),FALSE);
                 if ($isTestRun){
                     $targetEntry=$sourceEntry;
                 } else {
                     $targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+                    $context['sourceTargetEntryIdMatch']=TRUE;
                 }
             } else {
                 // move or copy attached file to target
@@ -932,23 +965,23 @@ class Database{
                 if (is_file($sourceFile) && !$isTestRun){
                     if ($keepSource){
                         $fileRenameSuccess=@copy($sourceFile,$targetFile);
+                        $context['copyAttachedFile']=TRUE;
                     } else {
                         $fileRenameSuccess=@rename($sourceFile,$targetFile);
+                        $context['movedAttachedFile']=TRUE;
                     }
                 }
                 // create target entry
                 if ($fileRenameSuccess){
-                    $targetEntry=$this->addLog2entry($targetEntry,'Attachment log',array('File source old'=>$sourceFile,'File source new'=>$targetFile),FALSE);
-                    $targetEntry=$this->addLog2entry($targetEntry,'Processing log',array('success'=>(($keepSource)?'Copied':'Moved').' file from EntryId='.$sourceEntry['EntryId'].' to '.$targetEntry['EntryId']),FALSE);
                     if (!$isTestRun){
                         if (!$keepSource){
                             $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
                         }
                         $targetEntry=$this->updateEntry($targetEntry,$isSystemCall,FALSE,FALSE,$targetFile);
+                        $context['attachedFileProcessed']=TRUE;
                     }            
                 } else {
                     // copying or renaming of attached file failed
-                    $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Failed to '.(($keepSource)?'copy':'move').' attached file, kept enrtry'),FALSE);
                     if ($isTestRun){
                         $targetEntry=$sourceEntry;
                     } else {
@@ -958,13 +991,14 @@ class Database{
             }
         } else {
             // no write access
-            $sourceEntry=$this->addLog2entry($sourceEntry,'Processing log',array('failed'=>'Write access denied'),FALSE);
             if ($isTestRun){
                 $targetEntry=$sourceEntry;
             } else {
                 $targetEntry=$this->updateEntry($sourceEntry,TRUE);
             }
+            $context['noWriteAccess']=TRUE;
         }
+        $targetEntry[__FUNCTION__]=$context;
         return $targetEntry;
     }
 
@@ -980,30 +1014,6 @@ class Database{
             }
         }
         return FALSE;
-    }
-    
-    public function addLog2entry(array $entry,string $logType='Processing log',array $logContent=array(),bool $updateEntry=FALSE)
-    {
-        if (!isset($entry['Params'][$logType])){$entry['Params'][$logType]=array();}
-        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
-        $logContent['timestamp']=time();
-        $logContent['time']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
-        $logContent['timezone']=date_default_timezone_get();
-        $logContent['method_0']=$trace[1]['class'].'::'.$trace[1]['function'];
-        $logContent['method_1']=$trace[2]['class'].'::'.$trace[2]['function'];
-        $logContent['method_2']=$trace[3]['class'].'::'.$trace[3]['function'];
-        $logContent['userId']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-        $entry['Params'][$logType][]=$logContent;
-        // remove expired logs
-        foreach($entry['Params'][$logType] as $logIndex=>$logArr){
-            if (!isset($logArr['Expires'])){continue;}
-            $expires=strtotime($logArr['Expires']);
-            if ($expires<time()){unset($entry['Params'][$logType][$logIndex]);}
-        }
-        if ($updateEntry){
-            $entry=$this->updateEntry($entry,TRUE);
-        }
-        return $entry;
     }
     
     /**
@@ -1120,7 +1130,7 @@ class Database{
             if ($targetIndex===$index){$targetEntryId=$item['entry']['EntryId'];}
             $this->oc[$storageObj]->insertEntry($item['entry'],TRUE);
         }
-        $context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($cmd['newOlKey']===$olKey)?'':'Key change '.$olKey.'&rarr;'.$cmd['newOlKey'].'.','notices'=>implode('|',$notices));
+        //$context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($cmd['newOlKey']===$olKey)?'':'Key change '.$olKey.'&rarr;'.$cmd['newOlKey'].'.','notices'=>implode('|',$notices));
         //$this->oc['logger']->log('info','Ordered list from Source {Source} with EntryId "{olKey}" rebuild, mapped "{mapping}". {keyChange} Notice: "{notices}"',$context);
         return $targetEntryId;
     }

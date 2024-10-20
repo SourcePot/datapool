@@ -292,7 +292,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $result['Mapping statistics']['Entries']['value']++;
         //
-        $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addLog2entry($sourceEntry,'Processing log',array('mode'=>$params['Content']['Mode']),FALSE);
         $sourceEntry['Content']=array();
         if ($base['csvRequested'] || $base['zipRequested']){
             unset($sourceEntry['Params']);

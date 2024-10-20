@@ -66,10 +66,10 @@ class MediaTools{
             $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
             $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
         } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xhtml')!==FALSE){
@@ -636,10 +636,15 @@ class MediaTools{
     
     public function addExif2entry(array $entry,string $file):array
     {
-        if (!is_file($file)){return $entry;}
-        if (!function_exists('exif_read_data')){return $entry;}
-        $exif=@exif_read_data($file,'IFD0');
-        $entry['exif']=(empty($exif))?array():$exif;
+        $entry['exif']=array();   
+        if (!is_file($file)){
+            // no attched file
+        } else if (!function_exists('exif_read_data')){
+            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',array());   
+        } else {
+            $exif=@exif_read_data($file,'IFD0');
+            $entry['exif']=(empty($exif))?array():$exif;
+        }
         return $entry;
     }
     

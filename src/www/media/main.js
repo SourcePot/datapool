@@ -359,8 +359,9 @@ jQuery(document).ready(function(){
 							attachEventsToContainer(containerId);
 							resetAll();
 						} catch(e){
-                            console.log(e);
-							jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">No valid answer from the application.<br/>Check the server protocol, if the memory was exhausted,<br/>check the memory_limit....</p>');
+							console.log(this.response);
+                            jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">No valid answer from the application.<br/>Check the server protocol, if the memory was exhausted,<br/>check the memory_limit....</p>');
+							alert('Invalid response from the application. Check the network connection and the server protocol. Maybe the memory was exhausted, check the memory_limit....');
 						}
 						containerBusy(containerId,false);
 					},false);

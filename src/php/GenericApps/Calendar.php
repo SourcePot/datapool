@@ -686,16 +686,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return trim($str,',&nbsp;');
     }
     
-    public function timestamp2date($string):array
+    public function timestamp2date($string,$timezone='UTC'):array
     {
         $timestamp=intval($string);
         $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($timestamp));
-        return $this->str2date($string,'UTC');
+        return $this->str2date($string,$timezone);
     }
     
     public function str2dateString($string,string $key='System'):string
     {
-        $timestamp=intval($string);
         $dateArr=$this->str2date($string);
         $string=($dateArr['isValid'] && isset($dateArr[$key]))?$dateArr[$key]:'';
         return $string;
@@ -751,6 +750,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $dateArr['US']=$datetimeObj->format('m/d/Y');
         $dateArr['UK']=$datetimeObj->format('d/m/Y');
         $dateArr['DE']=$datetimeObj->format('d.m.Y');
+        $dateArr['RFC2822']=$datetimeObj->format(\DateTimeInterface::RFC2822);
         $dateArr['day']=$datetimeObj->format('d');
         $dateArr['month']=$datetimeObj->format('m');
         $dateArr['year']=$datetimeObj->format('Y');

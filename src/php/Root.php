@@ -69,7 +69,7 @@ final class Root{
         $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('lngCode'=>'en','app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>array());
+            $_SESSION['page state']=array('app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>array());
         }
         // set exception handler and initialize directories
         $this->initDirs();
@@ -667,6 +667,21 @@ final class Root{
             $ip=hash('sha256',$ip,FALSE);
         }
         return $ip;
+    }
+
+    /**
+    * This method returns an the supplied entry with the relevant contexts added if missing.
+    * 
+    */
+    public function contextBackup(array $context,array $entry=array()):array
+    {
+        $relevantContexts=array('unifyEntry','insertEntry','updateEntry','addFile2entry');
+        foreach($relevantContexts as $contextName){
+            if (isset($context[$contextName]) && !isset($entry[$contextName])){
+                $entry[$contextName]=$context[$contextName];
+            }
+        }
+        return $entry;
     }
 
 }

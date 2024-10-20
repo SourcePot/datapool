@@ -43,7 +43,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
             // is admin
             $user=array('Source'=>$this->entryTable,'disableAutoRefresh'=>TRUE);
             $settings=array('orderBy'=>'Privileges','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
-            $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges','Filter'=>''));
+            $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges column','Filter'=>''));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' accounts','entryList',$user,$settings,array());    
             $class=$this->oc['SourcePot\Datapool\Root']->source2class($user['Source']);
             $userSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
@@ -58,9 +58,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         }
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),array());    
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-            if (isset($user['Params'])){
-                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs(array('selector'=>$user));
-            } else {
+            if (!isset($user['Params'])){
                 $html.='Please select a user...';
             }
         }

@@ -347,7 +347,6 @@ class Container{
             if ($level==0){
                 $arr['hideKeys']=TRUE;
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
-                $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryLogs($arr);
             }
         }
         if ($isDebugging){
@@ -416,11 +415,14 @@ class Container{
             $columnOptions=array();
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],array(),TRUE,FALSE) as $entry){
                 $rowIndex=$entry['rowIndex']+intval($settings['offset'])+1;
-                //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,__FUNCTION__.'-'.$entry['EntryId']);
                 $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
                 // setting up
+                $presetOptions=array('Read rights'=>'Read rights','Write rights'=>'Write rights','Privileges column'=>'Privileges column','Content','Params','Params'.$S.'File','Params'.$S.'File'.$S.'Spreadsheet','Params'.$S.'Log','Params'.$S.'Email','Params'.$S.'Geo','Params'.$S.'Address','Params'.$S.'Camera');
                 if (empty($columnOptions)){
-                    $columnOptions['preview']='&#10004; File preview';
+                    //$columnOptions['preview']='&#10004; File preview';
+                    foreach($presetOptions as $flatKey){
+                        $columnOptions[$flatKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey);
+                    }
                     foreach($flatEntry as $flatColumnKey=>$value){
                         $columnOptions[$flatColumnKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatColumnKey);
                     }
@@ -461,26 +463,37 @@ class Container{
                         }
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Columns'][$columnIndex],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
                         // table rows
-                        if (strcmp($cntrArr['Column'],'preview')===0){
-                            $mediaArr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview(array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$entry,'style'=>array('width'=>'100%','max-width'=>300,'max-height'=>250)));
-                            $matrix[$rowIndex][$columnIndex]=$mediaArr['html'];
+                        if (strpos($cntrArr['Column'],'Read ')!==FALSE || strpos($cntrArr['Column'],'Write ')!==FALSE || strpos($cntrArr['Column'],'Privileges ')!==FALSE){
+                            $rightsArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$entry);
+                            $right=substr($cntrArr['Column'],0,strpos($cntrArr['Column'],' '));
+                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml($rightsArr,$right);
                         } else {
                             $matrix[$rowIndex][$columnIndex]='{Nothing here...}';
                         }
+                        // present entry
                         $subMatix=array();
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
+                                // $flatColumnKey === column selection -> standard entry presentation
                                 $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
                                 $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,array());
                             } else if (strpos($flatColumnKey,$cntrArr['Column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR)===0){
+                                // column selection is substring of $flatColumnKey -> submatrix presentation 
                                 $subKey=str_replace($cntrArr['Column'],'',$flatColumnKey);
                                 $subKey=trim($subKey,\SourcePot\Datapool\Root::ONEDIMSEPARATOR);
                                 $subMatix[$subKey]=$value;
                             }
                         }
+                        // sub matrix preesentation
                         if (!empty($subMatix)){
                             $subMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($subMatix);
-                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$subMatix,'hideKeys'=>TRUE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE));
+                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$subMatix,'hideKeys'=>TRUE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'class'=>'matrix'));
+                        }
+                        // table row marking
+                        $class=$this->oc['SourcePot\Datapool\Root']->source2class($arr['selector']['Source']);
+                        $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
+                        if ($entry['Source']===$pageStateSelector['Source'] && $entry['EntryId']===(isset($pageStateSelector['EntryId'])?$pageStateSelector['EntryId']:'')){
+                            $matrix[$rowIndex]['trStyle']=array('background-color'=>'#e4e2ff');
                         }
                     }
                 } // end of loop through columns
