@@ -153,6 +153,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                'Combine on update'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
                                 );
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -267,6 +268,12 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $targetEntry=array();
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($base['mappingrules'] as $ruleIndex=>$rule){
+            if (!empty($rule['Content']['Combine on update'])){
+                // this setting will be used/process by the unifyEntry-method
+                $key=$rule['Content']['Target column'];
+                if ($key==='Content' || $key==='Params'){$key.=\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$rule['Content']['Target key'];}
+                $targetEntry['Params']['Combine on update'][$key]=$rule['Content']['Combine on update'];
+            }
             if (strcmp($rule['Content']['...value selected by'],'useValue')===0){
                 $targetValue=$rule['Content']['Target value or...'];
             } else {

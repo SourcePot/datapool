@@ -186,6 +186,7 @@ p.cover{
 }
 table{
     float:left;
+    clear:both;
 }
 table.std,div.table{
     clear:none;
@@ -194,7 +195,6 @@ table.std,div.table{
     border: 1px solid #aaa;
 }
 table.matrix{
-    clear:both;
     border:1px dotted #444;
 }
 td.matrix{

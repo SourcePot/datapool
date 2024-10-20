@@ -292,7 +292,7 @@ class Element{
                         array_unshift($keys,'cmd');
                         $result['selector']=(isset($arr['selector']))?$arr['selector']:$result['selector'];
                     } else {
-                        $filter=(empty($arr['filter']))?FILTER_DEFAULT:intval($arr['filter']);
+                        $filter=(empty($arr['filter']))?(\FILTER_DEFAULT):intval($arr['filter']);
                         $newValue=filter_input(INPUT_POST,$name,$filter);
                         array_unshift($keys,'val');
                     }

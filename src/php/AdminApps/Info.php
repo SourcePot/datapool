@@ -28,8 +28,11 @@ class Info implements \SourcePot\Datapool\Interfaces\App{
             return array('Category'=>'Admin','Emoji'=>'?','Label'=>'Info','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
             // get page content
+            ob_start();
             phpinfo();
-            $arr['toReplace']['{{content}}']='Refer to the phpinfo() tables above';
+            $phpinfo=ob_get_contents();
+            ob_get_clean();
+            $arr['toReplace']['{{content}}']=$phpinfo;
             return $arr;
         }
     }
