@@ -32,7 +32,7 @@ class Info implements \SourcePot\Datapool\Interfaces\App{
             phpinfo();
             $phpinfo=ob_get_contents();
             ob_get_clean();
-            $arr['toReplace']['{{content}}']=$phpinfo;
+            $arr['toReplace']['{{content}}']=str_replace('<table>','<table style="float:none;">',$phpinfo);
             return $arr;
         }
     }
