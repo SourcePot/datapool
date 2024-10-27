@@ -545,6 +545,11 @@ class Filespace{
         } else {
             // single file handling
             $entry=$this->addFile2entry($entry,$file);
+            // analyse pdf if any parser is selected
+            if (!empty($entry['pdfParser'])){
+                $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
+                $entry=$this->oc['SourcePot\Datapool\Tools\ZUGFeRD']->file2entry($file,$entry);
+            }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
         }
         $entry[__FUNCTION__]=$context;

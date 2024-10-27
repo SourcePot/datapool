@@ -54,18 +54,18 @@ class PdfTools{
     public function getPdfTextParserOptions():array
     {
         $parserKey='text2arr';
-        $parser=array('default'=>'text2arrSmalot','options'=>array());
+        $parser=array('@function'=>'select','@default'=>'','@options'=>array(''=>'None'),'@title'=>'Use "Smalot" as standard parser');
         foreach(get_class_methods(__CLASS__) as $method){
             if (mb_strpos($method,$parserKey)===FALSE){continue;}
             $parserName=str_replace('text2arr','',$method);
-            $parser['options'][$method]=$parserName;
+            $parser['@options'][$method]=$parserName;
         }
         return $parser;
     }
-   
-    public function text2arrSpatie($file='',array $arr=array()):array
+
+    public function text2arrSpatie($file='',array $entry=array()):array
     {
-        $arr['error']=(isset($arr['error']))?$arr['error']:array();
+        $entry['error']=(isset($entry['error']))?$entry['error']:array();
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             $this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']='';
@@ -89,19 +89,19 @@ class PdfTools{
             try{
                 $parser=new \Spatie\PdfToText\Pdf($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']);
                 $text=$parser->setOptions(['-enc UTF-8'])->setPdf($file)->text();
-                $arr['Content']['File content']=$this->textCleanup($text);
-                $arr['Params']['Content']['parser']=__FUNCTION__;
-                $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);    
+                $entry['Content']['File content']=$this->textCleanup($text);
+                $entry['Params']['Content']['parser']=__FUNCTION__;
+                $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);
             } catch (\Exception $e){
                 $this->oc['logger']->log('notice','Parser {function} failed with: '.$e->getMessage(),$context);    
             }
         }
-        return $arr;
+        return $entry;
     }
 
-    public function text2arrSmalot($file='',array $arr=array()):array
+    public function text2arrSmalot($file='',array $entry=array()):array
     {
-        $arr['error']=(isset($arr['error']))?$arr['error']:array();
+        $entry['error']=(isset($entry['error']))?$entry['error']:array();
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content']['Smalot'])){
             $this->pageSettings['Content']['Smalot']='';
@@ -119,20 +119,18 @@ class PdfTools{
             try{
                 // parse content
                 $pdf=$parser->parseFile($file);
-                $arr['Content']['File content']=$this->textCleanup($pdf->getText());
-                $arr['Params']['File']['PDF properties']=$pdf->getDetails();
-                $arr['Params']['Content']['parser']=__FUNCTION__;
+                $entry['Content']['File content']=$this->textCleanup($pdf->getText());
+                $entry['Params']['File']['PDF properties']=$pdf->getDetails();
+                $entry['Params']['Content']['parser']=__FUNCTION__;
                 $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);    
-                // embedded files
-                $arr=$this->attachments2arrSmalot($file,$arr);
             } catch (\Exception $e){
-                $arr['error'][]=$e->getMessage();
+                $entry['error'][]=$e->getMessage();
             }
         } else {
-            $arr['error'][]='Parser '.$context['function'].' failed with missing or invalid file';
+            $entry['error'][]='Parser '.$context['function'].' failed with missing or invalid file';
             $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);
         }
-        return $arr;
+        return $entry;
     }
     
     private function textCleanup(string $text):string
@@ -147,66 +145,53 @@ class PdfTools{
         return $text;
     }
     
-    public function attachments2arrSmalot($file,array $arr=array()):array
+    public function attachments2arrSmalot($file,array $entry=array()):array
     {
-        if (is_file($file)){
-            $arr['Content']['File content']=(isset($arr['Content']['File content']))?$arr['Content']['File content']:'';
-            $embeddedFileContent='';
-            $pdfParser= new \Smalot\PdfParser\Parser();
-            $pdfParsed=$pdfParser->parseFile($file);
-            $filespecs=$pdfParsed->getObjectsByType('Filespec');
-            $embeddedFiles=$pdfParsed->getObjectsByType('EmbeddedFile');
-            try{
-                // get file specs
-                $index=0;
-                $specs=array();
-                foreach($filespecs as $filespec){
-                    $index++;
-                    $specArr=$filespec->getDetails();
-                    $specFlat=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($specArr);
-                    foreach($specFlat as $key=>$value){
-                        if (mb_strpos($key,'Type')!==FALSE || mb_strpos($key,'Desc')!==FALSE || mb_strpos($key,'Subtype')!==FALSE){
-                            $lastSepPos=strrpos($key,$this->S);
-                            if ($lastSepPos){$key=mb_substr($key,$lastSepPos+strlen($this->S));}
-                            $specs[$index][$key]=$value;
-                        }
-                    }
-                }
-                // get file content
-                $index=0;
-                foreach ($embeddedFiles as $embeddedFile){
-                    $index++;
-                    $specsStr=implode(' ',$specs[$index]);
-                    $embeddedFileContent.="\n\n~~START~".$specsStr."~~\n";
-                    if (!isset($specs[$index]['Subtype'])){$specs[$index]['Subtype']='unknown type';}
-                    $content=trim($embeddedFile->getContent());
-                    $content=stripslashes($content);
-                    if (stripos($specs[$index]['Subtype'],'xml')!==FALSE){
-                        try{
-                            $content=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($content);
-                            $content=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($content);
-                            foreach($content as $contentKey=>$contentVvalue){
-                                $lastSepPos=strrpos($contentKey,$this->S);
-                                if ($lastSepPos===FALSE){$lastSepPos=0;} else {$lastSepPos+=strlen($this->S);}
-                                $embeddedFileContent.=mb_substr($contentKey,$lastSepPos).': '.trim(strval($contentVvalue)).";\n";
-                            }
-                        } catch (\Exception $e){
-                            $arr['error'][]=$e->getMessage();
-                            continue;
-                        }
-                    } else {
-                       $embeddedFileContent.='Content-type not yet implemented';
-                    }
-                    $embeddedFileContent.='~~END~'.$specsStr."~~";
-                }
-                $arr['Content']['File content'].=$embeddedFileContent;
-            } catch (\Exception $e){
-                $arr['error'][]=$e->getMessage();
+        $pathinfo=pathinfo($file);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$pathinfo['basename'],'fileName'=>$pathinfo['filename'],'fileExtension'=>$pathinfo['extension'],'attachments'=>0,'embedded'=>0);
+        
+        $pdfParser= new \Smalot\PdfParser\Parser();
+        $pdfContent=$pdfContent = file_get_contents($file);
+        $pdfParsed = $pdfParser->parseContent($pdfContent);
+        try {
+            $context['attachmentsFailed']=array();
+            $filespecIndex=0;
+            $filespecs = $pdfParsed->getObjectsByType('Filespec');
+            foreach ($filespecs as $filespec){
+                $context['Filespec'][$filespecIndex]=$filespec->getDetails();
+                $context['attachmentsFailed'][$filespecIndex]=$context['Filespec'][$filespecIndex]['F'];
+                $filespecIndex++;
             }
-        } else {
-            $arr['error'][]='Method '.__FUNCTION__.' failed: Invalid file';
+            $embededIndex=0;
+            $embeddedFiles = $pdfParsed->getObjectsByType('EmbeddedFile');
+            foreach ($embeddedFiles as $embeddedFile) {
+                $newEntry=$entry;
+                $newEntry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$context['Filespec'][$embededIndex]['F']);
+                $newEntry['fileContent']=$embeddedFile->getContent();
+                if (!empty($newEntry['fileContent'])){
+                    if (strpos($newEntry['fileContent'],'rsm:CrossIndustryInvoice')!==FALSE){
+                        $context['attachmentFailed']=$context['attachmentsFailed'][$embededIndex];
+                        $this->oc['logger']->log('info','Method "{class} &rarr; {function}()" found embedded XRechnung-file "{attachmentFailed}" in "{file}". No additional entry was created, instead the file content will be added to the entry Content-key.',$context);
+                        unset($context['attachmentsFailed'][$embededIndex]);
+                        $embededIndex++;
+                        continue;
+                    }
+                    $newEntry['Name']=$pathinfo['basename'].' ['.$newEntry['fileName'].']';
+                    $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+                    $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($newEntry);
+                }
+                unset($context['attachmentsFailed'][$embededIndex]);
+                $embededIndex++;
+            }
+            if ($embededIndex<$filespecIndex){
+                $context['attachmentsFailed']=implode(' | ',$context['attachmentsFailed']);
+                $this->oc['logger']->log('error','Method "{class} &rarr; {function}()" failed to extract embedded files "{attachmentsFailed}" from "{file}"',$context);
+            }
+        } catch (\Exception $e) {
+            $context['error']=$e->getMessage();
+            $this->oc['logger']->log('notice','Method "{class} &rarr; {function}()" failed to parse "{file}" with: "{error}"',$context);
         }
-        return $arr;
+        return $entry;
     }
 
 }

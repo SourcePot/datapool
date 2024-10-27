@@ -339,8 +339,8 @@ class Explorer{
         $guideEntry=$this->getGuideEntry($selector);
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($guideEntry,'Write',FALSE)){
             $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
-            $options=array('extractEmails'=>array('No','Yes'),'extractArchives'=>array('No','Yes'),'pdfParser'=>$pdfParser['options']);
-            $settings=array('extractEmails'=>1,'extractArchives'=>0,'pdfParser'=>$pdfParser['default']);
+            $options=array('extractEmails'=>array('No','Yes'),'extractArchives'=>array('No','Yes'),'pdfParser'=>$pdfParser['@options']);
+            $settings=array('extractEmails'=>1,'extractArchives'=>0,'pdfParser'=>$pdfParser['@default']);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
             $guideEntry=$this->getGuideEntry($selector);
             $selector['Read']=(isset($guideEntry['Read']))?$guideEntry['Read']:'ALL_MEMBER_R';

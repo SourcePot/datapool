@@ -138,7 +138,6 @@ class DataExplorer{
         $sourceOptions=array(''=>'&larrhk;');
         $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
         foreach($dbInfo as $Source=>$entryTemplate){$sourceOptions[$Source]=$Source;}
-        $functionOptions=array(''=>'&larrhk;');
         $this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
         // add data processors
         $this->processorOptions=array(''=>'&larrhk;');
@@ -147,9 +146,7 @@ class DataExplorer{
             $this->processorOptions[$classWithNamespace]=ucfirst($label);
         }
         $this->definition['Content']['Widgets']['Processor']['@options']=$this->processorOptions;
-        $pdfParserOptions=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
-        $this->definition['Content']['Widgets']['pdf-file parser']['@options']=$pdfParserOptions['options'];
-        $this->definition['Content']['Widgets']['pdf-file parser']['@default']=$pdfParserOptions['default'];
+        $this->definition['Content']['Widgets']['pdf-file parser']=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
         // add save button
         $this->definition['save']=array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save');
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
