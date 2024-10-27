@@ -16,6 +16,7 @@
         "guzzlehttp/guzzle":"^7.0",
         "spatie/pdf-to-text":">=1.52.0",
         "hfig/mapi":">=v1.3.0",
+        "horstoeko/zugferd":"^1",
         "sourcepot/ops":">=v1.0.0",
         "sourcepot/mediaplayer":">=v4.1.0",
         "sourcepot/sms":">=v2.1.0",
