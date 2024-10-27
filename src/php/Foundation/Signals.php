@@ -146,17 +146,20 @@ class Signals{
                 $arr['values'][$index]=floatval($signalArr['value']);    
             }
         }
-        $threshold=intval($trigger['Content']['Threshold']);
-        $condtionMet=match($trigger['Content']['Active if']){
-                        'stable'=>abs($arr['values'][0]-$arr['values'][1])<=$threshold && abs($arr['values'][1]-$arr['values'][2])<=$threshold,
-                        'above'=>$arr['values'][0]>=$threshold,
-                        'up'=>($arr['values'][0]-$arr['values'][1])>=$threshold,
-                        'down'=>($arr['values'][1]-$arr['values'][0])>=$threshold,
-                        'min'=>($arr['values'][0]-$arr['values'][1])>=$threshold && ($arr['values'][2]-$arr['values'][1])>=$threshold,
-                        'max'=>($arr['values'][1]-$arr['values'][0])>=$threshold && ($arr['values'][1]-$arr['values'][2])>=$threshold,
-                        'below'=>$arr['values'][0]<=$threshold,
-                        };
-        
+        if (!isset($arr['values'][0]) || !isset($arr['values'][1])){
+            $condtionMet=FALSE;    
+        } else {
+            $threshold=intval($trigger['Content']['Threshold']);
+            $condtionMet=match($trigger['Content']['Active if']){
+                            'stable'=>abs($arr['values'][0]-$arr['values'][1])<=$threshold && abs($arr['values'][1]-$arr['values'][2])<=$threshold,
+                            'above'=>$arr['values'][0]>=$threshold,
+                            'up'=>($arr['values'][0]-$arr['values'][1])>=$threshold,
+                            'down'=>($arr['values'][1]-$arr['values'][0])>=$threshold,
+                            'min'=>($arr['values'][0]-$arr['values'][1])>=$threshold && ($arr['values'][2]-$arr['values'][1])>=$threshold,
+                            'max'=>($arr['values'][1]-$arr['values'][0])>=$threshold && ($arr['values'][1]-$arr['values'][2])>=$threshold,
+                            'below'=>$arr['values'][0]<=$threshold,
+                            };
+        }    
         return ($condtionMet)?$condtionMet:((isset($trigger['Content']['isActive']))?$trigger['Content']['isActive']:FALSE);
     }
     

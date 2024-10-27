@@ -117,15 +117,20 @@ class Dictionary{
     
     public function unifyEntry(array $entry):array
     {
-        $entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);
-        $entry['Group']='Translations from en';
-        $entry['Folder']=$entry['langCode'];
-        $entry['Name']=mb_substr($entry['phrase'],0,100);
-        $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-        $entry['Owner']='SYSTEM';
-        $entry['Content']=array('translation'=>$entry['translation']);
-        $entry['Read']='ALL_R';
-        $entry['Write']='ADMIN_R';
+        if (!isset($entry['phrase']) || !isset($entry['langCode'])){
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called but required entry-key missing.',array('class'=>__CLASS__,'function'=>__FUNCTION__));         
+            return $entry;
+        } else {
+            $entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);
+            $entry['Group']='Translations from en';
+            $entry['Folder']=$entry['langCode'];
+            $entry['Name']=mb_substr($entry['phrase'],0,100);
+            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+            $entry['Owner']='SYSTEM';
+            $entry['Content']=array('translation'=>$entry['translation']);
+            $entry['Read']='ALL_R';
+            $entry['Write']='ADMIN_R';
+        }
         return $entry;
     }
     

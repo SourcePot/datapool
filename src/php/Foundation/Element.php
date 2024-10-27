@@ -96,6 +96,7 @@ class Element{
                              'label'=>'element-content',
                              'span'=>'element-content|title',
                              'submit'=>'value|title',
+                             'text'=>'placeholder|title',
                              'button'=>'element-content|title',
                              'th'=>'element-content',
                              'td'=>'element-content',
@@ -129,7 +130,7 @@ class Element{
 
     public function element(array $arr):string
     {
-        // translation
+        // translation, use type attribute, e.g. submit, text,... if it is present, instead of tag
         $translationTestKey=(isset($arr['type']))?'type':'tag';
         if (isset($this->translate[$arr[$translationTestKey]])){
             $toTranslateKeys=explode('|',$this->translate[$arr[$translationTestKey]]);

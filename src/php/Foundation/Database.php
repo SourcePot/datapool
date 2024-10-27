@@ -650,23 +650,6 @@ class Database{
     }    
         
     /**
-    * This method deletes the selected entries and returns the count of deleted entries or false on error.
-    *
-    * @param array $selector Is the selector to select the entries to be deleted  
-    * @return int|boolean The count of deleted entries or false on failure
-    */
-    public function deleteEntriesOnly(array $selector,bool $isSystemCall=FALSE):array
-    {
-        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){
-            return $this->getStatistic();
-        }
-        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,'Write',FALSE,TRUE,FALSE,FALSE,FALSE);
-        $sqlArr['sql']='DELETE FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-        return $this->addStatistic('deleted',$stmt->rowCount());
-    }
-    
-    /**
     * This method deletes the selected entries including linked files 
     * and returns the count of deleted entries or false on error.
     *
@@ -899,7 +882,7 @@ class Database{
     }
     
     /**
-    * The method returns the first entry that matches the selector or false, if no match is found.
+    * The method returns the first entry that matches the selector or FALSE, if no match is found.
     *
     * @param array $selector Is the selector.  
     * @param boolean $isSystemCall The value is provided to access control. 
@@ -1017,7 +1000,7 @@ class Database{
     }
     
     /**
-    * The method compares selectors
+    * This method compares two selectors
     *
     * @param array $selectorA Is the first selector.  
     * @param array $selectorB Is the second selector.  
@@ -1130,8 +1113,6 @@ class Database{
             if ($targetIndex===$index){$targetEntryId=$item['entry']['EntryId'];}
             $this->oc[$storageObj]->insertEntry($item['entry'],TRUE);
         }
-        //$context=array('olKey'=>$olKey,'Source'=>$selector['Source'],'mapping'=>implode('|',$mapping),'keyChange'=>($cmd['newOlKey']===$olKey)?'':'Key change '.$olKey.'&rarr;'.$cmd['newOlKey'].'.','notices'=>implode('|',$notices));
-        //$this->oc['logger']->log('info','Ordered list from Source {Source} with EntryId "{olKey}" rebuild, mapped "{mapping}". {keyChange} Notice: "{notices}"',$context);
         return $targetEntryId;
     }
 

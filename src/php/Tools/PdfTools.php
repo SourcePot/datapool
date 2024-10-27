@@ -65,7 +65,7 @@ class PdfTools{
    
     public function text2arrSpatie($file='',array $arr=array()):array
     {
-        $arr['error']=TRUE;
+        $arr['error']=(isset($arr['error']))?$arr['error']:array();
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             $this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']='';
@@ -91,7 +91,6 @@ class PdfTools{
                 $text=$parser->setOptions(['-enc UTF-8'])->setPdf($file)->text();
                 $arr['Content']['File content']=$this->textCleanup($text);
                 $arr['Params']['Content']['parser']=__FUNCTION__;
-                $arr['error']=FALSE;
                 $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);    
             } catch (\Exception $e){
                 $this->oc['logger']->log('notice','Parser {function} failed with: '.$e->getMessage(),$context);    
@@ -102,7 +101,7 @@ class PdfTools{
 
     public function text2arrSmalot($file='',array $arr=array()):array
     {
-        $arr['error']=TRUE;
+        $arr['error']=(isset($arr['error']))?$arr['error']:array();
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content']['Smalot'])){
             $this->pageSettings['Content']['Smalot']='';
@@ -124,11 +123,13 @@ class PdfTools{
                 $arr['Params']['File']['PDF properties']=$pdf->getDetails();
                 $arr['Params']['Content']['parser']=__FUNCTION__;
                 $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);    
-                $arr['error']=FALSE;
+                // embedded files
+                $arr=$this->attachments2arrSmalot($file,$arr);
             } catch (\Exception $e){
                 $arr['error'][]=$e->getMessage();
             }
         } else {
+            $arr['error'][]='Parser '.$context['function'].' failed with missing or invalid file';
             $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);
         }
         return $arr;

@@ -695,9 +695,16 @@ class Filespace{
     private function emailContent2files(string $fileContent,array $entry,bool $createOnlyIfMissing,bool $isSystemCall,):array
     {
         $emailStatistic=array('errors'=>array(),'parts'=>array(),'files'=>0,'class'=>__CLASS__,'function'=>__FUNCTION__);
+        // valid email content?
+        $separatorPos=mb_strpos($fileContent,"\r\n\r\n");
+        if ($separatorPos===FALSE){
+            $this->oc['logger']->log('notice','Message "{Name}" can\'t be processed. Header to content separatopr not found.',$entry);
+            $emailStatistic['errors'][]='Message can\'t be processed. Header to content separatopr not found.';
+            return $emailStatistic;
+        }
         // get and add email header
-        $emailHeader=mb_substr($fileContent,0,mb_strpos($fileContent,"\r\n\r\n"));
-        $emailContent=mb_substr($fileContent,mb_strpos($fileContent,"\r\n\r\n"));
+        $emailHeader=mb_substr($fileContent,0,$separatorPos);
+        $emailContent=mb_substr($fileContent,$separatorPos);
         $emailContent=trim($emailContent,"\r\n ");
         $entry['Params']['Email']=$this->oc['SourcePot\Datapool\Tools\Email']->emailProperties2arr($emailHeader,array());
         $entry['Folder']=(isset($entry['Params']['Email']['from']['value'][0]['original']))?$entry['Params']['Email']['from']['value'][0]['original']:'unknown sender';
