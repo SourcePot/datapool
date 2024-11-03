@@ -73,7 +73,7 @@ class Signals{
         $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,self::MAX_SIGNAL_DEPTH);
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal['Owner']='SYSTEM';
-        $signal['Expires']=$signal['+10DaysDateUTC'];
+        $signal['Expires']=date('Y-m-d H:i:s',34560000+time()); // a signal which is not updated within 400 days will be deleted
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($signal,TRUE);
         // update attached trigger
         $relevantTrigger=$this->updateTrigger($signal);

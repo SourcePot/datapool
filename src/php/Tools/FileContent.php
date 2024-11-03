@@ -36,13 +36,20 @@ final class FileContent{
     public function enrichEntry(array $entry):array
     {
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        if (isset($entry['Date'])){
+            $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+            $dateWebPageTimeZone=\DateTime::createFromFormat('Y-m-d H:i:s',$entry['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+            $dateWebPageTimeZone->setTimeZone(new \DateTimeZone($pageTimeZone));
+            $entry['Date ('.$pageTimeZone.')']=$dateWebPageTimeZone->format('Y-m-d H:i:s');
+        }
         $entry['currentUserId']=$currentUser['EntryId'];
         $entry['currentUser']=$currentUser['Content']['Contact details']['First name'].' '.$currentUser['Content']['Contact details']['Family name'];
         $entry['nowTimeStamp']=time();
         $entry['nowDateTimeUTC']=date('Y-m-d H:i:s');
         $entry['nowDateUTC']=date('Y-m-d');
         $entry['nowTimeUTC']=date('H:i:s');
-        $entry['+10DaysDateUTC']=date('Y-m-d 12:00:00',86400+time());
+        $entry['+1DayFromNowUTC']=date('Y-m-d H:i:s',86400+time());
+        $entry['+10DaysFromNowUTC']=date('Y-m-d H:i:s',864000+time());
         if (!empty($entry['Content']['File content'])){
             $entry=$this->addCosts($entry,$entry['Content']['File content']);
             $entry=$this->addUnycom($entry,$entry['Content']['File content']);

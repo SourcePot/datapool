@@ -130,6 +130,11 @@ class Logger
         $entry['Content']['msg']=$record->message;
         if ($this->levelConfig[$level]['addTrace']){
             $entry['Content']['trace']=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            // remove traces due to logging itsself
+            unset($entry['Content']['trace'][0]);
+            unset($entry['Content']['trace'][1]);
+            unset($entry['Content']['trace'][2]);
+            unset($entry['Content']['trace'][3]);
         }
         $entry['Name']=mb_substr($entry['Content']['msg'],0,50);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0);

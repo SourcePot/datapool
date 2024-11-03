@@ -185,8 +185,11 @@ class Element{
             $elementArr=$this->addElement2session($arr,$elementArr);
         }
         // compile html
-        $html=$this->elementArr2html($arr,$elementArr);
-        if (!empty($arr['hasCover'])){$html=$this->addCover($arr,$html);}
+        if (empty($arr['hasCover'])){
+            $html=$this->elementArr2html($arr,$elementArr);
+        } else {
+            $html=$this->elementArr2htmlAddCover($arr,$elementArr);
+        }
         return $html;
     }
     
@@ -257,15 +260,24 @@ class Element{
         return $html;
     }
 
-    private function addCover(array $arr,string $html):string
+    private function elementArr2htmlAddCover(array $arr,array $elementArr):string
     {
-        $arr['title']=(isset($arr['title']))?$arr['title']:'Safety cover..';
-        $arr['style']=array('margin'=>'0 0.2em');
-        $coverArrP=array('tag'=>'p','title'=>$arr['title'],'class'=>'cover','id'=>'cover-'.hrtime(TRUE),'element-content'=>'Sure?');
-        $html.=$this->element($coverArrP);
-        $coverArrDiv=array('tag'=>'div','title'=>$arr['title'],'class'=>'cover-wrapper','id'=>'cover-wrapper','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>$arr['style']);
-        $html=$this->element($coverArrDiv);
-        return $html;
+        unset($arr['hasCover']);
+        $elementArrStyle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->attr2value($elementArr['attr']['style']??'');
+        $elementArrStyle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($elementArrStyle);
+        $coverPArr=array('tag'=>'p','class'=>'cover','id'=>'cover-'.hrtime(TRUE),'style'=>array(),'element-content'=>'Sure?');
+        $coverDivArr=array('tag'=>'div','class'=>'cover-wrapper','id'=>'cover-wrapper','style'=>array(),'keep-element-content'=>TRUE);
+        // move selected $elementArr styles to the top div
+        foreach($elementArrStyle as $styleKey=>$styleValue){
+            if (stripos($styleKey,'float')===FALSE && stripos($styleKey,'clear')===FALSE && stripos($styleKey,'margin')===FALSE && stripos($styleKey,'padding')===FALSE && stripos($styleKey,'position')===FALSE && stripos($styleKey,'display')===FALSE){continue;}
+            $coverDivArr['style'][$styleKey]=$styleValue;
+            unset($elementArrStyle[$styleKey]);
+        }
+        $elementArr['attr']['style']='style="'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2style($elementArrStyle).'"';
+        // create cover
+        $coverDivArr['title']=(isset($elementArr['attr']['title']))?($this->oc['SourcePot\Datapool\Tools\MiscTools']->attr2value($elementArr['attr']['title'])):'Safety cover..';
+        $coverDivArr['element-content']=$this->elementArr2html($arr,$elementArr).$this->element($coverPArr);
+        return $this->element($coverDivArr);
     }
 
     /**

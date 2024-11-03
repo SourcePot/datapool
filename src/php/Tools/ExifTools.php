@@ -50,7 +50,10 @@ class ExifTools{
         $defs=array('Model'=>'Model','Make'=>'Make',
                     'XResolution'=>'XResolution','YResolution'=>'YResolution','Compression'=>'Compression',
                     'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
-                    'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue'
+                    'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue',
+                    'ApertureValue'=>'ApertureValue','BrightnessValue'=>'BrightnessValue','ExposureBiasValue'=>'ExposureBiasValue',
+                    'MaxApertureValue'=>'MaxApertureValue','SubjectDistance'=>'SubjectDistance','SubjectDistanceRange'=>'SubjectDistanceRange',
+                    'MeteringMode'=>'MeteringMode','Flash'=>'Flash','FocalLengthIn35mmFilm'=>'FocalLengthIn35mmFilm',
                     );
         $entry['Params']['Camera']=array();
         foreach($defs as $targetKey=>$sourceKey){
@@ -64,14 +67,33 @@ class ExifTools{
     
     private function addGPS(array $entry):array
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (isset($entry['Params']['Geo'])){
             $oldGeo=$entry['Params']['Geo'];
         } else {
             $oldGeo=array('lat'=>9999,'lon'=>9999);
         }
         $entry['Params']['Geo']=array();
+        // get GPS date time
+        if (isset($entry['exif']['GPSTimeStamp']) && isset($entry['exif']['GPSDateStamp'])){
+            // get UTC date time
+            $gpsDateTime=str_replace(':','-',$entry['exif']['GPSDateStamp']);
+            $gpsDateTime.=' '.str_pad(strval($this->fraction2float($entry['exif']['GPSTimeStamp'][0])),2,'0',STR_PAD_LEFT);
+            $gpsDateTime.=':'.str_pad(strval($this->fraction2float($entry['exif']['GPSTimeStamp'][1])),2,'0',STR_PAD_LEFT);
+            $gpsDateTime.=':'.str_pad(strval($this->fraction2float($entry['exif']['GPSTimeStamp'][2])),2,'0',STR_PAD_LEFT);
+            // convert to database date time
+            if (empty(trim($entry['exif']['GPSDateStamp'],'0:'))){
+                $context['gpsDateTime']=$gpsDateTime;
+                $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" GPS date "{gpsDateTime}" was invalid and won\'t be used as entry[Date].',$context);
+            } else {
+                $dateTime=\DateTime::createFromFormat('Y-m-d H:i:s',$gpsDateTime,new \DateTimeZone('UTC'));
+                $dateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                $entry['Date']=$dateTime->format('Y-m-d H:i:s');
+                $entry['Params']['DateTime']['GPS']=$entry['Date'];
+            }
+        }
         // get GPS data, e.g. lat and lon from exif
-        $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude','imgDirectionRef'=>'GPSImgDirectionRef','imgDirection'=>'GPSImgDirection','dateStamp'=>'GPSDateStamp');        
+        $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude','imgDirectionRef'=>'GPSImgDirectionRef','imgDirection'=>'GPSImgDirection','dateStamp'=>'GPSDateStamp','status'=>'GPSStatus','dop'=>'GPSDOP','mapDatum'=>'GPSMapDatum','satellites'=>'GPSSatellites');        
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){
                 if (isset($entry['Params']['Geo'][$targetKey])){unset($entry['Params']['Geo'][$targetKey]);}
@@ -105,32 +127,12 @@ class ExifTools{
 
     private function addDateTime(array $entry):array
     {
-        $exifDateTime='';
-        if (isset($entry['exif']['GPSDateStamp'])){
-            $exifDateTime=str_replace(':','-',$entry['exif']['GPSDateStamp']);
-            if (isset($entry['exif']['GPSTimeStamp'])){
-                $exifDateTime.=' '.$this->time2str($entry['exif']['GPSTimeStamp']);
-            } else {
-                $exifDateTime.=' 12:00:00';
-            }
-            $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-            $dateTime=\DateTime::createFromFormat('Y-m-d H:i:s',$exifDateTime,new \DateTimeZone('UTC'));
-            $dateTime->setTimeZone(new \DateTimeZone($pageTimeZone));
-            $entry['Date']=$dateTime->format('Y-m-d H:i:s');
-            $entry['Params']['DateTime']['GPS']=$entry['Date'];
-        }
-        if (isset($entry['exif']['DateTime'])){
-            $entry['Params']['DateTime']['DateTime']=$this->time2str($entry['exif']['DateTime']);
-        }
-        if (isset($entry['exif']['DateTimeDigitized'])){
-            $entry['Params']['DateTime']['DateTimeDigitized']=$this->time2str($entry['exif']['DateTimeDigitized']);
-        }
-        if (isset($entry['exif']['DateTimeOriginal'])){
-            $entry['Params']['DateTime']['DateTimeOriginal']=$this->time2str($entry['exif']['DateTimeOriginal']);
-        }
-        if (isset($entry['exif']['FileDateTime'])){
-            $entry['Params']['DateTime']['FileDateTime']=$this->time2str($entry['exif']['FileDateTime']);
-            $entry['Params']['File']['FileDateTime']=$entry['exif']['FileDateTime'];
+        foreach($entry['exif'] as $key=>$value){
+            if (stripos($key,'DateTime')===FALSE){continue;}
+            if (is_array($value)){continue;}
+            $newKey=str_replace('DateTime','',$key);
+            if (empty($newKey)){$newKey='EXIF';}
+            $entry['Params']['DateTime'][$newKey]=$this->time2str($entry['exif'][$key]);
         }
         return $entry;
     }

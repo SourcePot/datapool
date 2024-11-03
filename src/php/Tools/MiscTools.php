@@ -77,6 +77,26 @@ final class MiscTools{
     * XML tools
     */
 
+    
+    /**
+    * This method returns the value from an attribute string, e.g. style="float:left;clear:right;" returns float:left;clear:right;
+    *
+    * @param $attr Is the attr string  
+    * @return string Value contained in the attribute string
+    */
+    public function attr2value($attr):string
+    {
+        if (empty($attr)){return '';}
+        $attrComps=explode('="',trim($attr,'"'));
+        return array_pop($attrComps);
+    }
+
+    /**
+    * This method returns a tag style definition from an array, e.g. array('float'=>'left','clear'=>'right') returns float:left;clear:right; 
+    *
+    * @param array $arr Is the style array  
+    * @return string The style string
+    */
     public function arr2style(array $arr):string
     {
         $style='';
@@ -90,6 +110,12 @@ final class MiscTools{
         return $style;
     }
     
+    /**
+    * This method returns an array from a tag style definition, e.g. float:left;clear:right; returns array('float'=>'left','clear'=>'right')
+    *
+    * @param string $arr Is tag style definition string  
+    * @return array The style array
+    */
     public function style2arr(string $style):array
     {
         $arr=array();

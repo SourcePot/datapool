@@ -65,12 +65,12 @@ class Dictionary{
         }
     }
 
-    public function getValidLngCode($lngCode):string
+    public function getValidLng($lngCode, bool $getLngCode=TRUE):string
     {
         $lngCode=mb_substr(strval($lngCode),0,2);
         $lngCode=mb_strtolower($lngCode);
         if (isset($this->lngCodes[$lngCode])){
-            return $lngCode;
+            return ($getLngCode)?$lngCode:$this->lngCodes[$lngCode];
         } else {
             return 'en';
         }
@@ -80,7 +80,7 @@ class Dictionary{
     {
         if (empty($_SESSION['page state']['lngCode'])){
             if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){
-                $_SESSION['page state']['lngCode']=$this->getValidLngCode($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+                $_SESSION['page state']['lngCode']=$this->getValidLng($_SERVER['HTTP_ACCEPT_LANGUAGE'],TRUE);
             } else {
                 $_SESSION['page state']['lngCode']='en';
             }
@@ -221,7 +221,7 @@ class Dictionary{
         $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode));
         $matrix['Translation']['Translation']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>array('translation',$langCode),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
         $matrix['Translation']['Cmd']=array('tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>''));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Translation'));
         return array('html'=>$html,'wrapperSettings'=>array());
     }
     

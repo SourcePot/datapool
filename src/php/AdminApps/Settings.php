@@ -54,9 +54,19 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                 $settings=array('hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());    
             } else {
-                if ($selector['Group']==='Presentation' && !empty($selector['Folder'])){
-                    $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,array());
+                if ($selector['Group']==='Job processing'){
+                    // Job processing setting
+                    $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,array());    
+                } else if ($selector['Group']==='Presentation'){
+                    // Presentation setting
+                    if (empty($selector['Folder'])){
+                        $selector['md']='Please select a Folder for class and method based entry presentation settings...';
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Presentation','mdContainer',$selector,array(),array('style'=>array()));
+                    } else {
+                        $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,array());
+                    }
                 } else if (!empty($selector['EntryId'])){
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                     if (isset($entry['Content']) && isset($entry['Params'])){
@@ -69,14 +79,35 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                     $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());
                 }
-                if ($selector['Group']==='Job processing'){
-                    $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,array());    
-                }
+                
             }
+            if (empty($selector['Group'])){$html.=$this->settingsOverviewHtml();}
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
+    }
+
+    private function settingsOverviewHtml():string
+    {
+        $template=array();
+        $template['Logger']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger'),'description'=>'Here you find all the logs.');
+        $template['Logger errors']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger','Group'=>'error'),'description'=>'Error logs can be found here.');
+        $template['Job processing timimg']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'),'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job');
+        $template['Entry presentation']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'),'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().');
+        // create html
+        $matrix=array();
+        foreach($template as $key=>$def){
+            if (!empty($def['selector']['Name'])){
+                $def['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($def['selector']);
+            }
+            $btnArr=array('cmd'=>'select','selector'=>$def['selector'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $btnArr['selector']['Read']=65535;
+            $btnArr['selector']['Write']=49152;
+            $matrix[$key]['Description']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('font-weight'=>'bold','padding'=>'1rem','max-width'=>'40rem'),'keep-element-content'=>TRUE,'element-content'=>$def['description']));
+            $matrix[$key]['Select']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+        }
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Quick links','hideKeys'=>FALSE,'keep-element-content'=>TRUE));
+        return $html;
     }
 
     public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){

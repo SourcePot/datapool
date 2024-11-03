@@ -670,7 +670,7 @@ final class Root{
     }
 
     /**
-    * This method returns an the supplied entry with the relevant contexts added if missing.
+    * This method returns the supplied entry with the relevant contexts added if missing.
     * 
     */
     public function contextBackup(array $context,array $entry=array()):array

@@ -193,32 +193,13 @@ class Container{
         $entry['Owner']='SYSTEM';
         $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         if (!is_file($fileName)){
+            $typeComps=explode('|',$entry['Type']);
+            $language=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getValidLng($typeComps[1],FALSE);
+            $selectorString=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($arr['selector']);
             $entry['Params']['File']=array('UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md');
-            $fileContent="[//]: # (This a Markdown document!)\n\n";
-            if ($entry['Name']==='Top paragraph'){
-                // top paragraph initial md-contenz
-                $fileContent.='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';
-            } else if ($entry['Name']==='Bottom paragraph'){
-                // bottom paragraph initial md-contenz
-                $fileContent.="# What is Datapool?\n\nDatapool is an open-source web application for efficient automated data processing. Processes are configurated graphically as a data flow throught processing blocks.\n";
-                $fileContent.="Following the principle of *Divide-and-Conquer* multiple Datapool instances (e.g. hosted in a cloud) can interact with eachother or legacy software to handle complex problems.\n";
-                $fileContent.="This approach keeps complexity under control, responsability can be shared and the overall processing speed can be adjusted.\n";
-                $fileContent.="Data exchange is done in a transparant human readble form through lists, emails, pdf-documents or SMS improving debugging on system level.\n";
-                $fileContent.="Calendar-based trigger cann be used for time-based flow control. All calendar entries or properties such as the number of data records and their changes, generate signals. Trigger can be derived from these signals. Trigger can initiate data processing as well as the creation of messages, e.g. e-mail or SMS.\n\n";
-                $fileContent.="## The design goal for a single instance of Datapool is maximum configurability, not processing speed.\n\nFor example, a calendar date is saved as an array in all relevant formats from which mapping can choose:\n\n";
-                $fileContent.="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'dateType_example.png')."\" alt=\"Datapool date type example\" style=\"max-width:400px;\"/>\n\n";
-                $fileContent.="## Configuration is done by selection, not by conversion!\n\n";
-                $fileContent.="# Cooperative approach\n\nDatapool is an open source software project managed on **<a href=\"https://github.com/SourcePot/datapool\" target=\"_blank\">Github SourcePot/datapool</a>**. Datappol provides interfaces for adding processors, data receiver and transmitter.\n";
-                $fileContent.="Datapool content such as dataflows can be easily be exported and imported, i.e. shared within the organization or with others or stored as backup file. A user role infrastructure provides the different levels of access control, i.e. import and export is restricted to the \"Admin\" and \"Content admin\".\n";
-                $fileContent.="# Graphical data flow builder (DataExploerer-class)\n\nA dataflow consists of two types of (canvas) elements: \"connecting elements\" and \"processing blocks\" The connecting elements have no function other then helping to visualize the data flow.\n";
-                $fileContent.="The processing blocks contain all functionallity, i.e. \"providing a database table view\", \"storing settings\" and \"linking a processor\". The settings define the target or targets canvas elements for the result data. There are basic processor, e.g. for data acquisition, mapping, parsing or data distribution. In addition, user-defined processor can be added.\n\n";
-                $fileContent.="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
-            } else  if ($entry['Name']==='Legal paragraph'){
-                $fileContent="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
-                $fileContent.="# Contact\n## Address\n";
-                $fileContent.="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'email.png')."\" style=\"float:none;\">\n";
-                $fileContent.="# Legal\nThis is a private web page. The web page uses cookies for session handling.\n\n";
-            }
+            $fileContent="[//]: # (This a Markdown document in ".$language."!)\n\n";
+            $fileContent.='Sorry, there is no content available for <i>"'.$selectorString.'"</i> in <i>"'.$language.'"</i> yet...';
+            if (!empty($arr['selector']['md'])){$fileContent=$arr['selector']['md'];}
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }
@@ -417,15 +398,8 @@ class Container{
                 $rowIndex=$entry['rowIndex']+intval($settings['offset'])+1;
                 $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
                 // setting up
-                $presetOptions=array('Read rights'=>'Read rights','Write rights'=>'Write rights','Privileges column'=>'Privileges column','Content','Params','Params'.$S.'File','Params'.$S.'File'.$S.'Spreadsheet','Params'.$S.'Log','Params'.$S.'Email','Params'.$S.'Geo','Params'.$S.'Address','Params'.$S.'Camera');
                 if (empty($columnOptions)){
-                    //$columnOptions['preview']='&#10004; File preview';
-                    foreach($presetOptions as $flatKey){
-                        $columnOptions[$flatKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey);
-                    }
-                    foreach($flatEntry as $flatColumnKey=>$value){
-                        $columnOptions[$flatColumnKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatColumnKey);
-                    }
+                    $columnOptions=$this->getKeySelector($flatEntry);
                 }
                 foreach($settings['columns'] as $columnIndex=>$cntrArr){
                     $column=explode($S,$cntrArr['Column']);
@@ -520,6 +494,43 @@ class Container{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $arr;        
+    }
+
+    private function getKeySelector(array $flatEntry):array{
+        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        // options for complete match
+        $upperOrderKeys=array();
+        $keyMatchOptions=array();
+        foreach($flatEntry as $flatColumnKey=>$value){
+            if (strpos($flatColumnKey,$S)!==FALSE){
+                $flatKeyComps=explode($S,$flatColumnKey);
+                $dimensions=count($flatKeyComps);
+                $upperOrderKey='';
+                for($dim=0;$dim<$dimensions;$dim++){
+                    $upperOrderKey=(empty($upperOrderKey))?$flatKeyComps[$dim]:($upperOrderKey.=$S.$flatKeyComps[$dim]);
+                    if (!isset($upperOrderKeys[$upperOrderKey])){
+                        $upperOrderKeys[$upperOrderKey]=array('count'=>0,'dim'=>$dim);
+                    }
+                    $upperOrderKeys[$upperOrderKey]['count']++;
+                }
+                
+            }
+            $keyMatchOptions[$flatColumnKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatColumnKey);
+        }
+        // options for sub key matches
+        $subKeyOptions=array();
+        foreach($upperOrderKeys as $upperOrderKey=>$keyCount){
+            if ($keyCount>1){
+                $subKeyOptions[$upperOrderKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($upperOrderKey);
+            }
+        }
+        // options for special value presentation
+        $presentationOptions=array('Read rights'=>'Read rights','Write rights'=>'Write rights');
+        if (isset($flatEntry['Privileges'])){$presentationOptions['Privileges column']='Privileges column';}
+        // combine options
+        $columnOptions=$presentationOptions+$subKeyOptions+$keyMatchOptions;
+        ksort($columnOptions);
+        return $columnOptions;
     }
     
     private function getOffsetSelector(array $arr,array $settings,int $rowCount):string

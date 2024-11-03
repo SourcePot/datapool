@@ -38,7 +38,9 @@ class HTMLbuilder{
     private $appOptions=array('SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
                        'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
                        'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
-                       'SourcePot\Datapool\Foundation\Container|tools'=>'tools()',
+                       'SourcePot\Datapool\Tools\HTMLbuilder|entryControls'=>'entryControls()',
+                       'SourcePot\Datapool\Tools\HTMLbuilder|deleteBtn'=>'deleteBtn()',
+                       'SourcePot\Datapool\Tools\HTMLbuilder|downloadBtn'=>'downloadBtn()',
                        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
                        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
                        'SourcePot\Datapool\Foundation\Explorer|getQuicklinksHtml'=>'getQuicklinksHtml()',
@@ -341,6 +343,14 @@ class HTMLbuilder{
         return $html;
     }
     
+    /**
+    * This method returns an html-button to trigger entry processing such as download, delete, etc.
+    * The method is called with an empty $arr argument by SourcePot\Datapool\Root::run() to process the button commands before the web page is built.
+    *
+    * @param array $arr Is the control-array it must be empty to process the last user action OR
+    *                   it must contain the entry selector (key="selector") and key="cmd" which selects the button template  
+    * @return string The html-tag for the button 
+    */
     public function btn(array $arr=array()):string
     {
         // This function returns standard buttons based on argument arr.
@@ -430,6 +440,32 @@ class HTMLbuilder{
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
         }
+        return $html;
+    }
+
+    /**
+    * This method ios a wrapper method for method btn() which returns an entry delete html-button.
+    *
+    * @param array $arr It must contain the entry selector (key="selector")  
+    * @return string The html-tag for the button 
+    */
+    public function deleteBtn(array $arr):string
+    {
+        $arr['cmd']='delete';
+        $html=$this->btn($arr);
+        return $html;
+    }
+    
+    /**
+    * This method is a wrapper method for method btn() which returns an entry download html-button.
+    *
+    * @param array $arr It must contain the entry selector (key="selector")  
+    * @return string The html-tag for the button 
+    */
+    public function downloadBtn(array $arr):string
+    {
+        $arr['cmd']='download';
+        $html=$this->btn($arr);
         return $html;
     }
         
@@ -643,7 +679,6 @@ class HTMLbuilder{
         return $this->entryListEditor($arr,$isSystemCall);
     }
 
-    //public function orderedListHtml(array $arr,bool $isSystemCall=TRUE):string
     public function entryListEditor(array $arr,bool $isSystemCall=TRUE):string|array
     {
         $errorMsg='Method "'.__CLASS__.' &rarr; '.__FUNCTION__.'()" called with arr-argument keys missing: ';
@@ -775,6 +810,22 @@ class HTMLbuilder{
         } else {
             return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
         }
+    }
+
+    public function selector2string(array $selector=array(), bool $useEntryId=FALSE):string
+    {
+        $template=array('Source'=>'','Group'=>'','Folder'=>'','Name'=>'');
+        if (empty($selector['Name']) && !empty($selector['EntryId'])){
+            $selector=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+        }
+        $result=array();
+        if ($useEntryId){$keys['EntryId']='';}
+        foreach($template as $key=>$default){
+            if (!isset($selector[$key])){break;}
+            if ($selector[$key]===FALSE){break;}
+            $result[$key]=(isset($selector[$key]))?strval($selector[$key]):$default;
+        }
+        return implode(' &rarr; ',$result);
     }
 
     public function row2table(array $row,string $caption='Row as table',bool $flip=FALSE):string

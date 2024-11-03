@@ -470,6 +470,7 @@ class DataExplorer{
         $elements=array();
         $selector=$this->canvasSelector($callingClass);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+            if (empty($entry['Content']['Style']['Text'])){continue;}
             if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0 || strcmp($entry['Content']['Style']['Text'],'&#128337;')===0){continue;}
             $elements[$entry['Content']['Style']['Text']]=$entry;
         }
