@@ -152,9 +152,9 @@ class PdfTools{
         
         $pdfParser= new \Smalot\PdfParser\Parser();
         $pdfContent=$pdfContent = file_get_contents($file);
-        $pdfParsed = $pdfParser->parseContent($pdfContent);
         try {
             $context['attachmentsFailed']=array();
+            $pdfParsed = $pdfParser->parseContent($pdfContent);
             $filespecIndex=0;
             $filespecs = $pdfParsed->getObjectsByType('Filespec');
             foreach ($filespecs as $filespec){

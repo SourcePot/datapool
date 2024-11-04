@@ -90,10 +90,12 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     private function settingsOverviewHtml():string
     {
         $template=array();
-        $template['Logger']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger'),'description'=>'Here you find all the logs.');
+        $template['Logger']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger'),'description'=>'Here you will find all the logs.');
         $template['Logger errors']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger','Group'=>'error'),'description'=>'Error logs can be found here.');
         $template['Job processing timimg']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'),'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job');
         $template['Entry presentation']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'),'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().');
+        $template['Definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'),'description'=>'Here you can adjust the entry definitions.');
+        $template['Remote client definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'),'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected');
         // create html
         $matrix=array();
         foreach($template as $key=>$def){

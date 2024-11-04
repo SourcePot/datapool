@@ -39,8 +39,10 @@ final class FileContent{
         if (isset($entry['Date'])){
             $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
             $dateWebPageTimeZone=\DateTime::createFromFormat('Y-m-d H:i:s',$entry['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-            $dateWebPageTimeZone->setTimeZone(new \DateTimeZone($pageTimeZone));
-            $entry['Date ('.$pageTimeZone.')']=$dateWebPageTimeZone->format('Y-m-d H:i:s');
+            if ($dateWebPageTimeZone){
+                $dateWebPageTimeZone->setTimeZone(new \DateTimeZone($pageTimeZone));
+                $entry['Date ('.$pageTimeZone.')']=$dateWebPageTimeZone->format('Y-m-d H:i:s');
+            }
         }
         $entry['currentUserId']=$currentUser['EntryId'];
         $entry['currentUser']=$currentUser['Content']['Contact details']['First name'].' '.$currentUser['Content']['Contact details']['Family name'];

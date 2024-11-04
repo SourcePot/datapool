@@ -942,43 +942,37 @@ class Database{
                 }
             } else {
                 // move or copy attached file to target
-                $fileRenameSuccess=TRUE;
+                $context['fileError']=FALSE;
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
                 if (is_file($sourceFile) && !$isTestRun){
-                    if ($keepSource){
-                        $fileRenameSuccess=@copy($sourceFile,$targetFile);
-                        $context['copyAttachedFile']=TRUE;
-                    } else {
-                        $fileRenameSuccess=@rename($sourceFile,$targetFile);
-                        $context['movedAttachedFile']=TRUE;
+                    try{
+                        $this->oc['SourcePot\Datapool\Foundation\Filespace']->addStatistic('inserted files',intval(copy($sourceFile,$targetFile)));
+                    } catch(\Exception $e){
+                        $context['fileError']=$e->getMessage();
                     }
                 }
-                // create target entry
-                if ($fileRenameSuccess){
-                    if (!$isTestRun){
-                        if (!$keepSource){
-                            $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
-                        }
-                        $targetEntry=$this->updateEntry($targetEntry,$isSystemCall,FALSE,FALSE,$targetFile);
-                        $context['attachedFileProcessed']=TRUE;
-                    }            
+                // update entry and delete source file if source is not kept
+                if ($isTestRun){
+                    $targetEntry=$sourceEntry;
+                } else if ($context['fileError']){
+                    $context['Name']=$targetEntry['Name'];
+                    $context['sourceFile']=$sourceFile;
+                    $context['action']=($keepSource)?'to copy':'to move';
+                    $this->oc['logger']->log('notice','Failed {action} file "{sourceFile}" with "{fileError}". The entry "{Name}" was not updated.',$context);     
                 } else {
-                    // copying or renaming of attached file failed
-                    if ($isTestRun){
-                        $targetEntry=$sourceEntry;
+                    $targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
+                    if ($keepSource){
+                        $context['copyAttachedFile']=TRUE;
                     } else {
-                        $targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+                        $context['movedAttachedFile']=TRUE;
+                        $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
                     }
                 }
             }
         } else {
             // no write access
-            if ($isTestRun){
-                $targetEntry=$sourceEntry;
-            } else {
-                $targetEntry=$this->updateEntry($sourceEntry,TRUE);
-            }
+            $targetEntry=$sourceEntry;
             $context['noWriteAccess']=TRUE;
         }
         $targetEntry[__FUNCTION__]=$context;
