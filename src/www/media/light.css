@@ -237,7 +237,7 @@ th{
 }
 td,th{
     position:relative;
-    padding:0;
+    padding:3px;
 }
 p.log{
     clear:none;
