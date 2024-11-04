@@ -67,19 +67,15 @@ class MediaTools{
             $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
-        } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
-            $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
             $arr=$this->getPdf($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xhtml')!==FALSE){
             $arr=$this->getHtml($arr);
-        } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector'])){
-            if (strcmp(isset($arr['callingFunction'])?$arr['callingFunction']:'','entryList')===0){
-                $arr['html']='&#9783;';
-            } else {
-                $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
-            }
+        } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector']) && !$isSmallPreview){
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
+        } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
+            $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
             $matrix=array();
             $zip=new \ZipArchive;
