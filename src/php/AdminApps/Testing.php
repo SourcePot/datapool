@@ -99,8 +99,8 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         }
         //$return=array('html'=>'','Parameter'=>array(),'result'=>array());
         //$matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
-        $contentStructure=array('class'=>array('method'=>'select','value'=>'','options'=>$classes,'excontainer'=>FALSE),
-                                'method'=>array('method'=>'select','value'=>'','options'=>$methods,'excontainer'=>FALSE),
+        $contentStructure=array('class'=>array('method'=>'select','value'=>'','options'=>$classes,'excontainer'=>TRUE),
+                                'method'=>array('method'=>'select','value'=>'','options'=>$methods,'excontainer'=>TRUE),
                                 );
         // get HTML
         $arr['contentStructure']=$contentStructure;
