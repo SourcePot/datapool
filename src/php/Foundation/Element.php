@@ -52,7 +52,7 @@ class Element{
                        // Structural elements
                        'main'=>array(),
                        'html'=>array(),
-                       'details'=>array(),
+                       'details'=>array('open'=>FALSE),
                        'summary'=>array(),
                        'div'=>array(),
                        'li'=>array(),
@@ -199,6 +199,7 @@ class Element{
         if (is_array($attrValue)){
             $newAttrValue='';
             foreach($attrValue as $key=>$value){
+                $key=strval($key);
                 if (mb_strpos($key,'height')!==FALSE || mb_strpos($key,'width')!==FALSE || mb_strpos($key,'size')!==FALSE || mb_strpos($key,'top')!==FALSE || mb_strpos($key,'left')!==FALSE || mb_strpos($key,'bottom')!==FALSE || mb_strpos($key,'right')!==FALSE){
                     if (is_numeric($value)){
                         $value=strval($value).'px';

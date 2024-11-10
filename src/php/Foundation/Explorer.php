@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
+use GPBMetadata\Google\Api\Visibility;
+
 class Explorer{
     
     private $oc;
@@ -18,6 +20,7 @@ class Explorer{
     private $entryTemplate=array();
                                  
     private $selectorTemplate=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);
+    private $isVisibleTemplate=array('Source'=>FALSE,'Group'=>TRUE,'Folder'=>TRUE,'EntryId'=>TRUE);
     private $settingsTemplate=array('Source'=>array('orderBy'=>'Source','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
                                     'Group'=>array('orderBy'=>'Group','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
                                     'Folder'=>array('orderBy'=>'Folder','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE),
@@ -59,19 +62,14 @@ class Explorer{
         return $entry;
     }
 
-    public function getGuideIndicator():string
+    public function getExplorer(string $callingClass, array $visibility=array(), bool $addEntryByFileUpload=TRUE):string
     {
-        return \SourcePot\Datapool\Root::GUIDEINDICATOR;
-    }
-
-    public function getExplorer(string $callingClass, bool $enableNameSelector=TRUE, bool $addEntryByFileUpload=TRUE):string
-    {
-        $this->addEntryByFileUpload=$addEntryByFileUpload;
-        if (!$enableNameSelector){
-            unset($this->selectorTemplate['EntryId']);
-        }
-        $this->addEntryByFileUpload=$addEntryByFileUpload;
         $selector=$this->appProcessing($callingClass);
+        $this->addEntryByFileUpload=$addEntryByFileUpload;
+        // set selector visibility
+        $this->isVisibleTemplate=array_merge($this->isVisibleTemplate,$visibility);
+        $this->isVisibleTemplate['Source']=!empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass]);
+        // compile html
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Explorer'));
         $selectorsHtml=$this->getSelectors($callingClass);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE));
@@ -106,8 +104,8 @@ class Explorer{
             $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
             $selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>array('selector',$column),'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer'));
             $selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE));
-            if (strcmp($column,'Source')!==0 || !empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass])){
-                // Source-selector should only be presented if enabled by showSourceSelector
+            if (!empty($this->isVisibleTemplate[$column])){
+                // Source-selector is added based on visibility setting
                 $html.=$selectorHtml;
             }
             $stateKeys['nextKey']=$column;
@@ -198,7 +196,7 @@ class Explorer{
         return $selector;
     }
     
-    private function appProcessing(string $callingClass):array
+    public function appProcessing(string $callingClass):array
     {
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         // process selectors

@@ -479,6 +479,7 @@ class HTMLbuilder{
         $summaryArr=array('tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($summaryArr);
         $detailsArr=array('tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']);
+        if (isset($arr['open'])){$detailsArr['open']=$arr['open'];}
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($detailsArr);
         return $html;
         

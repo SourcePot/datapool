@@ -29,6 +29,16 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
         } else {
+            // update signals
+            $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Name'=>'Login for%'),TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login ok',$loginCount,'int'); 
+            $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Name'=>'One-time login%'),TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login one-time psw',$loginCount,'int'); 
+            $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Name'=>'Login failed%'),TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login failed',$loginCount,'int'); 
+            $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Name'=>'%registered as new user%'),TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'New registration',$loginCount,'int'); 
+            // compile page
             $bgStyle=array('background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')');
             $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'bg-media','style'=>$bgStyle,'element-content'=>' ')).PHP_EOL;
             $arr['toReplace']['{{content}}']=$this->getLoginForm();
@@ -69,7 +79,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($arr['Email']));
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
-                $this->oc['logger']->log('info','One-time login for {email} at {dateTime} was successful.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+                $this->oc['logger']->log('info','One-time login "{email}" at "{dateTime}" was successful.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
                 // delete temporary user, switch back to original user and login
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($user,TRUE);
                 $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
@@ -79,13 +89,6 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
                 $this->loginFailed($user,$arr['Email']);
             }  
         }
-        // update signals
-        $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'error','Name'=>'Login failed%'),TRUE);
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login failed',$loginCount,'int'); 
-        $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'info','Name'=>'Login for%'),TRUE);
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login ok',$loginCount,'int'); 
-        $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Group'=>'info','Name'=>'One-time login%'),TRUE);
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login one-time psw',$loginCount,'int'); 
         exit;
     }
     
@@ -98,14 +101,16 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginSuccess($user,$email){
         $this->resetSession();
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['logger']->log('info','Login for {email} at {dateTime} was successful.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        // return to login page
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
     }
 
     private function loginFailed($user,$email){
         $_SESSION['currentUser']['Privileges']=1;
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
-        $this->oc['logger']->log('notice','Login failed for {email} at {dateTime}.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        $this->oc['logger']->log('notice','Login failed at "{dateTime}" for "{email}".',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        // return to login page
         sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
     }
@@ -129,11 +134,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         if (empty($err)){
-            $this->oc['logger']->log('info','You have been registered as new user ({email}) at {dateTime}.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+            $this->oc['logger']->log('info','You have been registered as new user "{email}" at "{dateTime}".',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
-            exit;    
         } else {
             $this->oc['logger']->log('notice',$err,array('email'=>$arr['Email']));    
+            header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         }
         return $err;
     }
@@ -202,10 +207,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         // send email
         $mail=array('selector'=>$loginEntry);
         if ($this->oc['SourcePot\Datapool\Tools\Email']->entry2mail($mail,TRUE)){
-            $this->oc['logger']->log('info','The one time passphrase was sent to {email}, please check your emails.',array('email'=>$email));    
+            $this->oc['logger']->log('info','The one time passphrase was sent to "{email}", please check your emails.',array('email'=>$email));    
             return TRUE;    
         } else {
-            $this->oc['logger']->log('notice','The request to send the one time passphrase to {email} has failed.',array('email'=>$email));    
+            $this->oc['logger']->log('notice','The request to send the one time passphrase to "{email}" has failed.',array('email'=>$email));    
             return FALSE;
         }
     }

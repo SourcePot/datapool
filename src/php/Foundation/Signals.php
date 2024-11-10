@@ -22,6 +22,15 @@ class Signals{
                                  'Owner'=>array('type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
     
+    private $activeIf=array('stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
+                            'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (trigger above th.)',    
+                            'up'=>'&#9601;&#9601;&#9601;&#9585;&#9620; (rel. step up)',
+                            'max'=>'&#9601;&#9601;&#9585;&#9586;&#9601; (peak)',
+                            'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip)',
+                            'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down)',
+                            'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (trigger below th.)',    
+                            );
+
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -162,7 +171,7 @@ class Signals{
         }    
         return ($condtionMet)?$condtionMet:((isset($trigger['Content']['isActive']))?$trigger['Content']['isActive']:FALSE);
     }
-    
+
     public function getTriggerWidget(string $callingClass,string $callingFunction):string
     {
         $triggerSelector=array('Source'=>$this->entryTable,'Group'=>'trigger','Folder'=>$callingClass.'::'.$callingFunction);
@@ -229,14 +238,7 @@ class Signals{
     {
         $callingFunction='getTriggerWidget';
         $arr=array('Signal'=>$this->getSignalOptions());
-        $arr['Active if']=array('stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
-                                'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (trigger above th.)',    
-                                'up'=>'&#9601;&#9601;&#9601;&#9585;&#9620; (rel. step up)',
-                                'max'=>'&#9601;&#9601;&#9585;&#9586;&#9601; (peak)',
-                                'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip)',
-                                'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down)',
-                                'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (trigger below th.)',    
-                                );
+        $arr['Active if']=$this->activeIf;
         $row=array();
         $isNewRow=empty($trigger['EntryId']);
         if (!isset($trigger['EntryId'])){$trigger['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();}
@@ -254,7 +256,7 @@ class Signals{
             $reset='';
             $row['Cmd']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'+','keep-element-content'=>TRUE,'key'=>array('New',$trigger['EntryId']),'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE));
         } else {
-            $signalPlot=$this->getSignalPlot(array('EntryId'=>$trigger['Content']['Signal']));
+            $signalPlot=$this->getSignalDisplay(array('EntryId'=>$trigger['Content']['Signal']));
             $isActive=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($trigger['Content']['isActive']));
             $reset=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Reset','keep-element-content'=>TRUE,'key'=>array('Reset',$trigger['EntryId']),'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE));
             $row['Cmd']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'key'=>array('Save',$trigger['EntryId']),'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE));
@@ -273,6 +275,99 @@ class Signals{
         $row['isActive']=$isActive;
         $row['Reset']=$reset;
         return $row;
+    }
+
+    public function signalDisplayWrapper(array $arr):array{
+        $arr['html']=$this->getSignalDisplay($arr['selector']);
+        return $arr;
+    }
+
+    public function getSignalDisplay(array $selector=array()):string
+    {
+        $matrices=array();
+        $selector['Source']=$this->getEntryTable();
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
+            $signalParams=array('min'=>0,'max'=>FALSE);
+            $folderComps=explode('\\',$entry['Folder']);
+            $folder=array_pop($folderComps);
+            $name=$entry['Name'];
+            foreach($entry['Content']['signal'] as $index=>$signal){
+                // get signal parameters
+                if ($signal['dataType']==='int'){
+                    $value=round(floatval($signal['value']));
+                    if ($index===0){$signalParams['currentValue']=$value;}
+                    if ($signalParams['min']===FALSE){$signalParams['min']=$value;}
+                    if ($signalParams['max']===FALSE){$signalParams['max']=$value;}
+                    if ($signalParams['min']>$value){$signalParams['min']=$value;}
+                    if ($signalParams['max']<$value){$signalParams['max']=$value;}
+                } else if ($signal['dataType']==='float'){
+                    $value=floatval($signal['value']);
+                    if ($index===0){$signalParams['currentValue']=$value;}
+                    if ($signalParams['min']===FALSE){$signalParams['min']=$value;}
+                    if ($signalParams['max']===FALSE){$signalParams['max']=$value;}
+                    if ($signalParams['min']>$value){$signalParams['min']=$value;}
+                    if ($signalParams['max']<$value){$signalParams['max']=$value;}
+                } else if ($signal['dataType']==='bool'){
+                    $value=boolval(intval($signal['value']));
+                    if ($index===0){$signalParams['currentValue']=$value;}
+                    $signalParams['min']=FALSE;
+                    $signalParams['max']=TRUE;
+                } else if ($signal['dataType']==='string'){
+                    $value=strval($signal['value']);
+                    if ($index===0){$signalParams['currentValue']=$value;}
+                    if (!is_array($signalParams['min'])){
+                        $signalParams['min']=array($value=>1);
+                    } else if (isset($signalParams['min'][$value])){
+                        $signalParams['min'][$value]++;
+                    } else {
+                        $signalParams['min'][$value]=1;
+                    }
+                } else {
+                    $value=$signal['value'];
+                    if ($index===0){$signalParams['currentValue']=$value;}
+                    $signalParams['min']=$signalParams['max']='';
+                }
+            }
+            // signal parameters -> html tag
+            if (!isset($signalParams['currentValue'])){
+                $signalValue=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'empty','keep-element-content'=>TRUE));
+            } else if (is_bool($signalParams['currentValue'])){
+                $element=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($signalParams['currentValue'],array(),FALSE);
+                $signalValue=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+            } else if (is_numeric($signalParams['currentValue'])){
+                $title='value='.$signalParams['currentValue']."\n";
+                $title.='min='.$signalParams['min']."\n";
+                $title.='max='.$signalParams['max'];
+                if ($signalParams['min']==0 && $signalParams['max']==0){$signalParams['max']=1;}
+                $signalValue=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'meter','min'=>$signalParams['min'],'max'=>$signalParams['max'],'value'=>$signalParams['currentValue'],'title'=>$title,'style'=>array('width'=>'100px'),'element-content'=>' '));
+                $signalValue.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$signalParams['min'],'style'=>array('float'=>'left','clear'=>'left')));
+                $signalValue.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$signalParams['max'],'style'=>array('float'=>'right','clear'=>'right')));
+            } else {
+                $subMatrix=array();
+                foreach($signalParams['min'] as $value=>$valueCount){
+                    $valueString=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE,'class'=>(($value==$signalParams['currentValue'])?'status-on':'status-off')));
+                    $subMatrix['value'][$value]=$valueString;
+                    $subMatrix['count'][$value]=$valueCount;
+                }
+                ksort($subMatrix['value']);
+                ksort($subMatrix['count']);
+                $signalValue=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$subMatrix,'caption'=>'','hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'class'=>'matrix','style'=>array('width'=>'100px')));
+            }
+            $matrices[$folder][$name]=array('Value'=>$signalValue);
+        }
+        $html='';
+        if (count($matrices)===1){
+            $matrix=current($matrices);
+            ksort($matrix);
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$folder,'hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array()));;
+        } else{
+            ksort($matrices);
+            foreach($matrices as $folder=>$matrix){
+                ksort($matrix);
+                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$folder,'hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array()));;
+            }
+        }
+        return $html;
     }
 
     public function getSignalPlot(array $selector=array()):string|array
@@ -298,11 +393,30 @@ class Signals{
             $plotData=array('use'=>'signalPlot','meta'=>$selector,'data'=>array());
             $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
-                $plotData['meta']['title']=$entry['Folder'].' → '.$entry['Name'];
+                $folderComps=explode('\\',$entry['Folder']);
+                $plotData['meta']['title']=array_pop($folderComps);
+                $plotData['meta']['title'].=' → '.$entry['Name'];
+                $timeIndices=array();
                 foreach($entry['Content']['signal'] as $index=>$signal){
                     $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
-                    $plotData['data'][$index]['History [sec]']=time()-$signal['timeStamp'];
-                    $plotData['data'][$index]['Value']=$signal['value'];
+                    // get time index
+                    $currentTimeIndex=10*(time()-$signal['timeStamp']);
+                    while(isset($timeIndices[$currentTimeIndex])){
+                        $currentTimeIndex=$currentTimeIndex+1;
+                    }
+                    $timeIndices[$currentTimeIndex]=TRUE;
+                    $currentTimeIndex=$currentTimeIndex/10;
+                    // add data to plot
+                    $plotData['data'][$index]['History [sec]']=$currentTimeIndex;
+                    if ($signal['dataType']==='int'){
+                        $plotData['data'][$index]['Value']=round(floatval($signal['value']));
+                    } else if ($signal['dataType']==='float'){
+                        $plotData['data'][$index]['Value']=floatval($signal['value']);
+                    } else if ($signal['dataType']==='bool'){
+                        $plotData['data'][$index]['Value']=intval($signal['value']);
+                    } else {
+                        $plotData['data'][$index]['Value']=$signal['value'];
+                    }
                 }
             }
             return $plotData;
@@ -331,6 +445,7 @@ class Signals{
             $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
             $classEndPos=mb_strpos($entry['Folder'],'::');
             $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
+            //$options[$entry['EntryId']]=$entry['Folder'].': '.$entry['Name'];
         }
         asort($options);
         return $options;

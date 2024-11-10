@@ -71,7 +71,8 @@ jQuery(document).ready(function(){
                         Plot.ruleX([0]),
                         Plot.areaY(plotData['data'],{x:"History [sec]",y:"Value",curve:"step",fill:'blue','fillOpacity':0.2}),
                         Plot.lineY(plotData['data'],{x:"History [sec]",y:"Value",curve:"step",'tip':'xy','stroke':'blue'})
-                        ]
+                        ],
+                    marginLeft: 60    
                     };
                 if ("height" in plotData['meta']){plotDef['height']=plotData['meta']['height'];}
                 if ("title" in plotData['meta']){plotDef['title']=plotData['meta']['title'];}
@@ -83,7 +84,7 @@ jQuery(document).ready(function(){
             }
 
             function clientPlot(plotData){
-                var plots={activity:{color:'blue','ruleYzero':0},cpuTemperature:{color:'black','ruleYzero':40},alarm:{color:'red','ruleYzero':0},light:{color:'green','ruleYzero':0}};
+                var plots={activity:{color:'blue','ruleYzero':0},cpuTemperature:{color:'black','ruleYzero':40},alarm:{color:'red','ruleYzero':0},escalate:{color:'orange','ruleYzero':0},light:{color:'green','ruleYzero':0}};
                 plotData['data']['DateTime']=new Date(plotData['data']['DateTime']);
                 var plotDefs=[];
                 for (const property in plots){
@@ -102,6 +103,7 @@ jQuery(document).ready(function(){
                     delete plotData['meta']['title'];
                     plotDefs.push(plotDef);
                 };
+                jQuery("a[id^='svg-']").off('click');
                 jQuery('[id='+plotData['meta']['id']+']').html('');
                 for (const plotDef of plotDefs){
                     const plot=Plot.plot(plotDef)

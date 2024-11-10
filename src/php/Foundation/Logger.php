@@ -26,8 +26,8 @@ class Logger
                                'critical'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f88','min-width'=>'6rem')),
                                'error'=>array('hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#faa','min-width'=>'6rem')),
                                'warning'=>array('hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#fcc','min-width'=>'6rem')),
-                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT60M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#ff0','min-width'=>'6rem')),
-                               'info'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
+                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'PT60M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>array('color'=>'#ff0','min-width'=>'6rem')),
+                               'info'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
                                );
     
@@ -119,7 +119,9 @@ class Logger
         $level=mb_strtolower($record->level->name);
         $context=array_merge($record->context,$record->extra);
         $context['ip']=$this->oc['SourcePot\Datapool\Root']->getIP($this->levelConfig[$level]['hashIp']);
+        $context['timestamp']=time();
         $entry=$this->levelConfig[$level];
+        $entry['Owner']=(empty($entry['Owner']))?$_SESSION['currentUser']['EntryId']:$entry['Owner'];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
         $entry['Source']=$this->entryTable;
@@ -136,10 +138,10 @@ class Logger
             unset($entry['Content']['trace'][2]);
             unset($entry['Content']['trace'][3]);
         }
-        $entry['Name']=mb_substr($entry['Content']['msg'],0,50);
+        $entry['Name']=mb_substr($entry['Content']['msg'],0,100);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        // write to databse if it is present
+        // write to database
         if (!empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
         }
@@ -155,7 +157,12 @@ class Logger
         $arr['settings']=array_replace_recursive(array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'),$arr['settings']);
         $arr['selector']['Source']=$this->entryTable;
         $arr['html']=' ';
+        $_SESSION[__CLASS__]['age']=10;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read',$arr['settings']['orderBy'],$arr['settings']['isAsc'],$arr['settings']['limit'],$arr['settings']['offset']) as $log){
+            if (isset($log['Content']['timestamp'])){
+                $age=time()-$log['Content']['timestamp'];
+                if ($_SESSION[__CLASS__]['age']>$age){$_SESSION[__CLASS__]['age']=$age;}
+            }
             $rowHtml='';
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
             $flatLog['Date']=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate($flatLog['Date'],$sourceTimezone,$pageTimeZone);
@@ -178,6 +185,7 @@ class Logger
         $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         // add to app
         $appArr=array('class'=>'toolbox','icon'=>'Logger');
+        if ($_SESSION[__CLASS__]['age']<2){$appArr['open']=TRUE;}
         $appArr['html']=$contentHtml;
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         return $html;

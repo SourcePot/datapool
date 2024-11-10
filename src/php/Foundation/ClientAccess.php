@@ -121,6 +121,8 @@ class ClientAccess{
                 if (in_array($method,$this->methodBlackList)){
                     $data['answer']['error']='Access '.$class.'::'.$method.'() blocked';
                     $this->oc['logger']->log('warning',$data['answer']['error'],array());    
+                } else if (empty($this->oc[$class])){
+                    $this->oc['logger']->log('warning','Client request failed, Scope "{scope}::{method}" is inavlid. Please check Admin &rarr; Account &rarr; App credentials AND table "clientaccess"',$data['answer']);
                 } else if (method_exists($this->oc[$class],$method)){
                     // set user from owner
                     $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$data['answer']['owner']);
@@ -135,7 +137,7 @@ class ClientAccess{
                     $data['answer']=array('error'=>'Method '.$class.'::'.$method.'() does not exist');
                 }
             } else {
-                $this->oc['logger']->log('error','Access token failed: {failed}',array('failed'=>$data['answer']['error']));    
+                $this->oc['logger']->log('error','Access token failed: {failed}',array('failed'=>$data['answer']['error']));
             }
         } else {
             // authorization missing
@@ -188,7 +190,7 @@ class ClientAccess{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token
             $data['answer']=$authorizationEntry['Content'];
-            $this->oc['logger']->log('info','Client authorization success origin "{ip}": type="{type}", client_secret="***", client_id="{client_id}"',$authorizationArr);    
+            $this->oc['logger']->log('debug','Client authorization success origin "{ip}": type="{type}", client_secret="***", client_id="{client_id}"',$authorizationArr);    
         }
         return $data;
     }
@@ -213,7 +215,7 @@ class ClientAccess{
             return $data;
         }
         $tokenSelector['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(FALSE);
-        $this->oc['logger']->log('notice','Client token originating from {ip} failed: Source="{Source}", Name="{Name}"',$tokenSelector);    
+        $this->oc['logger']->log('warning','Client token originating from {ip} failed: Source="{Source}", Name="{Name}"',$tokenSelector);    
         return $data;
     }
     

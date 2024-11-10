@@ -124,10 +124,11 @@ final class Root{
             $this->currentUser=$loginUser;
         } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             // empty session -> anonymous user
-            $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>mt_rand(1,10000000),'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+            $loginId=strval(mt_rand(1,999999999));
+            $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>$loginId,'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
             $this->currentUser['Content']=array('Contact details'=>array('First name'=>'Anonym','Family name'=>'Anonym'),'Address'=>array());
             $this->currentUser['Params']=array();
-            $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.$this->getIP(TRUE);
+            $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.password_hash($loginId,PASSWORD_DEFAULT);;
             $_SESSION['currentUser']=$this->currentUser;
         } else {
             // get user from session
@@ -317,8 +318,7 @@ final class Root{
             $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',array('script'=>$pathInfo['basename']));    
         }
         // script time consumption in ms
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($pathInfo['basename'],__FUNCTION__,'Script time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal('All_scripts',__FUNCTION__,'Script init time consumption [ms]',round(($GLOBALS['script init time']-$GLOBALS['script start time'])/1000000),'int');
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$pathInfo['basename'].' time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
         if (self::PROFILING_PROFILE[$pathInfo['basename']]){
             $this->profileFileName=time().'-profile-'.$pathInfo['filename'].'.csv';
             $this->writeProfile($this->profileFileName);

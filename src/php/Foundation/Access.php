@@ -98,8 +98,15 @@ class Access{
     
     public function access($entry,$type='Write',$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE)
     {
-        if ($this->isEntryWithoutContent($entry)){return 'EMPTY ENTRY';}
-        if ($isSystemCall===TRUE){return 'SYSTEMCALL';}
+        if ($this->isEntryWithoutContent($entry)){
+            $this->oc['logger']->log('critical','Function "{class} &rarr; {function}()" access test on empty entry.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
+            return FALSE;
+            //return 'EMPTY ENTRY';
+        }
+        if ($isSystemCall===TRUE){
+            // system call access
+            return 'SYSTEMCALL';
+        }
         if (empty($entry)){return FALSE;}
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -111,11 +118,13 @@ class Access{
         if (empty($user['Owner'])){$user['Owner']='User EntryId Missing';}
         if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){$user['EntryId']='User id Invalid';}
         if (strcmp($entry['Owner'],$user['EntryId'])===0){
+            // owner access
             return 'CREATOR MATCH';
         } else if (isset($entry[$type])){
+            // standard access
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
             if ($accessLevel>0){return $accessLevel;}
-        } else {
+        } else if (!empty($entry['Source'])){
             $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
         }
         return FALSE;

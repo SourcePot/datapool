@@ -148,18 +148,11 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $prop['plotProp']['height']=(isset($chartparams['Content']['height']))?$chartparams['Content']['height']:300;
         $prop['plotProp']['width']=(isset($chartparams['Content']['width']))?$chartparams['Content']['width']:500;
         foreach($base['chartrules'] as $ruleId=>$rule){
-            $trace=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->getTraceTemplate();
-            $trace['selector']=$callingElement['Content']['Selector'];
-            $trace['x']['key']=$rule['Content']['x-selector'];
-            $trace['x']['Type']=$rule['Content']['x-data type'];
-            $trace['y']['key']=$rule['Content']['y-selector'];
-            $trace['y']['Type']=$rule['Content']['y-data type'];
-            $trace['Name']=$rule['Content']['trace name'];
-            $prop['traces'][$trace['Name']]=$trace;
+
         }
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=array();
-        $result['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->xyTraces2plot($prop);
+        $result['html']='';
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
         return $result;
