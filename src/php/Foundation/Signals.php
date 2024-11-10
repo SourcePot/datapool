@@ -343,7 +343,7 @@ class Signals{
                 $signalValue.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$signalParams['min'],'style'=>array('float'=>'left','clear'=>'left')));
                 $signalValue.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$signalParams['max'],'style'=>array('float'=>'right','clear'=>'right')));
             } else {
-                $subMatrix=array();
+                $subMatrix=array('value'=>array(),'count'=>array());
                 foreach($signalParams['min'] as $value=>$valueCount){
                     $valueString=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE,'class'=>(($value==$signalParams['currentValue'])?'status-on':'status-off')));
                     $subMatrix['value'][$value]=$valueString;
