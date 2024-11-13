@@ -61,7 +61,7 @@ final class Root{
     public function __construct($script)
     {
         $this->script=$script;
-        $this->oc=array(__CLASS__=>$this);
+        $this->oc=array(__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this);
         // initialize environment including user
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
@@ -87,14 +87,14 @@ final class Root{
         $this->oc['logger']=$this->getMonologLogger('Root');
         $this->oc['logger_1']=$this->getMonologLogger('Debugging');
         $this->registerVendorClasses();
-        // distribute object collection
+        // distribute the object collection within the project
         foreach($this->oc as $classWithNamespace=>$obj){
             if (!is_object($this->oc[$classWithNamespace])){continue;}
             if (!method_exists($this->oc[$classWithNamespace],'loadOc')){continue;}
             $this->oc[$classWithNamespace]->loadOc($this->oc);
         }
         $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
-        $this->emptyLoggerCache($this->oc);
+        $this->emptyLoggerCache();
         // invoke init methoods
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
@@ -109,7 +109,7 @@ final class Root{
             if (!method_exists($this->oc[$classWithNamespace],'init')){continue;}
             $this->oc[$classWithNamespace]->init();
         }
-        $this->checkExtensions($this->oc);
+        $this->checkExtensions();
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
     }
     
@@ -187,15 +187,15 @@ final class Root{
     /**
     * This method stores log entries up to the time when $this->oc['logger'] is fully setup
     */
-    private function log($level,$msg,$context):void
+    public function log($level,$msg,$context):void
     {
         $this->loggerCache[]=array('level'=>$level,'msg'=>$msg,'context'=>$context);
     }
 
-    private function emptyLoggerCache(array $oc):void
+    private function emptyLoggerCache():void
     {
         foreach($this->loggerCache as $logArr){
-            $oc['logger']->log($logArr['level'],$logArr['msg'],$logArr['context']);
+            $this->oc['logger']->log($logArr['level'],$logArr['msg'],$logArr['context']);
         }
     }
 
@@ -212,7 +212,7 @@ final class Root{
             if (class_exists($classWithNamespace)){
                 $this->oc[$classWithNamespace]=new $classWithNamespace($this->oc);
             } else {
-                $this->log('error','Method "{class} &rarr; {function}()": Failed to register class "{classWithNamespace}"',$context);
+                $this->oc['logger']->log('error','Method "{class} &rarr; {function}()": Failed to register class "{classWithNamespace}"',$context);
             }
         }
     }
@@ -260,14 +260,14 @@ final class Root{
         return $arr;
     }
     
-    private function checkExtensions(array $oc):void
+    private function checkExtensions():void
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         foreach(self::REQUIRED_EXTENSIONS as $extension=>$isREquired){
             if (!$isREquired){continue;}
             if (!extension_loaded($extension)){
                 $context['extension']=$extension;
-                $oc['logger']->log('critical','PHP extension "{extension}" not loaded',$context);
+                $this->oc['logger']->log('critical','PHP extension "{extension}" not loaded',$context);
             }
         }
     }
