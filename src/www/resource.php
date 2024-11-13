@@ -14,6 +14,6 @@ namespace SourcePot\Datapool;
 mb_internal_encoding("UTF-8");
 
 require_once('../php/Root.php');
-$pageObj=new Root();
+$pageObj=new Root('resource.php');
 $arr=$pageObj->run();
 ?>

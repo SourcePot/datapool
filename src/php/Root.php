@@ -48,7 +48,7 @@ final class Root{
     private $oc;
     private $placeholder=array();
     private $implementedInterfaces=array();
-    private $currentScript='';
+    private $script='';
     
     private $profileActive=NULL;
     private $profile=array();
@@ -58,15 +58,16 @@ final class Root{
 
     private $currentUser=array();
     
-    public function __construct()
+    public function __construct($script)
     {
+        $this->script=$script;
         $this->oc=array(__CLASS__=>$this);
+        // initialize environment including user
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
         session_start();
         $this->updateCurrentUser();
-        $this->currentScript=filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_URL);
         // inititate the web page state
         if (empty($_SESSION['page state'])){
             $_SESSION['page state']=array('app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>array());
@@ -277,9 +278,8 @@ final class Root{
     public function run():array
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
-        $pathInfo=pathinfo($this->currentScript);
         // get current temp dir
-        if (mb_strpos($this->currentScript,'resource.php')===FALSE && mb_strpos($this->currentScript,'job.php')===FALSE){
+        if ($this->script!=='resource.php' && $this->script!=='job.php'){
             $GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         }
         // process all buttons
@@ -289,7 +289,7 @@ final class Root{
         // add "page html" to the return array
         $arr=array();
         $appClassWithNamespace=$_SESSION['page state']['app']['Class'];
-        if (mb_strpos($this->currentScript,'index.php')>0 && method_exists($this->oc[$appClassWithNamespace],'run')){
+        if ($this->script==='index.php' && method_exists($this->oc[$appClassWithNamespace],'run')){
             $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appDef['Read'])){
                 $context['app']=$appClassWithNamespace;
@@ -304,23 +304,26 @@ final class Root{
             $arr=$this->oc[$appClassWithNamespace]->run($arr);
             $arr=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->add($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
-        } else if ($pathInfo['basename']=='js.php'){
+        } else if ($this->script==='js.php'){
             // js-call Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
-        } else if ($pathInfo['basename']=='job.php'){
+        } else if ($this->script==='job.php'){
             // job Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
-        } else if ($pathInfo['basename']=='resource.php'){
+        } else if ($this->script==='resource.php'){
             // client request processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
         } else {
             // invalid
-            $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',array('script'=>$pathInfo['basename']));    
+            $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',array('script'=>$this->script));
+            exit;  
         }
         // script time consumption in ms
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$pathInfo['basename'].' time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
-        if (self::PROFILING_PROFILE[$pathInfo['basename']]){
-            $this->profileFileName=time().'-profile-'.$pathInfo['filename'].'.csv';
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
+        if (self::PROFILING_PROFILE[$this->script]){
+            $scriptComps=explode('.',$this->script);
+            $fileName=array_shift($scriptComps);
+            $this->profileFileName=time().'-profile-'.$fileName.'.csv';
             $this->writeProfile($this->profileFileName);
         };
         return $arr;
@@ -534,7 +537,7 @@ final class Root{
             file_put_contents($logFileName,$logFileContent);
             //fallback page
             $html='';
-            if (mb_strpos($this->currentScript,'js.php')!==FALSE){
+            if ($this->script==='js.php'){
                 $html.='Have run into a problem, please check debugging dir...';
             } else {
                 $html.=$this->getBackupPageContent();
