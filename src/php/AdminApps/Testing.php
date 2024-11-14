@@ -93,9 +93,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $classes=array_combine($classes,$classes);
         ksort($classes);
         if (!empty($arr['selector']['Content']['class'])){
-            $methods=get_class_methods($arr['selector']['Content']['class']);
-            $methods=array_combine($methods,$methods);
-            ksort($methods);
+            if (class_exists($arr['selector']['Content']['class'])){
+                $methods=get_class_methods($arr['selector']['Content']['class']);
+                $methods=array_combine($methods,$methods);
+                ksort($methods);
+            }
         }
         //$return=array('html'=>'','Parameter'=>array(),'result'=>array());
         //$matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');

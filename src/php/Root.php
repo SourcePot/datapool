@@ -61,8 +61,8 @@ final class Root{
     public function __construct($script)
     {
         $this->script=$script;
+        // initialize the environment, setup the Object Collection (oc) with a temporary logger and setting up the user
         $this->oc=array(__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this);
-        // initialize environment including user
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
