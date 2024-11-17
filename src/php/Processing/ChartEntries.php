@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Processing;
 
 class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
+    private const MAX_LIMIT=1000000;
+
     private $oc;
 
     private $entryTable='';
@@ -21,6 +23,8 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $chartTypeOptions=array('timeY'=>'DateTime-Y-chart','XY'=>'XY-chart',);
     private $orderByOptions=array('Group'=>'Group','Folder'=>'Folder','Name'=>'Name','Date'=>'Date');
+
+
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -102,8 +106,8 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function chartParams($callingElement){
         $contentStructure=array('Width'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE),
                                 'Height'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE),
-                                'X-range'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','title'=>'e.g.: min|max','excontainer'=>TRUE),
-                                'Y-range'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','title'=>'e.g.: min|max','excontainer'=>TRUE),
+                                'offset'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>0,'min'=>0,'excontainer'=>TRUE),
+                                'limit'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>-1,'min'=>-1,'excontainer'=>TRUE),
                                 'Type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'timeY','options'=>$this->chartTypeOptions,'keep-element-content'=>TRUE),
                                 'OrderBy'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'Date','options'=>$this->orderByOptions,'keep-element-content'=>TRUE),
                                 'Normalize'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>array(''=>'-','x'=>'X','y'=>'Y'),'keep-element-content'=>TRUE),
@@ -188,7 +192,17 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $plotData['use']=$plotData['property']['Type'].'plot';
             $plotData['traces']=array();
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($plotData,TRUE,'Read',$plotData['property']['OrderBy']) as $entry){
+            if ($plotData['property']['offset']<1){
+                $plotData['property']['offset']=FALSE;
+            }
+            if ($plotData['property']['limit']<2){
+                if ($plotData['property']['offset']===FALSE){
+                    $plotData['property']['limit']=FALSE;       
+                } else {
+                    $plotData['property']['limit']=\SourcePot\Datapool\Processing\ChartEntries::MAX_LIMIT;
+                }
+            }
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($plotData,TRUE,'Read',$plotData['property']['OrderBy'],TRUE,$plotData['property']['limit'],$plotData['property']['offset'],) as $entry){
                 $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
                 foreach($plotData['rule'] as $ruleId=>$rule){
                     if (empty($rule)){continue;}

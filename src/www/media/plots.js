@@ -53,8 +53,10 @@ jQuery(document).ready(function(){
                             } else if (plotData['use']=='clientPlot'){
                                 clientPlot(plotData);
                             } else if (plotData['use']=='timeYplot'){
-                                timeYplot(plotData);
+                                plotData['xTypeIsDate']=true;
+                                XYplot(plotData);
                             } else if (plotData['use']=='XYplot'){
+                                plotData['xTypeIsDate']=false;
                                 XYplot(plotData);
                             }
                         }).fail(function(data){
@@ -118,9 +120,9 @@ jQuery(document).ready(function(){
                 }
             }
 
-            function timeYplot(plotData){
-                console.log(plotData);
-                var marks=[],xDef={grid:true,'label':''},yDef={grid:true,'label':''},yLabel=[];
+            function XYplot(plotData){
+                //console.log(plotData);
+                var marks=[],xDef={grid:true},yDef={grid:true};
                 for (const traceName in plotData['traces']){
                     var dataArr=[],dataDef={stroke:"name",'tip':'xy'};
                     for (const index in plotData['traces'][traceName]){
@@ -128,11 +130,13 @@ jQuery(document).ready(function(){
                         var data={'name':traceName};
                         for (const key in plotData['traces'][traceName][index]){
                             if (isDate){
-                                xDef['label']=key;
                                 dataDef['x']=key;
-                                data[key]=new Date(plotData['traces'][traceName][index][key]);
+                                if (plotData['xTypeIsDate']===true){
+                                    data[key]=new Date(plotData['traces'][traceName][index][key]);
+                                } else {
+                                    data[key]=parseFloat(plotData['traces'][traceName][index][key]);
+                                }
                             } else {
-                                if (yLabel.includes(key)==false){yLabel.push(key);}
                                 dataDef['y']=key;
                                 data[key]=parseFloat(plotData['traces'][traceName][index][key]);
                             }
@@ -140,14 +144,13 @@ jQuery(document).ready(function(){
                         }
                         dataArr.push(data);
                     }
-                    yDef['label']=yLabel.join(', ');
                     if (plotData['property']['Normalize']=='y'){
                         dataDef=Plot.normalizeY(dataDef);
-                        yDef['label']+=" (Change %)";
+                        yDef['label']="Change %";
                         yDef['tickFormat']=((f) => (y) => f((y - 1) * 100))(d3.format("+d"));
                     } else if (plotData['property']['Normalize']=='x'){
                         dataDef=Plot.normalizeX(dataDef);
-                        xDef['label']+=" (Change %)";
+                        xDef['label']="Change %";
                         xDef['tickFormat']=((f) => (x) => f((x - 1) * 100))(d3.format("+d"));
                     }
                     marks.push(Plot.lineY(dataArr,dataDef));
@@ -168,8 +171,8 @@ jQuery(document).ready(function(){
                 });
             }
 
+            /*
             function XYplot(plotData){
-                /*
                 var plots={activity:{color:'blue','ruleYzero':0},cpuTemperature:{color:'black','ruleYzero':40},alarm:{color:'red','ruleYzero':0},escalate:{color:'orange','ruleYzero':0},light:{color:'green','ruleYzero':0}};
                 plotData['data']['DateTime']=new Date(plotData['data']['DateTime']);
                 var plotDefs=[];
@@ -198,8 +201,8 @@ jQuery(document).ready(function(){
                         saveData(plot,plotData['meta']['id']+'.svg');
                     });
                 }
-                */
             }
+            */
 
             (function heartbeat(){
                 setTimeout(heartbeat,4900);
