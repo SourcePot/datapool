@@ -491,7 +491,7 @@ class Filespace{
     *
     * @return array Returns the final entry
     */
-    public function fileContent2entry(array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
+    public function fileContent2entry(array $entry,bool $noUpdateButCreateIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
         $this->resetStatistic();
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
@@ -505,12 +505,13 @@ class Filespace{
             // save entry['fileContent'] to private tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
             $entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
-            $bytes=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
-            if ($bytes===FALSE){
-                $context['filename']=$entry['Params']['File']['Source'];
+            $context['bytes']=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
+            $context['filename']=$entry['Params']['File']['Source'];
+            if ($context['bytes']===FALSE){
                 $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to create temporary file "{filename}", skipped this entry',$context);                 
             } else {
-                $this->file2entry($entry['Params']['File']['Source'],$entry,$createOnlyIfMissing,$isSystemCall);
+                $entry=$this->file2entry($entry['Params']['File']['Source'],$entry,$noUpdateButCreateIfMissing,$isSystemCall);
+                $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" created file "{filename}" with "{bytes}" Bytes.',$context);                 
             }
         }
         return $entry;
@@ -520,14 +521,14 @@ class Filespace{
     * This method adds/links a file to an entry.
     * @param string $file Is the full file name of the file to be linked to the entry
     * @param array $entry Is the entry to be linked with the file
-    * @param boolean $createOnlyIfMissing If TRUE, an exsisting entry will not be touched but the file will be added
+    * @param boolean $noUpdateButCreateIfMissing If TRUE, an exsisting entry will not be touched but the file will be added
     * @param boolean $isSystemCall Is the access control setting
     *
     * @return array Returns the final entry
     */
-    public function file2entry(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array
+    public function file2entry(string $file,array $entry,bool $noUpdateButCreateIfMissing=FALSE,bool $isSystemCall=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'specialFileHandling'=>FALSE);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'specialFileHandling'=>FALSE,'noUpdateButCreateIfMissing'=>$noUpdateButCreateIfMissing,'isSystemCall'=>$isSystemCall);
         if (empty($entry['Source'])){
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty entry["Source"], skipped this entry',$context);         
             return $entry;
@@ -538,7 +539,7 @@ class Filespace{
         }
         $entry=$this->addFileProps($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
-        if ($this->specialFileHandling($file,$entry,$createOnlyIfMissing,$isSystemCall)){
+        if ($this->specialFileHandling($file,$entry,$noUpdateButCreateIfMissing,$isSystemCall)){
             // Files are processed by specialFileHandling()
             // If a file is an archive or email which is separated into file, this method will be called again with each of the separated files
             $context['specialFileHandling']=TRUE;
@@ -550,7 +551,8 @@ class Filespace{
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
                 $entry=$this->oc['SourcePot\Datapool\Tools\ZUGFeRD']->file2entry($file,$entry);
             }
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,$createOnlyIfMissing);
+            // update entry
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall,$noUpdateButCreateIfMissing);
         }
         $entry[__FUNCTION__]=$context;
         return $entry;
@@ -567,9 +569,12 @@ class Filespace{
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         }
         $pathinfo=pathinfo($file);
+        $fileName=(empty($entry['Name']))?$pathinfo['filename']:(pathinfo($entry['Name'])['filename']);
+        $fileName=trim(preg_replace('/[^A-Za-z0-9\-]/','_',$fileName),'_ ');
+        var_dump($fileName);
         $entry['Params']['File']['Name']=$pathinfo['basename'];
         $entry['Params']['File']['Extension']=$pathinfo['extension'];
-        $entry['Name']=(empty($entry['Name']))?$pathinfo['basename']:$entry['Name'];
+        $entry['Name']=$fileName.'.'.$pathinfo['extension'];
         $entry['Params']['File']['Size']=filesize($file);
         $entry['Params']['File']['Date (created)']=filectime($file);
         $entry['Params']['File']['MIME-Type']=mime_content_type($file);
@@ -821,7 +826,7 @@ class Filespace{
      */
     public function addFile2entry(array $entry,string $file):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>'');
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
             if (empty($entry['pdfParser'])){
@@ -854,9 +859,14 @@ class Filespace{
         if (empty($entry['EntryId'])){
             $entry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
         }
-        $targetFile=$this->selector2file($entry,TRUE);
-        if (copy($file,$targetFile)){
-            // success   
+        $context['file']=$file;
+        $context['targetFile']=$this->selector2file($entry,TRUE);
+        if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$context['targetFile'])){
+            // success
+            $context['steps']='File copied to entry|';
+        } else {
+            $context['steps']='Failed to copy file to entry|';
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed to copy "{file}" to "{targetFile}"',$context);
         }
         $entry[__FUNCTION__]=$context;
         return $entry;

@@ -166,19 +166,15 @@ class CSVtools{
                 }
                 // save csv content
                 $statistics['csv entries']++;
-                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                if (empty($targetFile)){
-                    $this->oc['logger']->log('notice','CSV-entry creation named "{Name}" containing {rowCount} rows failed.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows']))); 
-                    break;
+                //$targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+                $entry['fileContent']=trim($csvContent);
+                if (empty($entry['Params']['File']['Name'])){
+                    $entry['fileName']=str_replace('.csv','',$entry['Name']).'.csv';
+                } else {
+                    $entry['fileName']=$entry['Params']['File']['Name'];
                 }
-                file_put_contents($targetFile,trim($csvContent));
-                if (empty($entry['Params']['File']['Name'])){$entry['Params']['File']['Name']=str_replace('.csv','',$entry['Name']).'.csv';}
-                $entry['Params']['File']['Size']=filesize($targetFile);
-                $entry['Params']['File']['Extension']='csv';
-                $entry['Params']['File']['MIME-Type']='text/csv';
-                $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
                 $entry['Content']=$statistics;
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,FALSE,FALSE,TRUE,$targetFile);
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
                 $this->oc['logger']->log('info','CSV-entry created named "{Name}" containing {rowCount} rows.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows'])));    
             }
             return $statistics;

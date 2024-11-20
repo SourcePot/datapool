@@ -54,7 +54,7 @@ class Queue
     * @param string    $attachment      Optional file name with location for file to be attached
     * @return array    $entry           The entry stored
     */
-    public function enqueueEntry(string $callingClass,int|string $step,array $entry,string $attachment=''):array
+    public function enqueueEntry(string $callingClass,int|string $step,array $entry):array
     {
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $hrTimeArr=hrtime(FALSE);
@@ -63,7 +63,7 @@ class Queue
         $entryTemplate['Group']=array_pop($callingClass).'||'.strval($step);
         $entry['EntryId']=str_pad(strval($hrTimeArr[0]),32,'0',STR_PAD_LEFT).'.'.$hrTimeArr[1].'||'.$entryTemplate['Group'];
         $entry=array_merge($entry,$entryTemplate);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,FALSE,FALSE,$attachment);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE,FALSE,FALSE);
         $this->updateQueueMeta($entry);
         return $entry;
     }

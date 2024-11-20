@@ -786,13 +786,12 @@ class Database{
     * @param boolean $isSystemCall The value is provided to access control to establish read/write access within the method 
     * @param boolean $noUpdateButCreateIfMissing If true, an existing entry won't be updated
     * @param boolean $addLog If true, an entry update will be documented in the entry processing log
-    * @param string $attachment If a valid file name is provided the file is added to the entry
     *
     * @return array|boolean The inserted, updated or created entry, an empty array if access rights were insufficient or false on error.
     */
-    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE,string $attachment=''):array|bool
+    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>'');
         // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys and set selector
@@ -807,20 +806,13 @@ class Database{
         $entry['preExistingEntry']=$existingEntry;
         if (empty($existingEntry['rowCount'])){
             // no existing entry found -> insert and return entry
-            if (is_file($attachment)){
-                // valid file attachment found
-                $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFileProps($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
-            } else {
-                $currentFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-                if (is_file($currentFile)){
-                    // entry has file attachment
-                } else {
-                    // no valid file attachment. clear related meta data
-                    if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
+            $context['steps'].='Is new entry|';
+            $currentFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            if (!is_file($currentFile)){
+                // no valid file attachment. clear related meta data
+                if (isset($entry['Params']['File'])){
+                    unset($entry['Params']['File']);
+                    $context['steps'].='Entry has no file, Params→File unset|';
                 }
             }
             // add log
@@ -832,20 +824,13 @@ class Database{
             // insert new entry
             $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$this->insertEntry($entry,TRUE);
+            $context['steps'].='Entry inserted|';
             $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> update
+            $context['steps'].='Entry exsists|';
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
-            $entry['Params']=array_merge($existingEntry['Params'],(isset($entry['Params'])?$entry['Params']:array()));
-            // add attachment 
-            if (is_file($attachment)){
-                if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
-                $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFileProps($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->addFile2entry($entry,$attachment);
-                $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
-            }
+            $entry['Params']=array_replace_recursive($existingEntry['Params'],(isset($entry['Params'])?$entry['Params']:array()));
             // add log
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
@@ -856,14 +841,23 @@ class Database{
             $entry=$this->unifyEntry($entry,FALSE);
             $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $contextBackup['entriesUpdated']=$this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
+            $context['steps'].='Entry updated|';
             $entry=$this->entryById($selector,$isSystemCall,'Read');
+            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
+        } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
+            // existing entry -> no write access -> no update 
+            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
+            $entry=$existingEntry;
+            $context['steps'].='Write access denied to existing entry|';
             $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else {
             // existing entry -> no update 
             $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$existingEntry;
+            $context['steps'].='Existing entry and no update|';
             $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         }
+        $context['steps']=trim($context['steps'],'|');
         $entry[__FUNCTION__]=$context;
         return $entry;
     }

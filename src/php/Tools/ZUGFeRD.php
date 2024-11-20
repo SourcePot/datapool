@@ -55,12 +55,17 @@ class ZUGFeRD{
     private function pdf2entry(string $file, array $entry, array $pathinfo):array
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$pathinfo['basename']);
-        $document = ZugferdDocumentPdfReader::readAndGuessFromFile($file);
-        if (empty($document)){
-            $this->oc['logger']->log('Info','Method "{class} &rarr; {function}()" failed to create a document object from "{file}".',$context);
-            return $entry;
+        try{
+            $document = ZugferdDocumentPdfReader::readAndGuessFromFile($file);
+            if (empty($document)){
+                $this->oc['logger']->log('Info','Method "{class} &rarr; {function}()" failed to create a document object from "{file}".',$context);
+            } else {
+                $entry=$this->document2entry($document,$entry);
+            }
+        } catch (\Exception $e){
+            $context['msg']=$e->getMessage();
+            $this->oc['logger']->log('Info','Method "{class} &rarr; {function}()" failed with "{msg}" for "{file}".',$context);
         }
-        $entry=$this->document2entry($document,$entry);
         return $entry;
     }
     

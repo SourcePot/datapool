@@ -277,12 +277,10 @@ class HTMLbuilder{
             $keys=$_SESSION[__CLASS__][__FUNCTION__][$requestId];
         } else {
             // get available keys
-            $foundEntries=FALSE;
             $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE,'Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE,$isDebugging=FALSE);
             for($i=0;$i<2;$i++){
                 $offset=($rowCount>1)?mt_rand(0,$rowCount-1):0;
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read',FALSE,TRUE,1,$offset) as $tmpEntry){
-                    $foundEntries=TRUE;
                     $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
                 }                
             }

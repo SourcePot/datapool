@@ -98,7 +98,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix['Commands']['Run']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Parsing widget'));
         foreach($result as $caption=>$matrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr['icon']=$caption;
+            if ($caption==='Parser statistics'){$appArr['open']=TRUE;}
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
@@ -196,6 +199,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
+                                'Required'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('-','Must not be empty'),'keep-element-content'=>TRUE),
                                 );
         //$contentStructure['Source column']['addColumns']
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
@@ -346,30 +350,41 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                         }
                     }
                 }
-                if (isset($rule['Content']['Match required'])){$matchRequired=boolval($rule['Content']['Match required']);} else {$matchRequired=FALSE;}
+                $matchRequired=(isset($rule['Content']['Match required']))?boolval($rule['Content']['Match required']):FALSE;
+                $parserFailed=!empty($ruleFailed) && $matchRequired;
                 if ($testRun){
                     $result['Parser rule matches'][$rowKey]=array('Regular expression or constant used'=>$rule['Content']['Constant or...'].$rule['Content']['regular expression'],
                                                                   'Section name'=>$sectionName,
                                                                   'Match'=>$matchText,
                                                                   'Removed match'=>$matchRemoved,
                                                                   'Match required'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($matchRequired),
-                                                                  'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($ruleFailed) && $matchRequired),
+                                                                  'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($parserFailed),
                                                                   );
                 }
-                if (!empty($ruleFailed) && $matchRequired){
-                    $parserFailed=$ruleFailed;
-                    break;
-                }
+                if ($parserFailed){break;}
             } 
             // loop through mapper rules
+            $mapperRuleFailed='';
             foreach($base['mapperrules'] as $ruleEntryId=>$rule){
+                $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
                 $matchText='';
                 if (empty($rule['Content']['...or constant'])){
                     $matchText=(isset($flatSourceEntry[$rule['Content']['Source column']]))?$flatSourceEntry[$rule['Content']['Source column']]:'';
+                    if (empty($matchText)){
+                        $mapperRuleFailed.='|'.$rule['Content']['Source column'].' not set or empty';
+                    }
                 } else {
                     $matchText=$rule['Content']['...or constant'];
                 }
                 $targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
+                //
+                $mustNotBeEmpty=(isset($rule['Content']['Required']))?boolval($rule['Content']['Required']):FALSE;
+                $parserFailed=!empty($mapperRuleFailed) && $mustNotBeEmpty;
+                $result['Mapper rule matches'][$rowKey]=array('Source column or constant'=>(($rule['Content']['Source column']==='useValue')?$rule['Content']['...or constant']:$matchText),
+                                                              'Must not be empty'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($mustNotBeEmpty),
+                                                              'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($parserFailed),
+                                                             );
+                if ($parserFailed){break;}
             }
         }
         // process result

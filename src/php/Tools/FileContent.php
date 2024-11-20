@@ -61,16 +61,26 @@ final class FileContent{
 
     private function addUnycom(array $entry,string $text):array
     {
-        preg_match('/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{1,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})(\s{0,1}[0-9]{0,2})/',$text,$matches);
-        if (isset($matches[0])){
-            $unycom=$matches[0];
-            $needlePos=stripos($text,$unycom);
-            $fhi=substr($text,$needlePos-10,10);
-            preg_match('/([A-Zabc1-9]{3,6})(\s*(-|—|—)\s*)/',$fhi,$match);
-            $fhi=(isset($match[1]))?$match[1].' - ':'';
-            $entry['UNYCOM']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($fhi.$unycom);
-            $entry['UNYCOM list']=implode(';',$matches);
+        $entry['UNYCOM']=array();
+        $pList=$fList=array();
+        preg_match_all(\SourcePot\Datapool\Tools\MiscTools::UNYCOM_REGEX,$text,$matches,PREG_OFFSET_CAPTURE);
+        foreach($matches[0] as $match){
+            $prefix=substr($text,$match[1]-10,10);
+            $prefixComps=preg_split('/[^A-Za-z0-9 ]+/',$prefix);
+            if (count($prefixComps)>1){
+                array_pop($prefixComps);
+                $prefix=array_pop($prefixComps);    
+            } else {
+                $prefix='';
+            }
+            $case=substr($text,intval($match[1]),16);
+            $unycomArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($case,$prefix);
+            $pList[]=$unycomArr['Reference'];
+            $fList[]=$unycomArr['Family'];
+            if (empty($entry['UNYCOM'])){$entry['UNYCOM']=$unycomArr;}
         }
+        $entry['UNYCOM P-list']=implode(';',$pList);
+        $entry['UNYCOM F-List']=implode(';',$fList);
         return $entry;
     }
 

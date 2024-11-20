@@ -12,6 +12,9 @@ namespace SourcePot\Datapool\Tools;
 
 final class MiscTools{
 
+    //public const UNYCOM_REGEX='/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u';
+    //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{0,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})(\s{0,1}[0-9]{0,2})/u';
+    public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{2,4})([0-9 ]{0,2})/u';
     public $emojis=array();
     private $emojiFile='';
     
@@ -980,21 +983,30 @@ final class MiscTools{
         return (isset($unycomArr[$key]))?$unycomArr[$key]:'';
     }
     
-    public function convert2unycom($value):array
+    public function convert2unycom($value,$prefix=''):array
     {
         $value=strval($value);
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-        preg_match('/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u',$value,$matches);
+        preg_match(\SourcePot\Datapool\Tools\MiscTools::UNYCOM_REGEX,$value,$matches);
         if (empty($matches[0])){return array('Match'=>'','isValid'=>FALSE);}
-        $arr=array_combine($keyTemplate,$matches);
+        // initialize result array from match
+        $arr=array();
+        $suffix='';
+        foreach($matches as $matchIndex=>$matchValue){
+            if (isset($keyTemplate[$matchIndex])){
+                $arr[$keyTemplate[$matchIndex]]=$matchValue;
+            } else {
+                $suffix.=$matchValue;
+            }
+        }
         $arr['Region']='  ';
         $arr['Country']='  ';
         $arr['Part']='  ';
         $arr['isValid']=TRUE;
-        $prefixSuffix=explode($matches[0],$value);
-        if (!empty($prefixSuffix[1])){
-            $suffix=preg_replace('/\s+/u','',$prefixSuffix[1]);
+        // process suffix
+        if (!empty($suffix)){
+            $suffix=preg_replace('/\s+/u','',$suffix);
             $suffix=strtoupper($suffix);
             $suffix=str_split($suffix,2);
             foreach($regions as $rc=>$region){
@@ -1030,6 +1042,7 @@ final class MiscTools{
                 }
             }
         }
+        // check year
         foreach($keyTemplate as $key){$arr[$key]=preg_replace('/\s+/u','',$arr[$key]);}
         if (strlen($arr['Year'])===2){
             if (intval($arr['Year'])<50){
@@ -1038,9 +1051,10 @@ final class MiscTools{
                 $arr['Year']='19'.$arr['Year'];
             }
         }
+        // compile result
         $reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
         $arr=array('Reference'=>$reference,'Reference without \s'=>preg_replace('/\s+/u','',$reference),'Full'=>$reference,'Family'=>$arr['Year'].'F'.$arr['Number'])+$arr;
-        $arr['Prefix']=trim($prefixSuffix[0],'- ');
+        $arr['Prefix']=trim($prefix,'- ');
         if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
         return $arr;
     }

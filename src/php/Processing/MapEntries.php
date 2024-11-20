@@ -228,31 +228,20 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
         }            
         if ($base['zipRequested']){
+            // add csv file to zip archive
             if (isset($result['Target']['Source'])){
-                // add csv file to zip archive
                 $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(array('Source'=>$result['Target']['Source']['value'],'EntryId'=>$result['Target']['EntryId']['value']));
                 $zipFileName=preg_replace('/[^a-zA-Z0-9\-]/','_',$result['Target']['Name']['value']);
                 $zip->addFile($csvFile,$zipFileName.'.csv');
             }
+            // create zip entry
             $zip->close();    
             if (isset($result['Target']['Source'])){
-                // create zip entry
-                $zipEntry=array('Source'=>$result['Target']['Source']['value'],'Name'=>$result['Target']['Name']['value'].' (complete)');
+                $zipEntry=array('Source'=>$result['Target']['Source']['value'],'Name'=>$zipFileName.' (complete)');
                 $zipEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$zipEntry);
                 $zipEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($zipEntry,array('Name'),'0','',FALSE);
-                // add file info
-                $pathArr=pathinfo($zipFile);
-                $zipEntry['Params']['File']['Source']=$zipFile;
-                $zipEntry['Params']['File']['Size']=filesize($zipEntry['Params']['File']['Source']);
-                $zipEntry['Params']['File']['Name']=$pathArr['basename'];
-                $zipEntry['Params']['File']['Extension']=$pathArr['extension'];
-                $zipEntry['Params']['File']['MIME-Type']=mime_content_type($zipFile);
-                $zipEntry['Params']['File']['Date (created)']=filectime($zipEntry['Params']['File']['Source']);
-                $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($zipEntry);
-                // save entry and file
-                $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($zipEntry,TRUE,FALSE,TRUE,$zipEntry['Params']['File']['Source']);
-                $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($zipEntry);
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($zipFile,$entryFile);
+                $zipEntry['extractArchives']=FALSE;
+                $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($zipFile,$zipEntry,FALSE,TRUE);
                 $result['Mapping statistics']['Output format']['value']='Zip + csv';
             }
         }
