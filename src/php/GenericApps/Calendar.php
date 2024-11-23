@@ -10,8 +10,6 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-const DB_TIMEZONE='UTC';
-
 class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
@@ -148,11 +146,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $vars['Period end']=time();
             $startDateTime=new \DateTime();
             $startDateTime->setTimestamp($vars['Period start']); 
-            $startDateTime->setTimezone(new \DateTimeZone(DB_TIMEZONE));
+            $startDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
             $startWindow=$startDateTime->format('Y-m-d H:i:s');
             $endDateTime=new \DateTime();
             $endDateTime->setTimestamp($vars['Period end']); 
-            $endDateTime->setTimezone(new \DateTimeZone(DB_TIMEZONE));
+            $endDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
             $endWindow=$endDateTime->format('Y-m-d H:i:s');
             // scan calendar entries
             $events=array();
@@ -227,8 +225,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $entry['Name']=(isset($entry['Name']))?$entry['Name']:'';
             $entry['Content']['Event']['Description']=(isset($entry['Content']['Event']['Description']))?$entry['Content']['Event']['Description']:'';
             $entry['Name']=(empty($entry['Content']['Event']['Description']))?$entry['Name']:mb_substr($entry['Content']['Event']['Description'],0,200);
-            $entry['Start']=(empty($entry['Content']['Event']['Start']))?$entry['Start']:$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],DB_TIMEZONE);
-            $entry['End']=(empty($entry['Content']['Event']['End']))?$entry['End']:$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],DB_TIMEZONE);
+            $entry['Start']=(empty($entry['Content']['Event']['Start']))?$entry['Start']:$this->getTimezoneDate($entry['Content']['Event']['Start'],$entry['Content']['Event']['Start timezone'],\SourcePot\Datapool\Root::DB_TIMEZONE);
+            $entry['End']=(empty($entry['Content']['Event']['End']))?$entry['End']:$this->getTimezoneDate($entry['Content']['Event']['End'],$entry['Content']['Event']['End timezone'],\SourcePot\Datapool\Root::DB_TIMEZONE);
         } else {
             // Serial events
             if (isset($entry['Content']['Name'])){$entry['Name']=$entry['Content']['Name'];}
@@ -278,7 +276,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                 'Hour'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$hourOptions),
                                 'Minute'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$minOptions),
                                 'Duration'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$durationOptions),
-                                'Timezone'=>array('method'=>'select','excontainer'=>TRUE,'value'=>DB_TIMEZONE,'options'=>$this->options['Timezone']),
+                                'Timezone'=>array('method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'options'=>$this->options['Timezone']),
                                 'Visibility'=>array('method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE)),
                                 );
         $arr['selector']=array('Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
@@ -380,9 +378,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                 }
             }
             if (mb_strpos($event['State'],'Upcomming')!==FALSE){
-                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts&nbsp;in'=>$this->getTimeDiff($event['Start'],'now',DB_TIMEZONE,DB_TIMEZONE));
+                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Starts&nbsp;in'=>$this->getTimeDiff($event['Start'],'now',\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::DB_TIMEZONE));
             } else {
-                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Ends&nbsp;in'=>$this->getTimeDiff($event['End'],'now',DB_TIMEZONE,DB_TIMEZONE));
+                $matrices[$event['State']][$EntryId]=array('Event'=>$event['Name'],'Ends&nbsp;in'=>$this->getTimeDiff($event['End'],'now',\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::DB_TIMEZONE));
             }
         }
         $html='';
@@ -550,7 +548,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private function getEvents($timestamp,$isSystemCall=FALSE){
         $calendarDateTime=new \DateTime();
         $calendarDateTime->setTimestamp($timestamp); 
-        $serverTimezone=new \DateTimeZone(DB_TIMEZONE);
+        $serverTimezone=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
         $calendarDateTime->setTimezone($serverTimezone);
         $viewStart=$calendarDateTime->format('Y-m-d H:i:s');
         $calendarDateTime->add(\DateInterval::createFromDateString(($this->setting['Days to show']??'10').' days'));
@@ -581,8 +579,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     }
                     $events[$key]=$entry;
                     $events[$key]['State']=$state;
-                    $events[$key]['x0']=$this->date2pos($entry['Start'],DB_TIMEZONE);
-                    $events[$key]['x1']=$this->date2pos($entry['End'],DB_TIMEZONE);
+                    $events[$key]['x0']=$this->date2pos($entry['Start'],\SourcePot\Datapool\Root::DB_TIMEZONE);
+                    $events[$key]['x1']=$this->date2pos($entry['End'],\SourcePot\Datapool\Root::DB_TIMEZONE);
                     // add y-index
                     $events[$key]=$this->addYindex($events[$key],$oldEvents);
                     $oldEvents[$key]=$events[$key];
@@ -609,12 +607,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                 $entries[$entryId]=$entry;
                 $entries[$entryId]['EntryId']=$entryId;
                 $entries[$entryId]['SerailEntryId']=$entry['EntryId'];
-                $entries[$entryId]['Start']=$this->getTimezoneDate('@'.$timestamp,'UTC',DB_TIMEZONE);
+                $entries[$entryId]['Start']=$this->getTimezoneDate('@'.$timestamp,'UTC',\SourcePot\Datapool\Root::DB_TIMEZONE);
                 $entries[$entryId]['Content']['Event']['Start']=$entries[$entryId]['Start'];
-                $entries[$entryId]['Content']['Event']['Start timezone']=DB_TIMEZONE;
-                $entries[$entryId]['End']=$this->getTimezoneDate('@'.$endTimestamp,'UTC',DB_TIMEZONE);
+                $entries[$entryId]['Content']['Event']['Start timezone']=\SourcePot\Datapool\Root::DB_TIMEZONE;
+                $entries[$entryId]['End']=$this->getTimezoneDate('@'.$endTimestamp,'UTC',\SourcePot\Datapool\Root::DB_TIMEZONE);
                 $entries[$entryId]['Content']['Event']['End']=$entries[$entryId]['End'];
-                $entries[$entryId]['Content']['Event']['End timezone']=DB_TIMEZONE;
+                $entries[$entryId]['Content']['Event']['End timezone']=\SourcePot\Datapool\Root::DB_TIMEZONE;
                 $timestamp=$endTimestamp;
                 $entryIdSuffix++;
             } else {

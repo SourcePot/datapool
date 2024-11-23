@@ -11,7 +11,6 @@ table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
     float:left;
     clear:right;
     max-width:100%;
-    margin:5px 0;
     border:none;
     box-shadow:none;
 }

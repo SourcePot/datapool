@@ -224,6 +224,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         if ($base['csvRequested'] || $base['zipRequested']){
+            // write csv file
             $result['Mapping statistics']['Output format']['value']='CSV';
             $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
         }            
@@ -235,12 +236,14 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $zip->addFile($csvFile,$zipFileName.'.csv');
             }
             // create zip entry
+            $archiveFileCount=$zip->count();
             $zip->close();    
             if (isset($result['Target']['Source'])){
                 $zipEntry=array('Source'=>$result['Target']['Source']['value'],'Name'=>$zipFileName.' (complete)');
                 $zipEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$zipEntry);
                 $zipEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($zipEntry,array('Name'),'0','',FALSE);
                 $zipEntry['extractArchives']=FALSE;
+                $zipEntry['Content']=array('Zip archive file count'=>$archiveFileCount);
                 $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($zipFile,$zipEntry,FALSE,TRUE);
                 $result['Mapping statistics']['Output format']['value']='Zip + csv';
             }
@@ -287,9 +290,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=$this->valueSizeLimitCompliance($key,$targetEntry);
         }
         $result['Mapping statistics']['Entries']['value']++;
-        //
         $sourceEntry['Content']=array();
         if ($base['csvRequested'] || $base['zipRequested']){
+            // add entry to csv
             unset($sourceEntry['Params']);
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
@@ -297,6 +300,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
             }
         } else {
+            // update and move entry to target
             $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun,$params['Content']['Keep source entries']);
         }

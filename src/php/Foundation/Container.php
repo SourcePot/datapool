@@ -671,6 +671,7 @@ class Container{
     public function getImageShuffle(array $arr,bool $isDebugging=FALSE):array
     {
         if (!isset($arr['html'])){$arr['html']='';}
+        $arr['callingFunction'].='-shuffle';
         $selectBtnHtml='';
         $settingsTemplate=array('isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']);
         $settingsTemplate['style']=array('width'=>320,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2);
@@ -704,7 +705,7 @@ class Container{
             if ($settings['autoShuffle']){$btnWrapper['style']['display']='none';}
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
             if (!empty($settings['presentEntry'])){
-                $entryPlaceholder=array('tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','title'=>$settings['getImageShuffle'],'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'0'));    
+                $entryPlaceholder=array('tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','title'=>$settings['getImageShuffle'],'function'=>__FUNCTION__,'style'=>array('clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'0'));    
                 $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($entryPlaceholder);
             }
         }   

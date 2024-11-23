@@ -82,9 +82,9 @@ class GeoTools{
                 $entry['Params'][$targetKey]=$this->normalizeAddress($response['addressparts']);
                 if (isset($entry['Content'][$targetKey])){$entry['Content'][$targetKey]=$entry['Params'][$targetKey];}
                 if (isset($response['result'])){
-                    $entry['Params'][$targetKey]['display_name']=$response['result'];
+                    $entry['Content']['Location/Destination']['display_name']=$entry['Params'][$targetKey]['display_name']=$response['result'];
                 } else {
-                    $entry['Params'][$targetKey]['display_name']=implode(', ',$response['addressparts']);
+                    $entry['Content']['Location/Destination']['display_name']=$entry['Params'][$targetKey]['display_name']=implode(', ',$response['addressparts']);
                 }
             }
             $debugArr['entry_out']=$entry;

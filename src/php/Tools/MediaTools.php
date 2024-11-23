@@ -41,6 +41,11 @@ class MediaTools{
             $arr['settings']['style']['max-width']=$arr['maxDim'];
             $arr['settings']['style']['max-height']=$arr['maxDim'];
         }
+        if (!empty($arr['wrapperSettings']['style'])){
+            $styleArr=(is_array($arr['wrapperSettings']['style']))?$arr['wrapperSettings']['style']:$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($arr['wrapperSettings']['style']);
+            if (isset($styleArr['max-width'])){$arr['settings']['style']['max-width']=intval($styleArr['max-width'])-10;}
+            if (isset($styleArr['max-height'])){$arr['settings']['style']['max-height']=intval($styleArr['max-height'])-40;}
+        }
         $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['width']));
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){return $arr;}
         $arr=$this->addTmpFile($arr);

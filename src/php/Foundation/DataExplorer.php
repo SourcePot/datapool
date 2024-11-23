@@ -435,21 +435,29 @@ class DataExplorer{
     /**
     * Canvas elements from calling class.
     *
-    * @param string    $callingClass       The calling method's class-name
+    * @param string    $callingClass    The calling method's class-name
+    * @param string    $EntryId         If empty all relevant canvas elements will be returned, else the selected canvas element 
     * @return array    Canvas elements
     */
-    public function getCanvasElements(string $callingClass):array
+    public function getCanvasElements(string $callingClass, string $EntryId=''):array
     {
         // This method is called by HTMLbuilder to provide a canvas elements selector.
         // It returns the canvas elements in order by their position.
         $elements=array();
         $selector=$this->canvasSelector($callingClass);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
-            if (empty($entry['Content']['Style']['Text'])){continue;}
-            if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0 || strcmp($entry['Content']['Style']['Text'],'&#128337;')===0){continue;}
-            $elements[$entry['Content']['Style']['Text']]=$entry;
+        if (empty($EntryId)){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
+                if (empty($entry['Content']['Style']['Text'])){continue;}
+                if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0 || strcmp($entry['Content']['Style']['Text'],'&#128337;')===0){continue;}
+                $elements[$entry['Content']['Style']['Text']]=$entry;
+            }
+            ksort($elements);
+        } else {
+            $selector['EntryId']=$EntryId;
+            if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector)){
+                $elements[$EntryId]=$entry; 
+            }
         }
-        ksort($elements);
         return $elements;
     }
     

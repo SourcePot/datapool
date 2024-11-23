@@ -75,6 +75,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                     } else {
                         $html.='No entry found...';
                     }
+                } else if ($selector['Group']==='Feeds'){
+                    $settings=array('method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds');
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Feed URL settings','generic',$selector,$settings,array());
                 } else {
                     $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());
@@ -95,6 +98,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $template['Job processing timimg']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'),'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job');
         $template['Entry presentation']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'),'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().');
         $template['Definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'),'description'=>'Here you can adjust the entry definitions.');
+        $template['Feeds']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'),'description'=>'Here you can add and remove Feeds.');
         $template['Remote client definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'),'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected');
         // create html
         $matrix=array();

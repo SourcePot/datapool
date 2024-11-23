@@ -560,6 +560,7 @@ class Filespace{
 
     public function addFileProps(array $entry,string $file):array
     {
+        // set Params → File uploader properties
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $entry['Owner']=(empty($entry['Owner']))?$currentUser['EntryId']:$entry['Owner'];
         $entry['Params']['File']=array();
@@ -568,13 +569,18 @@ class Filespace{
             $entry['Params']['File']['UploaderName']=$currentUser['Name'];
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         }
+        // get file name
         $pathinfo=pathinfo($file);
-        $fileName=(empty($entry['Name']))?$pathinfo['filename']:(pathinfo($entry['Name'])['filename']);
+        if (empty($entry['Name'])){
+            $fileName=$pathinfo['filename'];
+            $entry['Name']=$fileName.'.'.$pathinfo['extension'];
+        } else {
+            $fileName=pathinfo($entry['Name'])['filename'];
+        }
         $fileName=trim(preg_replace('/[^A-Za-z0-9\-]/','_',$fileName),'_ ');
-        var_dump($fileName);
-        $entry['Params']['File']['Name']=$pathinfo['basename'];
+        // set Params → File properties
+        $entry['Params']['File']['Name']=$fileName.'.'.$pathinfo['extension'];
         $entry['Params']['File']['Extension']=$pathinfo['extension'];
-        $entry['Name']=$fileName.'.'.$pathinfo['extension'];
         $entry['Params']['File']['Size']=filesize($file);
         $entry['Params']['File']['Date (created)']=filectime($file);
         $entry['Params']['File']['MIME-Type']=mime_content_type($file);

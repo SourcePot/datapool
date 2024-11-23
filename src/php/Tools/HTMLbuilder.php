@@ -41,9 +41,9 @@ class HTMLbuilder{
                        'SourcePot\Datapool\Tools\HTMLbuilder|entryControls'=>'entryControls()',
                        'SourcePot\Datapool\Tools\HTMLbuilder|deleteBtn'=>'deleteBtn()',
                        'SourcePot\Datapool\Tools\HTMLbuilder|downloadBtn'=>'downloadBtn()',
+                       'SourcePot\Datapool\Tools\HTMLbuilder|selectBtn'=>'selectBtn()',
                        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
                        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
-                       'SourcePot\Datapool\Foundation\Explorer|getQuicklinksHtml'=>'getQuicklinksHtml()',
                        );
         
     public function __construct(array $oc)
@@ -466,7 +466,20 @@ class HTMLbuilder{
         $html=$this->btn($arr);
         return $html;
     }
-        
+
+    /**
+    * This method is a wrapper method for method btn() which returns an entry download html-button.
+    *
+    * @param array $arr It must contain the entry selector (key="selector")  
+    * @return string The html-tag for the button 
+    */
+    public function selectBtn(array $arr):string
+    {
+        $arr['cmd']='select';
+        $html=$this->btn($arr);
+        return $html;
+    }
+
     public function app(array $arr):string
     {
         if (empty($arr['html'])){return '';}
@@ -868,7 +881,10 @@ class HTMLbuilder{
         if (empty($arr['excontainer'])){
             $settingsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
             $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
-            return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],array('style'=>array('padding'=>'0','margin'=>'0','border'=>'none')));
+            $wrapperSetting=array();
+            $wrapperSetting['class']=(empty($arr['class']))?'std':$arr['class'];
+            $wrapperSetting['style']=(empty($arr['style']))?'':$arr['style'];
+            return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],$wrapperSetting);
         } else {
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
@@ -952,6 +968,9 @@ class HTMLbuilder{
     
     private function getPresentationSelector(array $presentArr):array
     {
+        if (!empty($presentArr['selector']['function'])){
+            $presentArr['callingFunction'].='|'.$presentArr['selector']['function'];
+        }
         $selector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Presentation');
         $selector['Folder']=$presentArr['callingClass'].'::'.$presentArr['callingFunction'];
         $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($selector);

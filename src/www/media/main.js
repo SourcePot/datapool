@@ -75,7 +75,8 @@ jQuery(document).ready(function(){
 		let obj=jQuery('[function=loadEntry]').first();
 		if (isVisible(obj)===true && busyLoadingEntry===false){
 			let arr={'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id')},
-					 'settings':{'presentEntry':'Forum'},
+					 'settings':{'presentEntry':jQuery(obj).attr('class')},
+					 'style':jQuery(obj).attr('style'),'class':jQuery(obj).attr('class'),
 					 'function':jQuery(obj).attr('function'),
 					 'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
 					};
@@ -534,7 +535,7 @@ jQuery(document).ready(function(){
 	}
 	function presentEntry(containerId,selector){
 		var presentEntrySelector='#present-'+containerId+'-entry';
-		let arr={'selector':{'Source':jQuery(selector).attr('source'),'EntryId':jQuery(selector).attr('entry-id')},
+		let arr={'selector':{'Source':jQuery(selector).attr('source'),'EntryId':jQuery(selector).attr('entry-id'),'function':jQuery(presentEntrySelector).attr('function')},
 				 'settings':{'presentEntry':'Image shuffle '+jQuery(presentEntrySelector).attr('title')},
 				 'function':'loadEntry',
 				 'htmlSelector':presentEntrySelector

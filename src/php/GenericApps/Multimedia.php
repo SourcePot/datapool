@@ -58,18 +58,17 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-            if (empty($selector['Group'])){
+            if (empty($selector['Group']) || empty($selector['Folder'])){
                 $wrapperSetting=array('style'=>array('padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'10px','border'=>'1px dotted #999;'));
                 $setting=array('style'=>array('width'=>500,'height'=>400,'background-color'=>'#fff'),'autoShuffle'=>FALSE,'getImageShuffle'=>'multimedia');
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);
+                $hash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle '.$hash,'getImageShuffle',$selector,$setting,$wrapperSetting);
                 $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
                 $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
-            } else if (empty($selector['Group']) || empty($selector['EntryId'])){
-                //$wrapperSetting=array();
-                $wrapperSetting=array('html'=>$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap());
-                $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
-                $settings['columns']=array(array('Column'=>'Name','Filter'=>''));
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mutlimedia entries','entryList',$selector,$settings,$wrapperSetting);
+            } else if (empty($selector['EntryId'])){
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('max-width'=>300,'max-height'=>280)));
+                }
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
                 $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);

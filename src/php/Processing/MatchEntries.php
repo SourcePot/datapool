@@ -192,12 +192,17 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function matchEntry($base,$entry,$result,$testRun){
         $params=current($base['matchingparams']);
+        $bestMatchCanvasElement=current($this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements(__CLASS__,$params['Content']['Match with']));
         // get best match
         $needle=$entry[$params['Content']['Column to match']];
         $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
         // process best match
         $probability=round(100*$bestMatch['probability']);
         $entry['Params']['Processed'][__CLASS__]=$probability;
+        $bestMatchKey='Best match';
+        if ($bestMatchCanvasElement){
+            $bestMatchKey.='<br/>'.$bestMatchCanvasElement['Content']['Style']['Text'].'['.$params['Content']['Match with column'].']';
+        }
         if (intval($params['Content']['Match probability'])<100*$bestMatch['probability']){
             // successful match
             if (!empty($params['Content']['Combine content'])){
@@ -209,8 +214,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
-            if (count($result['Matches'])<$this->maxResultTableLength){
-                $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
+            if (count($result['Matches'])<$this->maxResultTableLength){        
+                $result['Matches'][$needle]=array($bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
             }
         } else {
             // failed match
@@ -221,7 +226,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Matching']['Kept entry']['value']++;
             }
             if (count($result['Matches'])<$this->maxResultTableLength){
-                $result['Matches'][$needle]=array('Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
+                $result['Matches'][$needle]=array($bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
             }
         }
         return $result;

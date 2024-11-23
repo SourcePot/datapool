@@ -195,9 +195,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if (!is_file($objectListFile)){return '';}
         foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
             if (!isset($row['classWithNamespace'])){continue;}
-            if ($row['type']==='Application object' && 
-                (mb_strpos($row['classWithNamespace'],'\GenericApps')!==FALSE || mb_strpos($row['classWithNamespace'],'\DataApps')!==FALSE) &&
-                (mb_strpos($row['classWithNamespace'],'\Multimedia')===FALSE && mb_strpos($row['classWithNamespace'],'\Invoices')===FALSE && mb_strpos($row['classWithNamespace'],'\Calendar')===FALSE && mb_strpos($row['classWithNamespace'],'\Forum')===FALSE)){
+            if ($row['type']==='Application object' && (strpos($row['classWithNamespace'],'\GenericApps')!==FALSE || strpos($row['classWithNamespace'],'\DataApps')!==FALSE) &&
+                (strpos($row['classWithNamespace'],'\Invoices')===FALSE && strpos($row['classWithNamespace'],'\Multimedia')===FALSE && strpos($row['classWithNamespace'],'\Calendar')===FALSE && strpos($row['classWithNamespace'],'\Forum')===FALSE && strpos($row['classWithNamespace'],'\Documents')===FALSE && strpos($row['classWithNamespace'],'\Feeds')===FALSE)){
                 $classes[$row['classWithNamespace']]=$row['classWithNamespace'];
                 $classes2files[$row['classWithNamespace']]=$row['file'];
             }
@@ -282,7 +281,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         sort($files);
         $matrix=array();
         foreach($files as $file){
-            if (mb_strpos($file,'exceptionsLog.json')===FALSE){continue;}
+            if (strpos($file,'exceptionsLog.json')===FALSE){continue;}
             $fullFileName=$GLOBALS['dirs']['debugging'].$file;
             $delArr=array('Cmd'=>array('tag'=>'button','element-content'=>'&coprod;','keep-element-content'=>TRUE,'title'=>'Delete file','key'=>array('delete',$fullFileName),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
             $matrix[$file]=$this->oc['SourcePot\Datapool\Root']->file2arr($fullFileName);

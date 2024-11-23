@@ -14,7 +14,7 @@ final class MiscTools{
 
     //public const UNYCOM_REGEX='/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u';
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{0,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})(\s{0,1}[0-9]{0,2})/u';
-    public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{2,4})([0-9 ]{0,2})/u';
+    public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,2})/u';
     public $emojis=array();
     private $emojiFile='';
     
@@ -138,7 +138,11 @@ final class MiscTools{
     {
         $data=$obj;
         if (is_object($data)){
+            $attr=current($data->attributes());
             $data=get_object_vars($data);
+            if ($attr){
+                $data=array_merge($attr,$data);
+            }
             foreach($obj->getDocNamespaces() as $ns_name=>$ns_uri){
                 if ($ns_name===''){continue;}
                 $ns_obj=$obj->children($ns_uri);
@@ -1005,8 +1009,12 @@ final class MiscTools{
         $arr['Part']='  ';
         $arr['isValid']=TRUE;
         // process suffix
-        if (!empty($suffix)){
-            $suffix=preg_replace('/\s+/u','',$suffix);
+        $suffix=preg_replace('/\s+/u','',$suffix);
+        if (empty($suffix)){
+            if ($arr['Type']==='P' || $arr['Type']==='E'){
+                $arr['Type']='F';
+            }
+        } else {
             $suffix=strtoupper($suffix);
             $suffix=str_split($suffix,2);
             foreach($regions as $rc=>$region){
@@ -1119,7 +1127,9 @@ final class MiscTools{
     
     public function matchEntry($needle,$matchSelector,$matchColumn,$matchType='contains',$isSystemCall=FALSE):array
     {
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // prepare match selector
+        $isUNYCOMfamily=FALSE;
         $needles=array();
         if ($matchType=='identical'){
             $matchSelector[$matchColumn]=$needle;
@@ -1127,12 +1137,13 @@ final class MiscTools{
             $matchSelector[$matchColumn]='%'.$needle.'%';
         } else if ($matchType=='unycom'){
             $unycomArr=$this->convert2unycom($needle);
-            $unycomArr=array_merge(array('Year'=>'1900','Type'=>'X','Number'=>'99999','Region'=>'  ','Country'=>'  ','Part'=>'  '),$unycomArr);
-            if (empty(trim($unycomArr['Region'])) && empty(trim($unycomArr['Country']))){
-                $unycomArr['Region']='WO';
-                $unycomArr['Country']='  ';
+            if ($unycomArr['Type']==='F'){
+                $needleTemplate=array('Year','Type','Number');
+                $isUNYCOMfamily=TRUE;
+            } else {
+                $needleTemplate=array('Year','Type','Number','Region','Country','Part');    
             }
-            $needles=array($unycomArr['Year'],$unycomArr['Type'],$unycomArr['Number'],$unycomArr['Region'],$unycomArr['Country'],$unycomArr['Part']);
+            foreach($needleTemplate as $key){$needles[]=$unycomArr[$key];}
             $matchSelector[$matchColumn]='%'.trim($unycomArr['Number']).'%';
         } else if ($matchType=='|'){
             $needles=explode($matchType,$needle);
@@ -1146,28 +1157,36 @@ final class MiscTools{
             $matchSelector[$matchColumn]='%'.$matchSelector[$matchColumn].'%';
         }
         // get possible matches
-        $bestMatch=array('probability'=>0);
+        $bestMatch=array('probability'=>0,'Content'=>array(),'Params'=>array());
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
-            if ($count=count($needles)){
+            // get sample
+            $sample=$matchEntry[$matchColumn];
+            if (strlen($sample)===0){
+                $context['Source']=$matchEntry['Source'];
+                $context['EntryId']=$matchEntry['EntryId'];
+                $context['Name']=$matchEntry['Name'];
+                $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" empty sample for entry Source={Source}, EntryId={EntryId}, Name={Name} detected.',$context);
+            } else if ($count=count($needles)){
+                // calculate probability
                 $probability=0;
-                $sample=$matchEntry[$matchColumn];
-                foreach($needles as $index=>$needle){
-                    $sample=explode($needle,$sample);
-                    if (count($sample)>1){
-                        array_shift($sample);
-                        $probability++;
-                    }
-                    $sample=implode($needle,$sample);
+                $tmpSample=$sample;
+                foreach($needles as $needle){
+                    $needlePos=strpos($tmpSample,$needle);
+                    if ($needlePos===FALSE){continue;}
+                    $probability++;
+                    $tmpSample=substr($tmpSample,($needlePos+strlen($needle)));
                 }
-                $probability=$probability/$count*(1-mb_strlen($sample)/mb_strlen($matchEntry[$matchColumn]));
+                $probability=($probability/$count)-(strlen($tmpSample)/strlen($sample));
+                // check probability against threshold
                 if ($bestMatch['probability']<$probability){
-                    $bestMatch=$matchEntry;
+                    $bestMatch=$matchEntry;    
                     $bestMatch['probability']=$probability;
                     if ($probability==1){break;}
                 }
             } else {
-                $bestMatch=$matchEntry;
-                $bestMatch['probability']=1;
+                $this->oc['logger']->log('notice','WARNING: Function "{class} &rarr; {function}()" called with empty needles, probability set to zero.',$context);
+                $bestMatch=array();
+                $bestMatch['probability']=0;
                 break;
             }
         }

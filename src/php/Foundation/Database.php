@@ -848,7 +848,7 @@ class Database{
             // existing entry -> no write access -> no update 
             $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$existingEntry;
-            $context['steps'].='Write access denied to existing entry|';
+            $context['steps'].='Write access to existing entry denied|';
             $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else {
             // existing entry -> no update 
