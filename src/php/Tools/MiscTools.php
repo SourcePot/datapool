@@ -481,13 +481,23 @@ final class MiscTools{
         return $arr;
     }
 
-    public function wasTouchedByClass(array $entry,string $classWithNamespace,bool $testRun=FALSE):bool
+    /**
+    * The method returns TRUE if the entry was touched already or FALSE if not
+    *
+    * @param array $entry Is the entry.  
+    * @param array $processId Is the process id, e.g. the class with namespace and method
+    * @param boolean $isSystemCall The value is provided to access control. 
+    * @param boolean $dontUpdate If true, the entry will not be updateed, e.g. equals testRun. 
+    *
+    * @return array The resulting entry entry.
+    */
+    public function wasTouchedByClass(array $entry,string $processId,bool $dontUpdate=FALSE):bool
     {
-        if (isset($entry['Params'][$classWithNamespace])){
+        if (isset($entry['Params'][$processId])){
             return TRUE;
         } else {
-            $entry['Params'][$classWithNamespace]=array('user'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'timestamp'=>time());
-            if (!$testRun){$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);}
+            $entry['Params'][$processId]=array('user'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'timestamp'=>time());
+            if (!$dontUpdate){$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);}
             return FALSE;
         }
     }
@@ -505,6 +515,17 @@ final class MiscTools{
             $selector[$key]=(mb_strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
         }
         return $selector;
+    }
+    
+    public function arrRemoveEmpty(array $arr)
+    {
+        $flatResultArr=array();
+        $flatArr=$this->arr2flat($arr);
+        foreach($flatArr as $flatKey=>$value){
+            if (empty($value)){continue;}
+            $flatResultArr[$flatKey]=$value;
+        }
+        return $this->flat2arr($flatResultArr);
     }
     
     /**

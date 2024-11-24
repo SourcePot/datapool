@@ -31,6 +31,7 @@ class Job{
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         // all jobs settings - remove non-existing job methods and add new job methods
+        $arr['run']=(isset($arr['run']))?$arr['run']:'';
         $jobs=array('due'=>array(),'undue'=>array());
         $allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
         $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
@@ -48,14 +49,29 @@ class Job{
                 $allJobsSetting['Content'][$class]=$initContent;
             }
             ksort($allJobsSetting['Content'][$class]);
-            $dueTime=time()-($allJobsSetting['Content'][$class]['Last run']+$allJobsSetting['Content'][$class]['Min time in sec between each run']);
-            if ($dueTime>0){$jobs['due'][$class]=$dueTime;} else {$jobs['undue'][$class]=$dueTime;}
+            if (empty($arr['run'])){
+                // get job based on which is overdue
+                $dueTime=time()-($allJobsSetting['Content'][$class]['Last run']+$allJobsSetting['Content'][$class]['Min time in sec between each run']);
+                if ($dueTime>0){
+                    $jobs['due'][$class]=$dueTime;
+                } else {
+                    $jobs['undue'][$class]=$dueTime;
+                }
+            } else {
+                // specific job requested
+                if ($class==$arr['run']){
+                    $jobs['due'][$class]=10;
+                } else {
+                    $jobs['undue'][$class]=0;
+                }
+            }
         }
         // get most overdue job
         $arr['page html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(array('tag'=>'h1','element-content'=>'Job processing triggered'));
         if (empty($jobs['due'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobs);
-            $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE));    
+            $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
+            $arr['jobVars']=array(); 
         } else {
             arsort($jobs['due']);
             reset($jobs['due']);
@@ -86,6 +102,7 @@ class Job{
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobStatistic);
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Job statistic','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
             ksort($allJobsSetting['Content'][$dueJob]);
+            $arr['jobVars']=$jobVars['Content'];
         }
         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($allJobsSetting,TRUE);
         return $arr;

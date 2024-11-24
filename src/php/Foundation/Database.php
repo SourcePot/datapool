@@ -271,7 +271,7 @@ class Database{
         } else {
             $typeArr=array();
         }
-        // is guiede entry?
+        // is guide entry?
         if (mb_strpos(strval($entry['EntryId']??''),\SourcePot\Datapool\Root::GUIDEINDICATOR)!==FALSE){
             $typeArr[0]=\SourcePot\Datapool\Root::GUIDEINDICATOR;
         } else {

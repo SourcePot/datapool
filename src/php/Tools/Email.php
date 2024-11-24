@@ -108,7 +108,18 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     {
         $Group='INBOX|'.preg_replace('/\W/','_',$id);
         return array('Source'=>$this->entryTable,'Group'=>$Group);
-    }    
+    }
+
+    private function id2entrySelector($id):array
+    {
+        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
+        if (isset($canvasElement['Content']['Selector'])){
+            return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arrRemoveEmpty($canvasElement['Content']['Selector']);
+        } else {
+            return array();
+        }
+    }
     
     private function getReceiverSetting($id){
         $id=preg_replace('/\W/','_','INBOX-'.$id);
@@ -121,7 +132,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     }
     
     private function getReceiverMeta($id){
-        //$mbox=imap_open("{mail.wallenhauer.com}INBOX",'c@wallenhauer.com','Hu8wl3PyT62tVV1');
         $meta=array();
         $setting=$this->getReceiverSetting($id);
         $mbox=@imap_open(strval($setting['Content']['Mailbox']),$setting['Content']['User'],$setting['Content']['Password']);
@@ -130,16 +140,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         if (empty($mbox)){
             $meta['Error']=imap_last_error();
         } else {
-            /*$check=imap_mailboxmsginfo($mbox);
-            $meta=array('Driver'=>$check->Driver,
-                        'Mailbox'=>$check->Mailbox,
-                        'Messages'=>$check->Nmsgs,
-                        'Recent'=>$check->Recent,
-                        'Unread'=>$check->Unread,
-                        'Deleted'=>$check->Deleted,
-                        'Size'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($check->Size),
-                        );
-            */
             $status=imap_status($mbox,$setting['Content']['Mailbox'],SA_ALL);
             $meta=array('messages'=>$status->messages,
                         'Recent'=>$status->recent,
@@ -153,29 +153,47 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     }
 
     private function todaysEmails($id){
-        $entrySelector=$this->receiverSelector($id);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'emailsSkipped'=>0,'alerts'=>'','errors'=>'');
+        $receiverSelector=$this->receiverSelector($id);
+        $entrySelector=$this->id2entrySelector($id);
         $setting=$this->getReceiverSetting($id);
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+        $context['Mailbox']=$setting['Content']['Mailbox'];
+        // initialize mailbox
         if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
-            $result=array('Error'=>'Setting "Mailbox" and/or "User" is empty.');
-            return $result;
+            $context['Error']='Setting "Mailbox" and/or "User" is empty.';
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" added "{emailsAdded}" Mailbox settings are empty.',$context);    
+            return $context;
         }
-        $result=array('Mailbox'=>$setting['Content']['Mailbox'],'Exceptions'=>'','Messages'=>0);
         $mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
         // error handling and documentation
         $errors=imap_errors();
+        if (!empty($errors)){
+            $context['errors']=implode(', ',$errors);
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with errors: {errors}',$context);    
+        }
         $alerts=imap_alerts();
-        if ($alerts){$result['Exceptions'].='Alerts: '.implode(', ',$alerts);}
-        if ($errors){$result['Exceptions'].=' | Errors: '.implode(', ',$errors);}
-        $result['Exceptions']=trim($result['Exceptions'],' |');
-        if (!empty($result['Exceptions'])){
-            $this->oc['logger']->log('error','Failed to connect to mailbox: {Exceptions}',array('Exceptions'=>$result['Exceptions']));    
+        if (!empty($errors)){
+            $context['alerts']=implode(', ',$alerts);
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with alerts: {alerts}',$context);    
         }
         // open mailbox
+        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         if (!empty($mbox)){
+            $expires=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
             $messages=imap_search($mbox,'SINCE "'.date('d-M-Y').'"');
             if ($messages){
                 foreach($messages as $mid){
+                    // check if emal was processed already -> skip if not new
+                    $processedMessageEntry=array('Source'=>$this->entryTable,'Group'=>'Status','Folder'=>$receiverSelector['Group'],'Name'=>$mid,'Expires'=>$expires);
+                    $processedMessageEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($processedMessageEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+                    if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($processedMessageEntry,TRUE)){
+                        $context['emailsSkipped']++;
+                        continue;
+                    } else {
+                        $context['emailsAdded']++;
+                        $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($processedMessageEntry);
+                    }
+                    // process email
                     $entry=$this->getMsg($mbox,$mid);
                     $entry=array_replace_recursive($entry,$entrySelector);
                     $entry['Content']['Html']=(empty($entry['htmlmsg']))?'':$entry['htmlmsg'];
@@ -199,12 +217,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         } // loop through attachmentzs
                     }
                 } // loop through messages
-                $result['Messages']=count($messages);
-                $this->oc['logger']->log('info','Messages found in mailbox: {count}',array('count'=>$result['Messages']));    
+                $context['messages']=count($messages);
+                $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" added "{emailsAdded}" emails and skiped "{emailsSkipped}" already processed emails.',$context);    
             }
             imap_close($mbox);
         }
-        return $result;
+        return $context;
     }
 
     private function getMsg($mbox,$mid){

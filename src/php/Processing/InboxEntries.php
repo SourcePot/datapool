@@ -19,7 +19,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
-    private $inboxClass='';
+    private $maxResultTableLength=50;
     private $base=array();
 
     private $conditions=array('stripos'=>'contains',
@@ -191,6 +191,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // get targets template
         $base['targets']=array();
         foreach($base['forwardingrules'] as $ruleId=>$rule){
+            if (!isset($rule['Content']['Forward on success'])){continue;}
             foreach($base['canvasElements'] as $targetName=>$target){
                 if ($target['EntryId']==$rule['Content']['Forward on success']){
                     $base['targets'][$targetName]=$target['EntryId'];
@@ -225,7 +226,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // loop through entries
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
                 $result['Processing statistics']['Entries']['value']++;
-                $result=$this->forwardEntry($base,$sourceEntry,$result,$testRun);
+                $result=$this->oc['SourcePot\Datapool\Processing\ForwardEntries']->forwardEntry($base,$sourceEntry,$result,$testRun);
             }
         }
         
@@ -234,67 +235,6 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
         return $result;
     }
-    
-    private function forwardEntry($base,$sourceEntry,$result,$testRun){
-        $params=current($base['inboxparams'])['Content'];
-        $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $forwardTo=array();
-        $targets=array();
-        foreach($base['forwardingrules'] as $ruleId=>$rule){
-            if (isset($flatSourceEntry[$rule['Content']['Value source']])){$valueA=$flatSourceEntry[$rule['Content']['Value source']];} else {$valueA='';}
-            $valueA=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($valueA,$rule['Content']['Value data type']);
-            $conditionMet=$this->oc['SourcePot\Datapool\Tools\MiscTools']->isTrue($valueA,$rule['Content']['with'],$rule['Content']['compare']);
-            if (isset($forwardTo[$rule['Content']['Forward on success']])){
-                if ($rule['Content']['...']==='&&'){
-                    $forwardTo[$rule['Content']['Forward on success']]=$forwardTo[$rule['Content']['Forward on success']] && $conditionMet;
-                } else if ($rule['Content']['...']==='||'){
-                    $forwardTo[$rule['Content']['Forward on success']]=$forwardTo[$rule['Content']['Forward on success']] || $conditionMet;
-                } else {
-                    $rule['Content']['ruleIndex']=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId);
-                    $this->oc['logger']->log('notice','Rule "{ruleIndex}" is invalid, key "... = {...}" is undefined',$rule['Content']);
-                }
-            } else {
-                $forwardTo[$rule['Content']['Forward on success']]=$conditionMet;
-            }
-        }
-        $forwarded=FALSE;
-        $targets=$base['targets'];
-        foreach($forwardTo as $targetEntryId=>$conditionMet){
-            $targetName=array_search($targetEntryId,$base['targets']);
-            $targets[$targetName]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet);
-            if (count($result['Forwarded'])<10){
-                $result['Forwarded'][$sourceEntry['Name']]=$targets;
-            } else {
-                $key=key($targets);
-                $result['Forwarded']['...'][$key]='...';
-            }
-            if ($conditionMet){
-                $processingLogText='Conditions met, forwarded entry to "'.$targetName.'"';
-                if ($this->itemAlreadyProcessed($sourceEntry,$processingLogText)){
-                    $result['Processing statistics']['Itmes already processed and skipped']['value']++;
-                } else {
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE,TRUE);
-                    $result['Processing statistics']['Itmes forwarded']['value']++;
-                }
-                $forwarded=TRUE;
-            }
-        }
-        if ($forwarded===FALSE){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Forward on failure']],TRUE,$testRun,TRUE,TRUE);
-            $result['Processing statistics']['Itmes not forwarded']['value']++;
-        }
-        return $result;
-    }
 
-    private function itemAlreadyProcessed($item,$processingLogText){
-        if (!isset($item['Params']['Processing log'])){return FALSE;}
-        foreach($item['Params']['Processing log'] as $log){
-            if (!isset($log['forwarded'])){continue;}
-            if (strcmp($log['forwarded'],$processingLogText)===0){
-                return TRUE;
-            }
-        }
-        return FALSE;
-    }
 }
 ?>

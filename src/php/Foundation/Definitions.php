@@ -378,7 +378,7 @@ class Definitions{
             $outputStr=$element['default'];
             unset($element['default']);
         }
-        $outputStr=strval($outputStr);
+        $outputStr=(is_array($outputStr))?(json_encode($outputStr)):strval($outputStr);
         // compile tag
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($element,'Write')){
             // write access

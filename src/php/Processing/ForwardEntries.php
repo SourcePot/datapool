@@ -19,7 +19,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
-    private $maxResultTableLength=50;
+    private $maxResultTableLength=10;
     private $conditions=array();
     private $operations=array('&&'=>'AND','||'=>'OR');
 
@@ -115,7 +115,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function getForwardEntriesParamsHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
-        $arr['html'].=$this->forwardingParams($arr['selector']);
         return $arr;
     }
 
@@ -123,30 +122,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->forwardingRules($arr['selector']);
         return $arr;
-    }
-
-    private function forwardingParams($callingElement){
-        $contentStructure=array('Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
-                                );
-        // get selctor
-        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
-        $arr['canvasCallingClass']=$callingElement['Folder'];
-        $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Forwarding parameters';
-        $arr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $matrix=array('Parameter'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
     }
     
     private function forwardingRules($callingElement){
@@ -171,7 +146,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runForwardEntries($callingElement,$testRun=1){
-        $base=array('forwardingparams'=>array(),'forwardingrules'=>array());
+        $base=array('forwardingparams'=>array(),'forwardingrules'=>array(),'processId'=>$callingElement['EntryId']);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);
         // get targets template
@@ -202,7 +177,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
     
-    private function forwardEntry($base,$sourceEntry,$result,$testRun){
+    public function forwardEntry($base,$sourceEntry,$result,$testRun){
         $params=current($base['forwardingparams']);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         $sample=array();
@@ -250,7 +225,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             if ($conditionMet){
-                $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,$params['Content']['Keep source entries']);
+                $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,FALSE);
             }
         }
         return $result;
