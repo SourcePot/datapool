@@ -90,7 +90,7 @@ class Container{
             $wrapperSettings=array_merge($wrapperSettings,$return['wrapperSettings']);
         }
         if (isset($return['settings'])){$_SESSION['container store'][$containerId]['settings']=array_replace_recursive($_SESSION['container store'][$containerId]['settings'],$return['settings']);}
-        $reloadBtnStyle=array('position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'3px','border'=>'none','background-color'=>'#ccc');
+        $reloadBtnStyle=array('position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'0','border'=>'none','background'=>'none');
         if (!empty($wrapperSettings['hideReloadBtn'])){$reloadBtnStyle['display']='none';}
         $reloadBtnArr=array('tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>array('reloadBtnArr'),'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($reloadBtnArr);

@@ -54,6 +54,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
                 // top web page section
                 $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Top paragraph');
@@ -100,7 +101,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                 $selector['md'].="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,array(),array('style'=>array()));
             } else {
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getQuicklinksHtml();
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
             }
             $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Legal paragraph');
             $selector['md']="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";

@@ -71,7 +71,6 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
                 }
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-                $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
                 $presentArr['selector']=$selector;
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             }

@@ -50,7 +50,8 @@ class NetworkTools{
     public function setPageStateBySelector(array $selector)
     {
         $classWithNamespace=$this->selector2class($selector);
-        if (method_exists($classWithNamespace,'run')){
+        // switch app based on on selected entry, but not if it is a DataApps
+        if (method_exists($classWithNamespace,'run') && strpos($classWithNamespace,'DataApps')===FALSE){
             $_SESSION['page state']['app']['Class']=$classWithNamespace;
         }
         return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);

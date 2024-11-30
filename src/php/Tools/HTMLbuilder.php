@@ -968,7 +968,9 @@ class HTMLbuilder{
     
     private function getPresentationSelector(array $presentArr):array
     {
-        if (!empty($presentArr['selector']['function'])){
+        if (!empty($presentArr['settings']['presentEntry'])){
+            $presentArr['callingFunction'].='|'.$presentArr['settings']['presentEntry'];
+        } else if (!empty($presentArr['selector']['function'])){
             $presentArr['callingFunction'].='|'.$presentArr['selector']['function'];
         }
         $selector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Presentation');
