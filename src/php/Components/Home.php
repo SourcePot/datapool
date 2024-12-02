@@ -54,7 +54,6 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
                 // top web page section
                 $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Top paragraph');

@@ -60,7 +60,7 @@ class Haystack{
                 $queryEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($queryEntry);
             }
         } else {
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($queryEntry,FALSE,'Read','Date',TRUE) as $queryEntry){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($queryEntry,FALSE,'Read','Date',FALSE) as $queryEntry){
                 $serachResult['Query']=$queryEntry['Content']['Query'];
                 break;
             }
@@ -81,6 +81,7 @@ class Haystack{
         $entryCount=0;
         $selectors=array(array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Content'=>'%'.$query.'%'),
                          array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Forum']->getEntryTable(),'Content'=>'%'.$query.'%'),
+                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Feeds']->getEntryTable(),'Content'=>'%'.$query.'%'),
                          array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getEntryTable(),'Content'=>'%'.$query.'%'),
                     );
         $arr['Query']=$query;
@@ -88,7 +89,7 @@ class Haystack{
         $arr['Names']=array();
         $arr['Hits']=array();
         foreach($selectors as $selector){
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE,100,0) as $entry){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,100,0) as $entry){
                 $arr['Names'][$entry['EntryId']]=$entry['Name'];
                 $arr['Hits'][$entry['EntryId']]=$entry['Source'];
                 $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>array()));
