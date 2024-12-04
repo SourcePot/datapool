@@ -17,7 +17,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable;
     private $entryTemplate=array('Group'=>array('value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
                                  'Folder'=>array('value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
-                                 'Start'=>array('value'=>'{{NOW}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
+                                 'Start'=>array('value'=>'{{nowDateUTC}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),
                                  'End'=>array('value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
                                  );
 
@@ -31,7 +31,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                              'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
                              'Content'=>array('Event'=>array('Description'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
                                                              'Type'=>array('@function'=>'select','@options'=>array('meeting'=>'Meeting','travel'=>'Travel','event'=>'Event','toTo'=>'To do'),'@default'=>'meeting','@excontainer'=>TRUE),
-                                                             'Start'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{NOW}})','@excontainer'=>TRUE),
+                                                             'Start'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{nowDateUTC}})','@excontainer'=>TRUE),
                                                              'Start timezone'=>array('@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),
                                                              'End'=>array('@tag'=>'input','@type'=>'datetime-local','@default'=>'{{TOMORROW}})','@excontainer'=>TRUE),
                                                              'End timezone'=>array('@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE),

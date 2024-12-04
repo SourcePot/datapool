@@ -19,7 +19,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
         
-    private $sections=array(0=>'all sections');
+    private $sections=array(0=>'Complete text','START'=>'START');
     
     private $paramsTemplate=array('Source column'=>'useValue','Target on success'=>'','Target on failure'=>'','Array→string glue'=>' ');
     
@@ -70,9 +70,21 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function getParseEntriesInfo($callingElement){
         //$regExpTester=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard(htmlentities('https://regexr.com/'));
-        $matrix=array('Regular expression tester'=>array('Message'=>''));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info','class'=>'max-content'));
-        $html.='<a href="https://regexr.com/" target="_blank" class="std">Sample regular expression tester: '.htmlentities('https://regexr.com/').'</a>';
+        $matrix=array();
+        $matrix['Parser control: Select parser target and type']['Description']='This control panel sets the fundermental parameters.<br/>"Source column" should contain the text to be parsed.<br/>"Target on success" is the Select-Element an entry should be moved to on success and<br/>"Target on failure" the Select-element used for entries that fail.<br/>If a value is an array but the target column can\'t hold arrays, the array will be imploded using "Array→string glue" as glue.';
+        $matrix['Provide rules to divide the text into sections']['Description']='This control panel sets rules to divide the text into sections.<br/>The first section is called "START", all following sections are named by "Section name".<br/>The text section boundery is controlled by the "Regular expression".';
+        $matrix['Parser rules: Parse selected entry and copy result to target entry']['Description']='This control panel sets the parser rules. The rules are processed as an ordered list.<br/>Rules are applied to the text section selected by "Rule relevant on section, the "Regular expression" is used to extract releavnt values.<br/>You can use brackets to ecxtract the full match "Match index"=0 or parts of match selected by "Match index">0.<br/>Alternatively to the regular expression you can proviede "Constant or..." as value.<br/>Use "Target data type" to convert the extracted value and "Target column", "Target key" to map the value to the entry.<br/>"Allow multiple hits" will create an array, "Combine on update" combines multiple hits in a new value.';
+        $matrix['Mapper rules: map directly to the target entry']['Description']='This control panel allows for the definition of direct mapping from the source entry to the target entry.';
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'','class'=>'max-content'));
+        $html.='<h2 class="std">Setting-up the parser, first steps:</h2><ol>';
+        $html.='<li>Add two Select-elements to the canvas, one for successfiully parsed entries and another for failed entries</li>';
+        $html.='<li>Add the two Select-elements to "Parser control: Select parser target and type"</li>';
+        $html.='<li>Upload a valid test document, this will enable the selection of the relevant "Source column"</li>';
+        $html.='<li>Set the "Source column", for text from a pdf-file the source column is "Content → File content"</li>';
+        $html.='<li>Check the content of the source column, e.g. "Content → File content", copy & paste the text into a regular expression tester such as <a href="https://regexr.com/" target="_blank" class="textlink">'.htmlentities('https://regexr.com/').'</a></li>';
+        $html.='<li>Find regular expression for all the values you need to extract. If a value type exsists multiple times such as dates, divide the txet into sections</li>';
+        $html.='<li>After the value extraction works fine with the test document, run a test with multiple real world documents. Improve the configuration if needed.</li>';
+        $html.='</ol>';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
     }
@@ -351,7 +363,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     }
                 }
                 $matchRequired=(isset($rule['Content']['Match required']))?boolval($rule['Content']['Match required']):FALSE;
-                $parserFailed=!empty($ruleFailed) && $matchRequired;
+                $parserFailed.=(!empty($ruleFailed) && $matchRequired)?'|Required match failed':'';
                 if ($testRun){
                     $result['Parser rule matches'][$rowKey]=array('Regular expression or constant used'=>$rule['Content']['Constant or...'].$rule['Content']['regular expression'],
                                                                   'Section name'=>$sectionName,
@@ -379,7 +391,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
                 //
                 $mustNotBeEmpty=(isset($rule['Content']['Required']))?boolval($rule['Content']['Required']):FALSE;
-                $parserFailed=!empty($mapperRuleFailed) && $mustNotBeEmpty;
+                $parserFailed.=(!empty($mapperRuleFailed) && $mustNotBeEmpty)?'|Mapper rule failed':'';
                 $result['Mapper rule matches'][$rowKey]=array('Source column or constant'=>(($rule['Content']['Source column']==='useValue')?$rule['Content']['...or constant']:$matchText),
                                                               'Must not be empty'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($mustNotBeEmpty),
                                                               'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($parserFailed),

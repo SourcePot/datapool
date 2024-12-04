@@ -28,7 +28,7 @@ class Database{
                                  'Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
                                  'Name'=>array('type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
                                  'Type'=>array('type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'),
-                                 'Date'=>array('type'=>'DATETIME','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
+                                 'Date'=>array('type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'),
                                  'Content'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This is the entry Content data'),
                                  'Params'=>array('type'=>'LONGBLOB','value'=>array(),'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
                                  'Expires'=>array('type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
@@ -928,10 +928,8 @@ class Database{
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
             if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
                 // source and target EntryId identical, attachment does not need to be touched
-                if ($isTestRun){
-                    $targetEntry=$sourceEntry;
-                } else {
-                    $targetEntry=$this->updateEntry($sourceEntry,$isSystemCall);
+                if (!$isTestRun){
+                    $targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
                     $context['sourceTargetEntryIdMatch']=TRUE;
                 }
             } else {
@@ -948,7 +946,7 @@ class Database{
                 }
                 // update entry and delete source file if source is not kept
                 if ($isTestRun){
-                    $targetEntry=$sourceEntry;
+                    // nothing to do
                 } else if ($context['fileError']){
                     $context['Name']=$targetEntry['Name'];
                     $context['sourceFile']=$sourceFile;

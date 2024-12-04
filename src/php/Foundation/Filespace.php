@@ -21,7 +21,7 @@ class Filespace{
     private $entryTemplate=array('Class'=>array('type'=>'string','value'=>TRUE,'Description'=>'Class selects the folder within the setup dir space'),
                                  'EntryId'=>array('type'=>'string','value'=>TRUE,'Description'=>'This is the unique id'),
                                  'Type'=>array('type'=>'string','value'=>'{{Class}}','Description'=>'This is the data-type of Content'),
-                                 'Date'=>array('type'=>'datetime','value'=>'{{NOW}}','Description'=>'This is the entry date and time'),
+                                 'Date'=>array('type'=>'datetime','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'),
                                  'Content'=>array('type'=>'json','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
                                  'Read'=>array('type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),

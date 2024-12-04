@@ -61,7 +61,6 @@ class Expenses implements \SourcePot\Datapool\Interfaces\App{
                 $arr['selector']=array_merge($explorerSelector,$pageStateSelector);
                 if (!empty($arr['selector']['EntryId'])){
                     $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-                    $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){

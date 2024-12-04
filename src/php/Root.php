@@ -30,6 +30,7 @@ final class Root{
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE,'home'=>TRUE);
+    public const ASSETS_WHITELIST=array('email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE);
     // profiling settings
     public const PROFILING_RATE=0;        // 0 ... 1.0 with "1"=100% profiling and "0"=0% profiling
     public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
@@ -37,7 +38,7 @@ final class Root{
     // required extensions
     public const REQUIRED_EXTENSIONS=array('ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
                                         'fileinfo'=>TRUE,'gd'=>TRUE,'gettext'=>TRUE,'gmp'=>FALSE,
-                                        'intl'=>FALSE,'imap'=>TRUE,'mbstring'=>TRUE,'exif'=>TRUE,
+                                        'intl'=>FALSE,'imap'=>TRUE,'mbstring'=>TRUE,'exif'=>TRUE,'bcmath'=>TRUE,
                                         'mysqli'=>TRUE,'oci8_12c'=>FALSE,'oci8_19'=>FALSE,'odbc'=>FALSE,
                                         'openssl'=>FALSE,'pdo_firebird'=>FALSE,'pdo_mysql'=>TRUE,'pdo_oci'=>FALSE,
                                         'pdo_odbc'=>FALSE,'pdo_pgsql'=>FALSE,'pdo_sqlite'=>FALSE,'pgsql'=>FALSE,

@@ -20,8 +20,6 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     
     public $definition=array('EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
 
-    private $assetWhitelist=array('email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE);
-
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -128,7 +126,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         $files=scandir($GLOBALS['relDirs']['assets']);
         foreach($files as $fileName){
             if (strlen($fileName)<3){continue;}
-            if (isset($this->assetWhitelist[$fileName])){continue;}
+            if (isset(\SourcePot\Datapool\Root::ASSETS_WHITELIST[$fileName])){continue;}
             $fileNameComps=preg_split('/[-_\.]/',$fileName);
             if (!isset($GLOBALS['dbInfo'][$fileNameComps[0]])){continue;}
             $selector=array('Source'=>$fileNameComps[0],'EntryId'=>$fileNameComps[1].'_%');

@@ -27,7 +27,7 @@ class MediaTools{
     public function init()
     {
         // add calendar placeholder
-        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{NOW}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{nowDateUTC}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now'));
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{YESTERDAY}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday'));
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TOMORROW}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow'));
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE}}',\SourcePot\Datapool\Root::DB_TIMEZONE);

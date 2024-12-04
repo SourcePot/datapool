@@ -36,7 +36,7 @@ final class MiscTools{
     
     private $matchTypes=array('identical'=>'Identical','contains'=>'Contains','unycom'=>'UNYCOM Case','|'=>'Separated by |','number'=>'Numbers');
     
-    private $combineOptions=array('overwrite'=>'Overwrite','addFloat'=>'float(A + B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)');
+    private $combineOptions=array('overwrite'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)');
     
     public function __construct()
     {
@@ -1232,7 +1232,12 @@ final class MiscTools{
                     $combineValueCountA=(isset($flatEntry[$combineValueCountKey]))?$flatEntry[$combineValueCountKey]:((isset($flatEntry[$settingKey])?1:0));
                     $combineValueCountB=(isset($flatExsistingEntry[$combineValueCountKey]))?$flatExsistingEntry[$combineValueCountKey]:((isset($flatExsistingEntry[$settingKey])?1:0));
                     if ($setting==='overwrite'){
-                        // don't calculate new value
+                        // don't calculate new value, use present value
+                    } else if ($setting==='firstHit'){
+                        // keep first value
+                        if (isset($flatExsistingEntry[$settingKey])){
+                            $flatCalcEntry[$settingKey]=$flatExsistingEntry[$settingKey];
+                        }
                     } else if ($setting==='addFloat'){
                         $a=(isset($flatEntry[$settingKey]))?floatval($flatEntry[$settingKey]):0;
                         $b=(isset($flatExsistingEntry[$settingKey]))?floatval($flatExsistingEntry[$settingKey]):0;

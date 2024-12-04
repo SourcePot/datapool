@@ -464,6 +464,20 @@ select.lng-selector{
 }
 
 /** DETAILS, SUMMARY, APPs **/
+summary{
+    float:left;
+    clear:none;
+    min-width:3rem;
+    width:100%;
+    font-size:1.2rem;
+    border-bottom:1px dotted var(--color);
+    background-color: lavender;
+}
+summary:hover{
+    cursor:pointer;
+    color:var(--color);
+    background-color:var(--hoverColor);
+}
 details{
     position:relative;
     float:left;
@@ -486,25 +500,13 @@ details.toolbox{
     color:var(--bgColor);
     background-color:var(--color);
 }
-summary{
-    float:left;
-    clear:none;
-    min-width:3rem;
-    width:100%;
-    font-size:1.2rem;
-    border-bottom:1px dotted var(--color);
-}
 summary.forum,summary.toolbox{
     margin:0;
     line-height:var(--bottom-nav-height);
 }
 summary.toolbox{
     color:var(--bgColor);
-}
-summary:hover{
-    cursor:pointer;
-    color:var(--color);
-    background-color:var(--hoverColor);
+    background: none;
 }
 article.toolbox{
     color:var(--hoverColor);

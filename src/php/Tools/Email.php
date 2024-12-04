@@ -554,7 +554,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 $this->oc['logger']->log('warning','Sending email to {to} failed.',array('to'=>$mail['To']));    
             }
             // save message
-            $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{NOW}}');
+            $entry=array('Source'=>$this->entryTable,'Group'=>'OUTBOX','Folder'=>$mail['To'],'Name'=>$mail['Subject'],'Date'=>'{{nowDateUTC}}');
             $entry['Group'].=($success)?' success':' failure';
             $entry['Content']=array('Sending'=>($success)?'success':'failed','Html'=>$msgTextHtml,'Plain'=>$msgTextPlain);
             $entry=$this->email2file($entry,array('header'=>$header,'To'=>$mail['To'],'Subject'=>$mail['Subject'],'message'=>$message));
