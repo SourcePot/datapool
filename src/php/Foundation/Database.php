@@ -235,6 +235,7 @@ class Database{
             }
         }
         if ($addDefaults){$entry=$this->addEntryDefaults($entry);}
+        $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
         $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->combineEntryData($entry);
         $entry[__FUNCTION__]=$context;
