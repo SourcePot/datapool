@@ -35,7 +35,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                                               ),
                             );
 
-    private $msgEntry=array('Expires'=>\SourcePot\Datapool\Root::NULL_DATE,'Owner'=>'SYSTEM');
+    private $receiverMeta=array();
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -149,12 +149,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         ); 
             imap_close($mbox);
         }
+        $this->receiverMeta=$meta;
         return $meta;
     }
 
     private function todaysEmails($id){
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'emailsSkipped'=>0,'alerts'=>'','errors'=>'');
-        $receiverSelector=$this->receiverSelector($id);
         $entrySelector=$this->id2entrySelector($id);
         $setting=$this->getReceiverSetting($id);
         $context['Mailbox']=$setting['Content']['Mailbox'];
@@ -173,252 +173,28 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         }
         $alerts=imap_alerts();
         if (!empty($errors)){
-            $context['alerts']=implode(', ',$alerts);
+            $context['alerts']=(string)$alerts;
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with alerts: {alerts}',$context);    
         }
         // open mailbox
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         if (!empty($mbox)){
-            $expires=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
+            $status=imap_status($mbox,$setting['Content']['Mailbox'],SA_ALL);
+            $context['messages']=$status->messages;
+            $entry=$entrySelector;
+            $entry['Params']['File']['MIME-Type']='message/rfc822';
+            $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
             $messages=imap_search($mbox,'SINCE "'.date('d-M-Y').'"');
             if ($messages){
                 foreach($messages as $mid){
-                    // check if emal was processed already -> skip if not new
-                    $processedMessageEntry=array('Source'=>$this->entryTable,'Group'=>'Status','Folder'=>$receiverSelector['Group'],'Name'=>$mid,'Expires'=>$expires);
-                    $processedMessageEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($processedMessageEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
-                    if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($processedMessageEntry,TRUE)){
-                        $context['emailsSkipped']++;
-                        continue;
-                    } else {
-                        $context['emailsAdded']++;
-                        $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($processedMessageEntry);
-                    }
-                    // process email
-                    $entry=$this->getMsg($mbox,$mid);
-                    $entry=array_replace_recursive($entry,$entrySelector);
-                    $entry['Content']['Html']=(empty($entry['htmlmsg']))?'':$entry['htmlmsg'];
-                    $entry['Content']['Plain']=(empty($entry['plainmsg']))?'':$entry['plainmsg'];
-                    $entry['Content']['RTF']='';
-                    $entry=$this->unifyEmailProps($entry);
-                    $entry['Name'].=' ['.$entry['Params']['Email']['hash'].']';
-                    $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.time(),'P4D');
-                    if (empty($entry['attachments'])){
-                        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
-                        $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
-                    } else {
-                        $entryName=$entry['Name'];
-                        foreach($entry['attachments'] as $attName=>$attContent){
-                            $attName=imap_utf8($attName);
-                            $entry['Name']=$entryName.' ('.$attName.')';
-                            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name','Date'),0);
-                            $entry['fileContent']=$attContent;
-                            $entry['fileName']=$attName;
-                            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry,TRUE,TRUE,FALSE);
-                        } // loop through attachmentzs
-                    }
-                } // loop through messages
-                $context['messages']=count($messages);
-                $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" added "{emailsAdded}" emails and skiped "{emailsSkipped}" already processed emails.',$context);    
+                    $msg=\imap_fetchbody($mbox,$mid,"");
+                    $statistic=$this->oc['SourcePot\Datapool\Foundation\Filespace']->email2files($msg,$entry);
+                    $context['emailsAdded']++;
+                }
             }
             imap_close($mbox);
         }
         return $context;
-    }
-
-    private function getMsg($mbox,$mid){
-        // input $mbox = IMAP stream, $mid = message id
-        $headerProps=array('fromaddress'=>'fromaddress','from'=>'from','ccaddress'=>'ccaddress',
-                           'cc'=>'cc','bccaddress'=>'bccaddress','bcc'=>'bcc','reply_toaddress'=>'reply_toaddress',
-                           'reply_to'=>'reply_to','senderaddress'=>'senderaddress','sender'=>'sender',
-                           'return_pathaddress'=>'return_pathaddress','return_path'=>'return_path','date'=>'date',
-                           'subject'=>'subject','in_reply_to'=>'in_reply_to','message_id'=>'message_id',
-                           'newsgroups'=>'newsgroups','followup_to'=>'followup_to','references'=>'references',
-                           'Recent'=>'Recent','Unseen'=>'Unseen','Flagged'=>'Flagged','Answered'=>'Answered',
-                           'Deleted'=>'Deleted','Draft'=>'Draft','Msgno'=>'Msgno','MailDate'=>'MailDate',
-                           'Size'=>'Size','udate'=>'udate','fetchfrom'=>'fetchfrom','fetchsubject'=>'fetchsubject');
-        // output all the following:
-        $this->msgEntry['charset']='';
-        $this->msgEntry['htmlmsg']='';
-        $this->msgEntry['plainmsg']='';
-        $this->msgEntry['attachments']=array();
-        // HEADER
-        $h=\imap_headerinfo($mbox,$mid);
-        $this->msgEntry['Name']=$this->iconvMimeDecode($h->subject,0,'utf-8');
-        $mailingDate=new \DateTime();
-        $mailingDate->setTimestamp($h->udate); 
-        $this->msgEntry['Date']=$mailingDate->format('Y-m-d H:i:s');
-        $this->msgEntry['Folder']=$this->iconvMimeDecode($h->senderaddress,0,'utf-8');
-        foreach($headerProps as $key=>$prop){
-            if (property_exists($h,$prop)===FALSE){
-                $this->msgEntry['Params']['Email'][$key]['value']='?';
-            } else if (is_array($h->$prop) || is_numeric($h->$prop)){
-                $this->msgEntry['Params']['Email'][$key]['value']=$h->$prop;
-            } else {
-                $this->msgEntry['Params']['Email'][$key]['value']=$this->iconvMimeDecode($h->$prop,0,'utf-8');
-            }
-        }
-        $s=\imap_fetchstructure($mbox,$mid);
-        if (!isset($s->parts)){
-            // simple
-            $this->getPart($mbox,$mid,$s,0);  // pass 0 as part-number
-        } else {  
-            // multipart: cycle through each part
-            foreach ($s->parts as $partno0=>$p){
-                $this->getPart($mbox,$mid,$p,$partno0+1);
-            }
-        }
-        return $this->msgEntry;
-    }
-
-    private function getPart($mbox,$mid,$p,$partno){
-        // $partno='1', '2', '2.1', '2.1.3', etc for multipart, 0 if simple
-        // DECODE DATA
-        $data=($partno)?
-            \imap_fetchbody($mbox,$mid,strval($partno)):  // multipart
-            \imap_body($mbox,$mid);  // simple
-        
-        // Any part may be encoded, even plain text messages, so check everything.
-        $data=$this->decodeEmailData($data,strval($p->encoding));
-        // PARAMETERS: get all parameters, like charset, filenames of attachments, etc.
-        $params=array();
-        if ($p->parameters){
-            foreach ($p->parameters as $x){
-                $params[mb_strtolower($x->attribute)]=$x->value;
-            }
-        }
-        if (isset($p->dparameters)){
-            foreach ($p->dparameters as $x){
-                $params[mb_strtolower($x->attribute)]=$x->value;
-            }
-        }
-        // ATTACHMENT: any part with a filename is an attachment, so an attached text file (type 0) is not mistaken as the message.
-        if (!empty($params['filename']) || !empty($params['name'])){
-            // filename may be given as 'Filename' or 'Name' or both
-            $filename=(isset($params['filename']))?$params['filename']:$params['name'];
-            // filename may be encoded, so see imap_mime_header_decode()
-            $this->msgEntry['attachments'][$filename]=$data;  // this is a problem if two files have same name
-        }
-        // TEXT
-        if ($p->type==0 && $data){
-            // Messages may be split in different parts because of inline attachments,
-            // so append parts together with blank row.
-            if (mb_strtolower($p->subtype)=='plain'){
-                $this->msgEntry['plainmsg'].=trim($data) ."\n\n";
-            } else {
-                $this->msgEntry['htmlmsg'].=$data ."<br><br>";
-            }
-            $this->msgEntry['charset']=$params['charset'];  // assume all parts are same charset
-        } else if ($p->type==2 && $data){
-            // EMBEDDED MESSAGE
-            // Many bounce notifications embed the original message as type 2,
-            // but AOL uses type 1 (multipart), which is not handled here.
-            // There are no PHP functions to parse embedded messages,
-            // so this just appends the raw source to the main message.
-            $this->msgEntry['plainmsg'].=$data."\n\n";
-        }
-
-        // SUBPART RECURSION
-        if (isset($p->parts)){
-            foreach ($p->parts as $partno0=>$p2){
-               $this-> getPart($mbox,$mid,$p2,$partno.'.'.($partno0+1));  // 1.2, 1.2.1, etc.
-            }
-        }
-    }
-
-    public function emailProperties2arr(string $email,array $template=array(),bool $lowerCaseKeys=TRUE):array
-    {
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $email=preg_replace('/(\n|\r)([^\n\r:]+: )/u',$S.'$2',$email);
-        $keyValueArr=explode($S,$email);
-        foreach($keyValueArr as $line){
-            $line=trim($line);
-            $line=imap_utf8($line);
-            $valueStart=mb_strpos($line,':');
-            if ($valueStart===FALSE){continue;}
-            $keyA=trim(mb_substr($line,0,$valueStart));
-            $template[$keyA]=array();
-            $line=mb_substr($line,$valueStart+2);
-            $comps=$this->oc['SourcePot\Datapool\Tools\MiscTools']->explode($line,';');
-            foreach($comps as $index=>$comp){
-                $comp=trim($comp);
-                $subComs=explode('=',$comp);
-                if (count($subComs)>1){
-                    $keyB=$subComs[0];
-                    $value=$subComs[1];
-                } else {
-                    $keyB='value';
-                    $value=$subComs[0];
-                }
-                if ($keyA=='from' || $keyA=='From' || $keyA=='to' || $keyA=='To' || $keyA=='cc' || $keyA=='Cc' || $keyA=='bcc' || $keyA=='Bcc'){
-                    $value=$this->emailAddressString2arr($value);
-                } else {
-                    $value=trim($value,'" ');
-                }
-                if ($lowerCaseKeys){
-                    $keyA=mb_strtolower($keyA);
-                    $keyB=mb_strtolower($keyB);
-                }
-                $template[$keyA][$keyB]=(is_array($value))?$value:preg_replace('/[\n\r]+/','',$value);
-            }
-        }
-        return $template;
-    }
-    
-    public function decodeEmailData(string $content,string $encoding)
-    {
-        switch($encoding){
-            case 'base64':
-                $content=base64_decode($content);
-                break;
-            case '3':
-                $content=base64_decode($content);
-                break;
-            case 'quoted-printable':
-                $content=quoted_printable_decode($content);
-                break;
-            case '4':
-                $content=quoted_printable_decode($content);
-                break;
-            default:
-                $content=$content;
-        }
-        return $content;
-    }
-    
-    public function emailAddressString2arr($emailAdr):array
-    {
-        $return=array();
-        $addresses=$this->oc['SourcePot\Datapool\Tools\MiscTools']->explode($emailAdr,',\s+');
-        foreach($addresses as $index=>$chunk){
-            preg_match('/[^\s<>,]*@[^\s<>,]*/u',$chunk,$matchEmailAddress);
-            if (empty($matchEmailAddress[0])){continue;}
-            $return[$index]['original']=$emailAdr;
-            $return[$index]['html']=htmlentities($chunk);
-            $comps=$this->oc['SourcePot\Datapool\Tools\MiscTools']->explode($chunk,'<');
-            $return[$index]['personal']=trim($comps[0],' "');
-            $emailComps=explode('@',$matchEmailAddress[0]);
-            $return[$index]['email']=$matchEmailAddress[0];
-            $return[$index]['mailbox']=$emailComps[0];
-            $return[$index]['host']=$emailComps[1];
-        }
-        return $return;
-    }
-
-    public function unifyEmailProps(array $entry):array
-    {
-        // add email date
-        if(isset($entry['Params']['Email']['date']['value'])){
-            $date=explode('(',$entry['Params']['Email']['date']['value']);
-            $date=array_shift($date);
-            $receivedDateTime=\DateTime::createFromFormat(\DATE_RFC2822,trim($date));
-            $receivedDateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-            $entry['Date']=$receivedDateTime->format('Y-m-d H:i:s');
-        }
-        // cadd email hash
-        $toHash=$entry['Date'];
-        $toHash.=(isset($entry['Content']['Plain']))?preg_replace('/\W+/','',$entry['Content']['Plain']):'';
-        $entry['Params']['Email']['hash']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash,TRUE);
-        return $entry;
     }
 
     /******************************************************************************************************************************************
