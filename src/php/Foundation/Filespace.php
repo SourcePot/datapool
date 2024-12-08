@@ -592,10 +592,7 @@ class Filespace{
     {
         $debugArr=array('file'=>$file,'cntr'=>array('extractEmails'=>TRUE,'extractArchives'=>TRUE));
         $entry=array_merge($debugArr['cntr'],$entry);
-
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry);
-
-        if ($entry['extractEmails'] && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE || $entry['Params']['File']['Extension']=='eml' || $entry['Params']['File']['Extension']=='msg')){
+       if ($entry['extractEmails'] && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE || $entry['Params']['File']['Extension']=='eml' || $entry['Params']['File']['Extension']=='msg')){
             $email=file_get_contents($file);
             $this->email2files($email,$entry);
             return TRUE;
@@ -632,10 +629,12 @@ class Filespace{
             } else if ($part['header']['content-type'][0]==="text/html"){
                 $newEntry['Content']['Html']=$part['data'];
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($newEntry);
-            } else if (isset($part['header']['content-disposition']['filename'])){
-                $newEntry['fileName']=$part['header']['content-disposition']['filename'];
+            } else {
+                $contentTypeComps=explode('/',$part['header']['content-type'][0]);
+                $fileName=$part['header']['content-disposition']['filename']??$part['header']['content-type']['name']??'noname.'.$contentTypeComps[1];
+                $newEntry['fileName']=$fileName;
                 $newEntry['fileContent']=$part['data'];
-                $newEntry['Params']['File']['MIME-Type']=$part['header']['content-type'];
+                $newEntry['Params']['File']['MIME-Type']=$part['header']['content-type'][0];
                 $this->fileContent2entry($newEntry);
                 $statistic['files']++;
             }
