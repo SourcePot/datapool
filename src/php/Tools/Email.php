@@ -96,11 +96,16 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     
     public function receiverPluginHtml(array $arr):string
     {
+        $html='';
+        // add settings form
         $setting=$this->getReceiverSetting($arr['selector']['EntryId']);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
+        $settingsHtml=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$settingsHtml,'icon'=>'Settings'));
+        // add meta data info
         $meta=$this->getReceiverMeta($arr['selector']['EntryId']);
         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Meta'));   
+        $metaHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Meta'));   
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$metaHtml,'icon'=>'Meta'));
         return $html;
     }
     
@@ -172,8 +177,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with errors: {errors}',$context);    
         }
         $alerts=imap_alerts();
-        if (!empty($errors)){
-            $context['alerts']=(string)$alerts;
+        if (!empty($alerts)){
+            $context['alerts']=implode(', ',$alerts);
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with alerts: {alerts}',$context);    
         }
         // open mailbox

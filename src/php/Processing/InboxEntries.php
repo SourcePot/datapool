@@ -151,7 +151,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($callingElement,TRUE);
         }
         // load inbox class
-        if (isset($arr['selector']['Content']['Inbox source'])){$this->inboxClass=$arr['selector']['Content']['Inbox source'];}
+        if (isset($arr['selector']['Content']['Inbox source'])){
+            $this->inboxClass=$arr['selector']['Content']['Inbox source'];
+        }
         // get HTML
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;

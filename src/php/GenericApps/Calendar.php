@@ -465,6 +465,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     $class='calendar-event-selected';
                 }
             }
+            if ($event['Group']=="Bank holidays"){$style['background-color']='#71d71f';} else {$style['background-color']='#c0b3ee';}
             $title=$event['Name']."\n";
             $title.=str_replace('T',' ',$event['Content']['Event']['Start']).' ('.$event['Content']['Event']['Start timezone'].")\n";
             $title.=str_replace('T',' ',$event['Content']['Event']['End']).' ('.$event['Content']['Event']['End timezone'].')';
