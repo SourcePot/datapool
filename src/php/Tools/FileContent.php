@@ -73,7 +73,7 @@ final class FileContent{
             } else {
                 $prefix='';
             }
-            $case=substr($text,intval($match[1]),16);
+            $case=substr($text,intval($match[1]),17);
             $unycomArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($case,$prefix);
             $pList[]=$unycomArr['Reference'];
             $fList[]=$unycomArr['Family'];

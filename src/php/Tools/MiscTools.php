@@ -14,7 +14,7 @@ final class MiscTools{
 
     //public const UNYCOM_REGEX='/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u';
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{0,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})(\s{0,1}[0-9]{0,2})/u';
-    public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,2})/u';
+    public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
     public $emojis=array();
     private $emojiFile='';
     
@@ -850,33 +850,37 @@ final class MiscTools{
     }
 
     public function convert($value,$dataType){
-        $newValue=match($dataType){
-                    'string'=>$this->str2str($value),
-                    'stringNoWhitespaces'=>$this->convert2stringNoWhitespaces($value),
-                    'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
-                    'splitString'=>$this->convert2splitString($value),
-                    'int'=>$this->str2int($value),
-                    'float'=>$this->str2float($value),
-                    'fraction'=>$this->fraction2float($value),
-                    'bool'=>(intval($value)>0),
-                    'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
-                    'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
-                    'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
-                    'dateString'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
-                    'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
-                    'shortHash'=>$this->getHash($value,TRUE),
-                    'hash'=>$this->getHash($value,False),
-                    'codepfad'=>$this->convert2codepfad($value),
-                    'unycom'=>$this->convert2unycom($value),
-                    'unycomCountry'=>$this->convert2unycomByKey($value,'Country'),
-                    'unycomRegion'=>$this->convert2unycomByKey($value,'Region'),
-                    'unycomFallNoWhitspaces'=>$this->convert2unycomByKey($value,'Reference without \s'),
-                    'useridNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,3),
-                    'useridName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,1),
-                    'useridEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,7),
-                    'useridPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,8),
-                    'useridMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,9),
-                };
+        if (empty($dataType)){
+            $newValue=$value;
+        } else {
+            $newValue=match($dataType){
+                        'string'=>$this->str2str($value),
+                        'stringNoWhitespaces'=>$this->convert2stringNoWhitespaces($value),
+                        'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
+                        'splitString'=>$this->convert2splitString($value),
+                        'int'=>$this->str2int($value),
+                        'float'=>$this->str2float($value),
+                        'fraction'=>$this->fraction2float($value),
+                        'bool'=>(intval($value)>0),
+                        'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
+                        'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
+                        'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
+                        'dateString'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
+                        'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
+                        'shortHash'=>$this->getHash($value,TRUE),
+                        'hash'=>$this->getHash($value,False),
+                        'codepfad'=>$this->convert2codepfad($value),
+                        'unycom'=>$this->convert2unycom($value),
+                        'unycomCountry'=>$this->convert2unycomByKey($value,'Country'),
+                        'unycomRegion'=>$this->convert2unycomByKey($value,'Region'),
+                        'unycomFallNoWhitspaces'=>$this->convert2unycomByKey($value,'Reference without \s'),
+                        'useridNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,3),
+                        'useridName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,1),
+                        'useridEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,7),
+                        'useridPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,8),
+                        'useridMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,9),
+                    };
+        }
         return $newValue;
     }
     

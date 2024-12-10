@@ -504,9 +504,8 @@ class Filespace{
         } else {
             // save entry['fileContent'] to private tmp dir, e.g. from email
             $tmpDir=$this->getPrivatTmpDir();
-            $entry['Params']['File']['Source']=$tmpDir.$entry['fileName'];
+            $entry['Params']['File']['Source']=$context['filename']=$tmpDir.$entry['fileName'];
             $context['bytes']=file_put_contents($entry['Params']['File']['Source'],$entry['fileContent']);
-            $context['filename']=$entry['Params']['File']['Source'];
             if ($context['bytes']===FALSE){
                 $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to create temporary file "{filename}", skipped this entry',$context);                 
             } else {
@@ -571,11 +570,13 @@ class Filespace{
         }
         // get file name
         $pathinfo=pathinfo($file);
-        if (empty($entry['Name'])){
+        if (!empty($entry['fileName'])){
+            $fileName=pathinfo($entry['fileName'])['filename'];
+        } else if (!empty($entry['Name'])){
+            $fileName=pathinfo($entry['Name'])['filename'];
+        } else {
             $fileName=$pathinfo['filename'];
             $entry['Name']=$fileName.'.'.$pathinfo['extension'];
-        } else {
-            $fileName=pathinfo($entry['Name'])['filename'];
         }
         $fileName=trim(preg_replace('/[^A-Za-z0-9\-]/','_',$fileName),'_ ');
         // set Params → File properties
@@ -606,6 +607,7 @@ class Filespace{
     public function email2files(string $email,array $entry):array
     {
         $statistic=array('parts'=>0,'files'=>0);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         // initialize and load email scanner
         $scanner = new \SourcePot\Email\Scanner();
         $scanner->load($email);
@@ -615,7 +617,7 @@ class Filespace{
         // create entry template
         foreach($emailParts as $name=>$part){
             $newEntry=$entry;
-            $newEntry['Name']=$name;
+            $newEntry['Name']=$context['name']=$name;
             $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,array('Name'),'0','',FALSE);
             $newEntry['Params']['Email']=$emailTransferHeader;
             // use "received" datetime to calculate entry[Date]
@@ -623,7 +625,9 @@ class Filespace{
                 $emailTransferHeader['received dateTimeObj']->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
                 $newEntry['Date']=$emailTransferHeader['received dateTimeObj']->format('Y-m-d H:i:s');
             }
-            if ($part['header']['content-type'][0]==="text/plain"){
+            if (!isset($part['header']['content-type'][0])){
+                $this->oc['logger']->log('notice','"{class} &rarr; {function}()" called with undefined content-type for "{name}"',$context);    
+            } else if ($part['header']['content-type'][0]==="text/plain"){
                 $newEntry['Content']['Message']=$part['data'];
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($newEntry);
             } else if ($part['header']['content-type'][0]==="text/html"){
