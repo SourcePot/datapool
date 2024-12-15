@@ -214,7 +214,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
-            if (count($result['Matches'])<$this->maxResultTableLength){        
+            if (count($result['Matches'])<$this->maxResultTableLength && isset($bestMatch[$params['Content']['Match with column']])){        
                 $result['Matches'][$needle]=array($bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
             }
         } else {
@@ -225,7 +225,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
-            if (count($result['Matches'])<$this->maxResultTableLength){
+            if (count($result['Matches'])<$this->maxResultTableLength && isset($bestMatch[$params['Content']['Match with column']])){
                 $result['Matches'][$needle]=array($bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
             }
         }

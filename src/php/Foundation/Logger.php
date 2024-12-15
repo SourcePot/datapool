@@ -181,7 +181,7 @@ class Logger
         $arr=array();
         $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
-        $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#000'));
+        $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#444'));
         $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         // add to app
         $appArr=array('class'=>'toolbox','icon'=>'Logger');

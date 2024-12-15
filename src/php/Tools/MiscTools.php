@@ -1030,7 +1030,9 @@ final class MiscTools{
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
         preg_match(\SourcePot\Datapool\Tools\MiscTools::UNYCOM_REGEX,$value,$matches);
-        if (empty($matches[0])){return array('Match'=>'','isValid'=>FALSE);}
+        if (empty($matches[0])){
+            return array('Match'=>'','Year'=>'9999','Type'=>'Q','Number'=>'99999','Region'=>'XX','Country'=>'XX','Part'=>'99','isValid'=>FALSE);
+        }
         // initialize result array from match
         $arr=array();
         $suffix='';
@@ -1164,9 +1166,11 @@ final class MiscTools{
     
     public function matchEntry($needle,$matchSelector,$matchColumn,$matchType='contains',$isSystemCall=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'needle'=>$needle,'needleLength'=>strlen($needle),'matchColumn'=>$matchColumn);
+        if ($context['needleLength']<3){
+            $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" called with very short needle "{needle}" for match column "{matchColumn}".',$context);
+        }
         // prepare match selector
-        $isUNYCOMfamily=FALSE;
         $needles=array();
         if ($matchType=='identical'){
             $matchSelector[$matchColumn]=$needle;
@@ -1176,7 +1180,6 @@ final class MiscTools{
             $unycomArr=$this->convert2unycom($needle);
             if ($unycomArr['Type']==='F'){
                 $needleTemplate=array('Year','Type','Number');
-                $isUNYCOMfamily=TRUE;
             } else {
                 $needleTemplate=array('Year','Type','Number','Region','Country','Part');    
             }
