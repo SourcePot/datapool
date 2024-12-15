@@ -83,6 +83,9 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                         $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',array('file'=>$videoSrc));
                     }
                 }
+                if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
+                }
                 // bottom web page section
                 $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Bottom paragraph');
                 $selector['md']="# What is Datapool?\n\nDatapool is an open-source web application for efficient automated data processing. Processes are configurated graphically as a data flow throught processing blocks.\n";

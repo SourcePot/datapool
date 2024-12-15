@@ -111,7 +111,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         if (!empty($selectedYear)){$forumSelector['Date']=$selectedYear.'-%';}
         $html='';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum'));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum','style'=>array('clear'=>'none')));
         }
         return $html;
     }

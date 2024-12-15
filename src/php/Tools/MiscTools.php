@@ -516,6 +516,18 @@ final class MiscTools{
         }
         return $selector;
     }
+
+    public function arr2entry(array $arr):array
+    {
+        $entry=array();
+        $Source=$arr['Source']??'settings';
+        $entryTemplate=$GLOBALS['dbInfo'][$Source];
+        foreach($entryTemplate as $column=>$infoArr){
+            if (!isset($arr[$column])){continue;}
+            $entry[$column]=$arr[$column];
+        }
+        return $entry;
+    }
     
     public function arrRemoveEmpty(array $arr)
     {

@@ -49,8 +49,9 @@ class Haystack{
         $queryEntry=array('Source'=>$this->entryTable,'Group'=>'Queries','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         // process data
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (isset($formData['cmd']['search'])){
+        if (isset($formData['cmd']['search']) || isset($formData['cmd']['reloadBtnArr'])){
             if (empty($formData['val']['Query'])){
+                //
             } else {
                 $serachResult=$this->getSerachResultHtml($formData['val']['Query']);
                 $queryEntry['Name']=substr($formData['val']['Query'],0,20);
@@ -69,9 +70,10 @@ class Haystack{
         $serachResult['html']=$serachResult['html']??'';
         // compile html
         $arr['html']=(empty($arr['html']))?'':$arr['html'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>array('Query'),'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>array()));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>array('Query'),'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>array()));
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Search','key'=>array('search'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>array()));
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('float'=>'none','width'=>'max-content','margin'=>'5em auto')));
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('float'=>'none','width'=>'max-content','margin'=>'0 auto')));
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','padding'=>'2em 0','width'=>'inherit')));
         $arr['html'].=$serachResult['html'];
         return $arr;
     }
@@ -79,21 +81,31 @@ class Haystack{
     private function getSerachResultHtml(string $query):array
     {
         $entryCount=0;
-        $selectors=array(array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Content'=>'%'.$query.'%'),
-                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Forum']->getEntryTable(),'Content'=>'%'.$query.'%'),
-                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Feeds']->getEntryTable(),'Content'=>'%'.$query.'%'),
-                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getEntryTable(),'Content'=>'%'.$query.'%'),
+        // if calendar entry add Start requirement
+        $nowDateTime=new \DateTime('now');
+        $nowDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+        $calendarStartDateTime=$nowDateTime->format('Y-m-d H:i:s');
+        // create selectors
+        $selectors=array(array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>100),
+                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Forum']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>100),
+                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Feeds']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>100),
+                         array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getEntryTable(),'Content'=>'%'.$query.'%','Start>'=>$calendarStartDateTime,'orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4),
                     );
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($selectors);
+        //
         $arr['Query']=$query;
         $arr['html']='';
         $arr['Names']=array();
         $arr['Hits']=array();
         foreach($selectors as $selector){
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,100,0) as $entry){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$selector['orderBy'],$selector['isAsc'],$selector['limit'],0) as $entry){
                 $arr['Names'][$entry['EntryId']]=$entry['Name'];
                 $arr['Hits'][$entry['EntryId']]=$entry['Source'];
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>array()));
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>array('clear'=>'none')));
             }
+        }
+        if (empty($arr['html'])){
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h2','element-content'=>'Nothing found...'));    
         }
         return $arr;
     }

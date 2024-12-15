@@ -67,7 +67,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
                 $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
             } else if (empty($selector['EntryId'])){
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('max-width'=>300,'max-height'=>280)));
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('clear'=>'none','max-width'=>300,'max-height'=>280)));
                 }
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);

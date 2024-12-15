@@ -40,6 +40,11 @@ class ReCAPTCHA{
         $this->projectId=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('Google Project ID');
     }
 
+    /**
+    * This method is called by the Root class during web page creation, after all html is added and before finalizing the page. 
+    * @param array  $arr    Is the web page array 
+    * @return array Returns the web page arrey with added ReCAPTCHA tags
+    */
     public function add(array $arr):array
     {
         if (!empty($this->siteKey)){
@@ -47,7 +52,8 @@ class ReCAPTCHA{
                 $this->oc['logger']->log('warning','Google Service Account file not found, check {file}',array('file'=>$this->serviceAccountFile));
             } else if (empty(getenv("GOOGLE_APPLICATION_CREDENTIALS"))){
                 $this->oc['logger']->log('warning','Google Service Account environment is not set',array());
-            } else if (strpos($arr['toReplace']['{{content}}'],'g-recaptcha')!==FALSE){
+            } else if (strpos($arr['toReplace']['{{content}}'],self::RECATCHA_CLASS_INDICATOR)!==FALSE){
+                // ReCAPTCHA class attributes found 
                 $arr['toReplace']['{{head}}']='<script src="https://www.google.com/recaptcha/enterprise.js?render='.urlencode($this->siteKey).'" async defer></script>'.$arr['toReplace']['{{head}}'];
                 //$arr['toReplace']['{{head}}']='<script src="https://www.google.com/recaptcha/api.js"></script>'.$arr['toReplace']['{{head}}'];
                 $arr['toReplace']['{{content}}']=$this->extractAndReplaceReCAPTCHAtags($arr['toReplace']['{{content}}']);
@@ -56,6 +62,11 @@ class ReCAPTCHA{
         return $arr;
     }
 
+    /**
+    * This method adds to all html-elements with the self::RECATCHA_CLASS_INDICATOR class atrriute futher attributes, i.e data-sitekey, data-callback, data-action. 
+    * @param string  $str is the html string    
+    * @return string Returns enriched html string
+    */
     private function extractAndReplaceReCAPTCHAtags(string $str):string
     {
         preg_match_all('/<[^<]+class=\"'.self::RECATCHA_CLASS_INDICATOR.'\"[^>]+>/',$str,$matches);
@@ -70,11 +81,13 @@ class ReCAPTCHA{
             $action=preg_replace('/[^a-zA-Z]/','_',$attrs['value']);
             $_SESSION[__CLASS__][$action]=$attrs;
             // create new tag, remove id and name
-            $newTag=str_replace('class="g-recaptcha"','class="g-recaptcha" data-sitekey="'.htmlspecialchars($this->siteKey).'" data-callback="onSubmit" data-action="'.$action.'"',$match);
-            if (isset($attrs['name'])){$newTag=str_replace('name="'.$attrs['name'].'"','',$newTag);}
-            $oldTagId=hrtime(TRUE);
-            if (isset($attrs['id'])){$newTag=str_replace('id="'.$attrs['id'].'"','id="'.$oldTagId.'"',$newTag);}
-            $_SESSION[__CLASS__][$action]['oldTagId']=$oldTagId;
+            $newTag=str_replace('class="'.self::RECATCHA_CLASS_INDICATOR.'"','class="'.self::RECATCHA_CLASS_INDICATOR.'" data-sitekey="'.htmlspecialchars($this->siteKey).'" data-callback="onSubmit" data-action="'.$action.'"',$match);
+            if (isset($attrs['name'])){
+                $newTag=str_replace('name="'.$attrs['name'].'"','',$newTag);
+            }
+            $tagId=md5($newTag);
+            if (isset($attrs['id'])){$newTag=str_replace('id="'.$attrs['id'].'"','id="'.$tagId.'"',$newTag);}
+            $_SESSION[__CLASS__][$action]['tagId']=$tagId;
             // replace original tag with new tag
             $str=str_replace($match,$newTag,$str);
         }
@@ -120,7 +133,7 @@ class ReCAPTCHA{
                 $client->close(); // call client.close() before exiting the method
             }
         }
-        $return['oldTagId']=$_SESSION[__CLASS__][$return['action']]['oldTagId'];
+        $return['tagId']=$_SESSION[__CLASS__][$return['action']]['tagId'];
         if ($return['score']>self::MIN_SCORE){
             // accept action
             $return['grant']=1;
