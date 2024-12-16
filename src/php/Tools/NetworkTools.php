@@ -10,13 +10,21 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Tools;
 
-class NetworkTools{
+class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     
     private $oc;
+    
+    private $entryTable='';
+    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                                 );
+    
     
     public function __construct(array $oc)
     {
         $this->oc=$oc;
+        $table=str_replace(__NAMESPACE__,'',__CLASS__);
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
     Public function loadOc(array $oc):void
@@ -24,6 +32,13 @@ class NetworkTools{
         $this->oc=$oc;
     }
 
+    public function init()
+    {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+    }
+
+    public function getEntryTable():string{return $this->entryTable;}
+ 
     public function href(array $arr):string
     {
         $script=$_SERVER['SCRIPT_NAME'];
@@ -142,6 +157,76 @@ class NetworkTools{
         }
         echo $data;
     }
+
+    /******************************************************************************************************************************************
+    * DATASOURCE: Network receiver
+    *
+    * 'EntryId' ... arr-property selects the inbox
+    * 
+    */
     
+    public function receive(string $id):array
+    {
+        $params=$this->getParams($id);
+        $canvasElement=$this->id2canvasElement($id);
+        // create entries
+        $entryTemplate=$this->receiverSelector($id);
+        
+        $result=array('Pages scanned'=>0,);
+        
+        return $result;
+    }
+    
+    public function receiverPluginHtml(array $arr):string
+    {
+        // get settings html
+        $contentStructure=array('A'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE),
+                                'B'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE),
+                                'Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
+                                );
+        // get selctor
+        $callingElementEntryId=$arr['selector']['EntryId'];
+        $callingElement=array('Folder'=>'Settings','EntryId'=>$callingElementEntryId);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
+        // form processing
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        $elementId=key($formData['val']);
+        if (isset($formData['cmd'][$elementId])){
+            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
+            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
+        }
+        // get HTML
+        $arr['canvasCallingClass']=$arr['selector']['Folder'];
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Network receiver parameter';
+        $arr['noBtns']=TRUE;
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>array('Parameter'=>$row),'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        // settings dependend html
+        $html.='Nothing here yet...';
+        return $html;
+    }
+
+    public function receiverSelector(string $id):array
+    {
+        $Group='INBOX|'.preg_replace('/\W/','_',$id);
+        return array('Source'=>$this->entryTable,'Group'=>$Group);
+    }    
+
+    private function getParams(string $id):array
+    {
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',array('Folder'=>'Settings','EntryId'=>$id),TRUE);
+        $paramsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
+        if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return array();}
+    }
+
+    private function id2canvasElement($id):array
+    {
+        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
+    }
+
 }
 ?>

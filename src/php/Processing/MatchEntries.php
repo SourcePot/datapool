@@ -39,12 +39,11 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     public function getEntryTable():string{return $this->entryTable;}
  
-   /**
+    /**
      * This method is the interface of this data processing class
      *
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
-     *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
     public function dataProcessor(array $callingElementSelector=array(),string $action='info'){

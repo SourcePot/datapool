@@ -910,7 +910,7 @@ class HTMLbuilder{
         $presentArr=$this->mapContainer2presentArr($presentArr);
         $selector=$this->getPresentationSelector($presentArr);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
-            $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']);
+            $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??array());
             $presentArr['class']=$setting['Content']['Style class'];
             $cntrArr=explode('|',$setting['Content']['Entry key']);
             if (count($cntrArr)===1){

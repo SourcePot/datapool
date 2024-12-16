@@ -22,6 +22,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $sections=array('FULL'=>'Complete text','ALL'=>'All non-multpile sections','LAST'=>'Text after last section');
     
     private $paramsTemplate=array('Source column'=>'useValue','Target on success'=>'','Target on failure'=>'','Array→string glue'=>' ');
+
+    private $multipleHitsStatistic=array();
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -249,6 +251,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Parser statistics']['Entries']['value']++;
             $result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
         }
+        // multiple hits statistics
+        foreach($this->multipleHitsStatistic as $hitsArr){
+            if ($hitsArr['Hits']<2){continue;}
+            $result['Hits >1 with same EntryId'][$hitsArr['Name']]=array('Hits'=>$hitsArr['Hits'],'Comment'=>$hitsArr['Comment']);    
+        }
+        // add general statistics
         $statistics=array('Statistics'=>$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix());
         $statistics['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $statistics['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
@@ -270,18 +278,17 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $params=$params['Content'];
         // get source text
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $fullText=(isset($flatSourceEntry[$params['Source column']]))?$flatSourceEntry[$params['Source column']]:'';
-        if (empty($fullText)){
-            // Parser failed, no content to parse
+        if (isset($flatSourceEntry[$params['Source column']])){
+            $fullText=$flatSourceEntry[$params['Source column']];
+        } else {
+            // Parser failed, content column not found
             $result['Parser statistics']['Failed']['value']++;
             $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
+            $this->add2hitStatistics($failedEntry,'failed');
             if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){
                 $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($failedEntry);
-            }         
+            }
             return $result;
-        } else {
-            unset($flatSourceEntry[$params['Source column']]);
-            $sourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
         }
         // direct mapping to entry
         $targetEntry=$this->processMapping($base,$flatSourceEntry);
@@ -290,12 +297,17 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // mapper failed
             $result['Parser statistics']['Failed']['value']++;
             $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);            
+            $this->add2hitStatistics($failedEntry,'failed');
             if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){
                 $failedEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($failedEntry);
                 $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($failedEntry);
             }         
             return $result;
         }
+        // add Source column to target entry
+        $flatSourceContent=array($params['Source column']=>$fullText);
+        $sourceContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceContent);
+        $targetEntry=array_replace_recursive($sourceContent,$targetEntry);
         // content found, get sections
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
@@ -324,7 +336,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!isset($result['Parser singleEntry sections <b>failed</b>']) || mt_rand(0,100)>70){$result['Parser singleEntry sections <b>failed</b>']=$resultArr;}
             // parser failed
             $result['Parser statistics']['Failed']['value']++;
-            $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);   
+            $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
+            $this->add2hitStatistics($failedEntry,'failed');
             return $result;
         } else {
             if (!isset($result['Parser singleEntry sections <b>success</b>']) || mt_rand(0,100)>70){$result['Parser singleEntry sections <b>success</b>']=$resultArr;}
@@ -332,6 +345,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // parse multi entries sections
         if (empty($sections['multipleEntries'])){
             $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun);
+            $this->add2hitStatistics($goodEntry,'success');
             $result['Parser statistics']['Success']['value']++;
         } else {
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
@@ -355,14 +369,29 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     }
                     $result['Parser statistics']['Success']['value']++;
                     $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntryTmp,$result,$testRun);
+                    $this->add2hitStatistics($goodEntry,'success');
                 }
             }
         }
+        // multiple hits statistics
+        // sample result
         if (!isset($result['Sample result <b>success</b>']) || mt_rand(1,100)>70){
             $goodEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($goodEntry);
             $result['Sample result <b>success</b>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($goodEntry);
         }
         return $result;
+    }
+
+    private function add2hitStatistics(array $entry,string $comment='')
+    {
+        if (isset($this->multipleHitsStatistic[$entry['EntryId']])){
+            $this->multipleHitsStatistic[$entry['EntryId']]['Hits']++;
+            if (strpos($this->multipleHitsStatistic[$entry['EntryId']]['Comment'],$comment)===FALSE){
+                $this->multipleHitsStatistic[$entry['EntryId']]['Comment'].=', '.$comment;
+            }
+        } else {
+            $this->multipleHitsStatistic[$entry['EntryId']]=array('Name'=>$entry['Name'],'Hits'=>1,'Comment'=>$comment);
+        } 
     }
 
     private function processParsing(array $base,array $entry,string $sectionId,string $section):array

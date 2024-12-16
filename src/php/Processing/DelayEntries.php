@@ -170,7 +170,6 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                                  'Condition met'=>array('value'=>0),
                                                  'Reset trigger'=>array('value'=>0),
                                                  'Moved entries'=>array('value'=>0),
-                                                 'Sent by email'=>array('value'=>''),
                                                  )
                      );
         $result=$this->checkCondition($base,$callingElement,$result,$testRun);

@@ -827,39 +827,6 @@ final class MiscTools{
     /******************************************************************************************************************************************
     * Generic conversions
     */
-    
-    public function var2dataType($var):string
-    {
-        if (is_array($var)){
-            return 'array';
-        }
-        $strVar=strval($var);
-        if (is_numeric($var)){
-            if (mb_strpos($strVar,'.')!==FALSE){
-                $dataType='float';
-            } else {
-                $dataType='int';
-            }
-        } else if (is_bool($var)){
-            $dataType='bool';
-        } else {
-            if (strcmp($strVar,'FALSE')===0 || strcmp($strVar,'TRUE')===0 || strcmp($strVar,'false')===0 || strcmp($strVar,'true')===0){
-                $dataType='bool';
-            } else {                
-                $strVarComps=explode('-',$strVar);
-                if (count($strVarComps)===3){
-                    $dataType='date';
-                    $strVarComps=explode(':',$strVarComps[2]);
-                    if (count($strVarComps)===3){
-                        $dataType.='Time';
-                    }
-                } else {
-                    $dataType='string';
-                }
-            }
-        }
-        return $dataType;
-    }
 
     public function convert($value,$dataType){
         if (empty($dataType)){
@@ -873,7 +840,7 @@ final class MiscTools{
                         'int'=>$this->str2int($value),
                         'float'=>$this->str2float($value),
                         'fraction'=>$this->fraction2float($value),
-                        'bool'=>(intval($value)>0),
+                        'bool'=>(bool)$value,
                         'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                         'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
                         'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
