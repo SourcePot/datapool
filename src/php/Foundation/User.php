@@ -258,7 +258,7 @@ class User{
     public function ownerAbstract(array $arr):string
     {
         $template=(isset($arr['selector']['template']))?$arr['selector']['template']:2;
-        $html=$this->userAbstract($arr['selector']['Owner'],$template);
+        $html=$this->userAbstract($arr['selector']['Owner']??'MISSING',$template);
         $arr['tag']='div';
         $arr['element-content']=$html;
         $arr['keep-element-content']=TRUE;
