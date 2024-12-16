@@ -86,6 +86,7 @@ final class FileContent{
 
     private function addCosts(array $entry,string $text):array
     {
+        $entry['Costs']=array();
         $costDescription=array();
         foreach($this->costs as $key=>$regex){
             $parts=preg_split($regex,$text,-1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);

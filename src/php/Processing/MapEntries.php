@@ -95,7 +95,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix['Commands']['Run']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping'));
         foreach($result as $caption=>$matrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr['icon']=$caption;
+            if ($caption==='Mapping statistics'){$appArr['open']=TRUE;}
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
