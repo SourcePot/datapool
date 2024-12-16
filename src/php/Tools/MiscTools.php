@@ -12,9 +12,9 @@ namespace SourcePot\Datapool\Tools;
 
 final class MiscTools{
 
-    //public const UNYCOM_REGEX='/([0-9]\s*[0-9]\s*[0-9]\s*[0-9]|[0-9]\s*[0-9])(\s*[FPRZXM]{1,2})([0-9\s]{5,6})/u';
-    //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})(\s{0,2}|WO|WE|EP|AP|EA|OA)([A-Z ]{0,2})(\s{0,1}[0-9]{0,2})/u';
-    public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
+    //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
+    public const UNYCOM_REGEX='/([0-9]{4})([ XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2}\s)/u';
+    
     public $emojis=array();
     private $emojiFile='';
     

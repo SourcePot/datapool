@@ -139,7 +139,10 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix['Commands']['Run']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget'));
         foreach($result as $caption=>$matrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr['icon']=$caption;
+            //if ($caption==='Copying results'){$appArr['open']=TRUE;}
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
@@ -205,7 +208,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Content rules';
+        $arr['caption']='Placeholder';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
@@ -263,7 +266,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     if (!isset($flatSample[$placeholderKey])){continue;}
                     $replaceArr=array('tag'=>'span','element-content'=>$flatSample[$placeholderKey],'keep-element-content'=>TRUE,'style'=>array('color'=>'#10f'));
                     $replace=$this->oc['SourcePot\Datapool\Foundation\Element']->element($replaceArr);
-                    $settings['pdfrules'][$ruleId]['Content']['text']=str_replace($placeholderNeedle,$replace,$settings['pdfrules'][$ruleId]['Content']['text']);
+                    $settings['pdfrules'][$ruleId]['Content']['text']=str_replace($placeholderNeedle,$replace,$settings['pdfrules'][$ruleId]['Content']['text']??'');
                 }
                 $textComps=preg_split('/(\n\r)|(\r\n)|(\n)/',$settings['pdfrules'][$ruleId]['Content']['text']);
                 foreach($textComps as $textCompIndex=>$textComp){
