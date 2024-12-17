@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\Tools;
 final class MiscTools{
 
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
-    public const UNYCOM_REGEX='/([0-9]{4})([ XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2}\s)/u';
+    public const UNYCOM_REGEX='/([0-9]{4})([ XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2}\s{0,1})/u';
     
     public $emojis=array();
     private $emojiFile='';
@@ -1075,7 +1075,7 @@ final class MiscTools{
 
     public function valueArr2value($value,$datatypeOrKey='')
     {
-        $datatype2key=array('date'=>'System short','timestamp'=>'System short','exceldate'=>'System short','money'=>'','unycom'=>'Match');
+        $datatype2key=array('date'=>'System short','timestamp'=>'System short','exceldate'=>'System short','money'=>'','unycom'=>'Reference');
         $key=(isset($datatype2key[$datatypeOrKey]))?$datatype2key[$datatypeOrKey]:$datatypeOrKey;
         if (!isset($value[$key]) && $key!==''){
             // If datatypeOrKey exists, a suitable key-value pair should also exist in the data field
