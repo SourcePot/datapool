@@ -26,28 +26,28 @@ class PdfDoc extends \FPDF{
     }
     
     // Page header
-    public function Header()
+    function Header()
     {
         foreach($this->header as $ruleId=>$rule){
             $this->SetFont($rule['font'],$rule['fontStyle'],$rule['fontSize']);
-            $this->SetXY($rule['x-pos [mm]'],$rule['y-pos [mm]']);
+            $this->SetY($rule['y-pos [mm]']);
             $rule['text']=iconv('UTF-8','windows-1252',$rule['text']);
-            $rule['text']=str_replace('{{pageNumber}}',strval($this->PageNo()),$rule['text']);
+            $rule['text']=str_replace('[[pageNumber]]',strval($this->PageNo()),$rule['text']);
             $rule['text']=preg_replace('/{{[^{}]+}}/','',$rule['text']);
-            $this->MultiCell($rule['width [mm]'],$rule['height [mm]'],$rule['text'],0,$rule['alignment']);
+            $this->Cell(0,$rule['height [mm]'],$rule['text'],0,0,$rule['alignment']);
         }
     }
 
     // Page footer
-    public function Footer()
+    function Footer()
     {
         foreach($this->footer as $ruleId=>$rule){
             $this->SetFont($rule['font'],$rule['fontStyle'],$rule['fontSize']);
-            $this->SetXY($rule['x-pos [mm]'],$rule['y-pos [mm]']);
+            $this->SetY($rule['y-pos [mm]']);
             $rule['text']=iconv('UTF-8','windows-1252',$rule['text']);
-            $rule['text']=str_replace('{{pageNumber}}',strval($this->PageNo()),$rule['text']);
+            $rule['text']=str_replace('[[pageNumber]]',strval($this->PageNo()),$rule['text']);
             $rule['text']=preg_replace('/{{[^{}]+}}/','',$rule['text']);
-            $this->MultiCell($rule['width [mm]'],$rule['height [mm]'],$rule['text'],0,$rule['alignment']);
+            $this->Cell(0,$rule['height [mm]'],$rule['text'],0,0,$rule['alignment']);
         }
     }
     

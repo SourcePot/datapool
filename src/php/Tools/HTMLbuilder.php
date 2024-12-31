@@ -800,7 +800,7 @@ class HTMLbuilder{
             if ($endIndex<$arr['maxRowCount'] && $currentIndex===$endIndex){
                 $btnArr=array_replace_recursive($arr,$this->btns['add'],array('excontainer'=>FALSE));
                 $btnArr['key'][]=$entry['EntryId'];
-                $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+                $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             }
             if ($currentIndex>$startIndex){
                 $btnArr=array_replace_recursive($arr,$this->btns['moveDown'],array('excontainer'=>FALSE));
@@ -915,32 +915,38 @@ class HTMLbuilder{
             $cntrArr=explode('|',$setting['Content']['Entry key']);
             if (count($cntrArr)===1){
                 // Simple value or array presentation
-                if (!isset($presentArr['selector'][$setting['Content']['Entry key']])){
-                    // Entry key missing
-                    $matrix=array();
-                } else if (is_array($presentArr['selector'][$setting['Content']['Entry key']])){
-                    // Simple array presentation
-                    $resultArr=array();
-                    $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($presentArr['selector'][$setting['Content']['Entry key']]);
-                    foreach($flatEntry as $flatKey=>$flatValue){
-                        if (!empty($setting['Content']['Key filter'])){
-                            if (stripos($flatKey,$setting['Content']['Key filter'])===FALSE){continue;}
+                $showKey=boolval(intval($setting['Content']['Show key']));
+                $key=$setting['Content']['Entry key'];
+                $presentationValue=$presentArr['selector'][$key]??'';
+                if (is_array($presentationValue)){
+                    $flatEntryPart=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($presentationValue);
+                    foreach($flatEntryPart as $flatKey=>$flatValue){
+                        // filter keys
+                        if (empty($setting['Content']['Key filter'])){continue;}
+                        if (strpos($flatKey,$setting['Content']['Key filter'])===FALSE){
+                            unset($flatEntryPart[$flatKey]);
                         }
-                        $resultArr[$flatKey]=$flatValue;
                     }
-                    if (count($resultArr)===1){
-                        $flatKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label(key($resultArr));
-                        $matrix=array($flatKey=>array('value'=>current($resultArr)));
+                    if (count($flatEntryPart)==1){
+                        $key.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().key($flatEntryPart);
+                        $presentationValue=current($flatEntryPart);
                     } else {
-                        $entrSubArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($resultArr);
-                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($entrSubArr);
+                        $presentationValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntryPart);
                     }
-                } else {
-                    // Simple value presentation
-                    $matrix=array($setting['Content']['Entry key']=>array('value'=>$presentArr['selector'][$setting['Content']['Entry key']]));
                 }
-                $tbaleHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>empty($setting['Content']['Show key']),'keep-element-content'=>TRUE,'caption'=>'','style'=>$presentArr['style'],'class'=>$presentArr['class']));
-                $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($tbaleHtml);
+                if (is_array($presentationValue)){
+                    // present as table
+                    $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($presentationValue);
+                    $presentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>(($showKey)?$key:''),'style'=>$presentArr['style'],'class'=>$presentArr['class']));
+                } else {
+                    // present as div
+                    if ($showKey){
+                        $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
+                        $presentationValue='<b>'.$key.': </b>'.$presentationValue;
+                    }
+                    $presentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$presentationValue,'keep-element-content'=>TRUE,'style'=>$presentArr['style'],'class'=>$presentArr['class']));
+                }
+                $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($presentHtml);
             } else {
                 // App presentation
                 $callingClass=array_shift($cntrArr);

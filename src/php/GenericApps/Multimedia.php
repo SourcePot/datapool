@@ -66,8 +66,17 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
                 $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
                 $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
             } else if (empty($selector['EntryId'])){
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('clear'=>'none','max-width'=>300,'max-height'=>280)));
+                $presentation=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($selector,'widget');
+                if ($presentation=='entryList'){
+                    $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Params'.$S.'File','Filter'=>'')));
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$selector,$settings,array());    
+                } else if ($presentation=='entryByEntry'){
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('clear'=>'none','max-width'=>300,'max-height'=>280)));
+                    }
+                } else {
+                    $html.='Selected widget = '.$presentation.' is not implemented';
                 }
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);

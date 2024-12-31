@@ -245,7 +245,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $zipEntry=array('Source'=>$result['Target']['Source']['value'],'Name'=>$zipFileName.' (complete)');
                 $zipEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$zipEntry);
                 $zipEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($zipEntry,array('Name'),'0','',FALSE);
-                $zipEntry['extractArchives']=FALSE;
+                $zipEntry['File upload extract archive']=FALSE;
                 $zipEntry['Content']=array('Zip archive file count'=>$archiveFileCount);
                 $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($zipFile,$zipEntry,FALSE,TRUE);
                 $result['Mapping statistics']['Output format']['value']='Zip + csv';

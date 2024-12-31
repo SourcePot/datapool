@@ -16,6 +16,7 @@ require_once($GLOBALS['dirs']['php'].'Tools/ondemand/PdfDoc.php');
 class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
+    private $sampleTargetFile='';
 
     private $entryTable='';
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -72,6 +73,8 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
+        // get sample target file
+        $this->sampleTargetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'PdfEntries.pdf';
     }
     
     public function getEntryTable():string
@@ -104,13 +107,14 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getPdfEntriesWidget(array $callingElement):string
     {
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF creation','generic',$callingElement,array('method'=>'getPdfEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF creation','generic',$callingElement,array('method'=>'getPdfEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $html;
     }
 
     private function getPdfEntriesInfo(array $callingElement):string
     {
         $matrix=array();
-        $matrix['Page number']=array('Placeholder'=>'{{pageNumber}}');
+        $matrix['Page number']=array('Placeholder'=>'[[pageNumber]]');
         $matrix['Page count']=array('Placeholder'=>'[[pageCount]]');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
@@ -144,6 +148,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             //if ($caption==='Copying results'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
+        $arr=$this->pdfPreview($arr);
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
     }
@@ -151,11 +156,10 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getPdfEntriesSettings(array $callingElement):string
     {
+        $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $settingsHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries settings','generic',$callingElement,array('method'=>'getPdfEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries settings','generic',$callingElement,array('method'=>'getPdfEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
         }
-        $previewHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries preview','generic',$callingElement,array('method'=>'pdfPreview','classWithNamespace'=>__CLASS__),array());
-        $html=$previewHtml.$settingsHtml;
         return $html;
     }
     
@@ -217,12 +221,12 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $contentStructure=array('type'=>array('method'=>'select','value'=>'','options'=>$this->contentTypes,'excontainer'=>TRUE),
                                 'text'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                'x-pos [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE),
-                                'y-pos [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE),
-                                'width [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'excontainer'=>TRUE),
-                                'height [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>10,'excontainer'=>TRUE),
+                                'x-pos [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>array('width'=>'50px'),'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE),
+                                'y-pos [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>array('width'=>'50px'),'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE),
+                                'width [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>array('width'=>'50px'),'excontainer'=>TRUE),
+                                'height [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>array('width'=>'50px'),'excontainer'=>TRUE),
                                 'font'=>array('method'=>'select','value'=>'','options'=>$this->fonts,'excontainer'=>TRUE),
-                                'fontSize'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>12,'excontainer'=>TRUE),
+                                'fontSize'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>array('width'=>'50px'),'excontainer'=>TRUE),
                                 'fontStyle'=>array('method'=>'select','value'=>'','options'=>$this->fontStyles,'excontainer'=>TRUE),
                                 'alignment'=>array('method'=>'select','value'=>'J','options'=>$this->alignments,'excontainer'=>TRUE),
                                 );
@@ -236,80 +240,14 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function pdfPreview(array $arr):array
     {
-        $arr['html']='';
-        $paperWidth=30;
-        // get settings
-        $settings=array('pdfparams'=>array(),'pdfplaceholder'=>array(),'pdfrules'=>array());
-        $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$arr['selector'],$settings);
-        $settings['pdfplaceholder']['pageNumber']=array('Content'=>array('placeholder'=>'{{pageNumber}}','source'=>'pageNumber'));
-        $settings['pdfplaceholder']['pageCount']=array('Content'=>array('placeholder'=>'[[pageCount]]','source'=>'pageCount'));
-        $params=current($settings['pdfparams']);
-        $paperStyle=array('position'=>'relative','float'=>'none','margin'=>'0 auto','box-shadow'=>'5px 5px 3px #ccc','border'=>'1px solid #aaa');
-        // get sample entry
-        $sample=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($arr['selector']['Content']['Selector']);
-        if (empty($sample)){$sample=array();}
-        $sample['pageNumber']='{pageNumber}';
-        $sample['pageCount']='{pageCount}';
-        $flatSample=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sample);
-        if (isset($params['Content'])){
-            $params=$params['Content'];
-            $paperFormat=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getFormat(strval($params['Paper']));
-            $paperDim=($params['Orientation']=='P')?$paperFormat:array('width'=>$paperFormat['height'],'height'=>$paperFormat['width']);
-            $scaler=$paperWidth/intval($paperDim['width']);
-            $paperStyle['width']=$paperWidth.'vw';
-            $paperStyle['height']=ceil($paperWidth*intval($paperDim['height'])/intval($paperDim['width'])).'vw';
-            $textStyle=array('position'=>'absolute','overflow'=>'hidden','border'=>'1px solid #00f');
-            foreach($settings['pdfrules'] as $ruleId=>$rule){
-                foreach($settings['pdfplaceholder'] as $placeholderId=>$placeholder){
-                    $placeholderKey=$placeholder['Content']['source'];
-                    $placeholderNeedle=$placeholder['Content']['placeholder'];
-                    if (!isset($flatSample[$placeholderKey])){continue;}
-                    $replaceArr=array('tag'=>'span','element-content'=>$flatSample[$placeholderKey],'keep-element-content'=>TRUE,'style'=>array('color'=>'#10f'));
-                    $replace=$this->oc['SourcePot\Datapool\Foundation\Element']->element($replaceArr);
-                    $settings['pdfrules'][$ruleId]['Content']['text']=str_replace($placeholderNeedle,$replace,$settings['pdfrules'][$ruleId]['Content']['text']??'');
-                }
-                $textComps=preg_split('/(\n\r)|(\r\n)|(\n)/',$settings['pdfrules'][$ruleId]['Content']['text']);
-                foreach($textComps as $textCompIndex=>$textComp){
-                    $xPosMm=floatval($rule['Content']['x-pos [mm]']);
-                    $yPosMm=floatval($rule['Content']['y-pos [mm]']);
-                    $textStyle['width']=($rule['Content']['width [mm]']*$scaler).'vw';
-                    $textStyle['height']=($rule['Content']['height [mm]']*$scaler).'vw';
-                    if ($xPosMm<0){
-                        $textStyle['left']='unset';
-                        $textStyle['right']=(abs($xPosMm)*$scaler).'vw';
-                    } else {
-                        $textStyle['left']=($xPosMm*$scaler).'vw';
-                        $textStyle['right']='unset';
-                    }
-                    if ($yPosMm<0){
-                        $textStyle['top']='unset';
-                        $textStyle['bottom']=(abs($yPosMm+$rule['Content']['height [mm]'])*$scaler).'vw';
-                    } else {
-                        $cellBottomPos=$yPosMm+(1+$textCompIndex)*$rule['Content']['height [mm]'];
-                        $textStyle['top']=(($yPosMm+$textCompIndex*$rule['Content']['height [mm]'])*$scaler).'vw';
-                        $textStyle['bottom']='unset';
-                    }
-                    $textStyle['font-size']=(0.33*$rule['Content']['fontSize']*$scaler).'vw';
-                    $textStyle['font-family']=$this->fonts[$rule['Content']['font']];
-                    $textStyle['text-align']=$this->alignments[$rule['Content']['alignment']];
-                    if ($rule['Content']['fontStyle']=='' || $rule['Content']['fontStyle']=='I'){
-                        $textStyle['font-style']=$this->fontStyles[$rule['Content']['fontStyle']];
-                    } else if ($rule['Content']['fontStyle']=='U'){
-                        $textStyle['text-decoration']='underline';
-                    } else if ($rule['Content']['fontStyle']=='B'){
-                        $textStyle['font-weight']='bold';
-                    }
-                    $textArr=array('tag'=>'p','element-content'=>$textComp,'keep-element-content'=>TRUE,'style'=>$textStyle);
-                    $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($textArr);
-                    if ($rule['Content']['type']=='content' && $params['Bottom margin [mm]']+$cellBottomPos>$paperDim['height']){break;}
-                }
-            }
+        $arr['html']=$arr['html']??'';
+        $arr['selector']['Params']['TmpFile']['Source']=$this->sampleTargetFile;
+        $arr['selector']['Params']['TmpFile']['MIME-Type']='application/pdf';
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
+            $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
         } else {
-            $textArr=array('tag'=>'h3','element-content'=>'Parameter missing','keep-element-content'=>TRUE);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($textArr);
+            $arr['html'].='Run "Test" to create a sample document';
         }
-        $paperArr=array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>$paperStyle);
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($paperArr);
         return $arr;    
     }
     
@@ -344,7 +282,11 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $params=current($settings['pdfparams']);
         // get target entry and file
         $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$settings['entryTemplates'][$params['Content']['Target']],TRUE,$testRun);
-        $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+        if ($testRun){
+            $targetFile=$this->sampleTargetFile;
+        } else {
+            $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
+        }
         // process rules
         $pageContent=array('header'=>array(),'content'=>array(),'footer'=>array());
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
@@ -373,7 +315,9 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $rule['text']=preg_replace('/{{[^{}]+}}/','',$rule['text']);
             $pdf->MultiCell($rule['width [mm]'],$rule['height [mm]'],$rule['text'],0,$rule['alignment']);
         }
-        if (is_file($targetFile)){unlink($targetFile);}
+        if (is_file($targetFile)){
+            unlink($targetFile);
+        }
         $pdf->Output('F',$targetFile);
         // pdf file data
         $targetEntry['Params']['File']=array();

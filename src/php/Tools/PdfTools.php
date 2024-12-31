@@ -75,16 +75,16 @@ class PdfTools{
         // parse file if valid
         if (!is_file($file)){
             // invalid pdf-file
-            $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);    
+            $this->oc['logger']->log('notice','Parser {function} failed with: file {file} is missing or invalid',$context);
         } else if (!class_exists('\Spatie\PdfToText\Pdf')){
             // parser class is missing
-            $this->oc['logger']->log('error','Parser {function} failed with: class "\Spatie\PdfToText\Pdf" is missing',$context);    
+            $this->oc['logger']->log('error','Parser {function} failed with: class "\Spatie\PdfToText\Pdf" is missing',$context);
         } else if (empty($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             // path to external parser executable is missing
-            $this->oc['logger']->log('warning','Parser {function} failed with: Path to Xpdf pdftotext executable is missing',$context);    
+            $this->oc['logger']->log('warning','Parser {function} failed with: Path to Xpdf pdftotext executable is missing',$context);
         } else if (!is_file($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             // path to external parser executable is not a file
-            $this->oc['logger']->log('error','Parser {function} failed with: {executable} is no valid file',$context);    
+            $this->oc['logger']->log('error','Parser {function} failed with: {executable} is no valid file',$context);
         } else {
             try{
                 $parser=new \Spatie\PdfToText\Pdf($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']);
@@ -93,7 +93,7 @@ class PdfTools{
                 $entry['Params']['Content']['parser']=__FUNCTION__;
                 $this->oc['logger']->log('info','"{file}" parsed by "{function}" ',$context);
             } catch (\Exception $e){
-                $this->oc['logger']->log('notice','Parser {function} failed with: '.$e->getMessage(),$context);    
+                $this->oc['logger']->log('notice','Parser {function} failed with: '.$e->getMessage(),$context);
             }
         }
         return $entry;

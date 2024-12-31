@@ -124,7 +124,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                               'Match with'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                               'Match with column'=>array('method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
                               'Match type'=>array('method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE),
-                              'Match probability'=>array('method'=>'select','value'=>80,'options'=>array(100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50'),'excontainer'=>TRUE),
+                              'Match probability'=>array('method'=>'select','value'=>80,'options'=>array(100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50',45=>'>45',40=>'>40',30=>'>30',25=>'>25'),'excontainer'=>TRUE),
                               'Match failure'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                               'Combine content'=>array('method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>array('No','Yes')),

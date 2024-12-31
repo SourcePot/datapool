@@ -61,9 +61,9 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         // create entries
         $entryTemplate=$this->receiverSelector($id);
         if (isset($canvasElement['Content']['Widgets']['pdf-file parser']) && isset($canvasElement['Content']['Widgets']['File upload extract archive']) && isset($canvasElement['Content']['Widgets']['File upload extract email parts'])){
-            $entryTemplate['pdfParser']=$canvasElement['Content']['Widgets']['pdf-file parser'];
-            $entryTemplate['extractArchives']=$canvasElement['Content']['Widgets']['File upload extract archive'];
-            $entryTemplate['extractEmails']=$canvasElement['Content']['Widgets']['File upload extract email parts'];
+            $entryTemplate['pdf-file parser']=$canvasElement['Content']['Widgets']['pdf-file parser'];
+            $entryTemplate['File upload extract archive']=$canvasElement['Content']['Widgets']['File upload extract archive'];
+            $entryTemplate['File upload extract email parts']=$canvasElement['Content']['Widgets']['File upload extract email parts'];
         } else {
             $this->oc['logger']->log('notice','Canvas element settings missing');    
         }

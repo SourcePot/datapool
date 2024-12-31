@@ -147,7 +147,7 @@ class User{
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
         if (!isset($entry['Group'])){$entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');}
-        if (!isset($entry['Folder'])){$entry['Folder']=$this->getUserRolsString($entry);}
+        if (!isset($entry['Folder'])){$entry['Folder']=$entry['Email'];}
         if (empty($entry['Name'])){$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');

@@ -120,7 +120,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $forumEntry['Group']=$user['Privileges'];
         $forumEntry['Folder']='Sent';
-        $forumEntry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+        $forumEntry['Date']=(empty($forumEntry['Date']))?($this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime()):$forumEntry['Date'];
         $forumEntry['Name']=(empty($forumEntry['Content']['Message']))?'':mb_substr($forumEntry['Content']['Message'],0,30);
         return $forumEntry;
     }

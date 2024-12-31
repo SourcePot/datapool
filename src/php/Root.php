@@ -33,7 +33,7 @@ final class Root{
     public const ASSETS_WHITELIST=array('email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE);
     // profiling settings
     public const PROFILING_RATE=0;        // 0 ... 1.0 with "1"=100% profiling and "0"=0% profiling
-    public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'resource.php'=>TRUE);
+    public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'import.php'=>FALSE,'resource.php'=>TRUE);
     public const PROFILING_BACKTRACE=4;
     // required extensions
     public const REQUIRED_EXTENSIONS=array('ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
@@ -311,6 +311,17 @@ final class Root{
         } else if ($this->script==='job.php'){
             // job Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
+        } else if ($this->script==='import.php'){
+            // import Processing
+            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
+            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
+            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
+                $arr=$this->oc['SourcePot\Datapool\Foundation\Legacy']->importPage($arr);
+            } else {
+                $arr['toReplace']['{{content}}']='Access '.$this->script.' denied.....';
+            }
+            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($this->script==='resource.php'){
             // client request processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);

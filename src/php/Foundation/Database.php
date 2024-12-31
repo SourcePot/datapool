@@ -15,8 +15,7 @@ class Database{
     private $oc;
     
     private $dbObj;
-    private $dbName='';
-
+    
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
     
@@ -41,9 +40,9 @@ class Database{
     {
         $this->oc=$oc;
         $this->resetStatistic();
-        $this->connect();
+        $this->dbObj=$this->connect();
         $this->collectDatabaseInfo();
-        // set defualt entry access rights
+        // set default entry access rights
         $accessOptions=$oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
         $this->rootEntryTemplate['Read']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
         $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
@@ -119,9 +118,15 @@ class Database{
     /**
     * @return string|FALSE The method returns the database name or FALSE if connection to the database failed.
     */
-    public function getDbName():string
+    public function getDbName():string|bool
     {
-        return $this->dbName;
+        if ($this->dbObj){
+            $stmt=$this->executeStatement('SELECT DATABASE()');
+            $row=$stmt->fetch(\PDO::FETCH_ASSOC);
+            return current($row);
+        } else {
+            return FALSE;
+        }
     }
     
     /**
@@ -299,25 +304,25 @@ class Database{
     * The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
     * 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
     */
-    private function connect():string
+    public function connect(string $class=__CLASS__, string $entryId='connect'):object|bool
     {
+        $dbObj=FALSE;
         $namespaceComps=explode('\\',__NAMESPACE__);
         $dbName=mb_strtolower($namespaceComps[0]);
-        $access=array('Class'=>__CLASS__,'EntryId'=>'connect');
-        $access['Read']=65535;
+        $access=array('Class'=>$class,'EntryId'=>$entryId,'Read'=>65535);
         $access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         try{
-            $this->dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
-            $this->dbObj->exec("SET CHARACTER SET '".self::CHARACTER_SET."'");
-            $this->dbObj->exec("SET NAMES ".self::CHARACTER_SET.'mb'.self::MULTIBYTE_COUNT);
+            $dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
+            $dbObj->exec("SET CHARACTER SET '".self::CHARACTER_SET."'");
+            $dbObj->exec("SET NAMES ".self::CHARACTER_SET.'mb'.self::MULTIBYTE_COUNT);
         } catch (\Exception $e){
+            $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($access);
             $msg=$e->getMessage();
-            echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i><br/>Please check the credentials ../src/setup/Database/connect.json');
+            echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i><br/>Please check the credentials '.$entryFile);
             exit(0);
         }
-        $this->dbName=$access['Content']['dbName'];
-        return $this->getDbStatus();
+        return $dbObj;
     }
     
     /**
@@ -338,9 +343,10 @@ class Database{
         return $GLOBALS['dbInfo'];
     }
 
-    public function executeStatement(string $sql,array $inputs=array()):object
+    public function executeStatement(string $sql,array $inputs=array(),object|bool $dbObj=FALSE):object
     {
-        $stmtArr=$this->bindValues($sql,$inputs);
+        if ($dbObj===FALSE){$dbObj=$this->dbObj;}
+        $stmtArr=$this->bindValues($sql,$inputs,$dbObj);
         $this->oc['SourcePot\Datapool\Root']->startStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
         try{
             $stmtArr['stmt']->execute();
@@ -356,9 +362,9 @@ class Database{
         return $stmtArr['stmt'];
     }
     
-    private function bindValues(string $sql,array $inputs=array()):array
+    private function bindValues(string $sql,array $inputs=array(),object $dbObj):array
     {
-        $return=array('sql'=>$sql,'input'=>$inputs,'stmt'=>$this->dbObj->prepare($sql),'sqlSimulated'=>$sql);
+        $return=array('sql'=>$sql,'input'=>$inputs,'stmt'=>$dbObj->prepare($sql),'sqlSimulated'=>$sql);
         foreach($inputs as $bindKey=>$bindValue){
             $simulatedValue="'".$bindValue."'";
             $return['sqlSimulated']=str_replace($bindKey,$simulatedValue,$return['sqlSimulated']);
@@ -701,7 +707,6 @@ class Database{
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
-        $entry=$this->addType2entry($entry);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
         if (!empty($entry['Owner'])){
             if (strpos($entry['Owner'],'ANONYM_')!==FALSE){

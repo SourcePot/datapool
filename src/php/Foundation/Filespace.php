@@ -250,7 +250,7 @@ class Filespace{
         return $this->updateEntry($entry);
     }
 
-    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE):array
+    public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE,bool $recursiveReplace=TRUE):array
     {
         // This method updates and returns the entry from the setup-directory.
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
@@ -265,7 +265,11 @@ class Filespace{
         } else if (empty($noUpdateCreateIfMissing)){
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',$user,$isSystemCall)){
                 // has access to update entry
-                $entry=array_replace_recursive($existingEntry,$entry);
+                if ($recursiveReplace){
+                    $entry=array_replace_recursive($existingEntry,$entry);
+                } else {
+                    $entry=array_merge($existingEntry,$entry);
+                }
                 $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
                 $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
                 $this->addStatistic('updated files',1);                    
@@ -546,7 +550,7 @@ class Filespace{
             // single file handling
             $entry=$this->addFile2entry($entry,$file);
             // analyse pdf if any parser is selected
-            if (!empty($entry['pdfParser'])){
+            if (!empty($entry['parserMethod'])){
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
                 $entry=$this->oc['SourcePot\Datapool\Tools\ZUGFeRD']->file2entry($file,$entry);
             }
@@ -591,13 +595,11 @@ class Filespace{
 
     private function specialFileHandling(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array|bool
     {
-        $debugArr=array('file'=>$file,'cntr'=>array('extractEmails'=>TRUE,'extractArchives'=>TRUE));
-        $entry=array_merge($debugArr['cntr'],$entry);
-       if ($entry['extractEmails'] && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE || $entry['Params']['File']['Extension']=='eml' || $entry['Params']['File']['Extension']=='msg')){
+        if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE || $entry['Params']['File']['Extension']=='eml' || $entry['Params']['File']['Extension']=='msg')){
             $email=file_get_contents($file);
             $this->email2files($email,$entry);
             return TRUE;
-        } else if ($entry['extractArchives'] && stripos($entry['Params']['File']['MIME-Type'],'/zip')!==FALSE){
+        } else if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract archive') && stripos($entry['Params']['File']['MIME-Type'],'/zip')!==FALSE){
             $this->archive2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             return TRUE;
         }
@@ -686,10 +688,10 @@ class Filespace{
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>'');
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
-            if (empty($entry['pdfParser'])){
+            $parserMethod=$entry['parserMethod']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'pdf-file parser');
+            if (empty($parserMethod)){
                 $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
             } else {
-                $parserMethod=$entry['pdfParser'];
                 try{
                     $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
                 } catch (\Exception $e){

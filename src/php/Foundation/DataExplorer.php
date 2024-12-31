@@ -518,9 +518,9 @@ class DataExplorer{
             foreach($formData['files']['files'] as $fileIndex=>$fileArr){
                 if (empty($fileArr["tmp_name"])){continue;}
                 $entry=$canvasElement['Content']['Selector'];
-                $entry['extractArchives']=!empty($canvasElement['Content']['Widgets']['File upload extract archive']);
-                $entry['extractEmails']=!empty($canvasElement['Content']['Widgets']['File upload extract email parts']);
-                $entry['pdfParser']=(isset($canvasElement['Content']['Widgets']['pdf-file parser']))?$canvasElement['Content']['Widgets']['pdf-file parser']:'';
+                $entry['File upload extract archive']=!empty($canvasElement['Content']['Widgets']['File upload extract archive']);
+                $entry['File upload extract email parts']=!empty($canvasElement['Content']['Widgets']['File upload extract email parts']);
+                $entry['pdf-file parser']=(isset($canvasElement['Content']['Widgets']['pdf-file parser']))?$canvasElement['Content']['Widgets']['pdf-file parser']:'';
                 $entry['EntryId']=hash_file('md5',$fileArr["tmp_name"]);
                 if (empty($entry['Folder'])){$entry['Folder']='Upload';}
                 if (empty($entry['Name'])){$entry['Name']=$fileArr["name"];}

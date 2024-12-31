@@ -59,19 +59,24 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             if (empty($selector['EntryId'])){
-                $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-                $containerTitle='Documents';
-                $containerTitle.=(empty($selector['Group']))?'.':'';
-                $containerTitle.=(empty($selector['Folder']))?'.':'';
-                $containerTitle.=(empty($selector['EntryId']))?'.':'';
-                if (empty($selector['Group'])){
-                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-                } else if (empty($selector['Folder'])){
-                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-                } else if (empty($selector['EntryId'])){
-                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Params'.$S.'File','Filter'=>'')));
+                $presentation=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($selector,'widget');
+                if ($presentation=='entryList'){
+                    $containerTitle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+                    if (empty($selector['Group'])){
+                        $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                    } else if (empty($selector['Folder'])){
+                        $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                    } else if (empty($selector['EntryId'])){
+                        $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Params'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'File','Filter'=>'')));
+                    }
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($containerTitle,'entryList',$selector,$settings,array()); 
+                } else if ($presentation=='entryByEntry'){
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('clear'=>'none','max-width'=>300,'max-height'=>280)));
+                    }
+                } else {
+                    $html.='Selected widget = '.$presentation.' is not implemented';
                 }
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($containerTitle,'entryList',$selector,$settings,array());
             } else {
                 $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
                 $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
