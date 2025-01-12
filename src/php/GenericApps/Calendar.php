@@ -96,7 +96,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $this->setting=array('Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone);
         $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
         // get page state
-        $this->pageStateTemplate=array('Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>'{{YESTERDAY}}','addDate'=>'','refreshInterval'=>300);
+        $this->pageStateTemplate=array('Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>date('Y-m-d H:i:s'),'addDate'=>'','refreshInterval'=>300);
         $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
     }
@@ -683,6 +683,20 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $str.=$value.'&nbsp;'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($label).',&nbsp;';
         }
         return trim($str,',&nbsp;');
+    }
+
+    public function sec2str(int $seconds):string
+    {
+        $template=array('day'=>86400,'hour'=>3600,'min'=>60,'sec'=>1);
+        $result='';
+        foreach($template as $key=>$duration){
+            $value=intval(floor($seconds/$duration));
+            if ($value>1){$key.='s';}
+            $seconds-=$value*$duration;
+            if ($value===0){continue;}
+            $result.=$value.$key.', ';
+        }
+        return trim($result,', ');
     }
     
     public function timestamp2date($string,$timezone='UTC'):array

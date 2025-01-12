@@ -18,14 +18,6 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
-    
-    private $maxResultTableLength=50;
-    private $base=array();
-
-    private $conditions=array('stripos'=>'contains',
-                             'stripos!'=>'does not contain',
-                            );
-
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -68,7 +60,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getInboxEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox','generic',$callingElement,array('method'=>'getInboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox','generic',$callingElement,array('method'=>'getInboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $html;
     }
     
      private function getInboxEntriesInfo($callingElement){
@@ -79,7 +72,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function getInboxEntriesWidgetHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
         // command processing
         $result=array();
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -102,9 +95,14 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Receive';
         $btnArr['key']=array('receive');
         $matrix['Commands']['Receive']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Inbox widget'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Inbox widget','style'=>array('clear'=>'none')));
+        $idStoreAppArr=array('html'=>$this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreWidget($arr['selector']['EntryId']),'icon'=>'Already processed');
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($idStoreAppArr);
         foreach($result as $caption=>$matrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr['icon']=$caption;
+            if ($caption==='Forwarded' || $caption==='Processing statistics'){$appArr['open']=TRUE;}
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
@@ -213,7 +211,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (isset($this->oc[$inboxParams['Inbox source']])){
                 $inboxResult=$this->oc[$inboxParams['Inbox source']]->receive($callingElement['EntryId']);
             } else {
-                $this->oc['logger']->log('warning','Function {class} &rarr; {function}() failed. Inbox "{inboxSource}" was not initiated.',array('class'=>__CLASS__,'class'=>__CLASS__,'inboxSource'=>$inboxParams['Inbox source']));         
+                $this->oc['logger']->log('warning','Function {class} &rarr; {function}() failed. Inbox "{inboxSource}" was not initiated.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'inboxSource'=>$inboxParams['Inbox source']));         
                 $result['Inbox statistics']['error']['value']='Inbox source not set';
             }
             foreach($inboxResult as $key=>$value){
@@ -227,11 +225,17 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             // loop through entries
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+                if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreIsNew($callingElement['EntryId'],$sourceEntry['EntryId'])){
+                    $result['Processing statistics']['Itmes already processed and skipped']['value']++;
+                    continue;
+                }
                 $result['Processing statistics']['Entries']['value']++;
                 $result=$this->oc['SourcePot\Datapool\Processing\ForwardEntries']->forwardEntry($base,$sourceEntry,$result,$testRun);
+                if ($testRun==0){
+                    $this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreAdd($callingElement['EntryId'],$sourceEntry['EntryId']);
+                }
             }
         }
-        
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));

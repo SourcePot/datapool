@@ -19,7 +19,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
-    private $maxResultTableLength=10;
     private $conditions=array();
     private $operations=array('&&'=>'AND','||'=>'OR');
 
@@ -98,7 +97,10 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $matrix['Commands']['Run']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Forwarding'));
         foreach($result as $caption=>$matrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr['icon']=$caption;
+            if ($caption==='Forwarded'){$appArr['open']=TRUE;}
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
         return $arr;
@@ -166,11 +168,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             $result=$this->forwardEntry($base,$sourceEntry,$result,$testRun);
         }
-        if (count($result['Forwarded'])>=$this->maxResultTableLength){
-            $currentValues=current($result['Forwarded']);
-            foreach($currentValues as $key=>$value){$currentValues[$key]='...';}
-            $result['Forwarded']['...']=$currentValues;
-        }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
@@ -183,7 +180,9 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $sample=array();
         $forwardTo=array();
         $targets=array();
+        $equations=array();
         foreach($base['forwardingrules'] as $ruleId=>$rule){
+            $forwardOnSuccess=$rule['Content']['Forward on success'];
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleId)[0];
             // get value
             if (isset($flatSourceEntry[$rule['Content']['Value source']])){
@@ -193,37 +192,34 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $valueA=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($valueA,$rule['Content']['Value data type']);
             $conditionMet=$this->oc['SourcePot\Datapool\Tools\MiscTools']->isTrue($valueA,$rule['Content']['with'],$rule['Content']['compare']);
-            if (isset($forwardTo[$rule['Content']['Forward on success']])){
-                $booleanOperation=$this->operations[$rule['Content']['...']];
+            //
+            $equations[$forwardOnSuccess]=$equations[$forwardOnSuccess]??'';
+            $conditionMetElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,array('element-content'=>$ruleIndex,'style'=>array('min-width'=>'unset','padding'=>'0')));
+            $conditionMetElement=$this->oc['SourcePot\Datapool\Foundation\Element']->element($conditionMetElement);
+            //
+            if (isset($forwardTo[$forwardOnSuccess])){
                 if ($rule['Content']['...']==='&&'){
-                    $forwardTo[$rule['Content']['Forward on success']]=$forwardTo[$rule['Content']['Forward on success']] && $conditionMet;
+                    $forwardTo[$forwardOnSuccess]=$forwardTo[$forwardOnSuccess] && $conditionMet;
                 } else if ($rule['Content']['...']==='||'){
-                    $forwardTo[$rule['Content']['Forward on success']]=$forwardTo[$rule['Content']['Forward on success']] || $conditionMet;
+                    $forwardTo[$forwardOnSuccess]=$forwardTo[$forwardOnSuccess] || $conditionMet;
                 } else {
                     $rule['Content']['ruleIndex']=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId);
                     $this->oc['logger']->log('notice','Rule "{ruleIndex}" is invalid, key "... = {...}" is undefined',$rule['Content']);
                 }
+                $equations[$forwardOnSuccess].='<p style="clear:none;padding:0 0.3rem;">'.$rule['Content']['...'].'</p>'.$conditionMetElement;
             } else {
-                $booleanOperation='';
-                $forwardTo[$rule['Content']['Forward on success']]=$conditionMet;
+                $forwardTo[$forwardOnSuccess]=$conditionMet;
+                $equations[$forwardOnSuccess]=$conditionMetElement;
             }
-            $targetName=array_search($rule['Content']['Forward on success'],$base['targets']);
-            $sample['Sample target "'.$targetName.'"'][$ruleIndex]=array('Boolean operation'=>$booleanOperation,'Value'=>$valueA,'Condition'=>$this->conditions[$rule['Content']['compare']],'Needle'=>$rule['Content']['with'],'='=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet));
-            
+            $targetName=array_search($forwardOnSuccess,$base['targets']);
         }
         $targets=$base['targets'];
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
-            $targets[$targetName]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet);
+            $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,array('style'=>array('min-width'=>'unset','padding'=>'0')));
+            $targetResultElement=$this->oc['SourcePot\Datapool\Foundation\Element']->element($targetResultElement);
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
-            if (count($result['Forwarded'])<$this->maxResultTableLength){
-                $result['Forwarded'][$sourceEntry['Name']]=$targets;
-                $sampleKey='Sample target "'.$targetName.'"';
-                $sample[$sampleKey]['Result']=array('Boolean operation'=>'','Value'=>'','Condition'=>'','Needle'=>'&#8680;','='=>$targets[$targetName]);
-                if (!isset($result[$sampleKey]) || mt_rand(0,100)>95){
-                    $result[$sampleKey]=$sample[$sampleKey];
-                }
-            }
+            $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             if ($conditionMet){
                 $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,FALSE);
             }

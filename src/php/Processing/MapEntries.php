@@ -124,6 +124,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=array('Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
                                 'Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip')),
+                                'Attached file'=>array('method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>array('Keep','Remove from target')),
                                 'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'Order by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE),
                                 'Order'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0=>'Descending',1=>'Ascending')),
@@ -306,6 +307,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // update and move entry to target
             $sourceEntry=array_replace_recursive($sourceEntry,$targetEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],TRUE,$testRun,$params['Content']['Keep source entries']);
+            if (!empty($params['Content']['Attached file']) && empty($testRun)){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($targetEntry);
+            }
         }
         $result['Target']['Source']['value']=$targetEntry['Source'];
         $result['Target']['EntryId']['value']=$targetEntry['EntryId'];

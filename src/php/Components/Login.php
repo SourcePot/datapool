@@ -64,7 +64,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginRequest(array $arr)
     {
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
-            $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array());    
+            $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array('lifetime'=>'P30D'));    
             return 'Password and/or email password were empty';
         }
         // standard user login
@@ -79,7 +79,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($arr['Email']));
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
-                $this->oc['logger']->log('info','One-time login "{email}" at "{dateTime}" was successful.',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+                $this->oc['logger']->log('info','One-time login "{email}" at "{dateTime}" was successful.',array('lifetime'=>'P30D','email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
                 // delete temporary user, switch back to original user and login
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($user,TRUE);
                 $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
@@ -101,7 +101,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginSuccess($user,$email){
         $this->resetSession();
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',array('lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         // return to login page
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
     }
@@ -109,7 +109,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginFailed($user,$email){
         $_SESSION['currentUser']['Privileges']=1;
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
-        $this->oc['logger']->log('notice','Login failed at "{dateTime}" for "{email}".',array('email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        $this->oc['logger']->log('notice','Login failed at "{dateTime}" for "{email}".',array('lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
         // return to login page
         sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
@@ -118,7 +118,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function registerRequest($arr){
         $err=FALSE;
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
-            $this->oc['logger']->log('notice','Registration failed, password and/or email were empty.',array());    
+            $this->oc['logger']->log('notice','Registration failed, password and/or email were empty.',array('lifetime'=>'P30D'));    
             $err='Password and/or email password were empty';
         } else {
             $user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
@@ -134,10 +134,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         if (empty($err)){
-            $this->oc['logger']->log('info','You have been registered as new user "{email}" at "{dateTime}".',array('email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+            $this->oc['logger']->log('info','You have been registered as new user "{email}" at "{dateTime}".',array('lifetime'=>'P30D','email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Admin')));
         } else {
-            $this->oc['logger']->log('notice',$err,array('email'=>$arr['Email']));    
+            $this->oc['logger']->log('notice',$err,array('lifetime'=>'P30D','email'=>$arr['Email']));    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
         }
         return $err;
@@ -154,10 +154,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             } else {
                 $existingUser['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);            
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($existingUser);
-                $this->oc['logger']->log('info','Passphrase for "{email}" updated.',array('email'=>$arr['Email']));    
+                $this->oc['logger']->log('info','Passphrase for "{email}" updated.',array('lifetime'=>'P30D','email'=>$arr['Email']));    
             }
         } else {
-            $this->oc['logger']->log('warning','User not found, passphrase update failed.',array());    
+            $this->oc['logger']->log('warning','User not found, passphrase update failed.',array('lifetime'=>'P30D'));    
         }
     }
 
@@ -171,7 +171,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $selector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
         $existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
         if (empty($existingUser)){
-            $this->oc['logger']->log('warning','Login-link request for an unknown email.',array());    
+            $this->oc['logger']->log('warning','Login-link request for an unknown email.',array('lifetime'=>'P30D'));    
             return 'Failed: unknown email.';
         }
         // create login entry and send email
@@ -183,7 +183,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function sendOneTimePsw($email,$user)
     {
         if ($this->getOneTimeEntry($email)){
-            $this->oc['logger']->log('notice','Nothing was sent. Please use the password you have already received before.',array('email'=>$email));    
+            $this->oc['logger']->log('notice','Nothing was sent. Please use the password you have already received before.',array('lifetime'=>'P30D','email'=>$email));    
             return FALSE;    
         }
         // create login entry
@@ -207,10 +207,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         // send email
         $mail=array('selector'=>$loginEntry);
         if ($this->oc['SourcePot\Datapool\Tools\Email']->entry2mail($mail,TRUE)){
-            $this->oc['logger']->log('info','The one time passphrase was sent to "{email}", please check your emails.',array('email'=>$email));    
+            $this->oc['logger']->log('info','The one time passphrase was sent to "{email}", please check your emails.',array('lifetime'=>'P30D','email'=>$email));    
             return TRUE;    
         } else {
-            $this->oc['logger']->log('notice','The request to send the one time passphrase to "{email}" has failed.',array('email'=>$email));    
+            $this->oc['logger']->log('notice','The request to send the one time passphrase to "{email}" has failed.',array('lifetime'=>'P30D','email'=>$email));    
             return FALSE;
         }
     }

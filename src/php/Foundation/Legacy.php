@@ -117,10 +117,6 @@ class Legacy{
             $file=self::FILESPACE2IMPORT.'\\'.$selector['Source'].'\\'.$selector['ElementId'].'.file';
         }
         if (empty($sourceEntry)){return FALSE;}
-        
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($sourceEntry);
-            
-        
         if ($selector['Source']==='user'){
             $paramsFile=$sourceEntry['Params']['File']??array();
             $paramsGeo=$sourceEntry['Params']['Geo']??array();
@@ -192,9 +188,10 @@ class Legacy{
                 $sourceEntry['Params']=array();
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
-        } else if ($selector['Source']==='multimedia' || $selector['Source']==='cloud'){
+        } else if ($selector['Source']==='multimedia' || $selector['Source']==='cloud' || $selector['Source']==='inventory'){
             if (strpos($sourceEntry['Type'],'__')===0){return FALSE;}
             $sourceEntry['Source']=($selector['Source']==='multimedia')?'multimedia':'documents';
+            $sourceEntry['Group']=($selector['Source']==='inventory')?'Inventory':$sourceEntry['Group'];
             $sourceEntry['EntryId']=$sourceEntry['ElementId'];
             $sourceEntry['Owner']=$sourceEntry['Creator'];
             if (is_file($file)){
@@ -209,12 +206,9 @@ class Legacy{
                 $sourceEntry['Params']=array();
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
-            
-            //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($sourceEntry);
         }
     }
-    
-    
+
     public function updateEntryListEditorEntries($arr)
     {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);

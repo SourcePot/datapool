@@ -21,7 +21,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
     public $receiverDef=array('Type'=>array('@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'),
                               'Content'=>array('EntryId'=>array('@tag'=>'p','@default'=>'','@excontainer'=>TRUE),
-                                               'Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
+                                               'Mailbox'=>array('@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}','@excontainer'=>TRUE),
                                                'User'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
                                                'Password'=>array('@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE),
                                                'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
@@ -130,7 +130,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $id=preg_replace('/\W/','_','INBOX-'.$id);
         $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$id);
         $setting['Content']=array('EntryId'=>$id,
-                                  'Mailbox'=>'{}',
+                                  'Mailbox'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}',
                                   'User'=>'',
                                   'Password'=>'');
         return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
@@ -159,7 +159,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     }
 
     private function todaysEmails($id){
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'emailsSkipped'=>0,'alerts'=>'','errors'=>'');
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'alerts'=>'','errors'=>'');
         $entrySelector=$this->id2entrySelector($id);
         $setting=$this->getReceiverSetting($id);
         $context['Mailbox']=$setting['Content']['Mailbox'];

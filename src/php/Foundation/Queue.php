@@ -12,10 +12,11 @@ namespace SourcePot\Datapool\Foundation;
 
 class Queue
 {
+    public const ID_STORE_ENTRYID_LIFETIME=604800;
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array();
     
     public function __construct(array $oc)
@@ -43,6 +44,12 @@ class Queue
     public function getEntryTemplate():array
     {
         return $this->entryTemplate;
+    }
+
+    public function job(array $vars):array
+    {
+        $vars=$this->idStoreCleanup($vars);
+        return $vars;
     }
 
     /**
@@ -206,6 +213,93 @@ class Queue
         $metaArr['Meter']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$queueMatrix,'hideHeader'=>False,'hideKeys'=>True,'keep-element-content'=>TRUE,'caption'=>'Processing queues'));
         return $metaArr;
     }
+
+    private function getIdStoreSelector(string $storeId):array
+    {
+        $EntryId=md5($storeId);
+        return array('Source'=>$this->getEntryTable(),'Group'=>'idStore','Folder'=>'EntryIds','Name'=>$storeId,'EntryId'=>$EntryId,'Owner'=>'SYSTEM');
+    }
+
+    public function idStoreAdd(string $storeId, string $EntryId, int|bool $lifetime=FALSE)
+    {
+        $entry=$this->getIdStoreSelector($storeId);
+        $existingEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($entry,TRUE);
+        if ($existingEntry){
+            $entry=$existingEntry;
+            $entry['Content'][$EntryId]=time();
+            $Content=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry['Content']);
+            $sql="UPDATE `".$this->getEntryTable()."` SET `Content`='".$Content."' WHERE `EntryId`='".$entry['EntryId']."';";
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array());
+        } else {
+            $entry['Content']=array($EntryId=>time());
+            $entry['Params']['lifetime']=(empty($lifetime))?self::ID_STORE_ENTRYID_LIFETIME:$lifetime;
+            $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry,TRUE);
+        }
+    }
+
+    public function idStoreIsNew(string $storeId, string $EntryId):bool
+    {
+        $selector=$this->getIdStoreSelector($storeId);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
+        if ($entry){
+            return isset($entry['Content'][$EntryId]);
+        } else {
+            return FALSE;
+        }
+    }
+
+    public function idStoreReset(string $storeId)
+    {
+        $selector=$this->getIdStoreSelector($storeId);
+        $sql=$sql="DELETE FROM `".$selector['Source']."` WHERE `EntryId`='".$selector['EntryId']."';";
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array());
+    }
+
+    public function idStoreCleanup(array $vars):array
+    {
+        $vars['statistics']['idStore count']=$vars['statistics']['idStore count']??0;
+        $vars['statistics']['expired entryIds']=$vars['statistics']['expired entryIds']??0;
+        $selector=array('Source'=>$this->getEntryTable(),'Group'=>'idStore','Folder'=>'EntryIds');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $idStore){
+            if ($idStore['isSkipRow']){continue;}
+            $vars['statistics']['idStore count']++;
+            foreach($idStore['Content'] as $entryId=>$updateTimestamp){
+                if (time()-$updateTimestamp>$idStore['Params']['lifetime']){
+                    $vars['statistics']['expired entryIds']++;
+                    unset($idStore['Content'][$entryId]);
+                }
+            }
+            $Content=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($idStore['Content']);
+            $sql="UPDATE `".$this->getEntryTable()."` SET `Content`='".$Content."' WHERE `EntryId`='".$idStore['EntryId']."';";
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array());
+        }
+        return $vars;
+    }
+
+    public function idStoreWidget(string $storeId):string
+    {
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['cmd']['reset'])){
+            $this->idStoreReset($storeId);
+        }
+        //
+        $selector=$this->getIdStoreSelector($storeId);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
+        //
+        $matrix=array();
+        if ($entry){
+            $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $matrix['Already processed']['Value']='<p>'.count($entry['Content']).'</p>';
+            $matrix['Ids expires after']['Value']='<p>'.$this->oc['SourcePot\Datapool\GenericApps\Calendar']->sec2str(intval($entry['Params']['lifetime'])).'</p>';
+            $btnArr['value']='Reset';
+            $btnArr['key']=array('reset');
+            $matrix['']['Value']=$btnArr;
+        } else {
+            $matrix['Already processed']['Value']='<p>none</p>';
+        }
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'EntryId-Store','style'=>array('clear'=>'none')));
+        return $html;
+    }    
 
 }
 ?>

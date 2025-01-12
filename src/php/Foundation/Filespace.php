@@ -270,6 +270,7 @@ class Filespace{
                 } else {
                     $entry=array_merge($existingEntry,$entry);
                 }
+                //$entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->mergeArr($existingEntry,$entry);
                 $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
                 $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry,$existingEntry['file']);
                 $this->addStatistic('updated files',1);                    
@@ -620,7 +621,7 @@ class Filespace{
         foreach($emailParts as $name=>$part){
             $newEntry=$entry;
             $newEntry['Name']=$context['name']=$name;
-            $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,array('Name'),'0','',FALSE);
+            $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(array('message-id'=>$emailTransferHeader['message-id'],'name'=>$name),FALSE);
             $newEntry['Params']['Email']=$emailTransferHeader;
             // use "received" datetime to calculate entry[Date]
             if (is_object($emailTransferHeader['received dateTimeObj'])){

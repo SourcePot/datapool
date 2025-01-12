@@ -141,6 +141,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function parserParams($callingElement){
         $contentStructure=array('Source column'=>array('method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE),
+                                'Pre-processing'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>array(''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'),'title'=>''),
                                 'Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
@@ -280,6 +281,16 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         if (isset($flatSourceEntry[$params['Source column']])){
             $fullText=$flatSourceEntry[$params['Source column']];
+            if (empty($params['Pre-processing'])){
+                // no pre-processing    
+            } else if ($params['Pre-processing']=='stripTags'){
+                $fullText=str_replace('</','|</',$fullText);
+                $fullText=strip_tags($fullText);
+                $fullText=preg_replace('/\|+/','|',$fullText);
+                $fullText=preg_replace('/\s+/',' ',$fullText);
+            } else if ($params['Pre-processing']=='whiteSpaceToSpace'){
+                $fullText=preg_replace('/\s+/',' ',$fullText);
+            }
         } else {
             // Parser failed, content column not found
             $result['Parser statistics']['Failed']['value']++;
@@ -312,11 +323,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
             foreach($sections['singleEntry'] as $sectionId=>$section){
-                $result['Sections singleEntry'][$this->sections[$sectionId]]=array('value'=>$section);
+                $result['Sections singleEntry'][$this->sections[$sectionId]]=array('value'=>htmlspecialchars($section));
             }
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $sectionIndex=>$section)
-                $result['Sections multipleEntries "'.$this->sections[$sectionId].'"'][$sectionIndex]=array('value'=>$section);
+                $result['Sections multipleEntries "'.$this->sections[$sectionId].'"'][$sectionIndex]=array('value'=>htmlspecialchars($section));
             }
         }
         // parse single entry sections
@@ -426,6 +437,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $result[$rowKey]['Key'].=' | '.$targetKey;
                     $entry=$this->addValue2flatEntry($entry,$rule['Content']['Target column'],$targetKey,$matchText,$rule['Content']['Target data type']);
                     $result[$rowKey]['Match text'].=empty($result[$rowKey]['Match text'])?$matchText:(' | '.$matchText);
+                    if (empty($rule['Content']['Allow multiple hits'])){break;}
                 }
             } else {
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
@@ -491,7 +503,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $textComps=$this->preg_single_split('/'.$rule['Content']['Regular expression'].'/',$text);
                 $text=$textComps[0];
-                $sections['singleEntry'][$sectionId]=$textComps[1]??FALSE;
+                $sections['singleEntry'][$sectionId]=$textComps[1]??'';
             }
         }
         $sections['singleEntry']['LAST']=$text;

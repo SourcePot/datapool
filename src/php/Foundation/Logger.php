@@ -118,6 +118,7 @@ class Logger
     {
         $level=mb_strtolower($record->level->name);
         $context=array_merge($record->context,$record->extra);
+        $lifetime=(empty($context['lifetime']))?$this->levelConfig[$level]['lifetime']:$context['lifetime'];
         $context['ip']=$this->oc['SourcePot\Datapool\Root']->getIP($this->levelConfig[$level]['hashIp']);
         $context['timestamp']=time();
         $entry=$this->levelConfig[$level];
@@ -127,7 +128,7 @@ class Logger
         $entry['Source']=$this->entryTable;
         $entry['Group']=$level;
         $entry['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-        $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$this->levelConfig[$level]['lifetime']);
+        $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$lifetime);
         $entry['Content']=$context;
         $entry['Content']['msg']=$record->message;
         if ($this->levelConfig[$level]['addTrace']){

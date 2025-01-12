@@ -20,7 +20,7 @@ final class MiscTools{
     
     private $oc=NULL;
     
-    private $dataTypes=array('string'=>'&rarr; String','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+    private $dataTypes=array('string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
                              'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
                              'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
                              'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash',
@@ -693,7 +693,8 @@ final class MiscTools{
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $arrKey=>$arrValue){
             if (mb_strpos($arrKey,$flatKey)===FALSE){continue;}
-            unset($flatArr[$arrKey]);
+            //unset($flatArr[$arrKey]);
+            $flatArr[$arrKey]='__TODELETE__';
         }
         $arr=$this->flat2arr($flatArr);
         return $arr;
@@ -732,6 +733,41 @@ final class MiscTools{
         return $leaves;
     }
 
+    /**
+     * This method merges input arrays recursively and removes branches with NULL values and overwrites braches with empty arrays. It returns the merged array. 
+     * Example: 
+     * $a=['Params'=>['File'=>['Name'=>'test_A.pdf','Size'=>1200],'Geo'=>['lat'=>32.23,'lon'=>1.433]],'Content'=>['Message'=>'Hallo','Comment'=>'Test']] and
+     * $b=['Params'=>['File'=>['Name'=>'test_A.pdf','Size'=>1200],'Geo'=>[]],'Content'=>['Message'=>'Hallo','Comment'=>NULL]] returns
+     * ['Params'=>['File'=>['Name'=>'test_A.pdf','Size'=>1200],'Geo'=>[],'Content'=>['Message'=>'Hallo']]
+     * 
+     * @param array $a Is the first array
+     * @param array $b Is the second array
+     * @return array returns the merged array 
+    */
+    public function mergeArr(array $a,array $b)
+    {
+        $flatA=$this->arr2flat($a);
+        $flatB=$this->arr2flat($b);
+        foreach($flatB as $flatKeyB=>$valueB){
+            if ($valueB==='{}' || $valueB===NULL || $valueB==='__TODELETE__'){
+                // empty branch
+                if ($valueB===NULL || $valueB==='__TODELETE__'){
+                    unset($flatB[$flatKeyB]);
+                }
+                if (isset($flatA[$flatKeyB])){
+                    unset($flatA[$flatKeyB]);
+                } else {
+                    foreach($flatA as $flatKeyA=>$valueA){
+                        if (strpos($flatKeyA,$flatKeyB)===0){
+                            unset($flatA[$flatKeyA]);
+                        }
+                    }
+                }
+            }
+        }
+        $flatA=array_merge($flatA,$flatB);
+        return $this->flat2arr($flatA);
+    }
 
     /**
     * @return string This method returns a string for a web page created from a statistics array, e.g. array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'file added'=>0)
@@ -834,7 +870,8 @@ final class MiscTools{
         } else {
             $newValue=match($dataType){
                         'string'=>$this->str2str($value),
-                        'stringNoWhitespaces'=>$this->convert2stringNoWhitespaces($value),
+                        'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
+                        'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),
                         'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
                         'splitString'=>$this->convert2splitString($value),
                         'int'=>$this->str2int($value),
@@ -941,10 +978,11 @@ final class MiscTools{
             return floatval($numberStr);
         }
     }
-    public function convert2stringNoWhitespaces($value):string
+
+    public function convert2stringWhitespaces($value,$replacement=''):string
     {
         $value=strval($value);
-        $value=preg_replace('/\s+/u','',$value);
+        $value=preg_replace('/\s+/u',$replacement,$value);
         return $value;
     }
 

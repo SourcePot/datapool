@@ -134,10 +134,7 @@ class DataExplorer{
     public function unifyEntry(array $entry):array
     {
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        if (!empty($entry['class'])){$entry['Content']['Style']['Style class']=$entry['class'];}
-        if (!empty($entry['Content']['Style']['Text'])){
-            $entry['Name']=$entry['Content']['Style']['Text'];
-        }
+        // new entry -> create structure
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
             $entry['Content']['Style']['Text']=$entry['element-content'];
@@ -149,6 +146,13 @@ class DataExplorer{
                 $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
                 $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasTrigger';
             }
+        }
+        // adjust style class and unify Name
+        if (!empty($entry['class'])){
+            $entry['Content']['Style']['Style class']=$entry['class'];
+        }
+        if (!empty($entry['Content']['Style']['Text'])){
+            $entry['Name']=$entry['Content']['Style']['Text'];
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_CONTENTADMIN_R');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
@@ -230,6 +234,7 @@ class DataExplorer{
         } else if (isset($formData['cmd']['edit'])){
             $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',TRUE);
         } else if (!empty($formData['cmd'])){
+            // insert new canvas element; canvas element structure will be finalized by unifyEntry-method 
             $entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
             $entry=array_merge($this->tags[key($formData['cmd'])],$entry);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
@@ -340,7 +345,11 @@ class DataExplorer{
             $element['entry-id']=$canvasElement['EntryId'];
             $style['cursor']='pointer';
         } else {
-            if (!empty($canvasElement['Content']['Selector']['Source'])){
+            if (empty($canvasElement['Content']['Selector']['Source'])){
+                if ($canvasElement['Content']['Style']['Style class']!=='canvas-text' && $canvasElement['Content']['Style']['Style class']!=='canvas-symbol'){
+                    $rowCount='SOURCE NOT SET!';
+                }
+            } else {
                 // canvas element view button
                 $element=$canvasElement;
                 $element['key']=array('view',$canvasElement['Source'],$canvasElement['EntryId']);
@@ -349,7 +358,7 @@ class DataExplorer{
                 $style['z-index']='5';
                 $style['box-sizing']='content-box';
                 $rowCountSelector=$canvasElement['Content']['Selector'];
-                $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,FALSE);
+                $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,TRUE);
             }
         }
         // canvas element
@@ -486,19 +495,14 @@ class DataExplorer{
 
     /**
     * Update canvas element properties with $arr values, i.e. style including position.
-    *
-    * @param    array   $arr Array containing vales to be updated
+    * This method is called via js-request.
+    * @param    array   $canvasElement Array containing vales to be updated
     * @return   $canvasElement Updated canvas element
     */
-    public function setCanvasElementStyle(array $arr):array
+    public function setCanvasElementStyle(array $canvasElement):array
     {
-        $canvasElement=array();
-        if (!empty($arr['Source']) && !empty($arr['EntryId']) && !empty($arr['Content']['Style'])){
-            $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(array('Source'=>$arr['Source'],'EntryId'=>$arr['EntryId']));
-            if ($canvasElement){
-                $canvasElement=array_replace_recursive($canvasElement,$arr);
-                $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($canvasElement);
-            }
+        if (!empty($canvasElement['Source']) && !empty($canvasElement['EntryId']) && !empty($canvasElement['Content']['Style'])){
+            $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($canvasElement);
         }
         return $canvasElement;
     }

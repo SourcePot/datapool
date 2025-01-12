@@ -241,18 +241,18 @@ class Container{
                     $settings['selectorKey']=key($formData['cmd']['setSelectorKey']);
                 } else if (isset($formData['cmd']['deleteKey'])){
                     $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrDeleteKeyByFlatKey($arr['selector'],key($formData['cmd']['deleteKey']));
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
                 } else if (isset($formData['cmd']['addValue'])){
                     $flatKey=$formData['cmd']['addValue'].$S.$formData['val']['newKey'];
                     $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrUpdateKeyByFlatKey($arr['selector'],$flatKey,'Enter new value here ...');
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
                 } else if (isset($formData['cmd']['addArr'])){
                     $flatKey=$formData['cmd']['addArr'].$S.$formData['val']['newKey'].$S.'...';
                     $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrUpdateKeyByFlatKey($arr['selector'],$flatKey,'to be deleted');
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
                 } else if (isset($formData['cmd']['save']) || isset($formData['cmd']['reloadBtnArr'])){
                     $arr['selector']=array_replace_recursive($arr['selector'],$formData['val']);
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
                 } else {
                     
                 }

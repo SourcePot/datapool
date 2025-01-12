@@ -160,7 +160,8 @@ class Explorer{
         }
         // create new guide entry, if it does not exist
         $unseledtedDetected=FALSE;
-        $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
+        $write=(empty($selector['Group']))?'ALL_MEMBER_R':'ALL_CONTENTADMIN_R'; // if no Group is set, all memebers can add a Group else only the owner and content admin can write a Group, Folder, Name 
+        $entry=array('Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>$write);
         foreach($this->selectorTemplate as $column=>$initValue){
             if (empty($selector[$column])){$unseledtedDetected=TRUE;}
             $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];

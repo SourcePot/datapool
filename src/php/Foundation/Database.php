@@ -239,7 +239,9 @@ class Database{
                 $entry=$this->oc[$classWithNamespace]->unifyEntry($entry,$addDefaults);
             }
         }
-        if ($addDefaults){$entry=$this->addEntryDefaults($entry);}
+        if ($addDefaults){
+            $entry=$this->addEntryDefaults($entry);
+        }
         $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
         $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->combineEntryData($entry);
@@ -404,7 +406,9 @@ class Database{
     * e.g. 'Date|[]|Start' -> refers to column 'Date'.
     */
     private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
-        if ($removeGuideEntries){$selector['Type=!']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';}
+        if ($removeGuideEntries){
+            $selector['Type=!']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
+        }
         $entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
         $opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
         $sqlArr=array('sql'=>array(),'inputs'=>array());            
@@ -503,12 +507,12 @@ class Database{
         return $sqlArr;
     }
     
-    public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE,$isDebugging=FALSE){
+    public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
         // count all selected rows
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
         $sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
+        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
         $rowCount=current($stmt->fetch());
         return intval($rowCount);
     }
@@ -567,7 +571,7 @@ class Database{
         }
     }
     
-    public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=array(),bool $removeGuideEntries=TRUE,bool $isDebugging=FALSE):\Generator
+    public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=array(),bool $removeGuideEntries=TRUE):\Generator
     {
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return array();}
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
@@ -579,7 +583,7 @@ class Database{
         }
         $sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
         $sqlArr['sql'].=';';
-        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],$isDebugging);
+        $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
         $result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>-1,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'');
         $this->addStatistic('matches',$result['rowCount']);
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
@@ -613,7 +617,7 @@ class Database{
             $sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
             $sqlArr['sql'].=';';
             //var_dump($sqlArr);
-            $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
+            $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
             $result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source']);
             $this->addStatistic('matches',$result['rowCount']);
             $row=$stmt->fetch(\PDO::FETCH_ASSOC);
@@ -677,7 +681,7 @@ class Database{
         }
         // delete entries by id-list
         $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
-        $stmt=$this->executeStatement($sql,array(),FALSE);
+        $stmt=$this->executeStatement($sql,array());
         return $this->addStatistic('deleted',$stmt->rowCount());
     }
     
@@ -726,7 +730,7 @@ class Database{
             $inputs[$sqlPlaceholder]=strval($value);
         }
         $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
-        $stmt=$this->executeStatement($sql,$inputs,FALSE);
+        $stmt=$this->executeStatement($sql,$inputs);
         $this->addStatistic('inserted',$stmt->rowCount());
         $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
         $context['entriesInserted']=$stmt->rowCount();
@@ -760,7 +764,7 @@ class Database{
             unset($entry['Privileges']);
         }
         if (empty($entry)){return FALSE;}
-        $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging);
+        $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries);
         $entryTemplate=$this->getEntryTemplate($selector['Source']);
         if (empty($entryList['primaryKeys'])){
             return FALSE;
@@ -778,7 +782,7 @@ class Database{
                 $inputs[$sqlPlaceholder]=strval($value);
             }
             $sql="UPDATE `".$selector['Source']."` SET ".trim($valueSql,',')." ".$entryList['sql'].";";
-            $stmt=$this->executeStatement($sql,$inputs,$isDebugging);
+            $stmt=$this->executeStatement($sql,$inputs);
             $this->addStatistic('updated',$stmt->rowCount());
             return $this->getStatistic('updated');
         }
@@ -836,7 +840,8 @@ class Database{
             // existing entry -> update
             $context['steps'].='Entry exsists|';
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
-            $entry['Params']=array_replace_recursive($existingEntry['Params'],(isset($entry['Params'])?$entry['Params']:array()));
+            //$entry=array_replace_recursive($existingEntry,$entry);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->mergeArr($existingEntry,$entry);
             // add log
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
