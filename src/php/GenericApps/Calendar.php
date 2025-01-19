@@ -792,10 +792,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         if ($isExcelDate){
             $string=preg_replace('/[^\d\.]+/','',$string);
         }
-        preg_match_all('/\d{4}[0-1][0-9][0-3][0-9]/',$string,$matches);
-        if (isset($matches[0][0]) && !$isExcelDate){
+        preg_match_all('/([0-9]{4})([0-1][0-9])([0-3][0-9])/',$string,$matchesYYYYMMDD);
+        preg_match_all('/([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{2,4})/',$string,$matchesDDDOTMMDOTYYYY);
+        if (isset($matchesYYYYMMDD[0][0]) && !$isExcelDate){
             // format YYYYMMDD -> YYYY-MM-DD
-            $string=$matches[0][0][0].$matches[0][0][1].$matches[0][0][2].$matches[0][0][3].'-'.$matches[0][0][4].$matches[0][0][5].'-'.$matches[0][0][6].$matches[0][0][7];
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($matchesYYYYMMDD);
+            $string=$matchesYYYYMMDD[1][0].'-'.$matchesYYYYMMDD[2][0].'-'.$matchesYYYYMMDD[3][0];
+        } else if (isset($matchesDDDOTMMDOTYYYY[0][0]) && !$isExcelDate){
+            // format YYYYMMDD -> DD.MM.YYYY
+            $string=$matchesDDDOTMMDOTYYYY[3][0].'-'.$matchesDDDOTMMDOTYYYY[2][0].'-'.$matchesDDDOTMMDOTYYYY[1][0];
         } else if (empty(preg_replace('/[\d\.]+/','',$string))){
             // EXCEL format
             $unixTimestamp=intval(86400*(floatval($string)-25569));

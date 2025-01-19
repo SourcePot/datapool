@@ -617,11 +617,12 @@ class Filespace{
         // read result
         $emailTransferHeader = $scanner->getHeader();
         $emailParts = $scanner->getParts();
+        $msgId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($emailTransferHeader['message-id'],TRUE);
         // create entry template
         foreach($emailParts as $name=>$part){
             $newEntry=$entry;
-            $newEntry['Name']=$context['name']=$name;
-            $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(array('message-id'=>$emailTransferHeader['message-id'],'name'=>$name),FALSE);
+            $newEntry['Name']=$context['name']=$name.' {'.$msgId.'}';
+            $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($newEntry['Name'],FALSE);
             $newEntry['Params']['Email']=$emailTransferHeader;
             // use "received" datetime to calculate entry[Date]
             if (is_object($emailTransferHeader['received dateTimeObj'])){

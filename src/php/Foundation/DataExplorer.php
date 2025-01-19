@@ -48,8 +48,8 @@ class DataExplorer{
                         'Text'=>array('tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Text box'),
                         );
     
-    private $graphicElemnts=array('Connectors'=>array('&VerticalSeparator;','&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;'),
-                                  'Symbols'=>array('&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'),
+    private $graphicElemnts=array('Connectors'=>array('&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'),
+                                  'Symbols'=>array('&VerticalSeparator;','&#8285;','&#8286;','','','&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'),
                                   'Math'=>array('&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'),
                                   );
 
@@ -316,7 +316,7 @@ class DataExplorer{
         $style=array('left'=>$canvasElement['Content']['Style']['left'],'top'=>$canvasElement['Content']['Style']['top']);
         if (!empty($selectedCanvasElement['EntryId'])){
             if (strcmp($selectedCanvasElement['EntryId'],$canvasElement['EntryId'])===0){
-                $style['border']='3px solid #d00';
+                $style['box-shadow']='3px 3px 5px 1px #f009';
             }
         }
         $text=$canvasElement['Content']['Style']['Text'];

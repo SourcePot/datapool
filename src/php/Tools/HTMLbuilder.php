@@ -748,6 +748,7 @@ class HTMLbuilder{
             $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,array('moveDownEntryId'=>$selector['EntryId']));
         }
         // html creation
+        $csvMatrix=array();
         $matrix=array();
         $startIndex=$endIndex=1;
         $selector=$baseSelector;
@@ -780,7 +781,8 @@ class HTMLbuilder{
                         if (strcmp($elementArr['type'],'hidden')===0){
                             $matrix[$rowIndex][$contentKey].=$elementArr['value'];
                         }
-                    }                
+                    }
+                    $csvMatrix[$entry['EntryId']][$contentKey]=$elementArr['value']??$elementArr['element-content']??'';
                 } else {
                     // if classWithNamespace::method() does not exists
                     $matrix[$rowIndex][$contentKey]=$this->traceHtml('Not found: '.$classWithNamespace.'::'.$method.'(arr)');
@@ -817,6 +819,7 @@ class HTMLbuilder{
             $matrix[$rowIndex]['']=$cmdBtns;
             if ($entry['rowCount']>1){$matrix[$rowIndex]['Move']=$moveBtns;}
         } // end of loop through list entries
+        $matrix[$rowIndex]['Move']=($matrix[$rowIndex]['Move']??'').$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
         if ($arr['returnRow']){
             return (empty(current($matrix)))?array('value'=>''):current($matrix);
         } else {

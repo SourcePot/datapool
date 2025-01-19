@@ -490,6 +490,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $text=$fullText;
         $sections=array('singleEntry'=>array('FULL'=>''),'multipleEntries'=>array());
         foreach($base['parsersectionrules'] as $ruleKey=>$rule){
+            if (!isset($rule['Content']['Section type']) || !isset($rule['Content']['Regular expression'])){continue;}
             $sectionId=$rule['EntryId'];
             if ($rule['Content']['Section type']==='multipleEntries'){
                 $sections['multipleEntries'][$sectionId]=array();

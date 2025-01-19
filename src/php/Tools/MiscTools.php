@@ -918,7 +918,7 @@ final class MiscTools{
     
     public function fraction2float($string)
     {
-        $string=preg_replace('/[^0-9\.\/\-]/u','',$string);
+        $string=preg_replace('/[^0-9\.\/\-]/u','',strval($string));
         $comps=explode('/',$string);
         $float=NULL;
         foreach($comps as $divider){

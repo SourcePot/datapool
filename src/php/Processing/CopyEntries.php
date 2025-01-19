@@ -158,8 +158,14 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function copyEntry($base,$sourceEntry,$result,$testRun){
+        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         foreach($base['copyingrules'] as $ruleId=>$rule){
             $targetEntryId=$rule['Content']['Target'];
+            if (!isset($base['targets'][$targetEntryId])){
+                $context['targetEntryId']=$targetEntryId;
+                $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" called with non-existig target "{targetEntryId}".',$context);
+                continue;
+            }
             $target=$base['targets'][$targetEntryId];
             $targetName=$target['Content']['Style']['Text'];
             if (isset($result['Copying results'][$targetName]['value'])){

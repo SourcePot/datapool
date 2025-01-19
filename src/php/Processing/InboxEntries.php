@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Processing;
 class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
+    private $inboxClass='__NOTSET__';
     
     private $entryTable='';
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
