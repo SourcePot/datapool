@@ -43,7 +43,7 @@ class ZUGFeRD{
     {
         $pathinfo=pathinfo($file);
         if (!is_file($file)){
-
+            // nothing to do
         } else if ($pathinfo['extension']==='pdf'){
             $entry=$this->pdf2entry($file,$entry,$pathinfo);
         } else if ($pathinfo['extension']==='xml'){

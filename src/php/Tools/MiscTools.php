@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\Tools;
 final class MiscTools{
 
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
-    public const UNYCOM_REGEX='/([0-9]{4})(\s{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2}\s{0,1})/u';
+    public const UNYCOM_REGEX='/([0-9]{4})([ ]{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2})\s/u';
     
     public $emojis=array();
     private $emojiFile='';
@@ -1032,9 +1032,10 @@ final class MiscTools{
     public function convert2unycom($value,$prefix=''):array
     {
         $value=strval($value);
+        $value=str_replace('-',' ',$value);
         $keyTemplate=array('Match','Year','Type','Number');
         $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-        preg_match(\SourcePot\Datapool\Tools\MiscTools::UNYCOM_REGEX,$value,$matches);
+        preg_match(self::UNYCOM_REGEX,$value,$matches);
         if (empty($matches[0])){
             return array('Match'=>'','Year'=>'9999','Type'=>'Q','Number'=>'99999','Region'=>'XX','Country'=>'XX','Part'=>'99','isValid'=>FALSE);
         }

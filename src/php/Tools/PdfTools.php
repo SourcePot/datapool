@@ -149,43 +149,35 @@ class PdfTools{
     {
         $pathinfo=pathinfo($file);
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$pathinfo['basename'],'fileName'=>$pathinfo['filename'],'fileExtension'=>$pathinfo['extension'],'attachments'=>0,'embedded'=>0);
-        
         $pdfParser= new \Smalot\PdfParser\Parser();
         $pdfContent=$pdfContent = file_get_contents($file);
         try {
             $context['attachmentsFailed']=array();
             $pdfParsed = $pdfParser->parseContent($pdfContent);
-            $filespecIndex=0;
             $filespecs = $pdfParsed->getObjectsByType('Filespec');
             foreach ($filespecs as $filespec){
-                $context['Filespec'][$filespecIndex]=$filespec->getDetails();
-                $context['attachmentsFailed'][$filespecIndex]=$context['Filespec'][$filespecIndex]['F'];
-                $filespecIndex++;
-            }
-            $embededIndex=0;
-            $embeddedFiles = $pdfParsed->getObjectsByType('EmbeddedFile');
-            foreach ($embeddedFiles as $embeddedFile) {
-                $newEntry=$entry;
-                $newEntry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$context['Filespec'][$embededIndex]['F']);
-                $newEntry['fileContent']=$embeddedFile->getContent();
-                if (!empty($newEntry['fileContent'])){
-                    if (strpos($newEntry['fileContent'],'rsm:CrossIndustryInvoice')!==FALSE){
-                        $context['attachmentFailed']=$context['attachmentsFailed'][$embededIndex];
-                        $this->oc['logger']->log('info','Method "{class} &rarr; {function}()" found embedded XRechnung-file "{attachmentFailed}" in "{file}". No additional entry was created, instead the file content will be added to the entry Content-key.',$context);
-                        unset($context['attachmentsFailed'][$embededIndex]);
-                        $embededIndex++;
-                        continue;
+                $fileDetails=$filespec->getDetails();
+                if($filespec->getHeader()->has('EF') && $filespec->getHeader()->get('EF')->has('F')) {
+                    $context['embeddedFileName']=$fileDetails['F'];
+                    $embeddedFileContent=$filespec->getHeader()->get('EF')->get('F')->getContent();
+                    if (!empty($embeddedFileContent)){
+                        if (stripos($embeddedFileContent,'rsm:CrossIndustryInvoice')!==FALSE){
+                            // XRechnung
+                            $entry=$this->oc['SourcePot\Datapool\Tools\ZUGFeRD']->xmlString2entry($embeddedFileContent,$entry);
+                            $this->oc['logger']->log('info','Method "{class} &rarr; {function}()" found embedded XRechnung-file "{embeddedFileName}" in "{file}". No additional entry was created, instead the file content will be added to the entry Content-key.',$context);
+                        } else {
+                            // misc embedded file
+                            $newEntry=$entry;
+                            $newEntry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$context['embeddedFileName']);
+                            $newEntry['fileContent']=$embeddedFileContent;
+                            $newEntry['Name']=$pathinfo['basename'].' ['.$newEntry['fileName'].']';
+                            $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+                            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($newEntry);
+                        }
+                    } else {
+                        $this->oc['logger']->log('notice','Method "{class} &rarr; {function}()" found empty embedded file "{embeddedFileName}" in "{file}". No additional entry was created.',$context);
                     }
-                    $newEntry['Name']=$pathinfo['basename'].' ['.$newEntry['fileName'].']';
-                    $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
-                    $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($newEntry);
                 }
-                unset($context['attachmentsFailed'][$embededIndex]);
-                $embededIndex++;
-            }
-            if ($embededIndex<$filespecIndex){
-                $context['attachmentsFailed']=implode(' | ',$context['attachmentsFailed']);
-                $this->oc['logger']->log('error','Method "{class} &rarr; {function}()" failed to extract embedded files "{attachmentsFailed}" from "{file}"',$context);
             }
         } catch (\Exception $e) {
             $context['error']=$e->getMessage();

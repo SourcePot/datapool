@@ -553,7 +553,6 @@ class Filespace{
             // analyse pdf if any parser is selected
             if (!empty($entry['parserMethod'])){
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
-                $entry=$this->oc['SourcePot\Datapool\Tools\ZUGFeRD']->file2entry($file,$entry);
             }
             // update entry
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall,$noUpdateButCreateIfMissing);
