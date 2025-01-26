@@ -63,7 +63,7 @@ The following flowchart shows the sequence of object instantiations, method call
 
 <img src="./assets/img/Browser_call_flow.png" alt="Browser call flow"/>
 
-Any class which implements the App interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar->run()`. 
+Any class which implements the `SourcePot\Datapool\Interfaces\App` interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar->run()`. 
 
 <img src="./assets/img/run_method.png" alt="Run method if an app where content is added" style="width:100%"/>
 
