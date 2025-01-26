@@ -1,6 +1,7 @@
 <?php
 /*
 * This file is part of the Datapool CMS package.
+*
 * @package Datapool
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
