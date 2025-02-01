@@ -390,7 +390,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
     
-    private function getCalendarSheet($arr=array()){
+    public function getCalendarSheet($arr=array()){
         $template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $arr=array_merge($template,$arr);
         $style=array('left'=>$this->date2pos());

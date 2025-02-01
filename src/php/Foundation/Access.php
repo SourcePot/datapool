@@ -190,6 +190,10 @@ class Access{
         return $this->hasRights($user,'PUBLIC_R');
     }
     
+    public function isRegistered($user=FALSE){
+        return $this->hasRights($user,'REGISTERED_R');
+    }
+    
     public function hasRights($user=FALSE,$right='ADMIN_R')
     {
         if (empty($user)){

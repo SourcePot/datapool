@@ -91,7 +91,6 @@ class Haystack{
                          array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Feeds']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>100),
                          array('Source'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getEntryTable(),'Content'=>'%'.$query.'%','Start>'=>$calendarStartDateTime,'orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4),
                     );
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($selectors);
         //
         $arr['Query']=$query;
         $arr['html']='';

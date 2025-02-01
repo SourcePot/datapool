@@ -545,8 +545,13 @@ class HTMLbuilder{
         $arr=array_replace_recursive($template,$arr);
         $entry=$arr['selector'];
         // only the Admin has access to the method if columns 'Privileges' is selected
-        if (is_array($arr['key'])){$arr['key']=array_shift($arr['key']);}
+        if (is_array($arr['key'])){
+            $arr['key']=array_shift($arr['key']);
+        }
         if (strcmp($arr['key'],'Privileges')===0 && !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,TRUE)){
+            return '';
+        }
+        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,FALSE)){
             return '';
         }
         $integer=$entry[$arr['key']];

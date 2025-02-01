@@ -306,7 +306,7 @@ class Database{
     * The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
     * 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
     */
-    public function connect(string $class=__CLASS__, string $entryId='connect'):object|bool
+    public function connect(string $class=__CLASS__, string $entryId='connect', bool $exitOnException=TRUE):object|bool
     {
         $dbObj=FALSE;
         $namespaceComps=explode('\\',__NAMESPACE__);
@@ -319,10 +319,14 @@ class Database{
             $dbObj->exec("SET CHARACTER SET '".self::CHARACTER_SET."'");
             $dbObj->exec("SET NAMES ".self::CHARACTER_SET.'mb'.self::MULTIBYTE_COUNT);
         } catch (\Exception $e){
-            $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($access);
-            $msg=$e->getMessage();
-            echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i><br/>Please check the credentials '.$entryFile);
-            exit(0);
+            if ($exitOnException){
+                $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($access);
+                $msg=$e->getMessage();
+                echo $this->oc['SourcePot\Datapool\Root']->getBackupPageContent('<i>The problem is: '.$msg.'</i><br/>Please check the credentials '.$entryFile);
+                exit(0);
+            } else {
+                throw new \Exception($e->getMessage());
+            }
         }
         return $dbObj;
     }
@@ -421,7 +425,7 @@ class Database{
             $column=trim($columns[0],' <>=!');
             if (!isset($entryTemplate[$column])){continue;}
             if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
-            if ((mb_strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || mb_strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
+            if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
                 $column='`'.$column.'`';
                 if (empty($value)){
                     if ($operator==='<' || $operator==='>' || $operator==='!'){$value='';} else {continue;}
@@ -466,7 +470,7 @@ class Database{
         if (!empty($sqlArr['sql'])){$sqlArr['sql'].=" AND";}
         $sqlArr['sql'].=" (((`".$rightType."` & ".intval($user['Privileges']).")>0) OR (`Owner` LIKE :Owner))";
         $sqlArr['inputs'][':Owner']=$user['Owner'];
-        if (mb_strpos($sqlArr['sql'],'WHERE')===FALSE){$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
+        if (strpos($sqlArr['sql'],'WHERE')===FALSE){$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
         return $sqlArr;
     }
     
@@ -489,9 +493,9 @@ class Database{
             $result[$column]=$value;
         } else if (is_array($entryTemplate[$column]['value'])){
             $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr((string)$value);
-        } else if (mb_strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
+        } else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
             $result[$column]=intval($value);
-        } else if (mb_strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || mb_strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
+        } else if (strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){
             $result[$column]=floatval($value);
         } else {
             $result[$column]=$value;

@@ -54,7 +54,13 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() || $this->oc['SourcePot\Datapool\Foundation\Access']->isPublic()){
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R') && !$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_CONTENTADMIN_R')){
+                // If user is member but not content admin or admin, show query widget and calendar widget
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
+                $calendarSheetArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getCalendarSheet();
+                $html.=$calendarSheetArr['html'];
+            } else {
+                // Show the introduction page, if public, registered, content admin or admin user
                 // top web page section
                 $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Top paragraph');
                 $selector['md']='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';
@@ -83,9 +89,6 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                         $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',array('file'=>$videoSrc));
                     }
                 }
-                if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
-                }
                 // bottom web page section
                 $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Bottom paragraph');
                 $selector['md']="# What is Datapool?\n\nDatapool is an open-source web application for efficient automated data processing. Processes are configurated graphically as a data flow throught processing blocks.\n";
@@ -102,8 +105,6 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                 $selector['md'].="The processing blocks contain all functionallity, i.e. \"providing a database table view\", \"storing settings\" and \"linking a processor\". The settings define the target or targets canvas elements for the result data. There are basic processor, e.g. for data acquisition, mapping, parsing or data distribution. In addition, user-defined processor can be added.\n\n";
                 $selector['md'].="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,array(),array('style'=>array()));
-            } else {
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',array(),array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>array()));
             }
             $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Legal paragraph');
             $selector['md']="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
