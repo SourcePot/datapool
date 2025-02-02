@@ -21,10 +21,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         
     private $sections=array('FULL'=>'Complete text','ALL'=>'All non-multpile sections','LAST'=>'Text after last section');
     
-    private $paramsTemplate=array('Source column'=>'useValue','Target on success'=>'','Target on failure'=>'','Array→string glue'=>' ');
+    private $paramsTemplate=array('Source column'=>'useValue','Target on success'=>'','Target on failure'=>'');
 
-    private $multipleHitsStatistic=array();
-    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -73,7 +71,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getParseEntriesInfo($callingElement){
         //$regExpTester=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard(htmlentities('https://regexr.com/'));
         $matrix=array();
-        $matrix['Parser control: Select parser target and type']['Description']='This control panel sets the fundermental parameters.<br/>"Source column" should contain the text to be parsed.<br/>"Target on success" is the Select-Element an entry should be moved to on success and<br/>"Target on failure" the Select-element used for entries that fail.<br/>If a value is an array but the target column can\'t hold arrays, the array will be imploded using "Array→string glue" as glue.';
+        $matrix['Parser control: Select parser target and type']['Description']='This control panel sets the fundermental parameters.<br/>"Source column" should contain the text to be parsed.<br/>"Target on success" is the Select-Element an entry should be moved to on success and<br/>"Target on failure" the Select-element used for entries that fail.';
         $matrix['Provide rules to divide the text into sections']['Description']='This control panel sets rules to divide the text into sections.<br/>The first section is called "START", all following sections are named by "Section name".<br/>The text section boundery is controlled by the "Regular expression".';
         $matrix['Parser rules: Parse selected entry and copy result to target entry']['Description']='This control panel sets the parser rules. The rules are processed as an ordered list.<br/>Rules are applied to the text section selected by "Rule relevant on section, the "Regular expression" is used to extract releavnt values.<br/>You can use brackets to ecxtract the full match "Match index"=0 or parts of match selected by "Match index">0.<br/>Alternatively to the regular expression you can proviede "Constant or..." as value.<br/>Use "Target data type" to convert the extracted value and "Target column", "Target key" to map the value to the entry.<br/>"Allow multiple hits" will create an array, "Combine on update" combines multiple hits in a new value.';
         $matrix['Mapper rules: map directly to the target entry']['Description']='This control panel allows for the definition of direct mapping from the source entry to the target entry.';
@@ -144,7 +142,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Pre-processing'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>array(''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'),'title'=>''),
                                 'Target on success'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Target on failure'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'No match placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE),
                                 );
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
@@ -196,7 +193,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Allow multiple hits'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes'),'title'=>'If "Yes", an additional numerical index will be added to the "Target key"'),
+                                'Combine'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
                                 'Match required'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
                                 );
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -215,6 +212,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
                                 'Source value'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('any','must be set'),'keep-element-content'=>TRUE),
+                                'Combine'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
                                 );
         //$contentStructure['Source column']['addColumns']
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
@@ -253,7 +251,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
         }
         // multiple hits statistics
-        foreach($this->multipleHitsStatistic as $hitsArr){
+        foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->getMultipleHitsStatistic() as $hitsArr){
             if ($hitsArr['Hits']<2){continue;}
             $result['Hits >1 with same EntryId'][$hitsArr['Name']]=array('Hits'=>$hitsArr['Hits'],'Comment'=>$hitsArr['Comment']);    
         }
@@ -295,7 +293,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // Parser failed, content column not found
             $result['Parser statistics']['Failed']['value']++;
             $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
-            $this->add2hitStatistics($failedEntry,'failed');
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($failedEntry,'failed');
             if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){
                 $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($failedEntry);
             }
@@ -308,17 +306,15 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // mapper failed
             $result['Parser statistics']['Failed']['value']++;
             $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);            
-            $this->add2hitStatistics($failedEntry,'failed');
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($failedEntry,'failed');
             if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){
                 $failedEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($failedEntry);
                 $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($failedEntry);
             }         
             return $result;
         }
-        // add Source column to target entry
-        $flatSourceContent=array($params['Source column']=>$fullText);
-        $sourceContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceContent);
-        $targetEntry=array_replace_recursive($sourceContent,$targetEntry);
+        
+        
         // content found, get sections
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
@@ -335,12 +331,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $resultArr=array();
         foreach($sections['singleEntry'] as $sectionId=>$section){
             if ($section===FALSE){continue;}
-            $targetEntry=$this->processParsing($base,$targetEntry,$sectionId,$section);
-            if (isset($targetEntry['processParsing']['result'][$sectionId])){
+            $targetEntryParsingA=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
+            if (isset($targetEntryParsingA['processParsing']['result'][$sectionId])){
                 $sectionName=$this->sections[$sectionId];
-                $resultArr=array_replace_recursive($resultArr,$targetEntry['processParsing']['result'][$sectionId]);
+                $resultArr=array_replace_recursive($resultArr,$targetEntryParsingA['processParsing']['result'][$sectionId]);
             }
-            $parserFailed=($targetEntry['processParsing']['failed'])?TRUE:$parserFailed;
+            $parserFailed=($targetEntryParsingA['processParsing']['failed'])?TRUE:$parserFailed;
+            $targetEntry=array_replace_recursive($targetEntry,$targetEntryParsingA);
         }
         ksort($resultArr);
         if ($parserFailed){
@@ -348,7 +345,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // parser failed
             $result['Parser statistics']['Failed']['value']++;
             $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
-            $this->add2hitStatistics($failedEntry,'failed');
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($failedEntry,'failed');
             return $result;
         } else {
             if (!isset($result['Parser singleEntry sections <b>success</b>']) || mt_rand(0,100)>70){$result['Parser singleEntry sections <b>success</b>']=$resultArr;}
@@ -356,12 +353,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // parse multi entries sections
         if (empty($sections['multipleEntries'])){
             $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun);
-            $this->add2hitStatistics($goodEntry,'success');
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
             $result['Parser statistics']['Success']['value']++;
         } else {
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $entryIndex=>$section){
-                    $targetEntryTmp=$this->processParsing($base,$targetEntry,$sectionId,$section);
+                    $targetEntryTmp=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
                     if ($targetEntryTmp['processParsing']['failed']){
                         // parser failed
                         $result['Parser statistics']['Failed']['value']++;
@@ -379,12 +376,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                         $result[$sectionKey]=$targetEntryTmp['processParsing']['result'][$sectionId];
                     }
                     $result['Parser statistics']['Success']['value']++;
-                    $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntryTmp,$result,$testRun);
-                    $this->add2hitStatistics($goodEntry,'success');
+                    $targetEntry=array_replace_recursive($targetEntry,$targetEntryTmp);
+                    $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun);
+                    $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
                 }
             }
         }
-        // multiple hits statistics
         // sample result
         if (!isset($result['Sample result <b>success</b>']) || mt_rand(1,100)>70){
             $goodEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($goodEntry);
@@ -393,23 +390,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
 
-    private function add2hitStatistics(array $entry,string $comment='')
-    {
-        if (isset($this->multipleHitsStatistic[$entry['EntryId']])){
-            $this->multipleHitsStatistic[$entry['EntryId']]['Hits']++;
-            if (strpos($this->multipleHitsStatistic[$entry['EntryId']]['Comment'],$comment)===FALSE){
-                $this->multipleHitsStatistic[$entry['EntryId']]['Comment'].=', '.$comment;
-            }
-        } else {
-            $this->multipleHitsStatistic[$entry['EntryId']]=array('Name'=>$entry['Name'],'Hits'=>1,'Comment'=>$comment);
-        } 
-    }
-
     private function processParsing(array $base,array $entry,string $sectionId,string $section):array
     {
         $params=current($base['parserparams']);
         $params=$params['Content'];
-        $result=array();
+        $targetEntry=$result=array();
         $failed=FALSE;
         foreach($base['parserrules'] as $ruleEntryId=>$rule){
             $ruleFailed=FALSE;
@@ -429,33 +414,29 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
                 $matches[$ruleMatchIndex][0]=$matches[$ruleMatchIndex][0]??$params['No match placeholder']??'';
                 foreach($matches[$ruleMatchIndex] as $hitIndex=>$matchText){
-                    if (empty($rule['Content']['Allow multiple hits'])){
-                        $targetKey=$rule['Content']['Target key'];
-                    } else {
-                        $targetKey=$rule['Content']['Target key'].' '.$hitIndex;
-                    }
-                    $result[$rowKey]['Key'].=' | '.$targetKey;
-                    $entry=$this->addValue2flatEntry($entry,$rule['Content']['Target column'],$targetKey,$matchText,$rule['Content']['Target data type']);
+                    $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                     $result[$rowKey]['Match text'].=empty($result[$rowKey]['Match text'])?$matchText:(' | '.$matchText);
-                    if (empty($rule['Content']['Allow multiple hits'])){break;}
+                    $matchText=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($matchText,$rule['Content']['Target data type']);
+                    $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
                 }
             } else {
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
-                $entry=$this->addValue2flatEntry($entry,$rule['Content']['Target column'],$rule['Content']['Target key'],$rule['Content']['Constant or...'],$rule['Content']['Target data type']);
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];
+                $rule['Content']['Constant or...']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($rule['Content']['Constant or...'],$rule['Content']['Target data type']);
+                $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$rule['Content']['Constant or...'],$rule['Content']['Combine']??'');
             }
             $result[$rowKey]['Match required']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Match required']);
             $result[$rowKey]['Rule Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed);
             $failed=($ruleFailed)?TRUE:$failed;
         }
-        $entry[__FUNCTION__]['result'][$sectionId]=$result;
-        $entry[__FUNCTION__]['failed']=$failed;
-        return $entry;
+        $targetEntry[__FUNCTION__]['result'][$sectionId]=$result;
+        $targetEntry[__FUNCTION__]['failed']=$failed;
+        return $targetEntry;
     }
 
     private function processMapping($base,$entry):array
     {
-        $result=array();
+        $targetEntry=$result=[];
         $failed=FALSE;
         $isset=FALSE;
         foreach($base['mapperrules'] as $ruleEntryId=>$rule){
@@ -477,12 +458,16 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                     );
             // add entry
             if (!$failed){
-                $entry=$this->addValue2flatEntry($entry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Target data type']);
+                $matchText=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($matchText,$rule['Content']['Target data type']);
+                $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
+                
+                $debugArr[]=['Target column'=>$rule['Content']['Target column'],'matchText'=>$matchText,'targetEntry'=>$targetEntry];
+            
             }
         }
-        $entry[__FUNCTION__]['result']=$result;
-        $entry[__FUNCTION__]['failed']=$failed;
-        return $entry;
+        $targetEntry[__FUNCTION__]['result']=$result;
+        $targetEntry[__FUNCTION__]['failed']=$failed;
+        return $targetEntry;
     }
 
     private function sections(array $base,string $fullText):array
@@ -527,39 +512,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
 
-    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType)
-    {
-        // value datatype conversions
-        $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
-        // add new value to entry
-        if (!isset($entry[$baseKey])){
-            $entry[$baseKey]=$newValue;
-        } else if (!is_array($entry[$baseKey])){
-            $entry[$baseKey]=$newValue;
-        } else {
-            $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);
-        }
-        return $entry;
-    }
-
     private function finalizeEntry(array $base,array $sourceEntry,array $targetEntry,array $result,bool $testRun):array
     {
         $params=current($base['parserparams']);
-        $params=$params['Content'];
-        $entryTemplate=$GLOBALS['dbInfo'][$base['entryTemplates'][$params['Target on success']]['Source']];
-        foreach($targetEntry as $key=>$value){
-            if (!is_array($value)){continue;}
-            if (!isset($entryTemplate[$key])){continue;}
-            if (is_array($entryTemplate[$key]['value'])){continue;}
-            foreach($value as $subKey=>$subValue){
-                $value[$subKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($subValue);
-            }
-            // set order of array values
-            ksort($value);
-            $targetEntry[$key]=implode($params['Array→string glue'],$value);
-        }
-        $targetEntry=array_replace_recursive($targetEntry,$base['entryTemplates'][$params['Target on success']]);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetEntry,TRUE,$testRun);
+        $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
+        $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
+        $entry=array_replace_recursive($sourceEntry,$targetEntry);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
         return $entry;
     }
 

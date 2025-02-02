@@ -12,19 +12,23 @@ namespace SourcePot\Datapool\Tools;
 
 final class MiscTools{
 
+    private $oc=NULL;
+    
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
     public const UNYCOM_REGEX='/([0-9]{4})([ ]{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2})\s/u';
     
     public $emojis=array();
     private $emojiFile='';
-    
-    private $oc=NULL;
+
+    private $multipleHitsStatistic=[];
+    private $combineOptionCache=[];
     
     private $dataTypes=array('string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
                              'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
                              'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
-                             'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash',
-                             'codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomCountry'=>'&rarr; UNYCOM country','unycomRegion'=>'&rarr; UNYCOM region','unycomFallNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
+                             'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
+                             'shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash','codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomCountry'=>'&rarr; UNYCOM country',
+                             'unycomRegion'=>'&rarr; UNYCOM region','unycomFallNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
                              'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
                              'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
                              );
@@ -36,7 +40,7 @@ final class MiscTools{
     
     private $matchTypes=array('identical'=>'Identical','contains'=>'Contains','unycom'=>'UNYCOM Case','|'=>'Separated by |','number'=>'Numbers');
     
-    private $combineOptions=array('overwrite'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)');
+    private $combineOptions=array(''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)');
     
     public function __construct()
     {
@@ -408,7 +412,6 @@ final class MiscTools{
                 }
             }
         }
-        $this->arr2file($result,$this->emojiFile);
         return $result;
     }
 
@@ -660,7 +663,7 @@ final class MiscTools{
     }
 
     /**
-    * @return arr This method a sub array from a flat array selected by $subFlatKey.
+    * @return arr This method returns a sub array from a flat array selected by $subFlatKey.
     */
     public function subflat2arr(array $flatArr,string $subFlatKey='',string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
@@ -860,6 +863,106 @@ final class MiscTools{
         return $result;
     }
 
+    /**
+    * @return array This method aadds an array [addKey=>value] to flatArr and combineOptions information to flatArr
+    */
+    public function addValue2flatArr(array $flatArr,string $flatKey,string $addKey='',$value,string $combineOptions='')
+    {
+        // initialize array- for provieded flatKey
+        if (!isset($flatArr[$flatKey])){
+            $flatArr[$flatKey]=[];
+        } else if (!is_array($flatArr[$flatKey])){
+            $flatArr[$flatKey]=[];
+        }
+        // array data type values only permitted for columns Content and Params
+        if (strpos($flatKey,'Content')!==0 && strpos($flatKey,'Params')!==0 && is_array($value)){
+            $value=$this->valueArr2value($value);
+        } else if (strpos($combineOptions,'chain')===0){
+            $value=$this->valueArr2value($value);
+        }
+        if (strlen($addKey)>0){
+            if (strpos($flatKey,'Content')===0 || strpos($flatKey,'Params')===0){
+                $flatKey.=\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$addKey;
+                $flatArr[$flatKey][]=$value;
+            } else {
+                $flatArr[$flatKey][$addKey]=$value;
+            }
+        } else {
+            $flatArr[$flatKey][]=$value;
+        }
+        $this->combineOptionCache[$flatKey]=$combineOptions;
+        return $flatArr;
+    }
+
+    /**
+    * @return array This method aadds an array [addKey=>value] to flatArr and combineOptions information to flatArr
+    */
+    public function flatArrCombineValues(array $flatArr)
+    {
+        $combinedFlatArr=[];
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        foreach($flatArr as $flatArrKey=>$valueArr){
+            $context['column']=$flatArrKey;
+            if (is_array($valueArr)){ksort($valueArr);}
+            if (isset($this->combineOptionCache[$flatArrKey])){
+                $combineOption=$this->combineOptionCache[$flatArrKey];
+            } else {
+                $combineOption='';
+            }
+            if ($combineOption==='lastHit'){
+                $value=array_pop($valueArr);
+            } else if ($combineOption==='firstHit'){
+                $value=array_shift($valueArr);
+            } else if ($combineOption==='addFloat'){
+                $value=0;
+                foreach($valueArr as $arrValue){
+                    $value+=floatval($arrValue);
+                }
+            } else if ($combineOption==='chainSpace'){
+                $value=implode(' ',$valueArr);
+            } else if ($combineOption==='chainPipe'){
+                $value=implode('|',$valueArr);
+            } else if ($combineOption==='chainComma'){
+                $value=implode(', ',$valueArr);
+            } else if ($combineOption==='chainSemicolon'){
+                $value=implode('; ',$valueArr);
+            } else {
+                $value=$valueArr;
+            }
+            if (is_array($value)){
+                if (strpos($flatArrKey,'Content')!==0 && strpos($flatArrKey,'Params')!==0){
+                    $combinedFlatArr[$flatArrKey]='{}';
+                    $this->oc['logger']->log('notice','Mapping failed for column "{column}". Please check "Combine"-option..',$context);
+                } else {
+                    $subFlatArr=$this->arr2flat($value);
+                    foreach($subFlatArr as $subkey=>$subValue){
+                        $combinedFlatArr[$flatArrKey.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$subkey]=$subValue;
+                    }
+                }
+            } else {
+                $combinedFlatArr[$flatArrKey]=$value;
+            }
+        }
+        return $combinedFlatArr;
+    }
+
+    public function add2hitStatistics(array $entry,string $comment='')
+    {
+        if (isset($this->multipleHitsStatistic[$entry['EntryId']])){
+            $this->multipleHitsStatistic[$entry['EntryId']]['Hits']++;
+            if (strpos($this->multipleHitsStatistic[$entry['EntryId']]['Comment'],$comment)===FALSE){
+                $this->multipleHitsStatistic[$entry['EntryId']]['Comment'].=', '.$comment;
+            }
+        } else {
+            $this->multipleHitsStatistic[$entry['EntryId']]=array('Name'=>$entry['Name'],'Hits'=>1,'Comment'=>$comment);
+        } 
+    }
+
+    public function getMultipleHitsStatistic():array
+    {
+        return $this->multipleHitsStatistic;
+    }
+
     /******************************************************************************************************************************************
     * Generic conversions
     */
@@ -880,9 +983,11 @@ final class MiscTools{
                         'bool'=>(bool)$value,
                         'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                         'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
-                        'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value,'UTC',TRUE),
-                        'dateString'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
+                        'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->excel2date($value),
                         'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
+                        'dateString'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
+                        'dateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->date2exchageRates($value),
+                        'excelDateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->excelDate2exchageRates($value),
                         'shortHash'=>$this->getHash($value,TRUE),
                         'hash'=>$this->getHash($value,False),
                         'codepfad'=>$this->convert2codepfad($value),
@@ -1112,22 +1217,19 @@ final class MiscTools{
         return $arr;
     }
 
-    public function valueArr2value($value,$datatypeOrKey='')
+    public function valueArr2value($value,$keyNeedle='')
     {
-        $datatype2key=array('date'=>'System short','timestamp'=>'System short','exceldate'=>'System short','money'=>'','unycom'=>'Reference');
-        $key=(isset($datatype2key[$datatypeOrKey]))?$datatype2key[$datatypeOrKey]:$datatypeOrKey;
-        if (!isset($value[$key]) && $key!==''){
-            // If datatypeOrKey exists, a suitable key-value pair should also exist in the data field
-            $value=FALSE;
-        } else if (is_array($value) && isset($value[$key])){
-            // Standard key matches a key-value pair 
-            $value=$value[$key];
-        } else if (is_array($value)){
-            // If no standard key exists, use the first key-value pair 
-            reset($value);
-            $value=current($value);
+        if (!is_array($value)){return $value;}
+        if (isset($value[$keyNeedle])){
+            return $value[$keyNeedle];
         }
-        return $value;
+        foreach(['System short','Amount','Reference'] as $keyNeedle){
+            if (isset($value[$keyNeedle])){
+                return $value[$keyNeedle];
+            }
+        }
+        reset($value);
+        return current($value);
     }
 
     public function isTrue($valueA,$valueB,$condition):bool
@@ -1241,6 +1343,7 @@ final class MiscTools{
         return $bestMatch;
     }
 
+    /*
     public function combineEntryData($entry):array{
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
         if (!empty($entry['Params']['Combine on update']) && !empty($entry['preExistingEntry'])){
@@ -1337,6 +1440,6 @@ final class MiscTools{
         $c['combineValueCount']=((empty($combineValueCountA))?$issetA:$combineValueCountA)+((empty($combineValueCountB))?$issetB:$combineValueCountB);
         return $c;
     }
-
+    */
 }
 ?>

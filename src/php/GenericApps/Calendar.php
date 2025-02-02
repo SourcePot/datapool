@@ -698,12 +698,29 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         }
         return trim($result,', ');
     }
-    
-    public function timestamp2date($string,$timezone='UTC'):array
+
+    public function str2date(string $str):array
     {
-        $timestamp=intval($string);
-        $string=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($timestamp));
-        return $this->str2date($string,$timezone);
+        $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
+        $dateTimeParserObj->setFromString($str);
+        $dateTimeParserObj->setTimezone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        return $dateTimeParserObj->getArray();
+    }
+    
+    public function timestamp2date($timestamp):array
+    {
+        $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
+        $dateTimeParserObj->setFromTimestamp($timestamp);
+        $dateTimeParserObj->setTimezone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        return $dateTimeParserObj->getArray();
+    }
+    
+    public function excel2date($excel):array
+    {
+        $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
+        $dateTimeParserObj->setFromExcelTimestamp($excel);
+        $dateTimeParserObj->setTimezone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        return $dateTimeParserObj->getArray();
     }
     
     public function str2dateString($string,string $key='System'):string
@@ -711,174 +728,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $dateArr=$this->str2date($string);
         $string=($dateArr['isValid'] && isset($dateArr[$key]))?$dateArr[$key]:'';
         return $string;
-    }
-
-    public function str2date($string,$timezone=NULL,bool $isExcelDate=FALSE):array
-    {
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $timezone=$timezone??$pageTimeZone;
-        $dummyDate=\SourcePot\Datapool\Root::NULL_DATE;
-        $dummyDateArr=array('year'=>mb_substr($dummyDate,0,4),'month'=>mb_substr($dummyDate,5,2),'day'=>mb_substr($dummyDate,8,2),'time'=>mb_substr($dummyDate,11,8));
-        $dateArr=$context=$this->guessDateComps($string,$isExcelDate);
-        if (isset($dateArr['timezoneIn'])){$timezone=$dateArr['timezoneIn'];}
-        $context['class']=__CLASS__;
-        $context['method']=__FUNCTION__;
-        if (!$dateArr['isValid']){
-            $dateArr=array_merge($dateArr,$dummyDateArr);
-            $this->oc['logger']->log('notice','Method "{method}" failed to parse date from "{string}" with "{error}"',$context);         
-        }
-        // year corrections
-        $year=intval($dateArr['year']);
-        if ($year<10){
-            $dateArr['year']='200'.$year;
-        } else if ($year<60){
-            $dateArr['year']='20'.$year;
-        } else if ($year<100){
-            $dateArr['year']='19'.$year;
-        } else if ($year<1000){
-            $dateArr['year']='0'.$year;
-        }
-        $dateArr['month']=str_pad($dateArr['month'],2,'0',STR_PAD_LEFT);
-        $dateArr['day']=str_pad($dateArr['day'],2,'0',STR_PAD_LEFT);
-        $dateArr['System']=$dateArr['year'].'-'.$dateArr['month'].'-'.$dateArr['day'].' '.$dateArr['time'];
-        $timezoneObj=new \DateTimeZone($timezone);
-        $systemTimezoneObj=new \DateTimeZone($pageTimeZone);
-        try{
-            $datetimeObj=new \DateTime($dateArr['System'],$timezoneObj);
-        } catch (\Exception $e){
-            $dateArr['isValid']=FALSE;
-            $context['error']=$e->getMessage();
-            $this->oc['logger']->log('warning','Method "{method}" failed to parse date from "{string}" with "{error}"',$context);         
-            $dateArr=array_merge($dateArr,$dummyDateArr);
-            $dateArr['System']=$dateArr['year'].'-'.$dateArr['month'].'-'.$dateArr['day'];
-            $datetimeObj=new \DateTime($dateArr['System'],$timezoneObj);
-        }
-        $datetimeObj->setTimezone($systemTimezoneObj);
-        $dateArr['System short']=$datetimeObj->format('Y-m-d');
-        $dateArr['System']=$datetimeObj->format('Y-m-d H:i:s');
-        $dateArr['YYYYMMDD']=$dateArr['year'].$dateArr['month'].$dateArr['day'];
-        $dateArr['Timezone in']=$timezone;
-        $dateArr['Timezone']=$pageTimeZone;
-        $dateArr['Timestamp']=$datetimeObj->getTimestamp();
-        $dateArr['US']=$datetimeObj->format('m/d/Y');
-        $dateArr['UK']=$datetimeObj->format('d/m/Y');
-        $dateArr['DE']=$datetimeObj->format('d.m.Y');
-        $dateArr['RFC2822']=$datetimeObj->format(\DateTimeInterface::RFC2822);
-        $dateArr['day']=$datetimeObj->format('d');
-        $dateArr['month']=$datetimeObj->format('m');
-        $dateArr['year']=$datetimeObj->format('Y');
-        $dateArr['US long']=$this->revMonths['US'][$dateArr['month']].' '.intval($dateArr['day']).', '.$dateArr['year'];
-        $dateArr['UK long']=intval($dateArr['day']).' '.$this->revMonths['UK'][$dateArr['month']].' '.$dateArr['year'];
-        $dateArr['DE long']=intval($dateArr['day']).'. '.$this->revMonths['DE'][$dateArr['month']].' '.$dateArr['year'];
-        return $dateArr;
-    }
-    
-    private function guessDateComps($string,bool $isExcelDate=FALSE):array
-    {
-        $arr=array('System short'=>'','System'=>'','isValid'=>TRUE,'string'=>$string,'time'=>'12:00:00');
-        $string=strval($string);
-        $string=trim(mb_strtolower($string));
-        if (empty($string)){
-            $arr['isValid']=FALSE;
-            $arr['error']='Date string is empty';
-            return $arr;            
-        }
-        // recover time string
-        preg_match_all('/\d{2}\:\d{2}\:\d{2}/',$string,$matches);
-        if (isset($matches[0][0])){
-            $string=trim(str_replace($matches[0][0],'',$string));
-            $arr['time']=$matches[0][0];
-        }
-        if ($isExcelDate){
-            $string=preg_replace('/[^\d\.]+/','',$string);
-        }
-        preg_match_all('/([0-9]{4})([0-1][0-9])([0-3][0-9])/',$string,$matchesYYYYMMDD);
-        preg_match_all('/([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{2,4})/',$string,$matchesDDDOTMMDOTYYYY);
-        if (isset($matchesYYYYMMDD[0][0]) && !$isExcelDate){
-            // format YYYYMMDD -> YYYY-MM-DD
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($matchesYYYYMMDD);
-            $string=$matchesYYYYMMDD[1][0].'-'.$matchesYYYYMMDD[2][0].'-'.$matchesYYYYMMDD[3][0];
-        } else if (isset($matchesDDDOTMMDOTYYYY[0][0]) && !$isExcelDate){
-            // format YYYYMMDD -> DD.MM.YYYY
-            $string=$matchesDDDOTMMDOTYYYY[3][0].'-'.$matchesDDDOTMMDOTYYYY[2][0].'-'.$matchesDDDOTMMDOTYYYY[1][0];
-        } else if (empty(preg_replace('/[\d\.]+/','',$string))){
-            // EXCEL format
-            $unixTimestamp=intval(86400*(floatval($string)-25569));
-            $arr['timezoneIn']='UTC';
-            $utcObj=new \DateTime();
-            $utcObj->setTimestamp($unixTimestamp); 
-            $string=$utcObj->format('Y-m-d');
-            $arr['time']=$utcObj->format('H:i:s');
-        } else if ($isExcelDate){
-            $arr['isValid']=FALSE;
-            $arr['error']='Date string is not valid Excel format';
-            return $arr;            
-        }
-        // get month from month name
-        foreach($this->months as $needle=>$month){
-            if (mb_strpos($string,$needle)===FALSE){continue;}
-            $arr['month']=$month;
-        }
-        // detect comma as year separator
-        $commaPos=mb_strpos($string,',');
-        if (!empty($commaPos)){
-            $dateComps=explode(',',$string);
-            $arr['year']=array_pop($dateComps);
-            $arr['year']=trim($arr['year']);
-            $string=$dateComps[0];
-        }
-        if (!empty($arr['year']) && !empty($arr['month'])){
-            $arr['day']=preg_replace('/\D+/','',$string);
-            return $arr;
-        } else if (!empty($arr['month'])){
-            $dateComps=preg_split('/\D+/',$string);
-            $arr['year']=array_pop($dateComps);
-            $arr['day']=array_shift($dateComps);
-            return $arr;
-        }
-        $hyphenPos=mb_strpos($string,'-');
-        $hyphenRPos=strrpos($string,'-');
-        $dotPos=mb_strpos($string,'.');
-        $dotRPos=strrpos($string,'.');
-        if (!empty($hyphenPos) && !empty($hyphenRPos)){
-            // YYYY-MM-DD
-            $arr['year']=mb_substr($string,0,$hyphenPos);
-            $arr['month']=mb_substr($string,$hyphenPos+1,$hyphenRPos-$hyphenPos-1);
-            $arr['day']=mb_substr($string,$hyphenRPos+1);
-            return $arr;
-        } else if (!empty($dotPos) && !empty($dotRPos)){
-            // DD.MM.YYYY
-            $arr['day']=mb_substr($string,0,$dotPos);
-            $arr['month']=mb_substr($string,$dotPos+1,$dotRPos-$dotPos-1);
-            $arr['year']=mb_substr($string,$dotRPos+1);
-            return $arr;
-        } else {
-            // unknown
-            $dateComps=preg_split('/\D+/',$string);
-            if (count($dateComps)!==3){
-                $arr['isValid']=FALSE;
-                $arr['error']='Failed to parse date string';
-                return $arr;
-            }
-            $dateComps[0]=intval($dateComps[0]);
-            $dateComps[1]=intval($dateComps[1]);
-        }
-        $arr['year']=$dateComps[2];
-        if ($dateComps[0]>12){
-            // default is US notation DD/MM/YYYY
-            $arr['day']=strval($dateComps[0]);
-            $arr['month']=strval($dateComps[1]);
-        } else if ($dateComps[1]>12){
-            // default is US notation MM/DD/YYYY
-            $arr['day']=strval($dateComps[1]);
-            $arr['month']=strval($dateComps[0]);
-        } else {
-            // default is US notation MM/DD/YYYY
-            $arr['notice']='Parse date guessed US date format (default)';
-            $arr['day']=strval($dateComps[1]);
-            $arr['month']=strval($dateComps[0]);
-        }
-        return $arr;
     }
 
 }

@@ -19,7 +19,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
         
-    private $paramsTemplate=array('Mode'=>'entries','Array→string glue'=>'|');
+    private $paramsTemplate=array('Mode'=>'entries');
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -125,7 +125,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
                                 'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip')),
                                 'Attached file'=>array('method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>array('Keep','Remove from target')),
-                                'Array→string glue'=>array('method'=>'select','excontainer'=>TRUE,'value'=>$this->paramsTemplate['Array→string glue'],'options'=>array('|'=>'|',' '=>'Space',''=>'None','_'=>'Underscore')),
                                 'Order by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE),
                                 'Order'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0=>'Descending',1=>'Ascending')),
                                 );
@@ -157,7 +156,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                 'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
                                 'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
                                 'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Combine on update'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
+                                'Combine'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
                                 );
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -226,7 +225,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
             }
-        }
+        } // end of entry loop
         if ($base['csvRequested'] || $base['zipRequested']){
             // write csv file
             $result['Mapping statistics']['Output format']['value']='CSV';
@@ -253,6 +252,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         $this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
+        // multiple hits statistics
+        foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->getMultipleHitsStatistic() as $hitsArr){
+            if ($hitsArr['Hits']<2){continue;}
+            $result['Hits >1 with same EntryId'][$hitsArr['Name']]=array('Hits'=>$hitsArr['Hits'],'Comment'=>$hitsArr['Comment']);    
+        }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
         $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
@@ -261,15 +265,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function mapEntry($base,$sourceEntry,$result,$testRun){
         $params=current($base['mappingparams']);
-        $targetEntry=array();
+        $targetEntry=[];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($base['mappingrules'] as $ruleIndex=>$rule){
-            if (!empty($rule['Content']['Combine on update'])){
-                // this setting will be used/process by the unifyEntry-method
-                $key=$rule['Content']['Target column'];
-                if ($key==='Content' || $key==='Params'){$key.=\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$rule['Content']['Target key'];}
-                $targetEntry['Params']['Combine on update'][$key]=$rule['Content']['Combine on update'];
-            }
             if (strcmp($rule['Content']['...value selected by'],'useValue')===0){
                 $targetValue=$rule['Content']['Target value or...'];
             } else {
@@ -279,20 +277,15 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $targetValue='{{missing}}';
                 }
             }
-            $targetEntry=$this->addValue2flatEntry($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue,$rule['Content']['Target data type'],$rule['Content']);
+            $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($targetValue,$rule['Content']['Target data type']);
+            $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue,$rule['Content']['Combine']??'');
         }
+        $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
         // wrapping up
         foreach($targetEntry as $key=>$value){
-            if (mb_strpos($key,'Content')===0 || mb_strpos($key,'Params')===0){continue;}
-            if (!is_array($value)){continue;}
-            foreach($value as $subKey=>$subValue){
-                $value[$subKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($subValue);
-            }
-            // set order of array values
-            ksort($value);
-            $targetEntry[$key]=implode($params['Content']['Array→string glue'],$value);
             $targetEntry=$this->valueSizeLimitCompliance($key,$targetEntry);
         }
+        $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
         $result['Mapping statistics']['Entries']['value']++;
         $sourceEntry['Content']=array();
         if ($base['csvRequested'] || $base['zipRequested']){
@@ -311,9 +304,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($targetEntry);
             }
         }
-        $result['Target']['Source']['value']=$targetEntry['Source'];
-        $result['Target']['EntryId']['value']=$targetEntry['EntryId'];
-        $result['Target']['Name']['value']=$targetEntry['Name'];
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($targetEntry,'');
         if (!isset($result['Sample result']) || mt_rand(0,100)>90){
             $result['Sample result']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
         }
@@ -338,6 +329,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
     }
     
+    /*
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule)
     {
         if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
@@ -350,15 +342,16 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         return $entry;
     }
+    */
 
     private function valueSizeLimitCompliance($key,array $entry):array
     {
         if (isset($GLOBALS['dbInfo']['user'][$key]['type'])){
             $sizeLimitBytes=intval(trim($GLOBALS['dbInfo']['user'][$key]['type'],'varcharVARCHAR()'));
             if ($sizeLimitBytes>0){
-                $currentSize=mb_strlen($entry[$key],'8bit');
+                $currentSize=mb_strlen(strval($entry[$key]),'8bit');
                 if ($currentSize>$sizeLimitBytes){
-                    $entry[$key]=mb_strcut($entry[$key],0,$sizeLimitBytes);
+                    $entry[$key]=mb_strcut(strval($entry[$key]),0,$sizeLimitBytes);
                     $this->oc['logger']->log('notice','Mapping to "entry[{key}]" value size of "{currentSize} Bytes" exeeded the limit of "{sizeLimitBytes}". The value was truncated to the size limit.',array('key'=>$key,'sizeLimitBytes'=>$sizeLimitBytes,'currentSize'=>$currentSize));
                 }
             }
