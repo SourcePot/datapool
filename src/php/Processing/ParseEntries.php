@@ -313,8 +313,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }         
             return $result;
         }
-        
-        
         // content found, get sections
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
@@ -331,13 +329,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $resultArr=array();
         foreach($sections['singleEntry'] as $sectionId=>$section){
             if ($section===FALSE){continue;}
-            $targetEntryParsingA=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
-            if (isset($targetEntryParsingA['processParsing']['result'][$sectionId])){
+            $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
+            if (isset($targetEntryParsing['processParsing']['result'][$sectionId])){
                 $sectionName=$this->sections[$sectionId];
-                $resultArr=array_replace_recursive($resultArr,$targetEntryParsingA['processParsing']['result'][$sectionId]);
+                $resultArr=array_replace_recursive($resultArr,$targetEntryParsing['processParsing']['result'][$sectionId]);
             }
-            $parserFailed=($targetEntryParsingA['processParsing']['failed'])?TRUE:$parserFailed;
-            $targetEntry=array_replace_recursive($targetEntry,$targetEntryParsingA);
+            $parserFailed=($targetEntryParsing['processParsing']['failed'])?TRUE:$parserFailed;
+            $targetEntry=array_replace_recursive($targetEntry,$targetEntryParsing);
         }
         ksort($resultArr);
         if ($parserFailed){
@@ -515,6 +513,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function finalizeEntry(array $base,array $sourceEntry,array $targetEntry,array $result,bool $testRun):array
     {
         $params=current($base['parserparams']);
+        unset($targetEntry['processMapping']);
+        unset($targetEntry['processParsing']);
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
         $entry=array_replace_recursive($sourceEntry,$targetEntry);
