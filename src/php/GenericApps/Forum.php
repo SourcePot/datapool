@@ -14,7 +14,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'),
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'),
                                  );

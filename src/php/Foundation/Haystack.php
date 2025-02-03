@@ -14,7 +14,7 @@ class Haystack{
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array();
     
     public function __construct(array $oc)

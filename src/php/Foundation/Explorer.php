@@ -14,7 +14,7 @@ class Explorer{
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array();
                                  
     private $selectorTemplate=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);

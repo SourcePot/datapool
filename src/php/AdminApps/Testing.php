@@ -14,7 +14,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
 
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array();
     
     private $boolStr=array(0=>'FALSE',1=>'TRUE');

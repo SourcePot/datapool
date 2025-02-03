@@ -18,7 +18,7 @@ class Logger
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array();
     
     private $levelConfig=array('emergency'=>array('hashIp'=>FALSE,'lifetime'=>'P1Y','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f00','min-width'=>'6rem')),

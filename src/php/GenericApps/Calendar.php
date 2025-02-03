@@ -14,7 +14,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array('Group'=>array('value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
                                  'Folder'=>array('value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'),
                                  'Start'=>array('value'=>'{{nowDateUTC}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'),

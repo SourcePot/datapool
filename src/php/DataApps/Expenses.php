@@ -14,7 +14,7 @@ class Expenses implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
-    private $entryTable;
+    private $entryTable='';
     private $entryTemplate=array('Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
                                  'Name'=>array('skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
                                  );
