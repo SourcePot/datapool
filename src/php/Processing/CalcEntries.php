@@ -15,8 +15,6 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     private $ruleOptions=array();
     
-    private $debugArr=array();
-
     private $entryTable='';
     private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
@@ -45,6 +43,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getEntryTable():string
     {
         return $this->entryTable;
+    }
+
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
     }
 
     /**

@@ -19,8 +19,6 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
-    private $maxResultTableLength=50;
-
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -37,7 +35,14 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function getEntryTable():string{return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
+    }
 
     /**
      * This method is the interface of this data processing class

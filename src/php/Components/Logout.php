@@ -14,7 +14,8 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
     }
 
@@ -23,7 +24,8 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
         } else {

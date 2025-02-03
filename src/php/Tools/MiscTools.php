@@ -84,7 +84,6 @@ final class MiscTools{
     * XML tools
     */
 
-    
     /**
     * This method returns the value from an attribute string, e.g. style="float:left;clear:right;" returns float:left;clear:right;
     *
@@ -894,6 +893,21 @@ final class MiscTools{
         return $flatArr;
     }
 
+    public function valueArr2value($value,$keyNeedle='')
+    {
+        if (!is_array($value)){return $value;}
+        if (isset($value[$keyNeedle])){
+            return $value[$keyNeedle];
+        }
+        foreach(['System short','Amount','Reference'] as $keyNeedle){
+            if (isset($value[$keyNeedle])){
+                return $value[$keyNeedle];
+            }
+        }
+        reset($value);
+        return current($value);
+    }
+
     /**
     * @return array This method aadds an array [addKey=>value] to flatArr and combineOptions information to flatArr
     */
@@ -1015,9 +1029,9 @@ final class MiscTools{
         }
     }
 
-    public function str2int($string,$lang='en'):int
+    public function str2int($string):int
     {
-        $value=$this->str2float($string,$lang);
+        $value=$this->str2float($string);
         return intval(round($value));
     }
     
@@ -1033,54 +1047,18 @@ final class MiscTools{
         return $float;
     }
     
-    public function str2float($string,$lang=''):float
+    public function str2float($string):float
     {
-        $string=strval($string);
-        $lang=mb_strtolower($lang);
-        // get number from string
-        $string=preg_replace('/[^0-9\.\,\-]/u','',$string);
-        // validate language for number format
-        $dotChunk=mb_strrchr($string,'.');
-        $dotCount=mb_strlen($string)-mb_strlen(str_replace('.','',$string));
-        if ($dotCount>1){
-            // e.g. 1.234.456,78 -> 1234456,78
-            $lang='de';
-            $numberStr=str_replace('.','',$string);
+        $asset=new \SourcePot\Asset\Asset();
+        if (is_int($string) || is_float($string)){
+            return floatval($string);
+        } else if (is_bool($string)){
+            return ($string)?1:0;
+        } else if (is_string($string)){
+            $asset->guessAssetFromString(strval($string));
+            return $asset->getValue();
         } else {
-            $numberStr=$string;
-        }
-        $commaChunk=mb_strrchr($string,',');
-        $commaCount=mb_strlen($string)-mb_strlen(str_replace(',','',$string));
-        if ($commaCount>1){
-            // e.g. 1,234,456.78 -> 1234456,78
-            $lang='en';
-            $numberStr=str_replace(',','',$string);
-        } else {
-            $numberStr=$string;
-        }
-        if ($dotCount===1 && $commaCount===1){
-            if (mb_strlen($commaChunk)>mb_strlen($dotChunk)){
-                // e.g. 1,234.56
-                $lang='en';
-            } else {
-                // e.g. 1.234,56
-                $lang='de';
-            }
-        } else if ($dotCount===1){
-            // e.g. 1234.567
-            if (mb_strlen($numberStr)>7 || empty($lang)){$lang='en';}
-        } else if ($commaCount===1 && mb_strlen($numberStr)>7){
-            // e.g. 1234,567
-            if (mb_strlen($numberStr)>7 || empty($lang)){$lang='de';}
-        }
-        // convert to float based on number format
-        if ($lang==='en'){
-            $numberStr=str_replace(',','',$numberStr);
-            return floatval($numberStr);
-        } else {
-            $numberStr=str_replace('.','',$numberStr);
-            $numberStr=str_replace(',','.',$numberStr);
-            return floatval($numberStr);
+            return 0;
         }
     }
 
@@ -1217,21 +1195,6 @@ final class MiscTools{
         return $arr;
     }
 
-    public function valueArr2value($value,$keyNeedle='')
-    {
-        if (!is_array($value)){return $value;}
-        if (isset($value[$keyNeedle])){
-            return $value[$keyNeedle];
-        }
-        foreach(['System short','Amount','Reference'] as $keyNeedle){
-            if (isset($value[$keyNeedle])){
-                return $value[$keyNeedle];
-            }
-        }
-        reset($value);
-        return current($value);
-    }
-
     public function isTrue($valueA,$valueB,$condition):bool
     {
         // string or simple tests
@@ -1304,8 +1267,6 @@ final class MiscTools{
             }
             $matchSelector[$matchColumn]='%'.$matchSelector[$matchColumn].'%';
         }
-
-        
         // get possible matches
         $bestMatch=array('probability'=>0,'Content'=>array(),'Params'=>array());
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
@@ -1343,103 +1304,5 @@ final class MiscTools{
         return $bestMatch;
     }
 
-    /*
-    public function combineEntryData($entry):array{
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
-        if (!empty($entry['Params']['Combine on update']) && !empty($entry['preExistingEntry'])){
-            $flatCalcEntry=array();
-            $flatExsistingEntry=$this->arr2flat($entry['preExistingEntry']);
-            unset($entry['preExistingEntry']);
-            $flatEntry=$this->arr2flat($entry);
-            $flatSetting=$this->arr2flat($entry['Params']['Combine on update']);
-            foreach($flatSetting as $settingKey=>$setting){
-                $glue=trim($this->combineOptions[$setting],'string(AB)');
-                $context['key']=$settingKey;
-                $context['setting']=$setting;
-                if (isset($flatEntry[$settingKey]) || isset($flatExsistingEntry[$settingKey])){
-                    // identical settings-key match
-                    $combineValueCountKey=$settingKey.'|combineValueCount';
-                    $combineValueCountA=(isset($flatEntry[$combineValueCountKey]))?$flatEntry[$combineValueCountKey]:((isset($flatEntry[$settingKey])?1:0));
-                    $combineValueCountB=(isset($flatExsistingEntry[$combineValueCountKey]))?$flatExsistingEntry[$combineValueCountKey]:((isset($flatExsistingEntry[$settingKey])?1:0));
-                    if ($setting==='overwrite'){
-                        // don't calculate new value, use present value
-                    } else if ($setting==='firstHit'){
-                        // keep first value
-                        if (isset($flatExsistingEntry[$settingKey])){
-                            $flatCalcEntry[$settingKey]=$flatExsistingEntry[$settingKey];
-                        }
-                    } else if ($setting==='addFloat'){
-                        $a=(isset($flatEntry[$settingKey]))?floatval($flatEntry[$settingKey]):0;
-                        $b=(isset($flatExsistingEntry[$settingKey]))?floatval($flatExsistingEntry[$settingKey]):0;
-                        $flatCalcEntry[$settingKey]=$a+$b;
-                        $flatCalcEntry[$combineValueCountKey]=$combineValueCountA+$combineValueCountB;
-                    } else if (strpos($setting,'chain')!==FALSE && isset($flatEntry[$settingKey]) && isset($flatExsistingEntry[$settingKey])){
-                        $flatCalcEntry[$settingKey]=$flatEntry[$settingKey].$glue.$flatExsistingEntry[$settingKey];
-                        $flatCalcEntry[$combineValueCountKey]=$combineValueCountA+$combineValueCountB;
-                    }
-                } else {
-                    // complex datatype keys
-                    $entryValue=$this->subflat2arr($flatEntry,$settingKey);
-                    $exsistingEntryValue=$this->subflat2arr($flatExsistingEntry,$settingKey);
-                    if ($setting==='overwrite'){
-                        $flatCalcEntry[$settingKey]['combineValueCount']=1;
-                    } else if ($setting==='addFloat'){
-                            // adding current and previous value, use data type float
-                        if (isset($entryValue['Currency']) || isset($exsistingEntryValue['Currency'])){
-                            // add money float
-                            $context['type']='money';
-                            if ($setting==='addFloat'){
-                                $flatCalcEntry[$settingKey]=$this->oc['SourcePot\Datapool\Foundation\Money']->addMoney($entryValue,$exsistingEntryValue);
-                            } else {
-                                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" selected data combination key="{key}" is not defined for dataype="{type}" and setting="{setting}"',$context);
-                            }
-                        } else {
-                            // add UNKNOWN float
-                            $context['type']='UNKNOWN';
-                            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" selected data combination key="{key}" is not defined for dataype="{type}" and setting="{setting}"',$context);    
-                        }
-                    } else if (strpos($setting,'chain')!==FALSE){
-                        // concatenate current and previous value, use data type string
-                        $flatCalcEntry[$settingKey]=$this->chainComplexDataTypes($exsistingEntryValue,$entryValue,$glue);
-                    } else {
-                        // setting undefined
-                        $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" selected data combination setting undefined, setting="{setting}".',$context);
-                    }
-                }
-            }
-            if (isset($entry['Params'][__FUNCTION__])){$entry['Params'][__FUNCTION__]++;} else {$entry['Params'][__FUNCTION__]=1;}
-            $entry=array_replace_recursive($entry,$this->flat2arr($flatCalcEntry));
-        }
-        return $entry;
-    }
-
-    private function chainComplexDataTypes(array $a, array $b, string $glue):array
-    {
-        $c=array();
-        $keys=array_keys($a+$b);
-        $issetA=$issetB=0;
-        $combineValueCountA=intval(isset($a['combineValueCount'])?$a['combineValueCount']:0);
-        $combineValueCountB=intval(isset($b['combineValueCount'])?$b['combineValueCount']:0);
-        foreach($keys as $key){
-            if ($key==='combineValueCount'){continue;}
-            $a[$key]=(isset($a[$key]))?$a[$key]:'';
-            $b[$key]=(isset($b[$key]))?$b[$key]:'';
-            $a[$key]=(is_array($a[$key]))?'{...}':strval($a[$key]);
-            $b[$key]=(is_array($b[$key]))?'{...}':strval($b[$key]);
-            if (!empty($a[$key]) && !empty($b[$key])){
-                $c[$key]=$a[$key].$glue.$b[$key];
-                $issetA=$issetB=1;
-            } else if (!empty($a[$key])){
-                $c[$key]=$a[$key];
-                $issetA=1;
-            } else if (!empty($b[$key])){
-                $c[$key]=$b[$key];
-                $issetB=1;
-            }
-        }
-        $c['combineValueCount']=((empty($combineValueCountA))?$issetA:$combineValueCountA)+((empty($combineValueCountB))?$issetB:$combineValueCountB);
-        return $c;
-    }
-    */
 }
 ?>

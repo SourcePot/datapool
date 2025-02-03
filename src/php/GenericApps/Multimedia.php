@@ -34,24 +34,29 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function job($vars){
+    public function job($vars):array
+    {
         return $vars;
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function unifyEntry($entry){
+    public function unifyEntry($entry):array
+    {
         // This function makes class specific corrections before the entry is inserted or updated.
         return $entry;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Apps','Emoji'=>'&#10063;','Label'=>'Multimedia','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         } else {

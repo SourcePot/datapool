@@ -82,6 +82,10 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
 
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
+    }
+
    /**
      * This method is the interface of this data processing class
      *

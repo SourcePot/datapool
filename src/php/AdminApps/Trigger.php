@@ -25,7 +25,8 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#10548;','Label'=>'Trigger','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {

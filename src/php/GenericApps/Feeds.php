@@ -38,13 +38,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->urlSelector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Feeds','Folder'=>'Settings','Name'=>'URL');
         $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($this->urlSelector);
-
-
-        //var_dump($this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector(array('Source'=>'Source','Group'=>'','Folder'=>'','Name'=>'Name')));
-
     }
 
-    public function job($vars){
+    public function job($vars):array
+    {
         if (empty($vars['URLs2do'])){
             $vars['URLs2do']=array();
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($this->urlSelector,FALSE,'Read','Date',FALSE) as $urlEntry){
@@ -58,19 +55,23 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
         return $vars;
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function unifyEntry($feedEntry){
+    public function unifyEntry($feedEntry):array
+    {
         return $feedEntry;
     }
     
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Apps','Emoji'=>'&#10057;','Label'=>'Feeds','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         } else {

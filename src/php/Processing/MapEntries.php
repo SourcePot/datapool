@@ -37,7 +37,14 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
-    public function getEntryTable():string{return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
+    }
 
    /**
      * This method is the interface of this data processing class

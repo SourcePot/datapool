@@ -19,7 +19,8 @@ class Invoices implements \SourcePot\Datapool\Interfaces\App{
                                  'Name'=>array('skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
                                  );
 
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -35,20 +36,24 @@ class Invoices implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function job($vars){
+    public function job($vars):array
+    {
         $vars=$this->oc['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__,FALSE);
         return $vars;
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         $html='';
         if ($arr===TRUE){
             return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);

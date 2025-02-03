@@ -27,7 +27,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
                              '@hideHeader'=>TRUE,
                              );
                             
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -46,19 +47,23 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
-    public function job($vars){
+    public function job($vars):array
+    {
         return $vars;
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         } else {
@@ -70,7 +75,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         }
     }
     
-    private function addYearSelector2menu($arr){
+    private function addYearSelector2menu($arr)
+    {
         $selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['select'])){
@@ -86,7 +92,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    private function newEntryHtml(){
+    private function newEntryHtml()
+    {
         $draftSelector=array('Source'=>$this->entryTable,
                           'Folder'=>'Draft',
                           'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),
@@ -105,7 +112,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
     
-    private function loadForumEntries(){
+    private function loadForumEntries()
+    {
         $forumSelector=array('Source'=>$this->entryTable,'Folder'=>'Sent');
         $selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
         if (!empty($selectedYear)){$forumSelector['Date']=$selectedYear.'-%';}
@@ -116,7 +124,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
     
-    public function unifyEntry($forumEntry){
+    public function unifyEntry($forumEntry)
+    {
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $forumEntry['Group']=$user['Privileges'];
         $forumEntry['Folder']='Sent';

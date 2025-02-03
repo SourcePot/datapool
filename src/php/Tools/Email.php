@@ -35,8 +35,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                                               ),
                             );
 
-    private $receiverMeta=array();
-    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -55,15 +53,18 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
     
-    public function job($vars){
+    public function job($vars):array
+    {
         if (empty($vars['Inboxes'])){
             $selector=array('Class'=>__CLASS__.'-rec');
             $vars['Inboxes']=array();
@@ -126,7 +127,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         }
     }
     
-    private function getReceiverSetting($id){
+    private function getReceiverSetting($id)
+    {
         $id=preg_replace('/\W/','_','INBOX-'.$id);
         $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$id);
         $setting['Content']=array('EntryId'=>$id,
@@ -136,7 +138,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
     }
     
-    private function getReceiverMeta($id){
+    private function getReceiverMeta($id)
+    {
         $meta=array();
         $setting=$this->getReceiverSetting($id);
         $mbox=@imap_open(strval($setting['Content']['Mailbox']),$setting['Content']['User'],$setting['Content']['Password']);
@@ -154,11 +157,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                         ); 
             imap_close($mbox);
         }
-        $this->receiverMeta=$meta;
         return $meta;
     }
 
-    private function todaysEmails($id){
+    private function todaysEmails($id)
+    {
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'alerts'=>'','errors'=>'');
         $entrySelector=$this->id2entrySelector($id);
         $setting=$this->getReceiverSetting($id);
@@ -205,7 +208,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     /******************************************************************************************************************************************
     * TRANSMITTER: Email transmitter 
     */
-    public function send(string $recipient,array $entry):int{
+    public function send(string $recipient,array $entry):int
+    {
         $sentEntriesCount=0;
         if (empty($entry['Content']['Subject'])){$entry['Content']['Subject']=$entry['Name'];}
         $userEntryTable=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
@@ -229,13 +233,15 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         return $sentEntriesCount;
     }
     
-    public function transmitterPluginHtml(array $arr):string{
+    public function transmitterPluginHtml(array $arr):string
+    {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         $arr['html'].='I am the email plugin...';
         return $arr['html'];
     }
     
-    public function getRelevantFlatUserContentKey():string{
+    public function getRelevantFlatUserContentKey():string
+    {
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $flatUserContentKey='Content'.$S.'Contact details'.$S.'Email';
         return $flatUserContentKey;
@@ -246,7 +252,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     * The argument mail is an array which must contain an entry: arr['selector']=entry 
     * @return boolean
     */
-    public function entry2mail($mail,$isDebugging=FALSE){
+    public function entry2mail($mail,$isDebugging=FALSE)
+    {
         // This method converts an entry to an email, the $mail-keys are:
         // 'selector' ... selects the entry
         // 'To' ... is the recipients emal address, use array for multiple addressees
@@ -350,7 +357,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         return $success;
     }
     
-    private function email2file($entry,$mailArr){
+    private function email2file($entry,$mailArr)
+    {
         $partOrder=array('header'=>TRUE,'From'=>TRUE,'To'=>TRUE,'Date'=>date('r'),'Subject'=>TRUE,'message'=>TRUE);
         $fileContent='';
         foreach($partOrder as $part=>$initValue){
@@ -382,7 +390,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         return $entry;
     }
     
-    private function iconvMimeDecode($str,$mode=0,$encoding=null){
+    private function iconvMimeDecode($str,$mode=0,$encoding=null)
+    {
         if (empty($str)){
             return '';
         } else {

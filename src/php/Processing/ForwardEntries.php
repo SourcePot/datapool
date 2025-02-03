@@ -39,7 +39,14 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $this->conditions=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getConditions();
     }
 
-    public function getEntryTable():string{return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+
+    public function getEntryTemplate(){
+        return $this->entryTemplate;
+    }
 
     /**
      * This method is the interface of this data processing class

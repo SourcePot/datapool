@@ -20,7 +20,8 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                                  'Owner'=>array('type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
                                  );
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -31,19 +32,23 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
     
-    public function init(){
+    public function init()
+    {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {
@@ -116,7 +121,8 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
 
-    public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE){
+    public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE)
+    {
         $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
@@ -127,7 +133,8 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
     }
     
-    public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE){
+    public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE)
+    {
         $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0,'',FALSE);
@@ -137,11 +144,13 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
     }
     
-    public function getVars($class,$initVars=array(),$isSystemCall=FALSE){
+    public function getVars($class,$initVars=array(),$isSystemCall=FALSE)
+    {
         return $this->getSetting('Job processing','Var space',$initVars,$class,$isSystemCall);
     }
 
-    public function setVars($class,$vars=array(),$isSystemCall=FALSE){
+    public function setVars($class,$vars=array(),$isSystemCall=FALSE)
+    {
         return $this->setSetting('Job processing','Var space',$vars,$class,$isSystemCall);
     }
     

@@ -41,17 +41,18 @@ class Dictionary{
         $this->initDictionaryIfEmpty();
     }
     
-    public function getEntryTable()
+    public function getEntryTable():string
     {
         return $this->entryTable;
     }
 
-    public function getEntryTemplate()
+    public function getEntryTemplate():array
     {
         return $this->entryTemplate;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#482;','Label'=>'Dictionary','Read'=>'ADMIN_R','Class'=>__CLASS__);
         } else {

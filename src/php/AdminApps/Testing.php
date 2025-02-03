@@ -17,7 +17,6 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable;
     private $entryTemplate=array();
     
-    private $dataTypes=array(''=>'mixed','string'=>'string','int'=>'int','float'=>'float','bool'=>'bool','array'=>'array','null'=>'null');
     private $boolStr=array(0=>'FALSE',1=>'TRUE');
     
     public function __construct($oc){
@@ -35,6 +34,16 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
     
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
+
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>'ALL_CONTENTADMIN_R','Class'=>__CLASS__);

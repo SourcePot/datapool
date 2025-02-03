@@ -19,7 +19,8 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  );
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -35,20 +36,24 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
 
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function unifyEntry($entry){
+    public function unifyEntry($entry):array
+    {
         $entry['Read']=intval($entry['Content']['Read access']??$this->oc['SourcePot\Datapool\Foundation\Access']->accessString2int($this->entryTemplate['Read']['value']));
         return $entry;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {

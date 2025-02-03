@@ -16,7 +16,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     
     const MIN_PASSPHRASDE_LENGTH=4;
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
     }
 
@@ -25,7 +26,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
         } else {
@@ -92,13 +94,15 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         exit;
     }
     
-    private function resetSession(){
+    private function resetSession()
+    {
         //$_SESSION=array('page state'=>$_SESSION['page state']); // reset session | keep page state
         $_SESSION=array(); // reset session
         session_regenerate_id(TRUE);
     }
     
-    private function loginSuccess($user,$email){
+    private function loginSuccess($user,$email)
+    {
         $this->resetSession();
         $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
         $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',array('lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
@@ -106,7 +110,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
     }
 
-    private function loginFailed($user,$email){
+    private function loginFailed($user,$email)
+    {
         $_SESSION['currentUser']['Privileges']=1;
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
         $this->oc['logger']->log('notice','Login failed at "{dateTime}" for "{email}".',array('lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
@@ -115,7 +120,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Login')));
     }
 
-    private function registerRequest($arr){
+    private function registerRequest($arr)
+    {
         $err=FALSE;
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
             $this->oc['logger']->log('notice','Registration failed, password and/or email were empty.',array('lifetime'=>'P30D'));    
@@ -143,7 +149,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         return $err;
     }
 
-    private function updateRequest($arr){
+    private function updateRequest($arr)
+    {
         $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
                     'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
                     );
@@ -161,7 +168,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         }
     }
 
-    private function pswRequest($arr){
+    private function pswRequest($arr)
+    {
         // check if email is valid
         if (empty($arr['Email'])){
             $this->oc['logger']->log('notice','Please provide your email address.',array());    
@@ -215,7 +223,8 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         }
     }
 
-    private function getOneTimeEntryEntryId($email):string{
+    private function getOneTimeEntryEntryId($email):string
+    {
         return $this->oc['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink';
     }
 

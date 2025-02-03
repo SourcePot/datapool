@@ -17,9 +17,20 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable;
     private $entryTemplate=array();
     
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->entryTable=$oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\User']->getEntryTemplate();
+    }
+    
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
     }
 
     Public function loadOc(array $oc):void
@@ -37,7 +48,8 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         }
     }
     
-    private function account(){
+    private function account()
+    {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
             // is admin

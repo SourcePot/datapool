@@ -20,7 +20,8 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     
     public $definition=array('EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
 
-    public function __construct($oc){
+    public function __construct($oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -31,28 +32,34 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
-    public function init(){
+    public function init()
+    {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
-    public function job($vars){
+    public function job($vars):array
+    {
         return $vars;
     }
 
-    public function getEntryTable(){
+    public function getEntryTable():string
+    {
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
-    public function unifyEntry($entry){
+    public function unifyEntry($entry):array
+    {
         return $entry;
     }
 
-    public function run(array|bool $arr=TRUE):array{
+    public function run(array|bool $arr=TRUE):array
+    {
         if ($arr===TRUE){
             return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>'ALL_R','Class'=>__CLASS__);
         } else {

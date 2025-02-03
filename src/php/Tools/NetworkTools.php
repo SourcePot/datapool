@@ -37,7 +37,15 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function getEntryTable():string{return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+    
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
  
     public function href(array $arr):string
     {

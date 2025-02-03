@@ -58,7 +58,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         }
     } 
     
-    public function backupArticle(){
+    public function backupArticle()
+    {
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -138,7 +139,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
     }
     
-    private function objectListHtml(){
+    private function objectListHtml()
+    {
         $matrix=array();
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objectListFile)){return 'Please reload to create a new object list.';}
@@ -150,13 +152,15 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
     }
     
-    public function appAdminHtml(){
+    public function appAdminHtml()
+    {
         $html=$this->replicateAppHtml();
         $html.=$this->deleteAppHtml();
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
     }
     
-    public function replicateAppHtml(){
+    public function replicateAppHtml()
+    {
         $apps=array();
         foreach($this->oc['SourcePot\Datapool\Foundation\Menu']->getCategories() as $category=>$def){
             if ($category!=='Apps' && $category!=='Data'){continue;}
@@ -188,7 +192,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Replicate app',TRUE);
     }
     
-    public function deleteAppHtml(){
+    public function deleteAppHtml()
+    {
         $classes=array();
         $classes2files=array();
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
@@ -228,7 +233,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     }
     
     
-    private function replicateApp($data){
+    private function replicateApp($data)
+    {
         $target=array();
         $readOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
@@ -269,7 +275,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         return TRUE;
     }
     
-    public function debugFilesHtml($arr){
+    public function debugFilesHtml($arr):array
+    {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (isset($formData['cmd']['delete'])){
@@ -296,7 +303,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    public function getPageSettingsHtml(){
+    public function getPageSettingsHtml()
+    {
         $homePageContentOptions=array(''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)');
         $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
         $contentStructure=array('pageTitle'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'),

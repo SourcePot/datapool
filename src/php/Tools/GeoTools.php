@@ -27,9 +27,6 @@ class GeoTools{
     
     private $countryCodes=array();
     
-    private $requestHeader=array('Content-Type'=>'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                                 'User-agent'=>'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0');
-    
     public function __construct(array $oc)
     {
         $this->oc=$oc;

@@ -18,7 +18,6 @@ class LoginForms{
     private $oc;
 
     private $formType=0;
-    private $pageSettings=array();
     
     private $digits=array(array('key'=>'a','sizeScaler'=>1,'font'=>'OpenSansLight.ttf','symbol'=>'?','description'=>'Question mark'),
                           array('key'=>'b','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>74,'description'=>'Spiral'),
