@@ -752,13 +752,15 @@ final class MiscTools{
         $flatB=$this->arr2flat($b);
         foreach($flatB as $flatKeyB=>$valueB){
             if ($valueB==='{}' || $valueB===NULL || $valueB==='__TODELETE__'){
-                // empty branch
+                // empty B
                 if ($valueB===NULL || $valueB==='__TODELETE__'){
                     unset($flatB[$flatKeyB]);
                 }
+                // empty A with flatKeyB
                 if (isset($flatA[$flatKeyB])){
                     unset($flatA[$flatKeyB]);
                 } else {
+                    // empty branch A starting with flatKeyB
                     foreach($flatA as $flatKeyA=>$valueA){
                         if (strpos($flatKeyA,$flatKeyB)===0){
                             unset($flatA[$flatKeyA]);

@@ -816,7 +816,6 @@ class Database{
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Privileges');
         // get existing entry
         $existingEntry=$this->entryById($selector,TRUE,'Write',TRUE);
-        $entry['preExistingEntry']=$existingEntry;
         if (empty($existingEntry['rowCount'])){
             // no existing entry found -> insert and return entry
             $context['steps'].='Is new entry|';
@@ -852,7 +851,8 @@ class Database{
                 $entry['Params']['Log'][__FUNCTION__]['update']=array('user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']);
             }
             // update entry
-            $entry=$this->unifyEntry($entry,FALSE);
+            $entry=$this->unifyEntry($entry,TRUE);
+            //$entry=$this->unifyEntry($entry,FALSE);
             $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $contextBackup['entriesUpdated']=$this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,array(),FALSE,$isDebugging=FALSE);
             $context['steps'].='Entry updated|';
