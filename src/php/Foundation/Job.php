@@ -29,6 +29,7 @@ class Job{
     */
     public function trigger(array $arr):array
     {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         // all jobs settings - remove non-existing job methods and add new job methods
         $arr['run']=(isset($arr['run']))?$arr['run']:'';
@@ -89,7 +90,13 @@ class Job{
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($jobVars,TRUE);
             $jobStartTime=hrtime(TRUE);
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-            $jobVars['Content']=$this->oc[$dueJob]->$dueMethod($jobVars['Content']);
+            try{
+                $jobVars['Content']=$this->oc[$dueJob]->$dueMethod($jobVars['Content']);
+                $arr['page html'].=$jobVars['Content']['html']??'';
+            } catch(\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['warning']->log('error','"{class} &rarr; {function}()" failed with "{msg}".',$context);
+            }            
             $jobStatistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $allJobsSetting['Content'][$dueJob]['Last run']=time();
             $allJobsSetting['Content'][$dueJob]['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);

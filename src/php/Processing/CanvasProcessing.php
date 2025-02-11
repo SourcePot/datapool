@@ -160,10 +160,10 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             return ['Results'=>['Step count'=>array('Value'=>count($canvasElements2process)),'Error'=>array('Value'=>'No canvas processing rules found...'),]];
         }
         // process canvas element
-        $canvasElement2process=array_shift($canvasElements2process);
-        $canvasElements2process[$canvasElement2process['EntryId']]=NULL;
-        if (!empty($canvasElement2process)){
-            $step=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($canvasElement2process['EntryId']);
+        foreach($canvasElements2process as $entryId=>$canvasElement2process){
+            $canvasElements2process[$entryId]=NULL;
+            if (!isset($canvasElement2process['Content']['Process'])){continue;}
+            $step=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId(strval($entryId));
             $canvasElement=array('Source'=>'dataexplorer','EntryId'=>$canvasElement2process['Content']['Process']);            
             $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
             $processor=$canvasElement['Content']['Widgets']['Processor'];
@@ -177,6 +177,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Statistics']['Timestamp']=array('Value'=>time());
             $result['Statistics']['Date']=array('Value'=>date('Y-m-d H:i:s'));
             $base['Statistics']=$result['Statistics'];
+            break;
         }
         $this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$canvasElements2process,$settingsKey,TRUE);
         return $result??[];
