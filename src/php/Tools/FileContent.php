@@ -61,20 +61,10 @@ final class FileContent{
 
     private function addUnycom(array $entry,string $text):array
     {
-        $entry['UNYCOM']=array();
-        $pList=$fList=array();
-        preg_match_all(\SourcePot\Datapool\Tools\MiscTools::UNYCOM_REGEX,$value=str_replace('-',' ',$text),$matches,PREG_OFFSET_CAPTURE);
-        foreach($matches[0] as $match){
-            $prefix=substr($text,$match[1]-10,10);
-            $prefixComps=preg_split('/[^A-Za-z0-9 ]+/',$prefix);
-            if (count($prefixComps)>1){
-                array_pop($prefixComps);
-                $prefix=array_pop($prefixComps);    
-            } else {
-                $prefix='';
-            }
-            $case=substr($text,intval($match[1]),19);
-            $unycomArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($case,$prefix);
+        $entry['UNYCOM']=$pList=$fList=[];
+        $unycomObj = new \SourcePot\Match\UNYCOM();
+        foreach($unycomObj->fetchCase($text) as $case){
+            $unycomArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($case);
             $pList[]=$unycomArr['Reference'];
             $fList[]=$unycomArr['Family'];
             if (empty($entry['UNYCOM'])){$entry['UNYCOM']=$unycomArr;}
