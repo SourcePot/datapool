@@ -273,7 +273,7 @@ class DataExplorer{
                     $htmlArr['processor'].=$this->oc[$processorClass]->dataProcessor($canvasElement,'widget');
                     $htmlArr['processor'].=$this->oc[$processorClass]->dataProcessor($canvasElement,'info');
                 } else {
-                    $this->oc['logger']->log('error','Processor class {processor} missing',array('processor'=>$processorClass));    
+                    $this->oc['logger']->log('error','Processor class {processor} missing',array('processor'=>$processorClass));
                 }
             }
             $htmlArr['cntr'].=$this->exportImportHtml($callingClass);

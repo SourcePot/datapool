@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
+use Symfony\Component\Validator\Constraints\Timezone;
+
 class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
@@ -718,24 +720,21 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     public function str2date(string $str):array
     {
         $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
-        $dateTimeParserObj->setFromString($str);
-        $dateTimeParserObj->setTimezone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $dateTimeParserObj->setFromString($str,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         return $dateTimeParserObj->getArray();
     }
     
     public function timestamp2date($timestamp):array
     {
         $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
-        $dateTimeParserObj->setFromTimestamp($timestamp);
-        $dateTimeParserObj->setTimezone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $dateTimeParserObj->setFromTimestamp($timestamp,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         return $dateTimeParserObj->getArray();
     }
     
     public function excel2date($excel):array
     {
         $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
-        $dateTimeParserObj->setFromExcelTimestamp($excel);
-        $dateTimeParserObj->setTimezone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $dateTimeParserObj->setFromExcelTimestamp($excel,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         return $dateTimeParserObj->getArray();
     }
     

@@ -465,7 +465,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!$failed){
                 $matchText=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($matchText,$rule['Content']['Target data type']);
                 $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
-                
                 $debugArr[]=['Target column'=>$rule['Content']['Target column'],'matchText'=>$matchText,'targetEntry'=>$targetEntry];
             
             }

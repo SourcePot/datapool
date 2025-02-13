@@ -38,10 +38,10 @@ final class MiscTools{
                                   '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
                                   );
     
-    private $matchTypes=array('identical'=>'Identical','contains'=>'Contains','unycom'=>'UNYCOM Case','|'=>'Separated by |','number'=>'Numbers');
-    
     private $combineOptions=array(''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)');
     
+    private $matchObj=NULL;
+
     public function __construct()
     {
         $this->emojiFile=$GLOBALS['dirs']['setup'].'emoji.json';
@@ -58,6 +58,7 @@ final class MiscTools{
         // add calendar placeholder
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{EntryId}}',$this->getEntryId());
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{Expires}}',$this->getDateTime('now','PT10M'));
+        $this->matchObj = new \SourcePot\Match\MatchValues();
     }
     
     public function getDataTypes():array
@@ -70,14 +71,14 @@ final class MiscTools{
         return $this->conditionTypes;
     }
     
-    public function getMatchTypes():array
-    {
-        return $this->matchTypes;
-    }
     public function getCombineOptions():array
-    
     {
         return $this->combineOptions;
+    }
+
+    public function getMatchTypes():array
+    {
+        return $this->matchObj->getMatchTypes();
     }
     
     /******************************************************************************************************************************************
@@ -1114,87 +1115,11 @@ final class MiscTools{
         return (isset($unycomArr[$key]))?$unycomArr[$key]:'';
     }
     
-    public function convert2unycom($value,$prefix=''):array
+    public function convert2unycom($value):array
     {
-        $value=strval($value);
-        $value=str_replace('-',' ',$value);
-        $keyTemplate=array('Match','Year','Type','Number');
-        $regions=array('WO'=>'PCT','WE'=>'Euro-PCT','EP'=>'European patent','EU'=>'Unitary Patent','AP'=>'ARIPO patent','EA'=>'Eurasian patent','OA'=>'OAPI patent');
-        preg_match(self::UNYCOM_REGEX,$value,$matches);
-        if (empty($matches[0])){
-            return array('Match'=>'','Year'=>'9999','Type'=>'Q','Number'=>'99999','Region'=>'XX','Country'=>'XX','Part'=>'99','isValid'=>FALSE);
-        }
-        // initialize result array from match
-        $arr=array();
-        $suffix='';
-        foreach($matches as $matchIndex=>$matchValue){
-            if (isset($keyTemplate[$matchIndex])){
-                $arr[$keyTemplate[$matchIndex]]=$matchValue;
-            } else {
-                $suffix.=$matchValue;
-            }
-        }
-        $arr['Region']='  ';
-        $arr['Country']='  ';
-        $arr['Part']='  ';
-        $arr['isValid']=TRUE;
-        // process suffix
-        $suffix=preg_replace('/\s+/u','',$suffix);
-        if (empty($suffix)){
-            if ($arr['Type']==='P' || $arr['Type']==='E'){
-                $arr['Type']='F';
-            }
-        } else {
-            $suffix=strtoupper($suffix);
-            $suffix=str_split($suffix,2);
-            foreach($regions as $rc=>$region){
-                if (empty($suffix[0])){break;}
-                if (mb_strpos($suffix[0],$rc)!==0){continue;}
-                array_shift($suffix);
-                $arr['Region']=$rc;
-                $arr['Region long']=$region;
-                break;
-            }
-            if (!empty($suffix[0])){
-                // get country codes from file
-                $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
-                if (is_file($file)){
-                    $cc=file_get_contents($file);
-                    $countries=json_decode($cc,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-                    foreach($countries as $alpha2code=>$countryArr){
-                        if (mb_strpos($suffix[0],$alpha2code)===FALSE){continue;}
-                        $arr['Country']=$alpha2code;
-                        $arr['Country long']=$countryArr['Country'];
-                        break;
-                    }
-                }
-                // get part
-                $suffix=implode('',$suffix);
-                $part=preg_replace('/[^0-9]+/u','',$suffix);
-                $nonNumericSuffix=str_replace($part,'',$suffix);
-                if (strlen($part)<2){$part='0'.$part;}
-                if (!empty($part)){$arr['Part']=$part;}
-                if (empty($arr['Country long']) && strlen($nonNumericSuffix)>1){
-                    // get country, if country is empty
-                    $arr['Country']=mb_substr($nonNumericSuffix,0,2);
-                }
-            }
-        }
-        // check year
-        foreach($keyTemplate as $key){$arr[$key]=preg_replace('/\s+/u','',$arr[$key]);}
-        if (strlen($arr['Year'])===2){
-            if (intval($arr['Year'])<50){
-                $arr['Year']='20'.$arr['Year'];
-            } else {
-                $arr['Year']='19'.$arr['Year'];
-            }
-        }
-        // compile result
-        $reference=$arr['Year'].$arr['Type'].$arr['Number'].$arr['Region'].$arr['Country'].$arr['Part'];
-        $arr=array('Reference'=>$reference,'Reference without \s'=>preg_replace('/\s+/u','',$reference),'Full'=>$reference,'Family'=>$arr['Year'].'F'.$arr['Number'])+$arr;
-        $arr['Prefix']=trim($prefix,'- ');
-        if (!empty($arr['Prefix'])){$arr['Full']=$arr['Prefix'].' - '.$arr['Full'];}
-        return $arr;
+        $unycomObj = new \SourcePot\Match\UNYCOM();
+        $unycomObj->set($value);  
+        return $unycomObj->get();
     }
 
     public function isTrue($valueA,$valueB,$condition):bool
@@ -1243,31 +1168,12 @@ final class MiscTools{
         if ($context['needleLength']<3){
             $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" called with very short needle "{needle}" for match column "{matchColumn}".',$context);
         }
-        // prepare match selector
-        $needles=array();
-        if ($matchType=='identical'){
-            $matchSelector[$matchColumn]=$needle;
-        } else if ($matchType=='contains'){
-            $matchSelector[$matchColumn]='%'.$needle.'%';
-        } else if ($matchType=='unycom'){
-            $unycomArr=$this->convert2unycom($needle);
-            if ($unycomArr['Type']==='F'){
-                $needleTemplate=array('Year','Type','Number');
-            } else {
-                $needleTemplate=array('Year','Type','Number','Region','Country','Part');    
-            }
-            foreach($needleTemplate as $key){$needles[]=$unycomArr[$key];}
-            $matchSelector[$matchColumn]='%'.trim($unycomArr['Number']).'%';
-        } else if ($matchType=='|'){
-            $needles=explode($matchType,$needle);
-            $matchSelector[$matchColumn]='%'.$needles[0].'%';
-        } else if ($matchType=='number'){
-            $needles=preg_split('/\D+/',$needle);
-            $matchSelector[$matchColumn]='';
-            foreach($needles as $sampleNeedle){
-                if (mb_strlen($matchSelector[$matchColumn])<mb_strlen($sampleNeedle)){$matchSelector[$matchColumn]=$sampleNeedle;}
-            }
-            $matchSelector[$matchColumn]='%'.$matchSelector[$matchColumn].'%';
+        $this->matchObj->set($needle,$matchType);
+        $dbNeedle=$this->matchObj->prepareMatch();
+        if (strpos($matchType,'!')===0){
+            $matchSelector['!'.$matchColumn]=$dbNeedle;
+        } else {
+            $matchSelector[$matchColumn]=$dbNeedle;
         }
         // get possible matches
         $bestMatch=array('probability'=>0,'Content'=>array(),'Params'=>array());
@@ -1279,29 +1185,21 @@ final class MiscTools{
                 $context['EntryId']=$matchEntry['EntryId'];
                 $context['Name']=$matchEntry['Name'];
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" empty sample for entry Source={Source}, EntryId={EntryId}, Name={Name} detected.',$context);
-            } else if ($count=count($needles)){
-                // calculate probability
-                $probability=0;
-                $tmpSample=$sample;
-                foreach($needles as $needle){
-                    $needlePos=strpos($tmpSample,$needle);
-                    if ($needlePos===FALSE){continue;}
-                    $probability++;
-                    $tmpSample=substr($tmpSample,($needlePos+strlen($needle)));
-                }
-                $probability=($probability/$count)-(strlen($tmpSample)/strlen($sample));
-                // check probability against threshold
-                if ($bestMatch['probability']<$probability){
-                    $bestMatch=$matchEntry;    
-                    $bestMatch['probability']=$probability;
-                    if ($probability==1){break;}
-                }
-            } else {
-                $this->oc['logger']->log('notice','WARNING: Function "{class} &rarr; {function}()" called with empty needles, probability set to zero.',$context);
-                $bestMatch=array();
-                $bestMatch['probability']=0;
-                break;
+                continue;
             }
+            try{
+                $probability=$this->matchObj->match($sample);
+            } catch(\Exception $e){
+                $context['msg']=$e->getMessage();
+                $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" match of needle "{needle}", with column "{matchColumn}" failed with "{msg}".',$context);
+                continue;
+            }
+            if ($bestMatch['probability']<$probability){
+                $bestMatch=$matchEntry;    
+                $bestMatch['probability']=$probability;
+                if ($probability==1){break;}
+            }
+            
         }
         return $bestMatch;
     }
