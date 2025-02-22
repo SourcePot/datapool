@@ -87,7 +87,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             unlink($objectListFile);
         }
         // export html
-        $matrix=array();
+        $matrix=[];
         $attachedFileSizeOptions=array(0=>'Skip attached files',
                                        1000000=>'Skip files if >1 MB',
                                        10000000=>'Skip files if >10 MB',
@@ -141,7 +141,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     private function objectListHtml()
     {
-        $matrix=array();
+        $matrix=[];
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objectListFile)){return 'Please reload to create a new object list.';}
         foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
@@ -161,7 +161,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     public function replicateAppHtml()
     {
-        $apps=array();
+        $apps=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Menu']->getCategories() as $category=>$def){
             if ($category!=='Apps' && $category!=='Data'){continue;}
             $apps[$def['Class']]=$def['Name'];
@@ -194,8 +194,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     public function deleteAppHtml()
     {
-        $classes=array();
-        $classes2files=array();
+        $classes=[];
+        $classes2files=[];
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objectListFile)){return '';}
         foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
@@ -235,7 +235,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     private function replicateApp($data)
     {
-        $target=array();
+        $target=[];
         $readOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
         if (!is_file($objectListFile)){return FALSE;}
@@ -286,7 +286,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         //
         $files=scandir($GLOBALS['dirs']['debugging']);
         sort($files);
-        $matrix=array();
+        $matrix=[];
         foreach($files as $file){
             if (strpos($file,'exceptionsLog.json')===FALSE){continue;}
             $fullFileName=$GLOBALS['dirs']['debugging'].$file;

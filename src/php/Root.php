@@ -47,17 +47,17 @@ final class Root{
                                         );
 
     private $oc;
-    private $placeholder=array();
-    private $implementedInterfaces=array();
+    private $placeholder=[];
+    private $implementedInterfaces=[];
     private $script='';
     
     private $profileActive=NULL;
-    private $profile=array();
+    private $profile=[];
     private $profileFileName=FALSE;
 
-    private $loggerCache=array();
+    private $loggerCache=[];
 
-    private $currentUser=array();
+    private $currentUser=[];
     
     public function __construct($script)
     {
@@ -71,7 +71,7 @@ final class Root{
         $this->updateCurrentUser();
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>array());
+            $_SESSION['page state']=array('app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>[]);
         }
         // set exception handler and initialize directories
         $this->initDirs();
@@ -119,7 +119,7 @@ final class Root{
     *
     * @return array An associative array that contains the current user
     */
-    public function updateCurrentUser($loginUser=array()):void
+    public function updateCurrentUser($loginUser=[]):void
     {
         if (!empty($loginUser)){
             // remote client | BE CAREFUL, THIE OPTION BYPASSES THE LOGIN
@@ -128,8 +128,8 @@ final class Root{
             // empty session -> anonymous user
             $loginId=strval(mt_rand(1,999999999));
             $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>$loginId,'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
-            $this->currentUser['Content']=array('Contact details'=>array('First name'=>'Anonym','Family name'=>'Anonym'),'Address'=>array());
-            $this->currentUser['Params']=array();
+            $this->currentUser['Content']=array('Contact details'=>array('First name'=>'Anonym','Family name'=>'Anonym'),'Address'=>[]);
+            $this->currentUser['Params']=[];
             $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.password_hash($loginId,PASSWORD_DEFAULT);;
             $_SESSION['currentUser']=$this->currentUser;
         } else {
@@ -236,7 +236,7 @@ final class Root{
 
     public function substituteWithPlaceholder(array $arr):array
     {
-        $newPlaceHolder=array();
+        $newPlaceHolder=[];
         $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
         $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
         // substitute placeholders
@@ -288,7 +288,7 @@ final class Root{
         $GLOBALS['script init time']=hrtime(TRUE);
         // get trace
         // add "page html" to the return array
-        $arr=array();
+        $arr=[];
         $appClassWithNamespace=$_SESSION['page state']['app']['Class'];
         if ($this->script==='index.php' && method_exists($this->oc[$appClassWithNamespace],'run')){
             $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
@@ -343,7 +343,7 @@ final class Root{
     
     public function getRegisteredMethods(string $method='',$arg=NULL):array
     {
-        $result=array();
+        $result=[];
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
             if (!is_object($obj)){continue;}
@@ -463,7 +463,7 @@ final class Root{
         if (!is_file($objListFile)){
             $this->createObjList($objListFile);
         }
-        $headerArr=array();
+        $headerArr=[];
         if (($handle=fopen($objListFile,"r"))!==FALSE){
             while (($rowArr=fgetcsv($handle,1000,";"))!==FALSE){
                 if (empty($headerArr)){
@@ -510,8 +510,8 @@ final class Root{
         $absRootPath=strtr(__DIR__,array('\\'=>'/'));
         $absRootPath=strtr($absRootPath,array($relThisDirSuffix=>''));
         // get absolute dirs
-        $GLOBALS['dirs']=array();
-        $GLOBALS['relDirs']=array();
+        $GLOBALS['dirs']=[];
+        $GLOBALS['relDirs']=[];
         foreach($GLOBALS['dirDefs'] as $label=>$def){
             $GLOBALS['dirs'][$label]=str_replace('.',$absRootPath,$def['relPath']).'/';
             $relDirComps=explode($wwwDirIndicator,$def['relPath']);
@@ -586,7 +586,7 @@ final class Root{
 
     public function file2arr(string $fileName):array
     {
-        $arr=array();
+        $arr=[];
         if (is_file($fileName)){
             $content=$this->file_get_contents_utf8($fileName);
             if (!empty($content)){
@@ -688,7 +688,7 @@ final class Root{
     * This method returns the supplied entry with the relevant contexts added if missing.
     * 
     */
-    public function contextBackup(array $context,array $entry=array()):array
+    public function contextBackup(array $context,array $entry=[]):array
     {
         $relevantContexts=array('unifyEntry','insertEntry','updateEntry','addFile2entry');
         foreach($relevantContexts as $contextName){

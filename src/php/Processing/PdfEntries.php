@@ -55,7 +55,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $orientation=array('P'=>'Portrait','L'=>'Landscape');
     
-    private $pageSettings=array();
+    private $pageSettings=[];
     
     public function __construct($oc)
     {
@@ -94,7 +94,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -111,7 +111,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getPdfEntriesWidget(array $callingElement):string
     {
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF creation','generic',$callingElement,array('method'=>'getPdfEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF creation','generic',$callingElement,array('method'=>'getPdfEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
         return $html;
     }
 
@@ -158,7 +158,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runPdfEntries($arr['selector'],FALSE);
@@ -167,7 +167,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -191,7 +191,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries settings','generic',$callingElement,array('method'=>'getPdfEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries settings','generic',$callingElement,array('method'=>'getPdfEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -273,7 +273,8 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $arr['html']=$arr['html']??'';
         $arr['selector']['Params']['TmpFile']['Source']=$this->sampleTargetFile;
-        $arr['selector']['Params']['TmpFile']['MIME-Type']='application/pdf';
+        $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['File']['MIME-Type']='application/pdf';
+        $arr['selector']['Params']['File']['Nme']=$arr['selector']['Name'];
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
         } else {
@@ -285,7 +286,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function runPdfEntries(array $callingElement,bool $testRun=FALSE):array
     {
         
-        $settings=array('pdfparams'=>array(),'pdfplaceholder'=>array(),'pdfrules'=>array());
+        $settings=array('pdfparams'=>[],'pdfplaceholder'=>[],'pdfrules'=>[]);
         $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$settings);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -322,7 +323,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
         }
         // process rules
-        $pageContent=array('header'=>array(),'content'=>array(),'footer'=>array());
+        $pageContent=array('header'=>[],'content'=>[],'footer'=>[]);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($settings['pdfrules'] as $ruleId=>$rule){
             if ($settings['pdfrules'][$ruleId]['Content']['text']==='[[logo]]'){
@@ -332,7 +333,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $placeholderKey=$placeholder['Content']['source'];
                     $placeholderNeedle=$placeholder['Content']['placeholder'];
                     if (!isset($flatSourceEntry[$placeholderKey])){continue;}
-                    $settings['pdfrules'][$ruleId]['Content']['text']=str_replace($placeholderNeedle,$flatSourceEntry[$placeholderKey],$settings['pdfrules'][$ruleId]['Content']['text']);
+                    $settings['pdfrules'][$ruleId]['Content']['text']=str_replace($placeholderNeedle,strval($flatSourceEntry[$placeholderKey]),$settings['pdfrules'][$ruleId]['Content']['text']);
                 }
             }
             $pageContent[$settings['pdfrules'][$ruleId]['Content']['type']][$ruleId]=$settings['pdfrules'][$ruleId]['Content'];
@@ -362,7 +363,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $pdf->Output('F',$targetFile);
         // pdf file data
-        $targetEntry['Params']['File']=array();
+        $targetEntry['Params']['File']=[];
         $targetEntry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
         $targetEntry['Params']['File']['Size']=filesize($targetFile);
         $targetEntry['Params']['File']['Name']=preg_replace('/[^0-9a-zA-Z]/','_',$targetEntry['Name']);

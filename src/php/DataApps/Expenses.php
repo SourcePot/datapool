@@ -72,7 +72,7 @@ class Expenses implements \SourcePot\Datapool\Interfaces\App{
                 } else if (!empty($arr['selector']['Group'])){
                     $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
                     $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Folder','Filter'=>''));
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,array());
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,[]);
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];

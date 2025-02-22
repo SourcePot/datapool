@@ -23,11 +23,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                  'End'=>array('value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.')
                                  );
 
-    private $setting=array();
-    private $toReplace=array();
+    private $setting=[];
+    private $toReplace=[];
 
-    private $pageState=array();
-    private $pageStateTemplate=array();
+    private $pageState=[];
+    private $pageStateTemplate=[];
 
     public $definition=array('Type'=>array('@tag'=>'p','@Read'=>'NO_R'),
                              'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''),
@@ -102,7 +102,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         if (time()-$vars['bankholidays']['lastRun']>2600000){
             $vars['last action']='Bankholidays';
             $entry=array('Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R');
-            $events=array();
+            $events=[];
             foreach($eventClasses as $eventClass){
                 if (class_exists($eventClass)){
                     $eventsObj=new $eventClass();
@@ -146,7 +146,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $endDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
             $endWindow=$endDateTime->format('Y-m-d H:i:s');
             // scan calendar entries
-            $events=array();
+            $events=[];
             $selector=array('Source'=>$this->entryTable,'Group!'=>'Serial%','End>'=>$startWindow);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $event){
                 $vars['Relevant calendar entries found']=$event['rowCount'];
@@ -203,8 +203,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             return array('Category'=>'Apps','Emoji'=>'&#9992;','Label'=>'Calendar','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
         } else {
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>array()));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Serial events by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getSerialEventsFrom','classWithNamespace'=>__CLASS__),array('style'=>array()));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getCalendar','classWithNamespace'=>__CLASS__),array('style'=>[]));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Serial events by '.__FUNCTION__,'generic',$this->pageState,array('method'=>'getSerialEventsFrom','classWithNamespace'=>__CLASS__),array('style'=>[]));
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -248,7 +248,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    public function getSerialEventsFrom($arr=array())
+    public function getSerialEventsFrom($arr=[])
     {
         $monthOptions=array(''=>'');
         $weekOptions=array(''=>'');
@@ -287,7 +287,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    private function getCalendarEntry($arr=array())
+    private function getCalendarEntry($arr=[])
     {
         $template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $arr=array_merge($template,$arr);
@@ -312,7 +312,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;        
     }
     
-    private function getCalendarSettings($arr=array())
+    private function getCalendarSettings($arr=[])
     {
         $template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $btnTemplate=array('style'=>array('font-size'=>'20px'),'tag'=>'button','keep-element-content'=>'TRUE','excontainer'=>FALSE);
@@ -369,7 +369,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     private function getEventsOverview()
     {
-        $matrices=array();
+        $matrices=[];
         $events=$this->getEvents(time());
         foreach($events as $EntryId=>$event){
             if (isset($matrices[$event['State']])){
@@ -394,7 +394,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
     
-    public function getCalendarSheet($arr=array())
+    public function getCalendarSheet($arr=[])
     {
         $template=array('html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $arr=array_merge($template,$arr);
@@ -460,7 +460,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             if (empty($event['Content']['Event']['Start']) || empty($event['Content']['Event']['End'])){continue;}
             if (is_array($event['Content']['Event']['Start'])){implode(' ',$event['Content']['Event']['Start']);}
             if (is_array($event['Content']['Event']['End'])){implode(' ',$event['Content']['Event']['End']);}
-            $style=array();
+            $style=[];
             $style['top']=100+$event['y']*40;
             if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
             $style['left']=$event['x0'];
@@ -568,9 +568,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $viewStart=$calendarDateTime->format('Y-m-d H:i:s');
         $calendarDateTime->add(\DateInterval::createFromDateString(($this->setting['Days to show']??'10').' days'));
         $viewEnd=$calendarDateTime->format('Y-m-d H:i:s');
-        $events=array();
-        $oldEvents=array();
-        $selectors=array();
+        $events=[];
+        $oldEvents=[];
+        $selectors=[];
         $selectors['Ongoing event']=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start<'=>$viewStart,'End>'=>$viewEnd);
         $selectors['Finnishing event']=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','End>='=>$viewStart,'End<='=>$viewEnd);
         $selectors['Upcomming event']=array('Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start>='=>$viewStart,'Start<='=>$viewEnd);
@@ -608,7 +608,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private function serialEntryToEntries($entry,int $timestamp,int $maxTimestamp=0)
     {
         $formatTestArr=array('Month'=>'m','Week day'=>'N','Day'=>'d','Hour'=>'H','Minute'=>'i');
-        $entries=array();
+        $entries=[];
         $entryIdSuffix=0;
         $maxTimestamp=(empty($maxTimestamp))?($timestamp+(intval($this->setting['Days to show']??'10')-1)*86400+90000):$maxTimestamp;
         // scan calendar range

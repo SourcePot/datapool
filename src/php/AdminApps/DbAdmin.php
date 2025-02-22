@@ -47,10 +47,10 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     
     private function dbInfo():string
     {
-        $matrices=array();
+        $matrices=[];
         $matrices['General']['Database name']=array('value'=>$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName(),'trStyle'=>array('background-color'=>'#bbf'));
         $sql='SELECT table_schema "Database name",SUM(data_length+index_length) "Database size" FROM information_schema.tables GROUP BY table_schema;';
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $dbInfo){
             if ($dbInfo['Database name']!==$matrices['General']['Database name']['value']){continue;}
             $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($dbInfo['Database size'],3,1024).'B';
@@ -58,12 +58,12 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             break;
         }
         $sql='SELECT CURRENT_USER();';
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $key=>$value){
             $matrices['General'][$key]=array('value'=>$value);
         }
         $sql='SHOW GLOBAL VARIABLES;';
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $keyValue){
             $key=$keyValue['Variable_name'];
             if ($key=='version' || $key=="version_ssl_library" || $key=='storage_engine'){
@@ -91,9 +91,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     
     private function dbUser():string
     {
-        $matrix=array();
+        $matrix=[];
         $sql='SELECT Host,User,Select_priv,Insert_priv,Update_priv,Delete_priv,Create_priv,Drop_priv,Reload_priv,Shutdown_priv,Process_priv,File_priv,Grant_priv,References_priv,Index_priv,Alter_priv,Show_db_priv,Super_priv,Create_tmp_table_priv,Lock_tables_priv,Execute_priv,Repl_slave_priv,Repl_client_priv,Create_view_priv,Show_view_priv,Create_routine_priv,Alter_routine_priv,Create_user_priv,Event_priv,Trigger_priv,Create_tablespace_priv,Delete_history_priv FROM mysql.user;';
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $userInfo){
             $row=$userInfo['User'].'@'.$userInfo['Host'];
             unset($userInfo['User']);
@@ -109,9 +109,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     {
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
-        $matrices=array('Columns'=>array());
+        $matrices=array('Columns'=>[]);
         $sql='SHOW INDEX FROM `'.$table.'`;';
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
             $column=$columnInfo['Column_name'];
             unset($columnInfo['Column_name']);
@@ -119,7 +119,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             $matrices['Index'][$column]=$columnInfo;
         }
         $sql='SHOW COLUMNS FROM `'.$table.'`;';
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
             $column=$columnInfo['Field'];
             unset($columnInfo['Field']);
@@ -128,7 +128,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         }
         $tableKey='Table "'.$table.'"';
         $sql="SELECT TABLE_NAME,TABLE_COLLATION,ENGINE,TABLE_ROWS,DATA_LENGTH,INDEX_LENGTH,AUTO_INCREMENT,CREATE_TIME,UPDATE_TIME FROM INFORMATION_SCHEMA.TABLES;";
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $tableInfo){
             if ($tableInfo['TABLE_NAME']!==$table){continue;}
             unset($tableInfo['TABLE_NAME']);
@@ -165,7 +165,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     
     private function tableCmdsProcessing()
     {
-        $context=array('currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),4),'class'=>__CLASS__,'function'=>__FUNCTION__,);
+        $context=array('currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],4),'class'=>__CLASS__,'function'=>__FUNCTION__,);
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
         if (isset($formData['cmd']['INDICES'])){
             $context['table']=key($formData['cmd']['INDICES']);
@@ -174,7 +174,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         } else if (isset($formData['cmd']['DROP'])){
             $context['table']=key($formData['cmd']['DROP']);
             $sql='DROP TABLE '.$context['table'].';';
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
             $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}"',$context);
             // Reset $GLOBALS['dbInfo'] to create table
             $baseClass=$GLOBALS['dbInfo'][$context['table']]['EntryId']['baseClass'];
@@ -184,7 +184,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         } else if (isset($formData['cmd']['TRUNCATE'])){
             $context['table']=key($formData['cmd']['TRUNCATE']);
             $sql='TRUNCATE TABLE '.$context['table'].';';
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array(),FALSE);
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
             $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
         }
     }

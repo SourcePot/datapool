@@ -31,10 +31,10 @@ class Container{
     */
     public function jsCall(array $arr):array
     {
-        $jsAnswer=array();
+        $jsAnswer=[];
         if (isset($_POST['function'])){
             if (strcmp($_POST['function'],'container')===0){
-                $jsAnswer['html']=$this->container('','',array(),array(),array(),$_POST['container-id'],TRUE);
+                $jsAnswer['html']=$this->container('','',[],[],[],$_POST['container-id'],TRUE);
             } else if (strcmp($_POST['function'],'containerMonitor')===0){
                 $jsAnswer['arr']=array('isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']);
             } else if (strcmp($_POST['function'],'loadEntry')===0){
@@ -59,7 +59,7 @@ class Container{
         return $arr;
     }
 
-    public function container(string $key='',$function='',$selector=array(),$settings=array(),$wrapperSettings=array(),$containerId=FALSE,$isJScall=FALSE):string
+    public function container(string $key='',$function='',$selector=[],$settings=[],$wrapperSettings=[],$containerId=FALSE,$isJScall=FALSE):string
     {
         // This function provides a dynamic web-page container, it returns html-script.
         // The state of forms whithin the container is stored in  $_SESSION['Container'][$container-id]
@@ -148,7 +148,7 @@ class Container{
         if (isset($registerSelector['isAsc'])){$isAsc=$registerSelector['isAsc'];} else {$isAsc=FALSE;}
         if (isset($registerSelector['limit'])){$limit=$registerSelector['limit'];} else {$limit=FALSE;}
         if (isset($registerSelector['offset'])){$offset=$registerSelector['offset'];} else {$offset=FALSE;}
-        if (isset($registerSelector['selectExprArr'])){$selectExprArr=$registerSelector['selectExprArr'];} else {$selectExprArr=array();}
+        if (isset($registerSelector['selectExprArr'])){$selectExprArr=$registerSelector['selectExprArr'];} else {$selectExprArr=[];}
         $hash='';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($registerSelector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,TRUE) as $row){
             $hash=$row['hash'];
@@ -234,7 +234,7 @@ class Container{
                     $fileArr=current(current($formData['files']));
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$arr['selector']);
                 } else if (isset($formData['cmd']['stepIn'])){
-                    if (empty($settings['selectorKey'])){$selectorKeyComps=array();} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
+                    if (empty($settings['selectorKey'])){$selectorKeyComps=[];} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
                     $selectorKeyComps[]=key($formData['cmd']['stepIn']);
                     $settings['selectorKey']=implode($S,$selectorKeyComps);
                 } else if (isset($formData['cmd']['setSelectorKey'])){
@@ -259,7 +259,7 @@ class Container{
                 $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$settings;
             }
             $navHtml='';
-            if (empty($settings['selectorKey'])){$selectorKeyComps=array();} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
+            if (empty($settings['selectorKey'])){$selectorKeyComps=[];} else {$selectorKeyComps=explode($S,$settings['selectorKey']);}
             $level=count($selectorKeyComps);
             while(count($selectorKeyComps)>0){
                 $key=array_pop($selectorKeyComps);
@@ -387,14 +387,14 @@ class Container{
             $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,$settings['isSystemCall']);
             $filterSkipped=TRUE;
         }
-        $csvMatrix=array();
+        $csvMatrix=[];
         if ($rowCount<=$settings['offset']){$settings['offset']=0;}
         if (!empty($rowCount)){
             // create html
             $filterKey='Filter';
-            $matrix=array();
-            $columnOptions=array();
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],array(),TRUE,FALSE) as $entry){
+            $matrix=[];
+            $columnOptions=[];
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],[],TRUE,FALSE) as $entry){
                 $rowIndex=$entry['rowIndex']+intval($settings['offset'])+1;
                 $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
                 // setting up
@@ -417,22 +417,22 @@ class Container{
                     } else {
                         $matrix[$filterKey][$columnIndex]='';
                         // filter text field
-                        if ($filterSkipped && !empty($cntrArr['Filter'])){$style=array('color'=>'#fff','background-color'=>'#a00');} else {$style=array();}
+                        if ($filterSkipped && !empty($cntrArr['Filter'])){$style=array('color'=>'#fff','background-color'=>'#a00');} else {$style=[];}
                         $filterTextField=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','title'=>'Filter list','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>array('columns',$columnIndex,'Filter'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                         // "order by"-buttons
-                        if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=array();}
-                        if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
+                        if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=array('color'=>'#fff','background-color'=>'#a00');} else {$styleBtnSetting=[];}
+                        if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=[];}
                         $element=array('tag'=>'button','element-content'=>'&#9650;','key'=>array('asc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'Order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         $matrix[$filterKey][$columnIndex].=$filterTextField;
-                        if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=array();}
+                        if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=[];}
                         $element=array('tag'=>'button','element-content'=>'&#9660;','key'=>array('desc',$column),'value'=>$columnIndex,'style'=>array('padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'),'title'=>'Order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']);
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         // column selector
-                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'title'=>'Select column or field','style'=>array(),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>array('columns',$columnIndex,'Column'),'title'=>'Select column or field','style'=>[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
                         // remove column button
                         if ($columnIndex>0){
-                            $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>array(),'title'=>'Remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+                            $element=array('tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>array('removeColumn',$columnIndex),'value'=>'remove','hasCover'=>TRUE,'style'=>[],'title'=>'Remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
                             $matrix['Columns'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         }
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Columns'][$columnIndex],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
@@ -445,12 +445,12 @@ class Container{
                             $matrix[$rowIndex][$columnIndex]='{Nothing here...}';
                         }
                         // present entry
-                        $subMatix=array();
+                        $subMatix=[];
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
                                 // $flatColumnKey === column selection -> standard entry presentation
                                 $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
-                                $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,array());
+                                $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,[]);
                             } else if (strpos($flatColumnKey,$cntrArr['Column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR)===0){
                                 // column selection is substring of $flatColumnKey -> submatrix presentation 
                                 $subKey=str_replace($cntrArr['Column'],'',$flatColumnKey);
@@ -499,8 +499,8 @@ class Container{
     private function getKeySelector(array $flatEntry):array{
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         // options for complete match
-        $upperOrderKeys=array();
-        $keyMatchOptions=array();
+        $upperOrderKeys=[];
+        $keyMatchOptions=[];
         foreach($flatEntry as $flatColumnKey=>$value){
             if (strpos($flatColumnKey,$S)!==FALSE){
                 $flatKeyComps=explode($S,$flatColumnKey);
@@ -518,7 +518,7 @@ class Container{
             $keyMatchOptions[$flatColumnKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatColumnKey);
         }
         // options for sub key matches
-        $subKeyOptions=array();
+        $subKeyOptions=[];
         foreach($upperOrderKeys as $upperOrderKey=>$keyCount){
             if ($keyCount>1){
                 $subKeyOptions[$upperOrderKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($upperOrderKey);
@@ -537,7 +537,7 @@ class Container{
     {
         $limit=intval($settings['limit']);
         if ($rowCount<=$limit){return '';}
-        $options=array();
+        $options=[];
         $optionCount=ceil($rowCount/$limit);
         for($index=0;$index<$optionCount;$index++){
             $offset=$index*$limit;
@@ -569,7 +569,7 @@ class Container{
         if (empty($arr['selector'])){return $arr;}
         $targetId=(isset($arr['containerId']))?$arr['containerId']:$arr['callingFunction'];
         $arr['class']=(isset($arr['class']))?$arr['class']:'comment';
-        $arr['style']=(isset($arr['style']))?$arr['style']:array();
+        $arr['style']=(isset($arr['style']))?$arr['style']:[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$targetId);
         if (isset($formData['cmd']['Add comment'])){
             if (empty($formData['val']['comment'])){
@@ -582,7 +582,7 @@ class Container{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
             }
         }
-        if (isset($arr['selector']['Content']['Comments'])){$Comments=$arr['selector']['Content']['Comments'];} else {$Comments=array();}
+        if (isset($arr['selector']['Content']['Comments'])){$Comments=$arr['selector']['Content']['Comments'];} else {$Comments=[];}
         $commentsHtml='';
         foreach($Comments as $creationTimestamp=>$comment){
             $footer=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$creationTimestamp);
@@ -632,10 +632,10 @@ class Container{
                 $this->oc[$arr['settings']['Transmitter']]->send($arr['settings']['Recipient'],$arr['selector']);
             }
         }
-        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions(array(),$arr['settings']['relevantFlatUserContentKey']);
+        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$arr['settings']['relevantFlatUserContentKey']);
         $arr['settings']['Recipient']=(isset($arr['settings']['Recipient']))?$arr['settings']['Recipient']:current($availableRecipients);
         // create form
-        $matrix=array();
+        $matrix=[];
         $selectArr=array('callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>FALSE);
         $selectArr['options']=$availableTransmitter;
         $selectArr['key']=array('settings','Transmitter');

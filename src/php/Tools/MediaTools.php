@@ -55,7 +55,7 @@ class MediaTools{
             $imageHtml=$this->getImage($arr);
             // add wrapper div
             $wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer');
-            $arr['wrapper']['style']=(isset($arr['wrapper']['style']))?$arr['wrapper']['style']:array();
+            $arr['wrapper']['style']=(isset($arr['wrapper']['style']))?$arr['wrapper']['style']:[];
             $imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'title'=>$arr['selector']['Name'],'class'=>'preview','source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
             $imageArr['id']='img-'.md5($arr['selector']['EntryId']);
             $imageArr['source']=$arr['selector']['Source'];
@@ -69,12 +69,12 @@ class MediaTools{
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector']) && !$isSmallPreview){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),[]);
         } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
-            $matrix=array();
+            $matrix=[];
             $zip=new \ZipArchive;
             if ($zip->open($arr['selector']['Params']['TmpFile']['Source'])===TRUE){
                 $zipFileCount=$zip->numFiles;
@@ -139,7 +139,7 @@ class MediaTools{
         // compile entry and add presentation keys
         if (!empty($arr['setting']['Show userAbstract'])){$arr['selector'][':::userAbstract']=TRUE;}
         if (!empty($arr['setting']['Show getPreview'])){$arr['selector'][':::getPreview']=TRUE;}
-        $arrElements=array('arr'=>$arr,'elements'=>array());
+        $arrElements=array('arr'=>$arr,'elements'=>[]);
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
         foreach($flatEntry as $flatEntryKey=>$flatEntryValue){
@@ -237,7 +237,7 @@ class MediaTools{
     
     private function getMarkdown(array $arr):array
     {
-        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
+        if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
         $arr['settings']['style']=array_merge(array('overflow'=>'hidden'),$arr['settings']['style']);
         $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$arr['selector']['EntryId'],'Write'=>$arr['selector']['Write'],'Write'=>$arr['selector']['Read']);
         // process form
@@ -275,7 +275,7 @@ class MediaTools{
     private function getObj(array $arr):array
     {
         if (!isset($arr['html'])){$arr['html']='';}
-        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
+        if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
         $arr['settings']['style']=array_merge(array('float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw','border'=>'1px dotted #444'),$arr['settings']['style']);
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $pdfArr=$arr;
@@ -283,11 +283,11 @@ class MediaTools{
             $pdfArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $pdfArr['type']=$arr['selector']['Params']['File']['MIME-Type'];
             $pdfArr['style']=$pdfArr['settings']['style'];
-            $pdfArr['element-content']='<a href="'.$pdfArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.$arr['selector']['Params']['File']['Name'].'</b> can\'t be presented, click here to download...</a>';
+            $pdfArr['element-content']='<a href="'.$pdfArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.($arr['selector']['Params']['File']['Name']??'').'</b> can\'t be presented, click here to download...</a>';
             $pdfArr['keep-element-content']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pdfArr);
         } else {
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['TmpFile']['Name'].' could not be copied into the presentation folder.'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.'));
         }
         $arr['wrapperSettings']=array('style'=>'width:95%;');
         return $arr;
@@ -535,7 +535,7 @@ class MediaTools{
     
     private function getImgPropArr(string $imgFile):array
     {
-        $exif=$this->addExif2entry(array(),$imgFile);
+        $exif=$this->addExif2entry([],$imgFile);
         $exif=current($exif);
         $imgPropArr=getimagesize($imgFile);
         if (isset($exif['Orientation'])){
@@ -557,14 +557,14 @@ class MediaTools{
     
     public function addExif2entry(array $entry,string $file):array
     {
-        $entry['exif']=array();   
+        $entry['exif']=[];   
         if (!is_file($file)){
             // no attched file
         } else if (!function_exists('exif_read_data')){
-            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',array());   
+            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',[]);   
         } else {
             $exif=@exif_read_data($file,'IFD0');
-            $entry['exif']=(empty($exif))?array():$exif;
+            $entry['exif']=(empty($exif))?[]:$exif;
         }
         return $entry;
     }

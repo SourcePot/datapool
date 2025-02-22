@@ -97,7 +97,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function resetSession()
     {
         //$_SESSION=array('page state'=>$_SESSION['page state']); // reset session | keep page state
-        $_SESSION=array(); // reset session
+        $_SESSION=[]; // reset session
         session_regenerate_id(TRUE);
     }
     
@@ -172,7 +172,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     {
         // check if email is valid
         if (empty($arr['Email'])){
-            $this->oc['logger']->log('notice','Please provide your email address.',array());    
+            $this->oc['logger']->log('notice','Please provide your email address.',[]);    
             return 'Failed: invalid email address';
         }
         // check if user exists

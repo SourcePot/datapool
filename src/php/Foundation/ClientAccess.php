@@ -55,7 +55,7 @@ class ClientAccess{
     */
     public function request($arr,$isDebugging=FALSE){
         $debugArr=array('arr in'=>$arr);
-        $header=array();
+        $header=[];
         $whitelist=array('127.0.0.1','::1');
        if (isset($_SERVER['HTTPS']) || in_array($_SERVER['REMOTE_ADDR'],$whitelist)){
             // process the request if https is confirmed
@@ -84,7 +84,7 @@ class ClientAccess{
     * @param array data
     * @return array data
     */
-    private function globals2data($data=array()){
+    private function globals2data($data=[]){
         // add all request data to $data
         foreach($_POST as $name=>$value){
             $data[$name]=filter_input(INPUT_POST,$name);
@@ -120,7 +120,7 @@ class ClientAccess{
                 $data['client_id']=$data['answer']['client_id'];
                 if (in_array($method,$this->methodBlackList)){
                     $data['answer']['error']='Access '.$class.'::'.$method.'() blocked';
-                    $this->oc['logger']->log('warning',$data['answer']['error'],array());    
+                    $this->oc['logger']->log('warning',$data['answer']['error'],[]);    
                 } else if (empty($this->oc[$class])){
                     $this->oc['logger']->log('warning','Client request failed, Scope "{scope}::{method}" is inavlid. Please check Admin &rarr; Account &rarr; App credentials AND table "clientaccess"',$data['answer']);
                 } else if (method_exists($this->oc[$class],$method)){
@@ -239,7 +239,7 @@ class ClientAccess{
     }
     
     private function getAuthorizationHeader($data){
-        $header=array();
+        $header=[];
         if (isset($data['client_id']) && isset($data['client_secret'])){
             $header['Authorization']='Basic '.base64_encode($data['client_id'].':'.$data['client_secret']);
             //var_dump(urlencode($header['Authorization']));
@@ -248,7 +248,7 @@ class ClientAccess{
     }
     
     private function getScopeOptions(){
-        $options=array();
+        $options=[];
         foreach($this->oc as $classWithNamespace=>$obj){
             $options[$classWithNamespace]=$classWithNamespace;
         }

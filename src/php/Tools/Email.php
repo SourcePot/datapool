@@ -67,7 +67,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     {
         if (empty($vars['Inboxes'])){
             $selector=array('Class'=>__CLASS__.'-rec');
-            $vars['Inboxes']=array();
+            $vars['Inboxes']=[];
             foreach($this->oc['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
                 $vars['Inboxes'][$entry['EntryId']]=$entry;
             }
@@ -123,7 +123,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         if (isset($canvasElement['Content']['Selector'])){
             return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arrRemoveEmpty($canvasElement['Content']['Selector']);
         } else {
-            return array();
+            return [];
         }
     }
     
@@ -140,7 +140,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     
     private function getReceiverMeta($id)
     {
-        $meta=array();
+        $meta=[];
         $setting=$this->getReceiverSetting($id);
         $mbox=@imap_open(strval($setting['Content']['Mailbox']),$setting['Content']['User'],$setting['Content']['Password']);
         imap_errors();
@@ -219,7 +219,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $flatSender=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sender);
         $flatUserContentKey=$this->getRelevantFlatUserContentKey();
         if (empty($flatRecipient[$flatUserContentKey])){
-            $this->oc['logger']->log('notice','Failed to send email: recipient email address is empty',array());    
+            $this->oc['logger']->log('notice','Failed to send email: recipient email address is empty',[]);    
         } else {
             $entry['Content']['To']=$flatRecipient[$flatUserContentKey];
             if (empty($flatSender[$flatUserContentKey])){
@@ -257,14 +257,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         // This method converts an entry to an email, the $mail-keys are:
         // 'selector' ... selects the entry
         // 'To' ... is the recipients emal address, use array for multiple addressees
-        $header=array();
+        $header=[];
         $emailWebmaster=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
         $mailKeyTypes=array('mail'=>array('To'=>'','Subject'=>$mail['selector']['Name']),
                             'header'=>array('From'=>$emailWebmaster,'Cc'=>FALSE,'Bcc'=>FALSE,'Reply-To'=>FALSE)
                             );
         $success=FALSE;
         if (empty($mail['selector'])){
-            $this->oc['logger']->log('notice','No email sent. Could not find the selected entry or no read access for the selected entry',array());    
+            $this->oc['logger']->log('notice','No email sent. Could not find the selected entry or no read access for the selected entry',[]);    
         } else {
             // copy email settings from mail[selector][Content] to mail and unset these settings
             foreach($mailKeyTypes as $keyType=>$mailKeys){

@@ -25,7 +25,7 @@ class GeoTools{
                          'Country_code'=>'Country code','Country code'=>'Country code',
                          );
     
-    private $countryCodes=array();
+    private $countryCodes=[];
     
     public function __construct(array $oc)
     {
@@ -46,19 +46,19 @@ class GeoTools{
         // load country codes
         $file=$GLOBALS['dirs']['setup'].'/countryCodes.json';
         if (!is_file($file)){
-            $this->oc['logger']->log('error','File "countryCodes.json" missing.',array());    
+            $this->oc['logger']->log('error','File "countryCodes.json" missing.',[]);    
         }
         $cc=file_get_contents($file);
         $this->countryCodes=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($cc);
         if (empty($this->countryCodes)){
-            $this->oc['logger']->log('error','File error "countryCodes.json"',array());    
+            $this->oc['logger']->log('error','File error "countryCodes.json"',[]);    
         }
     }
 
     public function location2address(array $entry,$targetKey='Address',bool $isDebugging=FALSE):array
     {
         $debugArr=array('entry_in'=>$entry);
-        $entry['Params'][$targetKey]=array();
+        $entry['Params'][$targetKey]=[];
         if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
             $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
@@ -100,13 +100,13 @@ class GeoTools{
         } else if (!empty($entry['Content']['Location/Destination'])){
             $address=$entry['Content']['Location/Destination'];
         } else {
-            $address=array();
+            $address=[];
         }
         $debugArr['address']=$address;
         if (!empty($address)){
             $query=$this->getRequestAddress($address);
             $debugArr['query']=$query;
-            $options=array('headers'=>array(),'query'=>$query);
+            $options=array('headers'=>[],'query'=>$query);
             try{
                 $client = new \GuzzleHttp\Client(['headers'=>['Referer'=>$this->referrer],'base_uri'=>'https://nominatim.openstreetmap.org']);
                 $response=$client->request('GET','/search',$options);
@@ -131,7 +131,7 @@ class GeoTools{
     
     private function normalizeAddress(array $address):array
     {
-        $normAddress=array();
+        $normAddress=[];
         foreach ($address as $oldKey=>$value){
             $newKey=ucfirst($oldKey);
             if (isset($this->alias[$newKey])){
@@ -142,7 +142,7 @@ class GeoTools{
         return $normAddress;
     }
 
-    private function getRequestAddress(array $address=array()):array
+    private function getRequestAddress(array $address=[]):array
     {
         $osmAlias=array('House number'=>'housenumber',
                         'Street'=>'street',
@@ -151,7 +151,7 @@ class GeoTools{
                         //'Country'=>'country',
                         'Zip'=>'postalcode'
                         );
-        $query=array();
+        $query=[];
         foreach($osmAlias as $from=>$to){
             if (empty($address[$from])){continue;}
             if (isset($address[$from])){$query[$to]=trim($address[$from]);}
@@ -212,11 +212,11 @@ class GeoTools{
                 return $ccArr;
                 break;
             }
-            return array();
+            return [];
         }
     }
     
-    public function getDynamicMap(array $arr=array()):string
+    public function getDynamicMap(array $arr=[]):string
     {
         $html='';
         $toLoadArr=array('leafletCss'=>array('tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>'','element-content'=>''),

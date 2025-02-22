@@ -19,8 +19,8 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'),
                                  );
     
-    private $urlSelector=array();
-    private $currentUrlEntryContent=array();
+    private $urlSelector=[];
+    private $currentUrlEntryContent=[];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -43,7 +43,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
     public function job($vars):array
     {
         if (empty($vars['URLs2do'])){
-            $vars['URLs2do']=array();
+            $vars['URLs2do']=[];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($this->urlSelector,FALSE,'Read','Date',FALSE) as $urlEntry){
                 $vars['URLs2do'][$urlEntry['EntryId']]=$urlEntry;
             }
@@ -154,7 +154,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         $dateTimeArr=$this->getFeedDate($date);
         $urlComps=parse_url($this->currentUrlEntryContent['URL']);
-        $entryTemplate=array('Source'=>$this->entryTable,'Group'=>$urlComps['host'],'Folder'=>$feed['channel']['title'],'Read'=>$this->currentUrlEntryContent['Visibility'],'Date'=>$dateTimeArr['DB_TIMEZONE'],'Content'=>array());
+        $entryTemplate=array('Source'=>$this->entryTable,'Group'=>$urlComps['host'],'Folder'=>$feed['channel']['title'],'Read'=>$this->currentUrlEntryContent['Visibility'],'Date'=>$dateTimeArr['DB_TIMEZONE'],'Content'=>[]);
         $entryTemplate['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
         foreach($feed['channel']['item'] as $item){
             $tmpFile='';

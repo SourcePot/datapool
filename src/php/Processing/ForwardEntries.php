@@ -19,7 +19,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  );
     
-    private $conditions=array();
+    private $conditions=[];
     private $operations=array('&&'=>'AND','||'=>'OR');
 
     public function __construct($oc){
@@ -56,7 +56,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -72,11 +72,11 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getForwardEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Selecting','generic',$callingElement,array('method'=>'getForwardEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Selecting','generic',$callingElement,array('method'=>'getForwardEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
     }
     
      private function getForwardEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=[];
         $matrix['Description']=array('<p style="width:40em;">This processor forwards entries to various targets on the basis of conditions. If there are several rules for a forwarding target, all rules must be fulfilled in order to forward the entry.<br/>Rules are linked by "AND" or "OR" (rule key "..."), the oparation is ignored for the first rule of each target.</p>');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
@@ -86,7 +86,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getForwardEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runForwardEntries($arr['selector'],0);
@@ -95,7 +95,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -116,8 +116,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getForwardEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Forwarding entries params','generic',$callingElement,array('method'=>'getForwardEntriesParamsHtml','classWithNamespace'=>__CLASS__),array());
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Forwarding entries settings','generic',$callingElement,array('method'=>'getForwardEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Forwarding entries params','generic',$callingElement,array('method'=>'getForwardEntriesParamsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Forwarding entries settings','generic',$callingElement,array('method'=>'getForwardEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -155,11 +155,11 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runForwardEntries($callingElement,$testRun=1){
-        $base=array('forwardingparams'=>array(),'forwardingrules'=>array(),'processId'=>$callingElement['EntryId']);
+        $base=array('forwardingparams'=>[],'forwardingrules'=>[],'processId'=>$callingElement['EntryId']);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);
         // get targets template
-        $base['targets']=array();
+        $base['targets']=[];
         foreach($base['forwardingrules'] as $ruleId=>$rule){
             foreach($base['canvasElements'] as $targetName=>$target){
                 if ($target['EntryId']==$rule['Content']['Forward on success']){
@@ -169,7 +169,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Forwarded'=>array(),
+        $result=array('Forwarded'=>[],
                     );
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
@@ -184,10 +184,10 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function forwardEntry($base,$sourceEntry,$result,$testRun){
         $params=current($base['forwardingparams']);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $sample=array();
-        $forwardTo=array();
-        $targets=array();
-        $equations=array();
+        $sample=[];
+        $forwardTo=[];
+        $targets=[];
+        $equations=[];
         foreach($base['forwardingrules'] as $ruleId=>$rule){
             $forwardOnSuccess=$rule['Content']['Forward on success'];
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleId)[0];

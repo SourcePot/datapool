@@ -72,7 +72,7 @@ class CSVtools{
         // The options are filtered by the $validate argument.
         // If $index is >0 the alias char is returned if $validate is empty or label if $validate is not empty.
         if ($index===FALSE){
-            $result=array();
+            $result=[];
             foreach($this->csvAlias as $index=>$aliasArr){
                 $validatorKey='valid'.ucfirst($validate);
                 if (empty($aliasArr[$validatorKey])){continue;}
@@ -101,7 +101,7 @@ class CSVtools{
     
     private function csvSetting():array
     {
-        $csvSettings=array();
+        $csvSettings=[];
         foreach($this->csvSettings as $settingKey=>$settingValueIndex){
             if (!isset($this->csvAlias[$settingValueIndex])){continue;}
             $csvSettings[$settingKey]=$this->csvAlias[$settingValueIndex]['chr'];
@@ -116,15 +116,15 @@ class CSVtools{
         } else {
             $csvFile=$selector;
         }
-        if (!is_file($csvFile)){yield array();}
+        if (!is_file($csvFile)){yield [];}
         $csvSettings=$this->csvSetting();
         $csv=new \SplFileObject($csvFile);
         $csv->setCsvControl($csvSettings['separator'],$csvSettings['enclosure'],$csvSettings['escape']);
-        $keys=array();
+        $keys=[];
         $rowIndex=0;
         while($csv->valid()){
             $csvArr=$csv->fgetcsv();
-            $result=array();
+            $result=[];
             foreach($csvArr as $columnIndex=>$cellValue){
                 if (isset($keys[$columnIndex])){
                     $result[$keys[$columnIndex]]=$cellValue;
@@ -138,12 +138,12 @@ class CSVtools{
         }
     }
     
-    public function entry2csv(array $entry=array()):array|bool
+    public function entry2csv(array $entry=[]):array|bool
     {
         // When called with an object this method adds the object to a session var space for later
         // csv-file creation. When the class is created the session var space will be written to respective csv-file-objects
         // csv-file name = $entry['Name'], if $entry['EntryId'] is not set it will be created from $entry['Name']
-        //$_SESSION['csvVarSpace']=array();
+        //$_SESSION['csvVarSpace']=[];
         if (empty($entry) && isset($_SESSION['csvVarSpace'])){
             $statistics=array('csv entries'=>0,'row count'=>0,'header'=>'');
             $csvSetting=$this->csvSetting();
@@ -183,9 +183,9 @@ class CSVtools{
             $elementId=$entry['EntryId'];
             $flatContentArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry['Content']);
             if (!isset($_SESSION['csvVarSpace'][$elementId])){
-                $_SESSION['csvVarSpace'][$elementId]=array('rows'=>array(),'entry'=>$entry,'first row'=>$flatContentArr);
+                $_SESSION['csvVarSpace'][$elementId]=array('rows'=>[],'entry'=>$entry,'first row'=>$flatContentArr);
             }
-            $row=array();
+            $row=[];
             foreach($_SESSION['csvVarSpace'][$elementId]['first row'] as $column=>$firstRowValue){
                 if (isset($flatContentArr[$column])){$row[$column]=$flatContentArr[$column];} else {$row[$column]='?';}
             }
@@ -193,7 +193,7 @@ class CSVtools{
             return $entry;
         } else if (!isset($_SESSION['csvVarSpace'])){
             // nothing to do
-            $_SESSION['csvVarSpace']=array();
+            $_SESSION['csvVarSpace']=[];
         } else {
             $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2);
             $this->oc['logger']->log('notice','Method "{function}" called by "{trace}" without content',array('function'=>__FUNCTION__,'trace'=>$trace[1]['function']));    
@@ -228,7 +228,7 @@ class CSVtools{
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
         $settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
-        $debugArr=array('arr in'=>$arr,'settings in'=>$settings,'valuesToUpdate'=>array());
+        $debugArr=array('arr in'=>$arr,'settings in'=>$settings,'valuesToUpdate'=>[]);
         $attachedFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         if (!is_file($attachedFile)){return $arr;}
         $csvEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
@@ -237,7 +237,7 @@ class CSVtools{
             if (!isset($settings[$settingKey])){$settings[$settingKey]=$settingValue;}
         }
         // form processing
-        $valuesToUpdate=array();
+        $valuesToUpdate=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (!empty($formData['cmd']) && isset($formData['val']['settings'])){
             // csv settings
@@ -251,10 +251,10 @@ class CSVtools{
         }
         // create sample
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $columns=array();
+        $columns=[];
         $rowCount=0;
         $rowLimitCount=0;
-        $matrix=array();
+        $matrix=[];
         foreach($this->csvIterator($arr['selector']) as $rowIndex=>$rowArr){
             $csvEntry['Content']=$rowArr;
             if ($rowLimitCount<$settings['limit'] && $rowIndex>=$settings['offset']){
@@ -305,7 +305,7 @@ class CSVtools{
         $selectArr['value']=$settings['mode'];
         $selectArr['options']=array('Show','Edit');
         $modeSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $matrix=array();
+        $matrix=[];
         $matrix['Cntr']['Offset']=array('tag'=>'input','type'=>'range','min'=>0,'max'=>($rowCount>$settings['limit'])?$rowCount-$settings['limit']:0,'value'=>$settings['offset'],'key'=>array('settings','offset'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
         $matrix['Cntr']['Limit']=$limitSelector;
         if (empty($settings['mode'])){

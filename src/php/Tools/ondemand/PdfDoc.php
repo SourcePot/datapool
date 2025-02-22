@@ -12,8 +12,8 @@ namespace SourcePot\Datapool\Tools;
 
 class PdfDoc extends \FPDF{
     
-    private $header=array();
-    private $footer=array();
+    private $header=[];
+    private $footer=[];
     private $logo=FALSE;
     protected $B=0;
     protected $I=0;
@@ -38,7 +38,7 @@ class PdfDoc extends \FPDF{
                     // Extract attributes
                     $a2=explode(' ',$e);
                     $tag=strtoupper(array_shift($a2));
-                    $attr=array();
+                    $attr=[];
                     foreach($a2 as $v){
                         if(preg_match('/([^=]*)=["\']?([^"\']*)/',$v,$a3)){$attr[strtoupper($a3[1])]=$a3[2];}
                     }

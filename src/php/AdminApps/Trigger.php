@@ -35,23 +35,23 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             if ($selector['Group']==='Transmitter'){
                 $visibility=array('EntryId'=>FALSE,'Folder'=>FALSE);
             } else {
-                $visibility=array();
+                $visibility=[];
             }
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer('SourcePot\Datapool\Foundation\Signals',$visibility);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState('SourcePot\Datapool\Foundation\Signals',array('Group'=>FALSE,'Folder'=>FALSE));
             $html='';
             if ($selector['Group']==='signal'){
                 if (empty($selector['Folder'])){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal overview widget','generic',$selector,array('method'=>'signalDisplayWrapper','classWithNamespace'=>'SourcePot\Datapool\Foundation\Signals'),array());
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal overview widget','generic',$selector,array('method'=>'signalDisplayWrapper','classWithNamespace'=>'SourcePot\Datapool\Foundation\Signals'),[]);
                 } else {
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Name') as $entry){
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPlot(array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']));
                     }
                 }
             } else if ($selector['Group']==='trigger'){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger widget','generic',array(),array('method'=>'triggerWidgetWrapper','classWithNamespace'=>__CLASS__),array());
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger widget','generic',[],array('method'=>'triggerWidgetWrapper','classWithNamespace'=>__CLASS__),[]);
             } else if ($selector['Group']==='Transmitter'){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Message widget','generic',array(),array('method'=>'messageWidgetWrapper','classWithNamespace'=>__CLASS__),array());
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Message widget','generic',[],array('method'=>'messageWidgetWrapper','classWithNamespace'=>__CLASS__),[]);
             } else {
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Performance','keep-element-content'=>TRUE));
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(array('Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Root::run'),FALSE,'Read','Name') as $entry){

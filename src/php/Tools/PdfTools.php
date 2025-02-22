@@ -14,7 +14,7 @@ class PdfTools{
 
     private $oc;
 
-    private $pageSettings=array();
+    private $pageSettings=[];
     private $S='';
     
     private $formats=array('a4'=>array('width'=>210,'height'=>297),
@@ -63,9 +63,9 @@ class PdfTools{
         return $parser;
     }
 
-    public function text2arrSpatie($file='',array $entry=array()):array
+    public function text2arrSpatie($file='',array $entry=[]):array
     {
-        $entry['error']=(isset($entry['error']))?$entry['error']:array();
+        $entry['error']=(isset($entry['error']))?$entry['error']:[];
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable'])){
             $this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']='';
@@ -99,9 +99,9 @@ class PdfTools{
         return $entry;
     }
 
-    public function text2arrSmalot($file='',array $entry=array()):array
+    public function text2arrSmalot($file='',array $entry=[]):array
     {
-        $entry['error']=(isset($entry['error']))?$entry['error']:array();
+        $entry['error']=(isset($entry['error']))?$entry['error']:[];
         // get parser setting, add them if missing
         if (!isset($this->pageSettings['Content']['Smalot'])){
             $this->pageSettings['Content']['Smalot']='';
@@ -145,14 +145,14 @@ class PdfTools{
         return $text;
     }
     
-    public function attachments2arrSmalot($file,array $entry=array()):array
+    public function attachments2arrSmalot($file,array $entry=[]):array
     {
         $pathinfo=pathinfo($file);
         $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$pathinfo['basename'],'fileName'=>$pathinfo['filename'],'fileExtension'=>$pathinfo['extension'],'attachments'=>0,'embedded'=>0);
         $pdfParser= new \Smalot\PdfParser\Parser();
         $pdfContent=$pdfContent = file_get_contents($file);
         try {
-            $context['attachmentsFailed']=array();
+            $context['attachmentsFailed']=[];
             $pdfParsed = $pdfParser->parseContent($pdfContent);
             $filespecs = $pdfParsed->getObjectsByType('Filespec');
             foreach ($filespecs as $filespec){

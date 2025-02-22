@@ -74,7 +74,7 @@ class Signals{
         $newContent=array('value'=>$value,'dataType'=>$dataType,'timeStamp'=>time());
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
-        $signal=array('Type'=>$this->entryTable.' '.$dataType,'Content'=>array('signal'=>array()));
+        $signal=array('Type'=>$this->entryTable.' '.$dataType,'Content'=>array('signal'=>[]));
         $signal=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($signal,'ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
         $signal=array_merge($signal,$signalSelector);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
@@ -103,7 +103,7 @@ class Signals{
     public function removeSignalsWithoutSource(string $callingClass,string $callingFunction)
     {
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction);
-        $signalSourceSelector=array();
+        $signalSourceSelector=[];
         $signalSourceSelector['Source']=$this->oc[$callingClass]->getEntryTable();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE) as $signal){
             $signalSourceSelector['Name']=$signal['Name'];
@@ -132,13 +132,13 @@ class Signals{
 
     private function updateTrigger(array $signal):array
     {
-        $relevantTrigger=array();
+        $relevantTrigger=[];
         $triggerSelector=array('Source'=>$this->entryTable,'Group'=>'trigger','Content'=>'%'.$signal['EntryId'].'%');
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($triggerSelector,TRUE,'Read','Name') as $trigger){
             $trigger['Read']=$signal['Read'];
             $trigger['Write']=$signal['Write'];
             $trigger['Content']['isActive']=$this->slopDetector($trigger,$signal);
-            if (!isset($trigger['Content']['trigger'])){$trigger['Content']['trigger']=array();}
+            if (!isset($trigger['Content']['trigger'])){$trigger['Content']['trigger']=[];}
             $trigger['Content']['trigger']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($trigger['Content']['trigger'],array('timeStamp'=>time(),'value'=>intval($trigger['Content']['isActive'])),20);
             $relevantTrigger[$trigger['EntryId']]=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($trigger,TRUE);
         }
@@ -147,7 +147,7 @@ class Signals{
     
     private function slopDetector(array $trigger,array $signal):bool
     {
-        $arr=array();
+        $arr=[];
         foreach($signal['Content']['signal'] as $index=>$signalArr){
             if (strcmp($signalArr['dataType'],'int')===0 || strcmp($signalArr['dataType'],'bool')===0){
                 $arr['values'][$index]=intval($signalArr['value']);
@@ -234,12 +234,12 @@ class Signals{
         return $success;
     }
 
-    private function getTriggerRow(array $trigger=array()):array
+    private function getTriggerRow(array $trigger=[]):array
     {
         $callingFunction='getTriggerWidget';
         $arr=array('Signal'=>$this->getSignalOptions());
         $arr['Active if']=$this->activeIf;
-        $row=array();
+        $row=[];
         $isNewRow=empty($trigger['EntryId']);
         if (!isset($trigger['EntryId'])){$trigger['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();}
         if (isset($trigger['Name'])){$value=$trigger['Name'];} else {$value='My new trigger';}
@@ -282,9 +282,9 @@ class Signals{
         return $arr;
     }
 
-    public function getSignalDisplay(array $selector=array()):string
+    public function getSignalDisplay(array $selector=[]):string
     {
-        $matrices=array();
+        $matrices=[];
         $selector['Source']=$this->getEntryTable();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
             $signalParams=array('min'=>0,'max'=>FALSE);
@@ -332,7 +332,7 @@ class Signals{
             if (!isset($signalParams['currentValue'])){
                 $signalValue=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'empty','keep-element-content'=>TRUE));
             } else if (is_bool($signalParams['currentValue'])){
-                $element=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($signalParams['currentValue'],array(),FALSE);
+                $element=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($signalParams['currentValue'],[],FALSE);
                 $signalValue=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
             } else if (is_numeric($signalParams['currentValue'])){
                 $title='value='.$signalParams['currentValue']."\n";
@@ -343,7 +343,7 @@ class Signals{
                 $signalValue.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$signalParams['min'],'style'=>array('float'=>'left','clear'=>'left')));
                 $signalValue.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$signalParams['max'],'style'=>array('float'=>'right','clear'=>'right')));
             } else {
-                $subMatrix=array('value'=>array(),'count'=>array());
+                $subMatrix=array('value'=>[],'count'=>[]);
                 foreach($signalParams['min'] as $value=>$valueCount){
                     $valueString=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE,'class'=>(($value==$signalParams['currentValue'])?'status-on':'status-off')));
                     $subMatrix['value'][$value]=$valueString;
@@ -359,18 +359,18 @@ class Signals{
         if (count($matrices)===1){
             $matrix=current($matrices);
             ksort($matrix);
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$folder,'hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array()));;
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$folder,'hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>[]));;
         } else{
             ksort($matrices);
             foreach($matrices as $folder=>$matrix){
                 ksort($matrix);
-                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$folder,'hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>array()));;
+                $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$folder,'hideKeys'=>FALSE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'style'=>[]));;
             }
         }
         return $html;
     }
 
-    public function getSignalPlot(array $selector=array()):string|array
+    public function getSignalPlot(array $selector=[]):string|array
     {
         if (empty($selector['function'])){
             // draw plot pane request
@@ -390,13 +390,13 @@ class Signals{
             return $html;
         } else {
             // return plot data request
-            $plotData=array('use'=>'signalPlot','meta'=>$selector,'data'=>array());
+            $plotData=array('use'=>'signalPlot','meta'=>$selector,'data'=>[]);
             $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
                 $folderComps=explode('\\',$entry['Folder']);
                 $plotData['meta']['title']=array_pop($folderComps);
                 $plotData['meta']['title'].=' → '.$entry['Name'];
-                $timeIndices=array();
+                $timeIndices=[];
                 foreach($entry['Content']['signal'] as $index=>$signal){
                     $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
                     // get time index
@@ -424,21 +424,21 @@ class Signals{
         
     }
     
-    public function getSignalOptions(array $selector=array()):array
+    public function getSignalOptions(array $selector=[]):array
     {
         $selector['Group']='signal';
         return $this->getOptions($selector,TRUE);
     }
     
-    public function getTriggerOptions(array $selector=array()):array
+    public function getTriggerOptions(array $selector=[]):array
     {
         $selector['Group']='trigger';
         return $this->getOptions($selector,TRUE);
     }
 
-    public function getOptions(array $selector=array(),bool $isSystemCall=FALSE):array
+    public function getOptions(array $selector=[],bool $isSystemCall=FALSE):array
     {
-        $options=array();
+        $options=[];
         $selector['Source']=$this->getEntryTable();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
             $classStartPos=strrpos($entry['Folder'],'\\');

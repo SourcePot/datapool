@@ -17,7 +17,7 @@ final class MiscTools{
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
     public const UNYCOM_REGEX='/([0-9]{4})([ ]{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2})\s/u';
     
-    public $emojis=array();
+    public $emojis=[];
     private $emojiFile='';
 
     private $multipleHitsStatistic=[];
@@ -125,7 +125,7 @@ final class MiscTools{
     */
     public function style2arr(string $style):array
     {
-        $arr=array();
+        $arr=[];
         $styleChunks=explode(';',$style);
         while($styleChunk=array_shift($styleChunks)){
             $styleDef=explode(':',$styleChunk);
@@ -218,7 +218,7 @@ final class MiscTools{
         }
     }
     
-    public function bool2element($value,array $element=array(),bool $invertColors=FALSE):array
+    public function bool2element($value,array $element=[],bool $invertColors=FALSE):array
     {
         $boolval=$this->str2bool($value);
         $element['class']=($boolval xor $invertColors)?'status-on':'status-off';
@@ -324,7 +324,7 @@ final class MiscTools{
     public function addEntryId(array $entry,array $relevantKeys=array('Source','Group','Folder','Name'),$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
     {
         if (!empty($entry['EntryId']) && $keepExistingEntryId){return $entry;}
-        $base=array();
+        $base=[];
         foreach($relevantKeys as $keyIindex=>$relevantKey){
             if (isset($entry[$relevantKey])){
                 if ($entry[$relevantKey]!==FALSE){$base[]=$entry[$relevantKey];}
@@ -380,7 +380,7 @@ final class MiscTools{
         //$html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
         $html=file_get_contents('D:/Full Emoji List, v15.0.htm');
         if (empty($html)){return FALSE;}
-        $result=array();
+        $result=[];
         $rows=explode('</tr>',$html);
         while($row=array_shift($rows)){
             $startPos=mb_strpos($row,'<tr');
@@ -441,7 +441,7 @@ final class MiscTools{
     
     public function var2color($var,$colorScheme=0,$light=FALSE,$decimal=TRUE):string
     {
-        $colorArr=array();
+        $colorArr=[];
         $hash=$this->getHash($var);
         $colorValuesArr=str_split($hash,2);
         for($index=0;$index<3;$index++){
@@ -512,7 +512,7 @@ final class MiscTools{
     
     public function arr2selector(array $arr,array $defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'app'=>'')):array
     {
-        $selector=array();
+        $selector=[];
         foreach($defaultValues as $key=>$defaultValue){
             $selector[$key]=(empty($arr[$key]))?$defaultValue:$arr[$key];
             $selector[$key]=(mb_strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
@@ -522,7 +522,7 @@ final class MiscTools{
 
     public function arr2entry(array $arr):array
     {
-        $entry=array();
+        $entry=[];
         $Source=$arr['Source']??'settings';
         $entryTemplate=$GLOBALS['dbInfo'][$Source];
         foreach($entryTemplate as $column=>$infoArr){
@@ -534,7 +534,7 @@ final class MiscTools{
     
     public function arrRemoveEmpty(array $arr)
     {
-        $flatResultArr=array();
+        $flatResultArr=[];
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $flatKey=>$value){
             if (empty($value)){continue;}
@@ -609,12 +609,12 @@ final class MiscTools{
                 $arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);
             }
             if (empty($arr)){
-                return array();
+                return [];
             } else {
                 return $arr;
             }
         } else {
-            return array();
+            return [];
         }
     }
     
@@ -624,14 +624,14 @@ final class MiscTools{
     public function arr2flat(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
         if (!is_array($arr)){return $arr;}
-        $flat=array();
+        $flat=[];
         $this->arr2flatHelper($arr,$flat,'',$S);
         return $flat;
     }
     
     private function arr2flatHelper($arr,&$flat,$oldKey='',string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR)
     {
-        $result=array();
+        $result=[];
         foreach ($arr as $key=>$value){
             if (strlen(strval($oldKey))===0){$newKey=$key;} else {$newKey=$oldKey.$S.$key;}
             if (is_array($value)){
@@ -654,9 +654,9 @@ final class MiscTools{
     public function flat2arr($arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR)
     {
         if (!is_array($arr)){return $arr;}
-        $result=array();
+        $result=[];
         foreach($arr as $key=>$value){
-            if ($value==='{}'){$value=array();}
+            if ($value==='{}'){$value=[];}
             $result=array_replace_recursive($result,$this->flatKey2arr($key,$value,$S));
         }
         return $result;
@@ -667,7 +667,7 @@ final class MiscTools{
     */
     public function subflat2arr(array $flatArr,string $subFlatKey='',string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
-        $subFlatArr=array();
+        $subFlatArr=[];
         foreach($flatArr as $flatKey=>$flatValue){
             if (strpos($flatKey,$subFlatKey)===0){
                 $newKey=trim(substr($flatKey,mb_strlen($subFlatKey)),$S);
@@ -727,7 +727,7 @@ final class MiscTools{
     */
     public function flatArrLeaves(array $flatArr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
-        $leaves=array();
+        $leaves=[];
         foreach($flatArr as $flatKey=>$flatValue){
             $leafKey=explode($S,$flatKey);
             $leafKey=array_pop($leafKey);
@@ -782,7 +782,7 @@ final class MiscTools{
         if ($statistic===FALSE){
             $statistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
         }
-        $str=array();
+        $str=[];
         foreach($statistic as $key=>$value){
             if (empty($value)){continue;}
             if (is_array($value)){
@@ -799,10 +799,10 @@ final class MiscTools{
     */
     public function arr2matrix(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$previewOnly=FALSE):array
     {
-        $matrix=array();
+        $matrix=[];
         $previewRowCount=3;
         $rowIndex=0;
-        $rows=array();
+        $rows=[];
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
             $columns=explode($S,strval($flatKey));
@@ -852,7 +852,7 @@ final class MiscTools{
     {
         // Example: Arguments "array('deleted'=>2,'inserted'=>1,'steps'=>'Open web page','done'=>FALSE)" and "array('deleted'=>0,'inserted'=>4,'steps'=>'Close web page','done'=>TRUE)"
         // will return array('deleted'=>2,'inserted'=>5,'steps'=>'Open web page|Close web page','done'=>TRUE)
-        $result=array();
+        $result=[];
         array_walk_recursive($arrays,function($item,$key) use (&$result){
             if (is_numeric($item)){
                 $result[$key]=isset($result[$key])?intval($item)+intval($result[$key]):intval($item);
@@ -1091,7 +1091,7 @@ final class MiscTools{
     public function convert2codepfad($value):array
     {
         $codepfade=explode(';',strval($value));
-        $arr=array();
+        $arr=[];
         foreach($codepfade as $codePfadIndex=>$codepfad){
             $codepfadComps=explode('\\',$codepfad);
             if ($codePfadIndex===0){
@@ -1176,7 +1176,7 @@ final class MiscTools{
             $matchSelector[$matchColumn]=$dbNeedle;
         }
         // get possible matches
-        $bestMatch=array('probability'=>0,'Content'=>array(),'Params'=>array());
+        $bestMatch=array('probability'=>0,'Content'=>[],'Params'=>[]);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
             // get sample
             $sample=$matchEntry[$matchColumn];

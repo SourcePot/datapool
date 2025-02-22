@@ -15,7 +15,7 @@ class Explorer{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
                                  
     private $selectorTemplate=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE);
     private $isVisibleTemplate=array('Source'=>FALSE,'Group'=>TRUE,'Folder'=>TRUE,'EntryId'=>TRUE);
@@ -60,7 +60,7 @@ class Explorer{
         return $entry;
     }
 
-    public function getExplorer(string $callingClass, array $visibility=array(), bool $addEntryByFileUpload=TRUE):string
+    public function getExplorer(string $callingClass, array $visibility=[], bool $addEntryByFileUpload=TRUE):string
     {
         $selector=$this->appProcessing($callingClass);
         $this->addEntryByFileUpload=$addEntryByFileUpload;
@@ -71,7 +71,7 @@ class Explorer{
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Explorer'));
         $selectorsHtml=$this->getSelectors($callingClass);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>array()));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>[]));
         return $html;
     }
 
@@ -81,7 +81,7 @@ class Explorer{
         $stateKeys=array('selectedKey'=>key($selectorPageState),'nextKey'=>key($selectorPageState));
         $lngNeedle='|'.$_SESSION['page state']['lngCode'].'|';
         $html='';
-        $selector=array();
+        $selector=[];
         foreach($this->selectorTemplate as $column=>$initValue){
             $selectorHtml='';
             $options=array(\SourcePot\Datapool\Root::GUIDEINDICATOR=>'&larrhk;');
@@ -143,7 +143,7 @@ class Explorer{
         return $html;
     }
     
-    public function getGuideEntry(array $selector,array $template=array()):array|bool
+    public function getGuideEntry(array $selector,array $template=[]):array|bool
     {
         if (empty($selector['Source'])){
             // selector is insufficient, return selector
@@ -177,7 +177,7 @@ class Explorer{
     private function updateGuideEntries(array $oldSelector,array $newSelector):array
     {
         $oldSelector['Type']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($oldSelector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,array(),FALSE) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($oldSelector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,[],FALSE) as $entry){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
             $entry=array_merge($entry,$this->selectorTemplate);
             $guideEntry=$this->getGuideEntry($newSelector,$entry);
@@ -187,7 +187,7 @@ class Explorer{
     
     private function addGuideEntry2selector(array $selector,array $guideEntry):array
     {
-        $guideTemplate=array();
+        $guideTemplate=[];
         if (isset($guideEntry['Content']['settings'])){$guideTemplate=$guideEntry['Content']['settings'];}
         if (isset($guideEntry['Read'])){$guideTemplate['Read']=$guideEntry['Read'];}
         if (isset($guideEntry['Write'])){$guideTemplate['Write']=$guideEntry['Write'];}
@@ -197,7 +197,7 @@ class Explorer{
 
     public function selector2setting(array $selector, string $key='')
     {
-        $selectorSettings=array();
+        $selectorSettings=[];
         if (isset($selector['File upload extract archive'])){$selectorSettings['File upload extract email parts']=$selector['File upload extract archive'];}
         if (isset($selector['File upload extract archive'])){$selectorSettings['File upload extract archive']=$selector['File upload extract archive'];}
         if (isset($selector['pdf-file parser'])){$selectorSettings['pdf-file parser']=$selector['pdf-file parser'];}
@@ -210,7 +210,7 @@ class Explorer{
                         'pdf-file parser'=>$pdfParser['@default'],
                         'widget'=>($selector['Source']=='documents')?'entryList':'entryByEntry'
                     );
-        $setting=array_merge($initSettings,$guideEntry['Content']['settings']??array(),$selectorSettings);
+        $setting=array_merge($initSettings,$guideEntry['Content']['settings']??[],$selectorSettings);
         if (empty($key)){
             return $setting;
         } else {
@@ -320,7 +320,7 @@ class Explorer{
                 $fileElement=array('tag'=>'input','type'=>'text','placeholder'=>'e.g. Documents','key'=>array($stateKeys['nextKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
                 $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
             }
-            $addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array());
+            $addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
             if (empty($access)){$arr['html']='';}
         }
@@ -335,11 +335,11 @@ class Explorer{
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Edit'));
         if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
             $selector=array('Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']);
-            if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,array(),array());}
+            if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,[],[]);}
         } else {
             $fileElement=array('tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>array($stateKeys['selectedKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
-            $addBtn=array('tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>array('edit'),'value'=>$stateKeys['selectedKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array());
+            $addBtn=array('tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>array('edit'),'value'=>$stateKeys['selectedKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
         }
         $arr=array('html'=>$html,'icon'=>'&#9998;','title'=>'Edit selected "'.$stateKeys['selectedKey'].'"','class'=>'explorer');
@@ -381,7 +381,7 @@ class Explorer{
                 $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($guideEntry);
             }
             // compile html: upload and presentation settings
-            $matrix=array();
+            $matrix=[];
             $arr=array('selector'=>$guideEntry,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
             foreach($settings as $key=>$setting){
                 $arr['options']=$options[$key];
@@ -401,7 +401,7 @@ class Explorer{
         $arr=array('html'=>'','callingClass'=>$callingClass,'callingFunction'=>__FUNCTION__,'icon'=>'@','title'=>'Send entry as email','class'=>'explorer');
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         if (!empty($arr['selector']['EntryId'])){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Send entry','sendEntry',$arr['selector'],array(),array());
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Send entry','sendEntry',$arr['selector'],[],[]);
         }
         return $arr;
     } 

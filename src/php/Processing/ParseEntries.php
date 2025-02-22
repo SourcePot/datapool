@@ -56,7 +56,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -72,12 +72,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getParseEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing','generic',$callingElement,array('method'=>'getParseEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing','generic',$callingElement,array('method'=>'getParseEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
     }
     
     private function getParseEntriesInfo($callingElement){
         //$regExpTester=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard(htmlentities('https://regexr.com/'));
-        $matrix=array();
+        $matrix=[];
         $matrix['Parser control: Select parser target and type']['Description']='This control panel sets the fundermental parameters.<br/>"Source column" should contain the text to be parsed.<br/>"Target on success" is the Select-Element an entry should be moved to on success and<br/>"Target on failure" the Select-element used for entries that fail.';
         $matrix['Provide rules to divide the text into sections']['Description']='This control panel sets rules to divide the text into sections.<br/>The first section is called "START", all following sections are named by "Section name".<br/>The text section boundery is controlled by the "Regular expression".';
         $matrix['Parser rules: Parse selected entry and copy result to target entry']['Description']='This control panel sets the parser rules. The rules are processed as an ordered list.<br/>Rules are applied to the text section selected by "Rule relevant on section, the "Regular expression" is used to extract releavnt values.<br/>You can use brackets to ecxtract the full match "Match index"=0 or parts of match selected by "Match index">0.<br/>Alternatively to the regular expression you can proviede "Constant or..." as value.<br/>Use "Target data type" to convert the extracted value and "Target column", "Target key" to map the value to the entry.<br/>"Allow multiple hits" will create an array, "Combine on update" combines multiple hits in a new value.';
@@ -99,7 +99,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getParseEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runParseEntries($arr['selector'],FALSE);
@@ -108,7 +108,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -130,7 +130,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // compile html
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing entries settings','generic',$callingElement,array('method'=>'getParseEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing entries settings','generic',$callingElement,array('method'=>'getParseEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -239,7 +239,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!isset($entry['Content']['Section name'])){continue;}
             $this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
         }
-        $base=array('parserparams'=>array(),'parsersectionrules'=>array(),'parserrules'=>array(),'mapperrules'=>array());
+        $base=array('parserparams'=>[],'parsersectionrules'=>[],'parserrules'=>[],'mapperrules'=>[]);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -248,7 +248,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                                  'Failed'=>array('value'=>0),
                                                  'Skip rows'=>array('value'=>0))
                                                 );
-        $result['Mutliple entries → one target']=array();
+        $result['Mutliple entries → one target']=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if ($sourceEntry['isSkipRow']){
                 $result['Parser statistics']['Skip rows']['value']++;
@@ -333,7 +333,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // parse single entry sections
         $parserFailed=FALSE;
-        $resultArr=array();
+        $resultArr=[];
         foreach($sections['singleEntry'] as $sectionId=>$section){
             if ($section===FALSE){continue;}
             $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
@@ -399,7 +399,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $params=current($base['parserparams']);
         $params=$params['Content'];
-        $targetEntry=$result=array();
+        $targetEntry=$result=[];
         $failed=FALSE;
         foreach($base['parserrules'] as $ruleEntryId=>$rule){
             $ruleFailed=FALSE;
@@ -477,12 +477,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function sections(array $base,string $fullText):array
     {
         $text=$fullText;
-        $sections=array('singleEntry'=>array('FULL'=>''),'multipleEntries'=>array());
+        $sections=array('singleEntry'=>array('FULL'=>''),'multipleEntries'=>[]);
         foreach($base['parsersectionrules'] as $ruleKey=>$rule){
             if (!isset($rule['Content']['Section type']) || !isset($rule['Content']['Regular expression'])){continue;}
             $sectionId=$rule['EntryId'];
             if ($rule['Content']['Section type']==='multipleEntries'){
-                $sections['multipleEntries'][$sectionId]=array();
+                $sections['multipleEntries'][$sectionId]=[];
                 do{
                     $textComps=$this->preg_single_split('/'.$rule['Content']['Regular expression'].'/',$text);
                     $text=$textComps[0];
@@ -504,7 +504,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function preg_single_split(string $regex,string $str):array
     {
-        $result=array();
+        $result=[];
         preg_match($regex,$str,$match,PREG_OFFSET_CAPTURE);
         if (isset($match[0][1])){
             $splitpos=$match[0][1]+strlen($match[0][0]);

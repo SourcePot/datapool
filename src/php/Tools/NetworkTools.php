@@ -93,7 +93,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         return $_SESSION['page state']['selected'][$callingClass][$key];
     }
 
-    public function getPageState(string $callingClass,$initState=array())
+    public function getPageState(string $callingClass,$initState=[])
     {
         if (method_exists($callingClass,'getEntryTable') && empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass])){
             // set Source based on relevant database table with regard to the calling class
@@ -227,7 +227,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     {
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',array('Folder'=>'Settings','EntryId'=>$id),TRUE);
         $paramsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
-        if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return array();}
+        if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return [];}
     }
 
     private function id2canvasElement($id):array

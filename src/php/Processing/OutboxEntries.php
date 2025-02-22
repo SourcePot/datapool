@@ -21,7 +21,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $outboxClass='';
     
-    private $recipientOptions=array();
+    private $recipientOptions=[];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -57,7 +57,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -73,11 +73,11 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getOutboxEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Outbox','generic',$callingElement,array('method'=>'getOutboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Outbox','generic',$callingElement,array('method'=>'getOutboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
     }
     
     private function getOutboxEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=[];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
@@ -86,7 +86,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getOutboxEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runOutboxEntries($arr['selector'],0);
@@ -95,7 +95,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -113,7 +113,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getOutboxEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Outbox entries settings','generic',$callingElement,array('method'=>'getOutboxEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Outbox entries settings','generic',$callingElement,array('method'=>'getOutboxEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -128,7 +128,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function outboxParams($callingElement){
-        $return=array('html'=>'','Parameter'=>array(),'result'=>array());
+        $return=array('html'=>'','Parameter'=>[],'result'=>[]);
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $contentStructure=array('Outbox class'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')),
                                 'Recipient'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions),
@@ -204,7 +204,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $outboxParams=$outboxParams['Content'];
         $orgEntry=$entry;
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
-        $entry['Content']=array();
+        $entry['Content']=[];
         // process outbox rules
         if (empty($base['outboxrules'])){
             $result['Outbox statistics']['Error']['Value']='Outbox rules missing';

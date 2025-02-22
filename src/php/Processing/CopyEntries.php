@@ -52,7 +52,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -68,11 +68,11 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getCopyEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying','generic',$callingElement,array('method'=>'getCopyEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying','generic',$callingElement,array('method'=>'getCopyEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
     }
     
      private function getCopyEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=[];
         $matrix['Description']=array('<p>This processor copies entries to various targets.</p>');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
@@ -82,7 +82,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getCopyEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runCopyEntries($arr['selector'],0);
@@ -91,7 +91,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -112,7 +112,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getCopyEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying settings','generic',$callingElement,array('method'=>'getCopyEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying settings','generic',$callingElement,array('method'=>'getCopyEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -136,11 +136,11 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runCopyEntries($callingElement,$testRun=1){
-        $base=array('copyingrules'=>array());
+        $base=array('copyingrules'=>[]);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);
         // get targets
-        $base['targets']=array();
+        $base['targets']=[];
         foreach($base['copyingrules'] as $ruleId=>$rule){
             foreach($base['canvasElements'] as $targetName=>$target){
                 if ($target['EntryId']==$rule['Content']['Target']){

@@ -33,7 +33,7 @@ class Job{
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         // all jobs settings - remove non-existing job methods and add new job methods
         $arr['run']=(isset($arr['run']))?$arr['run']:'';
-        $jobs=array('due'=>array(),'undue'=>array());
+        $jobs=array('due'=>[],'undue'=>[]);
         $allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
         $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
         $allJobsSetting=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Owner'=>'SYSTEM');
@@ -41,7 +41,7 @@ class Job{
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($allJobsSetting,TRUE);
         $allJobsSettingContent=$allJobsSetting['Content'];
-        $allJobsSetting['Content']=array();
+        $allJobsSetting['Content']=[];
         foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('job') as $class=>$initContent){
             $initContent=array_merge($allJobsSettingInitContent,$initContent);
             if (isset($allJobsSettingContent[$class])){
@@ -72,7 +72,7 @@ class Job{
         if (empty($jobs['due'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobs);
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE));
-            $arr['jobVars']=array(); 
+            $arr['jobVars']=[]; 
         } else {
             arsort($jobs['due']);
             reset($jobs['due']);
@@ -83,7 +83,7 @@ class Job{
                            'Group'=>'Job processing','Folder'=>'Var space',
                            'Name'=>$dueJob,
                            'Type'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
-                           'Content'=>array(),
+                           'Content'=>[],
                            );
             $jobVars=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,array('Source','Group','Folder','Name'),'0','',FALSE);
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');

@@ -68,7 +68,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($selector,'ALL_R','ALL_CONTENTADMIN_R');
             // add content article
-            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,array(),array('style'=>array()));
+            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,[],array('style'=>[]));
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
                 $html.=$this->assetManager($selector);
                 $this->copy2assetsDir();
@@ -87,7 +87,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             $flatFile=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files']);
             $fileArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatFile);
             if ($fileArr['error']==0){
-                $selector['Content']=array();
+                $selector['Content']=[];
                 $pathInfo=pathinfo($fileArr['name']);
                 $selector['Content']['src']=$this->entry2asset($selector,$pathInfo['extension'],TRUE);
                 if ($pathInfo['extension']=='pdf'){
@@ -112,7 +112,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         $selector['EntryId']='%_asset';
         $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
         $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'tag','Filter'=>''));
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets','entryList',$selector,$settings,array());
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets','entryList',$selector,$settings,[]);
         //
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9887;'));
         return $html;
@@ -131,7 +131,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     private function copy2assetsDir()
     {
         // delete asset files not present in database
-        $entriesPresentAsAssetFiles=array();
+        $entriesPresentAsAssetFiles=[];
         $files=scandir($GLOBALS['relDirs']['assets']);
         foreach($files as $fileName){
             if (strlen($fileName)<3){continue;}

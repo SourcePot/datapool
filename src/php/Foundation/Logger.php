@@ -19,7 +19,7 @@ class Logger
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
     
     private $levelConfig=array('emergency'=>array('hashIp'=>FALSE,'lifetime'=>'P1Y','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f00','min-width'=>'6rem')),
                                'alert'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f44','min-width'=>'6rem')),
@@ -179,7 +179,7 @@ class Logger
     
     public function getMyLogs():string
     {
-        $arr=array();
+        $arr=[];
         $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
         $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#444'));

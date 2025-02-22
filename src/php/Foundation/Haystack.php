@@ -15,7 +15,7 @@ class Haystack{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
     
     public function __construct(array $oc)
     {
@@ -70,8 +70,8 @@ class Haystack{
         $serachResult['html']=$serachResult['html']??'';
         // compile html
         $arr['html']=(empty($arr['html']))?'':$arr['html'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>array('Query'),'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>array()));
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Search','key'=>array('search'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>array()));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>array('Query'),'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Search','key'=>array('search'),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]));
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('float'=>'none','width'=>'max-content','margin'=>'0 auto')));
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>array('float'=>'left','clear'=>'both','padding'=>'2em 0','width'=>'inherit')));
         $arr['html'].=$serachResult['html'];
@@ -94,8 +94,8 @@ class Haystack{
         //
         $arr['Query']=$query;
         $arr['html']='';
-        $arr['Names']=array();
-        $arr['Hits']=array();
+        $arr['Names']=[];
+        $arr['Hits']=[];
         foreach($selectors as $selector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$selector['orderBy'],$selector['isAsc'],$selector['limit'],0) as $entry){
                 $arr['Names'][$entry['EntryId']]=$entry['Name'];

@@ -15,7 +15,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
 
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
     
     private $boolStr=array(0=>'FALSE',1=>'TRUE');
     
@@ -49,8 +49,8 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>'ALL_CONTENTADMIN_R','Class'=>__CLASS__);
         } else {
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',array(),array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array('style'=>array('background-color'=>'#c9ffc9')));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing result','generic',array(),array('method'=>'getTestHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',[],array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array('style'=>array('background-color'=>'#c9ffc9')));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing result','generic',[],array('method'=>'getTestHtml','classWithNamespace'=>__CLASS__),[]);
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -87,7 +87,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private function testParams($arr){
         // get entry
         $arr=$this->finalizeSelector($arr,__FUNCTION__,'settings');
-		$arr['selector']['Content']=array();
+		$arr['selector']['Content']=[];
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
@@ -97,7 +97,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
         }
         // get options
-        $methods=array();
+        $methods=[];
         $classes=array_keys($this->oc);
         $classes=array_combine($classes,$classes);
         ksort($classes);
@@ -108,7 +108,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 ksort($methods);
             }
         }
-        //$return=array('html'=>'','Parameter'=>array(),'result'=>array());
+        //$return=array('html'=>'','Parameter'=>[],'result'=>[]);
         //$matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
         $contentStructure=array('class'=>array('method'=>'select','value'=>'','options'=>$classes,'excontainer'=>TRUE),
                                 'method'=>array('method'=>'select','value'=>'','options'=>$methods,'excontainer'=>TRUE),
@@ -133,7 +133,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $testingParamsId=$this->getParamsId($arr['testParams']['class'],$arr['testParams']['method']);
         if (!method_exists($arr['testParams']['class'],$arr['testParams']['method'])){return $arr;}
         // get content structure from args
-        $contentStructure=array();
+        $contentStructure=[];
         $f=new \ReflectionMethod($arr['testParams']['class'],$arr['testParams']['method']);
         foreach($f->getParameters() as $pIndex=>$param){
             // get default value
@@ -165,7 +165,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private function test($arr)
     {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        $results=array();
+        $results=[];
         if (isset($formData['cmd']['array'])){
             $results=$this->runTest($arr,0);
         } else if (isset($formData['cmd']['json'])){
@@ -175,7 +175,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         }
         // test control form
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
-        $cntrMatrix=array();
+        $cntrMatrix=[];
         $btnArr['value']='Run (array -> table)';
         $btnArr['key']=array('array');
         $cntrMatrix['Commands']['Run']=$btnArr;
@@ -196,21 +196,21 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     
     private function runTest(array $arr,int $outputFormat=0):array
     {
-        $results=array();
+        $results=[];
         // load configuration
-        $args=array();
-        $config=array();
+        $args=[];
+        $config=[];
         // get params
-        $params=$this->finalizeSelector(array(),'testParams','settings');
+        $params=$this->finalizeSelector([],'testParams','settings');
         $params=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($params['selector'],TRUE);
         $config['params']=$params['Content'];
         // get args
         $testingParamsId=$this->getParamsId($config['params']['class'],$config['params']['method']);
-        $tests=$this->finalizeSelector(array(),'testArgs',$testingParamsId);
+        $tests=$this->finalizeSelector([],'testArgs',$testingParamsId);
         $tests=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($tests['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tests,TRUE,'Read','EntryId',TRUE) as $argsEntry){
             $testIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($argsEntry['EntryId']);
-            $config['tests'][$testIndex]=array();
+            $config['tests'][$testIndex]=[];
             while ($argsEntry['Content']){
                 $argName=key($argsEntry['Content']);
                 $argValue=array_shift($argsEntry['Content']);
@@ -219,7 +219,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         // testing
-        $results['Result']=array();
+        $results['Result']=[];
         foreach($config['tests'] as $testIndex=>$args){
             $valueArr=$this->testArgs2valueArr($args);
             $context=$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($this->oc[$config['params']['class']],$config['params']['method'],$valueArr);
@@ -230,7 +230,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     
     private function testArgs2valueArr(array $args):array
     {
-        $valueArr=array();
+        $valueArr=[];
         foreach($args as $argName=>$arrNameValueType){
             if ($arrNameValueType['type']==='array'){
                 $valueArr[]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($arrNameValueType['value']);

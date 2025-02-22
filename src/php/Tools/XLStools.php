@@ -43,20 +43,20 @@ class XLStools{
         } else {
             $xlsFile=$selector;
         }
-        if (!is_file($xlsFile)){yield array();}
+        if (!is_file($xlsFile)){yield [];}
         $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader(ucfirst($reader));
         $reader->setReadDataOnly(TRUE);
         try{
             $spreadsheet=$reader->load($xlsFile);
         } catch(\Exception $e){
             $this->oc['logger']->log('error','"{function}" failed to load "{file}"',array('function'=>__FUNCTION__,'file'=>$xlsFile));         
-            yield array();
+            yield [];
         }
         $worksheet=$spreadsheet->getActiveSheet();
         $xls=$worksheet->getRowIterator();
-        $keys=array();
+        $keys=[];
         while($xls->valid()){
-            $result=array();
+            $result=[];
             $cellIterator=$xls->current()->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(FALSE);
             foreach($cellIterator as $columnIndex=>$cell){

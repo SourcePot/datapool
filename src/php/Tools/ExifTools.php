@@ -55,7 +55,7 @@ class ExifTools{
                     'MaxApertureValue'=>'MaxApertureValue','SubjectDistance'=>'SubjectDistance','SubjectDistanceRange'=>'SubjectDistanceRange',
                     'MeteringMode'=>'MeteringMode','Flash'=>'Flash','FocalLengthIn35mmFilm'=>'FocalLengthIn35mmFilm',
                     );
-        $entry['Params']['Camera']=array();
+        $entry['Params']['Camera']=[];
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){continue;}
             $entry['exif'][$sourceKey]=$this->normalizeEncoding($entry['exif'][$sourceKey]);
@@ -73,7 +73,7 @@ class ExifTools{
         } else {
             $oldGeo=array('lat'=>9999,'lon'=>9999);
         }
-        $entry['Params']['Geo']=array();
+        $entry['Params']['Geo']=[];
         // get GPS date time
         if (isset($entry['exif']['GPSTimeStamp']) && isset($entry['exif']['GPSDateStamp'])){
             // get UTC date time
@@ -104,7 +104,7 @@ class ExifTools{
         }
         // skip further processing if GPS information is missing
         if (empty($entry['Params']['Geo'])){
-            $entry['Params']['Address']=array();
+            $entry['Params']['Address']=[];
             return $entry;
         }
         // if lon and lat are present, get multiplier from exif

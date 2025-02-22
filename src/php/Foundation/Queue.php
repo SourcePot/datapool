@@ -17,7 +17,7 @@ class Queue
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
     
     public function __construct(array $oc)
     {
@@ -166,7 +166,7 @@ class Queue
         // get processed steps
         $callingClass=explode('\\',$callingClass);
         $metaEntriesSelector=array('Source'=>$this->entryTable,'Group'=>'meta','Folder'=>array_pop($callingClass));
-        $metaArr=array('class'=>$metaEntriesSelector['Folder'],'Meta entries'=>array(),'Empty'=>TRUE,'All done'=>FALSE);
+        $metaArr=array('class'=>$metaEntriesSelector['Folder'],'Meta entries'=>[],'Empty'=>TRUE,'All done'=>FALSE);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($metaEntriesSelector,TRUE,'Read','Name',TRUE) as $metaEntry){
             $metaArr['Empty']=FALSE;
             $initTimeStamp=$metaEntry['Content']['Init timestamp'];
@@ -189,7 +189,7 @@ class Queue
         }
         // create result
         ksort($metaArr['Meta entries']);
-        $queueMatrix=array();
+        $queueMatrix=[];
         foreach($metaArr['Meta entries'] as $timestamp=>$stepArr){
             if ($stepArr['Queue size']===0 && $stepArr['Queue max']===0){
                 $percentage=0;
@@ -229,7 +229,7 @@ class Queue
             $entry['Content'][$EntryId]=time();
             $Content=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry['Content']);
             $sql="UPDATE `".$this->getEntryTable()."` SET `Content`='".$Content."' WHERE `EntryId`='".$entry['EntryId']."';";
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array());
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[]);
         } else {
             $entry['Content']=array($EntryId=>time());
             $entry['Params']['lifetime']=(empty($lifetime))?self::ID_STORE_ENTRYID_LIFETIME:$lifetime;
@@ -252,7 +252,7 @@ class Queue
     {
         $selector=$this->getIdStoreSelector($storeId);
         $sql=$sql="DELETE FROM `".$selector['Source']."` WHERE `EntryId`='".$selector['EntryId']."';";
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array());
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[]);
     }
 
     public function idStoreCleanup(array $vars):array
@@ -271,7 +271,7 @@ class Queue
             }
             $Content=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($idStore['Content']);
             $sql="UPDATE `".$this->getEntryTable()."` SET `Content`='".$Content."' WHERE `EntryId`='".$idStore['EntryId']."';";
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,array());
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[]);
         }
         return $vars;
     }
@@ -286,7 +286,7 @@ class Queue
         $selector=$this->getIdStoreSelector($storeId);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
         //
-        $matrix=array();
+        $matrix=[];
         if ($entry){
             $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
             $matrix['Already processed']['Value']='<p>'.count($entry['Content']).'</p>';

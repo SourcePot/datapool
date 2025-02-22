@@ -25,12 +25,12 @@ class Element{
                                 ),
                        
                        // Table
-                       'table'=>array(),
-                       'caption'=>array(),
-                       'tbody'=>array(),
-                       'tr'=>array(),
+                       'table'=>[],
+                       'caption'=>[],
+                       'tbody'=>[],
+                       'tr'=>[],
                        'td'=>array('cell'=>FALSE),
-                       'th'=>array(),
+                       'th'=>[],
                        // Forms
                        'button'=>array('name'=>TRUE),
                        'datalist'=>array('name'=>TRUE),
@@ -50,21 +50,21 @@ class Element{
                        
                        'a'=>array('href'=>FALSE,'target'=>FALSE),
                        // Structural elements
-                       'main'=>array(),
-                       'html'=>array(),
+                       'main'=>[],
+                       'html'=>[],
                        'details'=>array('open'=>FALSE),
-                       'summary'=>array(),
-                       'div'=>array(),
-                       'li'=>array(),
-                       'ol'=>array(),
-                       'ul'=>array(),
-                       'h1'=>array(),
-                       'h2'=>array(),
-                       'h3'=>array(),
-                       'h4'=>array(),
-                       'p'=>array(),
-                       'article'=>array(),
-                       'span'=>array(),
+                       'summary'=>[],
+                       'div'=>[],
+                       'li'=>[],
+                       'ol'=>[],
+                       'ul'=>[],
+                       'h1'=>[],
+                       'h2'=>[],
+                       'h3'=>[],
+                       'h4'=>[],
+                       'p'=>[],
+                       'article'=>[],
+                       'span'=>[],
                        // Media
                        'audio'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'canvas'=>array('height'=>FALSE,'width'=>FALSE),
@@ -85,9 +85,9 @@ class Element{
                        'line'=>array('x1'=>TRUE,'x2'=>TRUE,'y1'=>TRUE,'y2'=>TRUE),
                        'rect'=>array('x'=>TRUE,'y'=>TRUE,'width'=>TRUE,'height'=>TRUE),
                        'tspan'=>array('x'=>FALSE,'y'=>FALSE,'dx'=>FALSE,'dy'=>FALSE),
-                       'clipPath'=>array(),
-                       'use'=>array(),
-                       'defs'=>array(),
+                       'clipPath'=>[],
+                       'use'=>[],
+                       'defs'=>[],
                        );
     
     private $translate=array('p'=>'element-content|title',
@@ -150,7 +150,7 @@ class Element{
             if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}
             $def=array_merge($this->def[''],$this->def[$arr['tag']],$this->specialAttr);
             $nameRequired=(!empty($def['name']));
-            $elementArr=array('tag'=>$arr['tag'],'attr'=>array(),'sessionArr'=>array('type'=>''));
+            $elementArr=array('tag'=>$arr['tag'],'attr'=>[],'sessionArr'=>array('type'=>''));
             foreach($def as $attrName=>$attrCntr){
                 if (isset($arr[$attrName])){
                     $elementArr['sessionArr'][$attrName]=$arr[$attrName];
@@ -180,7 +180,7 @@ class Element{
                 throw new \ErrorException('Function '.__FUNCTION__.': tag "'.$elementArr['tag'].'" required attribute "key" missing.',0,E_ERROR,__FILE__,__LINE__);
             }
             $elementArr['sessionArr']=$this->def2arr($arr,$this->copyKeys2Session,$elementArr['sessionArr']);
-            $arr['selector']=(isset($arr['selector']))?$arr['selector']:array();
+            $arr['selector']=(isset($arr['selector']))?$arr['selector']:[];
             $elementArr['sessionArr']['selector']=$this->def2arr($arr['selector'],$this->copyKeys2selector);
             $elementArr=$this->addElement2session($arr,$elementArr);
         }
@@ -221,7 +221,7 @@ class Element{
         return $string;
     }
 
-    private function def2arr(array $arrIn,array $def,array $arrOut=array()):array
+    private function def2arr(array $arrIn,array $def,array $arrOut=[]):array
     {
         foreach($def as $defKey=>$defCntr){
             if (isset($arrIn[$defKey])){
@@ -266,8 +266,8 @@ class Element{
         unset($arr['hasCover']);
         $elementArrStyle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->attr2value($elementArr['attr']['style']??'');
         $elementArrStyle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($elementArrStyle);
-        $coverPArr=array('tag'=>'p','class'=>'cover','id'=>'cover-'.hrtime(TRUE),'style'=>array(),'element-content'=>'Sure?');
-        $coverDivArr=array('tag'=>'div','class'=>'cover-wrapper','id'=>'cover-wrapper','style'=>array(),'keep-element-content'=>TRUE);
+        $coverPArr=array('tag'=>'p','class'=>'cover','id'=>'cover-'.hrtime(TRUE),'style'=>[],'element-content'=>'Sure?');
+        $coverDivArr=array('tag'=>'div','class'=>'cover-wrapper','id'=>'cover-wrapper','style'=>[],'keep-element-content'=>TRUE);
         // move selected $elementArr styles to the top div
         foreach($elementArrStyle as $styleKey=>$styleValue){
             if (stripos($styleKey,'float')===FALSE && stripos($styleKey,'clear')===FALSE && stripos($styleKey,'margin')===FALSE && stripos($styleKey,'padding')===FALSE && stripos($styleKey,'position')===FALSE && stripos($styleKey,'display')===FALSE){continue;}
@@ -287,7 +287,7 @@ class Element{
      */
     public function formProcessing(string $callingClass,string $callingFunction):array
     {
-        $result=array('cmd'=>array(),'val'=>array(),'changed'=>array(),'files'=>array(),'hasValidFiles'=>FALSE,'selector'=>array(),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
+        $result=array('cmd'=>[],'val'=>[],'changed'=>[],'files'=>[],'hasValidFiles'=>FALSE,'selector'=>[],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         if (isset($_SESSION[$callingClass][$callingFunction])){
             foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){

@@ -57,20 +57,20 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             if (empty($selector['Group'])){
                 $settings=array('hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());    
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,[]);    
             } else {
                 if ($selector['Group']==='Job processing'){
                     // Job processing setting
                     $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,array());    
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,[]);    
                 } else if ($selector['Group']==='Presentation'){
                     // Presentation setting
                     if (empty($selector['Folder'])){
                         $selector['md']='Please select a Folder for class and method based entry presentation settings...';
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Presentation','mdContainer',$selector,array(),array('style'=>array()));
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Presentation','mdContainer',$selector,[],array('style'=>[]));
                     } else {
                         $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,array());
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,[]);
                     }
                 } else if (!empty($selector['EntryId'])){
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
@@ -82,10 +82,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                     }
                 } else if ($selector['Group']==='Feeds'){
                     $settings=array('method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds');
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Feed URL settings','generic',$selector,$settings,array());
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Feed URL settings','generic',$selector,$settings,[]);
                 } else {
                     $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,array());
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,[]);
                 }
                 
             }
@@ -97,7 +97,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
 
     private function settingsOverviewHtml():string
     {
-        $template=array();
+        $template=[];
         $template['Logger']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger'),'description'=>'Here you will find all the logs.');
         $template['Logger errors']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger','Group'=>'error'),'description'=>'Error logs can be found here.');
         $template['Job processing timimg']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'),'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job');
@@ -106,7 +106,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $template['Feeds']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'),'description'=>'Here you can add and remove Feeds.');
         $template['Remote client definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'),'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected');
         // create html
-        $matrix=array();
+        $matrix=[];
         foreach($template as $key=>$def){
             if (!empty($def['selector']['Name'])){
                 $def['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($def['selector']);
@@ -130,10 +130,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $entry['Content']=$setting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
         $this->oc['logger']->log('info','Setting "{name}" updated',array('name'=>$name));    
-        if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
+        if (isset($entry['Content'])){return $entry['Content'];} else {return [];}
     }
     
-    public function getSetting($callingClass,$callingFunction,$initSetting=array(),$name='System',$isSystemCall=FALSE)
+    public function getSetting($callingClass,$callingFunction,$initSetting=[],$name='System',$isSystemCall=FALSE)
     {
         $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
@@ -141,15 +141,15 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
         $entry['Content']=$initSetting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
-        if (isset($entry['Content'])){return $entry['Content'];} else {return array();}
+        if (isset($entry['Content'])){return $entry['Content'];} else {return [];}
     }
     
-    public function getVars($class,$initVars=array(),$isSystemCall=FALSE)
+    public function getVars($class,$initVars=[],$isSystemCall=FALSE)
     {
         return $this->getSetting('Job processing','Var space',$initVars,$class,$isSystemCall);
     }
 
-    public function setVars($class,$vars=array(),$isSystemCall=FALSE)
+    public function setVars($class,$vars=[],$isSystemCall=FALSE)
     {
         return $this->setSetting('Job processing','Var space',$vars,$class,$isSystemCall);
     }

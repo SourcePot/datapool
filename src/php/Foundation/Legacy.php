@@ -36,25 +36,25 @@ class Legacy{
     public function importPage(array $arr):array
     {
         // connect to database and get available tables
-        $tables=array();
+        $tables=[];
         $this->sourceDB=$this->oc['SourcePot\Datapool\Foundation\Database']->connect(__CLASS__,'sourceDb'); 
         foreach ($this->sourceDB->query('SHOW TABLES;') as $row){
             $tables[$row[0]]=FALSE;
         }
         // load settings
-        $setting=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Read'=>65535,'Content'=>array('entries'=>array(),'tables'=>array(),'entryCount'=>0));
+        $setting=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Read'=>65535,'Content'=>array('entries'=>[],'tables'=>[],'entryCount'=>0));
         $setting=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['save'])){
             // table selector
-            $setting['Content']=array('entries'=>array(),'tables'=>array(),'entryCount'=>0);
+            $setting['Content']=array('entries'=>[],'tables'=>[],'entryCount'=>0);
             foreach($tables as $table=>$selected){
                 $setting['Content']['tables'][$table]=isset($formData['val']['tables'][$table]);
             }
             $setting=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($setting,TRUE,FALSE,FALSE);
         } else if (isset($formData['cmd']['load'])){
-            $setting['Content']['entries']=array();
+            $setting['Content']['entries']=[];
             foreach($setting['Content']['tables'] as $table=>$selected){
                 if (!$selected){continue;}
                 foreach ($this->sourceDB->query('SELECT `ElementId` FROM `'.$table.'`;') as $entryId){
@@ -68,7 +68,7 @@ class Legacy{
             while(time()-$start<self::TIMELIMIT_SEC){
                 $entryComps=array_pop($setting['Content']['entries']);
                 if (empty($entryComps)){
-                    $setting['Content']['entries']=array();
+                    $setting['Content']['entries']=[];
                     break;
                 }
                 $this->processEntry(array('Source'=>$entryComps[0],'ElementId'=>$entryComps[1]));
@@ -77,7 +77,7 @@ class Legacy{
         }
         // tables matrix
         $tablesStr='';
-        $tablesMatrix=array();
+        $tablesMatrix=[];
         foreach($tables as $table=>$selected){
             if (empty($setting['Content']['tables'][$table])){
                 $tablesMatrix[$table]=array('Import'=>array('tag'=>'input','type'=>'checkbox','checked'=>FALSE,'key'=>array('tables',$table),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
@@ -88,7 +88,7 @@ class Legacy{
         }
         $tablesMatrix['']=array('Import'=>array('tag'=>'button','element-content'=>'Save','key'=>array('save'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
         // to do matrix
-        $toDoMatrix=array();
+        $toDoMatrix=[];
         $toDoMatrix['Tables']=array('Processing'=>array('tag'=>'p','element-content'=>trim($tablesStr,', ')));
         $toDoMatrix['Progress']=array('Processing'=>array('tag'=>'p','element-content'=>strval($setting['Content']['entryCount']-count($setting['Content']['entries'])).' of '.strval($setting['Content']['entryCount']).' done'));
         $toDoMatrix[' ']=array('Processing'=>array('tag'=>'meter','min'=>0,'max'=>$setting['Content']['entryCount'],'value'=>$setting['Content']['entryCount']-count($setting['Content']['entries'])));
@@ -104,7 +104,7 @@ class Legacy{
 
     private function processEntry(array $selector)
     {
-        $sourceEntry=array();
+        $sourceEntry=[];
         foreach ($this->sourceDB->query('SELECT * FROM `'.$selector['Source'].'` WHERE `ElementId`=\''.$selector['ElementId'].'\';') as $entry){
             foreach($entry as $column=>$value){
                 if (is_numeric($column)){continue;}
@@ -118,8 +118,8 @@ class Legacy{
         }
         if (empty($sourceEntry)){return FALSE;}
         if ($selector['Source']==='user'){
-            $paramsFile=$sourceEntry['Params']['File']??array();
-            $paramsGeo=$sourceEntry['Params']['Geo']??array();
+            $paramsFile=$sourceEntry['Params']['File']??[];
+            $paramsGeo=$sourceEntry['Params']['Geo']??[];
             $sourceEntry['Params']=array('File'=>$paramsFile,'Geo'=>$paramsGeo);
             $sourceEntry['Source']='user';
             $sourceEntry['Name']=$sourceEntry['Content']['Contact details']['Family name'].', '.$sourceEntry['Content']['Contact details']['First name'];
@@ -137,12 +137,12 @@ class Legacy{
             $sourceEntry['Source']='forum';
             $sourceEntry['EntryId']=$sourceEntry['ElementId'];
             $sourceEntry['Owner']=$sourceEntry['Creator'];
-            $paramsFile=(isset($sourceEntry['Params']['File']))?$sourceEntry['Params']['File']:array();
-            $paramsAddress=(isset($sourceEntry['Params']['reverseGeoLoc']['address']))?$sourceEntry['Params']['reverseGeoLoc']['address']:array();
+            $paramsFile=(isset($sourceEntry['Params']['File']))?$sourceEntry['Params']['File']:[];
+            $paramsAddress=(isset($sourceEntry['Params']['reverseGeoLoc']['address']))?$sourceEntry['Params']['reverseGeoLoc']['address']:[];
             if (isset($sourceEntry['Params']['reverseGeoLoc']['display_name'])){
                 $paramsAddress['display_name']=$sourceEntry['Params']['reverseGeoLoc']['display_name'];
             }
-            $paramsGeo=(isset($sourceEntry['Params']['Geo']))?$sourceEntry['Params']['Geo']:array();
+            $paramsGeo=(isset($sourceEntry['Params']['Geo']))?$sourceEntry['Params']['Geo']:[];
             $sourceEntry['Params']=array('File'=>$paramsFile,'Address'=>$paramsAddress,'Geo'=>$paramsGeo);
             if (is_file($file)){
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
@@ -164,13 +164,13 @@ class Legacy{
                                 'End'=>((is_array($sourceEntry['Content']['Entry']['End']))?(implode(' ',$sourceEntry['Content']['Entry']['End'])):$sourceEntry['Content']['Entry']['End']),
                                 'End timezone'=>$sourceEntry['Content']['Entry']['End timezone'],
                             );
-            $sourceEntry['Content']=array('Event'=>$contentEvent,'Location/Destination'=>(isset($sourceEntry['Content']['Location/Destination']))?$sourceEntry['Content']['Location/Destination']:array());
+            $sourceEntry['Content']=array('Event'=>$contentEvent,'Location/Destination'=>(isset($sourceEntry['Content']['Location/Destination']))?$sourceEntry['Content']['Location/Destination']:[]);
             if (is_file($file)){
                 $sourceEntry['Params']=array('File'=>$sourceEntry['Params']['File']);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$targetFile);
             } else {
-                $sourceEntry['Params']=array();
+                $sourceEntry['Params']=[];
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
         } else if ($selector['Source']==='security'){
@@ -185,7 +185,7 @@ class Legacy{
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$targetFile);
             } else {
-                $sourceEntry['Params']=array();
+                $sourceEntry['Params']=[];
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
         } else if ($selector['Source']==='multimedia' || $selector['Source']==='cloud' || $selector['Source']==='inventory'){
@@ -195,15 +195,15 @@ class Legacy{
             $sourceEntry['EntryId']=$sourceEntry['ElementId'];
             $sourceEntry['Owner']=$sourceEntry['Creator'];
             if (is_file($file)){
-                $paramsFile=(isset($sourceEntry['Params']['File']))?$sourceEntry['Params']['File']:array();
-                $paramsAddress=(isset($sourceEntry['Params']['reverseGeoLoc']['address']))?$sourceEntry['Params']['reverseGeoLoc']['address']:array();
+                $paramsFile=(isset($sourceEntry['Params']['File']))?$sourceEntry['Params']['File']:[];
+                $paramsAddress=(isset($sourceEntry['Params']['reverseGeoLoc']['address']))?$sourceEntry['Params']['reverseGeoLoc']['address']:[];
                 $paramsAddress['display_name']=(isset($sourceEntry['Params']['reverseGeoLoc']['display_name']))?$sourceEntry['Params']['reverseGeoLoc']['display_name']:'';
-                $paramsGeo=(isset($sourceEntry['Params']['Geo']))?$sourceEntry['Params']['Geo']:array();
+                $paramsGeo=(isset($sourceEntry['Params']['Geo']))?$sourceEntry['Params']['Geo']:[];
                 $sourceEntry['Params']=array('File'=>$paramsFile,'Address'=>$paramsAddress,'Geo'=>$paramsGeo);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$targetFile);
             } else {
-                $sourceEntry['Params']=array();
+                $sourceEntry['Params']=[];
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
         }

@@ -145,12 +145,12 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     {
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',array('Folder'=>'Settings','EntryId'=>$id),TRUE);
         $paramsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
-        if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return array();}
+        if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return [];}
     }
     
     private function getDirContent(string $id):string
     {
-        $matrix=array();
+        $matrix=[];
         $params=$this->getParams($id);
         if (!isset($params['Max file size']) || !isset($params['File extension regexp']) || !isset($params['File name regexp'])){
             return '';
@@ -161,7 +161,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
                 $file=$GLOBALS['dirs']['ftp'].$filename;
                 $fileArr=$this->getFileMetaArr($file);
                 $matchArr=$this->fileMatch($file,$params,$fileArr);
-                $matrix[$index]=array();
+                $matrix[$index]=[];
                 $matrix[$index]['filename']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['nameMatch']?'green':'red')),'element-content'=>$fileArr['filename']));
                 $matrix[$index]['extension']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['extensionMatch']?'green':'red')),'element-content'=>$fileArr['extension']));
                 $matrix[$index]['Size']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['sizeOK']?'green':'red')),'element-content'=>$fileArr['Size']));

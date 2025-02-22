@@ -15,7 +15,7 @@ class Money{
     private $oc;
         
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
         
     public function __construct(array $oc)
     {

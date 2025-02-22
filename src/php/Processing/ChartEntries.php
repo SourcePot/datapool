@@ -59,7 +59,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -89,7 +89,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function getChartEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=[];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info','class'=>'max-content'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
         return $html;
@@ -98,7 +98,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getChartEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chart settings','generic',$callingElement,array('method'=>'getChartEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chart settings','generic',$callingElement,array('method'=>'getChartEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -156,7 +156,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runChartEntries($callingElement,$testRun=FALSE){
-        $base=array('chartrules'=>array());
+        $base=array('chartrules'=>[]);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $plotSelector=$callingElement['Content']['Selector'];
         $plotSelector['property']=current($base['chartparams'])['Content'];
@@ -171,7 +171,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
 
-    public function getChartProcessorPlot(array $selector=array()):string|array
+    public function getChartProcessorPlot(array $selector=[]):string|array
     {
         if (empty($selector['function'])){
             // draw plot pane request
@@ -198,7 +198,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $plotData['property']['Title'].=' | timezone='.$pageTimeZone;
             }
             $plotData['use']=$plotData['property']['Type'].'plot';
-            $plotData['traces']=array();
+            $plotData['traces']=[];
             if ($plotData['property']['offset']<1){
                 $plotData['property']['offset']=FALSE;
             }

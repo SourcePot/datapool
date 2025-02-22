@@ -54,7 +54,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -70,11 +70,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getMapEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,array('method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,array('method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
     }
 
     private function getMapEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=[];
         $matrix['']['value']='If you select "Create csv" or "Create zip", remeber to set the target entry Name-column.<br/>The file name will be the target entry Name. Mapping will result in as many files as there are different Names.';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
@@ -84,7 +84,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getMapEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runMapEntries($arr['selector'],FALSE);
@@ -93,7 +93,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -115,7 +115,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMapEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,array('method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,array('method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -176,7 +176,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runMapEntries($callingElement,$testRun=FALSE){
-        $base=array('mappingparams'=>array(),'mappingrules'=>array());
+        $base=array('mappingparams'=>[],'mappingrules'=>[]);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -198,7 +198,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $zip= new \ZipArchive;
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
-        $deleteEntries=array('Source'=>$callingElement['Content']['Selector']['Source'],'EntryIds'=>array());
+        $deleteEntries=array('Source'=>$callingElement['Content']['Selector']['Source'],'EntryIds'=>[]);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
             //if (time()-$base['Script start timestamp']>30){break;}
             if ($sourceEntry['isSkipRow']){
@@ -294,7 +294,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
         $result['Mapping statistics']['Entries']['value']++;
-        $sourceEntry['Content']=array();
+        $sourceEntry['Content']=[];
         if ($base['csvRequested'] || $base['zipRequested']){
             // add entry to csv
             unset($sourceEntry['Params']);
@@ -339,8 +339,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     /*
     private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule)
     {
-        if (!isset($entry[$baseKey])){$entry[$baseKey]=array();}
-        if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=array();}
+        if (!isset($entry[$baseKey])){$entry[$baseKey]=[];}
+        if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=[];}
         $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
         if (is_array($entry[$baseKey])){
             $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);

@@ -24,18 +24,18 @@ class DataExplorer{
                                                             'top'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
                                                             'left'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
                                                             ),
-                                            'Selector'=>array('Source'=>array('@function'=>'select','@options'=>array()),
+                                            'Selector'=>array('Source'=>array('@function'=>'select','@options'=>[]),
                                                                 'Group'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
                                                                 'Folder'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
                                                                 'Name'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
                                                                 'EntryId'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
                                                                 'Type'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
                                                                 ),
-                                             'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
+                                             'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>[],'@default'=>0),
                                                                'File upload'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
                                                                'File upload extract archive'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
                                                                'File upload extract email parts'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
-                                                               'pdf-file parser'=>array('@function'=>'select','@options'=>array(),'@default'=>0),
+                                                               'pdf-file parser'=>array('@function'=>'select','@options'=>[],'@default'=>0),
                                                                'Delete selected entries'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>1),
                                                                 ),
                                               ),
@@ -53,7 +53,7 @@ class DataExplorer{
                                   'Math'=>array('&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'),
                                   );
 
-    private $processorOptions=array();
+    private $processorOptions=[];
     
     public function __construct(array $oc)
     {
@@ -173,7 +173,7 @@ class DataExplorer{
         // create explorer html
         $cntrHtmlArr=$this->getCntrHtml($callingClass);
         $canvasHtml=$this->getCanvas($callingClass);
-        $articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtmlArr['cntr'],'keep-element-content'=>TRUE,'style'=>array());
+        $articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtmlArr['cntr'],'keep-element-content'=>TRUE,'style'=>[]);
         $return['explorerHtml']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($articleArr);
         $return['explorerHtml'].=$cntrHtmlArr['processor'];
         // create content html
@@ -207,7 +207,7 @@ class DataExplorer{
             $canvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$canvasElement);
         } else if (isset($formData['cmd']['delete'])){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($canvasElement);
-            $canvasElement=array();
+            $canvasElement=[];
         } else if (isset($formData['cmd']['view'])){
             $canvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$canvasElement);
             $selector=$canvasElement['Content']['Selector'];
@@ -243,7 +243,7 @@ class DataExplorer{
         $isEditMode=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE);
         $isEditMode=$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R',$isEditMode,FALSE);
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){$isEditMode=FALSE;}
-        $matrix=array();
+        $matrix=[];
         foreach($this->tags as $key=>$tag){
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R',FALSE,TRUE)){continue;}
             if ($tag['showEditMode']!==$isEditMode){continue;}
@@ -386,7 +386,7 @@ class DataExplorer{
     *
     * @return array  Canvas element settings
     */
-    public function callingElement2settings(string $callingClass,string $callingFunction,array $callingElement,array $settings=array()):array
+    public function callingElement2settings(string $callingClass,string $callingFunction,array $callingElement,array $settings=[]):array
     {
         $settings['Script start timestamp']=hrtime(TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -419,12 +419,12 @@ class DataExplorer{
     public function callingElement2arr(string $callingClass,string $callingFunction,array $callingElement):array
     {
         if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){
-            return array();
+            return [];
         }
         $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId']);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name'),0);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
-        $entry['Content']=array();
+        $entry['Content']=[];
         $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
         return $arr;
     }
@@ -452,7 +452,7 @@ class DataExplorer{
     {
         // This method is called by HTMLbuilder to provide a canvas elements selector.
         // It returns the canvas elements in order by their position.
-        $elements=array();
+        $elements=[];
         $selector=$this->canvasSelector($callingClass);
         if (empty($EntryId)){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
@@ -481,7 +481,7 @@ class DataExplorer{
         $selector=array('Source'=>$this->entryTable,'EntryId'=>$entryId);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
         if (isset($entry['Content']['Selector'])){
-            $selector=array();
+            $selector=[];
             foreach($entry['Content']['Selector'] as $key=>$value){
                 if (empty($value)){continue;}
                 $selector[$key]=$value;
@@ -489,7 +489,7 @@ class DataExplorer{
             krsort($selector);
             return $selector;
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -536,7 +536,7 @@ class DataExplorer{
         $html='';
         $uploadElement=array('tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>array('files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $uploadBtn=array('tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>array('upload'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $matrix['upload']=array('value'=>$uploadElement);
         $matrix['cmd']=array('value'=>$uploadBtn);
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'File upload'));
@@ -555,7 +555,7 @@ class DataExplorer{
         $deleteBtn=array('selector'=>$canvasElement['Content']['Selector']);
         $deleteBtn['cmd']='delete all';
         $deleteBtn=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($deleteBtn);
-        $matrix=array();
+        $matrix=[];
         $matrix['cmd']=array('value'=>$deleteBtn);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delete entries'));
     }
@@ -571,7 +571,7 @@ class DataExplorer{
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R')){
             return '';
         }
-        $selectors=array();
+        $selectors=[];
         foreach($GLOBALS['dbInfo'] as $table=>$infoArr){
             $selectors[$table]=array('Source'=>$table,'Folder'=>$callingClass);
         }
@@ -582,7 +582,7 @@ class DataExplorer{
         }
         $callingClassName=mb_substr($callingClass,strrpos($callingClass,'\\')+1);
         $className=mb_substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         if (isset($formData['cmd']['Download backup'])){

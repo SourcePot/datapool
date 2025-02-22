@@ -22,7 +22,7 @@ class Menu{
                               'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Invoices','Name'=>'Invoice app'),
                              );
                              
-    private $available=array('Categories'=>array(),'Apps'=>array());
+    private $available=array('Categories'=>[],'Apps'=>[]);
     
     private $requested=array('Category'=>'Home');
     
@@ -46,14 +46,14 @@ class Menu{
             $linkinfo=$_SESSION['page state']['linkids'][$linkid];
             $this->requested['App']=$linkinfo['Class'];
             $this->requested['Category']=$linkinfo['Category'];
-            $selector=array();
+            $selector=[];
             $selector['Source']=(isset($linkinfo['Source']))?$linkinfo['Source']:FALSE;
             $selector['Group']=(isset($linkinfo['Group']))?$linkinfo['Group']:FALSE;
             $selector['Folder']=(isset($linkinfo['Folder']))?$linkinfo['Folder']:FALSE;
             $selector['Name']=(isset($linkinfo['Name']))?$linkinfo['Name']:FALSE;
             $selector['EntryId']=(isset($linkinfo['EntryId']))?$linkinfo['EntryId']:FALSE;
             $_SESSION['page state']['selected'][$this->requested['App']]=$selector;
-            $_SESSION['page state']['linkids']=array();
+            $_SESSION['page state']['linkids']=[];
         } else {
             $this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
             if (!isset($this->categories[$this->requested['Category']])){
@@ -106,7 +106,7 @@ class Menu{
     public function getCategories(bool $optionsOnly=FALSE):array
     {
         if ($optionsOnly){
-            $options=array();
+            $options=[];
             foreach($this->categories as $key=>$category){
                 $options[$key]=$category['Label'];
             }
@@ -135,7 +135,7 @@ class Menu{
     
     private function firstMenuBar(array $arr):array
     {
-        $options=array();
+        $options=[];
         $selected=FALSE;
         $lngSelector=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
         // get apps selector

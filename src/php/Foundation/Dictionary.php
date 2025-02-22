@@ -15,12 +15,12 @@ class Dictionary{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array();
+    private $entryTemplate=[];
     
     private $sourceLng='en';
     private $lngCodes=array('en'=>'English','de'=>'Deutsch','es'=>'Español');
     
-    private $lngCache=array();
+    private $lngCache=[];
     
     public function __construct(array $oc)
     {
@@ -60,7 +60,7 @@ class Dictionary{
             $html=$this->dictToolbox();
             $settings=array('orderBy'=>'Name','isAsc'=>TRUE,'limit'=>20,'hideUpload'=>TRUE);
             $settings['columns']=array(array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|translation','Filter'=>''));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' dictionary','entryList',array('Source'=>'dictionary'),$settings,array());    
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' dictionary','entryList',array('Source'=>'dictionary'),$settings,[]);    
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -188,7 +188,7 @@ class Dictionary{
         return $html;
     }
     
-    public function dictWidget(array $arr=array()):array
+    public function dictWidget(array $arr=[]):array
     {
         $langCode=$_SESSION['page state']['lngCode'];
         if (strcmp($langCode,$this->sourceLng)===0){
@@ -216,19 +216,19 @@ class Dictionary{
             }
         }
         // compile html
-        $matrix=array('Translation'=>array());
+        $matrix=array('Translation'=>[]);
         $matrix['Translation']['Label phrase']=array('tag'=>'p','element-content'=>'EN');
         $matrix['Translation']['Phrase']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'key'=>array('phrase','en'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $matrix['Translation']['Label translation']=array('tag'=>'p','element-content'=>strtoupper($langCode));
         $matrix['Translation']['Translation']=array('tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>array('translation',$langCode),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
         $matrix['Translation']['Cmd']=array('tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Translation'));
-        return array('html'=>$html,'wrapperSettings'=>array());
+        return array('html'=>$html,'wrapperSettings'=>[]);
     }
     
-    public function dictToolbox(array $arr=array()):string
+    public function dictToolbox(array $arr=[]):string
     {
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),array());
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Dictionary','generic',array('Source'=>$this->entryTable),array('method'=>'dictWidget','classWithNamespace'=>__CLASS__),[]);
         return $html;
     }
 

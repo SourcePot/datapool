@@ -52,7 +52,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=array(),string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -68,11 +68,11 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getDelayEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying','generic',$callingElement,array('method'=>'getDelayEntriesWidgetHtml','classWithNamespace'=>__CLASS__),array());
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying','generic',$callingElement,array('method'=>'getDelayEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
     }
     
      private function getDelayEntriesInfo($callingElement){
-        $matrix=array();
+        $matrix=[];
         $matrix['Description']=array('<p style="width:30em;">Entries will be forwarded to the selected next cnavas element when the trigger is active.</p>');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
@@ -82,7 +82,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getDelayEntriesWidgetHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
-        $result=array();
+        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runDelayEntries($arr['selector'],0);
@@ -93,7 +93,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // build html
         $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $matrix=array();
+        $matrix=[];
         $btnArr['value']='Test';
         $btnArr['key']=array('test');
         $matrix['Commands']['Test']=$btnArr;
@@ -115,7 +115,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getDelayEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying entries settings','generic',$callingElement,array('method'=>'getDelayEntriesSettingsHtml','classWithNamespace'=>__CLASS__),array());
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying entries settings','generic',$callingElement,array('method'=>'getDelayEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
         }
         return $html;
     }
@@ -130,7 +130,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function delayingParams($callingElement){
-        $return=array('html'=>'','Parameter'=>array(),'result'=>array());
+        $return=array('html'=>'','Parameter'=>[],'result'=>[]);
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $contentStructure=array('Forward to canvas element'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
                                 'Reset all trigger when condition is met'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
@@ -172,7 +172,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runDelayEntries($callingElement,$testRun=1){
-        $base=array('delayingparams'=>array(),'delayingrules'=>array());
+        $base=array('delayingparams'=>[],'delayingrules'=>[]);
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -195,7 +195,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $debugArr=array('params'=>$params,'rules'=>$base['delayingrules'],'selector'=>$callingElement,'testRun'=>$testRun);
         $isFirstRule=TRUE;
         $lastOparation='or';
-        $trigger2reset=array();
+        $trigger2reset=[];
         $triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
         foreach($base['delayingrules'] as $ruleId=>$rule){
             // calculate new 'Condition met'

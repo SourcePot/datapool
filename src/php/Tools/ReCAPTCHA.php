@@ -51,7 +51,7 @@ class ReCAPTCHA{
             if (!is_file($this->serviceAccountFile)){
                 $this->oc['logger']->log('warning','Google Service Account file not found, check {file}',array('file'=>$this->serviceAccountFile));
             } else if (empty(getenv("GOOGLE_APPLICATION_CREDENTIALS"))){
-                $this->oc['logger']->log('warning','Google Service Account environment is not set',array());
+                $this->oc['logger']->log('warning','Google Service Account environment is not set',[]);
             } else if (strpos($arr['toReplace']['{{content}}'],self::RECATCHA_CLASS_INDICATOR)!==FALSE){
                 // ReCAPTCHA class attributes found 
                 $arr['toReplace']['{{head}}']='<script src="https://www.google.com/recaptcha/enterprise.js?render='.urlencode($this->siteKey).'" async defer></script>'.$arr['toReplace']['{{head}}'];
@@ -71,7 +71,7 @@ class ReCAPTCHA{
     {
         preg_match_all('/<[^<]+class=\"'.self::RECATCHA_CLASS_INDICATOR.'\"[^>]+>/',$str,$matches);
         foreach(current($matches) as $matchIndex=>$match){
-            $attrs=array();
+            $attrs=[];
             preg_match_all('/(\s)([a-z]+)(=")([^\"]+)(")/',$match,$attrMatches);
             foreach($attrMatches[2] as $index=>$attr){
                 $attrs[$attr]=$attrMatches[4][$index];
@@ -139,7 +139,7 @@ class ReCAPTCHA{
             $return['grant']=1;
             if (isset($_SESSION[__CLASS__][$return['action']]['id'])){$return['id']=$_SESSION[__CLASS__][$return['action']]['id'];}
             if (isset($_SESSION[__CLASS__][$return['action']]['name'])){$return['name']=$_SESSION[__CLASS__][$return['action']]['name'];}
-            $_SESSION[__CLASS__]=array();
+            $_SESSION[__CLASS__]=[];
         } else {
             // reject action
             $return['grant']=0;

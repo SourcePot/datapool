@@ -14,28 +14,28 @@ class HTMLbuilder{
     
     private $oc;
     
-    private $btns=array('test'=>array('key'=>array('test'),'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE),
-                        'edit'=>array('key'=>array('edit'),'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
-                        'show'=>array('key'=>array('show'),'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
-                        'print'=>array('key'=>array('print'),'title'=>'Print','hasCover'=>FALSE,'element-content'=>'&#10064;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'style'=>array(),'excontainer'=>TRUE),
-                        'run'=>array('key'=>array('run'),'title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE),
-                        'add'=>array('key'=>array('add'),'title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE),
-                        'save'=>array('key'=>array('save'),'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE),
-                        'upload'=>array('key'=>array('upload'),'title'=>'Upload file','hasCover'=>FALSE,'element-content'=>'Upload','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>FALSE),
-                        'download'=>array('key'=>array('download'),'title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE),
-                        'download all'=>array('key'=>array('download all'),'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
-                        'export'=>array('key'=>array('export'),'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE),
-                        'select'=>array('key'=>array('select'),'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE),
-                        'approve'=>array('key'=>array('approve'),'title'=>'Approve entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array('font-size'=>'2rem','color'=>'green'),'excontainer'=>FALSE),
-                        'decline'=>array('key'=>array('decline'),'title'=>'Decline entry','hasCover'=>FALSE,'element-content'=>'&#10006;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array('font-size'=>'2rem','color'=>'red'),'excontainer'=>FALSE),
-                        'delete'=>array('key'=>array('delete'),'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array(),'excontainer'=>FALSE),
-                        'remove'=>array('key'=>array('remove'),'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>array(),'excontainer'=>FALSE),
-                        'delete all'=>array('key'=>array('delete all'),'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>array(),'excontainer'=>FALSE),
-                        'moveUp'=>array('key'=>array('moveUp'),'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array('float'=>'right')),
-                        'moveDown'=>array('key'=>array('moveDown'),'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>array()),
-                        );
+    private $btns=['test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
+                    'edit'=>['key'=>['edit'],'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
+                    'show'=>['key'=>['show'],'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
+                    'print'=>['key'=>['print'],'title'=>'Print','hasCover'=>FALSE,'element-content'=>'&#10064;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
+                    'run'=>['key'=>['run'],'title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE],
+                    'add'=>['key'=>['add'],'title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE],
+                    'save'=>['key'=>['save'],'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE],
+                    'upload'=>['key'=>['upload'],'title'=>'Upload file','hasCover'=>FALSE,'element-content'=>'Upload','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>FALSE],
+                    'download'=>['key'=>['download'],'title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE],
+                    'download all'=>['key'=>['download all'],'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE],
+                    'export'=>['key'=>['export'],'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE],
+                    'select'=>['key'=>['select'],'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE],
+                    'approve'=>['key'=>['approve'],'title'=>'Approve entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['font-size'=>'2rem','color'=>'green'],'excontainer'=>FALSE],
+                    'decline'=>['key'=>['decline'],'title'=>'Decline entry','hasCover'=>FALSE,'element-content'=>'&#10006;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['font-size'=>'2rem','color'=>'red'],'excontainer'=>FALSE],
+                    'delete'=>['key'=>['delete'],'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
+                    'remove'=>['key'=>['remove'],'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>[],'excontainer'=>FALSE],
+                    'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
+                    'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['float'=>'right']],
+                    'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[]],
+                    ];
 
-    private $appOptions=array('SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
+    private $appOptions=['SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
                        'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
                        'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
                        'SourcePot\Datapool\Tools\HTMLbuilder|entryControls'=>'entryControls()',
@@ -44,12 +44,12 @@ class HTMLbuilder{
                        'SourcePot\Datapool\Tools\HTMLbuilder|selectBtn'=>'selectBtn()',
                        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
                        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
-                       );
+                    ];
         
     public function __construct(array $oc)
     {
         $this->oc=$oc;
-        $_SESSION[__CLASS__]['keySelect']=array();
+        $_SESSION[__CLASS__]['keySelect']=[];
     }
 
     Public function loadOc(array $oc):void
@@ -76,7 +76,7 @@ class HTMLbuilder{
         return $html;
     }
     
-    public function template2string($template='Hello [p:{{key}}]...',$arr=array('key'=>'world'),$element=array())
+    public function template2string($template='Hello [p:{{key}}]...',$arr=['key'=>'world'],$element=[])
     {
         $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
         foreach($flatArr as $flatArrKey=>$flatArrValue){
@@ -97,7 +97,7 @@ class HTMLbuilder{
     
     private function arr2id(array $arr):string
     {
-        $toHash=array($arr['callingClass'],$arr['callingFunction'],$arr['key']);
+        $toHash=[$arr['callingClass'],$arr['callingFunction'],$arr['key']];
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash);
     }
     
@@ -109,7 +109,7 @@ class HTMLbuilder{
     public function table(array $arr,bool $returnArr=FALSE):string|array
     {
         $html='';
-        $styles=array('trStyle'=>array());
+        $styles=array('trStyle'=>[]);
         if (!empty($arr['matrix'])){
             $indexArr=array('x'=>0,'y'=>0);
             $tableArr=array('tag'=>'table','keep-element-content'=>TRUE,'element-content'=>'');
@@ -204,7 +204,7 @@ class HTMLbuilder{
             if (isset($arr['selected'])){$selected=$arr['selected'];unset($arr['selected']);}
             if (isset($arr['value'])){$selected=$arr['value'];unset($arr['value']);}
             if (!isset($arr['options'][$selected]) && !empty($selected)){$arr['options'][$selected]=$selected;}
-            $toReplace=array();
+            $toReplace=[];
             $selectArr=$arr;
             if (!empty($arr['hasSelectBtn'])){$selectArr['trigger-id']=$triggerId;}
             $selectArr['tag']='select';
@@ -265,7 +265,7 @@ class HTMLbuilder{
     * @param array $arr Is the entry selector and options  
     * @return array HTML-selector
     */
-    public function keySelect(array $arr,array $appendOptions=array()):string
+    public function keySelect(array $arr,array $appendOptions=[]):string
     {
         if (empty($arr['Source'])){return '';}
         $arr['value']=(isset($arr['value']))?$arr['value']:'';
@@ -287,8 +287,8 @@ class HTMLbuilder{
             $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
         }
         $arr['keep-element-content']=TRUE;
-        $arr['options']=(empty($arr['addSourceValueColumn']))?array():array('useValue'=>'&#9998;');
-        $arr['options']+=(empty($arr['addColumns']))?array():$arr['addColumns'];
+        $arr['options']=(empty($arr['addSourceValueColumn']))?[]:array('useValue'=>'&#9998;');
+        $arr['options']+=(empty($arr['addColumns']))?[]:$arr['addColumns'];
         $sampleValue='';
         foreach($keys as $key=>$value){
             if (!empty($arr['standardColumsOnly']) && !isset($stdKeys[$key])){continue;}
@@ -310,7 +310,7 @@ class HTMLbuilder{
             throw new \ErrorException('Function '.__FUNCTION__.': Argument arr[canvasCallingClass] is missing but required.',0,E_ERROR,__FILE__,__LINE__);
         }
         $canvasElements=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($arr['canvasCallingClass']);
-        if (empty($arr['addColumns'])){$arr['options']=array();} else {$arr['options']=$arr['addColumns'];}
+        if (empty($arr['addColumns'])){$arr['options']=[];} else {$arr['options']=$arr['addColumns'];}
         foreach($canvasElements as $key=>$canvasEntry){
             if (empty($canvasEntry['Content']['Selector']['Source'])){continue;}
             $arr['options'][$canvasEntry['EntryId']]=$canvasEntry['Content']['Style']['Text'];
@@ -349,7 +349,7 @@ class HTMLbuilder{
     *                   it must contain the entry selector (key="selector") and key="cmd" which selects the button template  
     * @return string The html-tag for the button 
     */
-    public function btn(array $arr=array()):string
+    public function btn(array $arr=[]):string
     {
         // This function returns standard buttons based on argument arr.
         // If arr is empty, buttons will be processed
@@ -431,9 +431,9 @@ class HTMLbuilder{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $cmd=key($formData['cmd']);
                 $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]=array('action'=>$cmd,'timestamp'=>time(),'app'=>$selector['app']);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),1);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),7);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array(),9);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],1);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],7);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],9);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
@@ -484,7 +484,7 @@ class HTMLbuilder{
     {
         if (empty($arr['html'])){return '';}
         $arr['icon']=(isset($arr['icon']))?$arr['icon']:'?';
-        $arr['style']=(isset($arr['style']))?$arr['style']:array();
+        $arr['style']=(isset($arr['style']))?$arr['style']:[];
         $arr['class']=(isset($arr['class']))?$arr['class']:'app';
         $arr['title']=(isset($arr['title']))?$arr['title']:'';
         $summaryArr=array('tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']);
@@ -496,14 +496,14 @@ class HTMLbuilder{
         
     }
     
-    public function emojis(array $arr=array()):array
+    public function emojis(array $arr=[]):array
     {
         if (empty($arr['settings']['target'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called without target setting.',0,E_ERROR,__FILE__,__LINE__);    
         }
         $arr['html']=(isset($arr['html']))?$arr['html']:'';        
         // get emoji options
-        $options=array();
+        $options=[];
         foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->emojis as $category=>$categoryArr){
             foreach($categoryArr as $group=>$groupArr){
                 $firstEmoji=$this->oc['SourcePot\Datapool\Tools\MiscTools']->code2utf(key($groupArr));
@@ -562,7 +562,7 @@ class HTMLbuilder{
         $updatedInteger=0;
         $html='<fieldset>';
         $html.='<legend>'.'"'.$arr['key'].'" right'.'</legend>';
-        $matrix=array();
+        $matrix=[];
         if (is_string($integer)){$integer=intval($integer);}
         for($bitIndex=0;$bitIndex<$arr['bitCount'];$bitIndex++){
             $currentVal=pow(2,$bitIndex);
@@ -701,12 +701,12 @@ class HTMLbuilder{
         $errorMsg='Method "'.__CLASS__.' &rarr; '.__FUNCTION__.'()" called with arr-argument keys missing: ';
         if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
             $errorMsg.=' contentStructure, callingClass or callingFunction';
-            $this->oc['logger']->log('error',$errorMsg,array());
+            $this->oc['logger']->log('error',$errorMsg,[]);
             return (empty($arr['returnRow']))?$errorMsg:array('error'=>$errorMsg);
         }
         if ((empty($arr['selector']['Source']) && empty($arr['selector']['Class'])) || empty($arr['selector']['EntryId'])){
             $errorMsg.=' Source or Class or EntryId';
-            $this->oc['logger']->log('error',$errorMsg,array());
+            $this->oc['logger']->log('error',$errorMsg,[]);
             return (empty($arr['returnRow']))?$errorMsg:array('error'=>$errorMsg);
         }
         $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr); // <----------------- Update old EntryId
@@ -753,8 +753,8 @@ class HTMLbuilder{
             $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,array('moveDownEntryId'=>$selector['EntryId']));
         }
         // html creation
-        $csvMatrix=array();
-        $matrix=array();
+        $csvMatrix=[];
+        $matrix=[];
         $startIndex=$endIndex=1;
         $selector=$baseSelector;
         $selector['EntryId']='%'.$arr['selector']['EntryId'];
@@ -832,13 +832,13 @@ class HTMLbuilder{
         }
     }
 
-    public function selector2string(array $selector=array(), bool $useEntryId=FALSE):string
+    public function selector2string(array $selector=[], bool $useEntryId=FALSE):string
     {
         $template=array('Source'=>'','Group'=>'','Folder'=>'','Name'=>'');
         if (empty($selector['Name']) && !empty($selector['EntryId'])){
             $selector=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
         }
-        $result=array();
+        $result=[];
         if ($useEntryId){$keys['EntryId']='';}
         foreach($template as $key=>$default){
             if (!isset($selector[$key])){break;}
@@ -851,7 +851,7 @@ class HTMLbuilder{
     public function row2table(array $row,string $caption='Row as table',bool $flip=FALSE):string
     {
         if ($flip){
-            $matrix=array();
+            $matrix=[];
             foreach($row as $key=>$value){
                 $matrix[$key]=array('value'=>$value);
             }
@@ -861,7 +861,7 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
     }
     
-    public function value2tabelCellContent($html,array $arr=array())
+    public function value2tabelCellContent($html,array $arr=[])
     {
         if (!is_string($html) || empty($html)){
             return $html;
@@ -889,7 +889,7 @@ class HTMLbuilder{
         if (empty($arr['excontainer'])){
             $settingsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
             $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
-            $wrapperSetting=array();
+            $wrapperSetting=[];
             $wrapperSetting['class']=(empty($arr['class']))?'std':$arr['class'];
             $wrapperSetting['style']=(empty($arr['style']))?'':$arr['style'];
             return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],$wrapperSetting);
@@ -918,7 +918,7 @@ class HTMLbuilder{
         $presentArr=$this->mapContainer2presentArr($presentArr);
         $selector=$this->getPresentationSelector($presentArr);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
-            $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??array());
+            $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??[]);
             $presentArr['class']=$setting['Content']['Style class'];
             $cntrArr=explode('|',$setting['Content']['Entry key']);
             if (count($cntrArr)===1){
@@ -963,7 +963,7 @@ class HTMLbuilder{
                 if (empty($wrapper)){
                     $appArr=$this->oc[$callingClass]->$callingFunction($presentArr);
                 } else if ($wrapper=='container'){
-                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$setting['EntryId'],'generic',$presentArr['selector'],array('method'=>$callingFunction,'classWithNamespace'=>$callingClass),array());    
+                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$setting['EntryId'],'generic',$presentArr['selector'],array('method'=>$callingFunction,'classWithNamespace'=>$callingClass),[]);    
                 }
                 if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
             }
@@ -1031,7 +1031,7 @@ class HTMLbuilder{
         $entryPresentationCss=$GLOBALS['dirs']['media'].'/ep.css';
         $entryPresentationCss=file_get_contents($entryPresentationCss);
         preg_match_all('/(\.)([a-z0-9\-]+)([\{\,\:]+)/',$entryPresentationCss,$matches);
-        $options=array();
+        $options=[];
         foreach($matches[2] as $class){
             $options[$class]=$class;
         }

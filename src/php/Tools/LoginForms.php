@@ -64,7 +64,7 @@ class LoginForms{
     public function getOneTimePswArr():array
     {
         $maxDigitsIndex=count($this->digits)-1;
-        $return=array('string'=>'','phrase'=>array());
+        $return=array('string'=>'','phrase'=>[]);
         for($index=0;$index<self::MIN_PSW_LENGTH;$index++){
             $int=random_int(0,$maxDigitsIndex);
             $keyArr=$this->digits[$int];
@@ -103,7 +103,7 @@ class LoginForms{
         return $result;
     }
     
-    public function getLoginForm(array $arr=array()):array
+    public function getLoginForm(array $arr=[]):array
     {
         $arr['result']=$this->formData();
         if (self::USE_RECAPTCHA){$styleClass='g-recaptcha';} else {$styleClass='std';}
@@ -118,7 +118,7 @@ class LoginForms{
         } else {
             $passphrase=$this->getStandard($arr);
         }
-        $matrix=array();
+        $matrix=[];
         if ($this->isLoggedIn()){
             $matrix['Passphrase']['Value']=$passphrase;
             $matrix['Btns']['Value']=$updateBtn;
@@ -137,7 +137,7 @@ class LoginForms{
         return $arr;
     }
     
-    private function getStandard(array $arr=array()):string
+    private function getStandard(array $arr=[]):string
     {
         $passphraseLabel=array('tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw');
         $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'6','style'=>array('clear'=>'both','width'=>220),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
@@ -146,11 +146,11 @@ class LoginForms{
         return $html;
     }
     
-    private function getSymbolKeypad(array $arr=array()):string
+    private function getSymbolKeypad(array $arr=[]):string
     {
         $template=array('symbolSize'=>40,'html'=>'','symbolColumnCount'=>5);
         $arr=array_merge($template,$arr);
-        $hashSymbolArr=array();
+        $hashSymbolArr=[];
         $aArr=array('tag'=>'a','href'=>'javascript:','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE);
         $imgArr=array('tag'=>'img');
         $layersDivArr=array('tag'=>'div','keep-element-content'=>TRUE,'style'=>array('width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px'),'class'=>'keypad');

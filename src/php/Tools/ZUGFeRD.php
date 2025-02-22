@@ -84,7 +84,7 @@ class ZUGFeRD{
 
     private function document2entry($document, array $entry):array
     {
-        $entry['Content']['zugferd']=array();
+        $entry['Content']['zugferd']=[];
         $document->getDocumentInformation($entry['Content']['zugferd']['documentno'],$entry['Content']['zugferd']['documenttypecode'],$entry['Content']['zugferd']['documentdate'],$entry['Content']['zugferd']['invoiceCurrency'],$entry['Content']['zugferd']['taxCurrency'],$entry['Content']['zugferd']['documentname'],$entry['Content']['zugferd']['documentlanguage'],$entry['Content']['zugferd']['effectiveSpecifiedPeriod']);
         // loop through document positions
         $docIndex=0;

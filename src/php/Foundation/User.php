@@ -118,7 +118,7 @@ class User{
     public function getUserRols(bool $asOptions=FALSE):array
     {
         if ($asOptions){
-            $options=array();
+            $options=[];
             foreach($this->userRols['Content'] as $index=>$userRole){
                 $options[$userRole['Value']]=$userRole['Name'];
             }
@@ -130,7 +130,7 @@ class User{
     
     public function getUserRolsString(array $user):string
     {
-        $userRols=array();
+        $userRols=[];
         foreach($this->userRols['Content'] as $index=>$rolArrc){
             if ((intval($user['Privileges']) & $rolArrc['Value'])>0){$userRols[]=$rolArrc['Name'];}
         }
@@ -198,7 +198,7 @@ class User{
         return $user;
     }
     
-    public function userAbstract(array|string $arr=array(),int $template=0):string
+    public function userAbstract(array|string $arr=[],int $template=0):string
     {
         // This method returns formated html text from an entry based on predefined templates.
         //     
@@ -286,11 +286,11 @@ class User{
         $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',array('userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
     }
     
-    public function getUserOptions(array $selector=array(),string $flatContactDetailsKey=''):array
+    public function getUserOptions(array $selector=[],string $flatContactDetailsKey=''):array
     {
         $selector['Source']=$this->entryTable;
         $selector['Privileges>']=1;
-        $options=array();
+        $options=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
             $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'];
             if (!empty($flatContactDetailsKey)){

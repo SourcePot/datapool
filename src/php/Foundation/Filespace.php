@@ -14,7 +14,7 @@ class Filespace{
 
     private $oc;
     
-    private $statistics=array();
+    private $statistics=[];
     
     const ENV_FILE='env.json';
 
@@ -22,7 +22,7 @@ class Filespace{
                                  'EntryId'=>array('type'=>'string','value'=>TRUE,'Description'=>'This is the unique id'),
                                  'Type'=>array('type'=>'string','value'=>'{{Class}}','Description'=>'This is the data-type of Content'),
                                  'Date'=>array('type'=>'datetime','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'),
-                                 'Content'=>array('type'=>'json','value'=>array(),'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
+                                 'Content'=>array('type'=>'json','value'=>[],'Description'=>'This is the entry Content, the structure of depends on the MIME-type.'),
                                  'Read'=>array('type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
                                  'Write'=>array('type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
                                  'Owner'=>array('type'=>'string','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
@@ -59,8 +59,8 @@ class Filespace{
                 $vars['Dirs to process'][$dir]=array('dir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir);
             }
         }
-        $vars['Last deleted files']=array();
-        $vars['Last failed deletions']=array();
+        $vars['Last deleted files']=[];
+        $vars['Last failed deletions']=[];
         $dir2process=array_shift($vars['Dirs to process']);
         if (empty($dir2process['dir'])){
             $this->oc['logger']->log('error','Failed "{class} &rarr; {function}()" due to array key in "dir2process[dir]" missing or empty array',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
@@ -230,7 +230,7 @@ class Filespace{
         $entry['rowCount']=(empty($arr))?0:1;
         if (empty($arr)){
             // no entry found
-            if (!$returnMetaOnNoMatch){$entry=array();}
+            if (!$returnMetaOnNoMatch){$entry=[];}
         } else {
             // entry found
             $entry['rowCount']=1;
@@ -239,7 +239,7 @@ class Filespace{
             if ($entry['access']){
                 $entry=array_replace_recursive($selector,$entry,$arr);
             } else if (!$returnMetaOnNoMatch){
-                $entry=array();
+                $entry=[];
             }
         }
         return $entry;
@@ -355,7 +355,7 @@ class Filespace{
             readfile($fileForDownload);
             exit;
         } else {
-            $this->oc['logger']->log('notice','No file found to download.',array());    
+            $this->oc['logger']->log('notice','No file found to download.',[]);    
         }
     }
 
@@ -566,7 +566,7 @@ class Filespace{
         // set Params → File uploader properties
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $entry['Owner']=(empty($entry['Owner']))?$currentUser['EntryId']:$entry['Owner'];
-        $entry['Params']['File']=array();
+        $entry['Params']['File']=[];
         if (empty($entry['Params']['File']['UploaderId'])){
             $entry['Params']['File']['UploaderId']=$currentUser['EntryId'];
             $entry['Params']['File']['UploaderName']=$currentUser['Name'];
@@ -652,7 +652,7 @@ class Filespace{
         
     private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall):array
     {
-        $zipStatistic=array('errors'=>array(),'files'=>array());
+        $zipStatistic=array('errors'=>[],'files'=>[]);
         // extract zip archive to a temporary dir
         $zip=new \ZipArchive;
         if ($zip->open($file)===TRUE){
@@ -691,7 +691,7 @@ class Filespace{
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
             $parserMethod=$entry['parserMethod']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'pdf-file parser');
             if (empty($parserMethod)){
-                $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',array());    
+                $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',[]);    
             } else {
                 try{
                     $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->$parserMethod($file,$entry);
@@ -736,18 +736,18 @@ class Filespace{
 
     public function exportEntries(array $selectors,bool $isSystemCall=FALSE,int $maxAttachedFilesize=10000000000):string
     {
-        $statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>array(),'Errors'=>array());
+        $statistics=array('added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>[],'Errors'=>[]);
         if (isset($selectors['Source'])){$selectors=array($selectors);}
         $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
         $fileName=preg_replace('/\W+/','_',$pageTitle).' dump.zip';
         $dir=$this->getTmpDir();
         $dumpFile=$dir.$fileName;
         if (is_file($dumpFile)){unlink($dumpFile);}
-        $attachedFiles=array();
+        $attachedFiles=[];
         $zip = new \ZipArchive;
         $zip->open($dumpFile,\ZipArchive::CREATE);
         foreach($selectors as $index=>$selector){
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE,array(),FALSE,FALSE) as $entry){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read',FALSE,TRUE,FALSE,FALSE,[],FALSE,FALSE) as $entry){
                 // get files to attach
                 $attachedFileName=$entry['Source'].'~'.$entry['EntryId'].'.file';
                 $attachedFile=$this->selector2file($entry);
@@ -778,7 +778,7 @@ class Filespace{
         $zip->close();
         $statistics['Attached filesize']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($statistics['Attached filesize'],2,1024);
         $msg='Export resulted in '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics);
-        $this->oc['logger']->log('info',$msg,array());    
+        $this->oc['logger']->log('info',$msg,[]);    
         return $dumpFile;
     }
     
@@ -855,7 +855,7 @@ class Filespace{
             unlink($GLOBALS['dirs']['logging'].$file);
         }
         $btnArr=array('tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,);
-        $matrix=array();
+        $matrix=[];
         $files=scandir($GLOBALS['dirs']['logging']);
         foreach($files as $fileName){
             if (strlen($fileName)<3){continue;}

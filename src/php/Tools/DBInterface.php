@@ -64,7 +64,7 @@ class DBInterface implements \SourcePot\Datapool\Interfaces\Receiver{
     
     public function receive(string $id):array
     {
-        $result=array();
+        $result=[];
         try{
             $this->db=$this->oc['SourcePot\Datapool\Foundation\Database']->connect(__CLASS__,$id,FALSE);
         } catch (\Exception $e){
@@ -104,7 +104,7 @@ class DBInterface implements \SourcePot\Datapool\Interfaces\Receiver{
         if (isset($canvasElement['Content']['Selector'])){
             return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arrRemoveEmpty($canvasElement['Content']['Selector']);
         } else {
-            return array();
+            return [];
         }
     }
     
@@ -119,14 +119,14 @@ class DBInterface implements \SourcePot\Datapool\Interfaces\Receiver{
     }
     
     private function getReceiverMeta($id){
-        $meta=array();
+        $meta=[];
         try{
             $this->db=$this->oc['SourcePot\Datapool\Foundation\Database']->connect(__CLASS__,$id,FALSE);
         } catch (\Exception $e){
             $result['Error (check settings)']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$e->getMessage(),'class'=>'sample'));
         }
         if ($this->db){
-            $meta['Table']=array();
+            $meta['Table']=[];
             foreach ($this->db->query('SHOW TABLES;') as $row){
                 $meta['Table'][]=$row[0];
             }
