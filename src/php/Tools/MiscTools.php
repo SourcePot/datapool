@@ -1058,8 +1058,8 @@ final class MiscTools{
         } else if (is_bool($string)){
             return ($string)?1:0;
         } else if (is_string($string)){
-            $asset->guessAssetFromString(strval($string));
-            return $asset->getValue();
+            $assetArr=$asset->guessAssetFromString(strval($string));
+            return $assetArr['value'];
         } else {
             return 0;
         }

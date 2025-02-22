@@ -274,8 +274,6 @@ class MediaTools{
     
     private function getObj(array $arr):array
     {
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
-        
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
         $arr['settings']['style']=array_merge(array('float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw','border'=>'1px dotted #444'),$arr['settings']['style']);
