@@ -68,11 +68,11 @@ class Element{
                        // Media
                        'audio'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'canvas'=>array('height'=>FALSE,'width'=>FALSE),
+                       'object'=>array('data'=>TRUE,'type'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE,'type'=>FALSE),
                        'iframe'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
                        'img'=>array('src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE),
                        'link'=>array('rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'object'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'script'=>array('src'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
                        'svg'=>array('src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),

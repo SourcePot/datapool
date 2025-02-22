@@ -51,10 +51,6 @@ class MediaTools{
         $arr=$this->addTmpFile($arr);
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'audio')===0){
-            $arr=$this->getAudio($arr);
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'video')===0){
-            $arr=$this->getVideo($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
             // add wrapper div
@@ -72,10 +68,6 @@ class MediaTools{
             $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/pdf')===0){
-            $arr=$this->getPdf($arr);
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/html')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xml')!==FALSE || mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/xhtml')!==FALSE){
-            $arr=$this->getHtml($arr);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector']) && !$isSmallPreview){
             $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),array());
         } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
@@ -101,33 +93,12 @@ class MediaTools{
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0){
-            $text=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
-            $arr=$this->addPreviewTextStyle($arr);
-            $arr['tag']='p';
-            if (mb_strlen($text)>200){
-                $arr['element-content']=mb_substr($text,0,200).' .....';
-            } else {
-                $arr['element-content']=$text;
-            }
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
         } else {
-            // attached file with undefined mime-type
-            $arr['html'].='Plugin missing: '.$arr['selector']['Params']['TmpFile']['MIME-Type'];
+            $arr=$this->getObj($arr);
         }
         return $arr;
     }
 
-    private function addPreviewTextStyle(array $arr):array
-    {
-        $arr['settings']['style']['float']='left';
-        $arr['settings']['style']['clear']='both';
-        $arr['settings']['style']['font-size']='0.8em';
-        $arr['settings']['style']['font-style']='italic;';
-        $arr['settings']['style']['max-width']=100;
-        return $arr;
-    }    
-    
     public function getIcon(array $arr):array|string
     {
         $arr=$this->addTmpFile($arr);
@@ -301,71 +272,22 @@ class MediaTools{
         return $arr;
     }
     
-    private function getVideo(array $arr):array
+    private function getObj(array $arr):array
     {
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
+        
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
-        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
-            $videoArr=$arr;
-            $videoArr['tag']='video';
-            $videoArr['type']=$arr['selector']['Params']['TmpFile']['MIME-Type'];
-            $videoArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
-            $videoArr['style']=$arr['settings']['style'];
-            $videoArr['element-content']=$arr['selector']['Name'];
-            $videoArr['controls']=TRUE;
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($videoArr);
-        }
-        return $arr;
-    }
-    
-    private function getAudio(array $arr):array
-    {
-        if (!isset($arr['html'])){$arr['html']='';}
-        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
-        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
-            // copy audio to temp folder
-            $audioArr=$arr;
-            $audioArr['tag']='audio';
-            $audioArr['type']=$arr['selector']['Params']['TmpFile']['MIME-Type'];
-            $audioArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
-            $audioArr['element-content']=$arr['selector']['Name'];
-            $audioArr['controls']=TRUE;
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($audioArr);
-        }
-        return $arr;
-    }
-
-    private function getPdf(array $arr):array
-    {
-        if (!isset($arr['html'])){$arr['html']='';}
-        if (!isset($arr['settings']['style'])){$arr['settings']['style']=array();}
-        $arr['settings']['style']=array_merge(array('margin'=>'10px 0 0 5px','height'=>'70vh','border'=>'1px solid #444'),$arr['settings']['style']);
+        $arr['settings']['style']=array_merge(array('float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw','border'=>'1px dotted #444'),$arr['settings']['style']);
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $pdfArr=$arr;
-            $pdfArr['tag']='embed';
-            $pdfArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
-            $pdfArr['type']='application/pdf';
+            $pdfArr['tag']='object';
+            $pdfArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
+            $pdfArr['type']=$arr['selector']['Params']['File']['MIME-Type'];
             $pdfArr['style']=$pdfArr['settings']['style'];
+            $pdfArr['element-content']='<a href="'.$pdfArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.$arr['selector']['Params']['File']['Name'].'</b> can\'t be presented, click here to download...</a>';
+            $pdfArr['keep-element-content']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pdfArr);
-        } else {
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['TmpFile']['Name'].' could not be copied into the presentation folder.'));
-        }
-        $arr['wrapperSettings']=array('style'=>'width:95%;');
-        return $arr;
-    }    
-    
-    private function getHtml(array $arr):array
-    {
-        if (!isset($arr['html'])){$arr['html']='';}
-        $style=array('margin'=>'10px 0 0 5px','width'=>'98%','height'=>'500px','border'=>'1px solid #444');
-        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
-            $htmlArr=$arr;
-            $htmlArr['tag']='iframe';
-            $htmlArr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
-            $htmlArr['type']='application/pdf';
-            $htmlArr['element-content']='Html content';
-            $htmlArr['style']=(isset($htmlArr['style']))?array_merge($style,$htmlArr['style']):$style;
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($htmlArr);
         } else {
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.$arr['Params']['TmpFile']['Name'].' could not be copied into the presentation folder.'));
         }

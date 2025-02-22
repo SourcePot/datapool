@@ -642,13 +642,13 @@ class HTMLbuilder{
         if (empty($arr['selector'])){
             return 'Entry does not exsist (yet).';
         }
-        $template=array('callingClass'=>__CLASS__,
-                        'callingFunction'=>__FUNCTION__,
-                        'hideHeader'=>TRUE,
-                        'hideKeys'=>TRUE,
-                        'previewStyle'=>array('max-height'=>100,'max-width'=>200),
-                        'settings'=>array('hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>FALSE,'hideDelete'=>FALSE),
-                        );
+        $template=['callingClass'=>__CLASS__,
+                'callingFunction'=>__FUNCTION__,
+                'hideHeader'=>TRUE,
+                'hideKeys'=>TRUE,
+                'previewStyle'=>['max-height'=>300,'max-width'=>400],
+                'settings'=>['hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>FALSE,'hideDelete'=>FALSE],
+                ];
         $arr=array_replace_recursive($template,$arr);
         // create preview
         $matrix=array('Preview'=>array('Value'=>''),'Btns'=>array('Value'=>''));

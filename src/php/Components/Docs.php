@@ -91,7 +91,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
                 $pathInfo=pathinfo($fileArr['name']);
                 $selector['Content']['src']=$this->entry2asset($selector,$pathInfo['extension'],TRUE);
                 if ($pathInfo['extension']=='pdf'){
-                    $selector['Content']['tag']='<embed src="'.$selector['Content']['src'].'" title="" style="width:95vw;height:70vh;"/>';
+                    $selector['Content']['tag']='<object data="'.$selector['Content']['src'].'" type="application/pdf" title="" style="width:95vw;height:70vh;"/>';
                 } else if ($pathInfo['extension']=='mp4' || $pathInfo['extension']=='webm'){
                     $selector['Content']['tag']='<video controls width="360"><source src="'.$selector['Content']['src'].'" type="video/'.$pathInfo['extension'].'" /></video>';
                 } else {
