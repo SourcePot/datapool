@@ -14,7 +14,7 @@ final class FileContent{
 
     private $oc;
     
-    private $costs=array('EUR'=>'/(EUR\s*[\-0-9,.]+\d{2})/u','USD'=>'/(USD\s*[\-0-9,.]+\d{2})/u',);
+    private $currencies=[];
     private $costAlias=array('endbetrag'=>'brutto','endsumm'=>'brutto','total'=>'brutto','mwst'=>'vat','msatzsteu'=>'vat','amtlich'=>'amt','amtsgeb'=>'amt','zwischensumme'=>FALSE);
     
     public function __construct()
@@ -25,6 +25,13 @@ final class FileContent{
     Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+        $rates=new \SourcePot\Asset\Rates();
+        $this->currencies=$rates->getCurrencies();
+        $this->currencies['€']=$this->currencies['EUR'];
+        $this->currencies['£']=$this->currencies['GBP'];
+        $this->currencies['US\$']=$this->currencies['USD'];
+        $this->currencies['CA\$']=$this->currencies['CAD'];
+        $this->currencies['AU\$']=$this->currencies['AUD'];
     }
 
     /**
@@ -76,39 +83,71 @@ final class FileContent{
 
     private function addCosts(array $entry,string $text):array
     {
-        $entry['Costs']=array();
-        $costDescription=array();
-        foreach($this->costs as $key=>$regex){
-            $parts=preg_split($regex,$text,-1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-            $entry['Costs'][$key]=array();
-            if (count($parts)===1){continue;}
-            for($index=0;$index<(count($parts)-1);$index+=2){
-                $description=mb_strtolower($parts[$index]);
-                if (empty($entry['Costs'][$key])){
-                    $descriptionArr=explode("\n",$description);
-                    $description=strval(array_pop($descriptionArr));
-                    if (strlen($description)<30){$description=strval(array_pop($descriptionArr)).' '.$description;}
+        $entry['Costs (left)']=$entry['Costs (right)']=[];
+        $isBefore=$isAfter=FALSE;
+        $maxValue=0;
+        $regexAmount='/[\-\+]{0,1}([0-9]+[,. ]{0,1})+/';
+        foreach($this->currencies as $code=>$name){
+            $parts=preg_split('/'.$code.'/',$text);
+            if (count($parts)<2){continue;}
+            $entry['Costs (left)'][$code]['Max amount']=$entry['Costs (left)'][$code]['Max amount']??0;
+            $entry['Costs (right)'][$code]['Max amount']=$entry['Costs (right)'][$code]['Max amount']??0;
+            $entry['Costs (left)'][$code]['VAT']=$entry['Costs (left)'][$code]['VAT']??0;
+            $entry['Costs (right)'][$code]['VAT']=$entry['Costs (right)'][$code]['VAT']??0;
+            foreach($parts as $i=>$part){
+                $amountStr=$descBefore=$descAfter='';
+                if ($i===0){
+                    $descBefore=substr($part,-50);
+                    $descAfter=$parts[$i+1];
+                } else if (!isset($parts[$i+1])){
+                    $descBefore=$part;
+                    $descAfter='';
+                } else {
+                    $descBefore=$part;
+                    $descAfter=$parts[$i+1];
                 }
-                $description=preg_replace('/\s+/u',' ',trim($description));
-                $costDescription[]=$description;
-                $description=$this->costAlias($description);
-                if (empty($description)){continue;}
-                $entry['Costs'][$key][$description]=(isset($entry['Costs'][$key][$description]))?$entry['Costs'][$key][$description]:0;
-                $entry['Costs'][$key][$description]+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($parts[$index+1]);
-            }
-            $netto=0;
-            foreach($entry['Costs'][$key] as $description=>$costs){
-                $description=strval($description);
-                if (mb_stripos($description,'vat')!==FALSE){
-                    $netto-=$costs;
-                } else if (mb_stripos($description,'brutto')!==FALSE){
-                    $netto+=$costs;
+                if ($isBefore){
+                    $amountStr=substr($parts[$i],-20);
+                } else if ($isAfter){
+                    if (isset($parts[$i+1])){
+                        $amountStr=substr($parts[$i+1],0,20);
+                    }
+                } else {
+                    $amountStr=substr($parts[$i],-20);
+                    preg_match($regexAmount,$amountStr,$match);
+                    if (empty($match[0])){
+                        $isAfter=TRUE;
+                        $amountStr=substr($parts[$i+1],0,20);
+                    } else {
+                        $isBefore=TRUE;
+                    }
                 }
-                $entry['Costs'][$key][$description]=$key.' '.$costs;
+                preg_match($regexAmount,$amountStr,$match);
+                if (isset($match[0])){
+                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($match[0]);
+                    $entry['Costs (left)'][$code]['Max amount']=($value>$entry['Costs (left)'][$code]['Max amount'])?$value:$entry['Costs (left)'][$code]['Max amount'];
+                    $entry['Costs (right)'][$code]['Max amount']=($value>$entry['Costs (right)'][$code]['Max amount'])?$value:$entry['Costs (right)'][$code]['Max amount'];
+                    if (isset($prevMatch)){
+                        $descBefore=trim(str_replace($prevMatch,'',$descBefore));
+                    }
+                    if (!empty($descBefore)){
+                        $entry['Costs (left)'][$code][$descBefore]=$value;
+                        if (strpos($descBefore,'MwSt')!==FALSE || strpos($descBefore,'USt')!==FALSE || strpos($descBefore,'msatzsteuer')!==FALSE || strpos($descBefore,'wertsteuer')!==FALSE){
+                            $entry['Costs (left)'][$code]['VAT']=$value;
+                        }
+                    }
+                    $descAfter=trim(str_replace($match[0],'',$descAfter));
+                    if (!empty($descAfter)){
+                        $entry['Costs (right)'][$code][$descAfter]=$value;
+                        if (strpos($descAfter,'MwSt')!==FALSE || strpos($descAfter,'USt')!==FALSE || strpos($descAfter,'msatzsteuer')!==FALSE || strpos($descAfter,'wertsteuer')!==FALSE){
+                            $entry['Costs (left)'][$code]['VAT']=$value;
+                        }
+                    }
+                    $prevMatch=$match[0];
+                }
             }
-            $entry['Costs'][$key]['netto']=$key.' '.$netto;
+
         }
-        $entry['Costs description']=implode(' | ',$costDescription);
         return $entry;
     }
 
