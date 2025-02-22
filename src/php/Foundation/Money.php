@@ -53,7 +53,7 @@ class Money{
     {
         $string=strval($string);
         $asset=new \SourcePot\Asset\Asset();
-        $asset->guessAssetFromString($string);
+        $asset->setFromString($string);
         return $asset->getArray();
     }
 
