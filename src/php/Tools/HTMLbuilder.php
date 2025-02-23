@@ -109,20 +109,20 @@ class HTMLbuilder{
     public function table(array $arr,bool $returnArr=FALSE):string|array
     {
         $html='';
-        $styles=array('trStyle'=>[]);
+        $styles=['trStyle'=>[]];
         if (!empty($arr['matrix'])){
-            $indexArr=array('x'=>0,'y'=>0);
-            $tableArr=array('tag'=>'table','keep-element-content'=>TRUE,'element-content'=>'');
+            $indexArr=['x'=>0,'y'=>0];
+            $tableArr=['tag'=>'table','keep-element-content'=>TRUE,'element-content'=>''];
             if (isset($arr['id'])){$tableArr['id']=$arr['id'];}
             if (isset($arr['style'])){$tableArr['style']=$arr['style'];}
             if (isset($arr['title'])){$tableArr['title']=$arr['title'];}
-            $tbodyArr=array('tag'=>'tbody','keep-element-content'=>TRUE);
+            $tbodyArr=['tag'=>'tbody','keep-element-content'=>TRUE];
             if (isset($arr['class'])){
                 $tableArr['class']=$arr['class'];
                 $tbodyArr['class']=$arr['class'];
             }
             if (!empty($arr['caption'])){
-                $captionArr=array('tag'=>'caption','keep-element-content'=>TRUE,'element-content'=>$arr['caption']);
+                $captionArr=['tag'=>'caption','keep-element-content'=>TRUE,'element-content'=>$arr['caption']];
                 if (isset($arr['class'])){$captionArr['class']=$arr['class'];}
                 $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($captionArr);
             }
@@ -131,9 +131,9 @@ class HTMLbuilder{
                 $indexArr['y']++;
                 $rowArr['trStyle']=(isset($rowArr['trStyle']))?$rowArr['trStyle']:$styles['trStyle'];
                 if (!empty($arr['skipEmptyRows']) && empty($rowArr)){continue;}
-                if (empty($arr['hideKeys'])){$rowArr=array(' Key '=>$rowLabel)+$rowArr;}
-                $trArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowArr['trStyle']);
-                $trHeaderArr=array('tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'');
+                if (empty($arr['hideKeys'])){$rowArr=[' Key '=>$rowLabel]+$rowArr;}
+                $trArr=['tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowArr['trStyle']];
+                $trHeaderArr=['tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>''];
                 foreach($rowArr as $colLabel=>$cell){
                     if (isset($styles[$colLabel])){continue;}
                     if (empty($arr['thKeepCase'])){
@@ -142,8 +142,8 @@ class HTMLbuilder{
                         $colLabel=strval($colLabel);
                     }
                     $indexArr['x']++;
-                    $thArr=array('tag'=>'th','element-content'=>$colLabel,'keep-element-content'=>!empty($arr['keep-element-content']));
-                    $tdArr=array('tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content']));
+                    $thArr=['tag'=>'th','element-content'=>$colLabel,'keep-element-content'=>!empty($arr['keep-element-content'])];
+                    $tdArr=['tag'=>'td','cell'=>$indexArr['x'].'-'.$indexArr['y'],'keep-element-content'=>!empty($arr['keep-element-content'])];
                     if (isset($cell['tdStyle'])){
                         $tdArr['style']=$cell['tdStyle'];
                         unset($cell['tdStyle']);
@@ -172,7 +172,7 @@ class HTMLbuilder{
             $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tbodyArr);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tableArr);
         } // if !empty matrix  
-        if ($returnArr){return array('html'=>$html);} else {return $html;}
+        if ($returnArr){return ['html'=>$html];} else {return $html;}
     }
     
     public function select(array $arr,bool $returnArr=FALSE):string|array
@@ -230,13 +230,13 @@ class HTMLbuilder{
                 $html=str_replace($needle,$value,$html);
             }
             if (count($arr['options'])>$optionsFilterLimit && !empty($selectArr['id'])){
-                $filterArr=array('tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>array('filter'),'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
-                $countArr=array('tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']);
+                $countArr=['tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($countArr);
             }
             if (isset($selectArr['trigger-id'])){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'*','key'=>array('select'),'value'=>$key,'id'=>$triggerId,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']));
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'*','key'=>['select'],'value'=>$key,'id'=>$triggerId,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
             }
         }
         if ($returnArr){
@@ -270,7 +270,7 @@ class HTMLbuilder{
         if (empty($arr['Source'])){return '';}
         $arr['value']=(isset($arr['value']))?$arr['value']:'';
         $stdKeys=$keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>''));
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>'']);
         $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STANDARD');
         if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
             // get options from cache
@@ -287,7 +287,7 @@ class HTMLbuilder{
             $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
         }
         $arr['keep-element-content']=TRUE;
-        $arr['options']=(empty($arr['addSourceValueColumn']))?[]:array('useValue'=>'&#9998;');
+        $arr['options']=(empty($arr['addSourceValueColumn']))?[]:['useValue'=>'&#9998;'];
         $arr['options']+=(empty($arr['addColumns']))?[]:$arr['addColumns'];
         $sampleValue='';
         foreach($keys as $key=>$value){
@@ -299,7 +299,7 @@ class HTMLbuilder{
         $html=$this->select($arr);
         if (!empty($sampleValue)){
             if (strlen($sampleValue)>40){$sampleValue=substr($sampleValue,0,37).'...';}
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','class'=>'sample','element-content'=>$sampleValue));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','class'=>'sample','element-content'=>$sampleValue]);
         }
         return $html;
     }
@@ -332,11 +332,11 @@ class HTMLbuilder{
     {
         $html='';
         $id=md5($text.mt_rand(1000,9999));
-        $element=array('tag'=>'button','element-content'=>'&#9780;','keep-element-content'=>TRUE,'id'=>'clipboard-'.$id,'key'=>array('copy',$id),'excontainer'=>TRUE,'title'=>'Copy to clipboard','style'=>array('font-weight'=>'bold'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $element=['tag'=>'button','element-content'=>'&#9780;','keep-element-content'=>TRUE,'id'=>'clipboard-'.$id,'key'=>['copy',$id],'excontainer'=>TRUE,'title'=>'Copy to clipboard','style'=>['font-weight'=>'bold'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-        $element=array('tag'=>'div','element-content'=>$text,'id'=>$id,'style'=>array('padding'=>'0'));
+        $element=['tag'=>'div','element-content'=>$text,'id'=>$id,'style'=>['padding'=>'0']];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-        $element=array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE);
+        $element=['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         return $html;
     }
@@ -354,13 +354,13 @@ class HTMLbuilder{
         // This function returns standard buttons based on argument arr.
         // If arr is empty, buttons will be processed
         $html='';
-        $defaultValues=array('selector'=>array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE));
-        $setValues=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $defaultValues=['selector'=>['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE]];
+        $setValues=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         if (isset($arr['cmd'])){
             // compile button
             $arr['element-content']=(isset($arr['element-content']))?$arr['element-content']:ucfirst($arr['cmd']);
             $arr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr,TRUE);
-            $arr['key']=array($arr['cmd']);
+            $arr['key']=[$arr['cmd']];
             if (!empty($arr['selector']['Source'])){$arr['source']=$arr['selector']['Source'];}
             if (!empty($arr['selector']['EntryId'])){
                 $arr['entry-id']=$arr['selector']['EntryId'];
@@ -426,11 +426,11 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['export'])){
                 $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
                 $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.$selector['Source'].' dump.zip';
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries(array($selector),$fileName,FALSE,10000000000);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries([$selector],$fileName,FALSE,10000000000);
             } else if (isset($formData['cmd']['approve']) || isset($formData['cmd']['decline'])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $cmd=key($formData['cmd']);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]=array('action'=>$cmd,'timestamp'=>time(),'app'=>$selector['app']);
+                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]=['action'=>$cmd,'timestamp'=>time(),'app'=>$selector['app']];
                 $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],1);
                 $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],7);
                 $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],9);
@@ -487,9 +487,9 @@ class HTMLbuilder{
         $arr['style']=(isset($arr['style']))?$arr['style']:[];
         $arr['class']=(isset($arr['class']))?$arr['class']:'app';
         $arr['title']=(isset($arr['title']))?$arr['title']:'';
-        $summaryArr=array('tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']);
+        $summaryArr=['tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($summaryArr);
-        $detailsArr=array('tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']);
+        $detailsArr=['tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']];
         if (isset($arr['open'])){$detailsArr['open']=$arr['open'];}
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($detailsArr);
         return $html;
@@ -520,10 +520,10 @@ class HTMLbuilder{
             $_SESSION[__CLASS__]['settings'][$callingFunction]=$arr['formData']['val'];
         }
         $currentKeys=explode('||',$_SESSION[__CLASS__]['settings'][$callingFunction]['Category']);
-        $categorySelectArr=array('options'=>$options,'key'=>array('Category'),'selected'=>$_SESSION[__CLASS__]['settings'][$callingFunction]['Category'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction);
+        $categorySelectArr=['options'=>$options,'key'=>['Category'],'selected'=>$_SESSION[__CLASS__]['settings'][$callingFunction]['Category'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction];
         $html=$this->select($categorySelectArr);
         if (count($currentKeys)>1){
-            $tagArr=array('tag'=>'a','href'=>'#','class'=>'emoji','target'=>$arr['settings']['target']);
+            $tagArr=['tag'=>'a','href'=>'#','class'=>'emoji','target'=>$arr['settings']['target']];
             foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->emojis[$currentKeys[0]][$currentKeys[1]] as $code=>$title){
                 $tagArr['id']='utf8-'.$code;
                 $tagArr['title']=$title;
@@ -531,7 +531,7 @@ class HTMLbuilder{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tagArr);
             }
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE]);
         return $arr;
     }
     
@@ -541,7 +541,7 @@ class HTMLbuilder{
         // Typical use is for keys 'Read', 'Write' or 'Privileges'.
         //
         if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
-        $template=array('key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16);
+        $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
         $entry=$arr['selector'];
         // only the Admin has access to the method if columns 'Privileges' is selected
@@ -581,23 +581,19 @@ class HTMLbuilder{
             if (isset($arr['integerDef'][$bitIndex]['Name'])){$label=$arr['integerDef'][$bitIndex]['Name'];} else {$label=$bitIndex;}
             $bitIndex=strval($bitIndex);
             $id=md5($callingClass.$callingFunction.$bitIndex);
-            //$matrix[$bitIndex]['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
-            //$matrix[$bitIndex]['Status']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
-            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>array($arr['key'],$bitIndex),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex));
-            $htmlBit.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'label','for'=>$id,'element-content'=>strval($label)));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$htmlBit,'keep-element-content'=>TRUE,'class'=>'fieldset'));
+            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>[$arr['key'],$bitIndex],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex]);
+            $htmlBit.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>strval($label)]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$htmlBit,'keep-element-content'=>TRUE,'class'=>'fieldset']);
         }
-        $updateBtn=array('tag'=>'button','key'=>array($arr['key'],'save'),'element-content'=>'Save','style'=>array('margin'=>'0','width'=>'100%'),'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
+        $updateBtn=['tag'=>'button','key'=>[$arr['key'],'save'],'element-content'=>'Save','style'=>['margin'=>'0','width'=>'100%'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
-        //$matrix['Cmd']['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
-        //$matrix['Cmd']['Status']='';
         if ($saveRequest){
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
             $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,array($arr['key']=>$updatedInteger),FALSE,'Write');
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,[$arr['key']=>$updatedInteger],FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-            $context=array('key'=>$arr['key'],'Source'=>$entry['Source'],'selector'=>'','statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics));
+            $context=['key'=>$arr['key'],'Source'=>$entry['Source'],'selector'=>'','statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics)];
             $context['what']=(empty($entry['EntryId']))?'entries':'entry';
             $context['selector'].=(empty($entry['Group']))?'':' | Group='.$entry['Group'];
             $context['selector'].=(empty($entry['Folder']))?'':' | Folder='.$entry['Folder'];
@@ -618,7 +614,7 @@ class HTMLbuilder{
         if (!isset($arr['selector'])){return $arr;}
         if (empty($arr['key'])){$arr['key']='Read';}
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId']) || empty($arr['selector'][$arr['key']])){
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>'Required keys missing.'));
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Required keys missing.']);
         } else {
             $html=$this->integerEditor($arr);
         }
@@ -632,9 +628,9 @@ class HTMLbuilder{
     */
     public function entryControls(array $arr,bool $isDebugging=FALSE):string
     {
-        $tableStyle=array('clear'=>'none','margin'=>'0','min-width'=>'200px');
+        $tableStyle=['clear'=>'none','margin'=>'0','min-width'=>'200px'];
         if (!isset($arr['selector'])){return 'Selector missing';}
-        $debugArr=array('arr_in'=>$arr);
+        $debugArr=['arr_in'=>$arr];
         $arr['html']='';
         if (!isset($arr['selector']['Content'])){
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
@@ -651,7 +647,7 @@ class HTMLbuilder{
                 ];
         $arr=array_replace_recursive($template,$arr);
         // create preview
-        $matrix=array('Preview'=>array('Value'=>''),'Btns'=>array('Value'=>''));
+        $matrix=['Preview'=>['Value'=>''],'Btns'=>['Value'=>'']];
         if (empty($arr['hidePreview'])){
             $previewArr=$arr;
             $previewArr['settings']['style']=$arr['previewStyle'];
@@ -682,8 +678,8 @@ class HTMLbuilder{
             }
         }
         // finalize
-        $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>array('width'=>'max-content')));
-        $html=$this->table(array('matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'title'=>$tableTitle,'style'=>$tableStyle,'class'=>'matrix'));
+        $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>['width'=>'max-content']]);
+        $html=$this->table(['matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'title'=>$tableTitle,'style'=>$tableStyle,'class'=>'matrix']);
         if ($isDebugging){
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
@@ -702,21 +698,21 @@ class HTMLbuilder{
         if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
             $errorMsg.=' contentStructure, callingClass or callingFunction';
             $this->oc['logger']->log('error',$errorMsg,[]);
-            return (empty($arr['returnRow']))?$errorMsg:array('error'=>$errorMsg);
+            return (empty($arr['returnRow']))?$errorMsg:['error'=>$errorMsg];
         }
         if ((empty($arr['selector']['Source']) && empty($arr['selector']['Class'])) || empty($arr['selector']['EntryId'])){
             $errorMsg.=' Source or Class or EntryId';
             $this->oc['logger']->log('error',$errorMsg,[]);
-            return (empty($arr['returnRow']))?$errorMsg:array('error'=>$errorMsg);
+            return (empty($arr['returnRow']))?$errorMsg:['error'=>$errorMsg];
         }
         $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr); // <----------------- Update old EntryId
         // get base selector and storage object
         if (!empty($arr['selector']['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
-            $baseSelector=array('Source'=>$arr['selector']['Source']);
+            $baseSelector=['Source'=>$arr['selector']['Source']];
         } else {
             $storageObj='SourcePot\Datapool\Foundation\Filespace';
-            $baseSelector=array('Class'=>$arr['selector']['Class']);
+            $baseSelector=['Class'=>$arr['selector']['Class']];
         }
         // initialization
         $arr['returnRow']=!empty($arr['returnRow']);
@@ -741,16 +737,16 @@ class HTMLbuilder{
             $entry=array_merge($arr['selector'],$selector,$formData['val'][$selector['EntryId']]);
             $this->oc[$storageObj]->updateEntry($entry,$isSystemCall);
         } else if (isset($formData['cmd']['delete'])){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,array('removeEntryId'=>$selector['EntryId']));
+            $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['removeEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['add'])){
             $endIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($selector['EntryId']);
             $newEntry=$arr['selector'];
             $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($selector['EntryId'],$endIndex+1);
             $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($newEntry);
         } else if (isset($formData['cmd']['moveUp'])){
-            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,array('moveUpEntryId'=>$selector['EntryId']));
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveUpEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['moveDown'])){
-            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,array('moveDownEntryId'=>$selector['EntryId']));
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveDownEntryId'=>$selector['EntryId']]);
         }
         // html creation
         $csvMatrix=[];
@@ -763,7 +759,7 @@ class HTMLbuilder{
             $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             $currentIndex=intval($entryIdComps[0]);
             $rowIndex=$entryIdComps[0];
-            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=array('background-color'=>'#f00');}
+            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=['background-color'=>'#f00'];}
             foreach($arr['contentStructure'] as $contentKey=>$elementArr){
                 $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
                 $method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];
@@ -779,7 +775,7 @@ class HTMLbuilder{
                     }
                     $elementArr['callingClass']=$arr['callingClass'];
                     $elementArr['callingFunction']=$arr['callingFunction'];
-                    $elementArr['key']=array($entry['EntryId'],'Content',$contentKey);
+                    $elementArr['key']=[$entry['EntryId'],'Content',$contentKey];
                     if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
                     $matrix[$rowIndex][$contentKey]=$this->oc[$classWithNamespace]->$method($elementArr);
                     if (isset($elementArr['type']) && isset($elementArr['value'])){
@@ -796,27 +792,27 @@ class HTMLbuilder{
             $cmdBtns='';
             $moveBtns='';
             // add buttons
-            $btnArr=array_replace_recursive($arr,$this->btns['save'],array('excontainer'=>FALSE));
+            $btnArr=array_replace_recursive($arr,$this->btns['save'],['excontainer'=>FALSE]);
             $btnArr['key'][]=$entry['EntryId'];
             $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             if ($entry['rowCount']>1){
-                $btnArr=array_replace_recursive($arr,$this->btns['delete'],array('excontainer'=>FALSE));
+                $btnArr=array_replace_recursive($arr,$this->btns['delete'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             }
             if ($endIndex<$arr['maxRowCount'] && $currentIndex===$endIndex){
-                $btnArr=array_replace_recursive($arr,$this->btns['add'],array('excontainer'=>FALSE));
+                $btnArr=array_replace_recursive($arr,$this->btns['add'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             }
             if ($currentIndex>$startIndex){
-                $btnArr=array_replace_recursive($arr,$this->btns['moveDown'],array('excontainer'=>FALSE));
+                $btnArr=array_replace_recursive($arr,$this->btns['moveDown'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']['background-color']='#89fa';}
                 $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
             }
             if ($currentIndex<$endIndex){
-                $btnArr=array_replace_recursive($arr,$this->btns['moveUp'],array('excontainer'=>FALSE));
+                $btnArr=array_replace_recursive($arr,$this->btns['moveUp'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']['background-color']='#89fa';}
                 $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
@@ -826,15 +822,15 @@ class HTMLbuilder{
         } // end of loop through list entries
         $matrix[$rowIndex]['Move']=($matrix[$rowIndex]['Move']??'').$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
         if ($arr['returnRow']){
-            return (empty(current($matrix)))?array('value'=>''):current($matrix);
+            return (empty(current($matrix)))?['value'=>'']:current($matrix);
         } else {
-            return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+            return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         }
     }
 
     public function selector2string(array $selector=[], bool $useEntryId=FALSE):string
     {
-        $template=array('Source'=>'','Group'=>'','Folder'=>'','Name'=>'');
+        $template=['Source'=>'','Group'=>'','Folder'=>'','Name'=>''];
         if (empty($selector['Name']) && !empty($selector['EntryId'])){
             $selector=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
         }
@@ -853,12 +849,12 @@ class HTMLbuilder{
         if ($flip){
             $matrix=[];
             foreach($row as $key=>$value){
-                $matrix[$key]=array('value'=>$value);
+                $matrix[$key]=['value'=>$value];
             }
         } else {
-            $matrix=array($caption=>$row);
+            $matrix=[$caption=>$row];
         }
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption));
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
     }
     
     public function value2tabelCellContent($html,array $arr=[])
@@ -887,7 +883,7 @@ class HTMLbuilder{
     {
         if (empty($arr['selector'])){return '';}
         if (empty($arr['excontainer'])){
-            $settingsTemplate=array('method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+            $settingsTemplate=['method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'];
             $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
             $wrapperSetting=[];
             $wrapperSetting['class']=(empty($arr['class']))?'std':$arr['class'];
@@ -945,14 +941,14 @@ class HTMLbuilder{
                 if (is_array($presentationValue)){
                     // present as table
                     $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($presentationValue);
-                    $presentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>(($showKey)?$key:''),'style'=>$presentArr['style'],'class'=>$presentArr['class']));
+                    $presentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>(($showKey)?$key:''),'style'=>$presentArr['style'],'class'=>$presentArr['class']]);
                 } else {
                     // present as div
                     if ($showKey){
                         $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
                         $presentationValue='<b>'.$key.': </b>'.$presentationValue;
                     }
-                    $presentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$presentationValue,'keep-element-content'=>TRUE,'style'=>$presentArr['style'],'class'=>$presentArr['class']));
+                    $presentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$presentationValue,'keep-element-content'=>TRUE,'style'=>$presentArr['style'],'class'=>$presentArr['class']]);
                 }
                 $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($presentHtml);
             } else {
@@ -963,13 +959,13 @@ class HTMLbuilder{
                 if (empty($wrapper)){
                     $appArr=$this->oc[$callingClass]->$callingFunction($presentArr);
                 } else if ($wrapper=='container'){
-                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$setting['EntryId'],'generic',$presentArr['selector'],array('method'=>$callingFunction,'classWithNamespace'=>$callingClass),[]);    
+                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$setting['EntryId'],'generic',$presentArr['selector'],['method'=>$callingFunction,'classWithNamespace'=>$callingClass],[]);    
                 }
                 if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
             }
         }
         if (empty($setting['rowCount'])){
-            $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',array('selectorFolder'=>$selector['Folder']));    
+            $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',['selectorFolder'=>$selector['Folder']]);    
         }
         if (isset($presentArr['containerId'])){
             $presentArr['html']=$html;
@@ -987,7 +983,7 @@ class HTMLbuilder{
         } else if (!empty($presentArr['selector']['function'])){
             $presentArr['callingFunction'].='|'.$presentArr['selector']['function'];
         }
-        $selector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Presentation');
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Presentation'];
         $selector['Folder']=$presentArr['callingClass'].'::'.$presentArr['callingFunction'];
         $guideEntry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($selector);
         $selector['Name']='Setting';
@@ -1012,16 +1008,16 @@ class HTMLbuilder{
             foreach($entryTemplate as $column=>$columnInfo){$entryKeyOptions[$column]=$column;}
         }
         $styleClassOptions=$this->getStyleClassOptions($arr);
-        $contentStructure=array('Entry key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE),
-                                'Key filter'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Style class'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE),
-                                'Style'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Show key'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array('No','Yes')),
-                                );
+        $contentStructure=['Entry key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE],
+                                'Key filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+                                'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
+                                'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+                                'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
+                          ];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']=$arr['selector']['Folder'];
         $arr['selector']['Name']='Setting';
-        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Source','Group','Folder','Name'),'0','',FALSE);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $arr;
     }
@@ -1040,7 +1036,7 @@ class HTMLbuilder{
 
     public function plotDataProvider(array $arr):array
     {
-        $plotData=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $plotData=['class'=>__CLASS__,'function'=>__FUNCTION__];
         if (isset($_SESSION['plots'][$arr['id']])){
             $plotData=array_merge($plotData,$_SESSION['plots'][$arr['id']]);
             if (!empty($plotData['callingClass']) && !empty($plotData['callingFunction'])){

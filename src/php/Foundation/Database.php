@@ -19,27 +19,25 @@ class Database{
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
     
-    private $entryTable='settings';
-    private $entryTemplate=[];
-
-    private $rootEntryTemplate=array('EntryId'=>array('type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0),
-                                 'Group'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'),
-                                 'Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-                                 'Name'=>array('type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
-                                 'Type'=>array('type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'),
-                                 'Date'=>array('type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'),
-                                 'Content'=>array('type'=>'LONGBLOB','value'=>[],'Description'=>'This is the entry Content data'),
-                                 'Params'=>array('type'=>'LONGBLOB','value'=>[],'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'),
-                                 'Expires'=>array('type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'),
-                                 'Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
-                                 'Owner'=>array('type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
-                                 );
+    private $rootEntryTemplate=['EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
+                                 'Group'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'],
+                                 'Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
+                                 'Name'=>['type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+                                 'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
+                                 'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
+                                 'Content'=>['type'=>'LONGBLOB','value'=>[],'Description'=>'This is the entry Content data'],
+                                 'Params'=>['type'=>'LONGBLOB','value'=>[],'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'],
+                                 'Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
+                                 'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                                 'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
+                                 'Owner'=>['type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
+                                ];
     
     public function __construct(array $oc)
     {
         $this->oc=$oc;
         $this->resetStatistic();
+        // initialize database and get connection
         $this->dbObj=$this->connect();
         $this->collectDatabaseInfo();
         // set default entry access rights
@@ -55,7 +53,6 @@ class Database{
 
     public function init()
     {
-        $this->entryTemplate=$this->getEntryTemplateCreateTable($this->entryTable);
     }
     
     public function job(array $vars):array
@@ -84,7 +81,7 @@ class Database{
 
     public function resetStatistic():array
     {
-        $_SESSION[__CLASS__]['Statistic']=array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0,'skipped'=>0);
+        $_SESSION[__CLASS__]['Statistic']=['matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0,'skipped'=>0];
         return $_SESSION[__CLASS__]['Statistic'];
     }
     
@@ -109,7 +106,7 @@ class Database{
         $matrix=[];
         if (isset($_SESSION[__CLASS__]['Statistic'])){
             foreach($_SESSION[__CLASS__]['Statistic'] as $key=>$value){
-                $matrix[$key]=array('Value'=>$value);
+                $matrix[$key]=['Value'=>$value];
             }
         }
         return $matrix;
@@ -134,7 +131,7 @@ class Database{
     */
     public function getEntryTemplate(string|bool $table=FALSE):array|bool
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'table'=>$table);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'table'=>$table];
         if ($table){
             if (isset($GLOBALS['dbInfo'][$table])){return $GLOBALS['dbInfo'][$table];}
         } else {
@@ -176,7 +173,7 @@ class Database{
             $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=".self::CHARACTER_SET." COLLATE ".self::CHARACTER_SET."_unicode_ci;";
             $this->executeStatement($sql,[]);
             if (isset($this->oc['logger'])){
-                $this->oc['logger']->log('notice','Created missing database table "{table}"',array('table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__));
+                $this->oc['logger']->log('notice','Created missing database table "{table}"',['table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__]);
             }
             // set standard indices
             $this->setTableIndices($table);
@@ -203,7 +200,7 @@ class Database{
     */
     public function setTableIndices(string $table)
     {
-        $context=array('table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>'');
+        $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
         // drop all existing indices
         $sql="";
         $indices=$this->getTableIndices($table);
@@ -228,7 +225,7 @@ class Database{
     */
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -310,8 +307,8 @@ class Database{
         $dbObj=FALSE;
         $namespaceComps=explode('\\',__NAMESPACE__);
         $dbName=mb_strtolower($namespaceComps[0]);
-        $access=array('Class'=>$class,'EntryId'=>$entryId,'Read'=>65535);
-        $access['Content']=array('dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id());
+        $access=['Class'=>$class,'EntryId'=>$entryId,'Read'=>65535];
+        $access['Content']=['dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id()];
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         try{
             $dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
@@ -369,7 +366,7 @@ class Database{
     
     private function bindValues(string $sql,array $inputs=[],object $dbObj):array
     {
-        $return=array('sql'=>$sql,'input'=>$inputs,'stmt'=>$dbObj->prepare($sql),'sqlSimulated'=>$sql);
+        $return=['sql'=>$sql,'input'=>$inputs,'stmt'=>$dbObj->prepare($sql),'sqlSimulated'=>$sql];
         foreach($inputs as $bindKey=>$bindValue){
             $simulatedValue="'".$bindValue."'";
             $return['sqlSimulated']=str_replace($bindKey,$simulatedValue,$return['sqlSimulated']);
@@ -381,7 +378,7 @@ class Database{
     private function deleteExpiredEntries():array
     {
         foreach($GLOBALS['dbInfo'] as $table=>$entryTemplate){
-            $selector=array('Source'=>$table,'Expires<'=>date('Y-m-d H:i:s'));
+            $selector=['Source'=>$table,'Expires<'=>date('Y-m-d H:i:s')];
             $this->deleteEntries($selector,TRUE);
         }
         return $this->getStatistic();
@@ -413,8 +410,8 @@ class Database{
             $selector['Type=!']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
         }
         $entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
-        $opAlias=array('<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT');
-        $sqlArr=array('sql'=>[],'inputs'=>[]);            
+        $opAlias=['<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT'];
+        $sqlArr=['sql'=>[],'inputs'=>[]];            
         foreach($selector as $column=>$value){
             if ($value===FALSE || $value==\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
@@ -453,7 +450,7 @@ class Database{
         $sqlArr['sql']=implode(' AND ',$sqlArr['sql']);
         if (empty($sqlArr['sql'])){$sqlArr['sql']='';} else {$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
         if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(array('selector'=>$selector,'sqlArr'=>$sqlArr,'entryTemplate'=>$entryTemplate));
+            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['selector'=>$selector,'sqlArr'=>$sqlArr,'entryTemplate'=>$entryTemplate]);
         }
         return $sqlArr;        
     }    
@@ -521,7 +518,7 @@ class Database{
     }
     
     public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
-        $selector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable());
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable()];
         if ($returnPrimaryKeyOnly){$return='EntryId';} else {$return='*';}
         $rights=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights([],$right,$right);
         $right=intval($rights['Read']);
@@ -540,7 +537,7 @@ class Database{
     
     public function getDistinct(array $selector,string $column,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeGuideEntries=FALSE):\Generator
     {
-        $result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>'');
+        $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>''];
         $column=trim($column,'!');
         if (strcmp($column,'Source')===0){
             $tableArr=$GLOBALS['dbInfo'];
@@ -559,7 +556,7 @@ class Database{
             $sqlArr['sql'].=';';
             //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-            $result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'');
+            $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>''];
             $this->addStatistic('matches',$result['rowCount']);
             while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
                 foreach($row as $column=>$value){
@@ -587,7 +584,7 @@ class Database{
         $sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
         $sqlArr['sql'].=';';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
-        $result=array('isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>-1,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'');
+        $result=['isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>-1,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>''];
         $this->addStatistic('matches',$result['rowCount']);
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
             $result['rowIndex']++;
@@ -616,12 +613,12 @@ class Database{
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         if (!empty($selector['EntryId'])){
             $sqlPlaceholder=':'.'EntryId';
-            $sqlArr=array('sql'=>"SELECT * FROM `".$selector['Source']."` WHERE `".'EntryId'."`=".$sqlPlaceholder,'inputs'=>array($sqlPlaceholder=>$selector['EntryId']));
+            $sqlArr=['sql'=>"SELECT * FROM `".$selector['Source']."` WHERE `".'EntryId'."`=".$sqlPlaceholder,'inputs'=>[$sqlPlaceholder=>$selector['EntryId']]];
             $sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
             $sqlArr['sql'].=';';
             //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
-            $result=array('isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source']);
+            $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source']];
             $this->addStatistic('matches',$result['rowCount']);
             $row=$stmt->fetch(\PDO::FETCH_ASSOC);
             if (is_array($row)){
@@ -652,9 +649,9 @@ class Database{
     *
     * @return array Array containing the EntryId-list as SQL-suiffix
     */
-    private function sqlEntryIdListSelector(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=array('EntryId'),bool $removeGuideEntries=FALSE,bool $isDebugging=FALSE):array
+    private function sqlEntryIdListSelector(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=['EntryId'],bool $removeGuideEntries=FALSE,bool $isDebugging=FALSE):array
     {
-        $result=array('primaryKeys'=>[],'sql'=>'','primaryKey'=>'EntryId');
+        $result=['primaryKeys'=>[],'sql'=>'','primaryKey'=>'EntryId'];
         foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging) as $row){
             $result['sql'].=",'".$row['EntryId']."'";
             $result['primaryKeys'][]=$row['EntryId'];
@@ -678,7 +675,7 @@ class Database{
             return $this->getStatistic();
         }
         foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
-            $entrySelector=array('Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue);
+            $entrySelector=['Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue];
             $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
             $this->removeFile($fileToDelete);
         }
@@ -712,7 +709,7 @@ class Database{
     */
     public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
         if (!empty($entry['Owner'])){
@@ -804,12 +801,12 @@ class Database{
     */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>'');
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>''];
         // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys and set selector
         if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
-        $selector=array('Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']);
+        $selector=['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']];
         // replace right constants
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
@@ -831,7 +828,7 @@ class Database{
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
                 $dateTimeArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date(time(),'UTC');
-                $entry['Params']['Log'][__FUNCTION__]['insert']=array('user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']);
+                $entry['Params']['Log'][__FUNCTION__]['insert']=['user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
             }
             // insert new entry
             $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
@@ -848,7 +845,7 @@ class Database{
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
                 $dateTimeArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date(time(),'UTC');
-                $entry['Params']['Log'][__FUNCTION__]['update']=array('user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']);
+                $entry['Params']['Log'][__FUNCTION__]['update']=['user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
             }
             // update entry
             $entry=$this->unifyEntry($entry,TRUE);
@@ -925,7 +922,7 @@ class Database{
     */
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'sourceUpdatedFirst'=>FALSE,'sourceTargetEntryIdMatch'=>FALSE,'copyAttachedFile'=>FALSE,'movedAttachedFile'=>FALSE,'attachedFileProcessed'=>FALSE,'noWriteAccess'=>FALSE);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'sourceUpdatedFirst'=>FALSE,'sourceTargetEntryIdMatch'=>FALSE,'copyAttachedFile'=>FALSE,'movedAttachedFile'=>FALSE,'attachedFileProcessed'=>FALSE,'noWriteAccess'=>FALSE];
         // test for required keys and set selector
         if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId']) || empty($targetSelector)){
             $this->oc['logger']->log('error','{class} &rarr; {function} called with empty sourceEntry[Source], sourceEntry[EntryId] or targetEntry. Source entry was not moved.',$context);    
@@ -939,7 +936,7 @@ class Database{
             }
             // apply target selector to source entry
             $targetEntry=array_replace_recursive($sourceEntry,$targetSelector);
-            $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+            $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,['Source','Group','Folder','Name'],'0','',FALSE);
             if (strcmp($sourceEntry['EntryId'],$targetEntry['EntryId'])===0){
                 // source and target EntryId identical, attachment does not need to be touched
                 if (!$isTestRun){
@@ -972,7 +969,7 @@ class Database{
                         $context['copyAttachedFile']=TRUE;
                     } else {
                         $context['movedAttachedFile']=TRUE;
-                        $this->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),$isSystemCall);
+                        $this->deleteEntries(['Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']],$isSystemCall);
                     }
                 }
             }
@@ -999,25 +996,6 @@ class Database{
         return FALSE;
     }
     
-    /**
-    * This method compares two selectors
-    *
-    * @param array $selectorA Is the first selector.  
-    * @param array $selectorB Is the second selector.  
-    *
-    * @return boolean TRUE if selectors are equal, FALSE if they are not equal.
-    */
-    public function isSameSelector(array $selectorA,array $selectorB):bool
-    {
-        $relevantKeys=array('Source','Group','Folder','Name','EntryId');
-        foreach($relevantKeys as $column){
-            if (empty($selectorA[$column])){$selectorA[$column]='';}
-            if (empty($selectorB[$column])){$selectorB[$column]='';}
-            if ($selectorA[$column]!=$selectorB[$column]){return FALSE;}
-        }
-        return TRUE;
-    }
-    
     public function addOrderedListIndexToEntryId(string $primaryKeyValue,int $index):string
     {
         $primaryKeyValue=$this->orderedListComps($primaryKeyValue);
@@ -1031,7 +1009,7 @@ class Database{
         $comps=$this->orderedListComps($primaryKeyValue);
         if (count($comps)<2){
             if ($detectMalFormat){
-                $this->oc['logger']->log('warning','Invalid EntryId "{EntryId}" supplied to "{function}"',array('function'=>__FUNCTION__,'EntryId'=>$primaryKeyValue));
+                $this->oc['logger']->log('warning','Invalid EntryId "{EntryId}" supplied to "{function}"',['function'=>__FUNCTION__,'EntryId'=>$primaryKeyValue]);
             }
             return 0;
         }
@@ -1056,7 +1034,7 @@ class Database{
         $targetIndex=0;
         $targetEntryId='';
         $notices=[];
-        $cmd=array_merge(array('newOlKey'=>'','removeEntryId'=>'SKIP','moveUpEntryId'=>'!!SKIP!!','moveDownEntryId'=>'!!SKIP!!'),$cmd);
+        $cmd=array_merge(['newOlKey'=>'','removeEntryId'=>'SKIP','moveUpEntryId'=>'!!SKIP!!','moveDownEntryId'=>'!!SKIP!!'],$cmd);
         if (!empty($selector['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
         } else {
@@ -1067,7 +1045,7 @@ class Database{
         $currentIndex=-1;
         $items=[];
         $olKey=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
-        $olSelector=array('Source'=>$selector['Source'],'EntryId'=>'%'.$olKey);
+        $olSelector=['Source'=>$selector['Source'],'EntryId'=>'%'.$olKey];
         foreach($this->entryIterator($olSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
             $targetFile='';
@@ -1083,7 +1061,7 @@ class Database{
             if ($cmd['removeEntryId']===$entry['EntryId']){
                 $notices[]='Removed item "'.$this->getOrderedListIndexFromEntryId($entry['EntryId']).'"';
             } else {
-                $items[]=array('entry'=>$entry,'file'=>$targetFile);
+                $items[]=['entry'=>$entry,'file'=>$targetFile];
                 $currentIndex++;
             }
             // move entry up or down

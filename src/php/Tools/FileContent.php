@@ -88,7 +88,7 @@ final class FileContent{
         foreach($this->currencies as $code=>$name){
             $regexp='/('.$code.'\s{1,2}[\-\+]{0,1}([0-9]+[,. ]{0,1})+)|([\-\+]{0,1}([0-9]+[,. ]{0,1})+\s{1,2}'.$code.')/';
             $parts=preg_split($regexp,$text, -1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-            $partCount=count($parts);
+            $partCount=(is_bool($parts))?1:count($parts);
             if ($partCount<2){continue;}
             $entry['Costs (left)'][$code]['Gross']=$entry['Costs (left)'][$code]['Max amount']=$entry['Costs (left)'][$code]['Net']=$entry['Costs (left)'][$code]['VAT']=0;
             $entry['Costs (right)'][$code]['Gross']=$entry['Costs (right)'][$code]['Max amount']=$entry['Costs (right)'][$code]['Net']=$entry['Costs (right)'][$code]['VAT']=0;

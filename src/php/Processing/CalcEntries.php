@@ -57,7 +57,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-     public function dataProcessor(array $callingElementSelector=[],string $action='info'){
+     public function dataProcessor(array $callingElementSelector=[],string $action='info')
+     {
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;

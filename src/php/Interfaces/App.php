@@ -17,7 +17,15 @@ interface App{
     * instances that provide database access, filespace access, html-templates etc.
     */
     
-    public function run(array|bool $arr):array;
+    /**
+     * Adds the web-page content
+     *
+     * @param array|bool $arr     If TRUE, the method returns an array, e.g. ['Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__]
+     *                            If type array, the method returns the web page content
+     * @return array The App description or web page content.
+     *
+     */
+    public function run(array|bool $arr=TRUE):array;
     
 }
 ?>
