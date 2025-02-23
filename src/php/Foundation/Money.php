@@ -58,7 +58,7 @@ class Money{
                 $vars['Problem'][]=$e->getMessage();
             }
             $dateTime->sub(new \DateInterval('P'.mt_rand(1,100).'M'));
-            sleep(1);
+            usleep(30000);
         }
         return $vars;
     }
