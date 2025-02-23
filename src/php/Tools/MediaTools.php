@@ -281,7 +281,7 @@ class MediaTools{
             $pdfArr=$arr;
             $pdfArr['tag']='object';
             $pdfArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
-            $pdfArr['type']=$arr['selector']['Params']['File']['MIME-Type'];
+            $pdfArr['type']=$arr['selector']['Params']['File']['MIME-Type']??$arr['selector']['Params']['TmpFile']['MIME-Type'];
             $pdfArr['style']=$pdfArr['settings']['style'];
             $pdfArr['element-content']='<a href="'.$pdfArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.($arr['selector']['Params']['File']['Name']??'').'</b> can\'t be presented, click here to download...</a>';
             $pdfArr['keep-element-content']=TRUE;

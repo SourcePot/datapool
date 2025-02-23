@@ -84,69 +84,52 @@ final class FileContent{
     private function addCosts(array $entry,string $text):array
     {
         $entry['Costs (left)']=$entry['Costs (right)']=[];
-        $isBefore=$isAfter=FALSE;
-        $maxValue=0;
         $regexAmount='/[\-\+]{0,1}([0-9]+[,. ]{0,1})+/';
         foreach($this->currencies as $code=>$name){
-            $parts=preg_split('/'.$code.'/',$text);
-            if (count($parts)<2){continue;}
-            $entry['Costs (left)'][$code]['Max amount']=$entry['Costs (left)'][$code]['Max amount']??0;
-            $entry['Costs (right)'][$code]['Max amount']=$entry['Costs (right)'][$code]['Max amount']??0;
-            $entry['Costs (left)'][$code]['VAT']=$entry['Costs (left)'][$code]['VAT']??0;
-            $entry['Costs (right)'][$code]['VAT']=$entry['Costs (right)'][$code]['VAT']??0;
+            $regexp='/('.$code.'\s{1,2}[\-\+]{0,1}([0-9]+[,. ]{0,1})+)|([\-\+]{0,1}([0-9]+[,. ]{0,1})+\s{1,2}'.$code.')/';
+            $parts=preg_split($regexp,$text, -1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+            $partCount=count($parts);
+            if ($partCount<2){continue;}
+            $entry['Costs (left)'][$code]['Gross']=$entry['Costs (left)'][$code]['Max amount']=$entry['Costs (left)'][$code]['Net']=$entry['Costs (left)'][$code]['VAT']=0;
+            $entry['Costs (right)'][$code]['Gross']=$entry['Costs (right)'][$code]['Max amount']=$entry['Costs (right)'][$code]['Net']=$entry['Costs (right)'][$code]['VAT']=0;
+            $desc=$value=NULL;
             foreach($parts as $i=>$part){
-                $amountStr=$descBefore=$descAfter='';
-                if ($i===0){
-                    $descBefore=substr($part,-50);
-                    $descAfter=$parts[$i+1];
-                } else if (!isset($parts[$i+1])){
-                    $descBefore=$part;
-                    $descAfter='';
+                $leftValid=$rightValid=FALSE;
+                $part=preg_replace('/\s+/',' ',$part);
+                $descDetectStr=preg_replace('/[0-9,. \+\-]+/','',$part);
+                if (strpos($part,$code)!==FALSE){
+                    // value
+                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($part);
+                    $leftValid=TRUE;
+                } else if (strlen($descDetectStr)>2){
+                    // description
+                    $desc=(isset($desc))?$part:substr($part,-50);
+                    $rightValid=TRUE;
                 } else {
-                    $descBefore=$part;
-                    $descAfter=$parts[$i+1];
+                    continue;
                 }
-                if ($isBefore){
-                    $amountStr=substr($parts[$i],-20);
-                } else if ($isAfter){
-                    if (isset($parts[$i+1])){
-                        $amountStr=substr($parts[$i+1],0,20);
+                if ($leftValid){
+                    if (strpos($desc,'MwSt')!==FALSE || strpos($desc,'USt')!==FALSE || strpos($desc,'msatzsteuer')!==FALSE || strpos($desc,'wertsteuer')!==FALSE){
+                        $entry['Costs (left)'][$code]['VAT']+=$value;
+                    } else if (stripos($desc,'endsumme')!==FALSE || stripos($desc,'endbetrag')!==FALSE || stripos($desc,'total')!==FALSE){
+                        $entry['Costs (left)'][$code]['Gross']=$value;
                     }
-                } else {
-                    $amountStr=substr($parts[$i],-20);
-                    preg_match($regexAmount,$amountStr,$match);
-                    if (empty($match[0])){
-                        $isAfter=TRUE;
-                        $amountStr=substr($parts[$i+1],0,20);
-                    } else {
-                        $isBefore=TRUE;
-                    }
-                }
-                preg_match($regexAmount,$amountStr,$match);
-                if (isset($match[0])){
-                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($match[0]);
                     $entry['Costs (left)'][$code]['Max amount']=($value>$entry['Costs (left)'][$code]['Max amount'])?$value:$entry['Costs (left)'][$code]['Max amount'];
+                    $entry['Costs (left)'][$code]['Net']=$entry['Costs (left)'][$code]['Gross']-$entry['Costs (left)'][$code]['VAT'];
+                    $entry['Costs (left)'][$code][$desc][]=$value;
+                }
+                
+                if ($rightValid && isset($value)){
+                    if (strpos($desc,'MwSt')!==FALSE || strpos($desc,'USt')!==FALSE || strpos($desc,'msatzsteuer')!==FALSE || strpos($desc,'wertsteuer')!==FALSE){
+                        $entry['Costs (right)'][$code]['VAT']+=$value;
+                    } else if (stripos($desc,'endsumme')!==FALSE || stripos($desc,'endbetrag')!==FALSE || stripos($desc,'total')!==FALSE){
+                        $entry['Costs (right)'][$code]['Gross']=$value;
+                    }
                     $entry['Costs (right)'][$code]['Max amount']=($value>$entry['Costs (right)'][$code]['Max amount'])?$value:$entry['Costs (right)'][$code]['Max amount'];
-                    if (isset($prevMatch)){
-                        $descBefore=trim(str_replace($prevMatch,'',$descBefore));
-                    }
-                    if (!empty($descBefore)){
-                        $entry['Costs (left)'][$code][$descBefore]=$value;
-                        if (strpos($descBefore,'MwSt')!==FALSE || strpos($descBefore,'USt')!==FALSE || strpos($descBefore,'msatzsteuer')!==FALSE || strpos($descBefore,'wertsteuer')!==FALSE){
-                            $entry['Costs (left)'][$code]['VAT']=$value;
-                        }
-                    }
-                    $descAfter=trim(str_replace($match[0],'',$descAfter));
-                    if (!empty($descAfter)){
-                        $entry['Costs (right)'][$code][$descAfter]=$value;
-                        if (strpos($descAfter,'MwSt')!==FALSE || strpos($descAfter,'USt')!==FALSE || strpos($descAfter,'msatzsteuer')!==FALSE || strpos($descAfter,'wertsteuer')!==FALSE){
-                            $entry['Costs (left)'][$code]['VAT']=$value;
-                        }
-                    }
-                    $prevMatch=$match[0];
+                    $entry['Costs (right)'][$code]['Net']=$entry['Costs (right)'][$code]['Gross']-$entry['Costs (right)'][$code]['VAT'];
+                    $entry['Costs (right)'][$code][$desc][]=$value;
                 }
             }
-
         }
         return $entry;
     }

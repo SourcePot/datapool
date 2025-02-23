@@ -273,7 +273,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $arr['html']=$arr['html']??'';
         $arr['selector']['Params']['TmpFile']['Source']=$this->sampleTargetFile;
-        $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['File']['MIME-Type']='application/pdf';
+        $arr['selector']['Params']['TmpFile']['MIME-Type']='application/pdf';
         $arr['selector']['Params']['File']['Nme']=$arr['selector']['Name'];
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
