@@ -489,6 +489,9 @@ class Database{
             $result[$column]=$value;
         } else if (is_array($entryTemplate[$column]['value'])){
             $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr((string)$value);
+            if (isset($result[$column]['!serialized!'])){
+                $result[$column]=unserialize($result[$column]['!serialized!']);
+            }
         } else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
             $result[$column]=intval($value);
         } else if (strpos($entryTemplate[$column]['type'],'FLOAT')!==FALSE || strpos($entryTemplate[$column]['type'],'DOUBLE')!==FALSE){

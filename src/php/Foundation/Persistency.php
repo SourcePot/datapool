@@ -65,7 +65,7 @@ class Persistency implements \Psr\SimpleCache\CacheInterface{
         $selector=['Source'=>$this->getEntryTable(),'EntryId'=>$entryId];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,$isSystemCall=FALSE,$rightType='Read',$returnMetaOnNoMatch=FALSE);
         if ($entry){
-            return unserialize($entry['Content']['value']);
+            return unserialize($entry['Content']['!serialized!']);
         } else {
             return $default;
         }
@@ -81,9 +81,9 @@ class Persistency implements \Psr\SimpleCache\CacheInterface{
         $entryId=sha1($callingClassFunction['class'].'|'.$key);
         $entry=['Source'=>$this->getEntryTable(),'Name'=>$key,'EntryId'=>$entryId];
         $entry['Group']='data';
-        $entry['Folder']=$callingClassFunction['class'];
+        $entry['Folder']=str_replace('\\','_',$callingClassFunction['class']);
         $entry['Expires']=$expires->format('Y-m-d H:i:s');
-        $entry['Content']=['value'=>serialize($value)];
+        $entry['Content']=['!serialized!'=>serialize($value)];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall=FALSE,$noUpdateButCreateIfMissing=FALSE,$addLog=TRUE);
         return $entry!==FALSE;
     }
@@ -105,7 +105,7 @@ class Persistency implements \Psr\SimpleCache\CacheInterface{
     {
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $callingClassFunction=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-        $selector=['Source'=>$this->getEntryTable(),'Group'=>'data','Folder'=>$callingClassFunction['class']];
+        $selector=['Source'=>$this->getEntryTable(),'Group'=>'data','Folder'=>str_replace('\\','_',$callingClassFunction['class'])];
         $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector,$isSystemCall=FALSE);
         return boolval($statistics['deleted']);
     }

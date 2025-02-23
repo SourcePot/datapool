@@ -135,6 +135,7 @@ class HTMLbuilder{
                 $trArr=['tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>'','style'=>$rowArr['trStyle']];
                 $trHeaderArr=['tag'=>'tr','keep-element-content'=>TRUE,'element-content'=>''];
                 foreach($rowArr as $colLabel=>$cell){
+                    if (is_object($cell)){$cell='{object}';}
                     if (isset($styles[$colLabel])){continue;}
                     if (empty($arr['thKeepCase'])){
                         $colLabel=ucfirst(strval($colLabel));

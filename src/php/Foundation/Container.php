@@ -280,6 +280,7 @@ class Container{
             if (!isset($settings['selectorKey'])){$settings['selectorKey']='';}
             $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
             foreach($flatEntry as $flatKey=>$value){
+                if (is_object($value)){$value='{object}';}
                 if (mb_strpos($flatKey,$settings['selectorKey'])!==0){continue;}
                 $flatKeyComps=explode($S,$flatKey);
                 if (!isset($tableInfo[$flatKeyComps[0]])){continue;}
@@ -447,6 +448,7 @@ class Container{
                         // present entry
                         $subMatix=[];
                         foreach($flatEntry as $flatColumnKey=>$value){
+                            if (is_object($value)){$value='{object}';}
                             if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
                                 // $flatColumnKey === column selection -> standard entry presentation
                                 $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;

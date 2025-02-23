@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
+use DateTime;
+
 class Money{
     
     private $oc;
@@ -46,6 +48,18 @@ class Money{
     
     public function job(array $vars):array
     {
+        $vars['OK']=$vars['Problem']=[];
+        $dateTime=new \DateTime('now');
+        for($count=0;$count<6;$count++){
+            try{
+                $this->oc['SourcePot\Asset\Rates']->getRates($dateTime);
+                $vars['OK'][]=$dateTime->format('Y-m-d');
+            } catch (\Exception $e){
+                $vars['Problem'][]=$e->getMessage();
+            }
+            $dateTime->sub(new \DateInterval('P'.mt_rand(1,100).'M'));
+            sleep(1);
+        }
         return $vars;
     }
 
