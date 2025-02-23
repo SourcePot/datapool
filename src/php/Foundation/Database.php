@@ -16,6 +16,7 @@ class Database{
     
     private $dbObj;
     
+    public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
     
@@ -489,7 +490,7 @@ class Database{
             $result[$column]=$value;
         } else if (is_array($entryTemplate[$column]['value'])){
             $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr((string)$value);
-            if (isset($result[$column]['!serialized!'])){
+            if (isset($result[$column]['!serialized!']) && empty($result['unlock'])){
                 $result[$column]=unserialize($result[$column]['!serialized!']);
             }
         } else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
@@ -559,7 +560,7 @@ class Database{
             $sqlArr['sql'].=';';
             //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
-            $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>''];
+            $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'','unlock'=>$selector['unlock']??FALSE];
             $this->addStatistic('matches',$result['rowCount']);
             while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
                 foreach($row as $column=>$value){
@@ -587,7 +588,7 @@ class Database{
         $sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
         $sqlArr['sql'].=';';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
-        $result=['isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>-1,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>''];
+        $result=['isFirst'=>TRUE,'isLast'=>TRUE,'rowIndex'=>-1,'rowCount'=>$stmt->rowCount(),'now'=>time(),'Source'=>$selector['Source'],'hash'=>'','unlock'=>$selector['unlock']??FALSE];
         $this->addStatistic('matches',$result['rowCount']);
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
             $result['rowIndex']++;
@@ -621,7 +622,7 @@ class Database{
             $sqlArr['sql'].=';';
             //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
-            $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source']];
+            $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source'],'unlock'=>$selector['unlock']??FALSE];
             $this->addStatistic('matches',$result['rowCount']);
             $row=$stmt->fetch(\PDO::FETCH_ASSOC);
             if (is_array($row)){
@@ -672,6 +673,11 @@ class Database{
     */
     public function deleteEntries(array $selector,bool $isSystemCall=FALSE):array
     {
+        // check for lock
+        if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($selector['unlock'])){
+            $this->oc['logger']->log('notice','Tried to delete table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
+            return $this->addStatistic('deleted',0);
+        }
         // delete files
         $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,[],FALSE,FALSE);
         if (empty($entryList['primaryKeys'])){
@@ -713,6 +719,12 @@ class Database{
     public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        // check for lock
+        if (!empty(self::TABLE_UNLOCK_REQUIRED[$entry['Source']]) && empty($entry['unlock'])){
+            $this->oc['logger']->log('notice','Tried to insert table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$entry);
+            return [];
+        }
+        // complete entry
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
         if (!empty($entry['Owner'])){
@@ -729,7 +741,9 @@ class Database{
             $sqlPlaceholder=':'.$column;
             $columns.='`'.$column.'`,';
             $values.=$sqlPlaceholder.',';
-            if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+            if (is_array($value)){
+                $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);
+            }
             $inputs[$sqlPlaceholder]=strval($value);
         }
         $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
@@ -767,6 +781,12 @@ class Database{
             unset($entry['Privileges']);
         }
         if (empty($entry)){return FALSE;}
+        // check tables with locks
+        if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($entry['unlock'])){
+            $this->oc['logger']->log('notice','Tried to update table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
+            return FALSE;
+        }
+        // get entry list
         $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries);
         $entryTemplate=$this->getEntryTemplate($selector['Source']);
         if (empty($entryList['primaryKeys'])){
@@ -781,7 +801,9 @@ class Database{
                 if (strcmp($column,'Source')===0){continue;}
                 $sqlPlaceholder=':'.$column;
                 $valueSql.="`".$column."`=".$sqlPlaceholder.",";
-                if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+                if (is_array($value)){
+                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);
+                }
                 $inputs[$sqlPlaceholder]=strval($value);
             }
             $sql="UPDATE `".$selector['Source']."` SET ".trim($valueSql,',')." ".$entryList['sql'].";";
