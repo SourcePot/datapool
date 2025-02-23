@@ -14,17 +14,17 @@ class Access{
     
     private $oc;
 
-    private $access=array('NO_R'=>0,
-                         'PUBLIC_R'=>1,
-                         'REGISTERED_R'=>2,
-                         'MEMBER_R'=>4,
-                         'SENTINEL_R'=>1024,
-                         'ADMIN_R'=>32768,
-                         'ALL_CONTENTADMIN_R'=>49152,
-                         'ALL_REGISTERED_R'=>65534,
-                         'ALL_MEMBER_R'=>65532,
-                         'ALL_R'=>65535
-                         );
+    private $access=['NO_R'=>0,
+                    'PUBLIC_R'=>1,
+                    'REGISTERED_R'=>2,
+                    'MEMBER_R'=>4,
+                    'SENTINEL_R'=>1024,
+                    'ADMIN_R'=>32768,
+                    'ALL_CONTENTADMIN_R'=>49152,
+                    'ALL_REGISTERED_R'=>65534,
+                    'ALL_MEMBER_R'=>65532,
+                    'ALL_R'=>65535
+                    ];
         
     public function __construct($oc)
     {
@@ -38,7 +38,7 @@ class Access{
 
     public function init()
     {
-        $access=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access);
+        $access=['Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access];
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         $this->access=$access['Content'];
     }
@@ -65,10 +65,7 @@ class Access{
     public function addRights(array $entry,$Read=FALSE,$Write=FALSE,$Privileges=FALSE):array
     {
         //  set defaults if right argument are empty
-        $rigthTypes=array('Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,
-                          'Write'=>(empty($Write))?'ADMIN_R':$Read,
-                          'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges
-                        );
+        $rigthTypes=['Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,'Write'=>(empty($Write))?'ADMIN_R':$Read,'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges];
         // add rights to the entry
         foreach($rigthTypes as $type=>$default){
             // set to default value

@@ -15,11 +15,9 @@ final class FileContent{
     private $oc;
     
     private $currencies=[];
-    private $costAlias=array('endbetrag'=>'brutto','endsumm'=>'brutto','total'=>'brutto','mwst'=>'vat','msatzsteu'=>'vat','amtlich'=>'amt','amtsgeb'=>'amt','zwischensumme'=>FALSE);
     
     public function __construct()
     {
-
     }
 
     Public function loadOc(array $oc):void
@@ -134,22 +132,5 @@ final class FileContent{
         return $entry;
     }
 
-    private function costAlias(string $str)
-    {
-        if (empty($str)){return '';}
-        foreach($this->costAlias as $needle=>$alias){
-            if (mb_stripos($str,$needle)===FALSE){continue;}
-            if ($alias===FALSE){return '';}
-            preg_match('/([^0-9]*)([0-9,.]+)(.*)/',$str,$match);
-            if ($alias=='vat' && isset($match[2])){
-                $rate=strtr($match[2],array(','=>'.'));
-                $rate=floatval($rate);
-                $rate=sprintf("%01.2f",$rate);
-                $alias.=' '.$rate;
-            }
-            return $alias;
-        }
-        return $str;
-    }
 }
 ?>
