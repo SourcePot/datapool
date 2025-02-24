@@ -109,9 +109,5 @@ class Haystack{
         return $arr;
     }
 
-    public function processSQLquery(array $stmtArr)
-    {
-        
-    }
 }
 ?>

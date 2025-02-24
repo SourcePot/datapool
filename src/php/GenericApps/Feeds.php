@@ -48,10 +48,14 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
                 $vars['URLs2do'][$urlEntry['EntryId']]=$urlEntry;
             }
         }
-        $urlsEntry=array_shift($vars['URLs2do']);
-        $this->currentUrlEntryContent=$urlsEntry['Content'];
-        $this->loadFeed($urlsEntry);
-        $vars['Feed URL processed']=$urlsEntry['Content']['URL'];
+        foreach($vars['URLs2do'] as $key=>$urlsEntry){
+            $this->currentUrlEntryContent=$urlsEntry['Content'];
+            $this->loadFeed($urlsEntry);
+            $vars['Feed URL processed']=$urlsEntry['Content']['URL'];
+            // remove from to do list
+            $vars['URLs2do'][$key]=NULL;
+            break;
+        }
         return $vars;
     }
 

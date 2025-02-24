@@ -106,7 +106,9 @@ final class FileContent{
                 } else {
                     continue;
                 }
+
                 if ($leftValid){
+                    $desc=strval($desc);
                     if (strpos($desc,'MwSt')!==FALSE || strpos($desc,'USt')!==FALSE || strpos($desc,'msatzsteuer')!==FALSE || strpos($desc,'wertsteuer')!==FALSE){
                         $entry['Costs (left)'][$code]['VAT']+=$value;
                     } else if (stripos($desc,'endsumme')!==FALSE || stripos($desc,'endbetrag')!==FALSE || stripos($desc,'total')!==FALSE){
@@ -116,8 +118,8 @@ final class FileContent{
                     $entry['Costs (left)'][$code]['Net']=$entry['Costs (left)'][$code]['Gross']-$entry['Costs (left)'][$code]['VAT'];
                     $entry['Costs (left)'][$code][$desc][]=$value;
                 }
-                
                 if ($rightValid && isset($value)){
+                    $desc=strval($desc);
                     if (strpos($desc,'MwSt')!==FALSE || strpos($desc,'USt')!==FALSE || strpos($desc,'msatzsteuer')!==FALSE || strpos($desc,'wertsteuer')!==FALSE){
                         $entry['Costs (right)'][$code]['VAT']+=$value;
                     } else if (stripos($desc,'endsumme')!==FALSE || stripos($desc,'endbetrag')!==FALSE || stripos($desc,'total')!==FALSE){

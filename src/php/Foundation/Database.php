@@ -19,6 +19,7 @@ class Database{
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
+    public const MAX_IDLIST_COUNT=10000;
     
     private $rootEntryTemplate=['EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
                                  'Group'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'],
@@ -26,8 +27,8 @@ class Database{
                                  'Name'=>['type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
                                  'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
                                  'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
-                                 'Content'=>['type'=>'LONGBLOB','value'=>[],'Description'=>'This is the entry Content data'],
-                                 'Params'=>['type'=>'LONGBLOB','value'=>[],'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'],
+                                 'Content'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This is the entry Content data'],
+                                 'Params'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'],
                                  'Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
                                  'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
                                  'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
@@ -353,9 +354,6 @@ class Database{
         $this->oc['SourcePot\Datapool\Root']->startStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
         try{
             $stmtArr['stmt']->execute();
-            if (isset($this->oc['SourcePot\Datapool\Foundation\Haystack'])){
-                $this->oc['SourcePot\Datapool\Foundation\Haystack']->processSQLquery($stmtArr);
-            }
         } catch (\Exception $e){
             $context=$stmtArr;
             $context['error']=$e->getMessage();
@@ -555,9 +553,7 @@ class Database{
             // selected table does not exist
         } else {
             $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries);
-            $selectExprSQL='';
-            $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
-            $sqlArr['sql'].=';';
+            $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
             //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
             $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'','unlock'=>$selector['unlock']??FALSE];
@@ -653,17 +649,29 @@ class Database{
     *
     * @return array Array containing the EntryId-list as SQL-suiffix
     */
-    private function sqlEntryIdListSelector(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=['EntryId'],bool $removeGuideEntries=FALSE,bool $isDebugging=FALSE):array
+    private function selector2idGroups(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeFile=TRUE):array
     {
-        $result=['primaryKeys'=>[],'sql'=>'','primaryKey'=>'EntryId'];
-        foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries,$isDebugging) as $row){
-            $result['sql'].=",'".$row['EntryId']."'";
-            $result['primaryKeys'][]=$row['EntryId'];
+        $groupIdIndex=0;
+        $entryIdGroups=[];
+        foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,['EntryId'],FALSE,FALSE) as $row){
+            // build entryId list
+            $groupIdIndex++;
+            $groupIdIndex=($groupIdIndex>self::MAX_IDLIST_COUNT)?0:$groupIdIndex;
+            $entryIdGroups[$groupIdIndex][]="'".$row['EntryId']."'";
+            // remove attached file
+            if (!$removeFile){continue;}
+            $entrySelector=['Source'=>$selector['Source'],'EntryId'=>$row['EntryId']];
+            $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
+            $this->removeFile($fileToDelete);
         }
-        $result['sql']='WHERE `'.'EntryId'.'` IN('.trim($result['sql'],',').')';
-        return $result;
-    }    
-        
+        return $entryIdGroups;
+    }
+
+    private function ids2IdListSelector(array $ids):string
+    {
+        return 'WHERE `'.'EntryId'.'` IN('.implode(',',$ids).')';
+    }
+
     /**
     * This method deletes the selected entries including linked files 
     * and returns the count of deleted entries or false on error.
@@ -678,20 +686,17 @@ class Database{
             $this->oc['logger']->log('notice','Tried to delete table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return $this->addStatistic('deleted',0);
         }
-        // delete files
-        $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,[],FALSE,FALSE);
-        if (empty($entryList['primaryKeys'])){
-            return $this->getStatistic();
+        // delete entries in groups
+        $rowCount=0;
+        $idGroups=$this->selector2idGroups($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,$removeFile=TRUE);
+        foreach($idGroups as $ids){
+            // delete entries by id-list
+            $sqlWhereClause=$this->ids2IdListSelector($ids);
+            $sql='DELETE FROM `'.$selector['Source'].'`'.$sqlWhereClause.';';
+            $stmt=$this->executeStatement($sql,[]);
+            $rowCount+=$stmt->rowCount();
         }
-        foreach($entryList['primaryKeys'] as $index=>$primaryKeyValue){
-            $entrySelector=['Source'=>$selector['Source'],'EntryId'=>$primaryKeyValue];
-            $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
-            $this->removeFile($fileToDelete);
-        }
-        // delete entries by id-list
-        $sql='DELETE FROM `'.$selector['Source'].'`'.$entryList['sql'].';';
-        $stmt=$this->executeStatement($sql,[]);
-        return $this->addStatistic('deleted',$stmt->rowCount());
+        return $this->addStatistic('deleted',$rowCount);
     }
     
     /**
@@ -774,43 +779,43 @@ class Database{
     *
     * @return int|boolean The updated entry count or false on failure
     */
-    public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=FALSE,$isDebugging=FALSE):int|bool
+    public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=FALSE,$isDebugging=FALSE):int
     {
         // only the Admin has the right to change data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
             unset($entry['Privileges']);
         }
-        if (empty($entry)){return FALSE;}
+        if (empty($entry)){return 0;}
         // check tables with locks
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($entry['unlock'])){
             $this->oc['logger']->log('notice','Tried to update table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
-            return FALSE;
+            return 0;
         }
         // get entry list
-        $entryList=$this->sqlEntryIdListSelector($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$selectExprArr,$removeGuideEntries);
+        $idGroups=$this->selector2idGroups($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeFile=FALSE);
+        if (empty($idGroups)){return 0;}
+        // prepare update sql string, set values and add sql where clause
         $entryTemplate=$this->getEntryTemplate($selector['Source']);
-        if (empty($entryList['primaryKeys'])){
-            return FALSE;
-        } else {
-            // set values
-            $inputs=[];
-            $valueSql='';
-            foreach($entry as $column=>$value){
-                if (!isset($entryTemplate[$column])){continue;}
-                if ($value===FALSE){continue;}
-                if (strcmp($column,'Source')===0){continue;}
-                $sqlPlaceholder=':'.$column;
-                $valueSql.="`".$column."`=".$sqlPlaceholder.",";
-                if (is_array($value)){
-                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);
-                }
-                $inputs[$sqlPlaceholder]=strval($value);
+        $inputs=[];
+        $valueSql='';
+        foreach($entry as $column=>$value){
+            if (!isset($entryTemplate[$column])){continue;}
+            if ($value===FALSE){continue;}
+            if (strcmp($column,'Source')===0){continue;}
+            $sqlPlaceholder=':'.$column;
+            $valueSql.="`".$column."`=".$sqlPlaceholder.",";
+            if (is_array($value)){
+                $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);
             }
-            $sql="UPDATE `".$selector['Source']."` SET ".trim($valueSql,',')." ".$entryList['sql'].";";
-            $stmt=$this->executeStatement($sql,$inputs);
-            $this->addStatistic('updated',$stmt->rowCount());
-            return $this->getStatistic('updated');
+            $inputs[$sqlPlaceholder]=strval($value);
         }
+        foreach($idGroups as $ids){
+            $sqlWhereClause=$this->ids2IdListSelector($ids);
+            $sql="UPDATE `".$selector['Source']."` SET ".trim($valueSql,',')." ".$sqlWhereClause.";";
+            $stmt=$this->executeStatement($sql,$inputs);
+            $this->addStatistic('updated',$stmt->rowCount());    
+        }
+        return $this->getStatistic('updated');
     }
     
     /**
