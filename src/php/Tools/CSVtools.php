@@ -116,25 +116,30 @@ class CSVtools{
         } else {
             $csvFile=$selector;
         }
-        if (!is_file($csvFile)){yield [];}
-        $csvSettings=$this->csvSetting();
-        $csv=new \SplFileObject($csvFile);
-        $csv->setCsvControl($csvSettings['separator'],$csvSettings['enclosure'],$csvSettings['escape']);
-        $keys=[];
-        $rowIndex=0;
-        while($csv->valid()){
-            $csvArr=$csv->fgetcsv();
-            $result=[];
-            foreach($csvArr as $columnIndex=>$cellValue){
-                if (isset($keys[$columnIndex])){
-                    $result[$keys[$columnIndex]]=$cellValue;
-                } else {
-                    $keys[$columnIndex]=$cellValue;
+        if (is_file($csvFile)){
+            $csvSettings=$this->csvSetting();
+            $csv=new \SplFileObject($csvFile);
+            $csv->setCsvControl($csvSettings['separator'],$csvSettings['enclosure'],$csvSettings['escape']);
+            $keys=[];
+            $rowIndex=0;
+            while($csv->valid()){
+                $csvArr=$csv->fgetcsv();
+                $result=[];
+                foreach($csvArr as $columnIndex=>$cellValue){
+                    if (isset($keys[$columnIndex])){
+                        $result[$keys[$columnIndex]]=$cellValue;
+                    } else {
+                        $keys[$columnIndex]=$cellValue;
+                    }
                 }
+                if ($rowIndex!==0){
+                    yield $result;
+                }
+                $csv->next();
+                $rowIndex++;
             }
-            if ($rowIndex!==0){yield $result;}
-            $csv->next();
-            $rowIndex++;
+        } else {
+            yield [];
         }
     }
     

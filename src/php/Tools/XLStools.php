@@ -51,6 +51,7 @@ class XLStools{
         } catch(\Exception $e){
             $this->oc['logger']->log('error','"{function}" failed to load "{file}"',array('function'=>__FUNCTION__,'file'=>$xlsFile));         
             yield [];
+            return FALSE;
         }
         $worksheet=$spreadsheet->getActiveSheet();
         $xls=$worksheet->getRowIterator();
