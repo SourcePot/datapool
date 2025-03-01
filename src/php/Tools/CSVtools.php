@@ -175,14 +175,12 @@ class CSVtools{
                 $entry['fileContent']=trim($csvContent);
                 if (empty($entry['Params']['File']['Name'])){
                     $entry['fileName']=str_replace('.csv','',$entry['Name']).'.csv';
-                } else {
-                    $entry['fileName']=$entry['Params']['File']['Name'];
                 }
                 $entry['Content']=$statistics;
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
                 $this->oc['logger']->log('info','CSV-entry created named "{Name}" containing {rowCount} rows.',array('Name'=>$entry['Name'],'rowCount'=>count($csvDefArr['rows'])));    
             }
-            return $statistics;
+            return $entry;
         } else if (isset($entry['Content'])){
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder'),$this->csvTimestamp,'',TRUE);
             $elementId=$entry['EntryId'];

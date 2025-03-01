@@ -15,11 +15,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
         
-    private $paramsTemplate=array('Mode'=>'entries');
+    private $paramsTemplate=['Mode'=>'entries'];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -70,14 +70,14 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getMapEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,array('method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,['method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
 
     private function getMapEntriesInfo($callingElement){
         $matrix=[];
         $matrix['']['value']='If you select "Create csv" or "Create zip", remeber to set the target entry Name-column.<br/>The file name will be the target entry Name. Mapping will result in as many files as there are different Names.';
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
        
@@ -92,22 +92,22 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runMapEntries($arr['selector'],TRUE);
         }
         // build html
-        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
         $btnArr['value']='Test';
-        $btnArr['key']=array('test');
+        $btnArr['key']=['test'];
         $matrix['Commands']['Test']=$btnArr;
         $btnArr['value']='Run';
-        $btnArr['key']=array('run');
+        $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping']);
         foreach($result as $caption=>$matrix){
-            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
             if ($caption==='Mapping statistics'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
-        $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
+        $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
         return $arr;
     }
 
@@ -115,7 +115,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMapEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,array('method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,['method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -128,13 +128,14 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function mappingParams($callingElement){
-        $contentStructure=array('Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
-                                'Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Mode'=>array('method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>array('entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip')),
-                                'Attached file'=>array('method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>array('Keep','Remove from target')),
-                                'Order by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE),
-                                'Order'=>array('method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>array(0=>'Descending',1=>'Ascending')),
-                                );
+        $contentStructure=['Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+                            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+                            'Mode'=>['method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>['entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip']],
+                            'Attached file'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
+                            'Order by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE],
+                            'Order'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0=>'Descending',1=>'Ascending']],
+                            'No match placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE),
+                            ];
         $contentStructure['Order by']+=$callingElement['Content']['Selector'];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -152,19 +153,19 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['caption']='Mapping control: Select mapping target and type';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $matrix=array('Parameter'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        $matrix=['Parameter'=>$row];
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function mappingRules($callingElement){
-        $contentStructure=array('Target value or...'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                '...value selected by'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>array('Linked file'=>'Linked file')),
-                                'Target data type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE),
-                                'Target column'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE),
-                                'Target key'=>array('method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE),
-                                'Combine'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."),
-                                );
+        $contentStructure=['Target value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+                            '...value selected by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>['Linked file'=>'Linked file']],
+                            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+                            'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
+                            'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+                            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."],
+                            ];
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -176,37 +177,35 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runMapEntries($callingElement,$testRun=FALSE){
-        $base=array('mappingparams'=>[],'mappingrules'=>[]);
+        $base=['mappingparams'=>[],'mappingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Mapping statistics'=>array('Entries'=>array('value'=>0),
-                                                  'Spreadsheet entries'=>array('value'=>0),
-                                                  'Files added to zip'=>array('value'=>0),
-                                                  'Skip rows'=>array('value'=>0),
-                                                  'Output format'=>array('value'=>'Entries'),
-                                                 )
-                    );
+        $result=['Mapping statistics'=>['Entries'=>['value'=>0],
+                                        'Spreadsheet entries'=>['value'=>0],
+                                        'Files added to zip'=>['value'=>0],
+                                        'Skip rows'=>['value'=>0],
+                                        'Output format'=>['value'=>'Entries'],
+                                        ]
+                    ];
         // loop through entries
         $params=current($base['mappingparams']);
         $base['Attachment name']=date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);
-        $base['zipRequested']=(!$testRun && strcmp($params['Content']['Mode'],'zip')===0);
-        $base['csvRequested']=(!$testRun && (strcmp($params['Content']['Mode'],'csv')===0 || strcmp($params['Content']['Mode'],'zip')===0));
+        $base['zipRequested']=strcmp($params['Content']['Mode'],'zip')===0;
+        $base['csvRequested']=strcmp($params['Content']['Mode'],'csv')===0 || strcmp($params['Content']['Mode'],'zip')===0;
         if ($base['zipRequested']){
             $zipName=date('Y-m-d His').' '.__FUNCTION__.'.zip';
             $zipFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().$zipName;
             $zip= new \ZipArchive;
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
-        $deleteEntries=array('Source'=>$callingElement['Content']['Selector']['Source'],'EntryIds'=>[]);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
-            //if (time()-$base['Script start timestamp']>30){break;}
             if ($sourceEntry['isSkipRow']){
                 $result['Mapping statistics']['Skip rows']['value']++;
                 continue;
             }
             if ($base['zipRequested']){
-                // open temporary zip-archive        
+                // add attached file to temporary zip-archive        
                 $attachment=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 if (is_file($attachment)){
                     $result['Mapping statistics']['Files added to zip']['value']++;
@@ -215,13 +214,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 } else {
                     $sourceEntry['Linked file']='';
                 }
-                
-            }
-            if ((!$testRun && !$params['Content']['Keep source entries']) || $base['zipRequested']){
-                $deleteEntries['EntryIds'][]="'".$sourceEntry['EntryId']."'";
             }
             // map entry
-            if (!empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
+            if (empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
+                $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
+            } else {
                 $iteratorClass=$sourceEntry['Params']['File']['SpreadsheetIteratorClass'];
                 $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
                 foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$sourceEntry['Params']['File']['Extension']) as $rowIndex=>$rowArr){
@@ -229,44 +226,50 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
                     $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
                 }
-            } else {
-                $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
             }
+
         } // end of entry loop
         if ($base['csvRequested'] || $base['zipRequested']){
             // write csv file
             $result['Mapping statistics']['Output format']['value']='CSV';
-            $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
+            $csvEntry=$this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
         }            
-        if ($base['zipRequested']){
+        if ($base['zipRequested'] && isset($csvEntry['EntryId'])){
             // add csv file to zip archive
-            if (isset($result['Target']['Source'])){
-                $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(array('Source'=>$result['Target']['Source']['value'],'EntryId'=>$result['Target']['EntryId']['value']));
-                $zipFileName=preg_replace('/[^a-zA-Z0-9\-]/','_',$result['Target']['Name']['value']);
-                $zip->addFile($csvFile,$zipFileName.'.csv');
+            if (isset($result['targetEntry']['Source'])){
+                $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(['Source'=>$csvEntry['Source'],'EntryId'=>$csvEntry['EntryId']]);
+                $zip->addFile($csvFile,$csvEntry['Params']['File']['Name']);
             }
             // create zip entry
             $archiveFileCount=$zip->count();
             $zip->close();    
-            if (isset($result['Target']['Source'])){
-                $zipEntry=array('Source'=>$result['Target']['Source']['value'],'Name'=>$zipFileName.' (complete)');
-                $zipEntry=array_replace_recursive($sourceEntry,$base['entryTemplates'][$params['Content']['Target']],$zipEntry);
-                $zipEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($zipEntry,array('Name'),'0','',FALSE);
+            if (isset($result['targetEntry']['Source'])){
+                $zipEntry=['Source'=>$result['targetEntry']['Source'],'Name'=>$result['targetEntry']['Name'].' (complete)'];
+                $zipEntry=array_replace_recursive($result['targetEntry'],$zipEntry);
+                $zipEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($zipEntry,['Name'],'0','',FALSE);
                 $zipEntry['File upload extract archive']=FALSE;
-                $zipEntry['Content']=array('Zip archive file count'=>$archiveFileCount);
+                $zipEntry['Content']=['Zip archive file count'=>$archiveFileCount];
                 $zipEntry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($zipFile,$zipEntry,FALSE,TRUE);
                 $result['Mapping statistics']['Output format']['value']='Zip + csv';
             }
         }
-        $this->deleteEntriesById($deleteEntries['Source'],$deleteEntries['EntryIds']);
+        //delete source entries
+        $params=current($base['mappingparams']);
+        if (($base['csvRequested'] || $base['zipRequested']) && empty($params['Content']['Keep source entries'])){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector']);
+        }
         // multiple hits statistics
         foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->getMultipleHitsStatistic() as $hitsArr){
             if ($hitsArr['Hits']<2){continue;}
-            $result['Hits >1 with same EntryId'][$hitsArr['Name']]=array('Hits'=>$hitsArr['Hits'],'Comment'=>$hitsArr['Comment']);    
+            $result['Hits >1 with same EntryId'][$hitsArr['Name']]=['Hits'=>$hitsArr['Hits'],'Comment'=>$hitsArr['Comment']];    
+        }
+        // remove targetEntry from results
+        if (isset($result['targetEntry'])){
+            unset($result['targetEntry']);
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
     }
     
@@ -281,7 +284,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 if (isset($flatSourceEntry[$rule['Content']['...value selected by']])){
                     $targetValue=$flatSourceEntry[$rule['Content']['...value selected by']];
                 } else {
-                    $targetValue='{{missing}}';
+                    $targetValue=$params['Content']['No match placeholder']??'';
                 }
             }
             $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($targetValue,$rule['Content']['Target data type']);
@@ -299,7 +302,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // add entry to csv
             unset($sourceEntry['Params']);
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
-            $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,array('Name'),'0','',FALSE);
+            $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,['Name'],'0','',FALSE);
             if (!$testRun){
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
             }
@@ -315,42 +318,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($result['Sample result']) || mt_rand(0,100)>90){
             $result['Sample result']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
         }
+        $result['targetEntry']=$targetEntry;
         return $result;
     }
     
-    private function deleteEntriesById($Source,$EntryIds){
-        if (empty($EntryIds)){
-            return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-        }
-        foreach($EntryIds as $EntryId){
-            $entrySelector=array('Source'=>$Source,'EntryId'=>trim($EntryId,"'"));
-            $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
-            if (is_file($fileToDelete)){
-                $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
-                unlink($fileToDelete);
-            }
-        }
-        $sql="DELETE FROM ".$Source." WHERE `EntryId` IN(".implode(',',$EntryIds).");";
-        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
-        $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('deleted',$stmt->rowCount());
-        return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-    }
-    
-    /*
-    private function addValue2flatEntry($entry,$baseKey,$key,$value,$dataType,$rule)
-    {
-        if (!isset($entry[$baseKey])){$entry[$baseKey]=[];}
-        if (!is_array($entry[$baseKey]) && empty($key)){$entry[$baseKey]=[];}
-        $newValue=array($key=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($value,$dataType));
-        if (is_array($entry[$baseKey])){
-            $entry[$baseKey]=array_replace_recursive($entry[$baseKey],$newValue);
-        } else {
-            $entry[$baseKey]=$newValue;
-        }
-        return $entry;
-    }
-    */
-
     private function valueSizeLimitCompliance($key,array $entry):array
     {
         if (isset($GLOBALS['dbInfo']['user'][$key]['type'])){
@@ -359,7 +330,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $currentSize=mb_strlen(strval($entry[$key]),'8bit');
                 if ($currentSize>$sizeLimitBytes){
                     $entry[$key]=mb_strcut(strval($entry[$key]),0,$sizeLimitBytes);
-                    $this->oc['logger']->log('notice','Mapping to "entry[{key}]" value size of "{currentSize} Bytes" exeeded the limit of "{sizeLimitBytes}". The value was truncated to the size limit.',array('key'=>$key,'sizeLimitBytes'=>$sizeLimitBytes,'currentSize'=>$currentSize));
+                    $this->oc['logger']->log('notice','Mapping to "entry[{key}]" value size of "{currentSize} Bytes" exeeded the limit of "{sizeLimitBytes}". The value was truncated to the size limit.',['key'=>$key,'sizeLimitBytes'=>$sizeLimitBytes,'currentSize'=>$currentSize]);
                 }
             }
         }

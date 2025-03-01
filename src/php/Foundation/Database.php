@@ -19,7 +19,7 @@ class Database{
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
-    public const MAX_IDLIST_COUNT=10000;
+    public const MAX_IDLIST_COUNT=2000;
     
     private $rootEntryTemplate=['EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
                                  'Group'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'],
@@ -655,8 +655,7 @@ class Database{
         $entryIdGroups=[];
         foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,['EntryId'],FALSE,FALSE) as $row){
             // build entryId list
-            $groupIdIndex++;
-            $groupIdIndex=($groupIdIndex>self::MAX_IDLIST_COUNT)?0:$groupIdIndex;
+            $groupIdIndex=($groupIdIndex>self::MAX_IDLIST_COUNT)?($groupIdIndex++):$groupIdIndex;
             $entryIdGroups[$groupIdIndex][]="'".$row['EntryId']."'";
             // remove attached file
             if (!$removeFile){continue;}

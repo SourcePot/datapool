@@ -20,6 +20,9 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                  );
     
     private $maxResultTableLength=50;
+    private const MAX_TEST_TIME=5000000000;   // in nanoseconds
+    private const MAX_PROC_TIME=30000000000;   // in nanoseconds
+    
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -166,36 +169,36 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Matching'=>array('Entries'=>array('value'=>0),
-                                        'Matched'=>array('value'=>0),
-                                        'Failed'=>array('value'=>0),
-                                        'Skip rows'=>array('value'=>0),
-                                        ),
+        $result=['Matching'=>['Entries'=>['value'=>0],
+                            'Matched'=>['value'=>0],
+                            'Failed'=>['value'=>0],
+                            'Skip rows'=>['value'=>0],
+                            ],
                      'Matches'=>[],
-                     );
+                ];
+        $isComplete=FALSE;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
+            $isComplete=($entry['isLast'])?TRUE:$isComplete;
+            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
+            if (($testRun && $expiredTime>self::MAX_TEST_TIME) || $expiredTime>self::MAX_PROC_TIME){
+                break;
+            }
             if ($entry['isSkipRow']){
                 $result['Matching']['Skip rows']['value']++;
                 continue;
             }
-            if ($testRun && $result['Matching']['Entries']['value']>$this->maxResultTableLength){
-                $result['Matching']['Entries']['value'].=' (testrun, incomplete)';
-                $result['Matching']['Matched']['value'].=' (testrun, incomplete)';
-                $result['Matching']['Failed']['value'].=' (testrun, incomplete)';
-                $result['Matching']['Skip rows']['value'].=' (testrun, incomplete)';
-                break;
-            }
             $result['Matching']['Entries']['value']++;
             $result=$this->matchEntry($base,$entry,$result,$testRun);
         }
-        if (count($result['Matches'])>=$this->maxResultTableLength){
-            $currentValues=current($result['Matches']);
-            foreach($currentValues as $key=>$value){$currentValues[$key]='...';}
-            $result['Matches']['...']=$currentValues;
+        if (!$isComplete){
+            foreach($result['Matching'] as $key=>$valueArr){
+                $result['Matching'][$key]['comment']='incomplete'.($testRun?' testrun only':', max. processing time reached');
+            }
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
+        $result['Statistics']['Enties per sec']=['Value'=>round(1000*$result['Matching']['Entries']['value']/$result['Statistics']['Time consumption [msec]']['Value'])];
         return $result;
     }
     

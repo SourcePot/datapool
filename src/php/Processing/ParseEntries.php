@@ -335,7 +335,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $parserFailed=FALSE;
         $resultArr=[];
         foreach($sections['singleEntry'] as $sectionId=>$section){
-            if ($section===FALSE){continue;}
+            if (empty($section)){continue;}
             $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
             if (isset($targetEntryParsing['processParsing']['result'][$sectionId])){
                 $sectionName=$this->sections[$sectionId];
@@ -355,7 +355,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             if (!isset($result['Parser singleEntry sections <b>success</b>']) || mt_rand(0,100)>70){$result['Parser singleEntry sections <b>success</b>']=$resultArr;}
         }
-        // parse multi entries sections
+        // parse multiple entries sections
         if (empty($sections['multipleEntries'])){
             $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun);
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
@@ -363,6 +363,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $entryIndex=>$section){
+                    if (empty($section)){continue;}
                     $targetEntryTmp=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
                     if ($targetEntryTmp['processParsing']['failed']){
                         // parser failed
@@ -427,8 +428,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];
-                $rule['Content']['Constant or...']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($rule['Content']['Constant or...'],$rule['Content']['Target data type']);
-                $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$rule['Content']['Constant or...'],$rule['Content']['Combine']??'');
+                $constant=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($rule['Content']['Constant or...'],$rule['Content']['Target data type']);
+                $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$constant,$rule['Content']['Combine']??'');
             }
             $result[$rowKey]['Match required']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Match required']);
             $result[$rowKey]['Rule Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed);
