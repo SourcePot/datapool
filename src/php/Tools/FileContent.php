@@ -82,7 +82,6 @@ final class FileContent{
     private function addCosts(array $entry,string $text):array
     {
         $entry['Costs (left)']=$entry['Costs (right)']=[];
-        $regexAmount='/[\-\+]{0,1}([0-9]+[,. ]{0,1})+/';
         foreach($this->currencies as $code=>$name){
             $regexp='/('.$code.'\s{1,2}[\-\+]{0,1}([0-9]+[,. ]{0,1})+)|([\-\+]{0,1}([0-9]+[,. ]{0,1})+\s{1,2}'.$code.')/';
             $parts=preg_split($regexp,$text, -1,PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
@@ -106,7 +105,6 @@ final class FileContent{
                 } else {
                     continue;
                 }
-
                 if ($leftValid){
                     $desc=strval($desc);
                     if (strpos($desc,'MwSt')!==FALSE || strpos($desc,'USt')!==FALSE || strpos($desc,'msatzsteuer')!==FALSE || strpos($desc,'wertsteuer')!==FALSE){

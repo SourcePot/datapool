@@ -23,22 +23,22 @@ final class MiscTools{
     private $multipleHitsStatistic=[];
     private $combineOptionCache=[];
     
-    private $dataTypes=array('string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
-                             'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
-                             'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
-                             'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
-                             'shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash','codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomFamily'=>'&rarr; UNYCOM family','unycomCountry'=>'&rarr; UNYCOM country',
-                             'unycomRegion'=>'&rarr; UNYCOM region','unycomRef'=>'&rarr; UNYCOM reference','unycomRefNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
-                             'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
-                             'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
-                             );
+    private $dataTypes=['string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+                        'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
+                        'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
+                        'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
+                        'shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash','codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomFamily'=>'&rarr; UNYCOM family','unycomCountry'=>'&rarr; UNYCOM country',
+                        'unycomRegion'=>'&rarr; UNYCOM region','unycomRef'=>'&rarr; UNYCOM reference','unycomRefNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
+                        'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
+                        'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
+                        ];
     
-    private $conditionTypes=array('empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
-                                  '>'=>'>','='=>'=','!='=>'&ne;','<'=>'<',
-                                  '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
-                                  );
+    private $conditionTypes=['empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
+                            '>'=>'>','='=>'=','!='=>'&ne;','<'=>'<',
+                            '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
+                            ];
     
-    private $combineOptions=array(''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)');
+    private $combineOptions=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
     
     private $matchObj=NULL;
 
@@ -99,7 +99,7 @@ final class MiscTools{
     }
 
     /**
-    * This method returns a tag style definition from an array, e.g. array('float'=>'left','clear'=>'right') returns float:left;clear:right; 
+    * This method returns a tag style definition from an array, e.g. ['float'=>'left','clear'=>'right'] returns float:left;clear:right; 
     *
     * @param array $arr Is the style array  
     * @return string The style string
@@ -118,7 +118,7 @@ final class MiscTools{
     }
     
     /**
-    * This method returns an array from a tag style definition, e.g. float:left;clear:right; returns array('float'=>'left','clear'=>'right')
+    * This method returns an array from a tag style definition, e.g. float:left;clear:right; returns ['float'=>'left','clear'=>'right']
     *
     * @param string $arr Is tag style definition string  
     * @return array The style array
@@ -168,7 +168,6 @@ final class MiscTools{
     
     public function xml2arr(string $xml):array|bool
     {
-        $arr=array('xml'=>$xml);
         if (extension_loaded('SimpleXML')){
             $this->normalize_xml2array(simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOCDATA),$result);
             $json=json_encode($result);
@@ -321,7 +320,7 @@ final class MiscTools{
         return time()-$timestamp;
     }
     
-    public function addEntryId(array $entry,array $relevantKeys=array('Source','Group','Folder','Name'),$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
+    public function addEntryId(array $entry,array $relevantKeys=['Source','Group','Folder','Name'],$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
     {
         if (!empty($entry['EntryId']) && $keepExistingEntryId){return $entry;}
         $base=[];
@@ -429,7 +428,7 @@ final class MiscTools{
     {
         // Thanks to "c0x at mail dot ru" based on https://www.php.net/manual/en/function.log.php
         $float=floatval($float);
-        $e=array('a','f','p','n','u','m','','k','M','G','T','P','E');
+        $e=['a','f','p','n','u','m','','k','M','G','T','P','E'];
         $p=min(max(floor(log(abs($float), $base)),-6),6);
         $value=round((float)$float/pow($base,$p),$prec);
         if ($value==0){
@@ -466,7 +465,7 @@ final class MiscTools{
         if (!empty($formData['cmd'])){
             $statistics=$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str();
             if ($statistics){
-                $this->oc['logger']->log('info','Form processing "cmd={cmd}": {statistics}',array('cmd'=>key($formData['cmd']),'statistics'=>$statistics));    
+                $this->oc['logger']->log('info','Form processing "cmd={cmd}": {statistics}',['cmd'=>key($formData['cmd']),'statistics'=>$statistics]);    
             }
         }   
     }
@@ -499,7 +498,7 @@ final class MiscTools{
         if (isset($entry['Params'][$processId])){
             return TRUE;
         } else {
-            $entry['Params'][$processId]=array('user'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'timestamp'=>time());
+            $entry['Params'][$processId]=['user'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'timestamp'=>time()];
             if (!$dontUpdate){$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);}
             return FALSE;
         }
@@ -510,7 +509,7 @@ final class MiscTools{
         return \SourcePot\Datapool\Root::ONEDIMSEPARATOR;
     }
     
-    public function arr2selector(array $arr,array $defaultValues=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'app'=>'')):array
+    public function arr2selector(array $arr,array $defaultValues=['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'app'=>'']):array
     {
         $selector=[];
         foreach($defaultValues as $key=>$defaultValue){
@@ -545,16 +544,16 @@ final class MiscTools{
     
     /**
     * Creates a new selector from a deletion selector. Example:
-    * $selector=array('Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>'Kanzlei XYZ')  
-    * return array('Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>FALSE,'EntryId'=>FALSE)
+    * $selector=['Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>'Kanzlei XYZ']  
+    * return ['Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>FALSE,'EntryId'=>FALSE]
     * 
     * @param    array   $selector   Is an selector to select entries or an entry 
     * @return   array   The new selector
     */
-    public function selectorAfterDeletion(array $selector,array $columns=array('Source','Group','Folder','EntryId','VOID')):array
+    public function selectorAfterDeletion(array $selector,array $columns=['Source','Group','Folder','EntryId','VOID']):array
     {
         $lastColumn='Source';
-        $newSelector=array('app'=>(isset($selector['app'])?$selector['app']:''));
+        $newSelector=['app'=>(isset($selector['app'])?$selector['app']:'')];
         foreach($columns as $column){
             $newSelector[$column]=(isset($selector[$column]))?$selector[$column]:FALSE;
             if ($newSelector[$column]==\SourcePot\Datapool\Root::GUIDEINDICATOR || $newSelector[$column]===FALSE){
@@ -679,11 +678,11 @@ final class MiscTools{
     
     private function flatKey2arr($key,$value,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
-        if (!is_string($key)){return array($key=>$value);}
+        if (!is_string($key)){return [$key=>$value];}
         $k=explode($S,$key);
         while(count($k)>0){
             $subKey=array_pop($k);
-            $value=array($subKey=>$value);
+            $value=[$subKey=>$value];
         }
         return $value;
     }
@@ -775,7 +774,7 @@ final class MiscTools{
     }
 
     /**
-    * @return string This method returns a string for a web page created from a statistics array, e.g. array('matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'file added'=>0)
+    * @return string This method returns a string for a web page created from a statistics array, e.g. ['matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'file added'=>0]
     */
     public function statistic2str(array|bool $statistic=FALSE):string
     {
@@ -810,7 +809,7 @@ final class MiscTools{
             if (is_bool($value)){
                 $value=$this->bool2element($value);
             }
-            $rows[$rowIndex]=array('columns'=>$columns,'value'=>$value);
+            $rows[$rowIndex]=['columns'=>$columns,'value'=>$value];
             if ($columnCount>$maxColumnCount){$maxColumnCount=$columnCount;}
             $rowIndex++;
         }
@@ -850,8 +849,8 @@ final class MiscTools{
     */
     public function addArrValuesKeywise(...$arrays)
     {
-        // Example: Arguments "array('deleted'=>2,'inserted'=>1,'steps'=>'Open web page','done'=>FALSE)" and "array('deleted'=>0,'inserted'=>4,'steps'=>'Close web page','done'=>TRUE)"
-        // will return array('deleted'=>2,'inserted'=>5,'steps'=>'Open web page|Close web page','done'=>TRUE)
+        // Example: Arguments "['deleted'=>2,'inserted'=>1,'steps'=>'Open web page','done'=>FALSE]" and "['deleted'=>0,'inserted'=>4,'steps'=>'Close web page','done'=>TRUE]"
+        // will return ['deleted'=>2,'inserted'=>5,'steps'=>'Open web page|Close web page','done'=>TRUE]
         $result=[];
         array_walk_recursive($arrays,function($item,$key) use (&$result){
             if (is_numeric($item)){
@@ -971,7 +970,7 @@ final class MiscTools{
                 $this->multipleHitsStatistic[$entry['EntryId']]['Comment'].=', '.$comment;
             }
         } else {
-            $this->multipleHitsStatistic[$entry['EntryId']]=array('Name'=>$entry['Name'],'Hits'=>1,'Comment'=>$comment);
+            $this->multipleHitsStatistic[$entry['EntryId']]=['Name'=>$entry['Name'],'Hits'=>1,'Comment'=>$comment];
         } 
     }
 
@@ -1160,13 +1159,13 @@ final class MiscTools{
         } else if ($condition==='~'){
             return $valueA==-1*$valueB;
         }
-        $this->oc['logger']->log('error','"{class} &rarr; {function}()" called with undefined condition.',array('class'=>__CLASS__,'function'=>__FUNCTION__));    
+        $this->oc['logger']->log('error','"{class} &rarr; {function}()" called with undefined condition.',['class'=>__CLASS__,'function'=>__FUNCTION__]);    
         return FALSE;
     }
     
     public function matchEntry($needle,$matchSelector,$matchColumn,$matchType='contains',$isSystemCall=FALSE):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'needle'=>$needle,'needleLength'=>strlen($needle),'matchColumn'=>$matchColumn);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'needle'=>$needle,'needleLength'=>strlen($needle),'matchColumn'=>$matchColumn];
         if ($context['needleLength']<3){
             $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" called with very short needle "{needle}" for match column "{matchColumn}".',$context);
         }
@@ -1178,7 +1177,7 @@ final class MiscTools{
             $matchSelector[$matchColumn]=$dbNeedle;
         }
         // get possible matches
-        $bestMatch=array('probability'=>0,'Content'=>[],'Params'=>[]);
+        $bestMatch=['probability'=>0,'Content'=>[],'Params'=>[]];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
             // get sample
             $sample=$matchEntry[$matchColumn];
@@ -1197,7 +1196,7 @@ final class MiscTools{
                 continue;
             }
             if ($bestMatch['probability']<$probability){
-                $bestMatch=$matchEntry;    
+                $bestMatch=$matchEntry;
                 $bestMatch['probability']=$probability;
                 if ($probability==1){break;}
             }

@@ -15,43 +15,43 @@ class DataExplorer{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                                 'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                                 ];
     
-    public $definition=array('Content'=>array('Style'=>array('Text'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                            'Style class'=>array('@function'=>'select','@options'=>array('canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'),'@default'=>'canvas-std'),
-                                                            'top'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
-                                                            'left'=>array('@tag'=>'input','@type'=>'Text','@default'=>'0px'),
-                                                            ),
-                                            'Selector'=>array('Source'=>array('@function'=>'select','@options'=>[]),
-                                                                'Group'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                                'Folder'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                                'Name'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                                'EntryId'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                                'Type'=>array('@tag'=>'input','@type'=>'Text','@default'=>''),
-                                                                ),
-                                             'Widgets'=>array('Processor'=>array('@function'=>'select','@options'=>[],'@default'=>0),
-                                                               'File upload'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
-                                                               'File upload extract archive'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
-                                                               'File upload extract email parts'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>0),
-                                                               'pdf-file parser'=>array('@function'=>'select','@options'=>[],'@default'=>0),
-                                                               'Delete selected entries'=>array('@function'=>'select','@options'=>array('No','Yes'),'@default'=>1),
-                                                                ),
-                                              ),
-                            );
+    public $definition=['Content'=>['Style'=>['Text'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                            'Style class'=>['@function'=>'select','@options'=>['canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'],'@default'=>'canvas-std'],
+                                                            'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
+                                                            'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
+                                                            ],
+                                            'Selector'=>['Source'=>['@function'=>'select','@options'=>[]],
+                                                                'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                                'Folder'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                                'Name'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                                'EntryId'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                                'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                                ],
+                                             'Widgets'=>['Processor'=>['@function'=>'select','@options'=>[],'@default'=>0],
+                                                               'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                                                               'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                                                               'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                                                               'pdf-file parser'=>['@function'=>'select','@options'=>[],'@default'=>0],
+                                                               'Delete selected entries'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>1],
+                                                                ],
+                                              ],
+                            ];
     
-    private $tags=array('run'=>array('tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'),'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'),
-                        'edit'=>array('tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>array('font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'),'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'),
-                        '&#9881;'=>array('tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'),
-                        'Select'=>array('tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'),
-                        'Text'=>array('tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Text box'),
-                        );
+    private $tags=['run'=>['tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'],'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'],
+                        'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
+                        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'],
+                        'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
+                        'Text'=>['tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Text box'],
+                        ];
     
-    private $graphicElemnts=array('Connectors'=>array('&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'),
-                                  'Symbols'=>array('&VerticalSeparator;','&#8285;','&#8286;','','','&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'),
-                                  'Math'=>array('&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'),
-                                  );
+    private $graphicElemnts=['Connectors'=>['&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'],
+                                  'Symbols'=>['&VerticalSeparator;','&#8285;','&#8286;','','','&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'],
+                                  'Math'=>['&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'],
+                                  ];
 
     private $processorOptions=[];
     
@@ -72,7 +72,7 @@ class DataExplorer{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         foreach($this->graphicElemnts as $category=>$htmlEntities){
             foreach($htmlEntities as $htmlEntity){
-                $this->tags[$htmlEntity]=array('tag'=>'div','element-content'=>$htmlEntity,'keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>$category,'Read'=>'ALL_CONTENTADMIN_R');
+                $this->tags[$htmlEntity]=['tag'=>'div','element-content'=>$htmlEntity,'keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>$category,'Read'=>'ALL_CONTENTADMIN_R'];
             }
         }
         $this->completeDefintion();
@@ -90,7 +90,7 @@ class DataExplorer{
     
     public function job($vars){
         // create signals from canvas elements
-        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements');
+        $selector=['Source'=>$this->entryTable,'Group'=>'Canvas elements'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $canvasElement){
             if (empty($canvasElement['Content']['Selector']['Source'])){continue;}
             $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
@@ -108,12 +108,12 @@ class DataExplorer{
     private function completeDefintion():void
     {
         // add Source selector
-        $sourceOptions=array(''=>'&larrhk;');
+        $sourceOptions=[''=>'&larrhk;'];
         $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
         foreach($dbInfo as $Source=>$entryTemplate){$sourceOptions[$Source]=$Source;}
         $this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
         // add data processors
-        $this->processorOptions=array(''=>'&larrhk;');
+        $this->processorOptions=[''=>'&larrhk;'];
         foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataProcessor') as $classWithNamespace=>$defArr){
             $label=$this->oc['SourcePot\Datapool\Root']->class2source($classWithNamespace);
             $this->processorOptions[$classWithNamespace]=ucfirst($label);
@@ -121,7 +121,7 @@ class DataExplorer{
         $this->definition['Content']['Widgets']['Processor']['@options']=$this->processorOptions;
         $this->definition['Content']['Widgets']['pdf-file parser']=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
         // add save button
-        $this->definition['save']=array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save');
+        $this->definition['save']=['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'];
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
@@ -167,13 +167,13 @@ class DataExplorer{
     */
     public function getDataExplorer(string $callingClass):array
     {
-        $return=array('isEditMode'=>$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode'),'contentHtml'=>'');
+        $return=['isEditMode'=>$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode'),'contentHtml'=>''];
         // add canvas element
         $return['canvasElement']=$this->canvasFormProcessing($callingClass);
         // create explorer html
         $cntrHtmlArr=$this->getCntrHtml($callingClass);
         $canvasHtml=$this->getCanvas($callingClass);
-        $articleArr=array('tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtmlArr['cntr'],'keep-element-content'=>TRUE,'style'=>[]);
+        $articleArr=['tag'=>'article','class'=>'explorer','element-content'=>$canvasHtml.$cntrHtmlArr['cntr'],'keep-element-content'=>TRUE,'style'=>[]];
         $return['explorerHtml']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($articleArr);
         $return['explorerHtml'].=$cntrHtmlArr['processor'];
         // create content html
@@ -199,7 +199,7 @@ class DataExplorer{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getCanvas',TRUE);
         if (!empty($formData['cmd'])){
             $cmd=key($formData['cmd']);
-            $elementSelector=array('Source'=>key($formData['cmd'][$cmd]));
+            $elementSelector=['Source'=>key($formData['cmd'][$cmd])];
             $elementSelector['EntryId']=key($formData['cmd'][$cmd][$elementSelector['Source']]);
             $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($elementSelector);
         }
@@ -235,7 +235,7 @@ class DataExplorer{
             $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'isEditMode',TRUE);
         } else if (!empty($formData['cmd'])){
             // insert new canvas element; canvas element structure will be finalized by unifyEntry-method 
-            $entry=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
+            $entry=['Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass];
             $entry=array_merge($this->tags[key($formData['cmd'])],$entry);
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
         }
@@ -248,15 +248,15 @@ class DataExplorer{
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R',FALSE,TRUE)){continue;}
             if ($tag['showEditMode']!==$isEditMode){continue;}
             $btn=$tag;
-            $btnTemplate=array('tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>array($key),'style'=>array('position'=>'relative','padding'=>'0','margin'=>'0.1em','font-size'=>'18px'));
+            $btnTemplate=['tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$key],'style'=>['position'=>'relative','padding'=>'0','margin'=>'0.1em','font-size'=>'18px']];
             $btn=array_replace_recursive($btn,$btnTemplate);
             $btn['class']='canvas-cntr-btn';
             if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
             $matrix[$tag['type']]['Btn'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btn);
         }
-        $htmlArr=array('cntr'=>'','processor'=>'');
-        $tableArr=array('matrix'=>$matrix,'keep-element-content'=>TRUE,'hideHeader'=>TRUE,'caption'=>'Canvas');
-        if ($isEditMode){$tableArr['style']=array('min-width'=>'550px');}
+        $htmlArr=['cntr'=>'','processor'=>''];
+        $tableArr=['matrix'=>$matrix,'keep-element-content'=>TRUE,'hideHeader'=>TRUE,'caption'=>'Canvas'];
+        if ($isEditMode){$tableArr['style']=['min-width'=>'550px'];}
         $htmlArr['cntr']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($tableArr);
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
         $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
@@ -273,7 +273,7 @@ class DataExplorer{
                     $htmlArr['processor'].=$this->oc[$processorClass]->dataProcessor($canvasElement,'widget');
                     $htmlArr['processor'].=$this->oc[$processorClass]->dataProcessor($canvasElement,'info');
                 } else {
-                    $this->oc['logger']->log('error','Processor class {processor} missing',array('processor'=>$processorClass));
+                    $this->oc['logger']->log('error','Processor class {processor} missing',['processor'=>$processorClass]);
                 }
             }
             $htmlArr['cntr'].=$this->exportImportHtml($callingClass);
@@ -292,7 +292,7 @@ class DataExplorer{
         // create html
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
         $html='';
-        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
+        $selector=['Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
             $html.=$this->canvasElement2html(__CLASS__,__FUNCTION__,$entry,$selectedCanvasElement);
         }
@@ -311,9 +311,9 @@ class DataExplorer{
     */
     private function canvasElement2html($callingClass,$callingFunction,$canvasElement,$selectedCanvasElement=FALSE){
         $rowCount=FALSE;
-        $element=array('tag'=>'div');
+        $element=['tag'=>'div'];
         // get canvas element style
-        $style=array('left'=>$canvasElement['Content']['Style']['left'],'top'=>$canvasElement['Content']['Style']['top']);
+        $style=['left'=>$canvasElement['Content']['Style']['left'],'top'=>$canvasElement['Content']['Style']['top']];
         if (!empty($selectedCanvasElement['EntryId'])){
             if (strcmp($selectedCanvasElement['EntryId'],$canvasElement['EntryId'])===0){
                 $style['box-shadow']='3px 3px 5px 1px #f009';
@@ -323,20 +323,20 @@ class DataExplorer{
         $isEditMode=!empty($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'isEditMode',FALSE));
         $isEditMode=$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R',$isEditMode,FALSE);
         if ($isEditMode){
-            $btnArr=array('tag'=>'button','value'=>'edit','Source'=>$canvasElement['Source'],'EntryId'=>$canvasElement['EntryId'],'keep-element-content'=>TRUE,'class'=>'canvas-element-btn');
+            $btnArr=['tag'=>'button','value'=>'edit','Source'=>$canvasElement['Source'],'EntryId'=>$canvasElement['EntryId'],'keep-element-content'=>TRUE,'class'=>'canvas-element-btn'];
             $btnArr['callingClass']=$callingClass;
             $btnArr['callingFunction']=$callingFunction;
             // canvas element select button
-            $btnArr['style']=array('top'=>'-5px');
-            $btnArr['key']=array('select',$canvasElement['Source'],$canvasElement['EntryId']);
+            $btnArr['style']=['top'=>'-5px'];
+            $btnArr['key']=['select',$canvasElement['Source'],$canvasElement['EntryId']];
             $btnArr['title']='Select';
             $btnArr['id']=md5('select'.$canvasElement['EntryId'].__FUNCTION__);
             $btnArr['element-content']='&#10022;';
             $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             // canvas element delete button
-            $btnArr['style']=array('bottom'=>'-5px');
+            $btnArr['style']=['bottom'=>'-5px'];
             $btnArr['title']='Delete';
-            $btnArr['key']=array('delete',$canvasElement['Source'],$canvasElement['EntryId']);
+            $btnArr['key']=['delete',$canvasElement['Source'],$canvasElement['EntryId']];
             $btnArr['id']=md5('delete'.$canvasElement['EntryId'].__FUNCTION__);
             $btnArr['element-content']='🗑';
             $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
@@ -352,7 +352,7 @@ class DataExplorer{
             } else {
                 // canvas element view button
                 $element=$canvasElement;
-                $element['key']=array('view',$canvasElement['Source'],$canvasElement['EntryId']);
+                $element['key']=['view',$canvasElement['Source'],$canvasElement['EntryId']];
                 $element['id']=md5('view'.$canvasElement['EntryId'].__FUNCTION__);
                 $element['tag']='button';
                 $style['z-index']='5';
@@ -363,7 +363,7 @@ class DataExplorer{
         }
         // canvas element
         if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0 && strcmp($canvasElement['Content']['Style']['Text'],'&#128337;')!==0){
-            $elmentInfo=array('tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')');
+            $elmentInfo=['tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')'];
             $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elmentInfo);
         }
         $element['class']=$canvasElement['Content']['Style']['Style class'];
@@ -391,7 +391,7 @@ class DataExplorer{
         $settings['Script start timestamp']=hrtime(TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $settings['callingElement']=$callingElement['Content'];
-        $entriesSelector=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']);
+        $entriesSelector=['Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $key=strtolower($entry['Group']);
             $settings[$key][$entry['EntryId']]=$entry;
@@ -421,11 +421,11 @@ class DataExplorer{
         if (!isset($callingElement['Folder']) || !isset($callingElement['EntryId'])){
             return [];
         }
-        $entry=array('Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId']);
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Group','Folder','Name'),0);
+        $entry=['Source'=>$this->oc[$callingClass]->getEntryTable(),'Group'=>$callingFunction,'Folder'=>$callingElement['Folder'],'Name'=>$callingElement['EntryId']];
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Group','Folder','Name'],0);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
         $entry['Content']=[];
-        $arr=array('callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry);
+        $arr=['callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry];
         return $arr;
     }
     
@@ -437,7 +437,7 @@ class DataExplorer{
     */
     public function canvasSelector(string $callingClass):array
     {
-        $selector=array('Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass);
+        $selector=['Source'=>$this->entryTable,'Group'=>'Canvas elements','Folder'=>$callingClass];
         return $selector;
     }
 
@@ -478,7 +478,7 @@ class DataExplorer{
     */
     public function entryId2selector(string $entryId):array
     {
-        $selector=array('Source'=>$this->entryTable,'EntryId'=>$entryId);
+        $selector=['Source'=>$this->entryTable,'EntryId'=>$entryId];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
         if (isset($entry['Content']['Selector'])){
             $selector=[];
@@ -534,12 +534,12 @@ class DataExplorer{
         }
         // create html
         $html='';
-        $uploadElement=array('tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>array('files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $uploadBtn=array('tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>array('upload'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $uploadElement=['tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>['files'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $uploadBtn=['tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>['upload'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
-        $matrix['upload']=array('value'=>$uploadElement);
-        $matrix['cmd']=array('value'=>$uploadBtn);
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'File upload'));
+        $matrix['upload']=['value'=>$uploadElement];
+        $matrix['cmd']=['value'=>$uploadBtn];
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'File upload']);
         return $html;
     }
     
@@ -552,12 +552,12 @@ class DataExplorer{
     private function getDeleteBtn(array $canvasElement):string
     {
         if (empty($canvasElement['Content']['Widgets']['Delete selected entries'])){return '';}
-        $deleteBtn=array('selector'=>$canvasElement['Content']['Selector']);
+        $deleteBtn=['selector'=>$canvasElement['Content']['Selector']];
         $deleteBtn['cmd']='delete all';
         $deleteBtn=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($deleteBtn);
         $matrix=[];
-        $matrix['cmd']=array('value'=>$deleteBtn);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delete entries'));
+        $matrix['cmd']=['value'=>$deleteBtn];
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delete entries']);
     }
     
     /**
@@ -573,12 +573,12 @@ class DataExplorer{
         }
         $selectors=[];
         foreach($GLOBALS['dbInfo'] as $table=>$infoArr){
-            $selectors[$table]=array('Source'=>$table,'Folder'=>$callingClass);
+            $selectors[$table]=['Source'=>$table,'Folder'=>$callingClass];
         }
-        $selectors=array('dataexplorer'=>array('Source'=>'dataexplorer','Folder'=>$callingClass));
+        $selectors=['dataexplorer'=>['Source'=>'dataexplorer','Folder'=>$callingClass]];
         foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataProcessor') as $classWithNamespace=>$ret){
             $source=$this->oc['SourcePot\Datapool\Root']->class2source($classWithNamespace);
-            $selectors[$source]=array('Source'=>$source,'Folder'=>$callingClass);
+            $selectors[$source]=['Source'=>$source,'Folder'=>$callingClass];
         }
         $callingClassName=mb_substr($callingClass,strrpos($callingClass,'\\')+1);
         $className=mb_substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
@@ -598,18 +598,18 @@ class DataExplorer{
                 $this->oc['logger']->log('notice','Import of "{name}" failed',$formData["files"]["import files"][0]);    
             }
         }
-        $btnArr=array('tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('float'=>'left','clear'=>'both','margin'=>'0.5em 5px;'));
+        $btnArr=['tag'=>'button','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['float'=>'left','clear'=>'both','margin'=>'0.5em 5px;']];
         $html='';
         $btnArr['element-content']='Download backup';
-        $btnArr['key']=array($btnArr['element-content']);
+        $btnArr['key']=[$btnArr['element-content']];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-        $element=array('tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>array('import files'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>'float:left;clear:left;margin:0.5em 5px;');
+        $element=['tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>['import files'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>'float:left;clear:left;margin:0.5em 5px;'];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         $btnArr['element-content']='Import';
-        $btnArr['key']=array($btnArr['element-content']);
+        $btnArr['key']=[$btnArr['element-content']];
         $btnArr['hasCover']=TRUE;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9850;'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9850;']);
         return $html;
     }
 

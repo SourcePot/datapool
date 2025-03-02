@@ -15,13 +15,13 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
     
     private $maxResultTableLength=50;
     private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=30000000000;   // in nanoseconds
+    private const MAX_PROC_TIME=50000000000;   // in nanoseconds
     
 
     public function __construct($oc){
@@ -72,13 +72,13 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getMatchEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Matching','generic',$callingElement,array('method'=>'getMatchEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Matching','generic',$callingElement,['method'=>'getMatchEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
     private function getMatchEntriesInfo($callingElement){
         $matrix=[];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
 
@@ -93,29 +93,29 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runMatchEntries($arr['selector'],TRUE);
         }
         // build html
-        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
         $btnArr['value']='Test';
-        $btnArr['key']=array('test');
+        $btnArr['key']=['test'];
         $matrix['Commands']['Test']=$btnArr;
         $btnArr['value']='Run';
-        $btnArr['key']=array('run');
+        $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Match entries'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Match entries']);
         foreach($result as $caption=>$matrix){
-            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
             if ($caption==='Matching'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
-        $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
+        $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
         return $arr;
     }
 
     private function getMatchEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Matching entries settings','generic',$callingElement,array('method'=>'getMatchEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Matching entries settings','generic',$callingElement,['method'=>'getMatchEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -127,24 +127,24 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function matchingParams($callingElement){
-        $return=array('html'=>'','Parameter'=>[],'result'=>[]);
+        $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
-        $contentStructure=array('Column to match'=>array('method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
-                              'Match with'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                              'Match with column'=>array('method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE),
-                              'Match type'=>array('method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE),
-                              'Match probability'=>array('method'=>'select','value'=>80,'options'=>array(100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50',45=>'>45',40=>'>40',30=>'>30',25=>'>25'),'excontainer'=>TRUE),
-                              'Match failure'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-                              'Match success'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-                              'Combine content'=>array('method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>array('No','Yes')),
-                              'Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
-                            );
+        $matchTypOptions=['identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication'];
+        $contentStructure=['Column to match'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE],
+                        'Match with'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+                        'Match with column'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE],
+                        'Match type'=>['method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE],
+                        'Match probability'=>['method'=>'select','value'=>80,'options'=>[100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50',45=>'>45',40=>'>40',30=>'>30',25=>'>25'],'excontainer'=>TRUE],
+                        'Match failure'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
+                        'Match success'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
+                        'Combine content'=>['method'=>'select','value'=>1,'excontainer'=>TRUE,'options'=>['No','Yes']],
+                        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+                        ];
         $contentStructure['Column to match']+=$callingElement['Content']['Selector'];
         $contentStructure['Match with column']+=$callingElement['Content']['Selector'];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']['Content']=array('Column to match'=>'Name');
+        $arr['selector']['Content']=['Column to match'=>'Name'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -159,13 +159,13 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['caption']='Select column to match and the success/failure targets';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $matrix=array('Parameter'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        $matrix=['Parameter'=>$row];
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
     public function runMatchEntries($callingElement,$testRun=TRUE){
-        $base=array('matchingparams'=>[]);
+        $base=['matchingparams'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -177,7 +177,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                      'Matches'=>[],
                 ];
         $isComplete=FALSE;
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
+        $selector=$callingElement['Content']['Selector'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
             $isComplete=($entry['isLast'])?TRUE:$isComplete;
             $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
             if (($testRun && $expiredTime>self::MAX_TEST_TIME) || $expiredTime>self::MAX_PROC_TIME){
@@ -198,7 +199,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        $result['Statistics']['Enties per sec']=['Value'=>round(1000*$result['Matching']['Entries']['value']/$result['Statistics']['Time consumption [msec]']['Value'])];
+        $result['Statistics']['Entries per sec']=['Value'=>round(1000*$result['Matching']['Entries']['value']/$result['Statistics']['Time consumption [msec]']['Value'],2)];
         return $result;
     }
     
@@ -227,7 +228,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Matching']['Kept entry']['value']++;
             }
             if (count($result['Matches'])<$this->maxResultTableLength && isset($bestMatch[$params['Content']['Match with column']])){        
-                $result['Matches'][$needle]=array($bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE));
+                $result['Matches'][$needle]=[$bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE)];
             }
         } else {
             // failed match
@@ -238,7 +239,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Matching']['Kept entry']['value']++;
             }
             if (count($result['Matches'])<$this->maxResultTableLength && isset($bestMatch[$params['Content']['Match with column']])){
-                $result['Matches'][$needle]=array($bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE));
+                $result['Matches'][$needle]=[$bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
             }
         }
         return $result;

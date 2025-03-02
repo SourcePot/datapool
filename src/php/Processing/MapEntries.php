@@ -20,6 +20,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                             ];
         
     private $paramsTemplate=['Mode'=>'entries'];
+
+    private const MAX_TEST_TIME=5000000000;   // in nanoseconds
+    private const MAX_PROC_TIME=30000000000;   // in nanoseconds
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -186,6 +189,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                                         'Files added to zip'=>['value'=>0],
                                         'Skip rows'=>['value'=>0],
                                         'Output format'=>['value'=>'Entries'],
+                                        'Comment'=>['value'=>''],
                                         ]
                     ];
         // loop through entries
@@ -200,6 +204,11 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
+            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
+            if ((($testRun && $expiredTime>self::MAX_TEST_TIME) || $expiredTime>self::MAX_PROC_TIME) && !$base['csvRequested']){
+                $result['Mapping statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+                break;
+            }
             if ($sourceEntry['isSkipRow']){
                 $result['Mapping statistics']['Skip rows']['value']++;
                 continue;
@@ -208,9 +217,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 // add attached file to temporary zip-archive        
                 $attachment=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 if (is_file($attachment)){
-                    $result['Mapping statistics']['Files added to zip']['value']++;
                     $sourceEntry['Linked file']=preg_replace('/[^0-9a-zA-ZöüäÖÜÄß\-]/','_',$sourceEntry['Name']).'.'.$sourceEntry['Params']['File']['Extension'];
-                    $zip->addFile($attachment,$sourceEntry['Linked file']);
+                    $result['Mapping statistics']['Files added to zip']['value']+=intval($zip->addFile($attachment,$sourceEntry['Linked file']));
                 } else {
                     $sourceEntry['Linked file']='';
                 }
@@ -238,7 +246,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // add csv file to zip archive
             if (isset($result['targetEntry']['Source'])){
                 $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(['Source'=>$csvEntry['Source'],'EntryId'=>$csvEntry['EntryId']]);
-                $zip->addFile($csvFile,$csvEntry['Params']['File']['Name']);
+                $result['Mapping statistics']['Files added to zip']['value']+=intval($zip->addFile($csvFile,$csvEntry['Params']['File']['Name']));
             }
             // create zip entry
             $archiveFileCount=$zip->count();

@@ -172,7 +172,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result=array('Forwarded'=>[],
                     );
         // loop through entries
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+        $selector=$callingElement['Content']['Selector'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $sourceEntry){
             $result=$this->forwardEntry($base,$sourceEntry,$result,$testRun);
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();

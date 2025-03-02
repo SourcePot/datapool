@@ -66,7 +66,7 @@ class Queue
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $hrTimeArr=hrtime(FALSE);
         $callingClass=explode('\\',$callingClass);
-        $entryTemplate=array('Source'=>$this->entryTable);
+        $entryTemplate=['Source'=>$this->entryTable];
         $entryTemplate['Group']=array_pop($callingClass).'||'.strval($step);
         $entry['EntryId']=str_pad(strval($hrTimeArr[0]),32,'0',STR_PAD_LEFT).'.'.$hrTimeArr[1].'||'.$entryTemplate['Group'];
         $entry=array_merge($entry,$entryTemplate);
@@ -88,7 +88,7 @@ class Queue
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $callingClass=explode('\\',$callingClass);
         $class=array_pop($callingClass);
-        $selector=array('Source'=>$this->entryTable,'Group'=>$class.'||'.$step);
+        $selector=['Source'=>$this->entryTable,'Group'=>$class.'||'.$step];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId',TRUE) as $entry){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry,TRUE);
             $this->updateQueueMeta($entry);
@@ -97,8 +97,8 @@ class Queue
         }
         // update meta entry
         if ($entryFound===FALSE){
-            $metaEntry=array('Source'=>$this->entryTable,'Group'=>'meta','Folder'=>$class,'Name'=>str_pad(strval($step),5,'0',STR_PAD_LEFT));
-            $metaEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($metaEntry,array('Group','Folder','Name'),0);
+            $metaEntry=['Source'=>$this->entryTable,'Group'=>'meta','Folder'=>$class,'Name'=>str_pad(strval($step),5,'0',STR_PAD_LEFT)];
+            $metaEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($metaEntry,['Group','Folder','Name'],0);
             $metaEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($metaEntry,TRUE);
             if (!empty($metaEntry['Content']['Queue size'])){
                 $metaEntry['Content']['Queue size']=0;
@@ -123,8 +123,8 @@ class Queue
         $entryPropArr=explode('||',$entry['Group']);
         $class=array_shift($entryPropArr);
         $name=str_pad(array_shift($entryPropArr),5,'0',STR_PAD_LEFT);
-        $metaEntry=array('Source'=>$this->entryTable,'Group'=>'meta','Folder'=>$class,'Name'=>$name,'Content'=>array('Init timestamp'=>time(),'Update timestamp'=>time(),'Queue max'=>FALSE,'Queue size'=>0));
-        $metaEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($metaEntry,array('Group','Folder','Name'),0);
+        $metaEntry=['Source'=>$this->entryTable,'Group'=>'meta','Folder'=>$class,'Name'=>$name,'Content'=>['Init timestamp'=>time(),'Update timestamp'=>time(),'Queue max'=>FALSE,'Queue size'=>0]];
+        $metaEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($metaEntry,['Group','Folder','Name'],0);
         $metaEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($metaEntry,TRUE);        
         // updatee entry meta
         $metaEntry['Content']['Update timestamp']=time();
@@ -147,9 +147,9 @@ class Queue
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $callingClass=explode('\\',$callingClass);
         $class=array_pop($callingClass);
-        $entriesSelector=array('Source'=>$this->entryTable,'Group'=>$class.'||%');
+        $entriesSelector=['Source'=>$this->entryTable,'Group'=>$class.'||%'];
         $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entriesSelector,TRUE);
-        $metaEntriesSelector=array('Source'=>$this->entryTable,'Group'=>'meta','Folder'=>$class);
+        $metaEntriesSelector=['Source'=>$this->entryTable,'Group'=>'meta','Folder'=>$class];
         $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($metaEntriesSelector,TRUE);
         return $this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
     }
@@ -160,13 +160,13 @@ class Queue
     * @param string     $callingClass    The calling method's class-name
     * @return array     The queue meta data array related to the $entry, with key 'Meter': html meter tags providing progrss; 'Current step': providing the current processing step and 'All done' is true if all steps are completed
     */
-    public function getQueueMeta(string $callingClass,array $stepsDescription=array(0=>'Start',1=>'Processing',2=>'Finalizing')):array
+    public function getQueueMeta(string $callingClass,array $stepsDescription=[0=>'Start',1=>'Processing',2=>'Finalizing']):array
     {
         ksort($stepsDescription);
         // get processed steps
         $callingClass=explode('\\',$callingClass);
-        $metaEntriesSelector=array('Source'=>$this->entryTable,'Group'=>'meta','Folder'=>array_pop($callingClass));
-        $metaArr=array('class'=>$metaEntriesSelector['Folder'],'Meta entries'=>[],'Empty'=>TRUE,'All done'=>FALSE);
+        $metaEntriesSelector=['Source'=>$this->entryTable,'Group'=>'meta','Folder'=>array_pop($callingClass)];
+        $metaArr=['class'=>$metaEntriesSelector['Folder'],'Meta entries'=>[],'Empty'=>TRUE,'All done'=>FALSE];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($metaEntriesSelector,TRUE,'Read','Name',TRUE) as $metaEntry){
             $metaArr['Empty']=FALSE;
             $initTimeStamp=$metaEntry['Content']['Init timestamp'];
@@ -183,7 +183,7 @@ class Queue
         $initTimeStamp=$initTimeStamp??time();
         foreach($stepsDescription as $stepIndex=>$description){
             $initTimeStamp++;
-            $metaArr['Meta entries'][ $initTimeStamp]=array('Init timestamp'=>$initTimeStamp,'Update timestamp'=>time(),'Queue max'=>0,'Queue size'=>0);
+            $metaArr['Meta entries'][ $initTimeStamp]=['Init timestamp'=>$initTimeStamp,'Update timestamp'=>time(),'Queue max'=>0,'Queue size'=>0];
             $metaArr['Meta entries'][ $initTimeStamp]['step']=intval($stepIndex);
             $metaArr['Meta entries'][ $initTimeStamp]['description']=$description;
         }
@@ -203,21 +203,21 @@ class Queue
             $queueMatrix[$timestamp]['Step']=$stepArr['step'];
             $queueMatrix[$timestamp]['Description']=(isset($stepArr['description']))?$stepArr['description']:'';
             $queueMatrix[$timestamp]['Done']=($stepArr['Queue max']-$stepArr['Queue size']).' / '.$stepArr['Queue max'];
-            $queueMatrix[$timestamp]['Meter']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'meter','min'=>0,'max'=>100,'value'=>$percentage,'title'=>$percentage.'%','element-content'=>''));
+            $queueMatrix[$timestamp]['Meter']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'meter','min'=>0,'max'=>100,'value'=>$percentage,'title'=>$percentage.'%','element-content'=>'']);
         }
         if (!isset($metaArr['Current step'])){
             // nothing left in the queue -> set 'Current step' to start
             if ($metaArr['Empty']===FALSE){$metaArr['All done']=TRUE;}
             $metaArr['Current step']=0;
         }
-        $metaArr['Meter']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$queueMatrix,'hideHeader'=>False,'hideKeys'=>True,'keep-element-content'=>TRUE,'caption'=>'Processing queues'));
+        $metaArr['Meter']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$queueMatrix,'hideHeader'=>False,'hideKeys'=>True,'keep-element-content'=>TRUE,'caption'=>'Processing queues']);
         return $metaArr;
     }
 
     private function getIdStoreSelector(string $storeId):array
     {
         $EntryId=md5($storeId);
-        return array('Source'=>$this->getEntryTable(),'Group'=>'idStore','Folder'=>'EntryIds','Name'=>$storeId,'EntryId'=>$EntryId,'Owner'=>'SYSTEM');
+        return ['Source'=>$this->getEntryTable(),'Group'=>'idStore','Folder'=>'EntryIds','Name'=>$storeId,'EntryId'=>$EntryId,'Owner'=>'SYSTEM'];
     }
 
     public function idStoreAdd(string $storeId, string $EntryId, int|bool $lifetime=FALSE)
@@ -231,7 +231,7 @@ class Queue
             $sql="UPDATE `".$this->getEntryTable()."` SET `Content`='".$Content."' WHERE `EntryId`='".$entry['EntryId']."';";
             $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[]);
         } else {
-            $entry['Content']=array($EntryId=>time());
+            $entry['Content']=[$EntryId=>time()];
             $entry['Params']['lifetime']=(empty($lifetime))?self::ID_STORE_ENTRYID_LIFETIME:$lifetime;
             $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry,TRUE);
         }
@@ -259,7 +259,7 @@ class Queue
     {
         $vars['statistics']['idStore count']=$vars['statistics']['idStore count']??0;
         $vars['statistics']['expired entryIds']=$vars['statistics']['expired entryIds']??0;
-        $selector=array('Source'=>$this->getEntryTable(),'Group'=>'idStore','Folder'=>'EntryIds');
+        $selector=['Source'=>$this->getEntryTable(),'Group'=>'idStore','Folder'=>'EntryIds',];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $idStore){
             if ($idStore['isSkipRow']){continue;}
             $vars['statistics']['idStore count']++;
@@ -288,16 +288,16 @@ class Queue
         //
         $matrix=[];
         if ($entry){
-            $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             $matrix['Already processed']['Value']='<p>'.count($entry['Content']).'</p>';
             $matrix['Ids expires after']['Value']='<p>'.$this->oc['SourcePot\Datapool\GenericApps\Calendar']->sec2str(intval($entry['Params']['lifetime'])).'</p>';
             $btnArr['value']='Reset';
-            $btnArr['key']=array('reset');
+            $btnArr['key']=['reset'];
             $matrix['']['Value']=$btnArr;
         } else {
             $matrix['Already processed']['Value']='<p>none</p>';
         }
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'EntryId-Store','style'=>array('clear'=>'none')));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'EntryId-Store','style'=>['clear'=>'none']]);
         return $html;
     }    
 
