@@ -253,14 +253,14 @@ class Explorer{
             $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
         } else if (isset($formData['cmd']['add files'])){
             if ($formData['hasValidFiles']){
-                foreach($formData['files']['add files'] as $fileIndex=>$fileArr){
+                foreach($formData['files']['add files_'] as $fileIndex=>$fileArr){
                     if ($fileArr['error']){continue;}
                     $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
                 }
             }        
         } else if (isset($formData['cmd']['update file'])){
             if ($formData['hasValidFiles']){
-                foreach($formData['files']['update file'] as $fileIndex=>$fileArr){
+                foreach($formData['files']['update file_'] as $fileIndex=>$fileArr){
                     if ($fileArr['error']){continue;}
                     $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
                 }
@@ -295,34 +295,21 @@ class Explorer{
             $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Add'));
             if (strcmp($stateKeys['selectedKey'],'Folder')===0){
                 if ($this->addEntryByFileUpload){
-                    $key=array('add files');
-                    $label='Add file(s)';
-                    $fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'selector'=>['app'=>$callingClass],'trigger-id'=>$btnId,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']);
+                    $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['add files'],'element-content'=>'Add file(s)'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
                 } else {
-                    $key=array('add entry');
-                    $label='Add entry';
-                    $fileElement=array('tag'=>'input','type'=>'text','key'=>$key,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']);
+                    $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','key'=>['add entry'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
+                    $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add entry','key'=>['add entry'],'value'=>$stateKeys['nextKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
                 }
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
-            } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
+            } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0 && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
                 if ($this->addEntryByFileUpload){
-                    $access=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE);
-                    $key=array('update file');
-                    $label='Update entry file';
-                    $fileElement=array('tag'=>'input','type'=>'file','key'=>$key,'selector'=>['app'=>$callingClass],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']);
-                    $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
+                    $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['update file'],'element-content'=>'Update entry file'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
                 } else {
                     $arr['html']='';
-                    return $arr;
                 }
             } else {
-                $key=array('add');
-                $label='Add '.$stateKeys['nextKey'];
-                $fileElement=array('tag'=>'input','type'=>'text','placeholder'=>'e.g. Documents','key'=>array($stateKeys['nextKey']),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>array('clear'=>'left'));
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','placeholder'=>'e.g. Documents','key'=>[$stateKeys['nextKey']],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add '.$stateKeys['nextKey'],'key'=>['add'],'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
             }
-            $addBtn=array('tag'=>'button','element-content'=>$label,'key'=>$key,'value'=>$stateKeys['nextKey'],'id'=>$btnId,'selector'=>['app'=>$callingClass],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
             if (empty($access)){$arr['html']='';}
         }
         return $arr;

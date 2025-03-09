@@ -519,7 +519,8 @@ class DataExplorer{
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
         if (isset($formData['cmd']['upload'])){
-            foreach($formData['files']['files'] as $fileIndex=>$fileArr){
+            foreach($formData['files']['upload_'] as $fileArr){
+                $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($fileArr);
                 if (empty($fileArr["tmp_name"])){continue;}
                 $entry=$canvasElement['Content']['Selector'];
                 $entry['File upload extract archive']=!empty($canvasElement['Content']['Widgets']['File upload extract archive']);
@@ -533,14 +534,10 @@ class DataExplorer{
             }
         }
         // create html
-        $btnId=md5(__CLASS__.'_'.__FUNCTION__.'_uploadBtn');
-        $html='';
-        $uploadElement=['tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>['files'],'selector'=>['app'=>$canvasElement],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
-        $uploadBtn=['tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>['upload'],'id'=>$btnId,'selector'=>['app'=>$canvasElement],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $uploadElement=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['upload'],'element-content'=>'Add file(s)'],['formProcessingArg'=>$canvasElement]);
         $matrix=[];
         $matrix['upload']=['value'=>$uploadElement];
-        $matrix['cmd']=['value'=>$uploadBtn];
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'File upload']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'File upload']);
         return $html;
     }
     
@@ -583,7 +580,6 @@ class DataExplorer{
         }
         $callingClassName=mb_substr($callingClass,strrpos($callingClass,'\\')+1);
         $className=mb_substr(__CLASS__,strrpos(__CLASS__,'\\')+1);
-        $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         if (isset($formData['cmd']['Download backup'])){

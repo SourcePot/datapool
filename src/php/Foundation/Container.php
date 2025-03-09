@@ -56,12 +56,16 @@ class Container{
                 $callingClass=$_SESSION['name2classFunction'][$tagName]['callingClass'];
                 $callingFunction=$_SESSION['name2classFunction'][$tagName]['callingFunction'];
                 $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
-                if ($callingFunction==='addEntry'){
-                    $this->oc['SourcePot\Datapool\Foundation\Explorer']->appProcessing($formData['selector']['app']);
-                } else if ($callingFunction==='getFileUpload'){
-                    $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getFileUpload($formData['selector']['app']);
-                } else if ($callingFunction==='ftpFileUpload'){
-                    $this->oc['SourcePot\Datapool\AdminApps\Admin']->ftpFileUpload($formData);
+                if (isset($formData['formProcessingClass']) && isset($formData['formProcessingFunction']) && isset($formData['formProcessingArg'])){
+                    $formProcessingClass=$formData['formProcessingClass'];
+                    $formProcessingFunction=$formData['formProcessingFunction'];
+                    $formProcessingArg=$formData['formProcessingArg'];
+                    if (method_exists($formProcessingClass,$formProcessingFunction)){
+                        $this->oc[$formProcessingClass]->$formProcessingFunction($formProcessingArg);
+                    } else {
+                        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'formProcessingClass'=>$formProcessingClass,'formProcessingFunction'=>$formProcessingFunction];
+                        $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" returns error: formProcessing-method deos not exist "{formProcessingClass} &rarr; {formProcessingFunction}(...)".',$context);
+                    }
                 }
             }
         } else {
@@ -472,7 +476,7 @@ class Container{
                             if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
                                 // $flatColumnKey === column selection -> standard entry presentation
                                 $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
-                                $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tabelCellContent($value,[]);
+                                $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($value,[]);
                             } else if (strpos($flatColumnKey,$cntrArr['Column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR)===0){
                                 // column selection is substring of $flatColumnKey -> submatrix presentation 
                                 $subKey=str_replace($cntrArr['Column'],'',$flatColumnKey);

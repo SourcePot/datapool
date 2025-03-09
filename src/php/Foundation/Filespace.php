@@ -359,10 +359,10 @@ class Filespace{
         }
     }
 
-    public function getPrivatTmpDir():string
+    public function getPrivatTmpDir($salt=''):string
     {
-        $ip=$this->oc['SourcePot\Datapool\Root']->getIP($hashOnly=TRUE);
-        $tmpDir=$GLOBALS['dirs']['privat tmp'].$ip.'/';
+        $privDir=$this->oc['SourcePot\Datapool\Root']->getIP($hashOnly=TRUE,$salt);
+        $tmpDir=$GLOBALS['dirs']['privat tmp'].$privDir.'/';
         if (!is_dir($tmpDir)){
             $this->addStatistic('added dirs',intval(mkdir($tmpDir,0770,TRUE)));
         }
@@ -388,7 +388,7 @@ class Filespace{
         foreach($tmpDirs as $tmpDir=>$maxAge){
             if (is_dir($tmpDir)){
                 $allDirs=scandir($tmpDir);
-                foreach($allDirs as $dirIndex=>$dir){
+                foreach($allDirs as $dir){
                     $fullDir=$tmpDir.$dir;
                     if (!is_dir($fullDir) || strlen($dir)<4){continue;}
                     $age=time()-filemtime($fullDir);
@@ -740,7 +740,7 @@ class Filespace{
         if (isset($selectors['Source'])){$selectors=array($selectors);}
         $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
         $fileName=preg_replace('/\W+/','_',$pageTitle).' dump.zip';
-        $dir=$this->getTmpDir();
+        $dir=$this->getTmpDir(__FUNCTION__);
         $dumpFile=$dir.$fileName;
         if (is_file($dumpFile)){unlink($dumpFile);}
         $attachedFiles=[];
@@ -797,18 +797,19 @@ class Filespace{
 
     public function importEntries(string $dumpFile,$orgFileName='',bool $isSystemCall=FALSE):array
     {
-        $statistics=array('zip errors'=>0,'json decode errors'=>0,'entries updated'=>0,'attached files added'=>0);
+        $statistics=['zip file count'=>0,'zip errors'=>0,'zip extraction error'=>0,'json decode errors'=>0,'entries updated'=>0,'attached files added'=>0];
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $dir=$this->getPrivatTmpDir();
+        $dir=$this->getPrivatTmpDir(__FUNCTION__);
         $zip = new \ZipArchive;
         if ($zip->open($dumpFile)===TRUE){
-            $zip->extractTo($dir);
-            $zip->close();
+            $statistics['zip file count']=$zip->numFiles;
+            $extracted=$zip->extractTo($dir);
+            $zip->close();    
+            $statistics['zip extraction error']=intval($extracted);
             $files=scandir($dir);
             foreach($files as $fileName){
                 // get entry and linked file
                 $file=$dir.$fileName;
-                if (!is_file($file)){continue;}
                 if (mb_strpos($fileName,'.json')===FALSE){continue;}
                 $fileContent=file_get_contents($file);
                 $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($fileContent);
@@ -831,7 +832,10 @@ class Filespace{
             $statistics['zip errors']++;
         }
         $dbStatistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-        $context=array('statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),'dbStatistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($dbStatistics),'orgFileName'=>$orgFileName);
+        $context=['statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),
+                  'dbStatistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($dbStatistics),
+                  'orgFileName'=>$orgFileName
+                 ];
         $this->oc['logger']->log('info','Import of "{orgFileName}" resulted in "{statistics}", the database statistic is "{dbStatistics}"',$context);    
         return $statistics;
     }

@@ -1,23 +1,22 @@
 jQuery(document).ready(function(){
 
-    var fileStore=[];
-    var fileCount=0;
+    var fileStore={};
+    var btnName2process=[];
     
-    jQuery('[type=file]').each(function(){
-        let name=jQuery(this).attr('name');
-        if (name.includes('[]')){
+    initFileUpload();
+    
+    function initFileUpload(){
+        jQuery('.file-upload[type=file]').each(function(){
+            let name=jQuery(this).attr('name');
             jQuery(this).unbind('change');
+            jQuery(this).unbind('drop');
             this.addEventListener("drop",handleFileEvent);
             this.addEventListener("change",handleFileEvent);
             jQuery(this).css({'height':50,'width':200});
-            jQuery(this).parent().append('<progress id="upload-progress" style="float:left;clear:both;width:200px;padding:0.2rem 0.6rem;" max="100" value="2"></progress>');
-        } else {
-            // use this script only for multiple files
-        }
-    });
-
+        });    
+    }
+    
     function handleFileEvent(event){
-        console.log(event);
         event.preventDefault();
         if (event.type=="drop" || event.type=="change"){
             let tagName=jQuery(event.target).attr('name').replace('[]','');
@@ -32,22 +31,32 @@ jQuery(document).ready(function(){
                 files=this.files;    
             }
             fileCount=files.length;
+            let filesArr=[];
             for (var i=0; i<fileCount; i++) {
-                fileStore[i]=files[i];
-                fileStore[i].tagName=tagName;
-                fileStore[i].btnName=btnName;
-                fileStore[i].btnValue=btnValue;
+                filesArr[i]=files[i];
+                filesArr[i].tagName=tagName;
+                filesArr[i].btnName=btnName;
+                filesArr[i].btnValue=btnValue;
             }
+            fileStore[btnName]={'count':fileCount,'filesArr':filesArr};
+            btnName2process.unshift(btnName);
             postFile();
         }
     }
 
     function postFile(){
-        let file=fileStore.shift();
-        setProgress(fileStore.length,fileCount);
+        let btnName=btnName2process[0];
+        if (btnName == undefined){
+            return true;
+        }   
+        let fileCount=fileStore[btnName]['count'];
+        let file=fileStore[btnName]['filesArr'].shift();
         if (file == undefined){
+            setProgress(btnName,0,fileCount);
+            btnName2process.shift();
             jQuery('[id=page-refresh]').click();
         } else {
+            setProgress(btnName,fileStore[btnName]['filesArr'].length,fileCount);
             const formData = new FormData();
             formData.append(file.tagName,file);
             formData.append(file.btnName,file.btnValue);
@@ -80,10 +89,14 @@ jQuery(document).ready(function(){
         xhr.addEventListener("abort", handleXhrEvent);
     }
 
-    function setProgress(value,maxValue){
+    function setProgress(btnTagName,value,maxValue){
         const percent=Math.round((1-value/maxValue)*100);
-        console.log(percent);
-        document.getElementById('upload-progress').value=percent;
+        document.getElementById(btnTagName+'_progress').value=percent;
     }
+
+	jQuery('[id=js-refresh]').on('click',function(event){
+		event.preventDefault();
+        initFileUpload();
+	});
 
 });

@@ -59,7 +59,7 @@ class Element{
                 'optgroup'=>['name'=>TRUE],
                 'option'=>['value'=>TRUE,'selected'=>FALSE],
                 'output'=>['name'=>TRUE],
-                'progress'=>['name'=>TRUE],
+                'progress'=>['value'=>FALSE,'min'=>FALSE,'max'=>FALSE,],
                 'meter'=>['min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE],
                 'select'=>['name'=>TRUE],
                 'textarea'=>['name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE],
@@ -111,7 +111,8 @@ class Element{
                     ];
                                
     const COPY2SESSION=['element-content'=>FALSE,'value'=>FALSE,'tag'=>TRUE,'type'=>'','key'=>FALSE,'id'=>FALSE,'name'=>FALSE,'selector'=>FALSE,'app'=>FALSE,
-                        'callingClass'=>FALSE,'callingFunction'=>FALSE,'filter'=>FILTER_DEFAULT,'Read'=>FALSE,'Write'=>FALSE,
+                        'formProcessingClass'=>FALSE,'formProcessingFunction'=>FALSE,'formProcessingArg'=>FALSE,
+                        'callingClass'=>FALSE,'callingFunction'=>FALSE,'filter'=>FILTER_DEFAULT,'Read'=>FALSE,'Write'=>FALSE,'Owner'=>FALSE,
                         ];
 
     public function __construct(array $oc)
@@ -139,7 +140,7 @@ class Element{
         // create tag-arr from $arr
         if (empty($arr['tag'])){
             $arr['tag']='p';
-            $arr['element-content']='ERROR tag-attribute missing';
+            $arr['element-content']='ERROR "tag"-attribute missing';
             $arr['style']['background-color']='#f00';
         }
         if (isset(self::DEF[$arr['tag']])){
@@ -169,7 +170,7 @@ class Element{
         if ($nameRequired){
             $arr['selector']=$arr['selector']??[];
             if (isset($arr['key'])){
-                $arr=$this->addNameAttr($arr);
+                $arr=$this->addNameIdAttr($arr);
                 $elementArr['attr']['id']=$this->attr2string($arr,'id',$arr['id']);
                 $elementArr['attr']['name']=$this->attr2string($arr,'name',$arr['name']);
             } else {
@@ -178,13 +179,6 @@ class Element{
             // copy special keys to session
             $sessionArr=$this->def2arr($arr,self::COPY2SESSION);
             $sessionArr=$this->addElement2session($sessionArr);
-            /*
-            if (($arr['callingFunction']??'')==='addEntry'){
-                if (($arr['type']??'')==='file'){
-                    $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($sessionArr);
-                }
-            }
-            */
         }
         // compile html
         if (empty($arr['hasCover'])){
@@ -195,7 +189,7 @@ class Element{
         return $html;
     }
 
-    public function addNameAttr(array $arr):array
+    public function addNameIdAttr(array $arr):array
     {
         if (!empty($arr['id']) && empty($arr['name'])){
             $arr['name']=$arr['id'];
@@ -306,7 +300,7 @@ class Element{
      */
     public function formProcessing(string $callingClass,string $callingFunction):array
     {
-        $result=array('cmd'=>[],'val'=>[],'changed'=>[],'files'=>[],'hasValidFiles'=>FALSE,'selector'=>[],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction);
+        $result=['cmd'=>[],'val'=>[],'changed'=>[],'files'=>[],'hasValidFiles'=>FALSE,'selector'=>[],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         if (isset($_SESSION[$callingClass][$callingFunction])){
             foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){
@@ -323,7 +317,9 @@ class Element{
                     if ($arr['type']==='submit' || $arr['tag']==='button'){
                         $newValue=$oldValue;
                         array_unshift($keys,'cmd');
-                        $result['selector']=(isset($arr['selector']))?$arr['selector']:$result['selector'];
+                        // copy COPY2SESSION
+                        $result=$this->def2arr($arr,self::COPY2SESSION,$result);
+                        //$result['selector']=(isset($arr['selector']))?$arr['selector']:$result['selector'];
                     } else {
                         $filter=(empty($arr['filter']))?(\FILTER_DEFAULT):intval($arr['filter']);
                         $newValue=filter_input(INPUT_POST,$name,$filter);

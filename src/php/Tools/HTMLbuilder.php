@@ -366,7 +366,7 @@ class HTMLbuilder{
             $arr['source']=$arr['selector']['Source'];
             $arr['entry-id']=$arr['selector']['EntryId'];
             $arr['value']=$arr['value']??$arr['selector']['EntryId'];
-            $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameAttr($arr);
+            $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($arr);
             // check for button failure
             $btnFailed=FALSE;
             if (isset($this->btns[$arr['cmd']])){
@@ -388,7 +388,7 @@ class HTMLbuilder{
                 if (strcmp($arr['cmd'],'upload')===0){
                     $fileArr=$arr;
                     $arr['key'][]=$arr['selector']['EntryId'];
-                    $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameAttr($arr);    
+                    $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($arr);    
                     unset($fileArr['name']);
                     unset($fileArr['id']);
                     if (isset($fileArr['element-content'])){
@@ -481,6 +481,56 @@ class HTMLbuilder{
     {
         $arr['cmd']='select';
         $html=$this->btn($arr);
+        return $html;
+    }
+
+    /**
+    * This method provides an asynchronous file upload widget. It interacts with fileUplaod.js. The widget will be detected based on the style class "file-upload"
+    *
+    * @param array $element Is an array containing basic elemnt settings such as style, key, callingClass, callingFunction  
+    * @param array $settings Is an array containing settings to be held as session vars such as: formProcessingClass, formProcessingFunction, formProcessingArg    
+    * @return string The html-tag for the file upload widget
+    */
+    public function fileUpload(array $element, array $settings):string
+    {
+        if (empty($element['callingClass']) || empty($element['callingFunction'])){
+            $missingKey=((empty($element['callingFunction']))?'callingFunction':'callingClass');
+            throw new \ErrorException('Function "'.__FUNCTION__.' &rarr; '.__CLASS__.'()" called but key "'.$missingKey.'" empty or missing.',0,E_ERROR,__FILE__,__LINE__);   
+        }
+        // add settings stored in session
+        $element['formProcessingArg']=$settings['formProcessingArg']??[];
+        $element['formProcessingClass']=$settings['formProcessingClass']??$element['callingClass'];
+        $element['formProcessingFunction']=$settings['formProcessingFunction']??$element['callingFunction'];
+        // get wrapper style and specific keys
+        if (!empty($element['style'])){
+            $divStyle=$element['style'];
+            unset($element['style']);
+        }
+        if (!empty($element['element-content'])){
+            $elementContent=$element['element-content'];
+            unset($element['element-content']);
+        }
+        $element['class']='file-upload';
+        $element['key']=$element['key']??['upload'];
+        // compile upload button
+        $elementBtn=array_merge(['tag'=>'button','element-content'=>$elementContent??'Upload'],$element);
+        $elementBtn['key']=$element['key'];
+        $elementBtn=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($elementBtn);
+        // compile file input
+        $lastKeyIndex=count($element['key'])-1;
+        $element['key'][$lastKeyIndex]=$element['key'][$lastKeyIndex].'_';
+        $elementFile=array_merge(['tag'=>'input','type'=>'file','multiple'=>TRUE],$element);
+        $elementFile['key']=$element['key'];
+        $elementFile=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($elementFile);
+        $elementFile['trigger-id']=$elementBtn['id'];
+        // progross bar
+        $elemntProgress=['tag'=>'progress','value'=>1,'min'=>0,'max'=>100,'style'=>['float'=>'left','clear'=>'both','width'=>'98%']];
+        $elemntProgress['name']=$elemntProgress['id']=$elementFile['trigger-id'].'_progress';
+        // compile html
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementFile);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementBtn);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elemntProgress);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>$element['class']='std','style'=>$divStyle??[]]);
         return $html;
     }
 
@@ -861,7 +911,7 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
     }
     
-    public function value2tabelCellContent($html,array $arr=[])
+    public function value2tableCellContent($html,array $arr=[])
     {
         if (!is_string($html) || empty($html)){
             return $html;

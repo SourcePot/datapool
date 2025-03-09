@@ -153,8 +153,8 @@ jQuery(document).ready(function(){
                             attachEventsToContainer(containerId);
                             jQuery('[id=js-refresh]').click();
                         } catch(e){
-                            //console.log(e);
-                            jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">No valid answer from the application.<br/>Check the log, the server protocol. If the memory was exhausted,<br/>check the memory_limit....</p>');
+                            console.log(e);
+                            jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">Error detected: "'+e.message+'".<br/>Check the log, the server protocol. If the memory was exhausted,<br/>check the memory_limit....</p>');
                             alert('Invalid response from the application. Check the network connection, the log and the server protocol. Maybe the memory was exhausted, check the memory_limit....');
                         }
                         containerBusy(containerId,false);

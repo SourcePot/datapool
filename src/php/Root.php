@@ -666,7 +666,7 @@ final class Root{
         file_put_contents($file,$fileContent);
     }
 
-    public function getIP(bool $hashOnly=TRUE):string
+    public function getIP(bool $hashOnly=TRUE, string $salt=''):string
     {
         if (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER)){
             $ip=$_SERVER["HTTP_X_FORWARDED_FOR"];
@@ -678,7 +678,7 @@ final class Root{
         if (empty($ip)){
             return 'empty';
         } else if ($hashOnly){
-            $ip=hash('sha256',$ip,FALSE);
+            $ip=hash('sha256',$ip.$salt,FALSE);
         }
         return $ip;
     }
