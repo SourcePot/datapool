@@ -15,64 +15,64 @@ class User{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Privileges'=>array('type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'),
-                                 'LoginId'=>array('type'=>'VARCHAR(512)','value'=>'','Description'=>'Is a login id derived from the passphrase.')
-                                 );
+    private $entryTemplate=['Privileges'=>['type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'],
+                            'LoginId'=>['type'=>'VARCHAR(512)','value'=>'','Description'=>'Is a login id derived from the passphrase.']
+                            ];
     
-    public $definition=array('Type'=>array('@tag'=>'p','@default'=>'user','@Read'=>'NO_R'),
-                             'Content'=>array('Contact details'=>array('Title'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'First name'=>array('@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE),
-                                                                 'Middle name'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Family name'=>array('@tag'=>'input','@type'=>'text','@default'=>'Doe','@excontainer'=>TRUE),
-                                                                 'Gender'=>array('@function'=>'select','@options'=>array('male'=>'male','female'=>'female','divers'=>'divers'),'@default'=>'male','@excontainer'=>TRUE),
-                                                                 'Language'=>array('@function'=>'select','@options'=>array('en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'),'@default'=>'en','@excontainer'=>TRUE),
-                                                                 'Email'=>array('@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'','@placeholder'=>'e.g. info@company.com','@excontainer'=>TRUE),
-                                                                 'Phone'=>array('@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 89 1234567','@excontainer'=>TRUE),
-                                                                 'Mobile'=>array('@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE),
-                                                                 'Fax'=>array('@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE),
-                                                                 'My reference'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE),
-                                                                 'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'),
-                                                                 ),
-                                                'Address'=>array('Company'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Department'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Patent Department','@excontainer'=>TRUE),
-                                                                 'Street'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'House number'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Town'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Zip'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'State'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Country'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Country code'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE),
-                                                                 'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'),
-                                                                ),
-                                              ),
-                             'Login'=>array('@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'),
-                             'Icon etc.'=>array('@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-                             'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
-                             'App credentials'=>array('@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'),
-                             'Map'=>array('@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>array('width'=>360,'height'=>400)),
-                             );
+    public $definition=['Type'=>['@tag'=>'p','@default'=>'user','@Read'=>'NO_R'],
+                             'Content'=>['Contact details'=>['Title'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'First name'=>['@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE],
+                                                            'Middle name'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Family name'=>['@tag'=>'input','@type'=>'text','@default'=>'Doe','@excontainer'=>TRUE],
+                                                            'Gender'=>['@function'=>'select','@options'=>['male'=>'male','female'=>'female','divers'=>'divers'],'@default'=>'male','@excontainer'=>TRUE],
+                                                            'Language'=>['@function'=>'select','@options'=>['en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'],'@default'=>'en','@excontainer'=>TRUE],
+                                                            'Email'=>['@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'','@placeholder'=>'e.g. info@company.com','@excontainer'=>TRUE],
+                                                            'Phone'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 89 1234567','@excontainer'=>TRUE],
+                                                            'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
+                                                            'Fax'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE],
+                                                            'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
+                                                            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+                                                            ],
+                                        'Address'=>['Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Patent Department','@excontainer'=>TRUE],
+                                                            'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'State'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Country code'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
+                                                        ],
+                                              ],
+                        'Login'=>['@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'],
+                        'Icon etc.'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+                        'Privileges'=>['@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+                        'App credentials'=>['@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'],
+                        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>['width'=>360,'height'=>400]],
+                        ];
 
-    private $userRols=array('Content'=>array(0=>array('Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'),
-                                             1=>array('Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'),
-                                             2=>array('Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Initial member state'),
-                                             3=>array('Value'=>8,'Name'=>'Group A','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group A member'),
-                                             4=>array('Value'=>16,'Name'=>'Group B','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group B member'),
-                                             5=>array('Value'=>32,'Name'=>'Group C','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group C member'),
-                                             6=>array('Value'=>64,'Name'=>'Group D','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group D member'),
-                                             7=>array('Value'=>128,'Name'=>'Group E','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group E member'),
-                                             8=>array('Value'=>256,'Name'=>'Group F','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group F member'),
-                                             9=>array('Value'=>512,'Name'=>'Group G','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group G member'),
-                                             10=>array('Value'=>1024,'Name'=>'Sentinel','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Sentinel member'),
-                                             11=>array('Value'=>2048,'Name'=>'Group I','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group I member'),
-                                             12=>array('Value'=>4096,'Name'=>'Group J','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group J member'),
-                                             13=>array('Value'=>8192,'Name'=>'Group K','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group K member'),
-                                             14=>array('Value'=>16384,'Name'=>'Config admin','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Configuration admin'),
-                                             15=>array('Value'=>32768,'Name'=>'Admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Administrator')
-                                             ),
+    private $userRols=['Content'=>[0=>['Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'],
+                                1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'],
+                                2=>['Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Initial member state'],
+                                3=>['Value'=>8,'Name'=>'Group A','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group A member'],
+                                4=>['Value'=>16,'Name'=>'Group B','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group B member'],
+                                5=>['Value'=>32,'Name'=>'Group C','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group C member'],
+                                6=>['Value'=>64,'Name'=>'Group D','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group D member'],
+                                7=>['Value'=>128,'Name'=>'Group E','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group E member'],
+                                8=>['Value'=>256,'Name'=>'Group F','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group F member'],
+                                9=>['Value'=>512,'Name'=>'Group G','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group G member'],
+                                10=>['Value'=>1024,'Name'=>'Sentinel','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Sentinel member'],
+                                11=>['Value'=>2048,'Name'=>'Group I','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group I member'],
+                                12=>['Value'=>4096,'Name'=>'Group J','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group J member'],
+                                13=>['Value'=>8192,'Name'=>'Group K','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group K member'],
+                                14=>['Value'=>16384,'Name'=>'Config admin','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Configuration admin'],
+                                15=>['Value'=>32768,'Name'=>'Admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Administrator']
+                                ],
                             'Type'=>'array',
                             'Read'=>'ALL_R',
                             'Write'=>'ADMIN_R',
-                            );
+                        ];
     
     public function __construct(array $oc)
     {
@@ -148,7 +148,7 @@ class User{
         }
         if (!isset($entry['Group'])){$entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');}
         if (!isset($entry['Folder'])){$entry['Folder']=$entry['Email'];}
-        if (empty($entry['Name'])){$entry['Name']=$this->userAbstract(array('selector'=>$entry),3);}
+        if (empty($entry['Name'])){$entry['Name']=$this->userAbstract(['selector'=>$entry],3);}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);
@@ -165,11 +165,11 @@ class User{
     {
         $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
         if ($noAdminAccountFound){
-            $admin=array('Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
-                         'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
-                         'Password'=>$this->initPsw(),
-                         'Owner'=>'SYSTEM'
-                         );
+            $admin=['Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
+                    'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
+                    'Password'=>$this->initPsw(),
+                    'Owner'=>'SYSTEM'
+                    ];
             $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
             $admin['Content']['Contact details']['First name']='Admin';
@@ -177,7 +177,7 @@ class User{
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin,TRUE);
             if ($success){
                 // Save init admin details
-                $adminFile=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__);
+                $adminFile=['Class'=>__CLASS__,'EntryId'=>__FUNCTION__];
                 $adminFile['Content']['Admin email']=$admin['Email'];
                 $adminFile['Content']['Admin password']=$admin['Password'];
                 $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->insertEntry($adminFile,TRUE);
@@ -205,7 +205,7 @@ class User{
         if (empty($arr)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();;
         } else if (!is_array($arr)){
-            $user=array('Source'=>$this->entryTable,'EntryId'=>trim($arr));
+            $user=['Source'=>$this->entryTable,'EntryId'=>trim($arr)];
         } else if (isset($arr['selector'])){
             $user=$arr['selector'];
         } else {
@@ -244,8 +244,8 @@ class User{
         } else if ($template===9){
             $abtract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
         }
-        $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(array('selector'=>$user,'returnHtmlOnly'=>TRUE));
-        $abtract=trim($this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,array('class'=>'user-abstract')),' ,;.|');
+        $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
+        $abtract=trim($this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,['class'=>'user-abstract']),' ,;.|');
         if (!empty($arr['wrapResult'])){
             $wrapper=$arr['wrapResult'];
             $wrapper['element-content']=$abtract;
@@ -282,7 +282,7 @@ class User{
     {
         $_SESSION['currentUser']=$user;
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
-        $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',array('userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+        $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',['userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
     }
     
     public function getUserOptions(array $selector=[],string $flatContactDetailsKey=''):array

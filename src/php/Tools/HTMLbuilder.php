@@ -524,13 +524,13 @@ class HTMLbuilder{
         $elementFile=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($elementFile);
         $elementFile['trigger-id']=$elementBtn['id'];
         // progross bar
-        $elemntProgress=['tag'=>'progress','value'=>1,'min'=>0,'max'=>100,'style'=>['float'=>'left','clear'=>'both','width'=>'98%']];
+        $elemntProgress=['tag'=>'progress','value'=>1,'min'=>0,'max'=>100,'class'=>$element['class']];
         $elemntProgress['name']=$elemntProgress['id']=$elementFile['trigger-id'].'_progress';
         // compile html
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementFile);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementBtn);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elemntProgress);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>$element['class']='std','style'=>$divStyle??[]]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>$element['class'],'style'=>$divStyle??[]]);
         return $html;
     }
 
@@ -546,8 +546,7 @@ class HTMLbuilder{
         $detailsArr=['tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']];
         if (isset($arr['open'])){$detailsArr['open']=$arr['open'];}
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($detailsArr);
-        return $html;
-        
+        return $html;   
     }
     
     public function emojis(array $arr=[]):array

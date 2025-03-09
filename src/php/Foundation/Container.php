@@ -52,6 +52,7 @@ class Container{
             $jsAnswer=$this->oc['SourcePot\Datapool\Tools\MediaTools']->loadImage(['selector'=>$_POST['loadImage']]);
         } else if (!empty($_FILES)){
             $tagName=key($_FILES);
+            // file upload widget request processing
             if (isset($_SESSION['name2classFunction'][$tagName])){
                 $callingClass=$_SESSION['name2classFunction'][$tagName]['callingClass'];
                 $callingFunction=$_SESSION['name2classFunction'][$tagName]['callingFunction'];

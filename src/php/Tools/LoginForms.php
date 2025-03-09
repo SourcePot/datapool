@@ -19,31 +19,31 @@ class LoginForms{
 
     private $formType=0;
     
-    private $digits=array(array('key'=>'a','sizeScaler'=>1,'font'=>'OpenSansLight.ttf','symbol'=>'?','description'=>'Question mark'),
-                          array('key'=>'b','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>74,'description'=>'Spiral'),
-                          array('key'=>'c','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>69,'description'=>'Mouse'),
-                          array('key'=>'d','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>77,'description'=>'Mug'),
-                          array('key'=>'e','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>78,'description'=>'Hand'),
-                          array('key'=>'f','sizeScaler'=>1,'font'=>'Digits.ttf','symbol'=>60,'description'=>'White arrow pointing right'),
-                          array('key'=>'g','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>80,'description'=>'Person'),
-                          array('key'=>'h','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>70,'description'=>'Cheese'),
-                          array('key'=>'i','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>75,'description'=>'Magnifying glass'),
-                          array('key'=>'j','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>124,'description'=>'T-shirt'),
-                          array('key'=>'k','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>163,'description'=>'Note'),
-                          array('key'=>'l','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>235,'description'=>'Umbrella'),
-                          array('key'=>'m','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>237,'description'=>'Moon'),
-                          array('key'=>'n','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>35,'description'=>'Airplane'),
-                          array('key'=>'o','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>41,'description'=>'Pie chart'),
-                          array('key'=>'p','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>74,'description'=>'Bell'),
-                          array('key'=>'q','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>79,'description'=>'Black chair'),
-                          array('key'=>'r','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>120,'description'=>'White chair'),
-                          array('key'=>'s','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>82,'description'=>'Light bulb'),
-                          array('key'=>'t','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>71,'description'=>'Cow'),
-                          array('key'=>'u','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>53,'description'=>'5'),
-                          array('key'=>'v','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>41,'description'=>'Black arrow pointing right'),
-                          array('key'=>'w','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>74,'description'=>'10'),
-                          array('key'=>'x','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>65,'description'=>'1'),
-                          array('key'=>'9','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>53,'description'=>'Cloud'),
+    private $digits=array(['key'=>'a','sizeScaler'=>1,'font'=>'OpenSansLight.ttf','symbol'=>'?','description'=>'Question mark'],
+                          ['key'=>'b','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>74,'description'=>'Spiral'],
+                          ['key'=>'c','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>69,'description'=>'Mouse'],
+                          ['key'=>'d','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>77,'description'=>'Mug'],
+                          ['key'=>'e','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>78,'description'=>'Hand'],
+                          ['key'=>'f','sizeScaler'=>1,'font'=>'Digits.ttf','symbol'=>60,'description'=>'White arrow pointing right'],
+                          ['key'=>'g','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>80,'description'=>'Person'],
+                          ['key'=>'h','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>70,'description'=>'Cheese'],
+                          ['key'=>'i','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>75,'description'=>'Magnifying glass'],
+                          ['key'=>'j','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>124,'description'=>'T-shirt'],
+                          ['key'=>'k','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>163,'description'=>'Note'],
+                          ['key'=>'l','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>235,'description'=>'Umbrella'],
+                          ['key'=>'m','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>237,'description'=>'Moon'],
+                          ['key'=>'n','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>35,'description'=>'Airplane'],
+                          ['key'=>'o','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>41,'description'=>'Pie chart'],
+                          ['key'=>'p','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>74,'description'=>'Bell'],
+                          ['key'=>'q','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>79,'description'=>'Black chair'],
+                          ['key'=>'r','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>120,'description'=>'White chair'],
+                          ['key'=>'s','sizeScaler'=>1,'font'=>'icon-works-webfont.ttf','symbol'=>82,'description'=>'Light bulb'],
+                          ['key'=>'t','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>71,'description'=>'Cow'],
+                          ['key'=>'u','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>53,'description'=>'5'],
+                          ['key'=>'v','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>41,'description'=>'Black arrow pointing right'],
+                          ['key'=>'w','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>74,'description'=>'10'],
+                          ['key'=>'x','sizeScaler'=>1.2,'font'=>'Digits.ttf','symbol'=>65,'description'=>'1'],
+                          ['key'=>'9','sizeScaler'=>1.2,'font'=>'GOODDB__.TTF','symbol'=>53,'description'=>'Cloud'],
                         );
     
     public function __construct(array $oc)
@@ -64,7 +64,7 @@ class LoginForms{
     public function getOneTimePswArr():array
     {
         $maxDigitsIndex=count($this->digits)-1;
-        $return=array('string'=>'','phrase'=>[]);
+        $return=['string'=>'','phrase'=>[]];
         for($index=0;$index<self::MIN_PSW_LENGTH;$index++){
             $int=random_int(0,$maxDigitsIndex);
             $keyArr=$this->digits[$int];
@@ -107,12 +107,12 @@ class LoginForms{
     {
         $arr['result']=$this->formData();
         if (self::USE_RECAPTCHA){$styleClass='g-recaptcha';} else {$styleClass='std';}
-        $emailLabel=array('tag'=>'label','element-content'=>'Email','for'=>'login-email');
-        $email=array('tag'=>'input','type'=>'email','key'=>array('Email'),'id'=>'login-email','style'=>array('clear'=>'both','width'=>220),'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
-        $updateBtn=array('tag'=>'input','type'=>'submit','key'=>array('Update'),'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm');
-        $loginBtn=array('tag'=>'input','type'=>'submit','key'=>array('Login'),'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('position'=>'absolute','top'=>'0.2em','left'=>'0','width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold'));
-        $registerBtn=array('tag'=>'input','type'=>'submit','key'=>array('Register'),'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('position'=>'absolute','top'=>'0.2em','right'=>'0','width'=>'45%','margin'=>'0 4px 0 0'));
-        $loginLinkBtn=array('tag'=>'input','type'=>'submit','key'=>array('pswRequest'),'value'=>'Get login token','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>array('margin'=>'1em 0'));
+        $emailLabel=['tag'=>'label','element-content'=>'Email','for'=>'login-email'];
+        $email=['tag'=>'input','type'=>'email','key'=>['Email'],'id'=>'login-email','style'=>['clear'=>'both','width'=>220],'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
+        $updateBtn=['tag'=>'input','type'=>'submit','key'=>['Update'],'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
+        $loginBtn=['tag'=>'input','type'=>'submit','key'=>['Login'],'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['position'=>'absolute','top'=>'0.2em','left'=>'0','width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold']];
+        $registerBtn=['tag'=>'input','type'=>'submit','key'=>['Register'],'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['position'=>'absolute','top'=>'0.2em','right'=>'0','width'=>'45%','margin'=>'0 4px 0 0']];
+        $loginLinkBtn=['tag'=>'input','type'=>'submit','key'=>['pswRequest'],'value'=>'Get login token','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['margin'=>'1em 0']];
         if ($this->formType===1){
             $passphrase=$this->getSymbolKeypad($arr);
         } else {
@@ -125,22 +125,22 @@ class LoginForms{
         } else {
             $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
             $matrix['Email']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
-            $matrix['Passphrase']=array('Value'=>$passphrase);
+            $matrix['Passphrase']=['Value'=>$passphrase];
             $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($loginBtn);
             $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
-            $matrix['Recover']=array('Value'=>$loginLinkBtn);
+            $matrix['Recover']=['Value'=>$loginLinkBtn];
         }
-        $matrix['Btns']['trStyle']=array('height'=>'3em');
-        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login '.($arr['result']['Email']??''),'id'=>'login-table'));
-        $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'id'=>'login-article'));
+        $matrix['Btns']['trStyle']=['height'=>'3em'];
+        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login '.($arr['result']['Email']??''),'id'=>'login-table']);
+        $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'id'=>'login-article']);
         if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
         return $arr;
     }
     
     private function getStandard(array $arr=[]):string
     {
-        $passphraseLabel=array('tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw');
-        $passphrase=array('tag'=>'input','type'=>'password','key'=>array('Passphrase'),'id'=>'login-psw','required'=>TRUE,'minlength'=>'6','style'=>array('clear'=>'both','width'=>220),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE);
+        $passphraseLabel=['tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw'];
+        $passphrase=['tag'=>'input','type'=>'password','key'=>['Passphrase'],'id'=>'login-psw','required'=>TRUE,'minlength'=>'6','style'=>['clear'=>'both','width'=>220],'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
         return $html;
@@ -148,12 +148,12 @@ class LoginForms{
     
     private function getSymbolKeypad(array $arr=[]):string
     {
-        $template=array('symbolSize'=>40,'html'=>'','symbolColumnCount'=>5);
+        $template=['symbolSize'=>40,'html'=>'','symbolColumnCount'=>5];
         $arr=array_merge($template,$arr);
         $hashSymbolArr=[];
-        $aArr=array('tag'=>'a','href'=>'javascript:','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE);
-        $imgArr=array('tag'=>'img');
-        $layersDivArr=array('tag'=>'div','keep-element-content'=>TRUE,'style'=>array('width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px'),'class'=>'keypad');
+        $aArr=['tag'=>'a','href'=>'javascript:','class'=>'keypad','keep-element-content'=>TRUE,'excontainer'=>TRUE];
+        $imgArr=['tag'=>'img'];
+        $layersDivArr=['tag'=>'div','keep-element-content'=>TRUE,'style'=>['width'=>$arr['symbolSize'].'px','height'=>$arr['symbolSize'].'px'],'class'=>'keypad'];
         shuffle($this->digits);
         $html=$arr['html'];
         foreach ($this->digits as $digitIndex => $digitDef){
@@ -197,11 +197,11 @@ class LoginForms{
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($layersDivArr);
         }
         // add hidden input and passphrase preview
-        $previewArr=array('tag'=>'div','element-content'=>'','class'=>'phrase-preview');
+        $previewArr=['tag'=>'div','element-content'=>'','class'=>'phrase-preview'];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($previewArr);
-        $previewBtn=array('tag'=>'a','element-content'=>'Clear','href'=>'#','class'=>'phrase-preview');
+        $previewBtn=['tag'=>'a','element-content'=>'Clear','href'=>'#','class'=>'phrase-preview'];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($previewBtn);
-        $phraseArr=array('tag'=>'input','type'=>'hidden','key'=>array('Passphrase'),'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','element-content'=>'','class'=>'pass-phrase');
+        $phraseArr=['tag'=>'input','type'=>'hidden','key'=>['Passphrase'],'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','element-content'=>'','class'=>'pass-phrase'];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($phraseArr);
         // save state
         $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'hashSymbolArr',$hashSymbolArr);
