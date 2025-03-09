@@ -1,36 +1,4 @@
-function onSubmit(token){
-	jQuery.ajax({
-		method:"POST",
-		url:'js.php',
-		context:document.body,
-		data:{'function':'createAssessment','token':token},
-		dataType: "json"
-	}).done(function(data){
-		var old_element=document.getElementById(data['tagId']);
-		if (old_element===null){
-			console.log('Tag provided by data not found in html-content');
-		} else if (data['grant']==1){
-			var new_element = old_element.cloneNode(true);
-			old_element.parentNode.replaceChild(new_element, old_element);
-			new_element.style.backgroundColor='LIMEGREEN';
-			new_element.name=data['name'];
-			new_element.id=data['id'];
-			setTimeout(function(){new_element.click();},250);
-		} else if (data['tagId']==null){
-			alert(data['error']);
-		} else {
-			old_element.style.backgroundColor='RED';
-		}
-	}).fail(function(data){
-		console.log(data);
-	});
-}
-
 jQuery(document).ready(function(){
-
-	function callbackDummy(data){
-        console.log(data);
-    }
 	
 /** BASIC PAGE CONTENT STYLING **/
 	if (jQuery('article.transparent').length){
@@ -71,7 +39,7 @@ jQuery(document).ready(function(){
 		jQuery(this).animate({'top':height},500).delay(5000).animate({'top':0},200);
 	}
 
-/** STEP-BY-STEP  ENTRY PRESENTATION, used e.g. by the forum **/
+/** STEP-BY-STEP ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]').first();
@@ -99,8 +67,7 @@ jQuery(document).ready(function(){
 			} else {
 				jQuery(arr['replaceSelector']).replaceWith(data['html']);
 			}
-			attachMissingContainerEvents();
-			resetAll();
+			jQuery('[id=js-refresh]').click();
 		}).fail(function(data){
 			console.log(data);
 		}).always(function(){
@@ -179,13 +146,13 @@ jQuery(document).ready(function(){
         try{
             navigator.clipboard.writeText(text);
             jQuery(this).parent().css({backgroundColor:"#8c4"});
-        } catch (err){
+        } catch (e){
+			console.log(e);
             jQuery(this).css({backgroundColor:"#faa"});
         }
         
     });
 
-    
 /** PRINTING **/
     jQuery('button:contains("❐")').on('click',function(e){
         e.preventDefault();
@@ -206,180 +173,6 @@ jQuery(document).ready(function(){
 		let text=jQuery(selector).val()+jQuery(this).html().replace(/<\/?[^>]+(>|$)/g,"");
 		jQuery(selector).val(text);
 	}
-
-
-/** HTML-CONTAINER MANAGEMENT **/	
-	initTriggerIds();
-	function initTriggerIds(){
-		jQuery('[trigger-id]').each(function(i){
-			let btnSelector='#'+jQuery(this).attr('trigger-id');
-			jQuery(this).unbind('change');
-			jQuery(this).on('change',function(e){
-				jQuery(btnSelector).click();
-			});
-			jQuery(btnSelector).hide();
-		});
-	}
-	function containerBusy(containerId,isBusy){
-		if (isBusy===true){
-			jQuery('div[busy-id=busy-'+containerId+']').show();
-		} else {
-			jQuery('div[busy-id=busy-'+containerId+']').hide();
-		}
-	}
-    
-    var containerArr=[];
-    function initContainerArr(){
-        jQuery('article[container-id]').each(function(containerIndex){
-            let containerId=jQuery(this).attr('container-id');
-            containerArr.push(containerId);
-        });
-    }
-    
-    var containerMonitorBusy=false;
-    function containerMonitor(){
-        if (containerMonitorBusy){return false;}
-        if (containerArr.length==0){
-            initContainerArr();
-            if (containerArr.length==0){return true;}
-        }
-        containerMonitorBusy=true;
-        var containerId=containerArr.pop();
-        jQuery.ajax({   method:"POST",
-                        url:'js.php',
-                        context:document.body,
-                        data:{'function':'containerMonitor','container-id':containerId},
-                        dataType: "json"
-                    }).done(function(data){
-                        if (!data['arr']['isUp2date']){
-                            containerId=data['arr']['container-id'];
-                            data=jQuery(data).serializeArray();
-                            reloadContainer(containerId,data);
-                        }
-                    }).fail(function(data){
-                        console.log(data);	
-                    }).always(function(){
-                        containerMonitorBusy=false;
-                    });
-        return true;
-    }
-	let attachedEvents={};
-	attachMissingContainerEvents()
-	function attachMissingContainerEvents(){
-		jQuery('article[container-id]').each(function(containerIndex){
-			let containerId=jQuery(this).attr('container-id');
-			if (attachedEvents[containerId]===undefined){
-				attachEventsToContainer(containerId);
-				attachedEvents[containerId]=true;
-			}
-		});
-	}
-	function attachEventsToContainer(containerId){
-		let wrapper=jQuery('article[container-id='+containerId+']');
-		jQuery(wrapper).find('[type=submit],button').each(function(i){
-			if (jQuery(this).attr('excontainer')===undefined){
-				jQuery(this).unbind('click');
-				jQuery(this).on('click',function(e){
-					e.preventDefault();
-					e.stopPropagation();
-					submitForm(this,containerId);
-				});
-			}
-		});
-		jQuery(wrapper).find('[type=text],[type=password],[type=email],[type=tel],[type=file]').each(function(i){
-			if (jQuery(this).attr('excontainer')===undefined){
-				jQuery(this).unbind('focusout');
-				jQuery(this).focusout(function(e){
-					jQuery('button[container-id=btn-'+containerId+']').click();
-				});
-			}
-		});
-		jQuery(wrapper).find('[type=range]').each(function(i){
-			if (jQuery(this).attr('excontainer')===undefined){
-				jQuery(this).unbind('change');
-				jQuery(this).on('change',function(e){
-					jQuery('button[container-id=btn-'+containerId+']').click();
-				});
-			}
-		});
-		jQuery(wrapper).find('[type=date],[type=datetime-local],[type=text]').each(function(i){
-			if (jQuery(this).attr('excontainer')===undefined){
-				jQuery(this).unbind('keypress');
-				jQuery(this).on('keypress',function(e){
-					if (e.which==13){
-						e.preventDefault();
-						e.stopPropagation();
-						jQuery('button[container-id=btn-'+containerId+']').click();
-					}
-				});
-			}
-		});
-		jQuery(wrapper).find('select').each(function(i){
-			if (jQuery(this).attr('excontainer')===undefined){
-				jQuery(this).unbind('change');
-				jQuery(this).on('change',function(e){
-					e.preventDefault();
-					e.stopPropagation();
-					jQuery('button[container-id=btn-'+containerId+']').click();
-				});
-			}
-		});
-	}
-	function reloadContainer(containerId,data){
-		var formData=new FormData();
-		formData.append('function','container');
-		formData.append('container-id',containerId);
-		postRequest(containerId,formData);
-        checkToolboxUpdate(containerId);
-	}
-	function submitForm(trigger,containerId){
-		containerBusy(containerId,true);
-		var formData=new FormData($('form')[0]);
-		formData.append(trigger.name,trigger.value);
-		formData.append('function','container');
-		formData.append('container-id',containerId);
-		postRequest(containerId,formData);
-	}
-	function postRequest(containerId,data){
-		containerBusy(containerId,true);
-		$.ajax({
-			url:'js.php',
-			type:'POST',
-			data: data,
-			cache: false,
-			contentType: false,
-			processData: false,
-			xhr: function(){
-				var myXhr=$.ajaxSettings.xhr();
-				if (myXhr.upload){
-					myXhr.upload.addEventListener('progress',function(e){
-						//console.log(e.loaded+' '+e.total);
-					},false);		
-					myXhr.addEventListener('load',function(e){
-						try{
-							var jsonResp=JSON.parse(this.response);
-							jQuery('article[container-id='+containerId+']').replaceWith(jsonResp['html']);
-							attachEventsToContainer(containerId);
-							resetAll();
-						} catch(e){
-							console.log(this.response);
-                            jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">No valid answer from the application.<br/>Check the server protocol, if the memory was exhausted,<br/>check the memory_limit....</p>');
-							alert('Invalid response from the application. Check the network connection and the server protocol. Maybe the memory was exhausted, check the memory_limit....');
-						}
-						containerBusy(containerId,false);
-					},false);
-					myXhr.addEventListener('error',function(e){
-						console.log(this.response);
-					},false);
-					myXhr.addEventListener('loaded',function(e){
-						containerBusy(containerId,false);
-					},false);
-				}				
-				return myXhr;
-			}
-		});	
-	}
-
 
 /** IMAGE VIEWER **/
 	let imgs=[];
@@ -456,7 +249,6 @@ jQuery(document).ready(function(){
 			}
 		}
 	});
-
 
 /** IMAGE SHUFFLE **/
 	var entryShuffleEntries={};
@@ -641,14 +433,6 @@ jQuery(document).ready(function(){
 		if (charArr.join('').localeCompare(newSymbolId)==0){return false;}
 		addSymbol(newSymbolId);
 	}
-	
-/** TOOLBOX **/
-    function checkToolboxUpdate(containerId){
-        var needsUpdate=jQuery('details.toolbox').children('[container-id="'+containerId+'"]').length;
-        if (needsUpdate>0){
-            jQuery('details.toolbox').css({'z-index':'100'}).prop("open",true);
-        }
-    }
 
 /** DOWNLOAD **/
     const xmlns = "http://www.w3.org/2000/xmlns/";
@@ -694,9 +478,7 @@ jQuery(document).ready(function(){
 	(function heartbeat(){
     	setTimeout(heartbeat,100);
 		heartbeats++;
-		if (heartbeats%6===0){
-            containerMonitor();
-		} else if (heartbeats%5===0){
+		if (heartbeats%5===0){
 			loadNextEntry();
 		}
 	})();
@@ -721,15 +503,17 @@ jQuery(document).ready(function(){
 			jQuery(this).parent().parent().css({'background-color':'#faa'});
 		});
 	}
-	function resetAll(){
+
+	jQuery('[id=js-refresh]').on('click',function(event){
+		event.preventDefault();
 		addSafetyCoverEvent();
 		addEmojiEvent();
 		addSymbolLoginEvents();
 		loadImageData();
 		initJsButtonEvents();
-        loadDynamicMap();
-        addFilter();
+		loadDynamicMap();
+		addFilter();
 		markChages();
-    }
+	});
 	
 });

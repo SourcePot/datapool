@@ -513,7 +513,7 @@ class DataExplorer{
     * @param    array   $canvasElement  Canvas elememnt
     * @return   string  Html-form
     */
-    private function getFileUpload(array $canvasElement):string
+    public function getFileUpload(array $canvasElement):string
     {
         if (empty($canvasElement['Content']['Widgets']['File upload'])){return '';}
         // form processing
@@ -533,9 +533,10 @@ class DataExplorer{
             }
         }
         // create html
+        $btnId=md5(__CLASS__.'_'.__FUNCTION__.'_uploadBtn');
         $html='';
-        $uploadElement=['tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>['files'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
-        $uploadBtn=['tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>['upload'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $uploadElement=['tag'=>'input','type'=>'file','multiple'=>TRUE,'key'=>['files'],'selector'=>['app'=>$canvasElement],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $uploadBtn=['tag'=>'button','value'=>'new','element-content'=>'Upload','key'=>['upload'],'id'=>$btnId,'selector'=>['app'=>$canvasElement],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
         $matrix['upload']=['value'=>$uploadElement];
         $matrix['cmd']=['value'=>$uploadBtn];

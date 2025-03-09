@@ -243,7 +243,6 @@ class Database{
         }
         $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
         $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
-        $entry[__FUNCTION__]=$context;
         return $entry;    
     }
 
@@ -687,11 +686,11 @@ class Database{
         }
         // delete entries in groups
         $rowCount=0;
-        $idGroups=$this->selector2idGroups($selector,$isSystemCall,'Read',FALSE,FALSE,FALSE,FALSE,$removeFile=TRUE);
+        $idGroups=$this->selector2idGroups($selector,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,$removeFile=TRUE);
         foreach($idGroups as $ids){
             // delete entries by id-list
             $sqlWhereClause=$this->ids2IdListSelector($ids);
-            $sql='DELETE FROM `'.$selector['Source'].'`'.$sqlWhereClause.';';
+            $sql='DELETE FROM `'.$selector['Source'].'` '.$sqlWhereClause.';';
             $stmt=$this->executeStatement($sql,[]);
             $rowCount+=$stmt->rowCount();
         }
@@ -754,8 +753,6 @@ class Database{
         $stmt=$this->executeStatement($sql,$inputs);
         $this->addStatistic('inserted',$stmt->rowCount());
         $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
-        $context['entriesInserted']=$stmt->rowCount();
-        $entry[__FUNCTION__]=$context;
         return $entry;
     }
 
@@ -830,7 +827,7 @@ class Database{
     */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>''];
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
         // test for required keys and set selector
@@ -844,13 +841,11 @@ class Database{
         $existingEntry=$this->entryById($selector,TRUE,'Write',TRUE);
         if (empty($existingEntry['rowCount'])){
             // no existing entry found -> insert and return entry
-            $context['steps'].='Is new entry|';
             $currentFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
             if (!is_file($currentFile)){
                 // no valid file attachment. clear related meta data
                 if (isset($entry['Params']['File'])){
                     unset($entry['Params']['File']);
-                    $context['steps'].='Entry has no file, Params→File unset|';
                 }
             }
             // add log
@@ -860,15 +855,10 @@ class Database{
                 $entry['Params']['Log'][__FUNCTION__]['insert']=['user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
             }
             // insert new entry
-            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$this->insertEntry($entry,TRUE);
-            $context['steps'].='Entry inserted|';
-            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> update
-            $context['steps'].='Entry exsists|';
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
-            //$entry=array_replace_recursive($existingEntry,$entry);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->mergeArr($existingEntry,$entry);
             // add log
             if ($addLog){
@@ -878,27 +868,15 @@ class Database{
             }
             // update entry
             $entry=$this->unifyEntry($entry,TRUE);
-            //$entry=$this->unifyEntry($entry,FALSE);
-            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
-            $contextBackup['entriesUpdated']=$this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE,$isDebugging=FALSE);
-            $context['steps'].='Entry updated|';
+            $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
-            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> no write access -> no update 
-            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$existingEntry;
-            $context['steps'].='Write access to existing entry denied|';
-            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         } else {
             // existing entry -> no update 
-            $contextBackup=$this->oc['SourcePot\Datapool\Root']->contextBackup($entry);
             $entry=$existingEntry;
-            $context['steps'].='Existing entry and no update|';
-            $entry=$this->oc['SourcePot\Datapool\Root']->contextBackup($contextBackup,$entry);
         }
-        $context['steps']=trim($context['steps'],'|');
-        $entry[__FUNCTION__]=$context;
         return $entry;
     }
     

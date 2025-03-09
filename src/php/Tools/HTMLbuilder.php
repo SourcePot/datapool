@@ -49,7 +49,6 @@ class HTMLbuilder{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
-        $_SESSION[__CLASS__]['keySelect']=[];
     }
 
     Public function loadOc(array $oc):void
@@ -355,42 +354,47 @@ class HTMLbuilder{
         // This function returns standard buttons based on argument arr.
         // If arr is empty, buttons will be processed
         $html='';
-        $defaultValues=['selector'=>['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE]];
-        $setValues=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $defaultValues=['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Read'=>0,'Write'=>0,'Owner'=>'SYSTEM','app'=>''];
         if (isset($arr['cmd'])){
+            $defaultValues['app']=$arr['app']??$arr['callingClass']??'';
+            $arr['callingClass']=__CLASS__;
+            $arr['callingFunction']=__FUNCTION__;
             // compile button
             $arr['element-content']=(isset($arr['element-content']))?$arr['element-content']:ucfirst($arr['cmd']);
-            $arr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr,TRUE);
             $arr['key']=[$arr['cmd']];
-            if (!empty($arr['selector']['Source'])){$arr['source']=$arr['selector']['Source'];}
-            if (!empty($arr['selector']['EntryId'])){
-                $arr['entry-id']=$arr['selector']['EntryId'];
-                if (!isset($arr['value'])){$arr['value']=$arr['selector']['EntryId'];}
-            } else if (!isset($arr['value'])){
-                $arr['value']=$arr['id'];
-            }
+            $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr['selector'],$defaultValues);
+            $arr['source']=$arr['selector']['Source'];
+            $arr['entry-id']=$arr['selector']['EntryId'];
+            $arr['value']=$arr['value']??$arr['selector']['EntryId'];
+            $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameAttr($arr);
+            // check for button failure
             $btnFailed=FALSE;
             if (isset($this->btns[$arr['cmd']])){
-                $arr=array_replace_recursive($defaultValues,$arr,$setValues,$this->btns[$arr['cmd']]);
+                $arr=array_replace_recursive($defaultValues,$arr,$this->btns[$arr['cmd']]);
                 if (!empty($arr['requiredRight'])){
                     $hasAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],$arr['requiredRight']);
                     if (empty($hasAccess)){$btnFailed='Access denied';}
                 }
                 if (!empty($arr['requiresFile']) && mb_strpos(strval($arr['selector']['EntryId']),'-guideEntry')===FALSE){
                     $hasFile=is_file($this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']));
-                    if (!$hasFile || empty($arr['selector']['Params']['File'])){$btnFailed='File error';}
+                    if (!$hasFile){$btnFailed='File error';}
                 }
                 $arr['element-content']=str_replace(' ','&nbsp;',$arr['element-content']);
             } else {
                 $btnFailed='Button defintion missing';
             }
+            // finalize button
             if (empty($btnFailed)){
-                if (isset($arr['selector']['Content'])){unset($arr['selector']['Content']);}
-                if (isset($arr['selector']['Params'])){unset($arr['selector']['Params']);}
                 if (strcmp($arr['cmd'],'upload')===0){
-                    $arr['key'][]=$arr['selector']['EntryId'];
                     $fileArr=$arr;
-                    if (isset($fileArr['element-content'])){unset($fileArr['element-content']);}
+                    $arr['key'][]=$arr['selector']['EntryId'];
+                    $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameAttr($arr);    
+                    unset($fileArr['name']);
+                    unset($fileArr['id']);
+                    if (isset($fileArr['element-content'])){
+                        unset($fileArr['element-content']);
+                    }
+                    $fileArr['trigger-id']=$arr['id'];
                     $fileArr['tag']='input';
                     $fileArr['type']='file';
                     $fileArr['excontainer']=TRUE;
@@ -407,10 +411,9 @@ class HTMLbuilder{
             if (isset($formData['cmd']['download']) || isset($formData['cmd']['download all'])){
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->entry2fileDownload($selector);
             } else if (isset($formData['cmd']['upload'])){
-                $key=key($formData['cmd']['upload']);
-                $fileArr=current($formData['files']['upload'][$key]);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
+                $filesArr=current($formData['files']['upload']);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($filesArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
                 $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
@@ -582,7 +585,7 @@ class HTMLbuilder{
             if (isset($arr['integerDef'][$bitIndex]['Name'])){$label=$arr['integerDef'][$bitIndex]['Name'];} else {$label=$bitIndex;}
             $bitIndex=strval($bitIndex);
             $id=md5($callingClass.$callingFunction.$bitIndex);
-            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>[$arr['key'],$bitIndex],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex]);
+            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>[$arr['key'],$bitIndex],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex,'excontainer'=>TRUE]);
             $htmlBit.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>strval($label)]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$htmlBit,'keep-element-content'=>TRUE,'class'=>'fieldset']);
         }
@@ -612,7 +615,7 @@ class HTMLbuilder{
     {
         // This method returns html with a number of checkboxes to set the bits of an access-byte.
         // $arr[key] ... Selects the respective access-byte, e.g. $arr['key']='Read', $arr['key']='Write' or $arr['key']='Privileges'.   
-        if (!isset($arr['selector'])){return $arr;}
+        if (!isset($arr['selector'])){return 'Selector missing!';}
         if (empty($arr['key'])){$arr['key']='Read';}
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId']) || empty($arr['selector'][$arr['key']])){
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Required keys missing.']);

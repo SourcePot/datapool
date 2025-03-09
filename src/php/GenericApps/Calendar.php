@@ -39,16 +39,16 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                                             'End timezone'=>['@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@excontainer'=>TRUE],
                                             'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                                             ],
-                                'Location/Destination'=>['Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                    'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
-                                                    ],
-                                ],
+                                    'Location/Destination'=>['Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                                                        'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
+                                                        ],
+                                    ],
                         'Misc'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
                         'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
                         'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
@@ -96,53 +96,44 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
 
     public function job($vars){
         // add bank holidays
-        $eventClasses=['\SourcePot\BankHolidays\es','\SourcePot\BankHolidays\de','\SourcePot\BankHolidays\uk'];
-        if (!isset($vars['bankholidays'])){$vars['bankholidays']['lastRun']=0;}
-        if (!isset($vars['signalCleanup'])){$vars['signalCleanup']['lastRun']=0;}
-        if (time()-$vars['bankholidays']['lastRun']>2600000){
-            $vars['last action']='Bankholidays';
-            $entry=['Source'=>$this->entryTable,'Group'=>'Bank holidays','Read'=>'ALL_R','Write'=>'ADMIN_R'];
-            $events=[];
-            foreach($eventClasses as $eventClass){
-                if (class_exists($eventClass)){
-                    $eventsObj=new $eventClass();
-                    $events+=$eventsObj->getBankHolidays();
-                    $this->oc['logger']->log('info','Event class "{eventClass}" loaded',['eventClass'=>$eventClass]);
-                } else {
-                    $this->oc['logger']->log('info','Event class "{eventClass}" missing/not installed',['eventClass'=>$eventClass]);
-                    continue;
+        if (!isset($vars['Bank holidays'])){$vars['Bank holidays']['lastRun']=0;}
+        if (!isset($vars['Signal cleanup'])){$vars['Signal cleanup']['lastRun']=0;}
+        if (time()-$vars['Bank holidays']['lastRun']>2600000){
+            // load bank holidays
+            $setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,'getJobSettings',[],'Job selected countries and regions',TRUE);
+            $countriesRegions=[];
+            $vars['Bank holidays']['Event count']=0;
+            $vars['Bank holidays']['Year']=intval(date('Y'))+mt_rand(-1,2);
+            foreach($setting as $countryCode=>$regions){
+                foreach($regions as $region=>$active){
+                    if (empty($active)){continue;}
+                    $countriesRegions[]=$region.' ('.strtoupper($countryCode).')';
+                    $holidayObj=new \SourcePot\BankHolidays\holidays($vars['Bank holidays']['Year'],$countryCode);
+                    foreach($holidayObj->datapoolHolidays($region,[],\SourcePot\Datapool\Root::DB_TIMEZONE) as $event){
+                        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($event,TRUE);
+                        $vars['Bank holidays']['Event count']++;
+                    }
                 }
             }
-            $context=['eventCount'=>0,'countries'=>''];
-            foreach($events as $country=>$eventArr){
-                foreach($eventArr as $entryId=>$event){
-                    $entry['EntryId']=$entryId;
-                    $entry['Folder']=$country;
-                    $entry['Content']=$event;
-                    $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P3Y');
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
-                    $context['eventCount']++;
-                }
-                $context['countries'].=(empty($context['countries']))?$country:'| '.$country;
-            }
-            $this->oc['logger']->log('info','Bank holidays: for countries "{countries}" were "{eventCount}" events added',$context);
-            $vars['bankholidays']['lastRun']=time();
+            $vars['Bank holidays']['Countries & regions']=implode(', ',$countriesRegions);
+            $vars['Last action']='Bank holidays for '.$vars['Bank holidays']['Countries & regions'].' added/updated';
+            $vars['Bank holidays']['lastRun']=time();
             return $vars;
-        } else if (time()-$vars['signalCleanup']['lastRun']>725361){
+        } else if (time()-$vars['Signal cleanup']['lastRun']>725361){
             // delete signals without a linked calendar entry
             $this->oc['SourcePot\Datapool\Foundation\Signals']->removeSignalsWithoutSource(__CLASS__,__FUNCTION__);
-            $vars['signalCleanup']['lastRun']=time();
-            $vars['last action']='Signal clean-up';
+            $vars['Signal cleanup']['lastRun']=time();
+            $vars['Last action']='Signal clean-up';
             return $vars;
-        } else if (isset($vars['Period start'])){
+        } else if (isset($vars['Signals']['Period start'])){
             // get relevant timespan
-            $vars['Period end']=time();
+            $vars['Signals']['Period end']=time();
             $startDateTime=new \DateTime();
-            $startDateTime->setTimestamp($vars['Period start']); 
+            $startDateTime->setTimestamp($vars['Signals']['Period start']); 
             $startDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
             $startWindow=$startDateTime->format('Y-m-d H:i:s');
             $endDateTime=new \DateTime();
-            $endDateTime->setTimestamp($vars['Period end']); 
+            $endDateTime->setTimestamp($vars['Signals']['Period end']); 
             $endDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
             $endWindow=$endDateTime->format('Y-m-d H:i:s');
             // scan calendar entries
@@ -156,19 +147,19 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $selector=['Source'=>$this->entryTable,'Group'=>'Serial events'];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $serialEvent){
                 $vars['Relevant serial events found']=$serialEvent['rowCount'];
-                $serialEntries=$this->serialEntryToEntries($serialEvent,$vars['Period start'],$vars['Period end']);
+                $serialEntries=$this->serialEntryToEntries($serialEvent,$vars['Signals']['Period start'],$vars['Signals']['Period end']);
                 $events[$serialEvent['Name']]=intval(!empty($serialEntries));
             }
             // update signals
             foreach($events as $name=>$value){
                 $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$name,$value,'bool'); 
             }
-            $vars['Signals for events updated']=count($events);
-            $vars['last action']='Signal updates';
+            $vars['Signals']['relevant events']=count($events);
+            $vars['Last action']='Signal updates';
         } else {
-            $vars['last action']='Skipped, Period start was not set';    
+            $vars['Last action']='Skipped, Period start was not set';    
         }
-        $vars['Period start']=time();
+        $vars['Signals']['Period start']=time();
         return $vars;
     }
 
@@ -205,6 +196,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,['method'=>'getCalendar','classWithNamespace'=>__CLASS__],['style'=>[]]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Serial events by '.__FUNCTION__,'generic',$this->pageState,['method'=>'getSerialEventsFrom','classWithNamespace'=>__CLASS__],['style'=>[]]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job settings '.__FUNCTION__,'generic',$this->pageState,['method'=>'getJobSettings','classWithNamespace'=>__CLASS__],['style'=>[]]);
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -215,7 +207,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $entry['Source']=$this->entryTable;    
         $entry['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         if (empty($entry['Group'])){$entry['Group']='Events';}
-        if (strcmp($entry['Group'],'Events')===0 || strcmp($entry['Group'],'Bank holidays')===0){
+        if ((strcmp($entry['Group'],'Events')===0 || strcmp($entry['Group'],'Bank holidays')===0) && isset($entry['addDate'])){
             // Standard events
             $entry['Content']['Event']['Start']=(isset($entry['Content']['Event']['Start']))?$entry['Content']['Event']['Start']:$entry['addDate'].'T00:00';
             $entry['Content']['Event']['Start timezone']=(isset($entry['Content']['Event']['Start timezone']))?$entry['Content']['Event']['Start timezone']:$this->setting['Timezone'];
@@ -248,7 +240,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    public function getSerialEventsFrom($arr=[])
+    public function getSerialEventsFrom($arr=[]):array
     {
         $monthOptions=[''=>''];
         $weekOptions=[''=>''];
@@ -287,7 +279,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
-    private function getCalendarEntry($arr=[])
+    private function getCalendarEntry($arr=[]):array
     {
         $template=['html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $arr=array_merge($template,$arr);
@@ -312,7 +304,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;        
     }
     
-    private function getCalendarSettings($arr=[])
+    private function getCalendarSettings($arr=[]):array
     {
         $template=['html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $btnTemplate=['style'=>['font-size'=>'20px'],'tag'=>'button','keep-element-content'=>'TRUE','excontainer'=>FALSE];
@@ -330,14 +322,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
             $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),$formData['val']['setting'],'Calendar',FALSE);
         }
-        $calendarDate=new \DateTime();
-        $calendarDate->setTimestamp($this->calendarStartTimestamp()); 
-        $calendarDate->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         $calendarDateArr=$arr;
         $calendarDateArr['tag']='input';
         $calendarDateArr['type']='date';
         $calendarDateArr['title']='Press enter to select';
-        $calendarDateArr['value']=$calendarDate->format('Y-m-d');
+        $calendarDateArr['value']=$this->timeStamp2pageDateTime($this->calendarStartTimestamp(),'Y-m-d');
         $calendarDateArr['key']=['pageState','calendarDate'];
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($calendarDateArr);
         $btnArr=array_replace_recursive($btnTemplate,$arr);
@@ -367,6 +356,58 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
     
+    public function getJobSettings($arr=[]):array
+    {
+        $setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,'getJobSettings',[],'Job selected countries and regions',TRUE);
+        // update bank holiday setting from form
+        $activeCountry=[];
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],__FUNCTION__);
+        if (!empty($formData['val'])){
+            foreach(\SourcePot\BankHolidays\holidays::getAvailableCountries() as $countryCode=>$countryName){
+                $activeCountry[$countryCode]=!empty($formData['changed'][$countryCode]);
+                foreach(\SourcePot\BankHolidays\holidays::getAvailableRegions($countryCode) as $region){
+                    $setting[$countryCode][$region]=!empty($formData['val'][$countryCode][$region]);
+                }
+            }        
+            $this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,'getJobSettings',$setting,'Job selected countries and regions',TRUE);
+        }
+        // compile bank holiday settings html
+        $arr['html']=$arr['html']??'';
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Relevant bank holidays']);
+        foreach(\SourcePot\BankHolidays\holidays::getAvailableCountries() as $countryCode=>$countryName){
+            $appHtml='';
+            foreach(\SourcePot\BankHolidays\holidays::getAvailableRegions($countryCode) as $region){
+                $id=md5($countryCode.'|'.$region);
+                $setting[$countryCode][$region]=$setting[$countryCode][$region]??FALSE;
+                $htmlRegion=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$setting[$countryCode][$region],'id'=>$id,'key'=>[$countryCode,$region],'callingClass'=>$arr['callingClass'],'callingFunction'=>__FUNCTION__,'title'=>$region.' of '.$countryName,'excontainer'=>FALSE]);
+                $htmlRegion.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>$region]);
+                $appHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$htmlRegion,'keep-element-content'=>TRUE,'class'=>'fieldset']);
+            }
+            $app=['icon'=>$countryName,'title'=>$countryName,'html'=>$appHtml,'open'=>!empty($activeCountry[$countryCode])];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($app);
+        }
+        // compile job var space overview
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Calendar job var-space']);
+        $jobVarSpace=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'Var space','Name'=>__CLASS__]);
+        $jobVarSpace['Content']=$jobVarSpace['Content']??[];
+        $valueMatrix=[];
+        foreach($jobVarSpace['Content'] as $key=>$value){
+            if (is_array($value)){
+                $matrix=[];
+                foreach($value as $subKey=>$subValue){
+                    if (in_array($subKey,['Period start','Period end','lastRun'])){$subValue=$this->timeStamp2pageDateTime($subValue);}
+                    $matrix[$subKey]=['value'=>$subValue];
+                }
+                $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$key,'hideKeys'=>FALSE,'hideHeader'=>TRUE]);
+            } else {
+                if (in_array($key,['Period start','Period end','lastRun'])){$value=$this->timeStamp2pageDateTime($value);}
+                $valueMatrix[$key]=['value'=>$value];
+            }
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$valueMatrix,'keep-element-content'=>TRUE,'caption'=>'Values','hideKeys'=>FALSE,'hideHeader'=>TRUE]);
+        return $arr;
+    }
+
     private function getEventsOverview()
     {
         $matrices=[];
@@ -528,17 +569,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     private function pos2date($pos)
     {
         $timestamp=$this->calendarStartTimestamp()+$pos*86400/$this->setting['Day width'];
-        $dateTime=new \DateTime();
-        $dateTime->setTimestamp($timestamp); 
-        $dateTime->setTimezone(new \DateTimeZone($this->setting['Timezone']));
-        return $dateTime->format('Y-m-d H:i:s');
+        return $this->timeStamp2pageDateTime($timestamp);
     }
     
     private function getCalendarWidth()
     {
         $calendarStartTimestamp=$this->calendarStartTimestamp();
-        $calendarDateTime=new \DateTime();
-        $calendarDateTime->setTimestamp($calendarStartTimestamp); 
+        $calendarDateTime=new \DateTime('@'.$calendarStartTimestamp);
         $calendarDateTime->add(\DateInterval::createFromDateString($this->setting['Days to show'].' days'));
         $calendarDateTime->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         return ceil(($calendarDateTime->getTimestamp()-$calendarStartTimestamp)*$this->setting['Day width']/86400);
@@ -747,5 +784,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         return $string;
     }
 
+    public function timeStamp2pageDateTime($timestamp,string $format='Y-m-d H:i:s'):string
+    {
+        $timestamp=intval($timestamp);
+        $dateTimeObj=new \DateTime('@'.$timestamp);
+        $dateTimeObj->setTimezone(new \DateTimeZone($this->setting['Timezone']));
+        return $dateTimeObj->format($format);
+    }
+    
 }
 ?>

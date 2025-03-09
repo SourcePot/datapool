@@ -303,7 +303,6 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
             $arr=$this->oc[$appClassWithNamespace]->run($arr);
-            $arr=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->add($arr);
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($this->script==='js.php'){
             // js-call Processing
@@ -682,21 +681,6 @@ final class Root{
             $ip=hash('sha256',$ip,FALSE);
         }
         return $ip;
-    }
-
-    /**
-    * This method returns the supplied entry with the relevant contexts added if missing.
-    * 
-    */
-    public function contextBackup(array $context,array $entry=[]):array
-    {
-        $relevantContexts=array('unifyEntry','insertEntry','updateEntry','addFile2entry');
-        foreach($relevantContexts as $contextName){
-            if (isset($context[$contextName]) && !isset($entry[$contextName])){
-                $entry[$contextName]=$context[$contextName];
-            }
-        }
-        return $entry;
     }
 
 }

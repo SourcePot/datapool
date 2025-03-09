@@ -14,109 +14,105 @@ class Element{
     
     private $oc;
     
-    private $def=array(// Generic
-                       ''=>array('accesskey'=>FALSE,'autocapitalize'=>FALSE,'autofocus'=>FALSE,'class'=>'std','contenteditable'=>FALSE,'data-*'=>FALSE,
-                                 'dir'=>FALSE,'draggable'=>FALSE,'enterkeyhint'=>FALSE,'hidden'=>FALSE,'id'=>FALSE,'inert'=>FALSE,'inputmode'=>FALSE,'is'=>FALSE,
-                                 'itemid'=>FALSE,'itemprop'=>FALSE,'itemref'=>FALSE,'itemscope'=>FALSE,'itemtype'=>FALSE,'lang'=>FALSE,'nonce'=>FALSE,'part'=>FALSE,
-                                 'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,
-                                 'virtualkeyboardpolicy'=>FALSE,
-                                 'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
-                                 'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,
-                                ),
-                       
-                       // Table
-                       'table'=>[],
-                       'caption'=>[],
-                       'tbody'=>[],
-                       'tr'=>[],
-                       'td'=>array('cell'=>FALSE),
-                       'th'=>[],
-                       // Forms
-                       'button'=>array('name'=>TRUE),
-                       'datalist'=>array('name'=>TRUE),
-                       'fieldset'=>array('name'=>TRUE),
-                       'form'=>array('action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,
-                                     'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE),
-                       'input'=>array('type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE),
-                       'label'=>array('for'=>TRUE),
-                       'legend'=>array('name'=>TRUE),
-                       'optgroup'=>array('name'=>TRUE),
-                       'option'=>array('value'=>TRUE,'selected'=>FALSE),
-                       'output'=>array('name'=>TRUE),
-                       'progress'=>array('name'=>TRUE),
-                       'meter'=>array('min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE),
-                       'select'=>array('name'=>TRUE),
-                       'textarea'=>array('name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE),
-                       
-                       'a'=>array('href'=>FALSE,'target'=>FALSE),
-                       // Structural elements
-                       'main'=>[],
-                       'html'=>[],
-                       'details'=>array('open'=>FALSE),
-                       'summary'=>[],
-                       'div'=>[],
-                       'li'=>[],
-                       'ol'=>[],
-                       'ul'=>[],
-                       'h1'=>[],
-                       'h2'=>[],
-                       'h3'=>[],
-                       'h4'=>[],
-                       'p'=>[],
-                       'article'=>[],
-                       'span'=>[],
-                       // Media
-                       'audio'=>array('src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'canvas'=>array('height'=>FALSE,'width'=>FALSE),
-                       'object'=>array('data'=>TRUE,'type'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'embed'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE,'type'=>FALSE),
-                       'iframe'=>array('src'=>TRUE,'height'=>FALSE,'width'=>FALSE),
-                       'img'=>array('src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE),
-                       'link'=>array('rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'picture'=>array('src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'script'=>array('src'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'svg'=>array('src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'video'=>array('src'=>FALSE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       'source'=>array('src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE),
-                       // SVG
-                       'path'=>array('d'=>TRUE),
-                       'circle'=>array('r'=>3,'cx'=>TRUE,'cy'=>TRUE),
-                       'text'=>array('x'=>TRUE,'y'=>TRUE),
-                       'line'=>array('x1'=>TRUE,'x2'=>TRUE,'y1'=>TRUE,'y2'=>TRUE),
-                       'rect'=>array('x'=>TRUE,'y'=>TRUE,'width'=>TRUE,'height'=>TRUE),
-                       'tspan'=>array('x'=>FALSE,'y'=>FALSE,'dx'=>FALSE,'dy'=>FALSE),
-                       'clipPath'=>[],
-                       'use'=>[],
-                       'defs'=>[],
-                       );
+    const TRANSLATE=['p'=>'element-content|title',
+                    'div'=>'element-content|title',
+                    'caption'=>'element-content',
+                    'label'=>'element-content',
+                    'span'=>'element-content|title',
+                    'submit'=>'value|title',
+                    'text'=>'placeholder|title',
+                    'button'=>'element-content|title',
+                    'th'=>'element-content',
+                    'td'=>'element-content',
+                    'h1'=>'element-content',
+                    'h2'=>'element-content',
+                    'h3'=>'element-content',
+                    'option'=>'element-content',
+                    ];
     
-    private $translate=array('p'=>'element-content|title',
-                             'div'=>'element-content|title',
-                             'caption'=>'element-content',
-                             'label'=>'element-content',
-                             'span'=>'element-content|title',
-                             'submit'=>'value|title',
-                             'text'=>'placeholder|title',
-                             'button'=>'element-content|title',
-                             'th'=>'element-content',
-                             'td'=>'element-content',
-                             'h1'=>'element-content',
-                             'h2'=>'element-content',
-                             'h3'=>'element-content',
-                             'option'=>'element-content',
-                             );
+    const DEF=[// Generic
+                ''=>['accesskey'=>FALSE,'autocapitalize'=>FALSE,'autofocus'=>FALSE,'class'=>'std','contenteditable'=>FALSE,'data-*'=>FALSE,
+                    'dir'=>FALSE,'draggable'=>FALSE,'enterkeyhint'=>FALSE,'hidden'=>FALSE,'id'=>FALSE,'inert'=>FALSE,'inputmode'=>FALSE,'is'=>FALSE,
+                    'itemid'=>FALSE,'itemprop'=>FALSE,'itemref'=>FALSE,'itemscope'=>FALSE,'itemtype'=>FALSE,'lang'=>FALSE,'nonce'=>FALSE,'part'=>FALSE,
+                    'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,
+                    'virtualkeyboardpolicy'=>FALSE,
+                    'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
+                    'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,
+                    ],
+                
+                // Table
+                'table'=>[],
+                'caption'=>[],
+                'tbody'=>[],
+                'tr'=>[],
+                'td'=>['cell'=>FALSE],
+                'th'=>[],
+                // Forms
+                'button'=>['name'=>TRUE],
+                'datalist'=>['name'=>TRUE],
+                'fieldset'=>['name'=>TRUE],
+                'form'=>['action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,
+                         'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE],
+                'input'=>['type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE],
+                'label'=>['for'=>TRUE],
+                'legend'=>['name'=>TRUE],
+                'optgroup'=>['name'=>TRUE],
+                'option'=>['value'=>TRUE,'selected'=>FALSE],
+                'output'=>['name'=>TRUE],
+                'progress'=>['name'=>TRUE],
+                'meter'=>['min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE],
+                'select'=>['name'=>TRUE],
+                'textarea'=>['name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE],
+                
+                'a'=>['href'=>FALSE,'target'=>FALSE],
+                // Structural elements
+                'main'=>[],
+                'html'=>[],
+                'details'=>['open'=>FALSE],
+                'summary'=>[],
+                'div'=>[],
+                'li'=>[],
+                'ol'=>[],
+                'ul'=>[],
+                'h1'=>[],
+                'h2'=>[],
+                'h3'=>[],
+                'h4'=>[],
+                'p'=>[],
+                'article'=>[],
+                'span'=>[],
+                // Media
+                'audio'=>['src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'canvas'=>['height'=>FALSE,'width'=>FALSE],
+                'object'=>['data'=>TRUE,'type'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'embed'=>['src'=>TRUE,'height'=>FALSE,'width'=>FALSE,'type'=>FALSE],
+                'iframe'=>['src'=>TRUE,'height'=>FALSE,'width'=>FALSE],
+                'img'=>['src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE],
+                'link'=>['rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'picture'=>['src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'script'=>['src'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'svg'=>['src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'video'=>['src'=>FALSE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                'source'=>['src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+                // SVG
+                'path'=>['d'=>TRUE],
+                'circle'=>['r'=>3,'cx'=>TRUE,'cy'=>TRUE],
+                'text'=>['x'=>TRUE,'y'=>TRUE],
+                'line'=>['x1'=>TRUE,'x2'=>TRUE,'y1'=>TRUE,'y2'=>TRUE],
+                'rect'=>['x'=>TRUE,'y'=>TRUE,'width'=>TRUE,'height'=>TRUE],
+                'tspan'=>['x'=>FALSE,'y'=>FALSE,'dx'=>FALSE,'dy'=>FALSE],
+                'clipPath'=>[],
+                'use'=>[],
+                'defs'=>[],
+                ];
     
-    private $specialAttr=array('function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'excontainer'=>FALSE,'container'=>FALSE,'cell'=>FALSE,
-                               'row'=>FALSE,'source'=>FALSE,'entry-id'=>FALSE,'index'=>FALSE,'js-status'=>FALSE,
-                               );
+    const SECIAL_ATTR=['function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'excontainer'=>FALSE,'container'=>FALSE,'cell'=>FALSE,
+                    'row'=>FALSE,'source'=>FALSE,'entry-id'=>FALSE,'index'=>FALSE,'js-status'=>FALSE,
+                    ];
                                
-    private $copyKeys2Session=array('element-content'=>FALSE,'value'=>FALSE,'tag'=>TRUE,'key'=>FALSE,'id'=>FALSE,'name'=>FALSE,
-                                    'callingClass'=>FALSE,'callingFunction'=>FALSE,'filter'=>FILTER_DEFAULT,'Read'=>FALSE,'Write'=>FALSE,
-                                    );
-    
-    private $copyKeys2selector=array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Date'=>FALSE,'Expires'=>FALSE,
-                                     'Read'=>FALSE,'Write'=>FALSE,'Privileges'=>FALSE,'LoginId'=>FALSE,'app'=>FALSE
-                                    );
+    const COPY2SESSION=['element-content'=>FALSE,'value'=>FALSE,'tag'=>TRUE,'type'=>'','key'=>FALSE,'id'=>FALSE,'name'=>FALSE,'selector'=>FALSE,'app'=>FALSE,
+                        'callingClass'=>FALSE,'callingFunction'=>FALSE,'filter'=>FILTER_DEFAULT,'Read'=>FALSE,'Write'=>FALSE,
+                        ];
 
     public function __construct(array $oc)
     {
@@ -132,8 +128,8 @@ class Element{
     {
         // translation, use type attribute, e.g. submit, text,... if it is present, instead of tag
         $translationTestKey=(isset($arr['type']))?'type':'tag';
-        if (isset($this->translate[$arr[$translationTestKey]])){
-            $toTranslateKeys=explode('|',$this->translate[$arr[$translationTestKey]]);
+        if (isset(self::TRANSLATE[$arr[$translationTestKey]])){
+            $toTranslateKeys=explode('|',self::TRANSLATE[$arr[$translationTestKey]]);
             foreach($toTranslateKeys as $toTranslateKey){
                 if (isset($arr[$toTranslateKey])){
                    $arr[$toTranslateKey]=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($arr[$toTranslateKey]);
@@ -146,11 +142,11 @@ class Element{
             $arr['element-content']='ERROR tag-attribute missing';
             $arr['style']['background-color']='#f00';
         }
-        if (isset($this->def[$arr['tag']])){
+        if (isset(self::DEF[$arr['tag']])){
             if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}
-            $def=array_merge($this->def[''],$this->def[$arr['tag']],$this->specialAttr);
+            $def=array_merge(self::DEF[''],self::DEF[$arr['tag']],self::SECIAL_ATTR);
             $nameRequired=(!empty($def['name']));
-            $elementArr=array('tag'=>$arr['tag'],'attr'=>[],'sessionArr'=>array('type'=>''));
+            $elementArr=['tag'=>$arr['tag'],'attr'=>[],'sessionArr'=>['type'=>'']];
             foreach($def as $attrName=>$attrCntr){
                 if (isset($arr[$attrName])){
                     $elementArr['sessionArr'][$attrName]=$arr[$attrName];
@@ -171,18 +167,24 @@ class Element{
         }
         // html-elements which require the name attribute will require the key attribute too
         if ($nameRequired){
+            $arr['selector']=$arr['selector']??[];
             if (isset($arr['key'])){
-                $arr['id']=(empty($arr['id']))?md5($arr['tag'].'|'.implode('|',$arr['key']).session_id()):$arr['id'];
-                $arr['name']=(empty($arr['name']))?$arr['id']:$arr['name'];
+                $arr=$this->addNameAttr($arr);
                 $elementArr['attr']['id']=$this->attr2string($arr,'id',$arr['id']);
                 $elementArr['attr']['name']=$this->attr2string($arr,'name',$arr['name']);
             } else {
                 throw new \ErrorException('Function '.__FUNCTION__.': tag "'.$elementArr['tag'].'" required attribute "key" missing.',0,E_ERROR,__FILE__,__LINE__);
             }
-            $elementArr['sessionArr']=$this->def2arr($arr,$this->copyKeys2Session,$elementArr['sessionArr']);
-            $arr['selector']=(isset($arr['selector']))?$arr['selector']:[];
-            $elementArr['sessionArr']['selector']=$this->def2arr($arr['selector'],$this->copyKeys2selector);
-            $elementArr=$this->addElement2session($arr,$elementArr);
+            // copy special keys to session
+            $sessionArr=$this->def2arr($arr,self::COPY2SESSION);
+            $sessionArr=$this->addElement2session($sessionArr);
+            /*
+            if (($arr['callingFunction']??'')==='addEntry'){
+                if (($arr['type']??'')==='file'){
+                    $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($sessionArr);
+                }
+            }
+            */
         }
         // compile html
         if (empty($arr['hasCover'])){
@@ -191,6 +193,23 @@ class Element{
             $html=$this->elementArr2htmlAddCover($arr,$elementArr);
         }
         return $html;
+    }
+
+    public function addNameAttr(array $arr):array
+    {
+        if (!empty($arr['id']) && empty($arr['name'])){
+            $arr['name']=$arr['id'];
+        } else if (empty($arr['id']) && !empty($arr['name'])){
+            $arr['id']=$arr['name'];
+        } else {
+            $hashArr=[];
+            $hashArr[]=['Source'=>$arr['selector']['Source']??'','Group'=>$arr['selector']['Group']??'','Folder'=>$arr['selector']['Folder']??'','Name'=>$arr['selector']['Name']??'','EntryId'=>$arr['selector']['EntryId']??''];
+            $hashArr[]=$arr['key'];
+            $hashArr[]=$arr['callingClass'];
+            $hashArr[]=$arr['callingFunction'];
+            $arr['name']=$arr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($hashArr,TRUE);
+        }
+        return $arr;
     }
     
     private function attr2string(array $arr,string $attrName,$attrValue):string
@@ -237,16 +256,16 @@ class Element{
         return $arrOut;
     }
 
-    private function addElement2session(array $arr,array $elementArr):array
+    private function addElement2session(array $sessionArr):array
     {
-        if (isset($elementArr['sessionArr']['name'])){
-            if (isset($arr['callingClass']) && isset($arr['callingFunction'])){
-                $_SESSION[$arr['callingClass']][$arr['callingFunction']][$elementArr['sessionArr']['name']]=$elementArr['sessionArr'];
-            } else {
-                throw new \ErrorException('Function '.__FUNCTION__.': tag "'.$elementArr['tag'].'" required attributes "callingClass" or "callingFunction" missing.',0,E_ERROR,__FILE__,__LINE__);    
-            }
+        if (!empty($sessionArr['callingClass']) && !empty($sessionArr['callingFunction']) && !empty($sessionArr['name'])){
+            $_SESSION['name2classFunction'][$sessionArr['name']]=['callingClass'=>$sessionArr['callingClass'],'callingFunction'=>$sessionArr['callingFunction']];
+            $_SESSION[$sessionArr['callingClass']][$sessionArr['callingFunction']][$sessionArr['name']]=$sessionArr;
+        } else {
+            $emptyKey=(empty($sessionArr['callingClass'])?'callingClass':(empty($sessionArr['callingFunction'])?'callingFunction':'name'));
+            throw new \ErrorException('Function '.__FUNCTION__.' called with empty key "'.$emptyKey.'"',0,E_ERROR,__FILE__,__LINE__);    
         }
-        return $elementArr;
+        return $_SESSION[$sessionArr['callingClass']][$sessionArr['callingFunction']][$sessionArr['name']];
     }
     
     private function elementArr2html(array $arr,array $elementArr):string
@@ -266,7 +285,7 @@ class Element{
         unset($arr['hasCover']);
         $elementArrStyle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->attr2value($elementArr['attr']['style']??'');
         $elementArrStyle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($elementArrStyle);
-        $coverPArr=array('tag'=>'p','class'=>'cover','id'=>'cover-'.hrtime(TRUE),'style'=>[],'element-content'=>'Sure?');
+        $coverPArr=array('tag'=>'p','class'=>'cover','id'=>'cover-'.$arr['id'],'style'=>[],'element-content'=>'Sure?');
         $coverDivArr=array('tag'=>'div','class'=>'cover-wrapper','id'=>'cover-wrapper','style'=>[],'keep-element-content'=>TRUE);
         // move selected $elementArr styles to the top div
         foreach($elementArrStyle as $styleKey=>$styleValue){
@@ -352,7 +371,7 @@ class Element{
         $arr=$value;
         while(count($keys)>0){
             $subKey=array_pop($keys);
-            $arr=array($subKey=>$arr);
+            $arr=[$subKey=>$arr];
         }
         return $arr;
     }

@@ -45,15 +45,27 @@ class Container{
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
             } else if (strcmp($_POST['function'],'plotDataProvider')===0){
                 $jsAnswer=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->plotDataProvider($_POST);
-            } else if (strcmp($_POST['function'],'createAssessment')===0){
-                $jsAnswer=$this->oc['SourcePot\Datapool\Tools\ReCAPTCHA']->createAssessment($_POST);
             } else {
-                // undefined
+                // unknown function
             }
         } else if (isset($_POST['loadImage'])){
             $jsAnswer=$this->oc['SourcePot\Datapool\Tools\MediaTools']->loadImage(['selector'=>$_POST['loadImage']]);
+        } else if (!empty($_FILES)){
+            $tagName=key($_FILES);
+            if (isset($_SESSION['name2classFunction'][$tagName])){
+                $callingClass=$_SESSION['name2classFunction'][$tagName]['callingClass'];
+                $callingFunction=$_SESSION['name2classFunction'][$tagName]['callingFunction'];
+                $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
+                if ($callingFunction==='addEntry'){
+                    $this->oc['SourcePot\Datapool\Foundation\Explorer']->appProcessing($formData['selector']['app']);
+                } else if ($callingFunction==='getFileUpload'){
+                    $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getFileUpload($formData['selector']['app']);
+                } else if ($callingFunction==='ftpFileUpload'){
+                    $this->oc['SourcePot\Datapool\AdminApps\Admin']->ftpFileUpload($formData);
+                }
+            }
         } else {
-            //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_POST,hrtime(TRUE).'-'.__FUNCTION__);
+            // invalid request
         }
         $arr['page html']=json_encode($jsAnswer,JSON_INVALID_UTF8_IGNORE);
         return $arr;
@@ -243,13 +255,21 @@ class Container{
                     $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrDeleteKeyByFlatKey($arr['selector'],key($formData['cmd']['deleteKey']));
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
                 } else if (isset($formData['cmd']['addValue'])){
-                    $flatKey=$formData['cmd']['addValue'].$S.$formData['val']['newKey'];
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrUpdateKeyByFlatKey($arr['selector'],$flatKey,'Enter new value here ...');
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    if (empty($formData['val']['newKey'])){
+                        $this->oc['logger']->log('notice','Empty key is not allowed when adding a value',$arr);
+                    } else {
+                        $flatKey=$formData['cmd']['addValue'].$S.$formData['val']['newKey'];
+                        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrUpdateKeyByFlatKey($arr['selector'],$flatKey,'Enter new value here ...');
+                        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    }
                 } else if (isset($formData['cmd']['addArr'])){
-                    $flatKey=$formData['cmd']['addArr'].$S.$formData['val']['newKey'].$S.'...';
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrUpdateKeyByFlatKey($arr['selector'],$flatKey,'to be deleted');
-                    $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    if (empty($formData['val']['newKey'])){
+                        $this->oc['logger']->log('notice','Empty key is not allowed when adding an array',$arr);
+                    } else {
+                        $flatKey=$formData['cmd']['addArr'].$S.$formData['val']['newKey'].$S.'...';
+                        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrUpdateKeyByFlatKey($arr['selector'],$flatKey,'to be deleted');
+                        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
+                    }
                 } else if (isset($formData['cmd']['save']) || isset($formData['cmd']['reloadBtnArr'])){
                     $arr['selector']=array_replace_recursive($arr['selector'],$formData['val']);
                     $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
@@ -467,7 +487,7 @@ class Container{
                         }
                         // table row marking
                         $class=$this->oc['SourcePot\Datapool\Root']->source2class($arr['selector']['Source']);
-                        $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
+                        $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($arr['selector']['app']??$class);
                         if ($entry['Source']===$pageStateSelector['Source'] && $entry['EntryId']===(isset($pageStateSelector['EntryId'])?$pageStateSelector['EntryId']:'')){
                             $matrix[$rowIndex]['trStyle']=['background-color'=>'#e4e2ff'];
                         }

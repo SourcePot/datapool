@@ -53,12 +53,11 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
             // is admin
-            $user=array('Source'=>$this->entryTable,'disableAutoRefresh'=>TRUE);
+            $user=array('Source'=>$this->entryTable,'disableAutoRefresh'=>TRUE,'app'=>__CLASS__);
             $settings=array('orderBy'=>'Privileges','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
             $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content|[]|Contact details|[]|Email','Filter'=>''),array('Column'=>'Privileges column','Filter'=>''));
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' accounts','entryList',$user,$settings,[]);    
-            $class=$this->oc['SourcePot\Datapool\Root']->source2class($user['Source']);
-            $userSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($class);
+            $userSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             if (isset($userSelector['EntryId'])){
                 $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($userSelector);
             } else {
@@ -68,6 +67,8 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
             // is non-admin user
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         }
+        unset($user['app']);
+        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($user);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),[]);    
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
             if (!isset($user['Params'])){

@@ -29,7 +29,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__);
+            return ['Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>'PUBLIC_R','Class'=>__CLASS__];
         } else {
             // update signals
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(array('Source'=>'logger','Name'=>'Login for%'),TRUE);
@@ -43,13 +43,14 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             // compile page
             $bgStyle=array('background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')');
             $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','class'=>'bg-media','style'=>$bgStyle,'element-content'=>' ')).PHP_EOL;
-            $arr['toReplace']['{{content}}']=$this->getLoginForm();
+            $arr['toReplace']['{{content}}']=$this->getLoginFormHtml([]);
             return $arr;
         }
     }
     
-    public function getLoginForm(){
-        $loginArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getLoginForm();
+    public function getLoginFormHtml(array $arr):string
+    {
+        $loginArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getLoginForm($arr);
         //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($loginArr['result'],hrtime(TRUE).'-'.__FUNCTION__);
         if (strcmp($loginArr['result']['cmd'],'Login')===0){
             $this->loginRequest($loginArr['result']);

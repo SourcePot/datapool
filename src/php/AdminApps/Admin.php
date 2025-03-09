@@ -314,8 +314,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                                 'pageTimeZone'=>array('method'=>'select','options'=>$timezones,'excontainer'=>TRUE),
                                 'logLevel'=>array('method'=>'select','options'=>array('Production','Monitoring','Debugging'),'excontainer'=>TRUE),
                                 'emailWebmaster'=>array('method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'),
-                                'Google Project ID'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>''),
-                                'Google reCAPTCHA site key [not used if empty]'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>''),
                                 'loginForm'=>array('method'=>'select','options'=>array('Password','Pass icons'),'excontainer'=>TRUE),
                                 'homePageContent'=>array('method'=>'select','options'=>$homePageContentOptions,'value'=>'video','excontainer'=>TRUE),
                                 'Spatie path to Xpdf pdftotext executable'=>array('method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>array('min-width'=>'50vw')),
@@ -343,11 +341,12 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             unlink($GLOBALS['dirs']['ftp'].$file);
         }
         // compile html
+        $uploadBtnId=md5(__CLASS__.'|'.__FUNCTION__.'|uploadBtn');
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'FTP manual upload'));
-        $fileArr=array('tag'=>'input','type'=>'file','key'=>array('upload'),'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
+        $fileArr=array('tag'=>'input','type'=>'file','key'=>['upload'],'trigger-id'=>$uploadBtnId,'multiple'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE);
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr);
-        $btnArr=array('tag'=>'input','type'=>'submit','key'=>array('uploadBtn'),'value'=>'Upload','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE);
+        $btnArr=array('tag'=>'input','type'=>'submit','key'=>['uploadBtn'],'id'=>$uploadBtnId,'value'=>'Upload','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE);
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
         $filesHtml='';
         $files=scandir($GLOBALS['dirs']['ftp']);

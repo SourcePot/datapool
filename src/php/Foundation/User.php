@@ -45,7 +45,7 @@ class User{
                                                                  'Save'=>array('@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'),
                                                                 ),
                                               ),
-                             'Login'=>array('@function'=>'getLoginForm','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'),
+                             'Login'=>array('@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'),
                              'Icon etc.'=>array('@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
                              'Privileges'=>array('@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'),
                              'App credentials'=>array('@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'),
@@ -268,8 +268,7 @@ class User{
     
     public function userAccountForm(array $arr):array
     {
-        $template=array('html'=>'');
-        $arr=array_merge($template,$arr);
+        $arr['html']=$arr['html']??'';
         if (isset($arr['selector']['EntryId'])){
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($arr['selector']);
@@ -292,6 +291,7 @@ class User{
         $selector['Privileges>']=1;
         $options=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
+            if (!isset($user['Content']['Contact details'])){continue;}
             $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'];
             if (!empty($flatContactDetailsKey)){
                 $flatUser=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($user);
