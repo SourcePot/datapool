@@ -220,7 +220,6 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Delete app',TRUE);
     }
     
-    
     private function replicateApp($data)
     {
         $target=[];
