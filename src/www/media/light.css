@@ -44,7 +44,7 @@ span{
     text-decoration:none;
     color:inherit;
 }
-h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,a.btn,.js-button{
+h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,progress,a.btn,.js-button{
     float:left;
     clear:both;
     font-size:inherit;
@@ -461,6 +461,25 @@ div.menu-item-emoji{
 select.lng-selector{
     float:right;
     clear:none;
+}
+
+/** WIDGETS **/
+div.file-upload{
+    padding:5px;
+    background-color:lavender;
+}
+input.file-upload{
+    clear:both;
+    height:50px;
+    width:200px;
+    margin:0;
+    padding:0; 
+}
+progress.file-upload{
+    clear:both;
+    width:200px;
+    margin-top:3px;
+    background-color: #eee;
 }
 
 /** DETAILS, SUMMARY, APPs **/

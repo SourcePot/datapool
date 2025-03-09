@@ -7,12 +7,10 @@ jQuery(document).ready(function(){
     
     function initFileUpload(){
         jQuery('.file-upload[type=file]').each(function(){
-            let name=jQuery(this).attr('name');
             jQuery(this).unbind('change');
             jQuery(this).unbind('drop');
             this.addEventListener("drop",handleFileEvent);
             this.addEventListener("change",handleFileEvent);
-            jQuery(this).css({'height':50,'width':200});
         });    
     }
     
@@ -75,7 +73,6 @@ jQuery(document).ready(function(){
         } else if (event.type=="load"){
         
         } else if (event.type=="loadend"){
-        
             postFile();
         }
     }

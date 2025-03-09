@@ -88,6 +88,10 @@ jQuery(document).ready(function(){
     
     function loadMapEntry(){
         let obj=mapEntryObjArr.shift();
+		if (obj == undefined){
+			entries2dynamicMap();
+			return true;
+		}
         let arr={'Source':jQuery(obj).attr('source'),
                  'EntryId':jQuery(obj).attr('entry-id'),
                  'function':'entryById',
@@ -104,10 +108,10 @@ jQuery(document).ready(function(){
             }).fail(function(data){
                 console.log(data);
             }).always(function(){
-                if (mapEntryObjArr.length>0){loadMapEntry();} else {entries2dynamicMap();}
+				loadMapEntry();
             });
         } else {
-            if (mapEntryObjArr.length>0){loadMapEntry();} else {entries2dynamicMap();}
+            loadMapEntry();
         }
     }
     function entries2dynamicMap(){
@@ -122,10 +126,12 @@ jQuery(document).ready(function(){
         var selectBtns={};
         for (const [key,value] of Object.entries(mapEntries)){
             if (typeof value['Params']['Geo']!=='undefined'){
-                var selectId=jQuery('button[entry-id='+value['EntryId']+']:contains("✦")').first().attr('id');
-                location=[parseFloat(value['Params']['Geo']['lat']),parseFloat(value['Params']['Geo']['lon'])];
-                var marker=L.marker(location).addTo(map);
-                var tooltip=L.tooltip().setLatLng(location).setContent(value['Folder']+'<br/>'+value['Name']).addTo(map);
+				let lat=parseFloat(value['Params']['Geo']['lat']);
+				let lon=parseFloat(value['Params']['Geo']['lon']);
+				if (isNaN(lat) || isNaN(lon)){continue;}
+				var selectId=jQuery('button[entry-id='+value['EntryId']+']:contains("✦")').first().attr('id');
+                var marker=L.marker([lat,lon]).addTo(map);
+                var tooltip=L.tooltip().setLatLng([lat,lon]).setContent(value['Folder']+'<br/>'+value['Name']).addTo(map);
                 selectBtns[jQuery(marker).attr('_leaflet_id')]=selectId;
                 marker.on('click',function(e){
                     var selectBtnSelector='#'+selectBtns[jQuery(this).attr('_leaflet_id')];
@@ -511,7 +517,6 @@ jQuery(document).ready(function(){
 		addSymbolLoginEvents();
 		loadImageData();
 		initJsButtonEvents();
-		loadDynamicMap();
 		addFilter();
 		markChages();
 	});
