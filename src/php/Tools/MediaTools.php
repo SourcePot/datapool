@@ -278,14 +278,14 @@ class MediaTools{
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
         $arr['settings']['style']=array_merge(array('float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw','border'=>'1px dotted #444'),$arr['settings']['style']);
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
-            $pdfArr=$arr;
-            $pdfArr['tag']='object';
-            $pdfArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
-            $pdfArr['type']=$arr['selector']['Params']['File']['MIME-Type']??$arr['selector']['Params']['TmpFile']['MIME-Type'];
-            $pdfArr['style']=$pdfArr['settings']['style'];
-            $pdfArr['element-content']='<a href="'.$pdfArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.($arr['selector']['Params']['File']['Name']??'').'</b> can\'t be presented, click here to download...</a>';
-            $pdfArr['keep-element-content']=TRUE;
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pdfArr);
+            $objArr=$arr;
+            $objArr['tag']='object';
+            $objArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
+            $objArr['type']=$arr['selector']['Params']['File']['MIME-Type']??$arr['selector']['Params']['TmpFile']['MIME-Type'];
+            $objArr['style']=$objArr['settings']['style'];
+            $objArr['element-content']='<a href="'.$objArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.($arr['selector']['Params']['File']['Name']??'').'</b> can\'t be presented, click here to download...</a>';
+            $objArr['keep-element-content']=TRUE;
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($objArr);
         } else {
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.'));
         }

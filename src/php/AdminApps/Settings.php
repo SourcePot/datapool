@@ -15,10 +15,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Owner'=>array('type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.')
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Owner'=>['type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
+                            ];
     
     public function __construct($oc)
     {
@@ -56,35 +56,35 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             if (empty($selector['Group'])){
-                $settings=array('hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                $settings=['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,[]);    
             } else {
                 if ($selector['Group']==='Job processing'){
                     // Job processing setting
-                    $settings=array('classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview');
+                    $settings=['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,[]);    
                 } else if ($selector['Group']==='Presentation'){
                     // Presentation setting
                     if (empty($selector['Folder'])){
                         $selector['md']='Please select a Folder for class and method based entry presentation settings...';
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Presentation','mdContainer',$selector,[],array('style'=>[]));
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Presentation','mdContainer',$selector,[],['style'=>[]]);
                     } else {
-                        $settings=array('method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder');
+                        $settings=['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'];
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,[]);
                     }
                 } else if (!empty($selector['EntryId'])){
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                     if (isset($entry['Content']) && isset($entry['Params'])){
-                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix(array('Content'=>$entry['Content'],'Params'=>$entry['Params']));
-                        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'keep-element-content'=>TRUE));
+                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix(['Content'=>$entry['Content'],'Params'=>$entry['Params']]);
+                        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE]);
                     } else {
                         $html.='No entry found...';
                     }
                 } else if ($selector['Group']==='Feeds'){
-                    $settings=array('method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds');
+                    $settings=['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Feed URL settings','generic',$selector,$settings,[]);
                 } else {
-                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                    $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,[]);
                 }
                 
@@ -98,50 +98,50 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     private function settingsOverviewHtml():string
     {
         $template=[];
-        $template['Logger']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger'),'description'=>'Here you will find all the logs.');
-        $template['Logger errors']=array('selector'=>array('app'=>__CLASS__,'Source'=>'logger','Group'=>'error'),'description'=>'Error logs can be found here.');
-        $template['Job processing timimg']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'),'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job');
-        $template['Entry presentation']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'),'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().');
-        $template['Definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'),'description'=>'Here you can adjust the entry definitions.');
-        $template['Feeds']=array('selector'=>array('app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'),'description'=>'Here you can add and remove Feeds.');
-        $template['Remote client definitions']=array('selector'=>array('app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'),'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected');
+        $template['Logger']=['selector'=>['app'=>__CLASS__,'Source'=>'logger'],'description'=>'Here you will find all the logs.'];
+        $template['Logger errors']=['selector'=>['app'=>__CLASS__,'Source'=>'logger','Group'=>'error'],'description'=>'Error logs can be found here.'];
+        $template['Job processing timimg']=['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'],'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'];
+        $template['Entry presentation']=['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'],'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().'];
+        $template['Definitions']=['selector'=>['app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'],'description'=>'Here you can adjust the entry definitions.'];
+        $template['Feeds']=['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'],'description'=>'Here you can add and remove Feeds.'];
+        $template['Remote client definitions']=['selector'=>['app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'],'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected'];
         // create html
         $matrix=[];
         foreach($template as $key=>$def){
             if (!empty($def['selector']['Name'])){
                 $def['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($def['selector']);
             }
-            $btnArr=array('cmd'=>'select','selector'=>$def['selector'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+            $btnArr=['cmd'=>'select','selector'=>$def['selector'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             $btnArr['selector']['Read']=65535;
             $btnArr['selector']['Write']=49152;
-            $matrix[$key]['Description']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('font-weight'=>'bold','padding'=>'1rem','max-width'=>'40rem'),'keep-element-content'=>TRUE,'element-content'=>$def['description']));
+            $matrix[$key]['Description']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['font-weight'=>'bold','padding'=>'1rem','max-width'=>'40rem'],'keep-element-content'=>TRUE,'element-content'=>$def['description']]);
             $matrix[$key]['Select']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         }
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Quick links','hideKeys'=>FALSE,'keep-element-content'=>TRUE));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Quick links','hideKeys'=>FALSE,'keep-element-content'=>TRUE]);
         return $html;
     }
 
     public function setSetting($callingClass,$callingFunction,$setting,$name='System',$isSystemCall=FALSE)
     {
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
+        $entry=['Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name];
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0,'',FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],0,'',FALSE);
         $entry['Content']=$setting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
-        $this->oc['logger']->log('info','Setting "{name}" updated',array('name'=>$name));    
-        if (isset($entry['Content'])){return $entry['Content'];} else {return [];}
+        $this->oc['logger']->log('info','Setting "{name}" updated',['name'=>$name]);    
+        return $entry['Content']??[];
     }
     
     public function getSetting($callingClass,$callingFunction,$initSetting=[],$name='System',$isSystemCall=FALSE)
     {
-        $entry=array('Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name);
+        $entry=['Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name];
         if ($isSystemCall){$entry['Owner']='SYSTEM';}
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0,'',FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],0,'',FALSE);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
         $entry['Content']=$initSetting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,$isSystemCall);
-        if (isset($entry['Content'])){return $entry['Content'];} else {return [];}
+        return $entry['Content']??[];
     }
     
     public function getVars($class,$initVars=[],$isSystemCall=FALSE)

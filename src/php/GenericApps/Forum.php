@@ -15,17 +15,17 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'],
+                            ];
     
-    public $definition=array('Content'=>array('Message'=>array('@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>array('font-size'=>'1.2rem')),
+    public $definition=['Content'=>['Message'=>['@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>['font-size'=>'1.2rem']],
                                               '@hideCaption'=>FALSE
-                                             ),
-                             'Attachment'=>array('@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE),
-                             'Preview'=>array('@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE),
-                             '@hideHeader'=>TRUE,
-                             );
+                                ],
+                        'Attachment'=>['@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE],
+                        'Preview'=>['@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE],
+                        '@hideHeader'=>TRUE,
+                        ];
                             
     public function __construct($oc)
     {
@@ -43,7 +43,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         // complete defintion
-        $this->definition['Send']=array('@tag'=>'button','@key'=>array('save'),'@element-content'=>'Send','@hideKeys'=>TRUE);
+        $this->definition['Send']=['@tag'=>'button','@key'=>['save'],'@element-content'=>'Send','@hideKeys'=>TRUE];
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
@@ -65,7 +65,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+            return ['Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__];
         } else {
             $arr=$this->addYearSelector2menu($arr);
             $entryHtml=$this->newEntryHtml();
@@ -83,21 +83,18 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
             $selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Year',$formData['val']['Year']);
         }
         // get selector
-        $options=array(''=>'All');
+        $options=[''=>'All'];
         $startYear=intval(date('Y'));
         for($year=$startYear;$year>$startYear-10;$year--){
             $options[$year]='Year '.$year;
         }
-        $arr['toReplace']['{{firstMenuBarExt}}']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selectedYear,'key'=>array('Year'),'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $arr['toReplace']['{{firstMenuBarExt}}']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$selectedYear,'key'=>['Year'],'hasSelectBtn'=>TRUE,'class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         return $arr;
     }
     
     private function newEntryHtml()
     {
-        $draftSelector=array('Source'=>$this->entryTable,
-                          'Folder'=>'Draft',
-                          'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),
-                          );
+        $draftSelector=['Source'=>$this->entryTable,'Folder'=>'Draft','Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),];
         $draftSelector=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($draftSelector);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
             if ($entry['isSkipRow']){continue;}
@@ -105,21 +102,23 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         }
         if (empty($forumEntry)){
             $forumEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($draftSelector,TRUE);
-        } 
+        }
+        $forumEntry['File upload extract archive']=FALSE;
+        $forumEntry['File upload extract email parts']=FALSE;
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,array('method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'),array('style'=>array('margin'=>'0','border'=>'none')));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9993;','class'=>'forum'));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9993;','class'=>'forum']);
         return $html;
     }
     
     private function loadForumEntries()
     {
-        $forumSelector=array('Source'=>$this->entryTable,'Folder'=>'Sent');
+        $forumSelector=['Source'=>$this->entryTable,'Folder'=>'Sent'];
         $selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
         if (!empty($selectedYear)){$forumSelector['Date']=$selectedYear.'-%';}
         $html='';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum','style'=>array('clear'=>'none')));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum','style'=>['clear'=>'none']]);
         }
         return $html;
     }

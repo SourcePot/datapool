@@ -98,11 +98,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         // add bank holidays
         if (!isset($vars['Bank holidays'])){$vars['Bank holidays']['lastRun']=0;}
         if (!isset($vars['Signal cleanup'])){$vars['Signal cleanup']['lastRun']=0;}
+        $action='';
         if (time()-$vars['Bank holidays']['lastRun']>2600000){
             // load bank holidays
+            $action='Bank holidays';
             $setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,'getJobSettings',[],'Job selected countries and regions',TRUE);
             $countriesRegions=[];
-            $vars['Bank holidays']['Event count']=0;
             $vars['Bank holidays']['Year']=intval(date('Y'))+mt_rand(-1,2);
             foreach($setting as $countryCode=>$regions){
                 foreach($regions as $region=>$active){
@@ -111,22 +112,23 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
                     $holidayObj=new \SourcePot\BankHolidays\holidays($vars['Bank holidays']['Year'],$countryCode);
                     foreach($holidayObj->datapoolHolidays($region,[],\SourcePot\Datapool\Root::DB_TIMEZONE) as $event){
                         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($event,TRUE);
-                        $vars['Bank holidays']['Event count']++;
                     }
                 }
             }
+            $vars['Bank holidays']=array_merge($vars['Bank holidays'],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
             $vars['Bank holidays']['Countries & regions']=implode(', ',$countriesRegions);
-            $vars['Last action']='Bank holidays for '.$vars['Bank holidays']['Countries & regions'].' added/updated';
             $vars['Bank holidays']['lastRun']=time();
             return $vars;
         } else if (time()-$vars['Signal cleanup']['lastRun']>725361){
             // delete signals without a linked calendar entry
+            $action='Signal cleanup';
             $this->oc['SourcePot\Datapool\Foundation\Signals']->removeSignalsWithoutSource(__CLASS__,__FUNCTION__);
             $vars['Signal cleanup']['lastRun']=time();
-            $vars['Last action']='Signal clean-up';
+            $vars['Signal cleanup']=array_merge($vars['Signal cleanup'],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
             return $vars;
         } else if (isset($vars['Signals']['Period start'])){
             // get relevant timespan
+            $action='Signals';
             $vars['Signals']['Period end']=time();
             $startDateTime=new \DateTime();
             $startDateTime->setTimestamp($vars['Signals']['Period start']); 
@@ -140,13 +142,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $events=[];
             $selector=['Source'=>$this->entryTable,'Group!'=>'Serial%','End>'=>$startWindow];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $event){
-                $vars['Relevant calendar entries found']=$event['rowCount'];
+                $vars['Signals']['Relevant calendar entries found']=$event['rowCount'];
                 $events[$event['Name']]=intval($event['Start']<$endWindow);
             }
             // get serial events for the time window between the last run and now
             $selector=['Source'=>$this->entryTable,'Group'=>'Serial events'];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',TRUE,FALSE,FALSE) as $serialEvent){
-                $vars['Relevant serial events found']=$serialEvent['rowCount'];
+                $vars['Signals']['Relevant serial events found']=$serialEvent['rowCount'];
                 $serialEntries=$this->serialEntryToEntries($serialEvent,$vars['Signals']['Period start'],$vars['Signals']['Period end']);
                 $events[$serialEvent['Name']]=intval(!empty($serialEntries));
             }
@@ -154,12 +156,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             foreach($events as $name=>$value){
                 $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$name,$value,'bool'); 
             }
-            $vars['Signals']['relevant events']=count($events);
-            $vars['Last action']='Signal updates';
+            $vars['Signals']['Window start']=$startWindow.' ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')';
+            $vars['Signals']['Window end']=$endWindow.' ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')';
+            $vars['Signals']['Period start']=time();
         } else {
-            $vars['Last action']='Skipped, Period start was not set';    
+            $action='Skipped';
         }
-        $vars['Signals']['Period start']=time();
+        $vars[$action]=array_merge($vars[$action],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
+        $vars['Last action']['Done']=$action;
+        $vars['Last action']['Date & time UTC']=date('Y-m-d H:i:s');
         return $vars;
     }
 
@@ -358,6 +363,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
     
     public function getJobSettings($arr=[]):array
     {
+        $arr['html']=$arr['html']??'';
+        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+            return $arr;
+        }
+        // get setting
         $setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,'getJobSettings',[],'Job selected countries and regions',TRUE);
         // update bank holiday setting from form
         $activeCountry=[];
@@ -372,7 +382,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,'getJobSettings',$setting,'Job selected countries and regions',TRUE);
         }
         // compile bank holiday settings html
-        $arr['html']=$arr['html']??'';
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Relevant bank holidays']);
         foreach(\SourcePot\BankHolidays\holidays::getAvailableCountries() as $countryCode=>$countryName){
             $appHtml='';

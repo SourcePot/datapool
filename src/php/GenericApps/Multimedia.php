@@ -68,17 +68,21 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App{
                 $setting=array('style'=>array('width'=>500,'height'=>400,'background-color'=>'#fff'),'autoShuffle'=>FALSE,'getImageShuffle'=>'multimedia');
                 $hash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle '.$hash,'getImageShuffle',$selector,$setting,$wrapperSetting);
-                $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+                if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector)){
+                    $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+                } else {
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'No entries yet...']);
+                }
                 $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
             } else if (empty($selector['EntryId'])){
                 $presentation=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($selector,'widget');
                 if ($presentation=='entryList'){
                     $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-                    $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Params'.$S.'File','Filter'=>'')));
+                    $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.$S.'File','Filter'=>'']]];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$selector,$settings,[]);    
                 } else if ($presentation=='entryByEntry'){
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('clear'=>'none','max-width'=>300,'max-height'=>280)));
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>['clear'=>'none','max-width'=>300,'max-height'=>280]]);
                     }
                 } else {
                     $html.='Selected widget = '.$presentation.' is not implemented';

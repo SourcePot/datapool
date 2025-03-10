@@ -137,7 +137,7 @@ class Definitions{
     * If the definition exsists, the webpaghe element will be created based on this definition. 
     * @return array
     */
-    public function selectorKey2element(array $entry,string $flatSelectorKey,$value=NULL,string $callingClass='',string $callingFunction='',bool $skipKeysWithNoDefintion=FALSE,$definition=[]):array
+    public function selectorKey2element(array $entry,string $flatSelectorKey,$value=NULL,string $callingClass='',string $callingFunction='',bool $skipKeysWithNoDefintion=FALSE,$definition=[]):array|string
     {
         $value=strval($value);
         if (empty($definition)){
@@ -183,7 +183,7 @@ class Definitions{
                 }
             }
             if (empty($element) && $skipKeysWithNoDefintion){
-                return $element;
+                return [];
             }
             foreach($element as $definitionAttr=>$definitionValue){
                 $element[$definitionAttr]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definitionValue);

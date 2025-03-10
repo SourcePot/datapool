@@ -345,8 +345,8 @@ class Explorer{
             $btnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         }
         if (!empty($btnHtml)){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
-            $wrapperElement=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'));
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Misc tools']);
+            $wrapperElement=array('tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'style'=>['clear'=>'both']);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperElement);
         }
         $arr=array('html'=>$html,'icon'=>'...','title'=>'Misc tools, e.g. entry deletion and download','class'=>'explorer');
@@ -360,7 +360,7 @@ class Explorer{
         $guideEntry=$this->getGuideEntry($selector);
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($guideEntry,'Write',FALSE)){
             $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
-            $options=array('File upload extract email parts'=>array('No','Yes'),'File upload extract archive'=>array('No','Yes'),'pdf-file parser'=>$pdfParser['@options'],'widget'=>array('entryList'=>'Entry list','entryByEntry'=>'Entry by entry'));
+            $options=array('File upload extract email parts'=>['No','Yes'],'File upload extract archive'=>['No','Yes'],'pdf-file parser'=>$pdfParser['@options'],'widget'=>array('entryList'=>'Entry list','entryByEntry'=>'Entry by entry'));
             $settings=$this->selector2setting($selector);
             // form processing
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -377,8 +377,8 @@ class Explorer{
                 $arr['key']=array($key);
                 $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($arr));
             }
-            $matrix['']=array('value'=>array('tag'=>'button','key'=>array('save'),'element-content'=>'Save','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Upload settings'));
+            $matrix['']=array('value'=>array('tag'=>'button','key'=>['save'],'element-content'=>'Save','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Upload settings']);
         }
         $arr=array('html'=>$html,'icon'=>'#','title'=>'Settings','class'=>'explorer');
         return $arr;
