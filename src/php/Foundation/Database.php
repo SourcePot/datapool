@@ -376,7 +376,7 @@ class Database{
     private function deleteExpiredEntries():array
     {
         foreach($GLOBALS['dbInfo'] as $table=>$entryTemplate){
-            $selector=['Source'=>$table,'Expires<'=>date('Y-m-d H:i:s')];
+            $selector=['Source'=>$table,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
             $this->deleteEntries($selector,TRUE);
         }
         return $this->getStatistic();

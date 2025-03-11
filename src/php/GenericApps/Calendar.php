@@ -156,15 +156,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             foreach($events as $name=>$value){
                 $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$name,$value,'bool'); 
             }
-            $vars['Signals']['Window start']=$startWindow.' ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')';
-            $vars['Signals']['Window end']=$endWindow.' ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')';
-            $vars['Signals']['Period start']=time();
+            $vars['Signals']['Window start ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')']=$startWindow;
+            $vars['Signals']['Window end ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')']=$endWindow;
         } else {
             $action='Skipped';
         }
-        $vars[$action]=array_merge($vars[$action],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
+        $vars['Signals']['Period start']=time();
+        $vars[$action]=array_merge($vars[$action]??[],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
         $vars['Last action']['Done']=$action;
-        $vars['Last action']['Date & time UTC']=date('Y-m-d H:i:s');
+        $vars['Last action']['Date & time']=time();
         return $vars;
     }
 
@@ -404,12 +404,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             if (is_array($value)){
                 $matrix=[];
                 foreach($value as $subKey=>$subValue){
-                    if (in_array($subKey,['Period start','Period end','lastRun'])){$subValue=$this->timeStamp2pageDateTime($subValue);}
+                    if (in_array($subKey,['Period start','Period end','lastRun','Date & time'])){$subValue=$this->timeStamp2pageDateTime($subValue);}
                     $matrix[$subKey]=['value'=>$subValue];
                 }
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$key,'hideKeys'=>FALSE,'hideHeader'=>TRUE]);
             } else {
-                if (in_array($key,['Period start','Period end','lastRun'])){$value=$this->timeStamp2pageDateTime($value);}
+                if (in_array($key,['Period start','Period end','lastRun','Date & time'])){$value=$this->timeStamp2pageDateTime($value);}
                 $valueMatrix[$key]=['value'=>$value];
             }
         }
