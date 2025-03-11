@@ -99,7 +99,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         if (!isset($vars['Bank holidays'])){$vars['Bank holidays']['lastRun']=0;}
         if (!isset($vars['Signal cleanup'])){$vars['Signal cleanup']['lastRun']=0;}
         $action='';
-        if (time()-$vars['Bank holidays']['lastRun']>2600000){
+        if (time()-$vars['Bank holidays']['lastRun']>260000){
             // load bank holidays
             $action='Bank holidays';
             $setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,'getJobSettings',[],'Job selected countries and regions',TRUE);
@@ -126,9 +126,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $vars['Signal cleanup']['lastRun']=time();
             $vars['Signal cleanup']=array_merge($vars['Signal cleanup'],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
             return $vars;
-        } else if (isset($vars['Signals']['Period start'])){
+        } else {
             // get relevant timespan
             $action='Signals';
+            $vars['Signals']['Period start']=$vars['Signals']['Period start']??time();
             $vars['Signals']['Period end']=time();
             $startDateTime=new \DateTime();
             $startDateTime->setTimestamp($vars['Signals']['Period start']); 
@@ -158,10 +159,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             }
             $vars['Signals']['Window start ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')']=$startWindow;
             $vars['Signals']['Window end ('.\SourcePot\Datapool\Root::DB_TIMEZONE.')']=$endWindow;
-        } else {
-            $action='Skipped';
+            $vars['Signals']['Period start']=time();
         }
-        $vars['Signals']['Period start']=time();
         $vars[$action]=array_merge($vars[$action]??[],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
         $vars['Last action']['Done']=$action;
         $vars['Last action']['Date & time']=time();
