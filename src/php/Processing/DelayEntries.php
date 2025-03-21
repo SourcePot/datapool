@@ -151,7 +151,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Move entries when conditions are met.';
         $arr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
         $matrix=array('Parameter'=>$row);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));

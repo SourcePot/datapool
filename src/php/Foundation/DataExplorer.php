@@ -520,7 +520,6 @@ class DataExplorer{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__,TRUE);
         if (isset($formData['cmd']['upload'])){
             foreach($formData['files']['upload_'] as $fileArr){
-                $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($fileArr);
                 if (empty($fileArr["tmp_name"])){continue;}
                 $entry=$canvasElement['Content']['Selector'];
                 $entry['File upload extract archive']=!empty($canvasElement['Content']['Widgets']['File upload extract archive']);

@@ -228,7 +228,7 @@ class User{
         } else if ($template===1){
             $abtract='{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}';
         } else if ($template===2){
-            $abtract='{{ICON}} [p:{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}]';
+            $abtract='{{ICON}} <p class="user-abstract">{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}</p>';
         } else if ($template===3){
             $abtract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}}';
         } else if ($template===4){
@@ -245,7 +245,7 @@ class User{
             $abtract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
         }
         $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
-        $abtract=trim($this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->template2string($abtract,$user,['class'=>'user-abstract']),' ,;.|');
+        $abtract=trim($this->template2string($abtract,$user,['class'=>'user-abstract']),' ,;.|');
         if (!empty($arr['wrapResult'])){
             $wrapper=$arr['wrapResult'];
             $wrapper['element-content']=$abtract;
@@ -255,6 +255,15 @@ class User{
         return $abtract;
     }
     
+    private function template2string(string $template='Hello {{key}}...',array $arr=['key'=>'world']):string
+    {
+        $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
+        foreach($flatArr as $flatArrKey=>$flatArrValue){
+            $template=str_replace('{{'.$flatArrKey.'}}',(string)$flatArrValue,$template);
+        }
+        return $template;
+    }
+
     public function ownerAbstract(array $arr):string
     {
         $template=(isset($arr['selector']['template']))?$arr['selector']['template']:2;

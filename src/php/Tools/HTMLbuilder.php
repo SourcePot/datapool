@@ -13,6 +13,13 @@ namespace SourcePot\Datapool\Tools;
 class HTMLbuilder{
     
     private $oc;
+
+    private const SHOW_FILTER_OPTION_COUNT=20;
+    private const MAX_SELECT_OPTION_COUNT=500;
+    private const MAX_PREV_WIDTH=300;
+    private const MAX_PREV_HEIGHT=150;
+
+    private $keyCache=[];
     
     private $btns=['test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
                     'edit'=>['key'=>['edit'],'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
@@ -73,25 +80,6 @@ class HTMLbuilder{
             $html.='<li>'.$trace[$index]['class'].'::'.$trace[$index]['function'].'() '.$trace[$index-1]['line'].'</li>';
         }
         return $html;
-    }
-    
-    public function template2string($template='Hello [p:{{key}}]...',$arr=['key'=>'world'],$element=[])
-    {
-        $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
-        foreach($flatArr as $flatArrKey=>$flatArrValue){
-            $template=str_replace('{{'.$flatArrKey.'}}',(string)$flatArrValue,$template);
-        }
-        $template=preg_replace('/{{[^{}]+}}/','',$template);
-        preg_match_all('/(\[\w+:)([^\]]+)(\])/',$template,$matches);
-        if (isset($matches[0][0])){
-            foreach($matches[0] as $matchIndex=>$match){
-                $element['tag']=trim($matches[1][$matchIndex],'[:');
-                $element['element-content']=$matches[2][$matchIndex];
-                $replacement=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-                $template=str_replace($match,$replacement,$template);
-            }
-        }
-        return $template;
     }
     
     private function arr2id(array $arr):string
@@ -181,7 +169,6 @@ class HTMLbuilder{
         // Required keys are 'options', 'key', 'callingClass' and 'callingFunction'.
         // Key 'label', 'selected', 'triggerId' are optional.
         // If 'hasSelectBtn' is set, a button will be added which will be clicked if an item is selected.
-        $optionsFilterLimit=20;
         if (!isset($arr['key'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Missing key-key in argument arr',0,E_ERROR,__FILE__,__LINE__);
         }
@@ -216,6 +203,7 @@ class HTMLbuilder{
             // create options
             if (isset($arr['style'])){unset($arr['style']);}
             $toReplace['{{options}}']='';
+            $optionCount=0;
             foreach($arr['options'] as $name=>$label){
                 $optionArr=$arr;
                 $optionArr['tag']='option';
@@ -224,12 +212,18 @@ class HTMLbuilder{
                 $optionArr['value']=$name;
                 $optionArr['element-content']=$label;
                 $optionArr['dontTranslateValue']=TRUE;
-                $toReplace['{{options}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($optionArr);                
+                $toReplace['{{options}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($optionArr);
+                $optionCount++;
+                if ($optionCount>=self::MAX_SELECT_OPTION_COUNT){
+                    $this->oc['logger']->log('notice','Html selector reached option limit. Not all options are shown.',[]);
+                    $toReplace['{{options}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'option','value'=>'','element-content'=>'Cut off: Limit reached!','style'=>['background-color'=>'#a00','color'=>'#fff'],'title'=>'LIMIT REACHED']);
+                    break;
+                }            
             }
             foreach($toReplace as $needle=>$value){
                 $html=str_replace($needle,$value,$html);
             }
-            if (count($arr['options'])>$optionsFilterLimit && !empty($selectArr['id'])){
+            if (count($arr['options'])>self::SHOW_FILTER_OPTION_COUNT && !empty($selectArr['id'])){
                 $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
                 $countArr=['tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']];
@@ -272,9 +266,9 @@ class HTMLbuilder{
         $stdKeys=$keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>'']);
         $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STANDARD');
-        if (isset($_SESSION[__CLASS__][__FUNCTION__][$requestId])){
+        if (isset($this->keyCache[__CLASS__][__FUNCTION__][$requestId])){
             // get options from cache
-            $keys=$_SESSION[__CLASS__][__FUNCTION__][$requestId];
+            $keys=$this->keyCache[__CLASS__][__FUNCTION__][$requestId];
         } else {
             // get available keys
             $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE,'Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE,$isDebugging=FALSE);
@@ -284,7 +278,7 @@ class HTMLbuilder{
                     $keys+=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($tmpEntry);
                 }                
             }
-            $_SESSION[__CLASS__][__FUNCTION__][$requestId]=$keys;
+            $this->keyCache[__CLASS__][__FUNCTION__][$requestId]=$keys;
         }
         $arr['keep-element-content']=TRUE;
         $arr['options']=(empty($arr['addSourceValueColumn']))?[]:['useValue'=>'&#9998;'];
@@ -654,8 +648,6 @@ class HTMLbuilder{
             $context['selector']=trim($context['selector'],'| ');
             $this->oc['logger']->log('info','{Source}-{what} selected by "{selector}" {key}-key processed: {statistics}',$context);    
         }
-        $hideHeader=(isset($arr['hideHeader']))?$arr['hideHeader']:TRUE;
-        $hideKeys=(isset($arr['hideKeys']))?$arr['hideKeys']:TRUE;
         $html.='</fieldset>';
         return $html;
     }
@@ -695,7 +687,7 @@ class HTMLbuilder{
                 'callingFunction'=>__FUNCTION__,
                 'hideHeader'=>TRUE,
                 'hideKeys'=>TRUE,
-                'previewStyle'=>['max-height'=>300,'max-width'=>400],
+                'previewStyle'=>['max-width'=>self::MAX_PREV_WIDTH,'max-height'=>self::MAX_PREV_HEIGHT],
                 'settings'=>['hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>FALSE,'hideDelete'=>FALSE],
                 ];
         $arr=array_replace_recursive($template,$arr);
@@ -739,7 +731,7 @@ class HTMLbuilder{
         return $html;
     }
     
-    public function entry2row(array $arr,bool $commandProcessingOnly=FALSE,bool $singleRowOnly=FALSE,bool $isNewRow=FALSE,bool $isSystemCall=FALSE):array|string
+    public function entry2row(array $arr,bool $isSystemCall=FALSE):array|string
     {
         $arr['returnRow']=TRUE;
         return $this->entryListEditor($arr,$isSystemCall);

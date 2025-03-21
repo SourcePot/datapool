@@ -123,7 +123,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='File upload filter';
         $arr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>array('Parameter'=>$row),'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
         $html.=$this->getDirContent($callingElementEntryId);

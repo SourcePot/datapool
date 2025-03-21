@@ -155,7 +155,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Mapping control: Select mapping target and type';
         $arr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
         $matrix=['Parameter'=>$row];
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);

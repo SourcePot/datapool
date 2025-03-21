@@ -157,7 +157,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select column to match and the success/failure targets';
         $arr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
         $matrix=['Parameter'=>$row];
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
