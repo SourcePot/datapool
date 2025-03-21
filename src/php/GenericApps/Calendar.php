@@ -87,7 +87,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $settingKey=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $this->setting=['Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone];
-        $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',TRUE);
+        $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',FALSE);
         // get page state
         $this->pageStateTemplate=['Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>date('Y-m-d H:i:s'),'addDate'=>'','refreshInterval'=>300];
         $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);

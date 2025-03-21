@@ -191,7 +191,7 @@ table{
 table.std,div.table{
     clear:none;
     margin:0.5rem;
-    box-shadow: 5px 5px 3px #ccc;
+    box-shadow: 5px 5px 3px #ddd;
     border: 1px solid #aaa;
 }
 table.matrix{

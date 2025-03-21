@@ -203,9 +203,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $zip= new \ZipArchive;
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
+        $timeLimit=$testRun?self::MAX_TEST_TIME:(($base['csvRequested'] || $params['Content']['Keep source entries']>0)?0:self::MAX_PROC_TIME);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
             $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ((($testRun && $expiredTime>self::MAX_TEST_TIME) || $expiredTime>self::MAX_PROC_TIME) && !$base['csvRequested']){
+            if ($expiredTime>$timeLimit && $timeLimit>0){
                 $result['Mapping statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
                 break;
             }

@@ -24,8 +24,7 @@
         "sourcepot/bankholidays":">=v1.0.0",
         "sourcepot/email":">=v0.2.0",
         "sourcepot/asset":">=v1.0.0",
-        "sourcepot/match":">=v1.0.0",
-        "google/cloud-recaptcha-enterprise":">=v1.14.0"
+        "sourcepot/match":">=v1.0.0"
     },
     "autoload":{
         "psr-4":{

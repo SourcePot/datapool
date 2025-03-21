@@ -21,8 +21,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $maxResultTableLength=50;
     private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=50000000000;   // in nanoseconds
-    
+    private const MAX_PROC_TIME=55000000000;   // in nanoseconds
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -178,12 +177,11 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 ];
         $isComplete=FALSE;
         $selector=$callingElement['Content']['Selector'];
+        $timeLimit=$testRun?self::MAX_TEST_TIME:self::MAX_PROC_TIME;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
             $isComplete=($entry['isLast'])?TRUE:$isComplete;
             $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if (($testRun && $expiredTime>self::MAX_TEST_TIME) || $expiredTime>self::MAX_PROC_TIME){
-                break;
-            }
+            if ($expiredTime>$timeLimit){break;}
             if ($entry['isSkipRow']){
                 $result['Matching']['Skip rows']['value']++;
                 continue;

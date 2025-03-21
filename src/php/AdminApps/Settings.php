@@ -125,7 +125,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     {
         $entry=['Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name];
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        if ($isSystemCall){$entry['Owner']='SYSTEM';}
+        if ($isSystemCall){
+            $entry['Owner']='SYSTEM';
+        }
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],0,'',FALSE);
         $entry['Content']=$setting;
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
@@ -136,7 +138,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     public function getSetting($callingClass,$callingFunction,$initSetting=[],$name='System',$isSystemCall=FALSE)
     {
         $entry=['Source'=>$this->entryTable,'Group'=>$callingClass,'Folder'=>$callingFunction,'Name'=>$name];
-        if ($isSystemCall){$entry['Owner']='SYSTEM';}
+        if ($isSystemCall){
+            $entry['Owner']='SYSTEM';
+        }
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],0,'',FALSE);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_MEMBER_R');
         $entry['Content']=$initSetting;
