@@ -91,14 +91,16 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
 
     public function getClientWidgetHtml($arr):array
     {
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
         // command processing
         $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
             $result=$this->runClientProcessor($arr['selector'],FALSE);
+            $appOpen=TRUE;
         } else if (isset($formData['cmd']['test'])){
             $result=$this->runClientProcessor($arr['selector'],TRUE);
+            $appOpen=TRUE;
         }
         // build html
         $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
@@ -115,6 +117,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
         }
         $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$arr['html'],'icon'=>'Client','open'=>$appOpen??FALSE]);
         return $arr;
     }
 
@@ -154,7 +157,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function clientParams($callingElement)
+    private function clientParams($callingElement):string
     {
         $contentStructure=['Client'=>['method'=>'select','value'=>'','options'=>$this->getClientOptions(),'excontainer'=>TRUE],];
         // get selctor
@@ -176,7 +179,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
         $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Params']);
+        return $html;
     }
     
     private function runClientProcessor(array $callingElement,bool $testRun=FALSE):array
@@ -405,7 +410,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             $target=$canvasElement['Content']['Selector'];
             $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
             $target['Owner']='SYSTEM';
-            $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$expiresTimestamp);
+            $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval(time()+self::ENTRY_EXPIRATION_SEC));
             $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$target,TRUE,FALSE,TRUE,FALSE);
         }
     }

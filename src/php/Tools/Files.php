@@ -45,11 +45,6 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         return $this->entryTemplate;
     }
     
-    public function job($vars):array
-    {
-        return $vars;
-    }
-    
     /******************************************************************************************************************************************
     * DATASOURCE: File receiver
     *
