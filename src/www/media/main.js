@@ -193,12 +193,14 @@ jQuery(document).ready(function(){
     }
     
     function loadImageByItem(){
-        var itemId=jQuery(this).attr('id');
+		var itemId=jQuery(this).attr('id');
         jQuery(imgs).each(function(index){
-            if (imgs[index]['id'].localeCompare(itemId)===0){
-                loadImage(index);
-                return false;
-            }
+			if (imgs[index]['id']!=undefined){
+				if (imgs[index]['id'].localeCompare(itemId)===0){
+					loadImage(index);
+					return false;
+				}
+			}
         });
     }
     
