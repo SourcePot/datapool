@@ -15,7 +15,7 @@ class HTMLbuilder{
     private $oc;
 
     private const SHOW_FILTER_OPTION_COUNT=20;
-    private const MAX_SELECT_OPTION_COUNT=500;
+    private const MAX_SELECT_OPTION_COUNT=1000;
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
 
@@ -216,7 +216,8 @@ class HTMLbuilder{
                 $optionCount++;
                 if ($optionCount>=self::MAX_SELECT_OPTION_COUNT){
                     $this->oc['logger']->log('notice','Html selector reached option limit. Not all options are shown.',[]);
-                    $toReplace['{{options}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'option','value'=>'','element-content'=>'Cut off: Limit reached!','style'=>['background-color'=>'#a00','color'=>'#fff'],'title'=>'LIMIT REACHED']);
+                    $noticeOption=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'option','value'=>'','element-content'=>'Cut off: option limit '.self::MAX_SELECT_OPTION_COUNT.' reached!','style'=>['border-bottom'=>'#a00','color'=>'#f00','font-weight'=>'bold'],'title'=>'LIMIT REACHED']);
+                    $toReplace['{{options}}']=$noticeOption.$toReplace['{{options}}'];
                     break;
                 }            
             }

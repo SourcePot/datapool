@@ -16,6 +16,7 @@ class Database{
     
     private $dbObj;
     
+    public const TIME_BETWEEN_OPTIMIZE_TABLES=36000;               // Make sure this value is larger than the minimum time between Database jobs!!
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
@@ -59,8 +60,32 @@ class Database{
     
     public function job(array $vars):array
     {
-        $vars['statistics']=$this->deleteExpiredEntries();
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$vars['statistics']['deleted'],'int'); 
+        $lastRun=$vars['Last run']??0;
+        // select table
+        if (empty($vars['tables2process'])){
+            $keysArr=array_keys($GLOBALS['dbInfo']);
+            $vars['tables2process']=array_combine($keysArr,$keysArr);
+        }
+        $selectedKey=key($vars['tables2process']);
+        $selectedTable=$vars['tables2process'][$selectedKey];
+        $vars['tables2process'][$selectedKey]='__TODELETE__';
+        if (time()-$lastRun>self::TIME_BETWEEN_OPTIMIZE_TABLES){
+            // optimize table
+            $sql='OPTIMIZE TABLE `'.$selectedTable.'`;';
+            $stmt=$this->executeStatement($sql,[]);
+            $vars['OPTIMIZE TABLE'][$selectedTable]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $vars['action']='Check and repair table "'.$selectedTable.'"';
+        } else {
+            // delete expitred entries
+            $selector=['Source'=>$selectedTable,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
+            $statistic=$this->deleteEntries($selector,TRUE);
+            // update delefted signal
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$statistic['deleted'],'int');
+            $vars['action']='Deleted expired entries of table "'.$selectedTable.'"';
+        }
+        // add inofs to html
+        $vars['html']='<h3>'.$vars['action'].'</h3>';
+        $vars['Last run']=time();
         return $vars;
     }
 
@@ -371,15 +396,6 @@ class Database{
             $return['stmt']->bindValue($bindKey,$bindValue);
         }
         return $return;
-    }
-
-    private function deleteExpiredEntries():array
-    {
-        foreach($GLOBALS['dbInfo'] as $table=>$entryTemplate){
-            $selector=['Source'=>$table,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
-            $this->deleteEntries($selector,TRUE);
-        }
-        return $this->getStatistic();
     }
     
     private function containsStringWildCards(string $string='abcd\_fgh\%jkl'):int|bool

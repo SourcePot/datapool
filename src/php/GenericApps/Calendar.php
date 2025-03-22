@@ -162,8 +162,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
             $vars['Signals']['Period start']=time();
         }
         $vars[$action]=array_merge($vars[$action]??[],$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic());
-        $vars['Last action']['Done']=$action;
-        $vars['Last action']['Date & time']=time();
+        $vars['Last action']=['Done'=>$action,'Date & time'=>time()];
         return $vars;
     }
 
