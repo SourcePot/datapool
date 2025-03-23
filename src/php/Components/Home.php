@@ -59,13 +59,13 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R') && !$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_CONTENTADMIN_R')){
-                // If user is member but not content admin or admin, show query widget and calendar widget
+            // Show query widget and HomeApps to ALL_MEMBERS
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R')){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>[]));
-                $calendarSheetArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getCalendarSheet();
-                $html.=$calendarSheetArr['html'];
-            } else {
-                // Show the introduction page, if public, registered, content admin or admin user
+                $html.=$this->honeAppWidgets();
+            } 
+            // Show Welcome Page sections to the public, admin and content admin
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'PUBLIC_R') || $this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_CONTENTADMIN_R')){
                 // top web page section
                 $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Top paragraph');
                 $selector['md']='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';
@@ -111,6 +111,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                 $selector['md'].="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,[],array('style'=>[]));
             }
+            // Show the legal paragraph to everybody
             $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Legal paragraph');
             $selector['md']="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
             $selector['md'].="# Contact\n## Address\n";
@@ -122,6 +123,22 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
             return $arr;
         }
     }
-    
+
+    private function honeAppWidgets():string
+    {
+        $widgetArr=[];
+        foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\HomeApp') as $widgetClass){
+            $table=$this->oc[$widgetClass]->getEntryTable();
+            $priority=$this->oc[$widgetClass]->getHomeAppPriority();
+            $priority=str_pad(strval($this->oc[$widgetClass]->getHomeAppPriority()),2,'0',STR_PAD_LEFT);
+            $widgetHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','class'=>'widget','element-content'=>$this->oc[$widgetClass]->getHomeAppCaption(),'keep-element-content'=>TRUE]);
+            $widgetHtml.=$this->oc[$widgetClass]->getHomeAppWidget();
+            $widgetHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','class'=>'widget','element-content'=>$widgetHtml,'keep-element-content'=>TRUE]);
+            $widgetArr[$priority.'_'.$table]=$widgetHtml;
+        }
+        ksort($widgetArr);
+        return implode(PHP_EOL,$widgetArr);
+    }
+
 }
 ?>

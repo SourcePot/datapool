@@ -31,6 +31,7 @@ class User{
                                                             'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
                                                             'Fax'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE],
                                                             'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
+                                                            'My user role(s)'=>['@class'=>__CLASS__,'@function'=>'getUserRolsString'],
                                                             'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                                                             ],
                                         'Address'=>['Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
@@ -131,10 +132,11 @@ class User{
     public function getUserRolsString(array $user):string
     {
         $userRols=[];
+        $privileges=$user['Privileges']??$user['selector']['Privileges']??[];
         foreach($this->userRols['Content'] as $index=>$rolArrc){
-            if ((intval($user['Privileges']) & $rolArrc['Value'])>0){$userRols[]=$rolArrc['Name'];}
+            if ((intval($privileges) & $rolArrc['Value'])>0){$userRols[]=$rolArrc['Name'];}
         }
-        return implode(', ',$userRols);
+        return implode('; ',$userRols);
     }
     
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array

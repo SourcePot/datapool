@@ -15,7 +15,7 @@ class HTMLbuilder{
     private $oc;
 
     private const SHOW_FILTER_OPTION_COUNT=20;
-    private const MAX_SELECT_OPTION_COUNT=1000;
+    private const MAX_SELECT_OPTION_COUNT=10000;
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
 

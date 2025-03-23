@@ -94,8 +94,9 @@ class Job{
                 $jobVars['Content']=$this->oc[$dueJob]->$dueMethod($jobVars['Content']);
                 $arr['page html'].=$jobVars['Content']['html']??'';
             } catch(\Exception $e){
+                $context['dueJob']=$dueJob;
                 $context['msg']=$e->getMessage();
-                $this->oc['logger']->log('error','"{class} &rarr; {function}()" failed with "{msg}".',$context);
+                $this->oc['logger']->log('error','"{class} &rarr; {function}()": job "{dueJob}" failed with "{msg}".',$context);
             }            
             $jobStatistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $allJobsSetting['Content'][$dueJob]['Last run']=time();

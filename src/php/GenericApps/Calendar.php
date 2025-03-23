@@ -10,9 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-use Symfony\Component\Validator\Constraints\Timezone;
-
-class Calendar implements \SourcePot\Datapool\Interfaces\App{
+class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
     private $oc;
     
@@ -798,6 +796,23 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App{
         $dateTimeObj->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         return $dateTimeObj->format($format);
     }
+
+    public function getHomeAppWidget():string
+    {
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>[]]);
+        return $html;
+    }
     
+    public function getHomeAppCaption():string
+    {
+        return 'Calendar';
+    }
+    
+    public function getHomeAppPriority():int
+    {
+        return 1;
+    }
+
 }
 ?>
