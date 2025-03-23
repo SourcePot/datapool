@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class User{
+class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private $oc;
     
@@ -313,6 +313,64 @@ class User{
         }
         asort($options);
         return $options;
+    }
+
+    public function userStatusLog():void
+    {
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R')){
+            $expires=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10H');
+            $onlineUser=$_SESSION['currentUser'];
+            $onlineUser=array_merge($onlineUser,['LoginId'=>'online','Privileges'=>1,'Owner'=>'SYSTEM','EntryId'=>'online_'.$onlineUser['EntryId'],'Expires'=>$expires]);
+            $onlineUser['Content']=['timestamp'=>time(),'location'=>''];
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($onlineUser,TRUE);
+        } else {
+            // no online log for public or registered user
+        }
+    }
+
+    public function getActiveUser(array $arr):array
+    {
+        $arr['html']=$arr['html']??'';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],TRUE,'Read','Name',TRUE,FALSE,FALSE) as $onlineUser){
+            $backgronudColor=(time()-$onlineUser['Content']['timestamp']<60)?'#0f0':((time()-$onlineUser['Content']['timestamp']<3660)?'#cc7':'#999');
+            $timeDiff=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimeDiff('@'.time(),'@'.$onlineUser['Content']['timestamp']);
+            // get user
+            $userEntryId=str_replace('online_','',$onlineUser['EntryId']);
+            $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$userEntryId],TRUE);
+            // user html
+            $userHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
+            $textHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$user['Content']['Contact details']['First name'].' '.$user['Content']['Contact details']['Family name'],'keep-element-content'=>TRUE,'style'=>['font-size'=>'1.2rem','font-weight'=>'bold']]);
+            if (!empty($timeDiff)){
+                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>'Last seen','keep-element-content'=>TRUE,'style'=>['clear'=>'left','padding-right'=>'5px']]);
+                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$timeDiff,'keep-element-content'=>TRUE,'style'=>['clear'=>'none']]);
+                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>'ago','keep-element-content'=>TRUE,'style'=>['clear'=>'right','padding-left'=>'5px']]);
+            }
+            $userHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$textHtml,'keep-element-content'=>TRUE,'style'=>['clear'=>'none','padding'=>'5px']]);
+            // html wrapper
+            $style=['padding'=>'3px 2vw','width'=>'94vw','border-left'=>'1vw solid '.$backgronudColor,'border-bottom'=>'1px dotted #000'];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$userHtml,'keep-element-content'=>TRUE,'style'=>$style]);
+        }
+        if (empty($arr['html'])){
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'No active user detected...']);
+        }
+        return $arr;
+    }
+
+    public function getHomeAppWidget():string
+    {
+        $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','refreshInterval'=>10];
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'100vw','border'=>'none','padding'=>'0px']]);
+        return $html;
+    }
+    
+    public function getHomeAppCaption():string
+    {
+        return 'Active user';
+    }
+    
+    public function getHomeAppPriority():int
+    {
+        return 1;
     }
 
 }

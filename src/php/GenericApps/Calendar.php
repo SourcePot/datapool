@@ -800,7 +800,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
     public function getHomeAppWidget():string
     {
         $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>[]]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
         return $html;
     }
     

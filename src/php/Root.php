@@ -307,6 +307,7 @@ final class Root{
         } else if ($this->script==='js.php'){
             // js-call Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
+            $this->oc['SourcePot\Datapool\Foundation\User']->userStatusLog();
         } else if ($this->script==='job.php'){
             // job Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
