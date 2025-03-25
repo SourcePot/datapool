@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class Haystack{
+class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private $oc;
     
@@ -107,6 +107,22 @@ class Haystack{
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h2','element-content'=>'Nothing found...'));    
         }
         return $arr;
+    }
+
+    public function getHomeAppWidget():string
+    {
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
+        return $html;
+    }
+    
+    public function getHomeAppCaption():string
+    {
+        return 'Query';
+    }
+    
+    public function getHomeAppPriority():int
+    {
+        return 1;
     }
 
 }

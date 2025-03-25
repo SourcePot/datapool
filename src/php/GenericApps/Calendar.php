@@ -811,7 +811,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
     
     public function getHomeAppPriority():int
     {
-        return 1;
+        return 2;
     }
 
 }

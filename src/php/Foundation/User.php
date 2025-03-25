@@ -205,7 +205,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         // This method returns formated html text from an entry based on predefined templates.
         //     
         if (empty($arr)){
-            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();;
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         } else if (!is_array($arr)){
             $user=['Source'=>$this->entryTable,'EntryId'=>trim($arr)];
         } else if (isset($arr['selector'])){
@@ -339,16 +339,18 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$userEntryId],TRUE);
             // user html
             $userHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
-            $textHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$user['Content']['Contact details']['First name'].' '.$user['Content']['Contact details']['Family name'],'keep-element-content'=>TRUE,'style'=>['font-size'=>'1.2rem','font-weight'=>'bold']]);
+            $textHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$user['Content']['Contact details']['First name'].' '.$user['Content']['Contact details']['Family name'],'keep-element-content'=>TRUE,'class'=>'widget-entry-header']);
+            // last seen
             if (!empty($timeDiff)){
-                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>'Last seen','keep-element-content'=>TRUE,'style'=>['clear'=>'left','padding-right'=>'5px']]);
-                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$timeDiff,'keep-element-content'=>TRUE,'style'=>['clear'=>'none']]);
-                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>'ago','keep-element-content'=>TRUE,'style'=>['clear'=>'right','padding-left'=>'5px']]);
+                $lastSeenStr=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Last seen');
+                $lastSeenStr.=' '.$timeDiff.' ';
+                $lastSeenStr.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('ago');
+                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$lastSeenStr,'keep-element-content'=>TRUE,'class'=>'widget-entry-content']);
             }
-            $userHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$textHtml,'keep-element-content'=>TRUE,'style'=>['clear'=>'none','padding'=>'5px']]);
+            $userHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$textHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
             // html wrapper
-            $style=['padding'=>'3px 2vw','width'=>'94vw','border-left'=>'1vw solid '.$backgronudColor,'border-bottom'=>'1px dotted #000'];
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$userHtml,'keep-element-content'=>TRUE,'style'=>$style]);
+            $style=['border-left'=>'1vw solid '.$backgronudColor];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$userHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper','style'=>$style]);
         }
         if (empty($arr['html'])){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'No active user detected...']);
@@ -359,7 +361,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function getHomeAppWidget():string
     {
         $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','refreshInterval'=>10];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'100vw','border'=>'none','padding'=>'0px']]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
         return $html;
     }
     
@@ -370,7 +372,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     public function getHomeAppPriority():int
     {
-        return 1;
+        return 3;
     }
 
 }

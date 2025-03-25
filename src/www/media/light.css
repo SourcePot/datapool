@@ -122,6 +122,11 @@ select{
     cursor:pointer;
     margin:2px;
 }
+textarea{
+    width:95%;
+    height:10vh;
+    font-size:1.4rem;
+}
 input.filter{
     width:3rem;
     border:1px dotted #084;
@@ -302,8 +307,6 @@ div.icon{
     clear:none;
     display: block;
     overflow:hidden;
-    height:60px;
-    width:60px;
     margin:0 3px;
     background-size:cover;
     -webkit-border-radius: 50%;
@@ -313,13 +316,9 @@ div.icon{
     border-radius: 50%;  
 }
 p.icon{
-    width:100px;
     text-align:center;
-    font-size:35px;
     background-color:#27d;
     color:var(--bgColor);
-    line-height:60px;
-    margin-left:-20px;
 }
 .logo{
     float:none;
@@ -846,6 +845,20 @@ div.center{
     color:#ccc;
     background-color:#020044;
 }
-.grecaptcha-badge{
-    z-index:100;
+.widget-entry-wrapper{
+    padding:3px 2vw;
+    width:94vw;
+    border-bottom:1px dotted #000;
+}
+.widget-entry-header{
+    clear:right;
+    font-size:1.2rem;
+    font-weight:bold;
+}
+.widget-entry-content-wrapper{
+    clear:none;
+    width:70vw;
+}
+.widget-entry-content{
+    font-size:1.2rem;
 }

@@ -252,7 +252,6 @@ class Database{
     */
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         if (empty($entry['Source'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called with empty entry Source.',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -429,8 +428,8 @@ class Database{
         foreach($selector as $column=>$value){
             if ($value===FALSE || $value==\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
-            if (!empty($match[2])){$operator=$match[2];} else {$operator='=';}
-            $placeholder=':'.md5($column.$opAlias[$operator]);
+            $operator=$match[2]??'=';
+            $placeholder=':'.md5($column.$opAlias[$operator[0]]);
             $columns=explode($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
             $column=trim($columns[0],' <>=!');
             if (!isset($entryTemplate[$column])){continue;}
@@ -438,7 +437,7 @@ class Database{
             if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
                 $column='`'.$column.'`';
                 if (empty($value)){
-                    if ($operator==='<' || $operator==='>' || $operator==='!'){$value='';} else {continue;}
+                    if ($operator[0]==='<' || $operator[0]==='>' || $operator[0]==='!'){$value='';} else {continue;}
                 } else {
                     $value=addslashes($value);
                 }
@@ -845,7 +844,9 @@ class Database{
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // only the Admin has the right to update the Privileges column
-        if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){unset($entry['Privileges']);}
+        if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
+            unset($entry['Privileges']);
+        }
         // test for required keys and set selector
         if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
         $selector=['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']];
@@ -860,9 +861,7 @@ class Database{
             $currentFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
             if (!is_file($currentFile)){
                 // no valid file attachment. clear related meta data
-                if (isset($entry['Params']['File'])){
-                    unset($entry['Params']['File']);
-                }
+                if (isset($entry['Params']['File'])){$entry['Params']['File']=NULL;}
             }
             // add log
             if ($addLog){
@@ -1011,7 +1010,7 @@ class Database{
             $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
             $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
             if (isset($entry['Params']['File']) && $removed){
-                unset($entry['Params']['File']);
+                $entry['Params']['File']=NULL;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
                 return TRUE;
             }

@@ -722,6 +722,15 @@ final class MiscTools{
     }
     
     /**
+    * @return string This method returns the column from a flat key provided.
+    */
+    public function flatKey2column(string $key,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):string
+    {
+        $flatKeyComps=explode($S,$key);
+        return array_shift($flatKeyComps);
+    }
+    
+    /**
     * @return array This method returns an array representing last subkey value pairs
     */
     public function flatArrLeaves(array $flatArr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
@@ -1163,9 +1172,10 @@ final class MiscTools{
         return FALSE;
     }
     
-    public function matchEntry($needle,$matchSelector,$matchColumn,$matchType='contains',$isSystemCall=FALSE):array
+    public function matchEntry($needle,$matchSelector,$matchFlatKey,$matchType='contains',$isSystemCall=FALSE):array
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'needle'=>$needle,'needleLength'=>strlen($needle),'matchColumn'=>$matchColumn];
+        $matchColumn=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2column($matchFlatKey);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'needle'=>$needle,'needleLength'=>strlen($needle),'matchColumn'=>$matchColumn,'matchFlatKey'=>$matchFlatKey];
         if ($context['needleLength']<3){
             $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" called with very short needle "{needle}" for match column "{matchColumn}".',$context);
         }
@@ -1180,7 +1190,16 @@ final class MiscTools{
         $bestMatch=['probability'=>0,'Content'=>[],'Params'=>[]];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
             // get sample
-            $sample=$matchEntry[$matchColumn];
+            if (is_array($matchEntry[$matchColumn])){
+                $flatMatchEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($matchEntry);
+                if (empty($flatMatchEntry[$matchFlatKey])){
+                    continue;
+                } else {
+                    $sample=$flatMatchEntry[$matchFlatKey];
+                }
+            } else {
+                $sample=strval($matchEntry[$matchColumn]);
+            }
             if (strlen($sample)===0){
                 $context['Source']=$matchEntry['Source'];
                 $context['EntryId']=$matchEntry['EntryId'];

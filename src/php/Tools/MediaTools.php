@@ -54,9 +54,9 @@ class MediaTools{
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
             // add wrapper div
-            $wrapperStyleTemplate=array('overflow'=>'hidden','cursor'=>'pointer');
+            $wrapperStyleTemplate=['overflow'=>'hidden','cursor'=>'pointer'];
             $arr['wrapper']['style']=(isset($arr['wrapper']['style']))?$arr['wrapper']['style']:[];
-            $imageArr=array('tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'title'=>$arr['selector']['Name'],'class'=>'preview','source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']);
+            $imageArr=['tag'=>'div','element-content'=>$imageHtml,'keep-element-content'=>TRUE,'title'=>$arr['selector']['Name'],'class'=>'preview','source'=>$arr['selector']['Source'],'entry-id'=>$arr['selector']['EntryId']];
             $imageArr['id']='img-'.md5($arr['selector']['EntryId']);
             $imageArr['source']=$arr['selector']['Source'];
             $imageArr['entry-id']=$arr['selector']['EntryId'];
@@ -67,12 +67,12 @@ class MediaTools{
             $json=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
             $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'class'=>'matrix']);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector']) && !$isSmallPreview){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],array('method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'),[]);
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],['method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'],[]);
         } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>array('clear'=>'both'),'class'=>'matrix'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'class'=>'matrix']);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
             $matrix=[];
             $zip=new \ZipArchive;
@@ -81,16 +81,16 @@ class MediaTools{
                 for( $i=0;$i<$zip->numFiles;$i++){ 
                     $stat=$zip->statIndex($i);
                     if (!$isSmallPreview || $i<3){
-                        $matrix[]=array('File'=>basename($stat['name']));
+                        $matrix[]=['File'=>basename($stat['name'])];
                     } else if ($i>=3){
-                        $matrix['']=array('File'=>'...');
+                        $matrix['']=['File'=>'...'];
                         break;
                     }
                 }
                 $zip->close();
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('clear'=>'both'),'element-content'=>'Zip-archive: '.$zipFileCount.' files'));
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'both'],'element-content'=>'Zip-archive: '.$zipFileCount.' files']);
             }
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>array('clear'=>'both')));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>['clear'=>'both']]);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
         } else {
@@ -101,21 +101,35 @@ class MediaTools{
 
     public function getIcon(array $arr):array|string
     {
+        $arr['html']=$arr['html']??'';
+        $arr['maxDim']=$arr['maxDim']??50;
+        $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['TmpFile']['MIME-Type']??'text';
+        $fontSize=round($arr['maxDim']*0.4);
         $arr=$this->addTmpFile($arr);
-        if (!isset($arr['html'])){$arr['html']='';}
-        if (empty($arr['selector']['Name'])){$text='?';} else {$text=$arr['selector']['Name'];}
-        if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){$arr['selector']['Params']['TmpFile']['MIME-Type']='text';}
+        // get text
+        if (empty($arr['selector']['Name'])){
+            $text='?';
+        } else {
+            $text=preg_replace('/[^A-Z]/','',$arr['selector']['Name']);
+            $text=substr($text,0,2);
+            $text=(empty($text))?'?':$text;
+            $text=strtr($text,['WC'=>'CW','wc'=>'cw']);
+        }
+        // add content: text, image
         if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
-            $arr['maxDim']=100;
             $iconSrc=$this->getImage($arr);
         } else {
-            $iconArr=array('tag'=>'p','element-content'=>$text,'class'=>'icon');
+            $iconArr=['tag'=>'p','element-content'=>$text,'class'=>'icon','style'=>['font-size'=>$fontSize,'width'=>$arr['maxDim'],'line-height'=>$arr['maxDim']]];
             $iconHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($iconArr);
         }
-        $imageArr=array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'class'=>'icon');
+        // add wrapper div
+        $style=['width'=>$arr['maxDim'],'height'=>$arr['maxDim']];
+        $imageArr=['tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'class'=>'icon','style'=>$style];
         $imageArr['title']=$text;
-        if (isset($iconHtml)){$imageArr['element-content']=$iconHtml;}
+        if (isset($iconHtml)){
+            $imageArr['element-content']=$iconHtml;
+        }
         if (isset($iconSrc)){
             $imageArr['style']['background-image']='url('.$iconSrc.')';
         }
@@ -129,17 +143,17 @@ class MediaTools{
     
     public function presentEntry(array $arr):array|string{
         if (empty($arr['selector'])){
-            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called arr["selector"] being empty.'));
+            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>__FUNCTION__.' called arr["selector"] being empty.']);
         } else if (!isset($arr['selector']['Content'])){
-            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called, but arr["selector*]["Content"] is missing.'));    
+            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>__FUNCTION__.' called, but arr["selector*]["Content"] is missing.']);    
         } else if (empty($arr['setting'])){
-            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>__FUNCTION__.' called with arr["setting"] being empty.'));    
+            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>__FUNCTION__.' called with arr["setting"] being empty.']);
         }
         if (!isset($arr['html'])){$arr['html']='';}
         // compile entry and add presentation keys
         if (!empty($arr['setting']['Show userAbstract'])){$arr['selector'][':::userAbstract']=TRUE;}
         if (!empty($arr['setting']['Show getPreview'])){$arr['selector'][':::getPreview']=TRUE;}
-        $arrElements=array('arr'=>$arr,'elements'=>[]);
+        $arrElements=['arr'=>$arr,'elements'=>[]];
         $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
         foreach($flatEntry as $flatEntryKey=>$flatEntryValue){
@@ -176,15 +190,15 @@ class MediaTools{
             
             $presentationIndex=1;
             while(isset($arrElements['elements'][$presentationIndex])){$presentationIndex+=10;}
-            $arrElements['arr']['setting']['Key tags'][$key]=array('presentation-index'=>$presentationIndex);
+            $arrElements['arr']['setting']['Key tags'][$key]=['presentation-index'=>$presentationIndex];
             
             $class=$arrElements['arr']['selector']['Source'];
             if (mb_strpos($key,':::')===0){
                 $arrElements['arr']['setting']['Key tags'][$key]['class']=$class;
             } else {
-                $style=array('float'=>'left','clear'=>'both','font-size'=>'1em','padding'=>'0.5em','display'=>'initial');
+                $style=['float'=>'left','clear'=>'both','font-size'=>'1em','padding'=>'0.5em','display'=>'initial'];
                 if (strcmp($key,'Name')!==0 && strcmp($key,'Message')!==0 && strcmp($key,'Date')!==0){$style['display']='none';}
-                $arrElements['arr']['setting']['Key tags'][$key]['element']=array('tag'=>'p','style'=>$style,'class'=>$class,'keep-element-content'=>'');
+                $arrElements['arr']['setting']['Key tags'][$key]['element']=['tag'=>'p','style'=>$style,'class'=>$class,'keep-element-content'=>''];
             }
         }
         // create elements or widgets for presentation on the web page
@@ -195,8 +209,8 @@ class MediaTools{
             if (mb_strpos($key,':::')===0){
                 $widgetArr=$arrElements['arr'];
                 if (strcmp($key,':::userAbstract')===0){
-                    $widgetArr['wrapResult']=array('tag'=>'div','style'=>array('float'=>'left','clear'=>'both','width'=>'100%','color'=>'#000','background-color'=>'#fff8'));
-                    $widgetArr['selector']=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$arrElements['arr']['selector']['Owner']);
+                    $widgetArr['wrapResult']=['tag'=>'div','style'=>['float'=>'left','clear'=>'both','width'=>'100%','color'=>'#000','background-color'=>'#fff8']];
+                    $widgetArr['selector']=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$arrElements['arr']['selector']['Owner']];
                     $arrElements['elements'][$presentationIndex]['html']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbtract($widgetArr,2);
                 } else if (strcmp($key,':::getPreview')===0){
                     $widgetArr['returnHtmlOnly']=TRUE;
@@ -238,8 +252,7 @@ class MediaTools{
     private function getMarkdown(array $arr):array
     {
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
-        $arr['settings']['style']=array_merge(array('overflow'=>'hidden'),$arr['settings']['style']);
-        $selector=array('Source'=>$arr['selector']['Source'],'EntryId'=>$arr['selector']['EntryId'],'Write'=>$arr['selector']['Write'],'Write'=>$arr['selector']['Read']);
+        $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
         // process form
         $markDownId=md5(__FUNCTION__.$arr['selector']['Source'].$arr['selector']['EntryId']);
         $arr['callingFunction']=$markDownId;
@@ -248,16 +261,16 @@ class MediaTools{
         if (isset($formData['val']['content'])){
             $source=key($formData['val']['content']);
             $entryId=key($formData['val']['content'][$source]);
-            $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(array('Source'=>$source,'EntryId'=>$entryId));
+            $mdFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(['Source'=>$source,'EntryId'=>$entryId]);
             $md=$formData['val']['content'][$source][$entryId];
             file_put_contents($mdFile,$md);
         } else {
             $md=file_get_contents($arr['selector']['Params']['TmpFile']['Source']);
         }
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
-            $contentArr=array('tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId);
-            $contentArr['key']=array('content',$arr['selector']['Source'],$arr['selector']['EntryId']);
-            $contentArr['style']=array('text-align'=>'left','width'=>'98%','height'=>'50vh');
+            $contentArr=['tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId];
+            $contentArr['key']=['content',$arr['selector']['Source'],$arr['selector']['EntryId']];
+            $contentArr['style']=['text-align'=>'left','width'=>'98%','height'=>'50vh'];
             $contentArr['class']='code';
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
             $btnArr['cmd']='show';
@@ -265,7 +278,7 @@ class MediaTools{
             $contentHtml=\Michelf\Markdown::defaultTransform($md);
             $btnArr['cmd']='edit';
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
         if (empty($arr['settings']['style']['height']) && empty($arr['settings']['style']['max-height'])){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         }
@@ -276,7 +289,7 @@ class MediaTools{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
-        $arr['settings']['style']=array_merge(array('float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw','border'=>'1px dotted #444'),$arr['settings']['style']);
+        $arr['settings']['style']=array_merge(['float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw','border'=>'1px dotted #444'],$arr['settings']['style']);
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $objArr=$arr;
             $objArr['tag']='object';
@@ -287,9 +300,9 @@ class MediaTools{
             $objArr['keep-element-content']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($objArr);
         } else {
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.'));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.']);
         }
-        $arr['wrapperSettings']=array('style'=>'width:95%;');
+        $arr['wrapperSettings']=['style'=>'width:95%;'];
         return $arr;
     }    
     
@@ -320,22 +333,22 @@ class MediaTools{
             (empty($arr['selector']['Params']['TmpFile']['Style class']))?$arr['styleClass']='rotate0':$arr['styleClass']=$arr['selector']['Params']['TmpFile']['Style class'];
             $transformArr=$this->styleClass2Params($arr);
             $absSinRot=abs(sin(deg2rad($transformArr['deg'])));
-            $imgArr=array('sourceFile'=>$arr['selector']['Params']['TmpFile']['Source'],
-                          'targetFile'=>$arr['targetFile'],
-                          'fileType'=>$tmpArr['mime'],
-                          'absSinRot'=>$absSinRot,
-                          'scaler'=>1,
-                          'orgWidth'=>$tmpArr[0],
-                          'orgHeight'=>$tmpArr[1],
-                          'orgRot'=>$transformArr['deg'],
-                          'orgFlipped'=>$transformArr['flip'],
-                          'newSize'=>(isset($arr['newSize']))?$arr['newSize']:FALSE,
-                          'newWidth'=>(isset($arr['newWidth']))?$arr['newWidth']:FALSE,
-                          'newHeight'=>(isset($arr['newHeight']))?$arr['newHeight']:FALSE,
-                          'maxDim'=>(isset($arr['maxDim']))?$arr['maxDim']:FALSE,
-                          'minDim'=>(isset($arr['minDim']))?$arr['minDim']:FALSE,
-                          'quality'=>90,
-                          );
+            $imgArr=['sourceFile'=>$arr['selector']['Params']['TmpFile']['Source'],
+                    'targetFile'=>$arr['targetFile'],
+                    'fileType'=>$tmpArr['mime'],
+                    'absSinRot'=>$absSinRot,
+                    'scaler'=>1,
+                    'orgWidth'=>$tmpArr[0],
+                    'orgHeight'=>$tmpArr[1],
+                    'orgRot'=>$transformArr['deg'],
+                    'orgFlipped'=>$transformArr['flip'],
+                    'newSize'=>(isset($arr['newSize']))?$arr['newSize']:FALSE,
+                    'newWidth'=>(isset($arr['newWidth']))?$arr['newWidth']:FALSE,
+                    'newHeight'=>(isset($arr['newHeight']))?$arr['newHeight']:FALSE,
+                    'maxDim'=>(isset($arr['maxDim']))?$arr['maxDim']:FALSE,
+                    'minDim'=>(isset($arr['minDim']))?$arr['minDim']:FALSE,
+                    'quality'=>90,
+                    ];
             //-- create image from file
             $orgImage=FALSE;
             try{
@@ -358,7 +371,7 @@ class MediaTools{
                     if ($orgImage===FALSE){return 'Failed to create image';}
                 }
             } catch(\Exception $e) {
-                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" caught exception {message}.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()));
+                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" caught exception {message}.',['class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()]);
                 return $arr;
             }
             //-- scale image
@@ -438,7 +451,7 @@ class MediaTools{
         
     private function styleClass2Params(array $arr):array
     {
-        $transformArr=array('deg'=>0,'flip'=>FALSE);
+        $transformArr=['deg'=>0,'flip'=>FALSE];
         $styleComps=explode(' ',$arr['styleClass']);
         $transformArr['deg']=intval(preg_replace('/[^0-9]/','',$styleComps[0]));
         if (empty($styleComps[1])){return $transformArr;}
@@ -466,13 +479,10 @@ class MediaTools{
         $imgPropArr=$this->getImgPropArr($imgFile);
         $arr=$this->resetScaleImage($arr);
         if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
-            $variant='A';
             $arr['minDim']=$boxStyleArr['width'];
         } else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
-            $variant='B';
             $arr['minDim']=$boxStyleArr['height'];
         } else {
-            $variant='C,D';    // not tested
             // scale image width to match box width
             $newImgHeight=$imgPropArr['height']*$boxStyleArr['width']/$imgPropArr['width'];
             if ($newImgHeight>$boxStyleArr['height']){
@@ -547,7 +557,7 @@ class MediaTools{
                 $imgPropArr['height']=$imgPropArr[1];
             }
         } else if (empty($imgPropArr)){
-            $imgPropArr=array('width'=>1,'height'=>1);
+            $imgPropArr=['width'=>1,'height'=>1];
         } else {
             $imgPropArr['width']=$imgPropArr[0];
             $imgPropArr['height']=$imgPropArr[1];

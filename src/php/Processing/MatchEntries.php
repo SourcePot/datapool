@@ -21,7 +21,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $maxResultTableLength=50;
     private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=55000000000;   // in nanoseconds
+    private const MAX_PROC_TIME=100000000000;   // in nanoseconds
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -128,10 +128,9 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function matchingParams($callingElement){
         $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $matchTypOptions=['identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication'];
-        $contentStructure=['Column to match'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE],
+        $contentStructure=['Column to match'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
                         'Match with'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        'Match with column'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>TRUE,'excontainer'=>TRUE],
+                        'Match with column'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
                         'Match type'=>['method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE],
                         'Match probability'=>['method'=>'select','value'=>80,'options'=>[100=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50',45=>'>45',40=>'>40',30=>'>30',25=>'>25'],'excontainer'=>TRUE],
                         'Match failure'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
@@ -204,15 +203,17 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function matchEntry($base,$entry,$result,$testRun){
         $params=current($base['matchingparams']);
         $bestMatchCanvasElement=current($this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements(__CLASS__,$params['Content']['Match with']));
+        $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
         // get best match
-        $needle=$entry[$params['Content']['Column to match']];
+        $needle=$flatEntry[$params['Content']['Column to match']];
         $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
         // process best match
         $probability=round(100*$bestMatch['probability']);
         $entry['Params']['Processed'][__CLASS__]=$probability;
         $bestMatchKey='Best match';
         if ($bestMatchCanvasElement){
-            $bestMatchKey.='<br/>'.$bestMatchCanvasElement['Content']['Style']['Text'].'['.$params['Content']['Match with column'].']';
+            $flatMatchKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($params['Content']['Match with column']);
+            $bestMatchKey.='<br/>'.$bestMatchCanvasElement['Content']['Style']['Text'].'['.$flatMatchKey.']';
         }
         if (intval($params['Content']['Match probability'])<100*$bestMatch['probability']){
             // successful match
@@ -224,9 +225,12 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun,$params['Content']['Keep source entries']);
             } else {
                 $result['Matching']['Kept entry']['value']++;
-            }
-            if (count($result['Matches'])<$this->maxResultTableLength && isset($bestMatch[$params['Content']['Match with column']])){        
-                $result['Matches'][$needle]=[$bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE)];
+            }    
+            if (count($result['Matches'])<$this->maxResultTableLength){
+                $flatBestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($bestMatch);
+                if (isset($flatBestMatch[$params['Content']['Match with column']])){
+                    $result['Matches'][$needle]=[$bestMatchKey=>$flatBestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE)];
+                }
             }
         } else {
             // failed match
@@ -236,8 +240,11 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $result['Matching']['Kept entry']['value']++;
             }
-            if (count($result['Matches'])<$this->maxResultTableLength && isset($bestMatch[$params['Content']['Match with column']])){
-                $result['Matches'][$needle]=[$bestMatchKey=>$bestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
+            if (count($result['Matches'])<$this->maxResultTableLength){
+                $flatBestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($bestMatch);
+                if (isset($flatBestMatch[$params['Content']['Match with column']])){
+                    $result['Matches'][$needle]=[$bestMatchKey=>$flatBestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
+                }
             }
         }
         return $result;

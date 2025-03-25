@@ -19,8 +19,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
                             'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'],
                             ];
     
-    public $definition=['Content'=>['Message'=>['@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@style'=>['font-size'=>'1.2rem']],
-                                              '@hideCaption'=>FALSE
+    public $definition=['Content'=>['Message'=>['@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@hideKeys'=>TRUE],
+                                              '@hideCaption'=>FALSE,
                                 ],
                         'Attachment'=>['@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE],
                         'Preview'=>['@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE],
@@ -106,7 +106,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $forumEntry['File upload extract archive']=FALSE;
         $forumEntry['File upload extract email parts']=FALSE;
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($forumEntry,FALSE);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.__FUNCTION__,'generic',$draftSelector,['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>'newforumentry'],['style'=>['clear'=>'both','margin'=>'1rem','width'=>'auto']]);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9993;','class'=>'forum']);
         return $html;
     }

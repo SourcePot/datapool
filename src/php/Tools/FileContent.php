@@ -42,11 +42,15 @@ final class FileContent{
     {
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         if (isset($entry['Date'])){
-            $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-            $dateWebPageTimeZone=\DateTime::createFromFormat('Y-m-d H:i:s',$entry['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-            if ($dateWebPageTimeZone){
-                $dateWebPageTimeZone->setTimeZone(new \DateTimeZone($pageTimeZone));
-                $entry['Date ('.$pageTimeZone.')']=$dateWebPageTimeZone->format('Y-m-d H:i:s');
+            if (is_array($entry['Date'])){
+                $this->oc['logger']->log('notice','Entry mal format: key "Date" is array for Entry Source="{Source}", Group="{Group}", Folder="{Folder}", Name="{Name}".',$entry);
+            } else {
+                $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+                $dateWebPageTimeZone=\DateTime::createFromFormat('Y-m-d H:i:s',$entry['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                if ($dateWebPageTimeZone){
+                    $dateWebPageTimeZone->setTimeZone(new \DateTimeZone($pageTimeZone));
+                    $entry['Date ('.$pageTimeZone.')']=$dateWebPageTimeZone->format('Y-m-d H:i:s');
+                }
             }
         }
         $entry['currentUserId']=$currentUser['EntryId'];

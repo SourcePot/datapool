@@ -61,7 +61,6 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             // Show query widget and HomeApps to ALL_MEMBERS
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R')){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],array('method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'),array('style'=>[]));
                 $html.=$this->honeAppWidgets();
             } 
             // Show Welcome Page sections to the public, admin and content admin
@@ -128,12 +127,17 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
     {
         $widgetArr=[];
         foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\HomeApp') as $widgetClass){
+            $maxHeight=($widgetClass==='SourcePot\Datapool\Foundation\Haystack')?'auto':'33vh';
             $table=$this->oc[$widgetClass]->getEntryTable();
             $priority=$this->oc[$widgetClass]->getHomeAppPriority();
             $priority=str_pad(strval($this->oc[$widgetClass]->getHomeAppPriority()),2,'0',STR_PAD_LEFT);
-            $widgetHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','class'=>'widget','element-content'=>$this->oc[$widgetClass]->getHomeAppCaption(),'keep-element-content'=>TRUE]);
+            $caption=$this->oc[$widgetClass]->getHomeAppCaption();
+            $widgetHtml='';
+            if (!empty($caption)){
+                $widgetHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','class'=>'widget','element-content'=>$caption,'keep-element-content'=>TRUE]);
+            }
             $widgetHtml.=$this->oc[$widgetClass]->getHomeAppWidget();
-            $widgetHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','class'=>'widget','element-content'=>$widgetHtml,'keep-element-content'=>TRUE]);
+            $widgetHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','class'=>'widget','element-content'=>$widgetHtml,'keep-element-content'=>TRUE,'style'=>['max-height'=>$maxHeight,'overflow-y'=>'auto']]);
             $widgetArr[$priority.'_'.$table]=$widgetHtml;
         }
         ksort($widgetArr);
