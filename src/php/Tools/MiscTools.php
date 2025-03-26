@@ -695,8 +695,7 @@ final class MiscTools{
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $arrKey=>$arrValue){
             if (mb_strpos($arrKey,$flatKey)===FALSE){continue;}
-            //unset($flatArr[$arrKey]);
-            $flatArr[$arrKey]='__TODELETE__';
+            $flatArr[$arrKey]=NULL;
         }
         $arr=$this->flat2arr($flatArr);
         return $arr;
@@ -1187,7 +1186,7 @@ final class MiscTools{
             $matchSelector[$matchColumn]=$dbNeedle;
         }
         // get possible matches
-        $bestMatch=['probability'=>0,'Content'=>[],'Params'=>[]];
+        $bestMatch=['Content'=>['match'=>['probability'=>0,'needle'=>$needle,'sample'=>'']],'Params'=>[]];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($matchSelector,$isSystemCall) as $matchEntry){
             // get sample
             if (is_array($matchEntry[$matchColumn])){
@@ -1214,9 +1213,11 @@ final class MiscTools{
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" match of needle "{needle}", with column "{matchColumn}" failed with "{msg}".',$context);
                 continue;
             }
-            if ($bestMatch['probability']<$probability){
+            if ($bestMatch['Content']['match']['probability']<$probability){
                 $bestMatch=$matchEntry;
-                $bestMatch['probability']=$probability;
+                $bestMatch['Content']['match']['needle']=$needle;
+                $bestMatch['Content']['match']['sample']=$sample;
+                $bestMatch['Content']['match']['probability']=$probability;
                 if ($probability==1){break;}
             }
             

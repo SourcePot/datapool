@@ -129,7 +129,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     public function getHomeAppPriority():int
     {
-        return 5;
+        return 3;
     }
 
 }

@@ -372,7 +372,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     public function getHomeAppPriority():int
     {
-        return 3;
+        return 4;
     }
 
 }

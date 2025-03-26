@@ -36,44 +36,52 @@ class XLStools{
         }
     }
     
-    public function iterator($selector,$reader='xlsx'):\Generator
+    public function iterator(array|string $selector,$reader='xlsx'):\Generator
     {
+        // get file from selector
         if (is_array($selector)){
             $xlsFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         } else {
             $xlsFile=$selector;
         }
-        if (!is_file($xlsFile)){yield [];}
-        $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader(ucfirst($reader));
-        $reader->setReadDataOnly(TRUE);
-        try{
-            $spreadsheet=$reader->load($xlsFile);
-        } catch(\Exception $e){
-            $this->oc['logger']->log('error','"{function}" failed to load "{file}"',array('function'=>__FUNCTION__,'file'=>$xlsFile));         
-            yield [];
+        if (is_file($xlsFile)){
+            // scan file
+            $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader(ucfirst($reader));
+            $reader->setReadDataOnly(TRUE);
+            try{
+                $spreadsheet=$reader->load($xlsFile);
+            } catch(\Exception $e){
+                $this->oc['logger']->log('error','"{function}" failed to load "{file}"',['function'=>__FUNCTION__,'file'=>$xlsFile,'msg'=>$e->getMessage()]);         
+                yield [];
+                return FALSE;
+            }
+            $worksheet=$spreadsheet->getActiveSheet();
+            $xls=$worksheet->getRowIterator();
+            $keys=[];
+            while($xls->valid()){
+                $result=[];
+                $cellIterator=$xls->current()->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(FALSE);
+                foreach($cellIterator as $columnIndex=>$cell){
+                    $cellValue=$cell->getValue();
+                    $cellValue??='';
+                    if (isset($keys[$columnIndex])){
+                        $result[$keys[$columnIndex]]=$cellValue;
+                    } else {
+                        $keys[$columnIndex]=$cellValue;
+                    }
+                }
+                if ($xls->key()>1){
+                    yield $result;
+                }
+                $xls->next();
+            }
+        } else {
+            // file missing
+            yield ['ERROR'=>'"'.__FUNCTION__.'" called but file "'.$xlsFile.'" not found.'];
             return FALSE;
         }
-        $worksheet=$spreadsheet->getActiveSheet();
-        $xls=$worksheet->getRowIterator();
-        $keys=[];
-        while($xls->valid()){
-            $result=[];
-            $cellIterator=$xls->current()->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(FALSE);
-            foreach($cellIterator as $columnIndex=>$cell){
-                $cellValue=$cell->getValue();
-                $cellValue??='';
-                if (isset($keys[$columnIndex])){
-                    $result[$keys[$columnIndex]]=$cellValue;
-                } else {
-                    $keys[$columnIndex]=$cellValue;
-                }
-            }
-            if ($xls->key()>1){
-                yield $result;
-            }
-            $xls->next();
-        }
+        return TRUE;
     }
 
 }

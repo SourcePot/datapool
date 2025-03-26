@@ -139,7 +139,12 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
                         ];
         $contentStructure['Column to match']+=$callingElement['Content']['Selector'];
-        $contentStructure['Match with column']+=$callingElement['Content']['Selector'];
+        // add to match element
+        $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
+        $params=current($settings[strtolower(__FUNCTION__)]??[]);
+        $matchElement=['Source'=>$callingElement['Source'],'EntryId'=>$params['Content']['Match with']??''];
+        $matchElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($matchElement,TRUE);
+        $contentStructure['Match with column']+=$matchElement['Content']['Selector']??[];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=['Column to match'=>'Name'];
@@ -208,17 +213,17 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $needle=$flatEntry[$params['Content']['Column to match']];
         $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
         // process best match
-        $probability=round(100*$bestMatch['probability']);
+        $probability=round(100*$bestMatch['Content']['match']['probability']);
         $entry['Params']['Processed'][__CLASS__]=$probability;
         $bestMatchKey='Best match';
         if ($bestMatchCanvasElement){
             $flatMatchKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($params['Content']['Match with column']);
             $bestMatchKey.='<br/>'.$bestMatchCanvasElement['Content']['Style']['Text'].'['.$flatMatchKey.']';
         }
-        if (intval($params['Content']['Match probability'])<100*$bestMatch['probability']){
+        if (intval($params['Content']['Match probability'])<$probability){
             // successful match
             if (!empty($params['Content']['Combine content'])){
-                $entry['Content']=array_replace_recursive($entry['Content'],$bestMatch['Content']);
+                $entry['Content']=array_merge($entry['Content'],$bestMatch['Content']);
             }
             $result['Matching']['Matched']['value']++;
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){

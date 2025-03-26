@@ -22,7 +22,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $paramsTemplate=['Mode'=>'entries'];
 
     private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=30000000000;   // in nanoseconds
+    private const MAX_PROC_TIME=100000000000;   // in nanoseconds
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -113,7 +113,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
         return $arr;
     }
-
 
     private function getMapEntriesSettings($callingElement){
         $html='';
@@ -306,10 +305,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
         $result['Mapping statistics']['Entries']['value']++;
-        $sourceEntry['Content']=[];
+        $sourceEntry['Content']=NULL;
         if ($base['csvRequested'] || $base['zipRequested']){
             // add entry to csv
-            unset($sourceEntry['Params']);
+            $sourceEntry['Params']=NULL;
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,['Name'],'0','',FALSE);
             if (!$testRun){
