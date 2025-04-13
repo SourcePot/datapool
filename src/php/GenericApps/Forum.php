@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Forum implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ALL_MEMBER_R';
+    
     private $oc;
     
     private $entryTable='';
@@ -65,7 +67,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return ['Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__];
+            return ['Category'=>'Apps','Emoji'=>'&#9993;','Label'=>'Forum','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $arr=$this->addYearSelector2menu($arr);
             $entryHtml=$this->newEntryHtml();

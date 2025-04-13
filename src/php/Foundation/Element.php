@@ -295,7 +295,7 @@ class Element{
     }
 
     /**
-     * This method returns the processing results from  $_POST and $_FILES. It returns an array containing old values, new values, files und commmands.
+     * This method returns the processing results from  $_POST and $_FILES. It returns an array containing old values, new values, files and commmands.
      *
      */
     public function formProcessing(string $callingClass,string $callingFunction):array

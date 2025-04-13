@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Info implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ADMIN_R';
+    
     private $oc;
     
     public function __construct($oc){
@@ -25,7 +27,7 @@ class Info implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'?','Label'=>'Info','Read'=>'ADMIN_R','Class'=>__CLASS__);
+            return array('Category'=>'Admin','Emoji'=>'?','Label'=>'Info','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             // get page content
             ob_start();

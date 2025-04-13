@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Trigger implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ADMIN_R';
+    
     private $oc;
     private $entryTable='';
     
@@ -28,7 +30,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'&#10548;','Label'=>'Trigger','Read'=>'ADMIN_R','Class'=>__CLASS__);
+            return array('Category'=>'Admin','Emoji'=>'&#10548;','Label'=>'Trigger','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $this->oc['SourcePot\Datapool\Foundation\Explorer']->appProcessing('SourcePot\Datapool\Foundation\Signals');
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState('SourcePot\Datapool\Foundation\Signals',array('Group'=>FALSE,'Folder'=>FALSE));

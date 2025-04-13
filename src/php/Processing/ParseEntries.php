@@ -390,7 +390,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // sample result
         if (!isset($result['Sample result <b>success</b>']) || mt_rand(1,100)>70){
-            $goodEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($goodEntry);
+            $goodEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($goodEntry??[]);
             $result['Sample result <b>success</b>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($goodEntry);
         }
         return $result;

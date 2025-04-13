@@ -376,11 +376,14 @@ jQuery(document).ready(function(){
 					start: function(){},
 					drag: function(){},
 					stop: function(){
-						let arr={'Content':{'Style':{'top':jQuery(this).css('top'),'left':jQuery(this).css('left')}},
+						let top=5*Math.round(parseInt(jQuery(this).css('top'))/5);
+						let left=5*Math.round(parseInt(jQuery(this).css('left'))/5);
+						let arr={'Content':{'Style':{'top':top,'left':left}},
                                  'Source':jQuery(this).attr('source'),
                                  'EntryId':jQuery(this).attr('entry-id'),
                                  'function':'setCanvasElementStyle',
                                  };
+						console.log(arr);
 						jQuery.ajax({
                             method:"POST",
                             url:'js.php',

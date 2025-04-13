@@ -12,12 +12,14 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver{
     
+    private const APP_ACCESS='ALL_MEMBER_R';
+    
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'],
+                            ];
     
     private $urlSelector=[];
     private $currentUrlEntryContent=[];
@@ -77,7 +79,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Apps','Emoji'=>'&#10057;','Label'=>'Feeds','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+            return array('Category'=>'Apps','Emoji'=>'&#10057;','Label'=>'Feeds','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);

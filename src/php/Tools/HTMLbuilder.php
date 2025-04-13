@@ -38,8 +38,8 @@ class HTMLbuilder{
                     'delete'=>['key'=>['delete'],'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
                     'remove'=>['key'=>['remove'],'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>[],'excontainer'=>FALSE],
                     'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
-                    'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['float'=>'right']],
-                    'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[]],
+                    'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['float'=>'right','margin'=>0]],
+                    'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
                     ];
 
     private $appOptions=['SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
@@ -201,7 +201,12 @@ class HTMLbuilder{
             $selectArr['keep-element-content']=TRUE;
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($selectArr);
             // create options
-            if (isset($arr['style'])){unset($arr['style']);}
+            /*
+            if (isset($arr['style'])){
+                $arrStyle=$arr['style'];
+                unset($arr['style']);
+            }
+            */
             $toReplace['{{options}}']='';
             $optionCount=0;
             foreach($arr['options'] as $name=>$label){
@@ -225,7 +230,7 @@ class HTMLbuilder{
                 $html=str_replace($needle,$value,$html);
             }
             if (count($arr['options'])>self::SHOW_FILTER_OPTION_COUNT && !empty($selectArr['id'])){
-                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'style'=>$arr['style']??[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
                 $countArr=['tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($countArr);
@@ -805,7 +810,7 @@ class HTMLbuilder{
             $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             $currentIndex=intval($entryIdComps[0]);
             $rowIndex=$entryIdComps[0];
-            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=['background-color'=>'#f00'];}
+            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=['background-color'=>'#faa'];}
             foreach($arr['contentStructure'] as $contentKey=>$elementArr){
                 $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
                 $method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];

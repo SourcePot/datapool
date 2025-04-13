@@ -243,6 +243,7 @@ td,th{
     position:relative;
     padding:3px;
     max-width:95vw;
+    min-width:4.5rem;
 }
 p.log{
     clear:none;
@@ -274,8 +275,8 @@ article.multimedia{
     max-width:300px;
     height:280px;
     margin:5px;
-    border:1px dotted #000;
-    box-shadow:10px 5px 5px #aaa;
+    border:1px solid #aaa;
+    box-shadow:10px 5px 5px #ccc;
 }
 article.transparent{
     height:25vh;
@@ -716,7 +717,12 @@ div.calendar-timeline{
 .calendar-event-selected{
     border:2px solid #f00;
 }
-
+.calendar-settings-wrapper{
+    clear:none;
+    background-color:#ddd;
+    margin:0.5rem 0.5rem 0.5rem 0;
+    padding:0.25rem;
+}
 /** STATUS **/
 .status-off{
     color:var(--color);

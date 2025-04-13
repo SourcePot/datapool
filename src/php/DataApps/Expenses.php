@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\DataApps;
 
 class Expenses implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ALL_DATA_R';
+    
     private $oc;
     
     private $entryTable='';
@@ -56,7 +58,7 @@ class Expenses implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return array('Category'=>'Data','Emoji'=>'$','Label'=>'Expenses','Read'=>'ADMIN_R','Class'=>__CLASS__);
+            return array('Category'=>'Data','Emoji'=>'$','Label'=>'Expenses','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];

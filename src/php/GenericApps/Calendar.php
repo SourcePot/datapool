@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
+    private const APP_ACCESS='ALL_MEMBER_R';
+    
     private $oc;
     
     private $entryTable='';
@@ -97,7 +99,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
         if (!isset($vars['Bank holidays'])){$vars['Bank holidays']['lastRun']=0;}
         if (!isset($vars['Signal cleanup'])){$vars['Signal cleanup']['lastRun']=0;}
         $action='';
-        if (time()-$vars['Bank holidays']['lastRun']>260000){
+        if (time()-$vars['Bank holidays']['lastRun']>26000){
             // load bank holidays
             $action='Bank holidays';
             $setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,'getJobSettings',[],'Job selected countries and regions',TRUE);
@@ -108,7 +110,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
                     if (empty($active)){continue;}
                     $countriesRegions[]=$region.' ('.strtoupper($countryCode).')';
                     $holidayObj=new \SourcePot\BankHolidays\holidays($vars['Bank holidays']['Year'],$countryCode);
-                    foreach($holidayObj->datapoolHolidays($region,[],\SourcePot\Datapool\Root::DB_TIMEZONE) as $event){
+                    foreach($holidayObj->datapoolHolidays($region,['Owner'=>'SYSTEM'],\SourcePot\Datapool\Root::DB_TIMEZONE) as $event){
                         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($event,TRUE);
                     }
                 }
@@ -192,7 +194,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return ['Category'=>'Apps','Emoji'=>'&#9992;','Label'=>'Calendar','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__];
+            return ['Category'=>'Apps','Emoji'=>'&#9992;','Label'=>'Calendar','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar by '.__FUNCTION__,'generic',$this->pageState,['method'=>'getCalendar','classWithNamespace'=>__CLASS__],['style'=>[]]);
@@ -307,9 +309,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
     
     private function getCalendarSettings($arr=[]):array
     {
-        $template=['html'=>'','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
-        $btnTemplate=['style'=>['font-size'=>'20px'],'tag'=>'button','keep-element-content'=>'TRUE','excontainer'=>FALSE];
-        $arr=array_merge($template,$arr);
+        $arr['html']=$arr['html']??'';
+        $arr['keep-element-content']=TRUE;
+        $arr['callingClass']=__CLASS__;
+        $arr['callingFunction']=__FUNCTION__;
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (isset($formData['cmd']['Home'])){
             $this->pageState['Group']='Events';
@@ -318,42 +321,50 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
             $this->pageState['addDate']='';
             $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
-        } else if (!empty($formData['cmd'])){
+        } else if (!empty($formData['val']['pageState'])){
+            $this->resetEventCache();
             $newPageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
             $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),$formData['val']['setting'],'Calendar',FALSE);
         }
-        $calendarDateArr=$arr;
+        $tagArr=$btnArr=$arr;
+        $tagArr['style']=['padding'=>'7px 3px'];
+        $btnArr['style']=['font-size'=>'20px','padding'=>'2px'];
+        $btnArr['tag']='button';
+        $btnArr['excontainer']=FALSE;
+        $btnArr['key']=['Home'];
+        $btnArr['title']='Home';
+        $btnArr['element-content']='&#9750;';
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+        $calendarDateArr=$tagArr;
         $calendarDateArr['tag']='input';
         $calendarDateArr['type']='date';
         $calendarDateArr['title']='Press enter to select';
         $calendarDateArr['value']=$this->timeStamp2pageDateTime($this->calendarStartTimestamp(),'Y-m-d');
         $calendarDateArr['key']=['pageState','calendarDate'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($calendarDateArr);
-        $btnArr=array_replace_recursive($btnTemplate,$arr);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($calendarDateArr);
         $btnArr['key']=['Set'];
         $btnArr['title']='Set';
         $btnArr['element-content']='&#10022;';
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-        $btnArr['key']=['Home'];
-        $btnArr['title']='Home';
-        $btnArr['element-content']='&#9750;';
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
-        $timezoneArr=$arr;
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'calendar-settings-wrapper']);
+        //
+        $timezoneArr=$tagArr;
         $timezoneArr['selected']=$this->setting['Timezone'];
         $timezoneArr['options']=$this->options['Timezone'];
         $timezoneArr['key']=['setting','Timezone'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($timezoneArr);
-        $daysToShowArr=$arr;
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($timezoneArr);
+        $daysToShowArr=$tagArr;
         $daysToShowArr['selected']=$this->setting['Days to show'];
         $daysToShowArr['options']=$this->options['Days to show'];
         $daysToShowArr['key']=['setting','Days to show'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($daysToShowArr);
-        $dayWidthArr=$arr;
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($daysToShowArr);
+        $dayWidthArr=$tagArr;
         $dayWidthArr['selected']=$this->setting['Day width'];
         $dayWidthArr['options']=$this->options['Day width'];
         $dayWidthArr['key']=['setting','Day width'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($dayWidthArr);
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($dayWidthArr);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'calendar-settings-wrapper']);
         return $arr;
     }
     
@@ -603,6 +614,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
 
     private function getEvents($timestamp,$isSystemCall=FALSE)
     {
+        $events=$this->getEventCache($timestamp);
+        if ($events){
+            return $events;
+        } else {
+            $events=[];
+        }
+        // get events
         $calendarDateTime=new \DateTime();
         $calendarDateTime->setTimestamp($timestamp); 
         $serverTimezone=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
@@ -610,7 +628,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
         $viewStart=$calendarDateTime->format('Y-m-d H:i:s');
         $calendarDateTime->add(\DateInterval::createFromDateString(($this->setting['Days to show']??'10').' days'));
         $viewEnd=$calendarDateTime->format('Y-m-d H:i:s');
-        $events=[];
         $oldEvents=[];
         $selectors=[];
         $selectors['Ongoing event']=['Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start<'=>$viewStart,'End>'=>$viewEnd];
@@ -644,12 +661,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
                 }
             }
         }
+        // cache events
+        $this->setEventCache($timestamp,$events);
         return $events;
     }
     
     private function serialEntryToEntries($entry,int $timestamp,int $maxTimestamp=0)
     {
-        $formatTestArr=['Month'=>'m','Week day'=>'N','Day'=>'d','Hour'=>'H','Minute'=>'i'];
         $entries=[];
         $entryIdSuffix=0;
         $maxTimestamp=(empty($maxTimestamp))?($timestamp+(intval($this->setting['Days to show']??'10')-1)*86400+90000):$maxTimestamp;
@@ -792,8 +810,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
     public function timeStamp2pageDateTime($timestamp,string $format='Y-m-d H:i:s'):string
     {
         $timestamp=intval($timestamp);
+        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $dateTimeObj=new \DateTime('@'.$timestamp);
-        $dateTimeObj->setTimezone(new \DateTimeZone($this->setting['Timezone']));
+        $dateTimeObj->setTimezone(new \DateTimeZone($pageTimeZone));
         return $dateTimeObj->format($format);
     }
 
@@ -814,5 +833,21 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
         return 2;
     }
 
+    private function setEventCache(int $timestamp, array $events):void
+    {
+        $cacheTimeStamp=intval($timestamp/30)*30;
+        $_SESSION[__CLASS__]['events-cache']=[$cacheTimeStamp=>$events];
+    }
+
+    private function getEventCache(int $timestamp):array|FALSE
+    {
+        $cacheTimeStamp=intval($timestamp/30)*30;
+        return $_SESSION[__CLASS__]['events-cache'][$cacheTimeStamp]??FALSE;
+    }
+
+    private function resetEventCache():void
+    {
+        $_SESSION[__CLASS__]['events-cache']=[];
+    }
 }
 ?>

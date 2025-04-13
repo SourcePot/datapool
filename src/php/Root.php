@@ -46,7 +46,7 @@ final class Root{
                                         'sqlite3'=>FALSE,'tidy'=>FALSE,'xsl'=>FALSE,'zip'=>TRUE,'opcache'=>FALSE
                                         );
 
-    private $oc;
+    private $oc=[];
     private $placeholder=[];
     private $implementedInterfaces=[];
     private $script='';

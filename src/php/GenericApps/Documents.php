@@ -12,11 +12,13 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Documents implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ALL_MEMBER_R';
+    
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -58,7 +60,7 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Apps','Emoji'=>'&#9783;','Label'=>'Documents','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__);
+            return ['Category'=>'Apps','Emoji'=>'&#9783;','Label'=>'Documents','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
@@ -68,23 +70,23 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
                 if ($presentation=='entryList'){
                     $containerTitle=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
                     if (empty($selector['Group'])){
-                        $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Group','Filter'=>''),array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                        $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
                     } else if (empty($selector['Folder'])){
-                        $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Folder','Filter'=>''),array('Column'=>'Name','Filter'=>'')));
+                        $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
                     } else if (empty($selector['EntryId'])){
-                        $settings=array('hideUpload'=>TRUE,'columns'=>array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Params'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'File','Filter'=>'')));
+                        $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'File','Filter'=>'']]];
                     }
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($containerTitle,'entryList',$selector,$settings,[]); 
                 } else if ($presentation=='entryByEntry'){
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>array('clear'=>'none','max-width'=>300,'max-height'=>280)));
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>['clear'=>'none','max-width'=>300,'max-height'=>280]]);
                     }
                 } else {
                     $html.='Selected widget = '.$presentation.' is not implemented';
                 }
             } else {
-                $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-                $presentArr['settings']=array('presentEntry'=>__CLASS__.'::'.__FUNCTION__);
+                $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+                $presentArr['settings']=['presentEntry'=>__CLASS__.'::'.__FUNCTION__];
                 $presentArr['selector']=$selector;
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             }

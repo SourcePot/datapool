@@ -14,17 +14,17 @@ class Menu{
     
     private $oc;
     
-    private $categories=array('Home'=>array('Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'),
-                              'Login'=>array('Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'),
-                              'Logout'=>array('Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'),
-                              'Admin'=>array('Emoji'=>'&#8582;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'),
-                              'Apps'=>array('Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'),
-                              'Data'=>array('Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Invoices','Name'=>'Invoice app'),
-                             );
+    private $categories=['Home'=>['Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],
+                        'Login'=>['Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'],
+                        'Logout'=>['Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
+                        'Admin'=>['Emoji'=>'&#8582;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
+                        'Apps'=>['Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
+                        'Data'=>['Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Invoice app'],
+                        ];
                              
-    private $available=array('Categories'=>[],'Apps'=>[]);
+    private $available=['Categories'=>[],'Apps'=>[]];
     
-    private $requested=array('Category'=>'Home');
+    private $requested=['Category'=>'Home'];
     
     public function __construct(array $oc)
     {
@@ -46,12 +46,7 @@ class Menu{
             $linkinfo=$_SESSION['page state']['linkids'][$linkid];
             $this->requested['App']=$linkinfo['Class'];
             $this->requested['Category']=$linkinfo['Category'];
-            $selector=[];
-            $selector['Source']=(isset($linkinfo['Source']))?$linkinfo['Source']:FALSE;
-            $selector['Group']=(isset($linkinfo['Group']))?$linkinfo['Group']:FALSE;
-            $selector['Folder']=(isset($linkinfo['Folder']))?$linkinfo['Folder']:FALSE;
-            $selector['Name']=(isset($linkinfo['Name']))?$linkinfo['Name']:FALSE;
-            $selector['EntryId']=(isset($linkinfo['EntryId']))?$linkinfo['EntryId']:FALSE;
+            $selector=['Source'=>$linkinfo['Source']??FALSE,'Group'=>$linkinfo['Group']??FALSE,'Folder'=>$linkinfo['Folder']??FALSE,'Name'=>$linkinfo['Name']??FALSE,'EntryId'=>$linkinfo['EntryId']??FALSE,];
             $_SESSION['page state']['selected'][$this->requested['App']]=$selector;
             $_SESSION['page state']['linkids']=[];
         } else {
@@ -145,15 +140,15 @@ class Menu{
         }
         $categoryEmoji=$this->categories[$this->requested['Category']]['Emoji'];
         $categoryTitle=$this->categories[$this->requested['Category']]['Label'];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>$categoryEmoji,'href'=>'#','title'=>$categoryTitle,'class'=>'first-menu','keep-element-content'=>TRUE));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>$categoryEmoji,'href'=>'#','title'=>$categoryTitle,'class'=>'first-menu','keep-element-content'=>TRUE]);
         if (!empty($options)){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(array('options'=>$options,'selected'=>$selected,'key'=>array('Class'),'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$selected,'key'=>['Class'],'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         }
         // compile html
         // $html.=$lngHtml;
         $html.='{{firstMenuBarExt}}';
         $html.=$lngSelector;
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu','id'=>'nav'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'first-menu','id'=>'nav']);
         $arr['toReplace']['{{firstMenuBar}}']=$html;
         return $arr;
     }
@@ -165,23 +160,23 @@ class Menu{
             $def['Category']=$category;
             $html.=$this->def2div($def);    
         }        
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'second-menu','style'=>'height:0;'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'second-menu','style'=>'height:0;']);
         $arr['toReplace']['{{secondMenuBar}}']=$html;
         return $arr;
     }
 
     private function def2div(array $def):string
     {
-        $href='index.php?'.http_build_query(array('category'=>$def['Category']));
+        $href='index.php?'.http_build_query(['category'=>$def['Category']]);
         $style='';
         if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}
         $def['Label']=$arr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);
         $html='';
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE));
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'a','element-content'=>$html,'href'=>$href,'class'=>'menu','keep-element-content'=>TRUE));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'li','element-content'=>$html,'style'=>$style,'class'=>'menu','keep-element-content'=>TRUE));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE]);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>$html,'href'=>$href,'class'=>'menu','keep-element-content'=>TRUE]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'li','element-content'=>$html,'style'=>$style,'class'=>'menu','keep-element-content'=>TRUE]);
         
         return $html;
     }

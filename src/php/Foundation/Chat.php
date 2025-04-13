@@ -12,13 +12,15 @@ namespace SourcePot\Datapool\Foundation;
 
 class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     
+    private const Expires='P30D';
+    
     private $oc;
 
     private $entryTable='';
     private $entryTemplate=[];
 
     private $currentUser=[];
-    
+
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -55,7 +57,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
         $chatEntry['Folder']=($formData['val']['selectedUser']??'').'|'.$this->currentUser['EntryId'];
         $chatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($chatEntry);
         if (isset($formData['cmd']['send']) && !empty($formData['val']['new'])){
-            $chatEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
+            $chatEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',self::Expires);
             $chatEntry['Content']=['Message'=>$formData['val']['new'],];
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($chatEntry,TRUE);
             $formData['val']['selectedUser']='';

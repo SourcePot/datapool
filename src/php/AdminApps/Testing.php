@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Testing implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ADMIN_R';
+    
     private $oc;
 
     private $entryTable='';
@@ -46,7 +48,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>'ALL_CONTENTADMIN_R','Class'=>__CLASS__);
+            return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',[],array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array('style'=>array('background-color'=>'#c9ffc9')));

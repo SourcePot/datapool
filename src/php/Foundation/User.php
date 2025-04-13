@@ -55,18 +55,18 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     private $userRols=['Content'=>[0=>['Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'],
                                 1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'],
-                                2=>['Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Initial member state'],
-                                3=>['Value'=>8,'Name'=>'Group A','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group A member'],
-                                4=>['Value'=>16,'Name'=>'Group B','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group B member'],
-                                5=>['Value'=>32,'Name'=>'Group C','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group C member'],
-                                6=>['Value'=>64,'Name'=>'Group D','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group D member'],
-                                7=>['Value'=>128,'Name'=>'Group E','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group E member'],
-                                8=>['Value'=>256,'Name'=>'Group F','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group F member'],
-                                9=>['Value'=>512,'Name'=>'Group G','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group G member'],
-                                10=>['Value'=>1024,'Name'=>'Sentinel','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Sentinel member'],
-                                11=>['Value'=>2048,'Name'=>'Group I','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group I member'],
-                                12=>['Value'=>4096,'Name'=>'Group J','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group J member'],
-                                13=>['Value'=>8192,'Name'=>'Group K','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Group K member'],
+                                2=>['Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Member state'],
+                                3=>['Value'=>8,'Name'=>'Business','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Business'],
+                                4=>['Value'=>16,'Name'=>'Cases','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Cases'],
+                                5=>['Value'=>32,'Name'=>'Education','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Education'],
+                                6=>['Value'=>64,'Name'=>'Investments','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Investments'],
+                                7=>['Value'=>128,'Name'=>'Accounts','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Accounts'],
+                                8=>['Value'=>256,'Name'=>'Friends (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Friends (uk)'],
+                                9=>['Value'=>512,'Name'=>'Friends (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Friends (de)'],
+                                10=>['Value'=>1024,'Name'=>'Sentinel','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Sentinel access'],
+                                11=>['Value'=>2048,'Name'=>'Family (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (uk)'],
+                                12=>['Value'=>4096,'Name'=>'Family (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (de)'],
+                                13=>['Value'=>8192,'Name'=>'Parents','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Parents'],
                                 14=>['Value'=>16384,'Name'=>'Config admin','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Configuration admin'],
                                 15=>['Value'=>32768,'Name'=>'Admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Administrator']
                                 ],
@@ -107,7 +107,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $this->entryTemplate;
     }
     
-    private function userRols():array
+    public function userRols():array
     {
         $entry=$this->userRols;
         $entry['Class']=__CLASS__;

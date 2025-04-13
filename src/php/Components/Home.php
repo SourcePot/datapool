@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Components;
 
 class Home implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ALL_R';
+    
     private $oc;
     private $entryTable='';
     
@@ -55,7 +57,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>'ALL_R','Class'=>__CLASS__);
+            return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             $html='';

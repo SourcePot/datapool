@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Admin implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ADMIN_R';
+    
     private $oc;
     private $entryTable='';
     
@@ -41,7 +43,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return ['Category'=>'Admin','Emoji'=>'&#8582;','Label'=>'Admin','Read'=>'ADMIN_R','Class'=>__CLASS__];
+            return ['Category'=>'Admin','Emoji'=>'&#8582;','Label'=>'Admin','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             // get page content
             $html='';

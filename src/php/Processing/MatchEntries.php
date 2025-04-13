@@ -201,7 +201,11 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        $result['Statistics']['Entries per sec']=['Value'=>round(1000*$result['Matching']['Entries']['value']/$result['Statistics']['Time consumption [msec]']['Value'],2)];
+        if ($result['Statistics']['Time consumption [msec]']['Value']===0){
+            $result['Statistics']['Entries per sec']=['Value'=>'NaN'];
+        } else {
+            $result['Statistics']['Entries per sec']=['Value'=>round(1000*$result['Matching']['Entries']['value']/$result['Statistics']['Time consumption [msec]']['Value'],2)];
+        }
         return $result;
     }
     

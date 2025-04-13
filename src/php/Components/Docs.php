@@ -12,13 +12,14 @@ namespace SourcePot\Datapool\Components;
 
 class Docs implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ALL_R';
+    
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],];
     
-    public $definition=array('EntryId'=>array('@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0));
+    public $definition=['EntryId'=>['@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0]];
 
     public function __construct($oc)
     {
@@ -61,14 +62,14 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>'ALL_R','Class'=>__CLASS__);
+            return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             // add explorer and set selector
-            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,array('EntryId'=>FALSE));
+            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,['EntryId'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($selector,'ALL_R','ALL_CONTENTADMIN_R');
             // add content article
-            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,[],array('style'=>[]));
+            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,[],['style'=>[]]);
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
                 $html.=$this->assetManager($selector);
                 $this->copy2assetsDir();
@@ -103,18 +104,18 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         }
         $html='';
         // file upload
-        $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','element-content'=>'','key'=>array('add'),'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
-        $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'button','element-content'=>'Add','key'=>array('add'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','element-content'=>'','key'=>['add'],'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add','key'=>['add'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         $matrix['']=array('New asset file'=>$fileUpload,'Cmd'=>$btn);
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content'));
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content']);
         // asset manager
         $selector['Name']=FALSE;
         $selector['EntryId']='%_asset';
         $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
-        $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'tag','Filter'=>''));
+        $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'tag','Filter'=>'']];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets','entryList',$selector,$settings,[]);
         //
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'&#9887;'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9887;']);
         return $html;
     }
     
@@ -148,7 +149,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             }
         }
         // add files present in database
-        $selector=array('Source'=>$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable(),'EntryId'=>'%_asset');
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable(),'EntryId'=>'%_asset'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $assetEntry){
             if (isset($entriesPresentAsAssetFiles[$assetEntry['EntryId']])){continue;}
             $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($assetEntry);

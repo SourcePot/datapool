@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Components;
 
 class Logout implements \SourcePot\Datapool\Interfaces\App{
+
+    private const APP_ACCESS='ALL_REGISTERED_R';
     
     private $oc;
     
@@ -27,15 +29,15 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>'ALL_REGISTERED_R','Class'=>__CLASS__);
+            return array('Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-            $this->oc['logger']->log('info','User logout {user} at {dateTime}',array('user'=>$user['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));
+            $this->oc['logger']->log('info','User logout {user} at {dateTime}',['user'=>$user['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);
             // reset session | keep page state
             $_SESSION=array('page state'=>$_SESSION['page state']);
             session_regenerate_id(TRUE);
             // load Home-app
-            header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('app'=>'SourcePot\Datapool\Components\Home')));
+            header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['app'=>'SourcePot\Datapool\Components\Home']));
             exit;
         }
     }

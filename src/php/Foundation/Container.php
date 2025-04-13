@@ -156,7 +156,7 @@ class Container{
     
     private function selector2hash($registerSelector):string
     {
-        if (empty($registerSelector)){return 'SKIP';}
+        if (empty($registerSelector['Source'])){return 'SKIP';}
         if (!empty($GLOBALS['dbInfo'][$registerSelector['Source']]['Name']['skipContainerMonitor'])){return 'SKIP';}
         //
         if (isset($registerSelector['isSystemCall'])){$isSystemCall=$registerSelector['isSystemCall'];} else {$isSystemCall=FALSE;}

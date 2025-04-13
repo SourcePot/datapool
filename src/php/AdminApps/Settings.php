@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Settings implements \SourcePot\Datapool\Interfaces\App{
     
+    private const APP_ACCESS='ADMIN_R';
+    
     private $oc;
     
     private $entryTable='';
@@ -50,7 +52,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>'ADMIN_R','Class'=>__CLASS__);
+            return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
