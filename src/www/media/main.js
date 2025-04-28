@@ -282,12 +282,12 @@ jQuery(document).ready(function(){
                     var width={'wrapper':jQuery(img).parent().width(),'img':jQuery(img).attr('orgwidth')};
                     var height={'wrapper':jQuery(img).parent().height(),'img':jQuery(img).attr('orgheight')};                        
                 } else {
-                    var width={'wrapper':jQuery(img).parent().width(),'img':img.width()};
+					var width={'wrapper':jQuery(img).parent().width(),'img':img.width()};
                     var height={'wrapper':jQuery(img).parent().height(),'img':img.height()};
                 }
 				if (!(containerId in triggerNext)){triggerNext[containerId]=true;}
 				if (jQuery('#btns-'+containerId+'-wrapper').is(":hidden")){
-					var widthDiff=width['img']-width['wrapper'];heightDiff=height['img']-height['wrapper'];
+					var widthDiff=width['img']-width['wrapper'],heightDiff=height['img']-height['wrapper'];
 					if (widthDiff>heightDiff){
 						animateImage(img,'marginLeft',0,width['wrapper']-width['img'],width['img'],triggerNext[containerId]);
 					} else if (height['img']>height['wrapper']){

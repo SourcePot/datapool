@@ -96,7 +96,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                     }
                 }
                 // bottom web page section
-                $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Bottom paragraph');
+                $selector=['Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Bottom paragraph'];
                 $selector['md']="# What is Datapool?\n\nDatapool is an open-source web application for efficient automated data processing. Processes are configurated graphically as a data flow throught processing blocks.\n";
                 $selector['md'].="Following the principle of *Divide-and-Conquer* multiple Datapool instances (e.g. hosted in a cloud) can interact with eachother or legacy software to handle complex problems.\n";
                 $selector['md'].="This approach keeps complexity under control, responsability can be shared and the overall processing speed can be adjusted.\n";
@@ -113,7 +113,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,[],array('style'=>[]));
             }
             // Show the legal paragraph to everybody
-            $selector=array('Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Legal paragraph');
+            $selector=['Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>'Legal paragraph'];
             $selector['md']="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"btn\" style=\"float:none;\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
             $selector['md'].="# Contact\n## Address\n";
             $selector['md'].="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'email.png')."\" style=\"float:none;\">\n";

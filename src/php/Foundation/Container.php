@@ -223,7 +223,7 @@ class Container{
         $entry['Read']='ALL_R';
         $entry['Write']='ALL_CONTENTADMIN_R';
         $arr=['settings'=>['style'=>['width'=>'100vw','max-width'=>'100%']]];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
         $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
         return $arr;
     }

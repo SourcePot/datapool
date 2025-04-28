@@ -275,7 +275,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
                         'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'options'=>$this->options['Timezone']],
                         'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE)],
                         ];
-        $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()];
+        $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
+        $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'owner'=>$currentUserId];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Serial events definition';
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);

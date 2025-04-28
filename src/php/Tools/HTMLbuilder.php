@@ -310,7 +310,7 @@ class HTMLbuilder{
             throw new \ErrorException('Function '.__FUNCTION__.': Argument arr[canvasCallingClass] is missing but required.',0,E_ERROR,__FILE__,__LINE__);
         }
         $canvasElements=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($arr['canvasCallingClass']);
-        if (empty($arr['addColumns'])){$arr['options']=[];} else {$arr['options']=$arr['addColumns'];}
+        $arr['options']=(empty($arr['addBlackHole']))?[]:['__BLACKHOLE__'=>'BLACKHOLE'];
         foreach($canvasElements as $key=>$canvasEntry){
             if (empty($canvasEntry['Content']['Selector']['Source'])){continue;}
             $arr['options'][$canvasEntry['EntryId']]=$canvasEntry['Content']['Style']['Text'];

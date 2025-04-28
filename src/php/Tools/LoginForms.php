@@ -108,7 +108,7 @@ class LoginForms{
         $arr['result']=$this->formData();
         if (self::USE_RECAPTCHA){$styleClass='g-recaptcha';} else {$styleClass='std';}
         $emailLabel=['tag'=>'label','element-content'=>'Email','for'=>'login-email'];
-        $email=['tag'=>'input','type'=>'email','key'=>['Email'],'id'=>'login-email','style'=>['clear'=>'both','width'=>220],'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
+        $email=['tag'=>'input','type'=>'email','key'=>['Email'],'id'=>'login-email','placeholder'=>'Email','style'=>['clear'=>'both','width'=>220],'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
         $updateBtn=['tag'=>'input','type'=>'submit','key'=>['Update'],'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
         $loginBtn=['tag'=>'input','type'=>'submit','key'=>['Login'],'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['position'=>'absolute','top'=>'0.2em','left'=>'0','width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold']];
         $registerBtn=['tag'=>'input','type'=>'submit','key'=>['Register'],'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['position'=>'absolute','top'=>'0.2em','right'=>'0','width'=>'45%','margin'=>'0 4px 0 0']];
@@ -123,8 +123,8 @@ class LoginForms{
             $matrix['Passphrase']['Value']=$passphrase;
             $matrix['Btns']['Value']=$updateBtn;
         } else {
-            $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
-            $matrix['Email']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
+            //$matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
+            $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
             $matrix['Passphrase']=['Value'=>$passphrase];
             $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($loginBtn);
             $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
@@ -139,10 +139,10 @@ class LoginForms{
     
     private function getStandard(array $arr=[]):string
     {
-        $passphraseLabel=['tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw'];
-        $passphrase=['tag'=>'input','type'=>'password','key'=>['Passphrase'],'id'=>'login-psw','required'=>TRUE,'minlength'=>'6','style'=>['clear'=>'both','width'=>220],'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
+        //$passphraseLabel=['tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw'];
+        $passphrase=['tag'=>'input','type'=>'password','key'=>['Passphrase'],'id'=>'login-psw','placeholder'=>'Passphrase','required'=>TRUE,'minlength'=>'6','style'=>['clear'=>'both','width'=>220],'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE];
+        //$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
         return $html;
     }
     

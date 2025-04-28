@@ -108,7 +108,7 @@ class Database{
 
     public function resetStatistic():array
     {
-        $_SESSION[__CLASS__]['Statistic']=['matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'failed'=>0,'skipped'=>0];
+        $_SESSION[__CLASS__]['Statistic']=['matches'=>0,'updated'=>0,'inserted'=>0,'deleted'=>0,'removed'=>0,'black hole'=>0,'failed'=>0,'skipped'=>0];
         return $_SESSION[__CLASS__]['Statistic'];
     }
     
@@ -970,7 +970,7 @@ class Database{
                 $context['fileError']=FALSE;
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
-                if (is_file($sourceFile) && !$isTestRun){
+                if (is_file($sourceFile) && !$isTestRun && !isset($targetEntry['__BLACKHOLE__'])){
                     try{
                         $this->oc['SourcePot\Datapool\Foundation\Filespace']->addStatistic('inserted files',intval(copy($sourceFile,$targetFile)));
                     } catch(\Exception $e){
@@ -986,7 +986,13 @@ class Database{
                     $context['action']=($keepSource)?'to copy':'to move';
                     $this->oc['logger']->log('notice','Failed {action} file "{sourceFile}" with "{fileError}". The entry "{Name}" was not updated.',$context);     
                 } else {
-                    $targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
+                    if (isset($targetEntry['__BLACKHOLE__'])){
+                        // black hole -> target won't be created
+                        $this->addStatistic('black hole',1);
+                    } else {
+                        // create target
+                        $targetEntry=$this->updateEntry($targetEntry,$isSystemCall);
+                    }
                     if ($keepSource){
                         $context['copyAttachedFile']=TRUE;
                     } else {

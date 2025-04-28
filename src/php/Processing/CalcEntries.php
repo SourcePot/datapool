@@ -149,8 +149,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function calculationParams($callingElement)
     {
         $contentStructure=['Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-                        'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+                        'Target on success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+                        'Target on failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
                         ];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
