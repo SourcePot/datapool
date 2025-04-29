@@ -82,10 +82,10 @@ The DataExplorer has two modes: **view** and **edit** The figure below shows how
 
 PEAR may be required for processing office documents such as emails. If the upload of emails fail, the php skript might have failed to include PEAR. Check if PEAR is installed and the location of the PEAR directory is set correctly on the server. If PEAR is installed, you can check the directory as follows:
 
-/* 
+```
 ...: pear config-get php_dir
 /usr/share/php
-*/
+```
 
 If you use PLESK for your server administration, you can add the correct path as follows:
 
