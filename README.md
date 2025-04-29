@@ -1,17 +1,17 @@
 # Datapool
-Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within a company. Datapool can carry out periodic data crunching with processes defined at team or department level. Datapool can also be used to bridge temporary gaps, for testing processes as well as for production.
+Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
 
 <img src="./assets/img/ComparisonWithSAP.png" alt="Example application"/>
 
-Datapool was originally developed to process invoices (pdf documents) within a patent department, in which all invoice data is extracted, analyzed and compared with the patent files. The invoice data is then processed in conjunction with UNYCOM and SAP. In this production environment, Datapool has been used to process approx. 1000 invoices per month. The data is compared with approx. 200,000 cost data records and 100,000 patent files. Processing takes place 1-2 times per month.  
+Datapool was originally developed to process invoices (pdf documents) within a patent department, in which in a frist step all invoice data is extracted, analyzed and compared with patent files. in a next step invoice data is processed in conjunction with UNYCOM and SAP. In this early production environment, Datapool processed approx. 1000 invoices per month. The data was compared with approx. 200k cost data records and 100k patent files. Processing took place 1-2 times per month.  
 
 ## Sample application
-Moving data between the packages is even more challenging.
+Moving data between different packages can be challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department. The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
 <img src="./assets/img/ExampleApplication.png" alt="Example application" style="width:90%;"/>
 
-The figure shows a typical application example in a company software setup including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case.
+The figure shows a typical application example of a company software ecosystem including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case.
 
 This example requires the following steps:
 1. Parsing: content extraction from the invoice. SAP relevant data as well as patent case specific data.
@@ -34,7 +34,7 @@ This example requires the following steps:
 ## Hosting the web-application
 
 ### Requirements
-This software is designed to run on a server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
+This software is designed to run on a web server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
 
 ### Installation 
 For the installation and creation of the first user account please refer to the video below.
@@ -50,20 +50,20 @@ Example installation using `Composer` on a notebook computer running MS Windows,
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ### Initial adjustments
-After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button the save changes.
+After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
 ## Architecture
-Datapool is based on an **object collection** or `oc`, i.e. a collection objects instantiated from PHP-classes in the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web-application is called.
+Datapool is based on an **object collection** or `oc`, i.e. a collection of objects instantiated from PHP-classes in the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web-application is called.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `init(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the init method of the class.
 
-The configuration file `../setup/objectList.csv` determines the order of creation of objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can be created within the source code when required.
+The configuration file `../setup/objectList.csv` determines the order of creation of the objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can (as usual) be created within the source code when required.
 
 ### Web page creation
 The following flowchart shows the sequence of object instantiations, method calls and content creation. 
 
 <img src="./assets/img/Browser_call_flow.png" alt="Browser call flow"/>
 
-Any class which implements the `SourcePot\Datapool\Interfaces\App` interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar->run()`. 
+Any class which implements the `SourcePot\Datapool\Interfaces\App` interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar→run()`. 
 
 <img src="./assets/img/run_method.png" alt="Run method if an app where content is added" style="width:100%"/>
 
@@ -76,7 +76,20 @@ The DataExplorer has two modes: **view** and **edit** The figure below shows how
 
 <img src="./assets/img/DataExplorer.png" alt="Canvas element properties"/>
 
+# Useful hints
 
+## Dependencies: PEAR
+
+PEAR may be required for processing office documents such as emails. If the upload of emails fail, the php skript might have failed to include PEAR. Check if PEAR is installed and the location of the PEAR directory is set correctly on the server. If PEAR is installed, you can check the directory as follows:
+
+/* 
+...: pear config-get php_dir
+/usr/share/php
+*/
+
+If you use PLESK for your server administration, you can add the correct path as follows:
+
+<img src="./assets/img/plesk_settings_pear.png" alt="Added the PEAR directory in PLESK"/>
 
 
 
