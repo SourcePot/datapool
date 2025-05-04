@@ -181,7 +181,6 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             // Reset $GLOBALS['dbInfo'] to create table
             $baseClass=$GLOBALS['dbInfo'][$context['table']]['EntryId']['baseClass'];
             unset($GLOBALS['dbInfo'][$context['table']]);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($context['table'],$baseClass);
             $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}" and re-created this table.',$context);
         } else if (isset($formData['cmd']['TRUNCATE'])){
             $context['table']=key($formData['cmd']['TRUNCATE']);
