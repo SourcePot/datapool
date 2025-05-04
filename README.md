@@ -38,7 +38,7 @@ This software is designed to run on a web server, i.e. the user interface is the
 
 ### Installation 
 For the installation and creation of the first user account please refer to the video below.
-1. Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
+1. Choose your target directory on your web server or your computer and run composer ```composer create-project sourcepot/datapool {add your target directory here}```. This will create, among other things, the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 3. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. (Check the error log which can be found in the `../debugging/`-subdirectory.  Each error generates a JSON-file containing the error details.) 
 4. Calling the webpage creates the file `../setup/Database/connect.json` which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
