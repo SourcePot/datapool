@@ -434,10 +434,11 @@ class HTMLbuilder{
             } else if (isset($formData['cmd']['approve']) || isset($formData['cmd']['decline'])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $cmd=key($formData['cmd']);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]=['action'=>$cmd,'timestamp'=>time(),'app'=>$selector['app']];
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],1);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],7);
-                $entry['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],9);
+                $userKey=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId().'_action';
+                $entry['Params']['User'][$userKey]=['action'=>$cmd,'timestamp'=>time(),'Source'=>$selector['Source']];
+                $entry['Params']['User'][$userKey]['user']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],1);
+                $entry['Params']['User'][$userKey]['user email']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],7);
+                $entry['Params']['User'][$userKey]['user mobile']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],9);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
@@ -708,8 +709,9 @@ class HTMLbuilder{
         // detected user action
         $tableTitle=$arr['selector']['Name'];
         $userAction='none';
-        if (isset($arr['selector']['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['action'])){
-            $userAction=$arr['selector']['Params']['User'][$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()]['action'];
+        $userKey=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId().'_action';
+        if (isset($arr['selector']['Params']['User'][$userKey])){
+            $userAction=$arr['selector']['Params']['User'][$userKey]['action'];
             $tableTitle='Your decission for the entry: '.$userAction;
         }
         if ($userAction==='approve'){

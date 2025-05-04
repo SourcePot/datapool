@@ -1,7 +1,7 @@
 <?php
 /*
 * This file is part of the Datapool CMS package.
-* ANY METHODS DEALING WITH LEGACY ISSUES SHOULD BE PLACED HERE.
+* ANY METHODS DEALING WITH IMPORTING ENBTRIES AND WITH LEGACY ISSUES SHOULD BE PLACED HERE.
 * @package Datapool
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
@@ -15,8 +15,8 @@ class Legacy{
     private $oc;
     
     private const TIMELIMIT_SEC=550;
-    private const FILESPACE2IMPORT='D:\xampp\htdocs\la-isla\_filespace';
-    private $sourceDB=FALSE;
+    private const FILESPACE2IMPORT='F:\Backup\2025\Backup\La-Isla\2025-05-01 Code\_filespace';    // directory location of the filespace to import
+    private $sourceDB=FALSE;    // The sourceDb setting are stored at ./setup/Legacy/sourceDb.json
     
     public function __construct(array $oc)
     {
@@ -118,6 +118,7 @@ class Legacy{
         }
         if (empty($sourceEntry)){return FALSE;}
         if ($selector['Source']==='user'){
+            // *****************  Target Table "user" *************************
             $paramsFile=$sourceEntry['Params']['File']??[];
             $paramsGeo=$sourceEntry['Params']['Geo']??[];
             $sourceEntry['Params']=array('File'=>$paramsFile,'Geo'=>$paramsGeo);
@@ -134,6 +135,7 @@ class Legacy{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
             }
         } else if ($selector['Source']==='forum'){
+            // *****************  Target Table "forum" *************************
             $sourceEntry['Source']='forum';
             $sourceEntry['EntryId']=$sourceEntry['ElementId'];
             $sourceEntry['Owner']=$sourceEntry['Creator'];
@@ -150,6 +152,7 @@ class Legacy{
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,FALSE);
         } else if ($selector['Source']==='calendar'){
+            // *****************  Target Table "calendar" *************************
             if (strpos($sourceEntry['Name'],'BDay')!==FALSE || strpos($sourceEntry['Type'],'bankholiday')!==FALSE || !isset($sourceEntry['Content']['Entry']['Visibility']) || strpos($sourceEntry['Name'],'Name missing')!==FALSE){return FALSE;}
             $sourceEntry['Source']='calendar';
             $sourceEntry['Group']='Events';
@@ -173,25 +176,10 @@ class Legacy{
                 $sourceEntry['Params']=[];
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
-        } else if ($selector['Source']==='security'){
+        } else if ($selector['Source']==='multimedia'){
+            // *****************  Target Table "multimedia" *************************
             if (strpos($sourceEntry['Type'],'__')===0){return FALSE;}
-            $sourceEntry['Source']='documents';
-            $sourceEntry['EntryId']=$sourceEntry['ElementId'];
-            $sourceEntry['Owner']=$sourceEntry['Creator'];
-            $sourceEntry['Group']='Security';
-            $sourceEntry['Name'].=' ('.$sourceEntry['Type'].')';
-            if (is_file($file)){
-                $sourceEntry['Params']=array('File'=>$sourceEntry['Params']['File']);
-                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$targetFile);
-            } else {
-                $sourceEntry['Params']=[];
-            }
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
-        } else if ($selector['Source']==='multimedia' || $selector['Source']==='cloud' || $selector['Source']==='inventory'){
-            if (strpos($sourceEntry['Type'],'__')===0){return FALSE;}
-            $sourceEntry['Source']=($selector['Source']==='multimedia')?'multimedia':'documents';
-            $sourceEntry['Group']=($selector['Source']==='inventory')?'Inventory':$sourceEntry['Group'];
+            $sourceEntry['Source']='multimedia';
             $sourceEntry['EntryId']=$sourceEntry['ElementId'];
             $sourceEntry['Owner']=$sourceEntry['Creator'];
             if (is_file($file)){
@@ -206,6 +194,45 @@ class Legacy{
                 $sourceEntry['Params']=[];
             }
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
+        } else if ($selector['Source']==='security'){
+            // *****************  Target Table "documents" SECURITY *************************
+            if (strpos($sourceEntry['Type'],'__')===0){return FALSE;}
+            $sourceEntry['Source']='documents';
+            $sourceEntry['EntryId']=$sourceEntry['ElementId'];
+            $sourceEntry['Owner']=$sourceEntry['Creator'];
+            $sourceEntry['Group']='Security';
+            $sourceEntry['Name'].=' ('.$sourceEntry['Type'].')';
+            if (is_file($file)){
+                $sourceEntry['Params']=array('File'=>$sourceEntry['Params']['File']);
+                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$targetFile);
+            } else {
+                $sourceEntry['Params']=[];
+            }
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
+        } else if ($selector['Source']==='inventory' || $selector['Source']==='invoicing' || $selector['Source']==='finance'){
+            // *****************  Target Table "documents" *************************
+            if (strpos($sourceEntry['Type'],'__')===0){return FALSE;}
+            $sourceEntry['Source']='documents';
+            $sourceEntry['Group']=($selector['Source']==='cloud')?$sourceEntry['Group']:($selector['Source'].' '.$sourceEntry['Group']);
+            $sourceEntry['EntryId']=$sourceEntry['ElementId'];
+            $sourceEntry['Owner']=$sourceEntry['Creator'];
+            if (is_file($file)){
+                $paramsFile=(isset($sourceEntry['Params']['File']))?$sourceEntry['Params']['File']:[];
+                $paramsAddress=(isset($sourceEntry['Params']['reverseGeoLoc']['address']))?$sourceEntry['Params']['reverseGeoLoc']['address']:[];
+                $paramsAddress['display_name']=(isset($sourceEntry['Params']['reverseGeoLoc']['display_name']))?$sourceEntry['Params']['reverseGeoLoc']['display_name']:'';
+                $paramsGeo=(isset($sourceEntry['Params']['Geo']))?$sourceEntry['Params']['Geo']:[];
+                $sourceEntry['Params']=array('File'=>$paramsFile,'Address'=>$paramsAddress,'Geo'=>$paramsGeo);
+                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$targetFile);
+            } else {
+                $sourceEntry['Params']=[];
+            }
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($sourceEntry,TRUE,TRUE);
+        } else {
+            // undefined source table
+            $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'Source'=>$selector['Source']);
+            $this->oc['logger']->log('notice','{class} &rarr; {function}() definition missing for source table {Source}',$context);
         }
     }
 

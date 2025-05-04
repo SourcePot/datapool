@@ -18,7 +18,7 @@ class Access{
                     'PUBLIC_R'=>1,
                     'REGISTERED_R'=>2,
                     'MEMBER_R'=>4,
-                    'ALL_DATA_R'=>248,
+                    'ALL_DATA_R'=>65532,
                     'SENTINEL_R'=>1024,
                     'ALL_DATA_SENTINEL_R'=>1272,
                     'ALL_FRIENDS_R'=>768,

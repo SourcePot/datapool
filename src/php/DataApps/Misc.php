@@ -10,16 +10,16 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Invoices implements \SourcePot\Datapool\Interfaces\App{
+class Misc implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ALL_DATA_R';
     
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-                                 'Name'=>array('skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
-                                 );
+    private $entryTemplate=['Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
+                            'Name'=>['skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+                            ];
 
     public function __construct($oc)
     {
@@ -58,7 +58,7 @@ class Invoices implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return array('Category'=>'Data','Emoji'=>'€','Label'=>'Invoices','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Data','Emoji'=>'.','Label'=>'Misc','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
@@ -72,8 +72,8 @@ class Invoices implements \SourcePot\Datapool\Interfaces\App{
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE,'hideApprove'=>FALSE,'hideDecline'=>FALSE);
-                    $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Folder','Filter'=>''));
+                    $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
+                    $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Folder','Filter'=>'']];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,[]);
                 }
             }

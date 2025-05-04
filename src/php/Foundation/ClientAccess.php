@@ -19,12 +19,12 @@ class ClientAccess{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'),
-                                 'Owner'=>array('type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
+                            'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.'],
+                            ];
 
-    private $methodBlackList=array('run','init');
+    private $methodBlackList=['run','init'];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -40,7 +40,6 @@ class ClientAccess{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        //var_dump($this->getAuthorizationHeader(array('client_id'=>'Gunterstraße 13','client_secret'=>'RsuQ632')));
     }
 
     public function getEntryTable(){return $this->entryTable;}
@@ -54,9 +53,9 @@ class ClientAccess{
     * @return array arr
     */
     public function request($arr,$isDebugging=FALSE){
-        $debugArr=array('arr in'=>$arr);
+        $debugArr=['arr in'=>$arr];
         $header=[];
-        $whitelist=array('127.0.0.1','::1');
+        $whitelist=['127.0.0.1','::1'];
        if (isset($_SERVER['HTTPS']) || in_array($_SERVER['REMOTE_ADDR'],$whitelist)){
             // process the request if https is confirmed
             $data=$this->globals2data();
@@ -68,7 +67,7 @@ class ClientAccess{
             $data=$this->request2data($data);
         } else {
             // client requests must use HTTPS
-            $data['answer']=array('error'=>'https is required');
+            $data['answer']=['error'=>'https is required'];
         }
         $arr['data']=$data;
         $this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
@@ -125,7 +124,7 @@ class ClientAccess{
                     $this->oc['logger']->log('warning','Client request failed, Scope "{scope}::{method}" is inavlid. Please check Admin &rarr; Account &rarr; App credentials AND table "clientaccess"',$data['answer']);
                 } else if (method_exists($this->oc[$class],$method)){
                     // set user from owner
-                    $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$data['answer']['owner']);
+                    $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$data['answer']['owner']];
                     $user=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($user,TRUE);
                     $this->oc['SourcePot\Datapool\Root']->updateCurrentUser($user);
                     // invoke client requested method
@@ -134,10 +133,10 @@ class ClientAccess{
                     $data['answer']=$this->oc[$class]->$method($data);
                     $data['answer']['token_expires_in_sec']=$tokenExpiresInSec;
                 } else {
-                    $data['answer']=array('error'=>'Method '.$class.'::'.$method.'() does not exist');
+                    $data['answer']=['error'=>'Method '.$class.'::'.$method.'() does not exist'];
                 }
             } else {
-                $this->oc['logger']->log('error','Access token failed: {failed}',array('failed'=>$data['answer']['error']));
+                $this->oc['logger']->log('error','Access token failed: {failed}',['failed'=>$data['answer']['error']]);
             }
         } else {
             // authorization missing
@@ -162,7 +161,7 @@ class ClientAccess{
         // get credentials entry and try match
         $authorizationEntry=FALSE;
         if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
-            $credentialsSelector=array('Source'=>$this->entryTable,'Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%');
+            $credentialsSelector=['Source'=>$this->entryTable,'Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%'];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
                 if (strcmp($entry['Content']['client_id'],$authorizationArr['client_id'])===0 && strcmp($entry['Content']['client_secret'],$authorizationArr['client_secret'])===0){
                     $authorizationEntry=$entry;
@@ -185,7 +184,7 @@ class ClientAccess{
             $authorizationEntry['Name']=$accessToken;
             $authorizationEntry['Group']='Client token';
             $authorizationEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($authorizationEntry);
-            $tokenContent=array('access_token'=>$accessToken,'expires_in'=>$this->authorizationLifespan,'expires'=>time()+$this->authorizationLifespan,'expires_datetime'=>$authorizationEntry['Expires']);
+            $tokenContent=['access_token'=>$accessToken,'expires_in'=>$this->authorizationLifespan,'expires'=>time()+$this->authorizationLifespan,'expires_datetime'=>$authorizationEntry['Expires']];
             $authorizationEntry['Content']=array_replace_recursive($authorizationEntry['Content'],$tokenContent);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token
@@ -203,7 +202,7 @@ class ClientAccess{
     */
     private function checkToken($data){
         $data['answer']['error']='invalid_grant';
-        $tokenSelector=array('Source'=>$this->entryTable,'Name'=>mb_substr($data['Authorization'],7));
+        $tokenSelector=['Source'=>$this->entryTable,'Name'=>mb_substr($data['Authorization'],7)];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tokenSelector,TRUE) as $token){
             $data['answer']=$token['Content'];
             $data['answer']['owner']=$token['Owner'];
@@ -220,12 +219,12 @@ class ClientAccess{
     }
     
     private function deleteExpiredEntries(){
-        $selector=array('Source'=>$this->entryTable,'Expires<'=>date('Y-m-d H:i:s'));
+        $selector=['Source'=>$this->entryTable,'Expires<'=>date('Y-m-d H:i:s')];
         $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector,TRUE);
     }
     
     private function decodeAuthorization($authorization){
-        $authorizationArr=array('type'=>FALSE,'client_id'=>FALSE,'client_secret'=>FALSE);
+        $authorizationArr=['type'=>FALSE,'client_id'=>FALSE,'client_secret'=>FALSE];
         $authComps=explode(' ',$authorization);
         $authorizationArr['type']=array_shift($authComps);
         $authComps=current($authComps);
@@ -259,17 +258,17 @@ class ClientAccess{
     public function clientAppCredentialsForm($arr){
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',FALSE,FALSE,TRUE)){return $arr;}
-        $contentStructure=array('scope'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\Datapool\Processing\RemoteClient','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()),
-                                'method'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE),
-                                'client_id'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'pi','excontainer'=>TRUE),
-                                'client_secret'=>array('method'=>'element','tag'=>'input','value'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(32),'type'=>'text','excontainer'=>TRUE),
-                                'Access token request'=>array('method'=>'getClientInfo'),
-                                );
-        $selector=array('Source'=>$this->entryTable,'Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Owner'=>$arr['selector']['Owner']);
-        $selector['Name']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(array('selector'=>$arr['selector']),4);
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,array('Group','Folder','Name'),0);
+        $contentStructure=['scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\Datapool\Processing\RemoteClient','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()],
+                            'method'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE],
+                            'client_id'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'pi','excontainer'=>TRUE],
+                            'client_secret'=>['method'=>'element','tag'=>'input','value'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(32),'type'=>'text','excontainer'=>TRUE],
+                            'Access token request'=>['method'=>'getClientInfo'],
+                            ];
+        $selector=['Source'=>$this->entryTable,'Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Owner'=>$arr['selector']['Owner']];
+        $selector['Name']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(['selector'=>$arr['selector']],4);
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,['Group','Folder','Name'],0);
         $selector=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($selector,'ALL_CONTENTADMIN_R','ALL_CONTENTADMIN_R');
-        $arr=array('selector'=>$selector);
+        $arr=['selector'=>$selector];
         $arr['callingClass']=__CLASS__;
         $arr['callingFunction']=__FUNCTION__;
         $arr['contentStructure']=$contentStructure;
@@ -280,15 +279,15 @@ class ClientAccess{
 
     public function getClientInfo(array $arr):string
     {
-        $client=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(array('Source'=>$this->entryTable,'EntryId'=>$arr['key'][0]));
+        $client=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$this->entryTable,'EntryId'=>$arr['key'][0]]);
         if (isset($client['Content']['client_id']) && isset($client['Content']['client_secret'])){
             $authorization=$this->getAuthorizationHeader($client['Content']);
             $text='resource.php?grant_type=authorization_code&Authorization='.urlencode($authorization['Authorization']);
         } else {
             $text='"client_id" or "client_secret" not set';    
         }
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$text,'style'=>array('width'=>'max-content','background-color'=>'#fff','color'=>'#000','padding'=>'0 0.25rem 1rem 0.25rem')));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>array('max-width'=>'200px','overflow'=>'auto')));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$text,'style'=>['width'=>'max-content','background-color'=>'#fff','color'=>'#000','padding'=>'0 0.25rem 1rem 0.25rem']]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['max-width'=>'200px','overflow'=>'auto']]);
         return $html;
     }
     

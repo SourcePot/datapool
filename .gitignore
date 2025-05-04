@@ -17,6 +17,7 @@
 !/src/php/GenericApps/Documents.php
 !/src/php/GenericApps/Calendar.php
 /src/php/DataApps/*
+!/src/php/DataApps/Misc.php
 !/src/php/DataApps/Invoices.php
 !/src/php/DataApps/Expenses.php
 !/src/php/DataApps/Cases.php

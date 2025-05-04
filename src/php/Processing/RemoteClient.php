@@ -221,7 +221,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         $clientRequest['Write']=(empty($clientRequest['Write']))?$this->entryTemplate['Write']['value']:$clientRequest['Write'];
         $idArr=['client_id'=>$clientRequest['client_id'],'Group'=>$clientRequest['Group'],'Folder'=>$clientRequest['Folder'],'Name'=>$clientRequest['Name']];
         $baseEntryId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($idArr,TRUE);
-        // create definition from clientRequest
+        // create definition from clientRequest it contains Status and Settings definition
         $definition=['Source'=>$this->entryTable];
         $definition['EntryId']=$baseEntryId.'_definition';
         foreach($clientRequest as $flatKey=>$value){
@@ -229,6 +229,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
                 $definition[$flatKey]=$value;
             }
         }
+        $definition['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
         $definition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definition,self::ONEDIMSEPARATOR);
         $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($definition,TRUE);
         // create the entry from clientRequest
@@ -305,11 +306,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
         $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$arr['selector']['Source'],'EntryId'=>$entryIdcomps[0].'_setting']);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        //if (isset($formData['cmd']['Settings'])){
         if (isset($formData['val']['Settings'])){
             $setting['Content']['Settings']=$formData['val']['Settings'];
             $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($setting,TRUE);
         }
+        // get defintion entry, removed Status definition and retun Settings form
         $defEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$arr['selector']['Source'],'EntryId'=>$entryIdcomps[0].'_definition']);
         if (empty($setting) || empty($defEntry)){return $arr;}
         unset($defEntry['Content']['Status']);
