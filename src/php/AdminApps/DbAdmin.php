@@ -144,7 +144,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             }
             break;
         }
-        $matrices[$tableKey]=$this->addTableCmds($matrices[$tableKey],$selector);
+        $matrices[$tableKey]=$this->addTableCmds($matrices[$tableKey]??[],$selector);
         $html='';
         foreach($matrices as $caption=>$matrix){
             $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$caption,'keep-element-content'=>TRUE,'hideKeys'=>FALSE,'hideHeader'=>FALSE));
