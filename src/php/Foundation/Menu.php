@@ -19,7 +19,7 @@ class Menu{
                         'Logout'=>['Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
                         'Admin'=>['Emoji'=>'&#8582;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
                         'Apps'=>['Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
-                        'Data'=>['Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Invoice app'],
+                        'Data'=>['Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Misc app'],
                         ];
                              
     private $available=['Categories'=>[],'Apps'=>[]];
