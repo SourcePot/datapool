@@ -19,7 +19,7 @@
         "sourcepot/ops":">=v1.0.0",
         "sourcepot/mediaplayer":">=v4.1.0",
         "sourcepot/sms":">=v2.1.0",
-        "sourcepot/checkentries":">=v2.0.0",
+        "sourcepot/checkentries":">=v1.0.0",
         "sourcepot/statistic":">=1.0.0",
         "sourcepot/bankholidays":">=v1.0.0",
         "sourcepot/email":">=v0.2.0",
