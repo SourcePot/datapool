@@ -690,12 +690,24 @@ class HTMLbuilder{
         if (empty($arr['selector'])){
             return 'Entry does not exsist (yet).';
         }
+        // check if a canvas element is selected and it's processor
+        $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement');
+        $hasCheckEntriesProcessor=(($selectedCanvasElement['Content']['Widgets']['Processor']??'')==='SourcePot\\checkentries\\checkentries');
+        // create tmeplate
         $template=['callingClass'=>__CLASS__,
                 'callingFunction'=>__FUNCTION__,
                 'hideHeader'=>TRUE,
                 'hideKeys'=>TRUE,
                 'previewStyle'=>['max-width'=>self::MAX_PREV_WIDTH,'max-height'=>self::MAX_PREV_HEIGHT],
-                'settings'=>['hideApprove'=>TRUE,'hideDecline'=>TRUE,'hideSelect'=>FALSE,'hideRemove'=>FALSE,'hideDelete'=>FALSE,'hideDownload'=>FALSE,'hideUpload'=>FALSE,'hideDelete'=>FALSE],
+                'settings'=>['hideApprove'=>($hasCheckEntriesProcessor?FALSE:TRUE),
+                             'hideDecline'=>($hasCheckEntriesProcessor?FALSE:TRUE),
+                             'hideSelect'=>FALSE,
+                             'hideRemove'=>FALSE,
+                             'hideDelete'=>FALSE,
+                             'hideDownload'=>FALSE,
+                             'hideUpload'=>FALSE,
+                             'hideDelete'=>FALSE
+                            ],
                 ];
         $arr=array_replace_recursive($template,$arr);
         // create preview

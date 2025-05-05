@@ -58,7 +58,7 @@ class Misc implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return ['Category'=>'Data','Emoji'=>'.','Label'=>'Misc','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
+            return ['Category'=>'Data','Emoji'=>'&star;','Label'=>'Misc','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
@@ -68,13 +68,13 @@ class Misc implements \SourcePot\Datapool\Interfaces\App{
                 $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
                 $arr['selector']=array_merge($explorerSelector,$pageStateSelector);
                 if (!empty($arr['selector']['EntryId'])){
-                    $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+                    $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
+                    $settings=['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
                     $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Folder','Filter'=>'']];
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,[]);
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries table','entryList',$arr['selector'],$settings,[]);
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
@@ -82,8 +82,6 @@ class Misc implements \SourcePot\Datapool\Interfaces\App{
             return $arr;
         }
     }
-    
-    
-    
+
 }
 ?>

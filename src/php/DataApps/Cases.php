@@ -17,9 +17,9 @@ class Cases implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Folder'=>array('type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'),
-                                 'Name'=>array('skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'),
-                                 );
+    private $entryTemplate=['Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
+                            'Name'=>['skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+                            ];
 
     public function __construct($oc)
     {
@@ -58,7 +58,7 @@ class Cases implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return array('Category'=>'Data','Emoji'=>'$','Label'=>'Cases','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Data','Emoji'=>'&#9859;','Label'=>'Cases','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
@@ -68,13 +68,13 @@ class Cases implements \SourcePot\Datapool\Interfaces\App{
                 $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($classWithNamespace);
                 $arr['selector']=array_merge($explorerSelector,$pageStateSelector);
                 if (!empty($arr['selector']['EntryId'])){
-                    $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+                    $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
-                    $settings['columns']=array(array('Column'=>'Name','Filter'=>''),array('Column'=>'Folder','Filter'=>''));
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,[]);
+                    $settings=['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
+                    $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Folder','Filter'=>'']];
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries table','entryList',$arr['selector'],$settings,[]);
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
@@ -82,8 +82,6 @@ class Cases implements \SourcePot\Datapool\Interfaces\App{
             return $arr;
         }
     }
-    
-    
-    
+
 }
 ?>

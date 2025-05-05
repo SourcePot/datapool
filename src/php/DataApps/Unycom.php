@@ -58,7 +58,7 @@ class Unycom implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return array('Category'=>'Data','Emoji'=>'§','Label'=>'UNYCOM','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Data','Emoji'=>'IP','Label'=>'Unycom','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
@@ -74,7 +74,7 @@ class Unycom implements \SourcePot\Datapool\Interfaces\App{
                 } else if (!empty($arr['selector']['Group'])){
                     $settings=['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
                     $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Folder','Filter'=>'']];
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,[]);
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries table','entryList',$arr['selector'],$settings,[]);
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
@@ -82,8 +82,6 @@ class Unycom implements \SourcePot\Datapool\Interfaces\App{
             return $arr;
         }
     }
-    
-    
-    
+
 }
 ?>

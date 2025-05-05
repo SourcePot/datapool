@@ -18,7 +18,8 @@ class SAP implements \SourcePot\Datapool\Interfaces\App{
     
     private $entryTable='';
     private $entryTemplate=['Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
-                            'Name'=>['skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],];
+                            'Name'=>['skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+                            ];
 
     public function __construct($oc)
     {
@@ -57,7 +58,7 @@ class SAP implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return ['Category'=>'Data','Emoji'=>'%','Label'=>'SAP','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
+            return ['Category'=>'Data','Emoji'=>'&#8512;','Label'=>'SAP','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];
@@ -71,9 +72,9 @@ class SAP implements \SourcePot\Datapool\Interfaces\App{
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
+                    $settings=['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
                     $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Folder','Filter'=>'']];
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries','entryList',$arr['selector'],$settings,[]);
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries table','entryList',$arr['selector'],$settings,[]);
                 }
             }
             $arr['toReplace']['{{explorer}}']=$explorerArr['explorerHtml'];
@@ -81,6 +82,6 @@ class SAP implements \SourcePot\Datapool\Interfaces\App{
             return $arr;
         }
     }
-    
+
 }
 ?>
