@@ -17,8 +17,8 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+                            ];
 
     public function __construct($oc){
         $this->oc=$oc;

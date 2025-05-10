@@ -10,8 +10,6 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Processing;
 
-use Google\Protobuf\StringValue;
-
 class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePot\Datapool\Interfaces\HomeApp{
 
     private const ENTRY_EXPIRATION_SEC=3600;

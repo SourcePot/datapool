@@ -15,9 +15,9 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
     
     
     public function __construct(array $oc)
@@ -116,7 +116,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     
     public function setEditMode(array $selector,bool $isEditMode=FALSE):string
     {
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE]);
         $id=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
         $_SESSION['page state']['isEditMode'][$id]=$isEditMode;
         return $id;
@@ -124,7 +124,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     
     public function getEditMode(array $selector):bool
     {
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE]);
         $id=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
         if (isset($_SESSION['page state']['isEditMode'][$id])){
             return $_SESSION['page state']['isEditMode'][$id];
@@ -140,20 +140,20 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         } else if (mb_strpos($dataType,'xml')>0){
             $data=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2xml($data);
         }
-        $headerTemplate=array(''=>'HTTP/1.1 200 OK',
-                              'Access-Control-Allow-Credentials'=>'true',
-                              'Access-Control-Allow-Headers'=>'Authorization',
-                              'Access-Control-Allow-Methods'=>'POST',
-                              'Access-Control-Allow-Origin'=>'*',
-                              'Cache-Control'=>'no-cache,must-revalidate',
-                              'Expires'=>'Sat, 26 Jul 1997 05:00:00 GMT',
-                              'Connection'=>'keep-alive',
-                              'Content-Language'=>'en',
-                              'Content-Type'=>$dataType.';charset='.$charset,
-                              'Content-Length'=>mb_strlen($data,$charset),
-                              'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
-                              'X-API'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle')
-                              );
+        $headerTemplate=[''=>'HTTP/1.1 200 OK',
+                        'Access-Control-Allow-Credentials'=>'true',
+                        'Access-Control-Allow-Headers'=>'Authorization',
+                        'Access-Control-Allow-Methods'=>'POST',
+                        'Access-Control-Allow-Origin'=>'*',
+                        'Cache-Control'=>'no-cache,must-revalidate',
+                        'Expires'=>'Sat, 26 Jul 1997 05:00:00 GMT',
+                        'Connection'=>'keep-alive',
+                        'Content-Language'=>'en',
+                        'Content-Type'=>$dataType.';charset='.$charset,
+                        'Content-Length'=>mb_strlen($data,$charset),
+                        'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
+                        'X-API'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle')
+                        ];
         $header=array_merge($headerTemplate,$header);
         foreach($header as $key=>$value){
             if (empty($key)){
@@ -180,7 +180,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         // create entries
         $entryTemplate=$this->receiverSelector($id);
         
-        $result=array('Pages scanned'=>0,);
+        $result=['Pages scanned'=>0,];
         
         return $result;
     }
@@ -188,13 +188,13 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     public function receiverPluginHtml(array $arr):string
     {
         // get settings html
-        $contentStructure=array('A'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE),
-                                'B'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE),
-                                'Keep source entries'=>array('method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>array(0=>'No, move entries',1=>'Yes, copy entries')),
-                                );
+        $contentStructure=['A'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+                        'B'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+                        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+                        ];
         // get selctor
         $callingElementEntryId=$arr['selector']['EntryId'];
-        $callingElement=array('Folder'=>'Settings','EntryId'=>$callingElementEntryId);
+        $callingElement=['Folder'=>'Settings','EntryId'=>$callingElementEntryId];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
@@ -210,8 +210,8 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         $arr['caption']='Network receiver parameter';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>array('Parameter'=>$row),'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         // settings dependend html
         $html.='Nothing here yet...';
         return $html;
@@ -220,19 +220,19 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     public function receiverSelector(string $id):array
     {
         $Group='INBOX|'.preg_replace('/\W/','_',$id);
-        return array('Source'=>$this->entryTable,'Group'=>$Group);
+        return ['Source'=>$this->entryTable,'Group'=>$Group];
     }    
 
     private function getParams(string $id):array
     {
-        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',array('Folder'=>'Settings','EntryId'=>$id),TRUE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',['Folder'=>'Settings','EntryId'=>$id],TRUE);
         $paramsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
         if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return [];}
     }
 
     private function id2canvasElement($id):array
     {
-        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
     }
 

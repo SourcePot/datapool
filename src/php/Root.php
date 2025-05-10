@@ -22,21 +22,21 @@ final class Root{
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
     public const ADD_VENDOR_CLASSES=['SourcePot\MediaPlayer\MediaPlayer','SourcePot\Sms\Sms','SourcePot\checkentries\checkentries','SourcePot\statistic\statistic','SourcePot\Asset\Rates'];
     // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
-    public const ALLOW_SOURCE_SELECTION=array('SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE);
+    public const ALLOW_SOURCE_SELECTION=['SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE];
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     public const DB_TIMEZONE='UTC';
     public const NULL_DATE='9999-12-30 12:12:12';
     public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
-    public const USE_LANGUAGE_IN_TYPE=array('docs'=>TRUE,'home'=>TRUE);
-    public const ASSETS_WHITELIST=array('email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE);
+    public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE];
+    public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
     // profiling settings
     public const PROFILING_RATE=0;        // 0 ... 1.0 with "1"=100% profiling and "0"=0% profiling
-    public const PROFILING_PROFILE=array('index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'import.php'=>FALSE,'resource.php'=>TRUE);
+    public const PROFILING_PROFILE=['index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'import.php'=>FALSE,'resource.php'=>TRUE];
     public const PROFILING_BACKTRACE=4;
     // required extensions
-    public const REQUIRED_EXTENSIONS=array('ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
+    public const REQUIRED_EXTENSIONS=['ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
                                         'fileinfo'=>TRUE,'gd'=>TRUE,'gettext'=>TRUE,'gmp'=>FALSE,
                                         'intl'=>FALSE,'imap'=>TRUE,'mbstring'=>TRUE,'exif'=>TRUE,'bcmath'=>TRUE,
                                         'mysqli'=>TRUE,'oci8_12c'=>FALSE,'oci8_19'=>FALSE,'odbc'=>FALSE,
@@ -44,7 +44,7 @@ final class Root{
                                         'pdo_odbc'=>FALSE,'pdo_pgsql'=>FALSE,'pdo_sqlite'=>FALSE,'pgsql'=>FALSE,
                                         'shmop'=>FALSE,'snmp'=>FALSE,'soap'=>FALSE,'sockets'=>FALSE,'sodium'=>FALSE,
                                         'sqlite3'=>FALSE,'tidy'=>FALSE,'xsl'=>FALSE,'zip'=>TRUE,'opcache'=>FALSE
-                                        );
+                                        ];
 
     private $oc=[];
     private $placeholder=[];
@@ -63,7 +63,7 @@ final class Root{
     {
         $this->script=$script;
         // initialize the environment, setup the Object Collection (oc) with a temporary logger and setting up the user
-        $this->oc=array(__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this);
+        $this->oc=[__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this];
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
@@ -71,7 +71,7 @@ final class Root{
         $this->updateCurrentUser();
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=array('app'=>array('Class'=>'SourcePot\Datapool\Components\Home'),'selected'=>[]);
+            $_SESSION['page state']=['app'=>['Class'=>'SourcePot\Datapool\Components\Home'],'selected'=>[]];
         }
         // set exception handler and initialize directories
         $this->initDirs();
@@ -127,8 +127,8 @@ final class Root{
         } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             // empty session -> anonymous user
             $loginId=strval(mt_rand(1,999999999));
-            $this->currentUser=array('Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>$loginId,'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R');
-            $this->currentUser['Content']=array('Contact details'=>array('First name'=>'Anonym','Family name'=>'Anonym'),'Address'=>[]);
+            $this->currentUser=['Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>$loginId,'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R'];
+            $this->currentUser['Content']=['Contact details'=>['First name'=>'Anonym','Family name'=>'Anonym'],'Address'=>[]];
             $this->currentUser['Params']=[];
             $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.password_hash($loginId,PASSWORD_DEFAULT);;
             $_SESSION['currentUser']=$this->currentUser;
@@ -190,7 +190,7 @@ final class Root{
     */
     public function log($level,$msg,$context):void
     {
-        $this->loggerCache[]=array('level'=>$level,'msg'=>$msg,'context'=>$context);
+        $this->loggerCache[]=['level'=>$level,'msg'=>$msg,'context'=>$context];
     }
 
     private function emptyLoggerCache():void
@@ -206,7 +206,7 @@ final class Root{
     */
     private function registerVendorClasses()
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // instantiate external classes
         foreach(self::ADD_VENDOR_CLASSES as $classIndex=>$classWithNamespace){
             $context['classWithNamespace']=$classWithNamespace;
@@ -263,7 +263,7 @@ final class Root{
     
     private function checkExtensions():void
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         foreach(self::REQUIRED_EXTENSIONS as $extension=>$isREquired){
             if (!$isREquired){continue;}
             if (!extension_loaded($extension)){
@@ -278,7 +278,7 @@ final class Root{
     */
     public function run():array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // get current temp dir
         if ($this->script!=='resource.php' && $this->script!=='job.php'){
             $GLOBALS['tmp user dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
@@ -327,7 +327,7 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
         } else {
             // invalid
-            $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',array('script'=>$this->script));
+            $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',['script'=>$this->script]);
             exit;  
         }
         // script time consumption in ms
@@ -351,7 +351,7 @@ final class Root{
             if ($arg){
                 $result[$classWithNamespace]=$this->oc[$classWithNamespace]->$method($arg);
             } else {
-                $result[$classWithNamespace]=array('class'=>$classWithNamespace,'method'=>$method);
+                $result[$classWithNamespace]=['class'=>$classWithNamespace,'method'=>$method];
             }
         }
         return $result;
@@ -398,24 +398,24 @@ final class Root{
     */
     private function createObjList(string $objListFile)
     {
-        $orderedInitialization=array('MiscTools.php'=>'301|',
-                                     'Access.php'=>'302|',
-                                     'Filespace.php'=>'303|',
-                                     'Backbone.php'=>'304|',
-                                     'Database.php'=>'305|',
-                                     'Definitions.php'=>'306|',
-                                     'Dictionary.php'=>'307|',
-                                     'User.php'=>'308|',
-                                     'HTMLbuilder.php'=>'309|',
-                                     'Logging.php'=>'310|',
-                                     'Logger.php'=>'311|',
-                                     'Home.php'=>'701|',
-                                     'Account.php'=>'702|',
-                                     'Login.php'=>'901|',
-                                     'Logout.php'=>'902|',
-                                     );
+        $orderedInitialization=['MiscTools.php'=>'301|',
+                                'Access.php'=>'302|',
+                                'Filespace.php'=>'303|',
+                                'Backbone.php'=>'304|',
+                                'Database.php'=>'305|',
+                                'Definitions.php'=>'306|',
+                                'Dictionary.php'=>'307|',
+                                'User.php'=>'308|',
+                                'HTMLbuilder.php'=>'309|',
+                                'Logging.php'=>'310|',
+                                'Logger.php'=>'311|',
+                                'Home.php'=>'701|',
+                                'Account.php'=>'702|',
+                                'Login.php'=>'901|',
+                                'Logout.php'=>'902|',
+                                ];
         $fileIndex=0;
-        $objectsArr=array('000|Header|'.$fileIndex=>array('class','classWithNamespace','file','type'));
+        $objectsArr=['000|Header|'.$fileIndex=>['class','classWithNamespace','file','type']];
         // scan dirs
         $dir=$GLOBALS['dirs']['php'];
         $dirs=scandir($dir);
@@ -437,9 +437,9 @@ final class Root{
                 $class=str_replace('.php','',$file);
                 $classWithNamespace=__NAMESPACE__.'\\'.$dirName.'\\'.$class;
                 if (isset($orderedInitialization[$file])){    
-                    $objectsArr[$orderedInitialization[$file].$cleanType.'|'.$fileIndex]=array($class,$classWithNamespace,$subDir.$file,$cleanType);
+                    $objectsArr[$orderedInitialization[$file].$cleanType.'|'.$fileIndex]=[$class,$classWithNamespace,$subDir.$file,$cleanType];
                 } else {
-                    $objectsArr[$type.'|'.$fileIndex]=array($class,$classWithNamespace,$subDir.$file,$cleanType);
+                    $objectsArr[$type.'|'.$fileIndex]=[$class,$classWithNamespace,$subDir.$file,$cleanType];
                 }
                 $fileIndex++;
             }
@@ -491,24 +491,24 @@ final class Root{
         $relThisDirSuffix='/src/php';
         $wwwDirIndicator='/src/www';
         // relative dirs from root
-        $GLOBALS['dirDefs']=array('root'=>array('relPath'=>'.','permissions'=>0770),
-                                'vendor'=>array('relPath'=>'./vendor','permissions'=>0770),
-                                'src'=>array('relPath'=>'./src','permissions'=>0770),
-                                'setup'=>array('relPath'=>'./src/setup','permissions'=>0770),
-                                'filespace'=>array('relPath'=>'./src/filespace','permissions'=>0770),
-                                'privat tmp'=>array('relPath'=>'./src/tmp_private','permissions'=>0770),
-                                'debugging'=>array('relPath'=>'./src/debugging','permissions'=>0770),
-                                'logging'=>array('relPath'=>'./src/logging','permissions'=>0770),
-                                'ftp'=>array('relPath'=>'./src/ftp','permissions'=>0770),
-                                'fonts'=>array('relPath'=>'./src/fonts','permissions'=>0770),
-                                'php'=>array('relPath'=>'./src/php','permissions'=>0770),
-                                'public'=>array('relPath'=>'./src/www','permissions'=>0775),
-                                'media'=>array('relPath'=>'./src/www/media','permissions'=>0775),
-                                'assets'=>array('relPath'=>'./src/www/assets','permissions'=>0775),
-                                'tmp'=>array('relPath'=>'./src/www/tmp','permissions'=>0775),
-                                );
-        $absRootPath=strtr(__DIR__,array('\\'=>'/'));
-        $absRootPath=strtr($absRootPath,array($relThisDirSuffix=>''));
+        $GLOBALS['dirDefs']=['root'=>['relPath'=>'.','permissions'=>0770],
+                            'vendor'=>['relPath'=>'./vendor','permissions'=>0770],
+                            'src'=>['relPath'=>'./src','permissions'=>0770],
+                            'setup'=>['relPath'=>'./src/setup','permissions'=>0770],
+                            'filespace'=>['relPath'=>'./src/filespace','permissions'=>0770],
+                            'privat tmp'=>['relPath'=>'./src/tmp_private','permissions'=>0770],
+                            'debugging'=>['relPath'=>'./src/debugging','permissions'=>0770],
+                            'logging'=>['relPath'=>'./src/logging','permissions'=>0770],
+                            'ftp'=>['relPath'=>'./src/ftp','permissions'=>0770],
+                            'fonts'=>['relPath'=>'./src/fonts','permissions'=>0770],
+                            'php'=>['relPath'=>'./src/php','permissions'=>0770],
+                            'public'=>['relPath'=>'./src/www','permissions'=>0775],
+                            'media'=>['relPath'=>'./src/www/media','permissions'=>0775],
+                            'assets'=>['relPath'=>'./src/www/assets','permissions'=>0775],
+                            'tmp'=>['relPath'=>'./src/www/tmp','permissions'=>0775],
+                            ];
+        $absRootPath=strtr(__DIR__,['\\'=>'/']);
+        $absRootPath=strtr($absRootPath,[$relThisDirSuffix=>'']);
         // get absolute dirs
         $GLOBALS['dirs']=[];
         $GLOBALS['relDirs']=[];
@@ -543,7 +543,7 @@ final class Root{
             }
             // logging
             if (!is_dir($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);}
-            $err=array('date'=>date('Y-m-d H:i:s'),'additional info'=>$addInfo,'message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString());
+            $err=['date'=>date('Y-m-d H:i:s'),'additional info'=>$addInfo,'message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString()];
             $logFileContent=json_encode($err);
             $logFileName=$GLOBALS['dirs']['debugging'].'/'.time().'_exceptionsLog.json';
             file_put_contents($logFileName,$logFileContent);
@@ -614,9 +614,9 @@ final class Root{
         $startTimeStamp=hrtime(TRUE);
         if ($this->profileActive){
             if (!isset($this->profile['meta'])){
-                $this->profile['meta']=array('Date'=>date('Y-m-d H:i:s'),'Zero'=>$startTimeStamp);
+                $this->profile['meta']=['Date'=>date('Y-m-d H:i:s'),'Zero'=>$startTimeStamp];
             }
-            $row=array('CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name);
+            $row=['CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name];
             $row=$this->addTrace2row($row);
             $row['Start [ms]']=$startTimeStamp;
             $row['Diff [ms]']=FALSE;
@@ -633,7 +633,7 @@ final class Root{
         if ($this->profileActive){
             $stopTimeStamp=hrtime(TRUE);
             $profileMeta=$this->profile['meta'];
-            $row=array('CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name);
+            $row=['CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name];
             $row=$this->addTrace2row($row);
             foreach($this->profile[$row['Hash']] as $startTimeStamp=>$row){
                 if ($row['Diff [ms]']===FALSE){
