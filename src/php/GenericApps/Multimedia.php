@@ -102,7 +102,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
     public function getHomeAppWidget(string $name):array
     {
         $element=['element-content'=>''];
-        $selector=['Source'=>$this->entryTable,'Group'=>'Home','Folder'=>'Public','Name'=>$name];
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable(),'Group'=>'Home','Folder'=>'Public','Name'=>$name];
         $selector['md']='<div class="center"><img src="./assets/logo.jpg" alt="Logo" style="float:none;width:320px;"/></div>';
         $selector['md'].="\n";
         $selector['md'].="\n";
@@ -125,7 +125,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
         $selector['md'].="# Contact\n## Address\n";
         $selector['md'].="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'email.png')."\" style=\"float:none;\">\n";
         $selector['md'].="# Legal\nThis is a private web page. The web page uses cookies for session handling.\n\n";
-        $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,[],array('style'=>[]));
+        $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,[],['style'=>[]]);
         return $element;
     }
     
