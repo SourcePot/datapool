@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 use Google\Protobuf\StringValue;
 
-class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
+class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePot\Datapool\Interfaces\HomeApp{
 
     private const ENTRY_EXPIRATION_SEC=3600;
     private const ONEDIMSEPARATOR='||';
@@ -482,5 +482,18 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor{
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$clientString,'returnTime [sec]',time()-$time,'int');
         }
     }
+
+    public function getHomeAppWidget(string $name):array
+    {
+        $element=['element-content'=>__CLASS__];
+        return $element;
+    }
+    
+    public function getHomeAppInfo():string
+    {
+        $info='This widget presents <b>Remote Clients</b>.';
+        return $info;
+    }
+
 }
 ?>

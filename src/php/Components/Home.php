@@ -113,7 +113,8 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Home Page Widgets';
         $arr['noBtns']=TRUE;
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Start web (Home) page widgets: widgets will be presented ascending based on "Key"']);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$infoMatrix,'caption'=>'Widget info for all available widgets','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE]);
         return $arr;
     }
