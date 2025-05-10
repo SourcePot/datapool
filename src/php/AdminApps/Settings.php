@@ -16,6 +16,46 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
+    public  const SELECTORS=['Logger errors'=>['selector'=>['app'=>__CLASS__,'Source'=>'logger','Group'=>'error'],
+                                               'containerType'=>'entryList',
+                                               'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]],
+                                               'description'=>'Error logs can be found here.'],
+                             'Logger'=>['selector'=>['app'=>__CLASS__,'Source'=>'logger'],
+                                        'containerType'=>'entryList',
+                                        'settings'=>['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'],
+                                        'description'=>'Here you will find all the logs.'],
+                             'Start page'=>['selector'=>\SourcePot\Datapool\Components\Home::WIDGET_SETTINGS_SELECTOR,
+                                                    'containerType'=>'generic',
+                                                    'settings'=>['method'=>'configureHomeWidgetsHtml','classWithNamespace'=>'SourcePot\Datapool\Components\Home'],
+                                                    'description'=>'Configure widget to be shown on the start page'],
+                             'Job processing timimg'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'],
+                                                    'text'=>'Use &#9998; to edit the selected Entry...',
+                                                    'containerType'=>'',
+                                                    'settings'=>[],
+                                                    'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'],
+                             'Job processing'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs'],
+                                                    'containerType'=>'generic',
+                                                    'settings'=>['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'],
+                                                    'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'],
+                             'Entry presentation'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'],
+                                                    'containerType'=>'generic',
+                                                    'settings'=>['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+                                                    'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().'],
+                             'Definitions'=>['selector'=>['app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'],
+                                                    'containerType'=>'entryList',
+                                                    'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'Folder','Filter'=>''],['Column'=>'Content','Filter'=>''],]],
+                                                    'description'=>'Here you can adjust the entry definitions.'],
+                             'Feeds'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'],
+                                                    'containerType'=>'generic',
+                                                    'settings'=>['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'],
+                                                    'description'=>'Here you can add and remove Feeds.'],
+                             'Remote client definitions'=>['selector'=>['app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'],
+                                                    'containerType'=>'entryList',
+                                                    'settings'=>[],
+                                                    'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected']
+                            ];
+    
+
     private $entryTable='';
     private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
                             'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
@@ -57,41 +97,37 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
-            if (empty($selector['Group'])){
-                $settings=['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,[]);    
-            } else {
-                if ($selector['Group']==='Job processing'){
-                    // Job processing setting
-                    $settings=['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'];
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Job overview','generic',$selector,$settings,[]);    
-                } else if ($selector['Group']==='Presentation'){
-                    // Presentation setting
-                    if (empty($selector['Folder'])){
-                        $selector['md']='Please select a Folder for class and method based entry presentation settings...';
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Presentation','mdContainer',$selector,[],['style'=>[]]);
+            foreach(self::SELECTORS as $selectorName=>$containerDef){
+                $match=TRUE;
+                foreach($containerDef['selector'] as $column=>$value){
+                    if ($column==='app'){continue;}
+                    if (empty($selector[$column])){continue;}
+                    $match=strpos($selector[$column],trim($value,'%'))!==FALSE;
+                    if ($match===FALSE){break;}
+                }
+                if ($match===TRUE){
+                    if (empty($containerDef['containerType'])){
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','keep-element-content'=>TRUE,'element-content'=>$containerDef['text']??'']);
                     } else {
-                        $settings=['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'];
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry presentation','generic',$selector,$settings,[]);
+                        $containerDef['selector']=array_merge($containerDef['selector'],$selector);
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selectorName,$containerDef['containerType'],$containerDef['selector'],$containerDef['settings'],[]);
                     }
-                } else if (!empty($selector['EntryId'])){
+                    break;
+                }
+            }
+            if (empty($match)){
+                if (!empty($selector['EntryId'])){
                     $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                     if (isset($entry['Content']) && isset($entry['Params'])){
                         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix(['Content'=>$entry['Content'],'Params'=>$entry['Params']]);
                         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE]);
-                    } else {
-                        $html.='No entry found...';
-                    }
-                } else if ($selector['Group']==='Feeds'){
-                    $settings=['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'];
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Feed URL settings','generic',$selector,$settings,[]);
+                    } 
                 } else {
                     $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' settings','entryList',$selector,$settings,[]);
                 }
-                
             }
-            if (empty($selector['Group'])){$html.=$this->settingsOverviewHtml();}
+            if (empty($selector['Folder'])){$html.=$this->settingsOverviewHtml();}
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -99,17 +135,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
 
     private function settingsOverviewHtml():string
     {
-        $template=[];
-        $template['Logger']=['selector'=>['app'=>__CLASS__,'Source'=>'logger'],'description'=>'Here you will find all the logs.'];
-        $template['Logger errors']=['selector'=>['app'=>__CLASS__,'Source'=>'logger','Group'=>'error'],'description'=>'Error logs can be found here.'];
-        $template['Job processing timimg']=['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'],'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'];
-        $template['Entry presentation']=['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'],'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().'];
-        $template['Definitions']=['selector'=>['app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'],'description'=>'Here you can adjust the entry definitions.'];
-        $template['Feeds']=['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'],'description'=>'Here you can add and remove Feeds.'];
-        $template['Remote client definitions']=['selector'=>['app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'],'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected'];
         // create html
         $matrix=[];
-        foreach($template as $key=>$def){
+        foreach(self::SELECTORS as $key=>$def){
             if (!empty($def['selector']['Name'])){
                 $def['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($def['selector']);
             }

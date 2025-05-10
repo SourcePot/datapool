@@ -1066,6 +1066,9 @@ class HTMLbuilder{
     
     public function getPresentationSettingHtml(array $arr):array
     {
+        if (empty($arr['selector']['Folder'])){
+            return ['html'=>'Please select the presentation setting, provide the Folder...'];
+        }
         $callingClassFunction=explode('::',$arr['selector']['Folder']);
         $entryKeyOptions=$this->appOptions;
         if (isset($this->oc[$callingClassFunction[0]])){

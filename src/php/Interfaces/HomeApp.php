@@ -16,11 +16,11 @@ interface HomeApp{
     * Initializes the instance that implments the HomeApp interface.
     * This interface is used by classes providing functionality to Home App
     */
-    public function getHomeAppWidget():string;
+
     
-    public function getHomeAppCaption():string;
+    public function getHomeAppWidget(string $name):array;
     
-    public function getHomeAppPriority():int;
+    public function getHomeAppInfo():string;
     
 }
 ?>

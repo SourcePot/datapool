@@ -2,7 +2,7 @@
 /*
 * This file is part of the Datapool CMS package.
 * This class provides basic persistency based on the SimpleCache interface.
-* It provides a simple infrastructure to stores data in the persistency-table of the database.
+* It provides a simple infrastructure to store data in the persistency-table of the database.
 * Entry Read and Write access is not restricted, i.e. this class should not be used to store access restricted data! 
 *
 * @package Datapool

@@ -109,21 +109,17 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $arr;
     }
 
-    public function getHomeAppWidget():string
+    public function getHomeAppWidget(string $name):array
     {
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
-        return $html;
+        $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
+        return $element;
     }
     
-    public function getHomeAppCaption():string
+    public function getHomeAppInfo():string
     {
-        return 'Query';
+        $info='This widget provides a <b>query text field</b>. Queries can be entered and will be used to search certain database tables.<br/>The results will be presented below the query field.';
+        return $info;
     }
     
-    public function getHomeAppPriority():int
-    {
-        return 1;
-    }
-
 }
 ?>

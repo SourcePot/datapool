@@ -95,7 +95,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
     public function feedsUrlsWidget(array $arr):array
     {
         $arr['selector']=$this->urlSelector;
-        $accessOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
+        $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
         $contentStructure=array('URL'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE),
                                 'Visibility'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions),
                                 );

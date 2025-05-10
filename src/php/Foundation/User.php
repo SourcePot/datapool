@@ -358,22 +358,19 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $arr;
     }
 
-    public function getHomeAppWidget():string
+    public function getHomeAppWidget(string $name):array
     {
+        $element=['element-content'=>''];
         $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','refreshInterval'=>10];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
-        return $html;
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
+        return $element;
     }
     
-    public function getHomeAppCaption():string
+    public function getHomeAppInfo():string
     {
-        return 'Active user';
+        $info='This widget displays a list of currently <b>logged-in users</b> and <b>resently logged-in users</b>.';
+        return $info;
     }
     
-    public function getHomeAppPriority():int
-    {
-        return 4;
-    }
-
 }
 ?>

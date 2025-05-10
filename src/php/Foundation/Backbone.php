@@ -132,8 +132,9 @@ class Backbone{
         $arr['toReplace']['{{body}}'].='{{firstMenuBar}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='{{secondMenuBar}}'.PHP_EOL;
         // main
-        $main='<div id="top-filler"></div>'.PHP_EOL.'{{explorer}}'.PHP_EOL.'{{content}}'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'main','element-content'=>$main,'keep-element-content'=>TRUE)).PHP_EOL;
+        $arr['toReplace']['{{bottomArticle}}']='<article style="height:100px"></article>';
+        $main='<div id="top-filler"></div>'.PHP_EOL.'{{explorer}}'.PHP_EOL.'{{content}}'.PHP_EOL.'{{bottomArticle}}'.PHP_EOL;
+        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'main','element-content'=>$main,'keep-element-content'=>TRUE]).PHP_EOL;
         // end of page        
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Logger']->getMyLogs().PHP_EOL;
         $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
@@ -145,7 +146,7 @@ class Backbone{
     public function finalizePage(array $arr):array
     {
         foreach($arr['toReplace'] as $needle=>$replacement){
-            $arr['page html']=strtr($arr['page html'],array($needle=>$replacement));
+            $arr['page html']=strtr($arr['page html'],[$needle=>$replacement]);
         }
         $arr['page html']=preg_replace('/{{[a-zA-Z]+}}/','',$arr['page html']);
         return $arr;
@@ -159,7 +160,7 @@ class Backbone{
         } else if (is_file($mediaFileAbs)){
             return $GLOBALS['relDirs']['media'].'/'.$mediaFile;
         } else {
-            $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to open media file "{mediaFile}"',array('class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile));         
+            $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to open media file "{mediaFile}"',['class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile]);         
             return FALSE;
         }
     }

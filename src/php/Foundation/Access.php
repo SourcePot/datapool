@@ -53,6 +53,11 @@ class Access{
         return $this->access;
     }
     
+    public function getAccessOptionsStrings():array
+    {
+        return array_flip($this->access);
+    }
+    
     public function accessString2int($string='NO_R'):int
     {
         if (isset($this->access[$string])){
@@ -196,7 +201,7 @@ class Access{
         return $this->hasRights($user,'REGISTERED_R');
     }
     
-    public function hasRights($user=FALSE,$right='ADMIN_R')
+    public function hasRights($user=FALSE,string $right='ADMIN_R')
     {
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -209,6 +214,19 @@ class Access{
         }    
     }
 
+    public function hasAccess($user=FALSE,int $right=32768)
+    {
+        if (empty($user)){
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+            if (empty($user)){return FALSE;}
+        }
+        if (($user['Privileges'] & $right)>0){
+            return TRUE;
+        } else {
+            return FALSE;
+        }    
+    }
+    
     public function rightsHtml(array $arr,string $right='Privileges'):string
     {
         $arr['html']='';

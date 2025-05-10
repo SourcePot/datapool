@@ -44,6 +44,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'New registration',$loginCount,'int'); 
             // compile page
             $bgStyle=array('background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')');
+            $arr['toReplace']['{{bottomArticle}}']='';
             $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','style'=>$bgStyle,'element-content'=>' ']).PHP_EOL;
             $arr['toReplace']['{{content}}']=$this->getLoginFormHtml([]);
             return $arr;

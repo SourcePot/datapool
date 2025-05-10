@@ -36,7 +36,6 @@ main{
     overflow-x:auto;
     overflow-y:visible; 
     background: none;
-    padding-bottom:130px;
 }
 span{
     font-family:inherit;
@@ -850,6 +849,11 @@ div.center{
 .code{
     color:#ccc;
     background-color:#020044;
+}
+article.widget{
+    padding: 0;
+    overflow-y:auto;
+    border:none;
 }
 .widget-entry-wrapper{
     padding:3px 2vw;

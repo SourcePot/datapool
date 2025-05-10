@@ -156,7 +156,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             if ($category!=='Apps' && $category!=='Data'){continue;}
             $apps[$def['Class']]=$def['Name'];
         }
-        $readOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
+        $readOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
         // init arr
         $arr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'noBtns'=>TRUE];
         $arr['selector']=['Source'=>'settings','Group'=>__CLASS__,'Folder'=>__FUNCTION__,'Name'=>'Replicate app'];

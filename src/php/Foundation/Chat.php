@@ -114,25 +114,21 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $arr;
     }
 
-    public function getHomeAppWidget():string
+    public function getHomeAppWidget(string $name):array
     {
-        $html='';
+        $element=['element-content'=>''];
         $newEntryHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('New entry'.__CLASS__.__FUNCTION__,'generic',['Source'=>$this->entryTable],['method'=>'newEntryHtml','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$newEntryHtml,'icon'=>'&#9993; Chat','class'=>'forum']);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$newEntryHtml,'icon'=>'&#9993; Chat','class'=>'forum']);
         $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$this->currentUser['EntryId'].'%','refreshInterval'=>5];
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chat '.__CLASS__.__FUNCTION__,'generic',$selector,['method'=>'getChat','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
-        return $html;
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chat '.__CLASS__.__FUNCTION__,'generic',$selector,['method'=>'getChat','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
+        return $element;
     }
     
-    public function getHomeAppCaption():string
+    public function getHomeAppInfo():string
     {
-        return '';
+        $info='This widget provides a <b>chat facility</b>. The user will be able to see chat messages<br/>which were addressed to the user and will also be able to create chat messages for other users.';
+        return $info;
     }
     
-    public function getHomeAppPriority():int
-    {
-        return 3;
-    }
-
 }
 ?>

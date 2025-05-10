@@ -817,23 +817,20 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
         return $dateTimeObj->format($format);
     }
 
-    public function getHomeAppWidget():string
+    public function getHomeAppWidget(string $name):array
     {
+        $element=['element-content'=>''];
         $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
-        return $html;
+        $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        return $element;
     }
     
-    public function getHomeAppCaption():string
+    public function getHomeAppInfo():string
     {
-        return 'Calendar';
+        $info='This widget presents todays <b>calendar sheet</b>.';
+        return $info;
     }
     
-    public function getHomeAppPriority():int
-    {
-        return 2;
-    }
-
     private function setEventCache(int $timestamp, array $events):void
     {
         $cacheTimeStamp=intval($timestamp/30)*30;
