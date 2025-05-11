@@ -18,11 +18,11 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     
     public  const SELECTORS=['Logger errors'=>['selector'=>['app'=>__CLASS__,'Source'=>'logger','Group'=>'error'],
                                                'containerType'=>'entryList',
-                                               'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]],
+                                               'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
                                                'description'=>'Error logs can be found here.'],
                              'Logger'=>['selector'=>['app'=>__CLASS__,'Source'=>'logger'],
                                         'containerType'=>'entryList',
-                                        'settings'=>['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'],
+                                        'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
                                         'description'=>'Here you will find all the logs.'],
                              'Start page'=>['selector'=>\SourcePot\Datapool\Components\Home::WIDGET_SETTINGS_SELECTOR,
                                                     'containerType'=>'generic',
@@ -51,7 +51,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                                                     'description'=>'Here you can add and remove Feeds.'],
                              'Remote client definitions'=>['selector'=>['app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'],
                                                     'containerType'=>'entryList',
-                                                    'settings'=>[],
+                                                    'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'EntryId','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>''],]],
                                                     'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected']
                             ];
     
@@ -101,8 +101,11 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                 $match=TRUE;
                 foreach($containerDef['selector'] as $column=>$value){
                     if ($column==='app'){continue;}
-                    if (empty($selector[$column])){continue;}
-                    $match=strpos($selector[$column],trim($value,'%'))!==FALSE;
+                    if (empty($selector[$column])){
+                        $match=FALSE;
+                    } else {
+                        $match=strpos($selector[$column],trim($value,'%'))!==FALSE;
+                    }
                     if ($match===FALSE){break;}
                 }
                 if ($match===TRUE){
