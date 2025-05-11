@@ -220,7 +220,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $idArr=['client_id'=>$clientRequest['client_id'],'Group'=>$clientRequest['Group'],'Folder'=>$clientRequest['Folder'],'Name'=>$clientRequest['Name']];
         $baseEntryId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($idArr,TRUE);
         // create definition from clientRequest it contains Status and Settings definition
-        $definition=['Source'=>$this->entryTable];
+        $definition=['Source'=>$this->entryTable,'Owner'=>'SYSTEM'];
         $definition['EntryId']=$baseEntryId.'_definition';
         foreach($clientRequest as $flatKey=>$value){
             if (strpos($flatKey,'@')!==FALSE || strpos($flatKey,self::ONEDIMSEPARATOR)===FALSE){
@@ -234,7 +234,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $dataTypes=[];
         $valueIndicator=self::ONEDIMSEPARATOR.'@value';
         $dataTypeIndicator=self::ONEDIMSEPARATOR.'@dataType';
-        $flatEntry=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_lastentry'];
+        $flatEntry=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_lastentry','Owner'=>'SYSTEM'];
         foreach($clientRequest as $flatKey=>$value){
             if (strpos($flatKey,'@')===FALSE){
                 $flatEntry[$flatKey]=$value;
