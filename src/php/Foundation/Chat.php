@@ -95,8 +95,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
                 $pair=explode('|',$chat['Folder']);
                 $to=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$pair[0]],TRUE);
                 $toName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($to,1);
-                $chatAuthorName=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('You');
-                $chatAuthorName.=' &rarr; '.$toName;
+                $chatAuthorName=' &#10150; '.$toName;
             }
             if (!empty($timeDiff)){
                 $chatAuthorName.=' (-'.$timeDiff.')';

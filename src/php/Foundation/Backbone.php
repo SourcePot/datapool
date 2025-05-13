@@ -132,7 +132,7 @@ class Backbone{
         $arr['toReplace']['{{body}}'].='{{firstMenuBar}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='{{secondMenuBar}}'.PHP_EOL;
         // main
-        $arr['toReplace']['{{bottomArticle}}']='<article style="height:100px"></article>';
+        $arr['toReplace']['{{bottomArticle}}']='<article style="width:100vw;height:100px;border:none;"></article>';
         $main='<div id="top-filler"></div>'.PHP_EOL.'{{explorer}}'.PHP_EOL.'{{content}}'.PHP_EOL.'{{bottomArticle}}'.PHP_EOL;
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'main','element-content'=>$main,'keep-element-content'=>TRUE]).PHP_EOL;
         // end of page        

@@ -14,8 +14,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class ClientAccess{
     
-    private $authorizationLifespan=60;
-    
+    public const AUTHORIZATION_LIFESPAN=600;
+
     private $oc;
     
     private $entryTable='';
@@ -165,6 +165,7 @@ class ClientAccess{
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
                 if (strcmp($entry['Content']['client_id'],$authorizationArr['client_id'])===0 && strcmp($entry['Content']['client_secret'],$authorizationArr['client_secret'])===0){
                     $authorizationEntry=$entry;
+                    unset($authorizationEntry['Content']['client_secret']);
                     break;
                 }
             }
@@ -179,12 +180,12 @@ class ClientAccess{
         } else {
             // create new token
             $accessToken=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(64);
-            $authorizationEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval(time()+$this->authorizationLifespan));
+            $authorizationEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval(time()+self::AUTHORIZATION_LIFESPAN));
             $authorizationEntry['Owner']='SYSTEM';
             $authorizationEntry['Name']=$accessToken;
             $authorizationEntry['Group']='Client token';
             $authorizationEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($authorizationEntry);
-            $tokenContent=['access_token'=>$accessToken,'expires_in'=>$this->authorizationLifespan,'expires'=>time()+$this->authorizationLifespan,'expires_datetime'=>$authorizationEntry['Expires']];
+            $tokenContent=['access_token'=>$accessToken,'expires_in'=>self::AUTHORIZATION_LIFESPAN,'expires'=>time()+self::AUTHORIZATION_LIFESPAN,'expires_datetime'=>$authorizationEntry['Expires']];
             $authorizationEntry['Content']=array_replace_recursive($authorizationEntry['Content'],$tokenContent);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token

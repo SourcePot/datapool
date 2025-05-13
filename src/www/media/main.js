@@ -339,6 +339,7 @@ jQuery(document).ready(function(){
 		var presentEntrySelector='#present-'+containerId+'-entry';
 		let arr={'selector':{'Source':jQuery(selector).attr('source'),'EntryId':jQuery(selector).attr('entry-id'),'function':jQuery(presentEntrySelector).attr('function')},
 				 'settings':{'presentEntry':'Image shuffle '+jQuery(presentEntrySelector).attr('title')},
+				 'style':{'border':'none','width':'auto'},
 				 'function':'loadEntry',
 				 'htmlSelector':presentEntrySelector
 				};
