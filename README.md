@@ -6,10 +6,11 @@ Datapool is a versatile modular web application. The basic functionalities are:
 3. MediaPlayer: creating/playing video playlists, see https://github.com/SourcePot/mediaplayer
 4. Calendar: calendar sheet holding single and reocurring eventswhich can be connected to the DataExplorer
 5. Forum: communication platform within the web application
-6. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
-7. User role based access control
-8. Interfaces: adding your own apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
-9. Comprehensive logger
+6. RSS feed reader
+7. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
+8. User role based access control
+9. Interfaces: adding your own apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
+10. Comprehensive logger
 
 Sample start page:
 ![Home app](/assets/img/datapool.png "Home app")
