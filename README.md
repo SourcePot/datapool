@@ -1,13 +1,16 @@
 # Datapool
 
-Datapool is a modular web application. The basic functionalities are:
+Datapool is a versatile modular web application. The basic functionalities are:
 1. Media-/File-Explorer: data and file storage based on selectors Group, Folder, Name, EntryId
 2. DataExplorer: process driven dataflow and -processing
 3. MediaPlayer: creating/playing video playlists, see https://github.com/SourcePot/mediaplayer
 4. Calendar: calendar sheet holding single and reocurring eventswhich can be connected to the DataExplorer
 5. Forum: communication platform within the web application
 6. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
-7. User role based access control 
+7. User role based access control
+8. Interfaces: adding your own apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
+
+![Home app](/assets/img/datapool.png "Home app")
 
 ## DataExplorer sample application
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
