@@ -44,7 +44,7 @@ To run Datapool on your computer as the local host, you can install XAMPP Apache
 5. Update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
 >[!IMPORTANT]
->Make sure on a web server, that **only** the `../src/www/`-subdirectory is visible to the public.
+>Running Datapool on a web server, you have to make sure that **only** the `../src/www/`-subdirectory is visible to the public.
 
 ### Example installation using `Composer` and setting up your first user account on a notebook computer running MS Windows, XAMPP server and MariaDB:
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
