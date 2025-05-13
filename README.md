@@ -9,7 +9,9 @@ Datapool is a versatile modular web application. The basic functionalities are:
 6. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
 7. User role based access control
 8. Interfaces: adding your own apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
+9. Comprehensive logger
 
+Sample start page:
 ![Home app](/assets/img/datapool.png "Home app")
 
 ## DataExplorer sample application
