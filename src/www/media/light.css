@@ -264,7 +264,7 @@ article{
     clear:none;
     display:block;
     position:relative;
-    width:100%;
+    width:100vw;
     padding-bottom: 28px;
     overflow:auto;
     background-color:var(--bgColor);
