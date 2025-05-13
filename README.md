@@ -20,7 +20,7 @@ Datapool is a versatile modular web application. The basic functionalities are:
 
 ## Requirements
 This software is designed to run on a web server, i.e. the user interface is the web browser. 
-It requires a **server** (web server or local host), **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required. To run Datapool on your computer as the local host, you can install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). THe example below, user XAMPP as infrastructure.
+It requires a **server** (web server or local host), **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required. To run Datapool on your computer as the local host, you can install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The example below, makes use of XAMPP as infrastructure. To install the web application with all its dependencies and folder structure I use Composer. If you want to use Composer, it needs to be installed on your computer or server, see https://getcomposer.org/download/. Personally, I tend to install the web application first on my personal computer (this is my local backup) and then I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installation 
 For the installation and creation of the first user account please refer to the video below.
