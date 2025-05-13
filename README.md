@@ -29,7 +29,7 @@ It requires:
 To run Datapool on your computer as the local host, you can install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The example below, makes use of XAMPP as infrastructure. To install the web application with all its dependencies and folder structure I use Composer. If you want to use Composer, it needs to be installed on your computer or server, see https://getcomposer.org/download/. Personally, I tend to install the web application first on my personal computer (this is my local backup) and then I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
-1. Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web application shouls be saved here e.g. as a sub directory.
+1. Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web application shouls be saved here e.g. as a sub directory.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
 ## Connecting the database with your web application
