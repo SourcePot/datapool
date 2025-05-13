@@ -12,7 +12,8 @@ Datapool is a versatile modular web application. The basic functionalities are:
 9. Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 10. Comprehensive logger
 
-Sample start page:
+### Sample start page:
+
 ![Home app](/assets/img/datapool.png "Home app")
 
 # Hosting the web application
