@@ -9,7 +9,7 @@ Datapool is a versatile modular web application. The basic functionalities are:
 6. RSS feed reader
 7. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
 8. User role based access control
-9. Interfaces: for adding your own apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
+9. Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 10. Comprehensive logger
 
 Sample start page:
