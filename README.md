@@ -1,9 +1,12 @@
 # Datapool
 
-Datapool is a modular web application.
-
-https://github.com/SourcePot/PIclient
-
+Datapool is a modular web application. The basic functionalities are:
+1. Media-/File-Explorer: data and file storage based on selectors Group, Folder, Name, EntryId
+2. DataExplorer: process driven dataflow and -processing
+2. Calendar: calendar sheet holding single and reocurring eventswhich can be connected to the DataExplorer
+3. Forum: communication platform within the web application
+4. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
+5. User role based access control 
 
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
 
