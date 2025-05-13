@@ -24,21 +24,30 @@ This software is designed to run on a web server, i.e. the user interface is the
 It requires:
 1. a **server** (web server or local host), 
 2. **PHP 8+** and 
-3. a **database** (and a database user, which is used by the web application). 
+3. a **database** (and a database user, which will be used by the web application). 
 
 To run Datapool on your computer as the local host, you can install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The example below, makes use of XAMPP as infrastructure. To install the web application with all its dependencies and folder structure I use Composer. If you want to use Composer, it needs to be installed on your computer or server, see https://getcomposer.org/download/. Personally, I tend to install the web application first on my personal computer (this is my local backup) and then I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installation 
 For the installation and creation of the first user account please refer to the video below.
-1. Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser.
-2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
-3. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. (Check the error log which can be found in the `../debugging/`-subdirectory.  Each error generates a JSON-file containing the error details.) 
-4. Calling the webpage creates the file `../setup/Database/connect.json` which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
-5. Refresh the webpage. This will create an initial admin user account. The user credentials of this account can be found in `../setup/User/initAdminAccount.json`. Register your own account and use the initial admin user account to change your own account to admin access level. Delete the initial admin user account after you have set up your own admin account.
-6. Make sure **only** the `../www/`-subdirectory is visible to the public.
+- Choose your target directory on your web server or your computer and run composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../www/`-subdirectory, which is the www-root and should be accessible via the network, i.e. from a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `...\xampp\htdocs\`. Your web application shouls be saved here e.g. as a sub directory.
+- Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
-Example installation using `Composer` on a notebook computer running MS Windows, XAMPP server and MariaDB:
+## Connecting the database
+1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. (Check the error log which can be found in the `../debugging/`-subdirectory.  Each error generates a JSON-file containing the error details.) 
+2. Calling the webpage creates the file `../setup/Database/connect.json` which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
 
+## Create an Admin account wfor the web application
+1. Refresh the webpage. This will create an initial admin user account. 
+2. Use the **Login** page to register your own account 
+3. Use the initial admin account to login and change your newly registered own account priviledges to admin access level (**Admin &rarr; Account**). The initial admin credentials can be found in `../setup/User/initAdminAccount.json`. 
+4. Delete the initial admin user account.
+5. Update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
+
+>[!IMPORTANT]
+>Make sure **only** the `../www/`-subdirectory is visible to the public.
+
+### Example installation using `Composer` on a notebook computer running MS Windows, XAMPP server and MariaDB:
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ## Initial adjustments
