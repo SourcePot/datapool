@@ -14,7 +14,7 @@ Datapool is a versatile modular web application. The basic functionalities are:
 Sample start page:
 ![Home app](/assets/img/datapool.png "Home app")
 
-# Hosting the web-application
+# Hosting the web application
 
 ## Requirements
 This software is designed to run on a web server, i.e. the user interface is the web browser. It requires **PHP 8+** and a **database**. Depending on the application requirements access to an email account might be required.
@@ -76,7 +76,7 @@ The DataExplorer has two modes: **view** and **edit** The figure below shows how
 ![Canvas element properties](/assets/img/DataExplorer.png "Canvas element properties")
 
 # Architecture
-Datapool is based on an **object collection** or `oc`, i.e. a collection of objects instantiated from PHP-classes in the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web-application is called.
+Datapool is based on an **object collection** or `oc`, i.e. a collection of objects instantiated from PHP-classes in the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `init(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the init method of the class.
 
 The configuration file `../setup/objectList.csv` determines the order of creation of the objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can (as usual) be created within the source code when required.
