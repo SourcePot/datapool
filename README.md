@@ -8,13 +8,13 @@ Datapool is a modular web application. The basic functionalities are:
 4. Remote client interface: adding remote sensor platforms, see https://github.com/SourcePot/PIclient
 5. User role based access control 
 
+## DataExplorer sample application
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
 
 ![Example application](/assets/img/ComparisonWithSAP.png "Example application")
 
-Datapool was originally developed to process invoices (pdf documents) within a patent department, in which in a frist step all invoice data is extracted, analyzed and compared with patent files. in a next step invoice data is processed in conjunction with UNYCOM and SAP. In this early production environment, Datapool processed approx. 1000 invoices per month. The data was compared with approx. 200k cost data records and 100k patent files. Processing took place 1-2 times per month.  
+Datapool was originally developed to process pdf documents. This can be invoices from service providers within a patent department. For such an application, in a frist step all invoice data is extracted, analyzed and compared with patent files. in a next step invoice data is processed in conjunction with UNYCOM and SAP. In this early production environment, Datapool processed approx. 1000 invoices per month. The data was compared with approx. 200k cost data records and 100k patent files. Processing took place 1-2 times per month.  
 
-## Sample application
 Moving data between different packages can be challenging.
 This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department. The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
 
