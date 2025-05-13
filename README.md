@@ -33,12 +33,12 @@ To run Datapool on your computer as the local host, you can install XAMPP Apache
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
 ## Connecting the database with your web application
-1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. (Check the error log which can be found in the `../src/debugging/`-subdirectory.  Each error generates a JSON-file containing the error details.) 
+1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. Check the error log which can be found in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
-2. Use the **Login** page to register your own account 
+2. Use the **Login** page to register your own account.
 3. Use the initial admin account to login and change your newly registered own account priviledges to admin access level (**Admin &rarr; Account**). The initial admin credentials can be found in `../src/setup/User/initAdminAccount.json`. 
 4. Delete the initial admin user account.
 5. Update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
