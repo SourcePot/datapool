@@ -39,7 +39,7 @@ I tend to install the web application on my personal computer first (this serves
 ## Connecting the database with your web application
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
-3. If the database as well as the database user are setup correctly, and the user credentials used by Datapool match the database user, the web application should when reloaded show an empty page with a menu bar at the top and the logger at the bottom of the web browser. 
+3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty page with a menu bar at the top and the logger at the bottom of the web browser. 
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
