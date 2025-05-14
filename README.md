@@ -30,7 +30,7 @@ To run Datapool on your computer as local host, you could install XAMPP Apache +
 
 Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details. 
 
-I tend to install the web application on my personal computer first (this serves as my local backup). In a later step I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
+I tend to install the web application on my personal computer first (this serves as my local backup). In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
@@ -38,7 +38,8 @@ I tend to install the web application on my personal computer first (this serves
 
 ## Connecting the database with your web application
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
-2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database access credentials. Use a text editor to update or match the credentials with the database user credentials. 
+2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
+3. If the database as well as the database user are setup correctly, and the user credentials used by Datapool match the database user, the web application should when reloaded show an empty page with a menu bar at the top and the logger at the bottom of the web browser. 
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
