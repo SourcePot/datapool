@@ -26,7 +26,11 @@ The web application requires:
 2. **PHP 8+** and 
 3. a **database** (and a database user, which will be used by the web application). 
 
-To run Datapool on your computer as the local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The example below, makes use of XAMPP as software environment. I would use Composer to install the web application with all its dependencies and the folder structure. To use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/. Personally, I tend to install the web application on my personal computer first (this serves as my local backup). In a later step I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
+To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment. 
+
+Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details. 
+
+I tend to install the web application on my personal computer first (this serves as my local backup). In a later step I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
