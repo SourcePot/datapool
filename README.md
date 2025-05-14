@@ -39,17 +39,17 @@ I tend to install the web application on my personal computer first (this serves
 ## Connecting the database with your web application
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
-3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty page with a menu bar at the top and the logger at the bottom of the web browser. 
+3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
-2. Use the **Login** page to register your own account.
-3. Use the initial admin account to login and change your newly registered own account priviledges to admin access level (**Admin &rarr; Account**). The initial admin credentials can be found in `../src/setup/User/initAdminAccount.json`. 
+2. Use the **Login** page to register your own new account.
+3. Use the initial admin account to login and change your newly registered own account. Change your own account priviledges from `registered` to `admin` access level (**Admin &rarr; Account**). The initial admin credentials can be found in the `../src/setup/User/initAdminAccount.json` directory. 
 4. Delete the initial admin user account.
 5. Update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
 >[!IMPORTANT]
->Running Datapool on a web server, you have to make sure that **only** the `../src/www/`-subdirectory is visible to the public.
+>Remember, to ensure security you need to adjust all file permissions. Especially, if you run the application on a publicly accessible server, you have to make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited. 
 
 ### Example installation using `Composer` and setting up your first user account on a notebook computer running MS Windows, XAMPP server and MariaDB:
 https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
