@@ -16,13 +16,13 @@ Datapool is a versatile modular web application. The basic functionalities are:
 
 ![Home app](/assets/img/datapool.png "Home app")
 
-# Hosting the web application on a web server or local computer
+# Hosting the web application on a web server or a local computer
 
 ## Requirements
 This software is designed to run on a web server, i.e. the user interface is the web browser.
 
-It requires:
-1. a **server** (web server or local host), 
+The web application requires:
+1. a **server** (web server or local host server, e.g. Apache, nginx), 
 2. **PHP 8+** and 
 3. a **database** (and a database user, which will be used by the web application). 
 
