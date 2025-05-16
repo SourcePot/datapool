@@ -1167,7 +1167,7 @@ final class MiscTools{
         } else if ($condition==='~'){
             return $valueA==-1*$valueB;
         }
-        $this->oc['logger']->log('error','"{class} &rarr; {function}()" called with undefined condition.',['class'=>__CLASS__,'function'=>__FUNCTION__]);    
+        $this->oc['logger']->log('error','"{class} &rarr; {function}()" called with undefined condition "{condition}".',['class'=>__CLASS__,'function'=>__FUNCTION__,'condition'=>$condition]);    
         return FALSE;
     }
     

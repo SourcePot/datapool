@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class Signals{
     private $oc;
 
-    private const MAX_SIGNAL_DEPTH=200;
+    private const MAX_SIGNAL_DEPTH=500;
     
     private $entryTable='';
     private $entryTemplate=['Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
@@ -69,7 +69,7 @@ class Signals{
         return $signalSelector;
     }
     
-    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int'):array
+    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',int $maxSignalDepth=self::MAX_SIGNAL_DEPTH):array
     {
         $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time()];
         // create entry template or get existing entry
@@ -79,7 +79,7 @@ class Signals{
         $signal=array_merge($signal,$signalSelector);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
         // update signal
-        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,self::MAX_SIGNAL_DEPTH);
+        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,$maxSignalDepth);
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal['Owner']='SYSTEM';
         $signal['Expires']=date('Y-m-d H:i:s',34560000+time()); // a signal which is not updated within 400 days will be deleted

@@ -842,7 +842,6 @@ class Database{
     */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
             unset($entry['Privileges']);

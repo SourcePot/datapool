@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePot\Datapool\Interfaces\HomeApp{
 
-    private const ENTRY_EXPIRATION_SEC=3600;
+    private const ENTRY_EXPIRATION_SEC=600;
     private const ONEDIMSEPARATOR='||';
     
     private $oc;
@@ -270,7 +270,8 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
-        $this->distributeClientEntries($entry);
+        $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
+        $this->distributeClientEntries($entry,$expiresTimestamp);
         // create signal
         $signalClient=$this->getClientName($flatEntry);
         foreach($flatEntry as $flatKey=>$signalValue){
@@ -290,8 +291,8 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($setting,TRUE);
         // prepare settings to be sent back to client
         $setting=$this->adjustByDataType($setting,FALSE);
-        unset($setting['Content']['Status']);
-        unset($setting['Params']);
+        if (isset($setting['Content']['Status'])){unset($setting['Content']['Status']);}
+        if (isset($setting['Params'])){unset($setting['Params']);}
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(['Content'=>$setting['Content']],self::ONEDIMSEPARATOR);
     }
 
@@ -408,9 +409,8 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         return $callingElement;
     }
 
-    private function distributeClientEntries(array $entry)
+    private function distributeClientEntries(array $entry, int $expiresTimestamp)
     {
-        $expiresTimestamp=time()+self::ENTRY_EXPIRATION_SEC;
         $remoteClientComps=explode('\\',__CLASS__);
         // loop through all canvas elements with RemoteClient processor -> move entry to RemoteClient processor Selector
         $canvasElementsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Content'=>'%'.implode('%',$remoteClientComps).'%'];

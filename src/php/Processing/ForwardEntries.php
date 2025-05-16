@@ -183,11 +183,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function forwardEntry($base,$sourceEntry,$result,$testRun){
-        $params=current($base['forwardingparams']);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $sample=[];
         $forwardTo=[];
-        $targets=[];
         $equations=[];
         foreach($base['forwardingrules'] as $ruleId=>$rule){
             $forwardOnSuccess=$rule['Content']['Forward on success'];
@@ -221,7 +218,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $targetName=array_search($forwardOnSuccess,$base['targets']);
         }
-        $targets=$base['targets'];
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
             $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,array('style'=>array('min-width'=>'unset','padding'=>'0')));

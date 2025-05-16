@@ -141,8 +141,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         // create html
         $matrix=[];
         foreach(self::SELECTORS as $key=>$def){
+            
             if (!empty($def['selector']['Name'])){
-                $def['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($def['selector']);
+                $selector=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($def['selector']);
+                $def['selector']=(empty($selector))?$def['selector']:$selector;
             }
             $btnArr=['cmd'=>'select','selector'=>$def['selector'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             $btnArr['selector']['Read']=65535;
