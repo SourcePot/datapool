@@ -72,7 +72,7 @@ If you use PLESK for your server administration, you can add the correct path as
 ![Added the PEAR directory in PLESK](/assets/img/plesk_settings_pear.png "Added the PEAR directory in PLESK")
 
 # Under the Hood
-Datapool is based on an **object collection** or `oc`, i.e. a collection of objects instantiated from PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called.
+Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `loadOc(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the loadOc method of the class.
 
 The configuration file `../setup/objectList.csv` determines the order of creation of the objects. With the private property `registerVendorClasses` of class `../php/Root.php` vendor classes can be added to the object collection. Otherwise, an instance of a vendor class can (as usual) be created within the source code when required.
@@ -86,7 +86,7 @@ Any class which implements the `SourcePot\Datapool\Interfaces\App` interface mus
 
 ![Run method if an app where content is added](/assets/img/run_method.png "Run method if an app where content is added")
 
-# Sample application (DataExplorer)
+# Sample application
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
 
 ![Example application](/assets/img/ComparisonWithSAP.png "Example application")
@@ -105,7 +105,7 @@ This example requires the following steps:
 2. Matching an SAP accounting record with the patent case.
 3. Mapping: adjusting data formats and types to create a UNYCOM compatible dataset.
 
-*The Datapool framework can achieve exactly this in a very transparent manner!*
+*The Datapool framework can achieve precisely this in a very transparent way!*
 
 ## DataExplorer features
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
