@@ -58,7 +58,7 @@ https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
-# Architecture
+# Under the Hood
 Datapool is based on an **object collection** or `oc`, i.e. a collection of objects instantiated from PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `loadOc(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the loadOc method of the class.
 
