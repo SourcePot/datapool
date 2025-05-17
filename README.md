@@ -58,6 +58,19 @@ https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
+## Dependencies: PEAR
+
+PEAR may be required for processing office documents such as emails. If the upload of emails fails, the php script might have failed to include PEAR. The exception **"Failed opening required 'PEAR.php' (include_path='/var/www/vhosts/...** indicates a faulty dicetory setting for PEAR. Check if PEAR is installed and the location of the PEAR directory is set correctly on the server. If PEAR is installed, you can check the directory as follows:
+
+```
+pear config-get php_dir
+> /usr/share/php
+```
+
+If you use PLESK for your server administration, you can add the correct path as follows in **Websites & Domains**, **PHP Settings for...**:
+
+![Added the PEAR directory in PLESK](/assets/img/plesk_settings_pear.png "Added the PEAR directory in PLESK")
+
 # Under the Hood
 Datapool is based on an **object collection** or `oc`, i.e. a collection of objects instantiated from PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `loadOc(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the loadOc method of the class.
@@ -72,21 +85,6 @@ The following flowchart shows the sequence of object instantiations, method call
 Any class which implements the `SourcePot\Datapool\Interfaces\App` interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar→run()`. 
 
 ![Run method if an app where content is added](/assets/img/run_method.png "Run method if an app where content is added")
-
-# Useful hints
-
-## Dependencies: PEAR
-
-PEAR may be required for processing office documents such as emails. If the upload of emails fails, the php script might have failed to include PEAR. The exception **"Failed opening required 'PEAR.php' (include_path='/var/www/vhosts/...** indicates a faulty dicetory setting for PEAR. Check if PEAR is installed and the location of the PEAR directory is set correctly on the server. If PEAR is installed, you can check the directory as follows:
-
-```
-pear config-get php_dir
-> /usr/share/php
-```
-
-If you use PLESK for your server administration, you can add the correct path as follows in **Websites & Domains**, **PHP Settings for...**:
-
-![Added the PEAR directory in PLESK](/assets/img/plesk_settings_pear.png "Added the PEAR directory in PLESK")
 
 # Sample application (DataExplorer)
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
