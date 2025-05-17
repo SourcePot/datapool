@@ -58,7 +58,7 @@ https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
-# sample application (DataExplorer)
+# Sample application (DataExplorer)
 Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
 
 ![Example application](/assets/img/ComparisonWithSAP.png "Example application")
