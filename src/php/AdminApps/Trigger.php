@@ -46,9 +46,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
                 if (empty($selector['Folder'])){
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal overview widget','generic',$selector,array('method'=>'signalDisplayWrapper','classWithNamespace'=>'SourcePot\Datapool\Foundation\Signals'),[]);
                 } else {
-                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Name') as $entry){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPlot(['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']]);
-                    }
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot($selector,['height'=>120]);
                 }
             } else if ($selector['Group']==='trigger'){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Trigger widget','generic',[],['method'=>'triggerWidgetWrapper','classWithNamespace'=>__CLASS__],[]);
@@ -56,13 +54,9 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Message widget','generic',[],['method'=>'messageWidgetWrapper','classWithNamespace'=>__CLASS__],[]);
             } else {
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Performance','keep-element-content'=>TRUE));
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Root::run'],FALSE,'Read','Name') as $entry){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPlot(['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']]);
-                }
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Root::run'],['height'=>120]);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Logins','keep-element-content'=>TRUE]);
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Components\Login::run'],FALSE,'Read','Name') as $entry){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPlot(['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']]);
-                }
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Components\Login::run'],['height'=>120,'color'=>'green']);
             }
             // finalize page
             $arr['toReplace']['{{content}}']=$html;

@@ -216,6 +216,12 @@ final class MiscTools{
             return !empty($str);
         }
     }
+
+    public function bool2html($arr):string
+    {
+        $element=$this->bool2element($arr['value']??FALSE,$arr['element']??[],$arr['invertColors']??FALSE);
+        return $this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+    }
     
     public function bool2element($value,array $element=[],bool $invertColors=FALSE):array
     {

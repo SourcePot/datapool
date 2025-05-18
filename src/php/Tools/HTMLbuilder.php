@@ -672,7 +672,7 @@ class HTMLbuilder{
         }
         return $html;
     }
-    
+
     /**
     * This method returns an html-table containing a file upload facility as well as the gerenic buttons 'remove' and 'delete'.
     * $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 

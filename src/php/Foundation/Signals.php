@@ -65,13 +65,17 @@ class Signals{
             unset($signalSelector['Name']);
             return $signalSelector;
         }
-        $signalSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signalSelector,['Source','Group','Folder','Name'],'0','',TRUE);
+        // add EntryId only, if entry Name is complete
+        if (strpos($name,'%')===FALSE){
+            $signalSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signalSelector,['Source','Group','Folder','Name'],'0','',TRUE);
+        }
         return $signalSelector;
     }
     
-    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',int $maxSignalDepth=self::MAX_SIGNAL_DEPTH):array
+    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[]):array
     {
         $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time()];
+        $params=array_merge(['maxSignalDepth'=>self::MAX_SIGNAL_DEPTH],$params);
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
         $signal=['Type'=>$this->entryTable.' '.$dataType,'Content'=>['signal'=>[]]];
@@ -79,7 +83,8 @@ class Signals{
         $signal=array_merge($signal,$signalSelector);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
         // update signal
-        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,$maxSignalDepth);
+        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,$params['maxSignalDepth']);
+        $signal['Params']['signal']=$params;
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal['Owner']='SYSTEM';
         $signal['Expires']=date('Y-m-d H:i:s',34560000+time()); // a signal which is not updated within 400 days will be deleted
@@ -370,58 +375,85 @@ class Signals{
         return $html;
     }
 
-    public function getSignalPlot(array $selector=[]):string|array
+    public function selector2plot(array $selector=[],array $params=[]):string|array
     {
-        if (empty($selector['function'])){
+        if (empty($selector['id'])){
             // draw plot pane request
-            $selector['Source']='signals';
-            $selector['Group']='signal';
-            $selector['callingClass']=__CLASS__;
-            $selector['callingFunction']=__FUNCTION__;
-            $selector['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
-            $selector['height']=150;
-            $_SESSION['plots'][$selector['id']]=$selector;
-            $elArr=['tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']];
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id']];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html];
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            return $html;
+            return $this->selector2plotPlane(__CLASS__,__FUNCTION__,$selector,$params);
         } else {
             // return plot data request
-            $plotData=['use'=>'signalPlot','meta'=>$selector,'data'=>[]];
-            $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Date') as $entry){
-                $folderComps=explode('\\',$entry['Folder']);
-                $plotData['meta']['title']=array_pop($folderComps);
-                $plotData['meta']['title'].=' → '.$entry['Name'];
-                $timeIndices=[];
-                foreach($entry['Content']['signal'] as $index=>$signal){
-                    $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
-                    // get time index
-                    $currentTimeIndex=10*(time()-$signal['timeStamp']);
-                    while(isset($timeIndices[$currentTimeIndex])){
-                        $currentTimeIndex=$currentTimeIndex+1;
-                    }
-                    $timeIndices[$currentTimeIndex]=TRUE;
-                    $currentTimeIndex=$currentTimeIndex/10;
-                    // add data to plot
-                    $plotData['data'][$index]['History [sec]']=$currentTimeIndex;
-                    if ($signal['dataType']==='int'){
-                        $plotData['data'][$index]['Value']=round(floatval($signal['value']));
-                    } else if ($signal['dataType']==='float'){
-                        $plotData['data'][$index]['Value']=floatval($signal['value']);
-                    } else if ($signal['dataType']==='bool'){
-                        $plotData['data'][$index]['Value']=intval($signal['value']);
-                    } else {
-                        $plotData['data'][$index]['Value']=$signal['value'];
-                    }
+            return $this->plotId2data($selector['id']);
+        }
+    }
+
+    public function signal2plot(string|array $callingClass,string $callingFunction='',string $name=''):string|array
+    {
+        if (empty($callingClass['function'])){
+            // draw plot pane request
+            $selector=$this->getSignalSelector($callingClass,$callingFunction,$name);
+            return $this->selector2plotPlane(__CLASS__,__FUNCTION__,$selector);
+        } else {
+            // return plot data request
+            return $this->plotId2data($callingClass['id']);
+        }
+    }
+
+    private function selector2plotPlane(string $callingClass,string $callingFunction,array $selector,array $params=[]):string
+    {
+        $html='';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name') as $entry){
+            $plotDataMeta=array_merge(['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId'],'id'=>$entry['EntryId'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction],($entry['Params']['signal']??[]),$params);
+            $_SESSION['plots'][$entry['EntryId']]=$plotDataMeta;
+            $elArr=['tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$entry['EntryId'].'" placeholder','id'=>$entry['EntryId']];
+            $plotHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $elArr=['tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$entry['EntryId']];
+            $plotHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $elArr=['tag'=>'div','class'=>'plot-wrapper','style'=>[],'keep-element-content'=>TRUE,'element-content'=>$plotHtml];
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+        }
+        $elArr=['tag'=>'div','class'=>'plot-wrapper','style'=>[],'keep-element-content'=>TRUE,'element-content'=>$html];
+        return $this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);    
+    }
+
+    private function plotId2data($id):array
+    {
+        $selector=$_SESSION['plots'][$id]??[];
+        $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
+        if (isset($selector['min'])){$selector['min']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($selector['min'],$selector['dataType']);}
+        if (isset($selector['max'])){$selector['max']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($selector['max'],$selector['dataType']);}
+        $plotData=['use'=>'signalPlot','meta'=>$selector,'data'=>[]];
+        if ($entry){
+            $folderComps=explode('\\',$entry['Folder']);
+            $plotData['meta']['title']=array_pop($folderComps);
+            $plotData['meta']['title'].=' → '.$entry['Name'];
+            $timeIndices=[];
+            foreach($entry['Content']['signal'] as $index=>$signal){
+
+                $debugArr['signals'][$entry['EntryId']]=$entry;
+
+                $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
+                // get time index
+                $currentTimeIndex=10*(time()-$signal['timeStamp']);
+                while(isset($timeIndices[$currentTimeIndex])){
+                    $currentTimeIndex=$currentTimeIndex+1;
+                }
+                $timeIndices[$currentTimeIndex]=TRUE;
+                $currentTimeIndex=$currentTimeIndex/10;
+                // add data to plot
+                $plotData['data'][$index]['History [sec]']=$currentTimeIndex;
+                if ($signal['dataType']==='int'){
+                    $plotData['data'][$index]['Value']=round(floatval($signal['value']));
+                } else if ($signal['dataType']==='float'){
+                    $plotData['data'][$index]['Value']=floatval($signal['value']);
+                } else if ($signal['dataType']==='bool'){
+                    $plotData['data'][$index]['Value']=boolval($signal['value']);
+                } else {
+                    $plotData['data'][$index]['Value']=$signal['value'];
                 }
             }
-            return $plotData;
         }
-        
+        return $plotData;
     }
     
     public function getSignalOptions(array $selector=[]):array

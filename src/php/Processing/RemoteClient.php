@@ -14,7 +14,14 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private const ENTRY_EXPIRATION_SEC=600;
     private const ONEDIMSEPARATOR='||';
-    
+    private const INDICATORS=[self::ONEDIMSEPARATOR.'@value'=>'value',
+                            self::ONEDIMSEPARATOR.'@dataType'=>'dataTypes',
+                            self::ONEDIMSEPARATOR.'@isSignal'=>'signals',
+                            self::ONEDIMSEPARATOR.'@min'=>'min',
+                            self::ONEDIMSEPARATOR.'@max'=>'max',
+                            self::ONEDIMSEPARATOR.'@color'=>'color',
+                        ];
+
     private $oc;
     
     private $entryTable='';
@@ -37,7 +44,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->returnTimeSignals();
     }
     
     public function getEntryTable():string
@@ -229,35 +235,31 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $idArr=['client_id'=>$clientRequest['client_id'],'Group'=>$clientRequest['Group'],'Folder'=>$clientRequest['Folder'],'Name'=>$clientRequest['Name']];
         $baseEntryId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($idArr,TRUE);
         // create definition from clientRequest it contains Status and Settings definition
-        $definition=['Source'=>$this->entryTable,'Owner'=>'SYSTEM'];
-        $definition['EntryId']=$baseEntryId.'_definition';
-        foreach($clientRequest as $flatKey=>$value){
-            if (strpos($flatKey,'@')!==FALSE || strpos($flatKey,self::ONEDIMSEPARATOR)===FALSE){
-                $definition[$flatKey]=$value;
-            }
-        }
-        $definition['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
-        $definition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definition,self::ONEDIMSEPARATOR);
-        $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($definition,TRUE);
-        // create the entry from clientRequest
-        $dataTypes=[];
-        $valueIndicator=self::ONEDIMSEPARATOR.'@value';
-        $dataTypeIndicator=self::ONEDIMSEPARATOR.'@dataType';
+        $flatDefinition=['Source'=>$this->entryTable,'Owner'=>'SYSTEM','EntryId'=>$baseEntryId.'_definition','Expires'=>\SourcePot\Datapool\Root::NULL_DATE];
         $flatEntry=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_lastentry','Owner'=>'SYSTEM'];
         foreach($clientRequest as $flatKey=>$value){
+            $keyComps=explode(self::ONEDIMSEPARATOR,$flatKey);
+            $testKey=self::ONEDIMSEPARATOR.array_pop($keyComps);
+            $newKey=implode(self::ONEDIMSEPARATOR,$keyComps);
             if (strpos($flatKey,'@')===FALSE){
+                // not a definition
                 $flatEntry[$flatKey]=$value;
-            } else if (($pos=strpos($flatKey,$dataTypeIndicator))!==FALSE){
-                $newKey=substr($flatKey,0,$pos);
-                $dataTypes[$newKey]=$value;
-                $newKey=$this->getDataTypeFlatKey($newKey);
-                $flatEntry[$newKey]=$value;
-            } else if (($pos=strpos($flatKey,$valueIndicator))!==FALSE){
-                $newKey=substr($flatKey,0,$pos);
+            } else if (isset(self::INDICATORS[$testKey])){
+                // value, data type or signal
+                if (self::INDICATORS[$testKey]!=='value'){
+                    $newKey=$this->getDataPropertyFlatKey($newKey,self::INDICATORS[$testKey]);
+                }
                 $flatEntry[$newKey]=$value;
             }
+            // defintion
+            if (strpos($flatKey,'@')!==FALSE || strpos($flatKey,self::ONEDIMSEPARATOR)===FALSE){
+                $flatDefinition[$flatKey]=$value;
+            }
         }
-        // save entry
+        // save definition
+        $definition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatDefinition,self::ONEDIMSEPARATOR);
+        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($definition,TRUE);
+        // save the entry from clientRequest
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
         $entry=$this->adjustByDataType($entry,FALSE);
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
@@ -270,21 +272,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
-        $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
-        $this->distributeClientEntries($entry,$expiresTimestamp);
-        // create signal
-        $signalClient=$this->getClientName($flatEntry);
-        foreach($flatEntry as $flatKey=>$signalValue){
-            if (strpos($flatKey,'Content')!==0){continue;}
-            if (stripos($flatKey,'timestamp')!==FALSE){continue;}
-            $dataTypeKey=$this->getDataTypeFlatKey($flatKey);
-            $dataType=(isset($flatEntry[$dataTypeKey]))?$flatEntry[$dataTypeKey]:'int';
-            $signalName=explode(self::ONEDIMSEPARATOR,$flatKey);
-            array_shift($signalName);
-            $signalName=implode('→',$signalName);
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$signalClient,$signalName,$signalValue,$dataType);
-        } 
-        // create the initial setting
+        $this->updateSignalsFromEntry($entry);
+        $this->distributeClientEntries($entry);
+        // create the initial setting and get current setting
         $setting=$entry;
         $setting['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
         $setting['EntryId']=$baseEntryId.'_setting';
@@ -294,6 +284,34 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         if (isset($setting['Content']['Status'])){unset($setting['Content']['Status']);}
         if (isset($setting['Params'])){unset($setting['Params']);}
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(['Content'=>$setting['Content']],self::ONEDIMSEPARATOR);
+    }
+
+    private function updateSignalsFromEntry(array $entry)
+    {
+        $signalClient=$this->getCientId($entry);
+        $flatContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Content']??[]),self::ONEDIMSEPARATOR);
+        $flatSignals=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['signals']??[]),self::ONEDIMSEPARATOR);
+        $flatDataTypes=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['dataTypes']??[]),self::ONEDIMSEPARATOR);
+        $flatMin=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['min']??[]),self::ONEDIMSEPARATOR);
+        $flatMax=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['max']??[]),self::ONEDIMSEPARATOR);
+        $flatColor=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['color']??[]),self::ONEDIMSEPARATOR);
+        foreach($flatSignals as $subKey=>$isSignal){
+            if (intval($isSignal)<1 || !isset($flatContent[$subKey])){continue;}
+            $dataType=$flatDataTypes[$subKey]??'float';
+            $signalValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($flatContent[$subKey],$dataType);
+            $signalName=str_replace(self::ONEDIMSEPARATOR,'→',$subKey);
+            $params=['dataType'=>$dataType,'height'=>120];
+            if (isset($flatMin[$subKey])){$params['min']=$flatMin[$subKey];}
+            if (isset($flatMax[$subKey])){$params['max']=$flatMax[$subKey];}
+            if (isset($flatColor[$subKey])){$params['color']=$flatColor[$subKey];}
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$signalClient,$signalName,$signalValue,$dataType,$params);
+        }
+    }
+
+    public function getClientPlot(array $callingElement):string
+    {
+        $params=current($callingElement['clientparams']??[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Signals']->signal2plot(__CLASS__,$params['Content']['Client']??'__NOTHING_HERE__','%');
     }
 
     private function getClientOptions():array
@@ -360,57 +378,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         return $arr;
     }
 
-    public function getClientPlot(array $callingElement):string|array
+    private function distributeClientEntries(array $entry)
     {
-        $clientOptions=$this->getClientOptions();
-        if (!empty($callingElement['clientparams']) && empty($callingElement['function'])){
-            // draw plot pane request
-            $params=current($callingElement['clientparams']);
-            $selector=[];
-            $selector['signalFunction']=$clientOptions[$params['Content']['Client']];
-            $selector['callingClass']=__CLASS__;
-            $selector['callingFunction']=__FUNCTION__;
-            $selector['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
-            $selector['height']=80;
-            $_SESSION['plots'][$selector['id']]=$selector;
-            $elArr=['tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']];
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id'],'style'=>['clear'=>'both']];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html];
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            return $html;
-        } else {
-            // return plot data request
-            $plotData=['use'=>'clientPlot','meta'=>$callingElement,'data'=>[]];
-            $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-            $signalSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector(__CLASS__,$callingElement['signalFunction'].'%',FALSE);
-            $signalSelector['Name']='Status%';
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Date') as $entry){
-                $plotData['meta']['title']=$callingElement['signalFunction'];
-                $nameComps=explode('→',$entry['Name']);
-                $subkey=array_pop($nameComps);
-                foreach($entry['Content']['signal'] as $index=>$signal){
-                    $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
-                    $plotData['data'][$index]['History [sec]']=time()-$signal['timeStamp'];
-                    if ($signal['dataType']==='int'){
-                        $plotData['data'][$index][$subkey]=round(floatval($signal['value']));
-                    } else if ($signal['dataType']==='float'){
-                        $plotData['data'][$index][$subkey]=floatval($signal['value']);
-                    } else if ($signal['dataType']==='bool'){
-                        $plotData['data'][$index][$subkey]=intval($signal['value']);
-                    } else {
-                        $plotData['data'][$index][$subkey]=$signal['value'];
-                    }
-                }
-            }
-            return $plotData;
-        }
-        return $callingElement;
-    }
-
-    private function distributeClientEntries(array $entry, int $expiresTimestamp)
-    {
+        $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
         $remoteClientComps=explode('\\',__CLASS__);
         // loop through all canvas elements with RemoteClient processor -> move entry to RemoteClient processor Selector
         $canvasElementsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Content'=>'%'.implode('%',$remoteClientComps).'%'];
@@ -421,6 +391,16 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $target['Owner']='SYSTEM';
             $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($expiresTimestamp));
             $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$target,TRUE,FALSE,TRUE,FALSE);
+        }
+    }
+
+    private function getCientId(array $entry):string|FALSE
+    {
+        $entryIdComps=explode('_',$entry['EntryId']);
+        if (count($entryIdComps)===2){
+            return $entryIdComps[0];
+        } else {
+            return FALSE;
         }
     }
 
@@ -435,13 +415,13 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         return $string;
     }
 
-    private function getDataTypeFlatKey(string $flatContentKey):string{
+    private function getDataPropertyFlatKey(string $flatContentKey,string $property='dataTypes'):string{
         $flatContentKey=str_replace('→',self::ONEDIMSEPARATOR,$flatContentKey);
         $flatContentKey=str_replace(' → ',self::ONEDIMSEPARATOR,$flatContentKey);
         if (strpos($flatContentKey,'Content')===FALSE){
-            return 'Params'.self::ONEDIMSEPARATOR.'dataTypes'.self::ONEDIMSEPARATOR.$flatContentKey;
+            return 'Params'.self::ONEDIMSEPARATOR.$property.self::ONEDIMSEPARATOR.$flatContentKey;
         } else {
-            return str_replace('Content','Params'.self::ONEDIMSEPARATOR.'dataTypes',$flatContentKey);
+            return str_replace('Content','Params'.self::ONEDIMSEPARATOR.$property,$flatContentKey);
         }
     }
 
@@ -450,44 +430,14 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry,self::ONEDIMSEPARATOR);
         foreach($flatEntry as $flatKey=>$flatValue){
             if (strpos($flatKey,'Content')!==0){continue;}
-            $dataTypeKey=$this->getDataTypeFlatKey($flatKey);
+            $dataTypeKey=$this->getDataPropertyFlatKey($flatKey,'dataTypes');
             $dataType=(isset($flatEntry[$dataTypeKey]))?$flatEntry[$dataTypeKey]:'int';
-            if ($dataType=='bool'){
-                $flatEntry[$flatKey]=boolval($flatValue);
-            } else if ($dataType=='float'){
-                $flatEntry[$flatKey]=floatval($flatValue);
-            } else if ($dataType=='int'){
-                $flatEntry[$flatKey]=intval($flatValue);
-            } else if ($dataType=='string'){
-                $flatEntry[$flatKey]=strval($flatValue);
-            }
+            $flatEntry[$flatKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($flatValue,$dataType);
         }
         if ($returnFlat){
             return $flatEntry;
         } else {
             return $this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
-        }
-    }
-
-    private function returnTimeSignals()
-    {
-        $returnTimes=[];
-        // check all signals
-        $signalSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector(__CLASS__,'');
-        $signalSelector['Folder']='%RemoteClient%';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector,TRUE,'Read','Date') as $signal){
-            if (!isset($signal['Content']['signal'][0]['timeStamp'])){continue;}
-            if (strpos($signal['Name'],'returnTime')!==FALSE){continue;}
-            if (!isset($returnTimes['Folder'])){
-                $returnTimes[$signal['Folder']]=$signal['Content']['signal'][0]['timeStamp'];
-            } else if ($returnTimes['Folder']<$returnTimes['Folder']=$signal['Content']['signal'][0]['timeStamp']){
-                $returnTimes[$signal['Folder']]=$signal['Content']['signal'][0]['timeStamp'];
-            }
-        }
-        // create return time signal
-        foreach($returnTimes as $folder=>$time){
-            $clientString=array_pop(explode('::',$folder));
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$clientString,'returnTime [sec]',time()-$time,'int');
         }
     }
 
