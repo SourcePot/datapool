@@ -180,7 +180,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $replacementStr="return ['Category'=>'".(($class==='GenericApps')?'Apps':'Data')."','Emoji'=>'".$appData['Emoji']."','Label'=>'".$appData['Label']."','Read'=>'".$appData['Read']."','Class'=>";
                 $newClassStr=preg_replace(self::APP_DEF_REGEX,$replacementStr,$newClassStr);
                 // save new class file
-                $newFile=$fileMeta['dir'].'\\'.$newClassName.'.php';            
+                $newFile=$fileMeta['dir'].'/'.$newClassName.'.php';            
                 file_put_contents($newFile,$newClassStr);
                 unlink($GLOBALS['dirs']['setup'].'objectList.csv');
                 // add to oc
@@ -234,20 +234,20 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $classFileContent=file_get_contents($fileMeta['file']);
                 preg_match(self::APP_ACCESS_REGEX,$classFileContent,$accessMatch);
                 preg_match(self::APP_DEF_REGEX,$classFileContent,$match);
-                if (strpos($match[4],'APP_ACCESS')!==FALSE){unset($match[4]);}
+                if (strpos($match[4]??'','APP_ACCESS')!==FALSE){unset($match[4]);}
                 if (!isset(self::CORE_APPS[$class])){
                     $btns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['deleteApp',$arr['class']]]);
                     $btns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['updateApp',$arr['class']]]);
                 }
-                $readR=trim($match[4]??$accessMatch[1],'\'"');
+                $readR=trim($match[4]??$accessMatch[1]??'','\'"');
             } else {
                 $match=['-','-','-','-'];
             }
         }
         $readRbyte=$accessOptions[$readR];
         $arr['Category']=$match[1];
-        $arr['Emoji']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','keep-element-content'=>TRUE,'value'=>html_entity_decode($match[2]),'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Emoji']]);
-        $arr['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','keep-element-content'=>TRUE,'value'=>html_entity_decode($match[3]),'placeholder'=>'MyNewApp','excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Label']]);
+        $arr['Emoji']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','keep-element-content'=>TRUE,'value'=>html_entity_decode($match[2]??''),'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Emoji']]);
+        $arr['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','keep-element-content'=>TRUE,'value'=>html_entity_decode($match[3]??''),'placeholder'=>'MyNewApp','excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Label']]);
         $arr['Read']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$accessOptions,'selected'=>$readRbyte,'excontainer'=>TRUE,'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Read']]);
         $arr['Cmd']=$btns;
         return $arr;

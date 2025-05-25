@@ -397,8 +397,8 @@ final class Root{
         $meta['className']=array_pop($classComps);
         $meta['fileName']=$meta['className'].'.php';
         $meta['subDir']=array_pop($classComps);
-        $meta['dir']=__DIR__.'\\'.$meta['subDir'];
-        $meta['file']=$meta['dir'].'\\'.$meta['fileName'];
+        $meta['dir']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel(__DIR__.'/'.$meta['subDir']);
+        $meta['file']=$meta['dir'].'/'.$meta['fileName'];
         return $meta;
     }
     
