@@ -12,12 +12,11 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
-    private const APP_ACCESS='ALL_MEMBER_R';
     
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
                             ];
 
     public function __construct($oc){
@@ -60,7 +59,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Apps','Emoji'=>'&#10063;','Label'=>'Multimedia','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Apps','Emoji'=>'&#10063;','Label'=>'Multimedia','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__];
         } else {
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);

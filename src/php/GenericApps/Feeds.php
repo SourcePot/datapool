@@ -79,13 +79,13 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Apps','Emoji'=>'&#10057;','Label'=>'Feeds','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Apps','Emoji'=>'&#10057;','Label'=>'Feeds','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>array('clear'=>'none')));
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'none']]);
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -96,12 +96,12 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
     {
         $arr['selector']=$this->urlSelector;
         $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
-        $contentStructure=array('URL'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE),
-                                'Visibility'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions),
-                                );
+        $contentStructure=['URL'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE],
+                            'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions],
+                            ];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']=$arr['selector']['Folder'];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Source','Group','Folder','Name'),'0','',FALSE);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $arr;
     
@@ -227,9 +227,9 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
     
     public function receive(string $id):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'Feed items loaded'=>0,'Already processed an skipped'=>0);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'Feed items loaded'=>0,'Already processed an skipped'=>0];
         // receive new items from current feed
-        $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger(array('run'=>__CLASS__));
+        $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger(['run'=>__CLASS__]);
         // copy feed items to canvas element
         $canvasElement=$this->id2canvasElement($id);
         $sourceSelector=$this->receiverSelector($id);

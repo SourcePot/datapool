@@ -12,8 +12,6 @@ namespace SourcePot\Datapool\DataApps;
 
 class Misc implements \SourcePot\Datapool\Interfaces\App{
     
-    private const APP_ACCESS='ALL_DATA_R';
-    
     private $oc;
     
     private $entryTable='';
@@ -58,7 +56,7 @@ class Misc implements \SourcePot\Datapool\Interfaces\App{
     {
         $html='';
         if ($arr===TRUE){
-            return ['Category'=>'Data','Emoji'=>'&star;','Label'=>'Misc','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
+            return ['Category'=>'Data','Emoji'=>'⋆','Label'=>'Misc','Read'=>'ALL_DATA_R','Class'=>__CLASS__];
         } else {
             $explorerArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getDataExplorer(__CLASS__);
             $html.=$explorerArr['contentHtml'];

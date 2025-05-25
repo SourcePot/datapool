@@ -13,6 +13,18 @@ namespace SourcePot\Datapool\AdminApps;
 class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
+    private const CLASS_LINE_REGEX="/class\s+([A-Za-z]+)\s+implements\s+/";
+    private const APP_ACCESS_REGEX="/private const APP_ACCESS='([^´;]+)'/";
+    private const APP_DEF_REGEX="/return\s\['Category'=>'([^']+)','Emoji'=>'([^']+)','Label'=>'([^']+)','Read'=>([A-Z_\']+|self::APP_ACCESS),'Class'=>/";
+    private const APP_NAMESPACE_CLASSNAME="/namespace\s([^\s]+)\s*;\s+class\s([^\s]+)/";
+    private const CORE_APPS=['SourcePot\Datapool\GenericApps\Documents'=>TRUE,
+                             'SourcePot\Datapool\GenericApps\Multimedia'=>TRUE,
+                             'SourcePot\Datapool\GenericApps\Calendar'=>TRUE,
+                             'SourcePot\Datapool\GenericApps\Feeds'=>TRUE,
+                             'SourcePot\Datapool\GenericApps\Forum'=>TRUE,
+                             'SourcePot\Datapool\DataApps\Misc'=>TRUE
+                            ];
+    private const TEMPLATE_APPS=['GenericApps'=>'SourcePot\Datapool\GenericApps\Documents','DataApps'=>'SourcePot\Datapool\DataApps\Misc'];
     
     private $oc;
     private $entryTable='';
@@ -51,7 +63,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',['Source'=>$this->entryTable],['method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
             $html.=$this->getPageSettingsHtml();
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('FTP manual upload','generic',['Source'=>$this->entryTable],['method'=>'ftpFileUpload','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
-            $html.=$this->appAdminHtml();
+            //$html.=$this->appAdminHtml();
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('App management','generic',['Source'=>$this->entryTable],['method'=>'appManagement','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
             $html.=$this->backupArticle();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -140,129 +153,106 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         }
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE]);
     }
-    
-    public function appAdminHtml()
+
+    public function appManagement($arr):array
     {
-        $html=$this->replicateAppHtml();
-        $html.=$this->deleteAppHtml();
-        return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
-    }
-    
-    public function replicateAppHtml()
-    {
-        $apps=[];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Menu']->getCategories() as $category=>$def){
-            if ($category!=='Apps' && $category!=='Data'){continue;}
-            $apps[$def['Class']]=$def['Name'];
-        }
-        $readOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
-        // init arr
-        $arr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'noBtns'=>TRUE];
-        $arr['selector']=['Source'=>'settings','Group'=>__CLASS__,'Folder'=>__FUNCTION__,'Name'=>'Replicate app'];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
-        $arr['selector']['Content']=['Source class'=>key($apps),'New class'=>'Inventory','Label'=>'Inventory','Emoji'=>'€','Read'=>32768];
         // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['cmd']) && !isset($formData['cmd']['save'])){
-            $entryKey=key($formData['cmd']);
-            $arr['selector']['Content']=$formData['val'][$entryKey]['Content'];
-            $this->replicateApp($formData['val'][$entryKey]['Content']);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'appProperties');
+        if (isset($formData['cmd']['replicateApp']) || isset($formData['cmd']['updateApp'])){
+            if (isset($formData['cmd']['replicateApp'])){
+                $class=key($formData['cmd']['replicateApp']);
+                $templateClass=self::TEMPLATE_APPS[$class];
+                $fileMeta=$this->oc['SourcePot\Datapool\Root']->class2fileMeta($templateClass);
+            } else {
+                $class=key($formData['cmd']['updateApp']);
+                $fileMeta=$this->oc['SourcePot\Datapool\Root']->class2fileMeta($class);
+            }
+            $appData=$formData['val'][$class];
+            if (empty($appData['Label'])){
+                $this->oc['logger']->log('notice','App was not updated nor replicated, invalid app data Emoji="{Emoji}", Label="{Label}"',$appData);
+            } else {
+                $newClassStr=file_get_contents($fileMeta['file']);
+                // replace class name
+                $newClassName=preg_replace('/[^A-Za-z]/','',$appData['Label']);
+                $replacementStr="class ".$newClassName." implements ";
+                $newClassStr=preg_replace(self::CLASS_LINE_REGEX,$replacementStr,$newClassStr);
+                // replace app definition array
+                $replacementStr="return ['Category'=>'".(($class==='GenericApps')?'Apps':'Data')."','Emoji'=>'".$appData['Emoji']."','Label'=>'".$appData['Label']."','Read'=>'".$appData['Read']."','Class'=>";
+                $newClassStr=preg_replace(self::APP_DEF_REGEX,$replacementStr,$newClassStr);
+                // save new class file
+                $newFile=$fileMeta['dir'].'\\'.$newClassName.'.php';            
+                file_put_contents($newFile,$newClassStr);
+                unlink($GLOBALS['dirs']['setup'].'objectList.csv');
+                // add to oc
+                preg_match(self::APP_NAMESPACE_CLASSNAME,$newClassStr,$match);
+                $class=$match[1].'\\'.$match[2];
+                $this->oc[$class]=TRUE;
+            }
+        } else if (isset($formData['cmd']['deleteApp'])){
+            $class=key($formData['cmd']['deleteApp']);
+            $fileMeta=$this->oc['SourcePot\Datapool\Root']->class2fileMeta($class);
+            $sql='DROP TABLE `'.$this->oc[$class]->getEntryTable().'`;';
+            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[]);
+            $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            unset($this->oc[$class]);
+            unlink($fileMeta['file']);
+            unlink($GLOBALS['dirs']['setup'].'objectList.csv');
         }
-        $contentStructure=['Source class'=>['method'=>'select','options'=>$apps,'excontainer'=>TRUE],
-                                'New class'=>['method'=>'element','tag'=>'input','type'=>'text','minlength'=>3],
-                                'Label'=>['method'=>'element','tag'=>'input','type'=>'text','minlength'=>3],
-                                'Emoji'=>['method'=>'element','tag'=>'input','type'=>'text','minlength'=>1,'maxlength'=>1],
-                                'Read'=>['method'=>'select','options'=>$readOptions,'excontainer'=>TRUE],
-                                ' '=>['method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Replicate'],
-                                ];
-        // get HTML
-        $arr['contentStructure']=$contentStructure;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Replicate app',TRUE);
-    }
-    
-    public function deleteAppHtml()
-    {
-        $classes=[];
-        $classes2files=[];
-        $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
-        if (!is_file($objectListFile)){return '';}
-        foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
-            if (!isset($row['classWithNamespace'])){continue;}
-            if ($row['type']==='Application object' && (strpos($row['classWithNamespace'],'\GenericApps')!==FALSE || strpos($row['classWithNamespace'],'\DataApps')!==FALSE) &&
-                (strpos($row['classWithNamespace'],'\Invoices')===FALSE && strpos($row['classWithNamespace'],'\Multimedia')===FALSE && strpos($row['classWithNamespace'],'\Calendar')===FALSE && strpos($row['classWithNamespace'],'\Forum')===FALSE && strpos($row['classWithNamespace'],'\Documents')===FALSE && strpos($row['classWithNamespace'],'\Feeds')===FALSE)){
-                $classes[$row['classWithNamespace']]=$row['classWithNamespace'];
-                $classes2files[$row['classWithNamespace']]=$row['file'];
+        // html creation
+        $arr['html']=$arr['html']??'';
+        $matrices=['GenericApps'=>[],'DataApps'=>[]];
+        foreach($this->oc as $class=>$obj){
+            if (strpos($class,'\DataApps')!==FALSE){
+                $matrices['DataApps'][$class]=$this->appProperties($class);
+            } else if (strpos($class,'\GenericApps')!==FALSE){
+                $matrices['GenericApps'][$class]=$this->appProperties($class);
             }
         }
-        // init arr
-        $arr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'noBtns'=>TRUE];
-        $arr['selector']=['Source'=>'settings','Group'=>__CLASS__,'Folder'=>__FUNCTION__,'Name'=>'Delete app'];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
-        $arr['selector']['Content']=['Class'=>key($classes)];
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['cmd']) && !isset($formData['cmd']['save'])){
-            $entryKey=key($formData['cmd']);
-            $class2delete=$formData['val'][$entryKey]['Content']['Class'];
-            if (unlink($classes2files[$class2delete])){
-                unlink($objectListFile);
-                $this->oc['logger']->log('info','Class "{class}" has been deleted. But the corresponding database table and filespace was left alone',['class'=>$class2delete]);         
-            } else {
-                $this->oc['logger']->log('error','Failed to remove class "{class}", file {file}',['class'=>$class2delete,'file'=>$classes2files[$class2delete]]);         
-            }
+        foreach($matrices as $caption=>$matrix){
+            $matrix['New']=$this->appProperties($caption);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>$caption.' management','hideKeys'=>TRUE,'hideHeader'=>FALSE]);
         }
-        $contentStructure=['Class'=>['method'=>'select','options'=>$classes,'excontainer'=>TRUE],
-                        ' '=>['method'=>'element','tag'=>'button','hasCover'=>TRUE,'title'=>'Check input before proceeding','element-content'=>'Delete'],
-                        ];
-        // get HTML
-        $arr['contentStructure']=$contentStructure;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Delete app',TRUE);
+        return $arr;
     }
-    
-    private function replicateApp($data)
+
+    private function appProperties($class):array
     {
-        $target=[];
-        $readOptions=array_flip($this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions());
-        $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
-        if (!is_file($objectListFile)){return FALSE;}
-        foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
-            if (strcmp($row['classWithNamespace'],$data['Source class'])!==0){continue;}
-            $target['class']=ucfirst(preg_replace('/[^a-zA-Z]/','',$data['New class']));
-            $source=$row;
-            $source['namespace']=explode('\\',$source['classWithNamespace']);
-            array_pop($source['namespace']);
-            $target['namespace']=$source['namespace']=implode('\\',$source['namespace']);
-            $target['classWithNamespace']=$target['namespace'].'\\'.$target['class'];
-            $target['type']=$source['type'];
-            $target['file']=str_replace($source['class'],$target['class'],$source['file']);
-            break;
-        }
-        if (isset($source)){
-            $category=$this->oc['SourcePot\Datapool\Foundation\Menu']->class2category($source['class']);
-            if (is_file($target['file'])){
-               $this->oc['logger']->log('warning','Target class "{class}" exists already and was not changed',['class'=>$target['class']]);     
-            } else if (strlen($target['class'])<3){
-               $this->oc['logger']->log('warning','Target class name "{class}" is invalid',['class'=>$data['New class']]);     
-            } else if (empty($category)){
-               $this->oc['logger']->log('warning','Category info missing for source class "{class}", nothing created',['class'=>$data['New class']]);     
-            } else {
-                $fileContent=file_get_contents($source['file']);
-                $fileContent=str_replace('class '.$source['class'].' ','class '.$target['class'].' ',$fileContent);
-                $newDef="if (\$arr===TRUE){\n            return ['Category'=>'".$category['Category']."','Emoji'=>'".$data['Emoji']."','Label'=>'".$data['Label']."','Read'=>'".$readOptions[intval($data['Read'])]."','Class'=>__CLASS__];";
-                $fileContent=preg_replace('/(if \(\$arr\=+TRUE\)\{\s+return )(array\([^)]+\)\;)/',$newDef,$fileContent);
-                if (file_put_contents($target['file'],$fileContent)){
-                    unlink($objectListFile);
-                    $this->oc['logger']->log('info','New class "{class}" created',['class'=>$data['New class']]);
-                } else {
-                    $this->oc['logger']->log('error','Creation of class "{class}" failed',['class'=>$data['New class']]);
+        $classComps=explode('\\',$class);
+        $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
+        $accessOptions=array_combine(array_keys($accessOptions),array_keys($accessOptions));
+        // html form creation
+        $btns='';
+        $readR='ALL_MEMBER_R';
+        $arr=['class'=>$class];
+        if (count($classComps)<4){
+            $folder=array_pop($classComps);
+            $match=['',(($folder==='GenericApps')?'Apps':'Data'),'?',''];
+            $btns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'+','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['replicateApp',$arr['class']]]);
+        } else {
+            $fileMeta=$this->oc['SourcePot\Datapool\Root']->class2fileMeta($class);
+            if (is_file($fileMeta['file'])){
+                $classFileContent=file_get_contents($fileMeta['file']);
+                preg_match(self::APP_ACCESS_REGEX,$classFileContent,$accessMatch);
+                preg_match(self::APP_DEF_REGEX,$classFileContent,$match);
+                if (strpos($match[4],'APP_ACCESS')!==FALSE){unset($match[4]);}
+                if (!isset(self::CORE_APPS[$class])){
+                    $btns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['deleteApp',$arr['class']]]);
+                    $btns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['updateApp',$arr['class']]]);
                 }
+                $readR=trim($match[4]??$accessMatch[1],'\'"');
+            } else {
+                $match=['-','-','-','-'];
             }
         }
-        return TRUE;
+        $readRbyte=$accessOptions[$readR];
+        $arr['Category']=$match[1];
+        $arr['Emoji']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','keep-element-content'=>TRUE,'value'=>html_entity_decode($match[2]),'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Emoji']]);
+        $arr['Label']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','keep-element-content'=>TRUE,'value'=>html_entity_decode($match[3]),'placeholder'=>'MyNewApp','excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Label']]);
+        $arr['Read']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$accessOptions,'selected'=>$readRbyte,'excontainer'=>TRUE,'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$arr['class'],'Read']]);
+        $arr['Cmd']=$btns;
+        return $arr;
     }
-    
+
     public function debugFilesHtml($arr):array
     {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';

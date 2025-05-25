@@ -12,8 +12,6 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Documents implements \SourcePot\Datapool\Interfaces\App{
     
-    private const APP_ACCESS='ALL_MEMBER_R';
-    
     private $oc;
     
     private $entryTable='';
@@ -60,7 +58,7 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return ['Category'=>'Apps','Emoji'=>'&#9783;','Label'=>'Documents','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
+            return ['Category'=>'Apps','Emoji'=>'&#9783;','Label'=>'Documents','Read'=>'ALL_MEMBER_R','Class'=>__CLASS__];
         } else {
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);

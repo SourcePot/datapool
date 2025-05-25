@@ -390,6 +390,18 @@ final class Root{
         }
     }
 
+    public function class2fileMeta(string $classWithNamespace):array
+    {
+        $meta=['class'=>$classWithNamespace];
+        $classComps=explode('\\',$classWithNamespace);
+        $meta['className']=array_pop($classComps);
+        $meta['fileName']=$meta['className'].'.php';
+        $meta['subDir']=array_pop($classComps);
+        $meta['dir']=__DIR__.'\\'.$meta['subDir'];
+        $meta['file']=$meta['dir'].'\\'.$meta['fileName'];
+        return $meta;
+    }
+    
     /**
     * This method creates the ../src/setup/objectList.csv file that contains row by row all objects that make-up the Datapool object collection.
     * The objects will be initiated row by row. If a different order is required, the file needs to be edited accordingly.
