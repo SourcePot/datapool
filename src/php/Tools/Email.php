@@ -14,8 +14,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-date_default_timezone_set('Etc/UTC');
-
 class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver{
     
     private const HTML_TEMPLATE='<!DOCTYPE html>
