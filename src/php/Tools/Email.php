@@ -50,8 +50,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
     public $transmitterDef=['Type'=>['@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'],
                             'Content'=>['Originator'=>['@tag'=>'input','@type'=>'text','@default'=>'Datapool','@excontainer'=>TRUE],
-                                        'SMTP server'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                        'Port'=>['@tag'=>'input','@type'=>'interger','@default'=>465,'@excontainer'=>TRUE],
+                                        'SMTP server'=>['@tag'=>'input','@type'=>'text','@default'=>'smtp.strato.de','@excontainer'=>TRUE],
+                                        'Port'=>['@tag'=>'input','@type'=>'interger','@value'=>465,'@excontainer'=>TRUE],
                                         'Connection security'=>['@function'=>'select','@options'=>[''=>'None','STARTTLS'=>'STARTTLS','SSLTLS'=>'SSL/TLS'],'@excontainer'=>TRUE],
                                         'Authentication method'=>['@function'=>'select','@options'=>['no_authentication'=>'No authentication','normal_password'=>'Normal password','encrypted_password'=>'Entcrypted password','keberos'=>'Keberos/GSSAPI','ntlm'=>'NTLM'],'@excontainer'=>TRUE],
                                         'User'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
@@ -299,21 +299,24 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $mail->Username=$smtpSettings['User'];
             $mail->Password=$smtpSettings['Password'];
             // create header and body
+            $mail->CharSet='UTF-8';
             $mail->setFrom($entry['Content']['From'],$entry['Content']['FromName']);
             //$mail->addReplyTo('replyto@example.com', 'First Last');
             $mail->addAddress($entry['Content']['To'],$entry['Content']['ToName']??'');
             $mail->Subject=$entry['Content']['Subject'];
             $html=$text='';
+            $flatContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry['Content']);
             $skipSections=['From'=>TRUE,'FromName'=>TRUE,'To'=>TRUE,'ToName'=>TRUE,'Subject'=>TRUE,];
             $hideSectionsName=['Message'=>TRUE];
-            foreach($entry['Content'] as $section=>$content){
+            foreach($flatContent as $section=>$content){
                 if ($skipSections[$section]??FALSE){continue;}
                 if (empty($hideSectionsName[$section])){
-                    $text=$section."\n\r";
-                    $html.='<h1>'.htmlentities($section).'</h1>';
+                    $section=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($section);
+                    $text=htmlspecialchars_decode($section)."\n\r";
+                    $html.='<h1>'.$section.'</h1>';
                 }
-                $text=$content."\n\r";
-                $html.='<p>'.htmlentities($content).'<p>';
+                $text=strip_tags(htmlspecialchars_decode($content))."\n\r";
+                $html.='<div class="content">'.$content.'<div>';
             }
             $html=str_replace('{{html}}',$html,self::HTML_TEMPLATE);
             $html=str_replace('{{title}}','',$html);
