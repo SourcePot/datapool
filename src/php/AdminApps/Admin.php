@@ -301,7 +301,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById(['Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init']);
         // get HTML
         $arr['contentStructure']=$contentStructure;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,TRUE);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Web application settings',TRUE);
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
     }
