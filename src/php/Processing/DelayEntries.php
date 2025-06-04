@@ -15,9 +15,9 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -68,14 +68,14 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getDelayEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying','generic',$callingElement,array('method'=>'getDelayEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying','generic',$callingElement,['method'=>'getDelayEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
      private function getDelayEntriesInfo($callingElement){
         $matrix=[];
-        $matrix['Description']=array('<p style="width:30em;">Entries will be forwarded to the selected next cnavas element when the trigger is active.</p>');
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
+        $matrix['Description']=['<p style="width:30em;">Entries will be forwarded to the selected next cnavas element when the trigger is active.</p>'];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
     
@@ -92,30 +92,30 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runDelayEntries($arr['selector'],2);
         }
         // build html
-        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
         $btnArr['value']='Test';
-        $btnArr['key']=array('test');
+        $btnArr['key']=['test'];
         $matrix['Commands']['Test']=$btnArr;
         $btnArr['value']='Run';
-        $btnArr['key']=array('run');
+        $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $matrix['Commands']['Trigger']=array('tag'=>'button','element-content'=>'Manual trigger','key'=>array('trigger'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delaying widget'));
+        $matrix['Commands']['Trigger']=['tag'=>'button','element-content'=>'Manual trigger','key'=>['trigger'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Delaying widget']);
         foreach($result as $caption=>$matrix){
-            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
             if ($caption==='Delaying statistics'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
-        $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
+        $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
         return $arr;
     }
 
     private function getDelayEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying entries settings','generic',$callingElement,array('method'=>'getDelayEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Delaying entries settings','generic',$callingElement,['method'=>'getDelayEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -124,20 +124,18 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->delayingParams($arr['selector']);
         $arr['html'].=$this->delayingRules($arr['selector']);
-        //$selectorMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($callingElement['Content']['Selector']);
-        //$arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$selectorMatrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Selector used for Delaying'));
         return $arr;
     }
     
     private function delayingParams($callingElement){
-        $return=array('html'=>'','Parameter'=>[],'result'=>[]);
+        $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $contentStructure=array('Forward to canvas element'=>array('method'=>'canvasElementSelect','addColumns'=>array(''=>'...'),'excontainer'=>TRUE),
-                                'Reset all trigger when condition is met'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
-                                );
+        $contentStructure=['Forward to canvas element'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
+                            'Reset all trigger when condition is met'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>['No','Yes']],
+                            ];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']['Content']=array('Column to delay'=>'Name');
+        $arr['selector']['Content']=['Column to delay'=>'Name'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -153,16 +151,16 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
-        $matrix=array('Parameter'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        $matrix=['Parameter'=>$row];
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
     private function delayingRules($callingElement){
         $triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
-        $contentStructure=array('Trigger'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions),
-                                'Reset trigger'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>array('No','Yes')),
-                                'Combine with next row'=>array('method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>array('or'=>'OR','and'=>'AND','xor'=>'XOR',)),
-                                );
+        $contentStructure=['Trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions],
+                            'Reset trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>['No','Yes']],
+                            'Combine with next row'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>['or'=>'OR','and'=>'AND','xor'=>'XOR',]],
+                            ];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -172,27 +170,27 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runDelayEntries($callingElement,$testRun=1){
-        $base=array('delayingparams'=>[],'delayingrules'=>[]);
+        $base=['delayingparams'=>[],'delayingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Delaying statistics'=>array('Condition'=>array('value'=>''),
-                                                 'Condition met'=>array('value'=>0),
-                                                 'Reset trigger'=>array('value'=>0),
-                                                 'Moved entries'=>array('value'=>0),
-                                                 )
-                     );
+        $result=['Delaying statistics'=>['Condition'=>['value'=>''],
+                                        'Condition met'=>['value'=>0],
+                                        'Reset trigger'=>['value'=>0],
+                                        'Moved entries'=>['value'=>0],
+                                        ]
+                ];
         $result=$this->checkCondition($base,$callingElement,$result,$testRun);
         //
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
     }
     
     private function checkCondition($base,$callingElement,$result,$testRun,$isDebugging=FALSE){
         $params=current($base['delayingparams']);
-        $debugArr=array('params'=>$params,'rules'=>$base['delayingrules'],'selector'=>$callingElement,'testRun'=>$testRun);
+        $debugArr=['params'=>$params,'rules'=>$base['delayingrules'],'selector'=>$callingElement,'testRun'=>$testRun];
         $isFirstRule=TRUE;
         $lastOparation='or';
         $trigger2reset=[];
@@ -213,7 +211,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 'and'=>$lastValue & $triggerValue,
                 'xor'=>$lastValue ^ $triggerValue,
             };
-            $debugArr['Steps'][]=array('lastValue'=>$lastValue,'lastOparation'=>$lastOparation,'triggerValue'=>$triggerValue,'result'=>$result['Delaying statistics']['Condition met']['value']);
+            $debugArr['Steps'][]=['lastValue'=>$lastValue,'lastOparation'=>$lastOparation,'triggerValue'=>$triggerValue,'result'=>$result['Delaying statistics']['Condition met']['value']];
             // add 'Contition' result
             if (!$isFirstRule){
                 $result['Delaying statistics']['Condition']['value'].='<b>'.$lastOparation.'</b>';

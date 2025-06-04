@@ -15,9 +15,9 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -68,14 +68,14 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getCopyEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying','generic',$callingElement,array('method'=>'getCopyEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying','generic',$callingElement,['method'=>'getCopyEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
      private function getCopyEntriesInfo($callingElement){
         $matrix=[];
-        $matrix['Description']=array('<p>This processor copies entries to various targets.</p>');
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info'));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
+        $matrix['Description']=['<p>This processor copies entries to various targets.</p>'];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
     
@@ -90,29 +90,29 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runCopyEntries($arr['selector'],1);
         }
         // build html
-        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
         $btnArr['value']='Test';
-        $btnArr['key']=array('test');
+        $btnArr['key']=['test'];
         $matrix['Commands']['Test']=$btnArr;
         $btnArr['value']='Run';
-        $btnArr['key']=array('run');
+        $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Copying'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Copying']);
         foreach($result as $caption=>$matrix){
-            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
             if ($caption==='Copying results'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
-        $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
+        $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
         return $arr;
     }
 
     private function getCopyEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying settings','generic',$callingElement,array('method'=>'getCopyEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Copying settings','generic',$callingElement,['method'=>'getCopyEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -124,9 +124,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function copyingRules($callingElement){
-        $triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
-        $contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                );
+        $contentStructure=['Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -136,8 +134,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
         
     public function runCopyEntries($callingElement,$testRun=1){
-        $base=array('copyingrules'=>[]);
-        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,['copyingrules'=>[]]);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);
         // get targets
         $base['targets']=[];
@@ -150,20 +147,20 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Copying results'=>array('Entries'=>array('value'=>0)));
+        $result=['Copying results'=>['Entries'=>['value'=>0]]];
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             $result['Copying results']['Entries']['value']++;
             $result=$this->copyEntry($base,$sourceEntry,$result,$testRun);
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
     }
     
     private function copyEntry($base,$sourceEntry,$result,$testRun){
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         foreach($base['copyingrules'] as $ruleId=>$rule){
             $targetEntryId=$rule['Content']['Target'];
             if (!isset($base['targets'][$targetEntryId])){
@@ -181,7 +178,7 @@ class CopyEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$rule['Content']['Target']],TRUE,$testRun,TRUE);
         }
         if (!$testRun){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries(array('Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']),TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries(['Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']],TRUE);
         }
         return $result;
     }

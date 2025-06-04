@@ -17,11 +17,11 @@ class PdfTools{
     private $pageSettings=[];
     private $S='';
     
-    private $formats=array('a4'=>array('width'=>210,'height'=>297),
-                           'a3'=>array('width'=>297,'height'=>420),
-                           'a5'=>array('width'=>148,'height'=>210),
-                           'a6'=>array('width'=>105,'height'=>148),
-                           );
+    private $formats=['a4'=>['width'=>210,'height'=>297],
+                    'a3'=>['width'=>297,'height'=>420],
+                    'a5'=>['width'=>148,'height'=>210],
+                    'a6'=>['width'=>105,'height'=>148],
+                    ];
     
     public function __construct(array $oc)
     {    
@@ -37,7 +37,7 @@ class PdfTools{
     {
         $this->S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         // get complete page settings
-        $selector=array('Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init');
+        $selector=['Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init'];
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById($selector,TRUE);
     }
     
@@ -54,7 +54,7 @@ class PdfTools{
     public function getPdfTextParserOptions():array
     {
         $parserKey='text2arr';
-        $parser=array('@function'=>'select','@default'=>'','@options'=>array(''=>'None'),'@title'=>'Use "Smalot" as standard parser');
+        $parser=['@function'=>'select','@default'=>'','@options'=>[''=>'None'],'@title'=>'Use "Smalot" as standard parser'];
         foreach(get_class_methods(__CLASS__) as $method){
             if (mb_strpos($method,$parserKey)===FALSE){continue;}
             $parserName=str_replace('text2arr','',$method);
@@ -71,7 +71,7 @@ class PdfTools{
             $this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']='';
             $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($this->pageSettings,TRUE);
         }
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$file,'executable'=>$this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$file,'executable'=>$this->pageSettings['Content']['Spatie path to Xpdf pdftotext executable']];
         // parse file if valid
         if (!is_file($file)){
             // invalid pdf-file
@@ -107,7 +107,7 @@ class PdfTools{
             $this->pageSettings['Content']['Smalot']='';
             $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($this->pageSettings,TRUE);
         }
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$file,'Smalot'=>$this->pageSettings['Content']['Smalot']);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$file,'Smalot'=>$this->pageSettings['Content']['Smalot']];
         // parse file if valid
         if (is_file($file)){
             // parser configuration
@@ -148,7 +148,7 @@ class PdfTools{
     public function attachments2arrSmalot($file,array $entry=[]):array
     {
         $pathinfo=pathinfo($file);
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$pathinfo['basename'],'fileName'=>$pathinfo['filename'],'fileExtension'=>$pathinfo['extension'],'attachments'=>0,'embedded'=>0);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'file'=>$pathinfo['basename'],'fileName'=>$pathinfo['filename'],'fileExtension'=>$pathinfo['extension'],'attachments'=>0,'embedded'=>0];
         $pdfParser= new \Smalot\PdfParser\Parser();
         $pdfContent=$pdfContent = file_get_contents($file);
         try {
@@ -171,7 +171,7 @@ class PdfTools{
                             $newEntry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$context['embeddedFileName']);
                             $newEntry['fileContent']=$embeddedFileContent;
                             $newEntry['Name']=$pathinfo['basename'].' ['.$newEntry['fileName'].']';
-                            $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,array('Source','Group','Folder','Name'),'0','',FALSE);
+                            $newEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($newEntry,['Source','Group','Folder','Name'],'0','',FALSE);
                             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($newEntry);
                         }
                     } else {

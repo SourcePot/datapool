@@ -19,41 +19,41 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $sampleTargetFile='';
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
 
-    private $paper=array('a4'=>'A4',
-                         'a3'=>'A3',
-                         'a5'=>'A5',
-                         'a6'=>'A6',
-                         );
+    private $paper=['a4'=>'A4',
+                    'a3'=>'A3',
+                    'a5'=>'A5',
+                    'a6'=>'A6',
+                    ];
     
-    private $contentTypes=array('content'=>'Page content',
-                                'header'=>'Page header',
-                                'footer'=>'Page footer',
-                                );
+    private $contentTypes=['content'=>'Page content',
+                        'header'=>'Page header',
+                        'footer'=>'Page footer',
+                        ];
     
-    private $alignments=array('L'=>'start',
-                             'C'=>'center',
-                             'R'=>'end',
-                             'J'=>'justify'
-                            );
+    private $alignments=['L'=>'start',
+                        'C'=>'center',
+                        'R'=>'end',
+                        'J'=>'justify'
+                        ];
     
-    private $fontStyles=array(''=>'normal',
-                              'B'=>'bold',
-                              'I'=>'italic',
-                              'U'=>'underline'
-                              );
+    private $fontStyles=[''=>'normal',
+                        'B'=>'bold',
+                        'I'=>'italic',
+                        'U'=>'underline'
+                        ];
     
-    private $fonts=array('Arial'=>'Arial, Helvetica, sans-serif',
-                         'Courier'=>'Courier New',
-                         'Times'=>'"Times New Roman", Times, serif',
-                         'Symbol'=>'Symbol, sans-serif;',
-                         'ZapfDingbats'=>"Wingdings, 'Zapf Dingbats', sans-serif",
-                         );
+    private $fonts=['Arial'=>'Arial, Helvetica, sans-serif',
+                    'Courier'=>'Courier New',
+                    'Times'=>'"Times New Roman", Times, serif',
+                    'Symbol'=>'Symbol, sans-serif;',
+                    'ZapfDingbats'=>"Wingdings, 'Zapf Dingbats', sans-serif",
+                    ];
 
-    private $orientation=array('P'=>'Portrait','L'=>'Landscape');
+    private $orientation=['P'=>'Portrait','L'=>'Landscape'];
     
     private $pageSettings=[];
     
@@ -111,18 +111,18 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getPdfEntriesWidget(array $callingElement):string
     {
-        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF creation','generic',$callingElement,array('method'=>'getPdfEntriesWidgetHtml','classWithNamespace'=>__CLASS__),[]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF creation','generic',$callingElement,['method'=>'getPdfEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
         return $html;
     }
 
     private function getPdfEntriesInfo(array $callingElement):string
     {
-        $matrix=array('Please note:'=>array('Placeholder'=>'If the canvas element contains an entry with an attached jpeg- or png-image, this image will be available as logo.<br/>The placeholder [[logo]] should only be used on its own, not within a continuous text.'));
-        $matrix['Logo']=array('Placeholder'=>'[[logo]]');
-        $matrix['Page number']=array('Placeholder'=>'[[pageNumber]]');
-        $matrix['Page count']=array('Placeholder'=>'[[pageCount]]');
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info'));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
+        $matrix=['Please note:'=>['Placeholder'=>'If the selection defined by the canvas element contains an entry with an attached jpeg- or png-image, this image is the available as logo.<br/>The placeholder [[logo]] should only be used on its own, not within a continuous text.']];
+        $matrix['Logo']=['Placeholder'=>'[[logo]]'];
+        $matrix['Page number']=['Placeholder'=>'[[pageNumber]]'];
+        $matrix['Page count']=['Placeholder'=>'[[pageCount]]'];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Info & Predefined placeholder']);
         return $html;
     }
 
@@ -143,10 +143,10 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 } else {
                     // loge file needs to be copied to the private tmp-dir
                     if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$logoFile)){
-                        $this->oc['logger']->log('info','Function {class} &rarr; {function}() copied logo-file "{name}" to the private temp dir.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'name'=>$entry['Params']['File']['Name']));         
+                        $this->oc['logger']->log('info','Function {class} &rarr; {function}() copied logo-file "{name}" to the private temp dir.',['class'=>__CLASS__,'function'=>__FUNCTION__,'name'=>$entry['Params']['File']['Name']]);         
                         break;
                     } else {
-                        $this->oc['logger']->log('warning','Function {class} &rarr; {function}() failed  to copy logo-file to the private temp dir.',array('class'=>__CLASS__,'function'=>__FUNCTION__));         
+                        $this->oc['logger']->log('warning','Function {class} &rarr; {function}() failed  to copy logo-file to the private temp dir.',['class'=>__CLASS__,'function'=>__FUNCTION__]);         
                     }
                 }
             }
@@ -166,23 +166,23 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runPdfEntries($arr['selector'],TRUE);
         }
         // build html
-        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
         $btnArr['value']='Test';
-        $btnArr['key']=array('test');
+        $btnArr['key']=['test'];
         $matrix['Commands']['Test']=$btnArr;
         $btnArr['value']='Run';
-        $btnArr['key']=array('run');
+        $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget']);
         foreach($result as $caption=>$matrix){
-            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption)));
+            $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
             //if ($caption==='Copying results'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr=$this->pdfPreview($arr);
-        $arr['wrapperSettings']=array('style'=>array('width'=>'fit-content'));
+        $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
         return $arr;
     }
 
@@ -191,7 +191,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries settings','generic',$callingElement,array('method'=>'getPdfEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('PDF entries settings','generic',$callingElement,['method'=>'getPdfEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -207,12 +207,12 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function pdfParams(array $callingElement):string
     {
-        $contentStructure=array('Target'=>array('method'=>'canvasElementSelect','excontainer'=>TRUE),
-                                'Paper'=>array('method'=>'select','value'=>key($this->paper),'excontainer'=>TRUE,'options'=>$this->paper),
-                                'Orientation'=>array('method'=>'select','excontainer'=>TRUE,'value'=>key($this->orientation),'options'=>$this->orientation),
-                                'Top margin [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE),
-                                'Bottom margin [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE),
-                                );
+        $contentStructure=['Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+                        'Paper'=>['method'=>'select','value'=>key($this->paper),'excontainer'=>TRUE,'options'=>$this->paper],
+                        'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>key($this->orientation),'options'=>$this->orientation],
+                        'Top margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
+                        'Bottom margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
+                        ];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -229,38 +229,38 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['caption']='PDF control';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $matrix=array('Parameter'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        $matrix=['Parameter'=>$row];
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function pdfPlaceholder(array $callingElement):string
     {
-        $contentStructure=array('source'=>array('method'=>'keySelect','value'=>'Name','addSourceValueColumn'=>TRUE,'excontainer'=>TRUE),
-                                'placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'{{Name}}','excontainer'=>TRUE),
-                                );
+        $contentStructure=['source'=>['method'=>'keySelect','value'=>'Name','addSourceValueColumn'=>TRUE,'excontainer'=>TRUE],
+                        'placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'{{Name}}','excontainer'=>TRUE],
+                        ];
         $contentStructure['source']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Placeholder';
+        $arr['caption']='Mapping to placeholder';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
 
     private function pdfRules(array $callingElement):string
     {
-        $contentStructure=array('type'=>array('method'=>'select','value'=>'','options'=>$this->contentTypes,'excontainer'=>TRUE),
-                                'text'=>array('method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE),
-                                'x-pos [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>array('width'=>'50px'),'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE),
-                                'y-pos [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>array('width'=>'50px'),'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE),
-                                'width [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>array('width'=>'50px'),'excontainer'=>TRUE),
-                                'height [mm]'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>array('width'=>'50px'),'excontainer'=>TRUE),
-                                'font'=>array('method'=>'select','value'=>'','options'=>$this->fonts,'excontainer'=>TRUE),
-                                'fontSize'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>array('width'=>'50px'),'excontainer'=>TRUE),
-                                'fontStyle'=>array('method'=>'select','value'=>'','options'=>$this->fontStyles,'excontainer'=>TRUE),
-                                'alignment'=>array('method'=>'select','value'=>'J','options'=>$this->alignments,'excontainer'=>TRUE),
-                                );
+        $contentStructure=['type'=>['method'=>'select','value'=>'','options'=>$this->contentTypes,'excontainer'=>TRUE],
+                            'text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE],
+                            'x-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE],
+                            'y-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE],
+                            'width [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+                            'height [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+                            'font'=>['method'=>'select','value'=>'','options'=>$this->fonts,'excontainer'=>TRUE],
+                            'fontSize'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+                            'fontStyle'=>['method'=>'select','value'=>'','options'=>$this->fontStyles,'excontainer'=>TRUE],
+                            'alignment'=>['method'=>'select','value'=>'J','options'=>$this->alignments,'excontainer'=>TRUE],
+                            ];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -286,14 +286,14 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function runPdfEntries(array $callingElement,bool $testRun=FALSE):array
     {
         
-        $settings=array('pdfparams'=>[],'pdfplaceholder'=>[],'pdfrules'=>[]);
+        $settings=['pdfparams'=>[],'pdfplaceholder'=>[],'pdfrules'=>[]];
         $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$settings);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=array('Pdf statistics'=>array('Entries'=>array('value'=>0),
-                                              'Skip rows'=>array('value'=>0),
-                                              )
-                    );
+        $result=['Pdf statistics'=>['Entries'=>['value'=>0],
+                                    'Skip rows'=>['value'=>0],
+                                    ]
+                    ];
 
         if (is_file($this->sampleTargetFile)){unlink($this->sampleTargetFile);}
         // loop through entries
@@ -307,8 +307,8 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->pdfEntry($settings,$sourceEntry,$result,$testRun,$callingElement);
         }
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$settings['Script start timestamp'])/1000000));
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$settings['Script start timestamp'])/1000000)];
         return $result;
     }
     
@@ -323,7 +323,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
         }
         // process rules
-        $pageContent=array('header'=>[],'content'=>[],'footer'=>[]);
+        $pageContent=['header'=>[],'content'=>[],'footer'=>[]];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($settings['pdfrules'] as $ruleId=>$rule){
             if ($settings['pdfrules'][$ruleId]['Content']['text']==='[[logo]]'){

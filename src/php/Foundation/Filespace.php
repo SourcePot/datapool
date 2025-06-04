@@ -658,7 +658,7 @@ class Filespace{
         $zip=new \ZipArchive;
         if ($zip->open($file)===TRUE){
             $i=0;
-            $this->oc['logger']->log('info','Processing zip-archive with "{numFiles}" files',array('numFiles'=>$zip->count()));    
+            $this->oc['logger']->log('info','Processing zip-archive with "{numFiles}" files',['numFiles'=>$zip->count()]);    
             while($fileName=$zip->getNameIndex($i)){
                 $entry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$fileName);
                 $entry['fileContent']=$zip->getFromIndex($i);
@@ -738,7 +738,7 @@ class Filespace{
     public function exportEntries(array $selectors,bool $isSystemCall=FALSE,int $maxAttachedFilesize=10000000000):string
     {
         $statistics=['added entries'=>0,'added files'=>0,'Attached filesize'=>0,'tables'=>[],'Errors'=>[]];
-        if (isset($selectors['Source'])){$selectors=array($selectors);}
+        if (isset($selectors['Source'])){$selectors=[$selectors];}
         $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
         $fileName=preg_replace('/\W+/','_',$pageTitle).' dump.zip';
         $dir=$this->getTmpDir(__FUNCTION__);
@@ -893,8 +893,8 @@ class Filespace{
                 }
             }
             ksort($matrix);
-            $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Logging files','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE));
-            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE));
+            $tableHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Logging files','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE]);
+            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$tableHtml,'keep-element-content'=>TRUE]);
         } else {
             return '';
         }

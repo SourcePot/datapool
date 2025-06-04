@@ -73,7 +73,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getInboxEntriesInfo($callingElement){
-        $matrix=array('Info'=>array('Message'=>'Select an receiver through "Inbox source" first'));
+        $matrix=['Info'=>['Message'=>'Select an receiver through "Inbox source" first']];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
@@ -104,10 +104,10 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['key']=['receive'];
         $matrix['Commands']['Receive']=$btnArr;
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Inbox widget','style'=>['clear'=>'none']]);
-        $idStoreAppArr=array('html'=>$this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreWidget($arr['selector']['EntryId']),'icon'=>'Already processed');
+        $idStoreAppArr=['html'=>$this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreWidget($arr['selector']['EntryId']),'icon'=>'Already processed'];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($idStoreAppArr);
         foreach($result as $caption=>$matrix){
-            $appArr=array('html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]));
+            $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
             if ($caption==='Forwarded' || $caption==='Processing statistics'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
@@ -167,7 +167,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
-        $matrix=array('Parameter'=>$row);
+        $matrix=['Parameter'=>$row];
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 

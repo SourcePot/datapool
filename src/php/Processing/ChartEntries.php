@@ -17,12 +17,12 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
 
-    private $chartTypeOptions=array('timeY'=>'DateTime-Y-chart','XY'=>'XY-chart',);
-    private $orderByOptions=array('Group'=>'Group','Folder'=>'Folder','Name'=>'Name','Date'=>'Date');
+    private $chartTypeOptions=['timeY'=>'DateTime-Y-chart','XY'=>'XY-chart',];
+    private $orderByOptions=['Group'=>'Group','Folder'=>'Folder','Name'=>'Name','Date'=>'Date'];
 
 
     
@@ -90,15 +90,15 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function getChartEntriesInfo($callingElement){
         $matrix=[];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info','class'=>'max-content'));
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$html,'icon'=>'?'));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info','class'=>'max-content']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
 
     private function getChartEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chart settings','generic',$callingElement,array('method'=>'getChartEntriesSettingsHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chart settings','generic',$callingElement,['method'=>'getChartEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -111,14 +111,14 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function chartParams($callingElement){
-        $contentStructure=array('Width'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE),
-                                'Height'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE),
-                                'offset'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>0,'min'=>0,'excontainer'=>TRUE),
-                                'limit'=>array('method'=>'element','tag'=>'input','type'=>'number','value'=>-1,'min'=>-1,'excontainer'=>TRUE),
-                                'Type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'timeY','options'=>$this->chartTypeOptions,'keep-element-content'=>TRUE),
-                                'OrderBy'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'Date','options'=>$this->orderByOptions,'keep-element-content'=>TRUE),
-                                'Normalize'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>array(''=>'-','x'=>'X','y'=>'Y'),'keep-element-content'=>TRUE),
-                                );
+        $contentStructure=['Width'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE],
+                        'Height'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE],
+                        'offset'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>0,'min'=>0,'excontainer'=>TRUE],
+                        'limit'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>-1,'min'=>-1,'excontainer'=>TRUE],
+                        'Type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'timeY','options'=>$this->chartTypeOptions,'keep-element-content'=>TRUE],
+                        'OrderBy'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Date','options'=>$this->orderByOptions,'keep-element-content'=>TRUE],
+                        'Normalize'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[''=>'-','x'=>'X','y'=>'Y'],'keep-element-content'=>TRUE],
+                        ];
         // get selector
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -135,16 +135,16 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['caption']='Chart control';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $matrix=array('Parameter'=>$row);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        $matrix=['Parameter'=>$row];
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function chartRules($callingElement){
-        $contentStructure=array('trace name'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE),
-                                'x-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE),
-                                'y-selector'=>array('method'=>'keySelect','excontainer'=>TRUE,'value'=>'Group','standardColumsOnly'=>FALSE),
-                                );
+        $contentStructure=['trace name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE],
+                        'x-selector'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE],
+                        'y-selector'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Group','standardColumsOnly'=>FALSE],
+                        ];
         $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
         $contentStructure['y-selector']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -156,7 +156,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function runChartEntries($callingElement,$testRun=FALSE){
-        $base=array('chartrules'=>[]);
+        $base=['chartrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $plotSelector=$callingElement['Content']['Selector'];
         $plotSelector['property']=current($base['chartparams'])['Content'];
@@ -165,9 +165,9 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $plotSelector['rule'][$ruleId]=$rule['Content'];
         }
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic($plotSelector);
-        $result=array('html'=>$this->getChartProcessorPlot($plotSelector));
-        $result['Statistics']['Script time']=array('Value'=>date('Y-m-d H:i:s'));
-        $result['Statistics']['Time consumption [msec]']=array('Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000));
+        $result=['html'=>$this->getChartProcessorPlot($plotSelector)];
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
     }
 
@@ -179,13 +179,13 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $selector['callingFunction']=__FUNCTION__;
             $selector['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
             $_SESSION['plots'][$selector['id']]=$selector;
-            $elArr=array('tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$selector['property']['Title']);
+            $elArr=['tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$selector['property']['Title']];
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=array('tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']);
+            $elArr=['tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=array('tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id']);
+            $elArr=['tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id']];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=array('tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html);
+            $elArr=['tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html];
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
             return $html;
         } else {

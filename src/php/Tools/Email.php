@@ -89,7 +89,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     public function job($vars):array
     {
         if (empty($vars['Inboxes'])){
-            $selector=array('Class'=>__CLASS__.'-rec');
+            $selector=['Class'=>__CLASS__.'-rec'];
             $vars['Inboxes']=[];
             foreach($this->oc['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
                 $vars['Inboxes'][$entry['EntryId']]=$entry;
@@ -124,24 +124,24 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         // add settings form
         $setting=$this->getReceiverSetting($arr['selector']['EntryId']);
         $settingsHtml=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$settingsHtml,'icon'=>'Settings'));
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$settingsHtml,'icon'=>'Settings']);
         // add meta data info
         $meta=$this->getReceiverMeta($arr['selector']['EntryId']);
         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);
-        $metaHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Meta'));   
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(array('html'=>$metaHtml,'icon'=>'Meta'));
+        $metaHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Meta']);   
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$metaHtml,'icon'=>'Meta']);
         return $html;
     }
     
     public function receiverSelector(string $id):array
     {
         $Group='INBOX|'.preg_replace('/\W/','_',$id);
-        return array('Source'=>$this->entryTable,'Group'=>$Group);
+        return ['Source'=>$this->entryTable,'Group'=>$Group];
     }
 
     private function id2entrySelector($id):array
     {
-        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
         if (isset($canvasElement['Content']['Selector'])){
             return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arrRemoveEmpty($canvasElement['Content']['Selector']);
@@ -153,11 +153,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     private function getReceiverSetting($id)
     {
         $id=preg_replace('/\W/','_','INBOX-'.$id);
-        $setting=array('Class'=>__CLASS__.'-rec','EntryId'=>$id);
-        $setting['Content']=array('EntryId'=>$id,
-                                  'Mailbox'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}',
-                                  'User'=>'',
-                                  'Password'=>'');
+        $setting=['Class'=>__CLASS__.'-rec','EntryId'=>$id];
+        $setting['Content']=['EntryId'=>$id,
+                            'Mailbox'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}',
+                            'User'=>'',
+                            'Password'=>''];
         return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
     }
     
@@ -172,12 +172,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $meta['Error']=imap_last_error();
         } else {
             $status=imap_status($mbox,$setting['Content']['Mailbox'],SA_ALL);
-            $meta=array('messages'=>$status->messages,
-                        'Recent'=>$status->recent,
-                        'Unseen'=>$status->unseen,
-                        'UIDnext'=>$status->uidnext,
-                        'UIDvalidity'=>$status->uidvalidity
-                        ); 
+            $meta=['messages'=>$status->messages,
+                    'Recent'=>$status->recent,
+                    'Unseen'=>$status->unseen,
+                    'UIDnext'=>$status->uidnext,
+                    'UIDvalidity'=>$status->uidvalidity
+                    ]; 
             imap_close($mbox);
         }
         return $meta;
@@ -185,7 +185,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
     private function todaysEmails($id)
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'alerts'=>'','errors'=>'');
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'alerts'=>'','errors'=>''];
         $entrySelector=$this->id2entrySelector($id);
         $setting=$this->getReceiverSetting($id);
         $context['Mailbox']=$setting['Content']['Mailbox'];
@@ -339,7 +339,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $settingsHtml=$this->getTransmitterSettingsWidgetHtml(['callingClass'=>__CLASS__]);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'SMS Settings','html'=>$settingsHtml]);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Email Settings','html'=>$settingsHtml]);
         }
         // Send message
         $entry=['recipient'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Source'=>$this->getEntryTable(),'Group'=>'Test','Folder'=>'Test','Name'=>'Testmail','Content'=>['Subject'=>'Testmail','Message'=>'Ich bin ein Test']];

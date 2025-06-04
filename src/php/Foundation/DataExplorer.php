@@ -390,9 +390,9 @@ class DataExplorer{
     {
         $settings['Script start timestamp']=hrtime(TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $settings['callingElement']=$callingElement['Content'];
+        $settings['callingElement']=$callingElement['Content']??[];
         $settings['entryTemplates']['__BLACKHOLE__']=['Source'=>'blackhole','__BLACKHOLE__'=>'__BLACKHOLE__'];
-        $entriesSelector=['Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']];
+        $entriesSelector=['Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']??''];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $key=strtolower($entry['Group']);
             $settings[$key][$entry['EntryId']]=$entry;

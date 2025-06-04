@@ -133,7 +133,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $base=['clientparams'=>[]];
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $params=current($callingElement['clientparams']);
-        if (!empty($params['Content']['Client'])){
+        if (!empty($params['Content']['Client']) && !empty($callingElement['callingElement']['Selector'])){
             $baseEntryId=$params['Content']['Client'];
             // get client settings form
             $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_setting','disableAutoRefresh'=>FALSE];
@@ -449,7 +449,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $callingElementSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$clientParams['Name']];
             $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector);
             $callingElement=$this->getClientSettings($callingElement,TRUE);
-            if ($callingElement['lastEntrySelector']){
+            if (!empty($callingElement['lastEntrySelector'])){
                 $lastEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElement['lastEntrySelector']);
                 if ($lastEntry){
                     $name=$this->getClientName($lastEntry);

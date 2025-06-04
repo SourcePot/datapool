@@ -150,12 +150,12 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         }
         if (!isset($entry['Group'])){$entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');}
         if (!isset($entry['Folder'])){$entry['Folder']=$entry['Email'];}
-        if (empty($entry['Name'])){$entry['Name']=$this->userAbstract(['selector'=>$entry],3);}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);
         }
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
+        $entry['Name']=$this->userAbstract(['selector'=>$entry],3);
         return $entry;
     }
     

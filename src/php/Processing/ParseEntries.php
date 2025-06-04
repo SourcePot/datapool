@@ -444,8 +444,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function processMapping($base,$entry):array
     {
         $targetEntry=$result=[];
-        $failed=FALSE;
-        $isset=FALSE;
+        $mappingFailed=FALSE;
         foreach($base['mapperrules'] as $ruleEntryId=>$rule){
             if (!isset($rule['Content']['Source column']) || !isset($rule['Content']['...or constant'])){continue;}
             $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
@@ -458,13 +457,15 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $matchText=$rule['Content']['...or constant'];
             }
             // check for error
-            $failed=!empty($rule['Content']['Source value']) && !$isset;
+            $ruleFailed=!empty($rule['Content']['Source value']) && !$isset;
             $result[$rowKey]=['Source column or constant'=>$matchText,
-                            'Must be set'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Source value']),
-                            'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($failed),
+                            'Must be set'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Source value']??FALSE),
+                            'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed),
                             ];
             // add entry
-            if (!$failed){
+            if ($ruleFailed){
+                $mappingFailed=TRUE;
+            } else {
                 $matchText=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($matchText,$rule['Content']['Target data type']);
                 $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
                 $debugArr[]=['Target column'=>$rule['Content']['Target column'],'matchText'=>$matchText,'targetEntry'=>$targetEntry];
@@ -472,7 +473,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         $targetEntry[__FUNCTION__]['result']=$result;
-        $targetEntry[__FUNCTION__]['failed']=$failed;
+        $targetEntry[__FUNCTION__]['failed']=$mappingFailed;
         return $targetEntry;
     }
 

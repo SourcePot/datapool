@@ -47,14 +47,14 @@ class ExifTools{
     
     private function addCamera(array $entry):array
     {
-        $defs=array('Model'=>'Model','Make'=>'Make',
-                    'XResolution'=>'XResolution','YResolution'=>'YResolution','Compression'=>'Compression',
-                    'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
-                    'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue',
-                    'ApertureValue'=>'ApertureValue','BrightnessValue'=>'BrightnessValue','ExposureBiasValue'=>'ExposureBiasValue',
-                    'MaxApertureValue'=>'MaxApertureValue','SubjectDistance'=>'SubjectDistance','SubjectDistanceRange'=>'SubjectDistanceRange',
-                    'MeteringMode'=>'MeteringMode','Flash'=>'Flash','FocalLengthIn35mmFilm'=>'FocalLengthIn35mmFilm',
-                    );
+        $defs=['Model'=>'Model','Make'=>'Make',
+                'XResolution'=>'XResolution','YResolution'=>'YResolution','Compression'=>'Compression',
+                'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
+                'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue',
+                'ApertureValue'=>'ApertureValue','BrightnessValue'=>'BrightnessValue','ExposureBiasValue'=>'ExposureBiasValue',
+                'MaxApertureValue'=>'MaxApertureValue','SubjectDistance'=>'SubjectDistance','SubjectDistanceRange'=>'SubjectDistanceRange',
+                'MeteringMode'=>'MeteringMode','Flash'=>'Flash','FocalLengthIn35mmFilm'=>'FocalLengthIn35mmFilm',
+                ];
         $entry['Params']['Camera']=[];
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){continue;}
@@ -67,11 +67,11 @@ class ExifTools{
     
     private function addGPS(array $entry):array
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         if (isset($entry['Params']['Geo'])){
             $oldGeo=$entry['Params']['Geo'];
         } else {
-            $oldGeo=array('lat'=>9999,'lon'=>9999);
+            $oldGeo=['lat'=>9999,'lon'=>9999];
         }
         $entry['Params']['Geo']=[];
         // get GPS date time
@@ -93,7 +93,7 @@ class ExifTools{
             }
         }
         // get GPS data, e.g. lat and lon from exif
-        $defs=array('lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude','imgDirectionRef'=>'GPSImgDirectionRef','imgDirection'=>'GPSImgDirection','dateStamp'=>'GPSDateStamp','status'=>'GPSStatus','dop'=>'GPSDOP','mapDatum'=>'GPSMapDatum','satellites'=>'GPSSatellites');        
+        $defs=['lat'=>'GPSLatitude','lon'=>'GPSLongitude','alt'=>'GPSAltitude','imgDirectionRef'=>'GPSImgDirectionRef','imgDirection'=>'GPSImgDirection','dateStamp'=>'GPSDateStamp','status'=>'GPSStatus','dop'=>'GPSDOP','mapDatum'=>'GPSMapDatum','satellites'=>'GPSSatellites'];        
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){
                 if (isset($entry['Params']['Geo'][$targetKey])){unset($entry['Params']['Geo'][$targetKey]);}

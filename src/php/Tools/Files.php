@@ -15,9 +15,9 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=array('Read'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 'Write'=>array('type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'),
-                                 );
+    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+                            ];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -65,7 +65,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         } else {
             $this->oc['logger']->log('notice','Canvas element settings missing');    
         }
-        $result=array('Files found'=>0,'Files uploaded'=>0,'Files removed from upload dir'=>0);
+        $result=['Files found'=>0,'Files uploaded'=>0,'Files removed from upload dir'=>0];
         $files=scandir($GLOBALS['dirs']['ftp']);
         foreach($files as $index=>$filename){
             if (strlen($filename)<3){continue;}
@@ -92,18 +92,18 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     public function receiverPluginHtml(array $arr):string
     {
         // get settings html
-        $mimeOptions=array(''=>'...','text/'=>'text/*','application/'=>'application/*','image/'=>'image/*','video/'=>'video/*','audio/'=>'audio/*','message/'=>'message/*','/zip'=>'*/zip*','/pdf'=>'*/pdf','/json'=>'*/json');
-        $fileSizeOptions=array(''=>'Only system limit',10240=>'10 kB',102400=>'100 kB',1048576=>'1 MB',10485760=>'10 MB',104857600=>'100 MB',209715200=>'200 MB');
-        $contentStructure=array('File name regexp'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE),
-                                'File extension regexp'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE),
-                                'Relevant mime-type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions),
-                                '..or mime-type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions),
-                                '...or mime-type'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions),
-                                'Max file size'=>array('method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$fileSizeOptions),
-                                );
+        $mimeOptions=[''=>'...','text/'=>'text/*','application/'=>'application/*','image/'=>'image/*','video/'=>'video/*','audio/'=>'audio/*','message/'=>'message/*','/zip'=>'*/zip*','/pdf'=>'*/pdf','/json'=>'*/json'];
+        $fileSizeOptions=[''=>'Only system limit',10240=>'10 kB',102400=>'100 kB',1048576=>'1 MB',10485760=>'10 MB',104857600=>'100 MB',209715200=>'200 MB'];
+        $contentStructure=['File name regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+                            'File extension regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+                            'Relevant mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
+                            '..or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
+                            '...or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
+                            'Max file size'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$fileSizeOptions],
+                            ];
         // get selctor
         $callingElementEntryId=$arr['selector']['EntryId'];
-        $callingElement=array('Folder'=>'Settings','EntryId'=>$callingElementEntryId);
+        $callingElement=['Folder'=>'Settings','EntryId'=>$callingElementEntryId];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
         // form processing
@@ -119,8 +119,8 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         $arr['caption']='File upload filter';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=array('background-color'=>'#a00');}
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>array('Parameter'=>$row),'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         $html.=$this->getDirContent($callingElementEntryId);
         return $html;
     }
@@ -128,7 +128,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     public function receiverSelector(string $id):array
     {
         $Group='INBOX|'.preg_replace('/\W/','_',$id);
-        return array('Source'=>$this->entryTable,'Group'=>$Group);
+        return ['Source'=>$this->entryTable,'Group'=>$Group];
     }    
 
     /******************************************************************************************************************************************
@@ -138,7 +138,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     
     private function getParams(string $id):array
     {
-        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',array('Folder'=>'Settings','EntryId'=>$id),TRUE);
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',['Folder'=>'Settings','EntryId'=>$id],TRUE);
         $paramsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
         if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return [];}
     }
@@ -157,13 +157,13 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
                 $fileArr=$this->getFileMetaArr($file);
                 $matchArr=$this->fileMatch($file,$params,$fileArr);
                 $matrix[$index]=[];
-                $matrix[$index]['filename']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['nameMatch']?'green':'red')),'element-content'=>$fileArr['filename']));
-                $matrix[$index]['extension']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['extensionMatch']?'green':'red')),'element-content'=>$fileArr['extension']));
-                $matrix[$index]['Size']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['sizeOK']?'green':'red')),'element-content'=>$fileArr['Size']));
-                $matrix[$index]['MIME-Type']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','style'=>array('color'=>($matchArr['mimeTypeMatch']?'green':'red')),'element-content'=>$fileArr['MIME-Type']));
+                $matrix[$index]['filename']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['color'=>($matchArr['nameMatch']?'green':'red')],'element-content'=>$fileArr['filename']]);
+                $matrix[$index]['extension']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['color'=>($matchArr['extensionMatch']?'green':'red')],'element-content'=>$fileArr['extension']]);
+                $matrix[$index]['Size']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['color'=>($matchArr['sizeOK']?'green':'red')],'element-content'=>$fileArr['Size']]);
+                $matrix[$index]['MIME-Type']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['color'=>($matchArr['mimeTypeMatch']?'green':'red')],'element-content'=>$fileArr['MIME-Type']]);
                 $matrix[$index]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($matchArr['match']);
             }
-            return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Dir content'));
+            return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Dir content']);
         }
     }
 
@@ -180,7 +180,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     {
         if (!isset($params['Max file size']) || !isset($params['File extension regexp']) || !isset($params['File name regexp'])){
             $this->oc['logger']->log('notice','Please set "File upload filter"');        
-            return array('match'=>FALSE);
+            return ['match'=>FALSE];
         } else {
             $mimeTypeMatch=FALSE;
             if (!empty($params['Relevant mime-type'])){$mimeTypeMatch=$mimeTypeMatch || strpos($fileArr['MIME-Type'],$params['Relevant mime-type'])!==FALSE;}
@@ -189,13 +189,13 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
             $nameMatch=preg_match('/'.$params['File name regexp'].'/',$fileArr['filename']);
             $extensionMatch=preg_match('/'.$params['File extension regexp'].'/',$fileArr['extension']);
             $sizeOK=empty($params['Max file size']) || (intval($params['Max file size'])>=$fileArr['Size']);
-            return array('match'=>$mimeTypeMatch && $nameMatch && $extensionMatch && $sizeOK,'mimeTypeMatch'=>$mimeTypeMatch,'nameMatch'=>$nameMatch,'extensionMatch'=>$extensionMatch,'sizeOK'=>$sizeOK);
+            return ['match'=>$mimeTypeMatch && $nameMatch && $extensionMatch && $sizeOK,'mimeTypeMatch'=>$mimeTypeMatch,'nameMatch'=>$nameMatch,'extensionMatch'=>$extensionMatch,'sizeOK'=>$sizeOK];
         }
     }
     
     private function id2canvasElement($id):array
     {
-        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
     }
 
