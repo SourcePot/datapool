@@ -16,6 +16,8 @@ use PHPMailer\PHPMailer\Exception;
 
 class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver{
     
+    private const SMTP_PORTS=[25=>'25 (standard)',587=>'587 (secure submission with TLS)',465=>'465 (legacy secure SMTPS)',2525=>'2525 (alternative when others are blocked)'];
+    
     private const HTML_TEMPLATE='<!DOCTYPE html>
                                 <html>
                                 <head>
@@ -40,7 +42,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     public $receiverDef=['Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
                         'Content'=>['EntryId'=>['@tag'=>'p','@default'=>'','@excontainer'=>TRUE],
                                     'Mailbox'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}','@excontainer'=>TRUE],
-                                    'User'=>['@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE],
+                                    'User'=>['@tag'=>'input','@type'=>'text','@default'=>'john@doe.com','@excontainer'=>TRUE],
                                     'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
                                     'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                                     ],
@@ -49,11 +51,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     public $transmitterDef=['Type'=>['@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'],
                             'Content'=>['Originator'=>['@tag'=>'input','@type'=>'text','@default'=>'Datapool','@excontainer'=>TRUE],
                                         'SMTP server'=>['@tag'=>'input','@type'=>'text','@default'=>'smtp.strato.de','@excontainer'=>TRUE],
-                                        'Port'=>['@tag'=>'input','@type'=>'interger','@value'=>465,'@excontainer'=>TRUE],
-                                        'Connection security'=>['@function'=>'select','@options'=>[''=>'None','STARTTLS'=>'STARTTLS','SSLTLS'=>'SSL/TLS'],'@excontainer'=>TRUE],
+                                        'Port'=>['@function'=>'select','@options'=>self::SMTP_PORTS,'@value'=>465,'@excontainer'=>TRUE],
                                         'Authentication method'=>['@function'=>'select','@options'=>['no_authentication'=>'No authentication','normal_password'=>'Normal password','encrypted_password'=>'Entcrypted password','keberos'=>'Keberos/GSSAPI','ntlm'=>'NTLM'],'@excontainer'=>TRUE],
                                         'User'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
                                         'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
+                                        'From'=>['@tag'=>'input','@type'=>'email','@title'=>'This field sets the email header "from" address. The mail provider might request this address to be regisztered with the user account.','@default'=>'john@doe.com','@excontainer'=>TRUE],
                                         'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                                         ],
                             ];
@@ -269,8 +271,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
 
             //Enable SMTP debugging
             $mail->SMTPDebug=SMTP::DEBUG_OFF;       // for production use
-            //$mail->SMTPDebug=SMTP::DEBUG_CLIENT   // client messages;
-            //$mail->SMTPDebug=SMTP::DEBUG_SERVER   // client and server messages;
+            //$mail->SMTPDebug=SMTP::DEBUG_CLIENT;   // client messages;
+            //$mail->SMTPDebug=SMTP::DEBUG_SERVER;   // client and server messages;
             
             //Set the hostname of the mail server
             $mail->Host=$smtpSettings['SMTP server'];
@@ -298,7 +300,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             $mail->Password=$smtpSettings['Password'];
             // create header and body
             $mail->CharSet='UTF-8';
-            $mail->setFrom($entry['Content']['From'],$entry['Content']['FromName']);
+            $mail->setFrom($smtpSettings['From']??$entry['Content']['From']??$smtpSettings['User'],$entry['Content']['FromName']);
             //$mail->addReplyTo('replyto@example.com', 'First Last');
             $mail->addAddress($entry['Content']['To'],$entry['Content']['ToName']??'');
             $mail->Subject=$entry['Content']['Subject'];
@@ -328,7 +330,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                 $sentEntriesCount++;
                 $this->oc['logger']->log('info','Message sent to "{To}"',$entry['Content']); 
             } else {
-                $this->oc['logger']->log('notice','Failed to send message to "{To}"',$entry['Content']); 
+                $entry['Content']['User']=$smtpSettings['User'];
+                $this->oc['logger']->log('notice','Failed to send message to "{To}" via account "{User}" from "{From}"',$entry['Content']); 
             }
         }
         return $sentEntriesCount;
@@ -374,6 +377,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         $setting['Content']=['EntryId'=>$EntryId,
                             'Mailbox'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}',
                             'User'=>'',
+                            'From'=>'',
                             'Password'=>''];
         $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
         $settings['Content']['Port']=intval($settings['Content']['Port']);
