@@ -659,8 +659,7 @@ class Container{
                 $this->oc[$arr['settings']['Transmitter']]->send($arr['settings']['Recipient'],$arr['selector']);
             }
         }
-        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$arr['settings']['relevantFlatUserContentKey']);
-        $arr['settings']['Recipient']=(isset($arr['settings']['Recipient']))?$arr['settings']['Recipient']:current($availableRecipients);
+        $arr['settings']['Recipient']=$arr['settings']['Recipient']??($this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
         // create form
         $matrix=[];
         $selectArr=['callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>FALSE];
@@ -668,7 +667,7 @@ class Container{
         $selectArr['key']=['settings','Transmitter'];
         $selectArr['selected']=$arr['settings']['Transmitter'];
         $matrix['Transmitter']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $selectArr['options']=$availableRecipients;
+        $selectArr['options']=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$arr['settings']['relevantFlatUserContentKey']);
         $selectArr['key']=['settings','Recipient'];
         $selectArr['selected']=$arr['settings']['Recipient'];
         $matrix['Recipient']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);

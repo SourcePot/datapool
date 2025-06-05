@@ -64,13 +64,9 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
         }
         $arr['html']=$arr['html']??'';
         // user selector
-        $selectArr=['options'=>[''=>''],'selected'=>$formData['val']['selectedUser']??'','key'=>['selectedUser'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+        $selectArr=['options'=>[''=>''],'selected'=>$formData['val']['selectedUser']??($this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()),'key'=>['selectedUser'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
         $userSelctor=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId!'=>'online_%','EntryId!!'=>'%-oneTimeLink'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($userSelctor,TRUE,'Read','Name',FALSE,FALSE,FALSE) as $user){
-            if ($user['EntryId']===$this->currentUser['EntryId']){continue;}
-            if ((intval($user['Privileges']) & intval($this->currentUser['Privileges']))==0){continue;}
-            $selectArr['options'][$user['EntryId']]=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($user,6);
-        }
+        $selectArr['options']=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$this->oc['SourcePot\Datapool\Tools\Email']->getRelevantFlatUserContentKey());
         $matrix=[];
         $matrix['To']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         // New chat entry

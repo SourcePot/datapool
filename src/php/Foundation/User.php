@@ -299,10 +299,10 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function getUserOptions(array $selector=[],string $flatContactDetailsKey=''):array
     {
         $selector['Source']=$this->entryTable;
-        $selector['Privileges>']=1;
         $options=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
-            if (!isset($user['Content']['Contact details'])){continue;}
+            if ((intval($_SESSION['currentUser']['Privileges']) & intval($user['Privileges']))===0){continue;}    // return only users with matching Privileges
+            if (!isset($user['Content']['Contact details'])){continue;} // remove non-user entries
             $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'];
             if (!empty($flatContactDetailsKey)){
                 $flatUser=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($user);
