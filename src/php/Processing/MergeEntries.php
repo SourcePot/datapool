@@ -191,7 +191,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $sourceEntry){
             $result=$this->mergeEntries($base,$sourceEntry,$result,$testRun);
         }
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+        $result['Statistics']=array_merge($this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix(),$result['Statistics']??[]);
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
@@ -206,12 +206,12 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $value=$flatSourceEntry[$params['Map from']];
             $targetSelector=array_merge(['Group'=>$sourceEntry['Group'],'Folder'=>$sourceEntry['Folder'],'Name'=>$sourceEntry['Name'],],$base['entryTemplates'][$params['Target']]);
             $targetSelector[$params['Map to']]=$value;
-            $result['Merge statistic'][$value]['Merged']=($result['Merge statistic'][$value]['Merged']??0)+1;
         } else {
             $failure=TRUE;
+            $value='Failed';
             $targetSelector=array_merge(['Group'=>$sourceEntry['Group'],'Folder'=>$sourceEntry['Folder'],'Name'=>$sourceEntry['Name'],],$base['entryTemplates'][$params['Target on failure']]);
-            $result['Merge statistic']['Falure']['Not merged']=($result['Merge statistic']['Falure']['Not merged']??0)+1;
         }
+        $result['Statistics'][$value]['Value']=($result['Statistics'][$value]['Value']??0)+1;
         $targetSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetSelector,['Source','Group','Folder','Name'],'0','',FALSE);
         $existingEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($targetSelector,TRUE,'Write',TRUE);
         $flatExistingEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($existingEntry??[]);
@@ -242,9 +242,15 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     '%'=>floatval($operandA)%floatval($operandB)   
                 };
             } else if (strpos($rule['Content']['Operation'],'money')===0){
-            
+                $asset=new \SourcePot\Asset\Asset();
+                $asset->setFromString(strval($operandA));
+                $assetArrB=$asset->guessAssetFromString((string)$operandB);
+                $newValue=match($operation){
+                    '+'=>$asset->addAssetString($assetArrB['value string'],$assetArrB['unit'],$assetArrB['dateTime']),
+                    '-'=>$asset->subAssetString($assetArrB['value string'],$assetArrB['unit'],$assetArrB['dateTime']),
+                };
             } else if (strpos($rule['Content']['Operation'],'string')===0){
-                $newValue=$operandA.$operation.$operandB;
+                $newValue=($result['Statistics'][$value]['Value']>1)?($operandA.$operation.$operandB):$operandB;
             } else if (strpos($rule['Content']['Operation'],'byte')===0){
                 $newValue=match($operation){
                     '&'=>intval($operandA) & intval($operandB),
@@ -265,8 +271,8 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $sourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
         $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelector,TRUE,$testRun,$params['Keep source entries']??FALSE);
         if ($failure){
-            if (!isset($result['Sample result (failure)']) || mt_rand(0,100)>90){
-                $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+            if (!isset($result['Sample result calculation '.$value]) || mt_rand(0,100)>90){
+                $result['Sample result calculation '.$value]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
         } else {
             $result['Sample result calculation '.$value]=$calcDebug;
