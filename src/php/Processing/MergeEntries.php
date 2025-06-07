@@ -81,9 +81,9 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
      private function getMergeEntriesInfo($callingElement){
         $matrix=[];
-        $matrix['Description']=['<p style="width:40em;">This processor forwards entries to various targets on the basis of conditions. If there are several rules for a merging target, all rules must be fulfilled in order to forward the entry.<br/>Rules are linked by "AND" or "OR" (rule key "..."), the oparation is ignored for the first rule of each target.</p>'];
+        $matrix['Description']=['<p style="width:40em;">This processor merges entries into one or multiple target entries. The target entry count depends on the amount of different "Map to"-values. When the processor run is triggered, make sure that there are no entries left in the target canvaselement from any previous run. Otherwise a new run will be taking pre-existing values as a starting point.</p>'];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Info']);
         return $html;
     }
     
