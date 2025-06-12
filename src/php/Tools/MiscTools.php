@@ -319,7 +319,6 @@ final class MiscTools{
     
     public function getEntryIdAge(string $entryId):int
     {
-        // Returns the age of a provided EntryId
         if (mb_strpos($entryId,'eid')===FALSE || mb_strpos($entryId,'EID')===FALSE){return 0;}
         $timestamp=mb_substr($entryId,3,mb_strpos($entryId,'-')-1);
         $timestamp=intval($timestamp);
@@ -515,12 +514,15 @@ final class MiscTools{
         return \SourcePot\Datapool\Root::ONEDIMSEPARATOR;
     }
     
-    public function arr2selector(array $arr,array $defaultValues=['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'app'=>'']):array
+    public function arr2selector(array $arr,array $defaultValues=['app'=>'','Source'=>FALSE,'EntryId'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE]):array
     {
         $selector=[];
         foreach($defaultValues as $key=>$defaultValue){
-            $selector[$key]=(empty($arr[$key]))?$defaultValue:$arr[$key];
-            $selector[$key]=(mb_strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
+            $selector[$key]=$arr[$key]??$defaultValue;
+            $selector[$key]=(strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
+            if (!empty($arr['minimalSelector']) && !empty($selector['Source']) && !empty($selector['EntryId']) && strpos($selector['EntryId'],'%')===FALSE && strpos($selector['EntryId'],'?')===FALSE){
+                break;
+            }
         }
         return $selector;
     }

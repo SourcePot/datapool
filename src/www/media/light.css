@@ -43,7 +43,7 @@ span{
     text-decoration:none;
     color:inherit;
 }
-h1,h2,h3,li,ol,ul,div,p,div,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,progress,a.btn,.js-button{
+h1,h2,h3,li,ol,ul,div,p,div,fieldset,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,progress,a.btn,.js-button{
     float:left;
     clear:both;
     font-size:inherit;

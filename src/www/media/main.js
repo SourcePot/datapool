@@ -495,12 +495,13 @@ jQuery(document).ready(function(){
 		}
 	})();
 	function isVisible(obj){
+		const BOTTOM_VISIBILITY_OFFSET=100;	// if value>0 objects with bottom minus value will be detected as visible
 		if (obj.length==0){return false;}
 		let element={'top':jQuery(obj).offset().top};
 		element['bottom']=element['top']+jQuery(obj).outerHeight();
 		let viewport={'top':jQuery(window).scrollTop()};
 		viewport['bottom']=viewport['top']+jQuery(window).innerHeight();
-		if ((element['top']<viewport['top'] && element['bottom']<viewport['top']) || (element['top']>viewport['bottom'] && element['bottom']>viewport['bottom'])){
+		if ((element['top']<viewport['top'] && element['bottom']<viewport['top']) || (element['top']>viewport['bottom'] && element['bottom']>(viewport['bottom']+BOTTOM_VISIBILITY_OFFSET))){
 			return false;
 		} else {
 			return true;

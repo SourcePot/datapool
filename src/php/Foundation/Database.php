@@ -525,9 +525,8 @@ class Database{
     
     public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
-        // count all selected rows
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
-        $sqlArr['sql']='SELECT COUNT(*) FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
+        $sqlArr['sql']='SELECT COUNT(*) FROM (SELECT `EntryId` FROM `'.$selector['Source'].'`'.$sqlArr['sql'].') AS a;';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
         $rowCount=current($stmt->fetch());
         return intval($rowCount);

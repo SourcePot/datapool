@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Foundation;
 
 class DataExplorer{
+
+    private const ROW_COUNT_LIMIT=FALSE;
     
     private $oc;
     
@@ -20,24 +22,25 @@ class DataExplorer{
                                  ];
     
     public $definition=['Content'=>['Style'=>['Text'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                            'Style class'=>['@function'=>'select','@options'=>['canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'],'@default'=>'canvas-std'],
-                                                            'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
-                                                            'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
-                                                            ],
+                                                        'Style class'=>['@function'=>'select','@options'=>['canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'],'@default'=>'canvas-std'],
+                                                        'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
+                                                        'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
+                                                        ],
                                             'Selector'=>['Source'=>['@function'=>'select','@options'=>[]],
-                                                                'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                                'Folder'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                                'Name'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                                'EntryId'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                                'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                                ],
-                                             'Widgets'=>['Processor'=>['@function'=>'select','@options'=>[],'@default'=>0],
-                                                               'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                               'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                               'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                               'pdf-file parser'=>['@function'=>'select','@options'=>[],'@default'=>0],
-                                                               'Delete selected entries'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>1],
-                                                                ],
+                                                        'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                        'Folder'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                        'Name'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                        'EntryId'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                        'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                                                        ],
+                                             'Widgets'=>[
+                                                        'Processor'=>['@function'=>'processorSelector','@class'=>__CLASS__],
+                                                        'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                                                        'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                                                        'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                                                        'pdf-file parser'=>['@function'=>'select','@options'=>[],'@default'=>0],
+                                                        'Delete selected entries'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>1],
+                                                        ],
                                               ],
                             ];
     
@@ -112,13 +115,6 @@ class DataExplorer{
         $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
         foreach($dbInfo as $Source=>$entryTemplate){$sourceOptions[$Source]=$Source;}
         $this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
-        // add data processors
-        $this->processorOptions=[''=>'&larrhk;'];
-        foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataProcessor') as $classWithNamespace=>$defArr){
-            $label=$this->oc['SourcePot\Datapool\Root']->class2source($classWithNamespace);
-            $this->processorOptions[$classWithNamespace]=ucfirst($label);
-        }
-        $this->definition['Content']['Widgets']['Processor']['@options']=$this->processorOptions;
         $this->definition['Content']['Widgets']['pdf-file parser']=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
         // add save button
         $this->definition['save']=['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'];
@@ -358,7 +354,10 @@ class DataExplorer{
                 $style['z-index']='5';
                 $style['box-sizing']='content-box';
                 $rowCountSelector=$canvasElement['Content']['Selector'];
-                $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,FALSE,FALSE,TRUE);
+                $rowCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($rowCountSelector,TRUE,'Read',FALSE,TRUE,self::ROW_COUNT_LIMIT,FALSE,TRUE);
+                if ($rowCount===self::ROW_COUNT_LIMIT){
+                    $rowCount='>'.$rowCount;
+                }
             }
         }
         // canvas element
@@ -493,6 +492,14 @@ class DataExplorer{
             return [];
         }
     }
+
+    public function processorSelector($arr):string
+    {
+        $arr['options']=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Processor');
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($arr);
+        return $html;
+    }
+
 
     /**
     * Update canvas element properties with $arr values, i.e. style including position.

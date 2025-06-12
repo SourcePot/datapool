@@ -19,6 +19,8 @@ class HTMLbuilder{
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
 
+    private const SET_ACCESS_BYTE_INFO='Security relevant setting!<br/>New Priviledges will become active at the next user login.';
+
     private $keyCache=[];
     
     private $btns=['test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
@@ -406,6 +408,7 @@ class HTMLbuilder{
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             // button command processing
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+            $formData['selector']['minimalSelector']=TRUE;
             $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($formData['selector']);
             //if (!empty($formData['cmd'])){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);}
             if (isset($formData['cmd']['download']) || isset($formData['cmd']['download all'])){
@@ -608,7 +611,7 @@ class HTMLbuilder{
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,FALSE,FALSE)){
             return '';
         }
-        $integer=$entry[$arr['key']];
+        $integer=intval($entry[$arr['key']]);
         $callingClass=__CLASS__;
         $callingFunction=__FUNCTION__.$arr['key'];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
@@ -616,8 +619,6 @@ class HTMLbuilder{
         $updatedInteger=0;
         $html='<fieldset>';
         $html.='<legend>'.'"'.$arr['key'].'" right'.'</legend>';
-        $matrix=[];
-        if (is_string($integer)){$integer=intval($integer);}
         for($bitIndex=0;$bitIndex<$arr['bitCount'];$bitIndex++){
             $currentVal=pow(2,$bitIndex);
             if ($saveRequest){
@@ -659,16 +660,22 @@ class HTMLbuilder{
         return $html;
     }
     
+    /**
+    * @param array $arr Contains the relevant entry=$arr['selector'] and key, i.e. $arr[key] selects the respective access-byte, e.g. 'Read', 'Write' or 'Privileges'. 
+    * @return string This method returns html-elements, i.e. checkboxes and a safe button as user interface to set/update an access byte.
+    */
     public function setAccessByte(array $arr):string
     {
-        // This method returns html with a number of checkboxes to set the bits of an access-byte.
-        // $arr[key] ... Selects the respective access-byte, e.g. $arr['key']='Read', $arr['key']='Write' or $arr['key']='Privileges'.   
         if (!isset($arr['selector'])){return 'Selector missing!';}
         if (empty($arr['key'])){$arr['key']='Read';}
+        $html='';
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId']) || empty($arr['selector'][$arr['key']])){
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Required keys missing.']);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Required keys missing.']);
         } else {
-            $html=$this->integerEditor($arr);
+            if ($arr['key']==='Privileges'){
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'both','color'=>'#f00'],'keep-element-content'=>TRUE,'element-content'=>self::SET_ACCESS_BYTE_INFO]);
+            }
+            $html.=$this->integerEditor($arr);
         }
         return $html;
     }

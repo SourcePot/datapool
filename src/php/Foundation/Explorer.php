@@ -19,10 +19,10 @@ class Explorer{
                                  
     private $selectorTemplate=['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE];
     private $isVisibleTemplate=['Source'=>FALSE,'Group'=>TRUE,'Folder'=>TRUE,'EntryId'=>TRUE];
-    private $settingsTemplate=['Source'=>['orderBy'=>'Source','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE],
-                                'Group'=>['orderBy'=>'Group','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE],
-                                'Folder'=>['orderBy'=>'Folder','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE],
-                                'EntryId'=>['orderBy'=>'Name','isAsc'=>TRUE,'limit'=>FALSE,'offset'=>FALSE]
+    private $settingsTemplate=['Source'=>['orderBy'=>'Source','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
+                                'Group'=>['orderBy'=>'Group','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
+                                'Folder'=>['orderBy'=>'Folder','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
+                                'EntryId'=>['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE]
                                 ];
                                     
     private $addEntryByFileUpload=TRUE;
@@ -160,7 +160,7 @@ class Explorer{
         }
         // create new guide entry, if it does not exist
         $unseledtedDetected=FALSE;
-        $write=(empty($selector['Group']))?'ALL_MEMBER_R':'ALL_CONTENTADMIN_R'; // if no Group is set, all memebers can add a Group else only the owner and content admin can write a Group, Folder, Name 
+        $write=(empty($selector['Group']) || ($selector['Group']??\SourcePot\Datapool\Root::GUIDEINDICATOR)===\SourcePot\Datapool\Root::GUIDEINDICATOR)?'ALL_MEMBER_R':'ALL_CONTENTADMIN_R'; // if no Group is set, all memebers can add a Group else only the owner and content admin can write a Group, Folder, Name 
         $entry=['Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>$write];
         foreach($this->selectorTemplate as $column=>$initValue){
             if (empty($selector[$column])){$unseledtedDetected=TRUE;}

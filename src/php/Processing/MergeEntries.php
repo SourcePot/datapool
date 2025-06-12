@@ -11,7 +11,11 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Processing;
 
 class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
-    
+
+    private const DESCRIPTION='This processor merges entries into one or multiple target entries. 
+                               The target entry count depends on the amount of different "Map to"-values. 
+                               When the processor run is triggered, make sure that there are no entries left in the target canvas-element from any previous run. 
+                               Otherwise a new run will be taking pre-existing values as a starting point.';
     private $oc;
 
     private $entryTable='';
@@ -19,7 +23,6 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
                             'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
                             ];
     
-    private $conditions=[];
     private const OPERATIONS=['number(A+B)'=>'number(A+B)','number(A-B)'=>'number(A-B)','number(A*B)'=>'number(A*B)','number(A/B)'=>'number(A/B)','number(A%B)'=>'number(A%B)',
                               'money(A+B)'=>'money(A+B)','money(A-B)'=>'money(A-B)',
                               'string(A B)'=>'string(A B)','string(A | B)'=>'string(A | B)','string(A, B)'=>'string(A, B)','string(A; B)'=>'string(A; B)',
@@ -40,7 +43,6 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->conditions=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getConditions();
     }
 
     public function getEntryTable():string
@@ -81,7 +83,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
      private function getMergeEntriesInfo($callingElement){
         $matrix=[];
-        $matrix['Description']=['<p style="width:40em;">This processor merges entries into one or multiple target entries. The target entry count depends on the amount of different "Map to"-values. When the processor run is triggered, make sure that there are no entries left in the target canvaselement from any previous run. Otherwise a new run will be taking pre-existing values as a starting point.</p>'];
+        $matrix['Description']=['<p style="width:40em;">'.self::DESCRIPTION.'</p>'];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Info']);
         return $html;
@@ -280,10 +282,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
         }
-            
-
         return $result;
     }
-
 }
 ?>
