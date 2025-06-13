@@ -430,7 +430,7 @@ class Database{
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
             $operator=$match[2]??'=';
             $placeholder=':'.md5($column.$opAlias[$operator[0]]);
-            $columns=explode($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$column);
+            $columns=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$column);
             $column=trim($columns[0],' <>=!');
             if (!isset($entryTemplate[$column])){continue;}
             if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}

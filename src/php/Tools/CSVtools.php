@@ -255,7 +255,6 @@ class CSVtools{
             }
         }
         // create sample
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $columns=[];
         $rowCount=0;
         $rowLimitCount=0;
@@ -264,7 +263,7 @@ class CSVtools{
             $csvEntry['Content']=$rowArr;
             if ($rowLimitCount<$settings['limit'] && $rowIndex>=$settings['offset']){
                 foreach($rowArr as $column=>$cellValue){
-                    $columns['Content'.$S.$column]=$column;
+                    $columns['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).$column]=$column;
                     if (empty($settings['mode'])){
                         // show cell values
                         $valArr=$cellValue;

@@ -224,7 +224,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 return '';
             }
         }
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         if ($template===0){
             $abtract='{{Content'.$S.'Contact details'.$S.'First name}}';
         } else if ($template===1){

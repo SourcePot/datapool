@@ -15,7 +15,6 @@ class PdfTools{
     private $oc;
 
     private $pageSettings=[];
-    private $S='';
     
     private $formats=['a4'=>['width'=>210,'height'=>297],
                     'a3'=>['width'=>297,'height'=>420],
@@ -35,7 +34,6 @@ class PdfTools{
 
     public function init()
     {
-        $this->S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         // get complete page settings
         $selector=['Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init'];
         $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById($selector,TRUE);

@@ -154,10 +154,9 @@ class MediaTools{
         if (!empty($arr['setting']['Show userAbstract'])){$arr['selector'][':::userAbstract']=TRUE;}
         if (!empty($arr['setting']['Show getPreview'])){$arr['selector'][':::getPreview']=TRUE;}
         $arrElements=['arr'=>$arr,'elements'=>[]];
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
         foreach($flatEntry as $flatEntryKey=>$flatEntryValue){
-            $flatEntryKey=str_replace($S,'|',$flatEntryKey);
+            $flatEntryKey=str_replace(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,'|',$flatEntryKey);
             $arrElements=$this->addElementFromKeySettingValue($arrElements,$flatEntryKey,$flatEntryValue);
         }
         // sort html elements and prsent them in order

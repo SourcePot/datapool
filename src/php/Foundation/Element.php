@@ -301,7 +301,6 @@ class Element{
     public function formProcessing(string $callingClass,string $callingFunction):array
     {
         $result=['cmd'=>[],'val'=>[],'changed'=>[],'files'=>[],'hasValidFiles'=>FALSE,'selector'=>[],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
         if (isset($_SESSION[$callingClass][$callingFunction])){
             foreach($_SESSION[$callingClass][$callingFunction] as $name=>$arr){
                 // Process _POST array

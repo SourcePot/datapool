@@ -21,15 +21,15 @@ class Logger
     private $entryTable='';
     private $entryTemplate=[];
     
-    private $levelConfig=array('emergency'=>array('hashIp'=>FALSE,'lifetime'=>'P1Y','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f00','min-width'=>'6rem')),
-                               'alert'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f44','min-width'=>'6rem')),
-                               'critical'=>array('hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#f88','min-width'=>'6rem')),
-                               'error'=>array('hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#faa','min-width'=>'6rem')),
-                               'warning'=>array('hashIp'=>TRUE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>array('color'=>'#fcc','min-width'=>'6rem')),
-                               'notice'=>array('hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>array('color'=>'#ff0','min-width'=>'6rem')),
-                               'info'=>array('hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
-                               'debug'=>array('hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>array('color'=>'#fff','min-width'=>'6rem')),
-                               );
+    private $levelConfig=['emergency'=>['hashIp'=>FALSE,'lifetime'=>'P1Y','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f00','min-width'=>'6rem']],
+                        'alert'=>['hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f44','min-width'=>'6rem']],
+                        'critical'=>['hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f88','min-width'=>'6rem']],
+                        'error'=>['hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#faa','min-width'=>'6rem']],
+                        'warning'=>['hashIp'=>TRUE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#fcc','min-width'=>'6rem']],
+                        'notice'=>['hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>['color'=>'#ff0','min-width'=>'6rem']],
+                        'info'=>['hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>['color'=>'#fff','min-width'=>'6rem']],
+                        'debug'=>['hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>['color'=>'#fff','min-width'=>'6rem']],
+                        ];
     
     public function __construct(array $oc)
     {
@@ -60,8 +60,8 @@ class Logger
     
     public function job($vars){
         // create and update signals for relevant logging Groups
-        $relevantGroups=array('emergency','alert','critical','error','warning');
-        $selector=array('Source'=>$this->entryTable);
+        $relevantGroups=['emergency','alert','critical','error','warning'];
+        $selector=['Source'=>$this->entryTable];
         foreach($relevantGroups as $Group){
             $selector['Group']=$Group;
             $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE);
@@ -92,7 +92,7 @@ class Logger
     public function methodTest($classInstance,string $method,array $args,string $logLevel='info',string $logger='logger_1'):array
     {
         $class=get_class($classInstance);
-        $context=array('class'=>$class,'method'=>$method);
+        $context=['class'=>$class,'method'=>$method];
         $msg='{class} &rarr; {function}()';
         try{
             $paramsStr='';
@@ -101,7 +101,7 @@ class Logger
                 $paramsStr.='{'.$param->name.'},';
                 $context[$param->name]=$args[$pIndex];
             }
-            $return=call_user_func_array(array($classInstance,$method),$args);
+            $return=call_user_func_array([$classInstance,$method],$args);
             $context['return']=$return;
             $context['return dataType']=gettype($return);
             $msg.='('.trim($paramsStr,', ').') returned {return}';
@@ -154,7 +154,7 @@ class Logger
         $sourceTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
         $today=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
         $today=mb_substr($today,0,11);
-        $columns=array('Date','Group','Content'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'msg');
+        $columns=['Date','Group','Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'msg'];
         $arr['settings']=array_replace_recursive(array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'),$arr['settings']);
         $arr['selector']['Source']=$this->entryTable;
         $arr['html']=' ';
@@ -170,9 +170,9 @@ class Logger
             $flatLog['Date']=str_replace($today,'',$flatLog['Date']);
             foreach($arr['settings']['columns'] as $column){
                 if (!isset($flatLog[$column])){continue;}
-                $rowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'p','element-content'=>$flatLog[$column],'keep-element-content'=>TRUE,'style'=>$this->levelConfig[$log['Group']]['style'],'class'=>$arr['settings']['class']));
+                $rowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$flatLog[$column],'keep-element-content'=>TRUE,'style'=>$this->levelConfig[$log['Group']]['style'],'class'=>$arr['settings']['class']]);
             }
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$rowHtml,'keep-element-content'=>TRUE,'class'=>$arr['settings']['class']));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$rowHtml,'keep-element-content'=>TRUE,'class'=>$arr['settings']['class']]);
         }
         return $arr;
     }
@@ -180,12 +180,12 @@ class Logger
     public function getMyLogs():string
     {
         $arr=[];
-        $arr['selector']=array('Source'=>$this->entryTable,'Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
-        $arr['settings']=array('method'=>'getLogsHtml','classWithNamespace'=>__CLASS__);
-        $arr['wrapper']=array('class'=>'toolbox','style'=>array('overflow-y'=>'scroll','background-color'=>'#444'));
+        $arr['selector']=['Source'=>$this->entryTable,'Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()];
+        $arr['settings']=['method'=>'getLogsHtml','classWithNamespace'=>__CLASS__];
+        $arr['wrapper']=['class'=>'toolbox','style'=>['overflow-y'=>'scroll','background-color'=>'#444']];
         $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         // add to app
-        $appArr=array('class'=>'toolbox','icon'=>'Logger');
+        $appArr=['class'=>'toolbox','icon'=>'Logger'];
         if ($_SESSION[__CLASS__]['age']<2){$appArr['open']=TRUE;}
         $appArr['html']=$contentHtml;
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);

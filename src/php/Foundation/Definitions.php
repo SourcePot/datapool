@@ -102,7 +102,7 @@ class Definitions{
     */
     public function definition2entry(array $definition,array $entry=[]):array
     {
-        $flatArrayKeySeparator=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $flatArrayKeySeparator=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
         $flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition);
         $defaultArrKeys2remove=[];
@@ -143,8 +143,7 @@ class Definitions{
         if (empty($definition)){
             $definition=$this->getDefinition($entry);
         }
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $selectorKeyComps=explode($S,$flatSelectorKey);
+        $selectorKeyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$flatSelectorKey);
         $element=[];
         if (empty($definition)){
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write')){
@@ -166,16 +165,16 @@ class Definitions{
                     throw new \ErrorException('Function '.__FUNCTION__.': Defintion format error with definition-Key '.$definitionKey.'.',0,E_ERROR,__FILE__,__LINE__);
                 }
                 $definitionKey=array_shift($definitionKeyComps);
-                $definitionKey=trim($definitionKey,$S.'*');
+                $definitionKey=trim($definitionKey,\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'*');
                 if (mb_strpos($flatSelectorKey,$definitionKey)===FALSE){
                     // not the correct definition key
                 } else {
                     $definitionAttr=array_pop($definitionKeyComps);
-                    $sPos=mb_strpos($definitionAttr,$S);
+                    $sPos=mb_strpos($definitionAttr,\SourcePot\Datapool\Root::ONEDIMSEPARATOR);
                     if ($sPos!==FALSE){
                         $tmp=$definitionAttr;
                         $definitionAttr=mb_substr($definitionAttr,0,$sPos);
-                        $subKey=mb_substr($tmp,$sPos+strlen($S));
+                        $subKey=mb_substr($tmp,$sPos+strlen(\SourcePot\Datapool\Root::ONEDIMSEPARATOR));
                         $element[$definitionAttr][$subKey]=$definitionValue;
                     } else {
                         $element[$definitionAttr]=$definitionValue;
@@ -210,8 +209,7 @@ class Definitions{
         // flatten arrays
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
         $flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $attrIdentifier=$S.'@';
+        $attrIdentifier=(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'@';
         $entryArr=[];
         foreach($flatDefinition as $definitionKey=>$definitionValue){
             $definitionKeyComps=explode($attrIdentifier,$definitionKey);
@@ -231,7 +229,7 @@ class Definitions{
         $tableCntrArr=[];
         foreach($entryArr as $key=>$defArr){
             // get key components
-            $keyComps=explode($S,$key);
+            $keyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$key);
             $keyArr=$keyComps;
             $key=array_pop($keyComps);
             if (empty($keyComps)){$caption=$key;} else {$caption=implode(' &rarr; ',$keyComps);}

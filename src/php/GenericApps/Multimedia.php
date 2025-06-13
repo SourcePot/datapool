@@ -78,8 +78,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
             } else if (empty($selector['EntryId'])){
                 $presentation=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($selector,'widget');
                 if ($presentation=='entryList'){
-                    $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-                    $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.$S.'File','Filter'=>'']]];
+                    $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'File','Filter'=>'']]];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$selector,$settings,[]);    
                 } else if ($presentation=='entryByEntry'){
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){

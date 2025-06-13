@@ -174,7 +174,9 @@ class HTMLbuilder{
         if (!isset($arr['key'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Missing key-key in argument arr',0,E_ERROR,__FILE__,__LINE__);
         }
-        if (is_array($arr['key'])){$key=implode($this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator(),$arr['key']);} else {$key=$arr['key'];}
+        if (is_array($arr['key'])){
+            $key=implode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$arr['key']);} else {$key=$arr['key'];
+        }
         $inputId=$this->arr2id($arr).'input';
         $triggerId=$this->arr2id($arr).'btn';    
         $html='';
@@ -1004,7 +1006,7 @@ class HTMLbuilder{
                         }
                     }
                     if (count($flatEntryPart)==1){
-                        $key.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().key($flatEntryPart);
+                        $key.=\SourcePot\Datapool\Root::ONEDIMSEPARATOR.key($flatEntryPart);
                         $presentationValue=current($flatEntryPart);
                     } else {
                         $presentationValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntryPart);

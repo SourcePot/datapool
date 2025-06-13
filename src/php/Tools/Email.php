@@ -366,8 +366,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
     
     public function getRelevantFlatUserContentKey():string
     {
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $flatUserContentKey='Content'.$S.'Contact details'.$S.'Email';
+        $flatUserContentKey='Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Email';
         return $flatUserContentKey;
     }
 

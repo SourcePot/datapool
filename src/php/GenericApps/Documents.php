@@ -72,7 +72,7 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
                     } else if (empty($selector['Folder'])){
                         $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>'']]];
                     } else if (empty($selector['EntryId'])){
-                        $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator().'File','Filter'=>'']]];
+                        $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'File','Filter'=>'']]];
                     }
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($containerTitle,'entryList',$selector,$settings,[]); 
                 } else if ($presentation=='entryByEntry'){

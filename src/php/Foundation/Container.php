@@ -243,7 +243,7 @@ class Container{
         if (empty($arr['selector'])){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'No entry found with the selector provided']);
         } else {
-            $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+            $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
             $debugArr['formData']=$formData;
             if (!empty($formData['cmd'])){
@@ -302,7 +302,9 @@ class Container{
             $btnArr['cmd']='download';
             $btnsHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
             $matrix=['Nav'=>['value'=>$navHtml,'cmd'=>$btnsHtml]];
-            if (!isset($settings['selectorKey'])){$settings['selectorKey']='';}
+            if (!isset($settings['selectorKey'])){
+                $settings['selectorKey']='';
+            }
             $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
             foreach($flatEntry as $flatKey=>$value){
                 if (is_object($value)){$value='{object}';}
@@ -366,7 +368,7 @@ class Container{
     
     private function entryList(array $arr,bool $isDebugging=FALSE):array
     {
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         $SettingsTemplate=['columns'=>[['Column'=>'Name','Filter'=>'']],
                             'isSystemCall'=>FALSE,
                             'orderBy'=>'Name',
@@ -524,7 +526,7 @@ class Container{
     }
 
     private function getKeySelector(array $flatEntry):array{
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         // options for complete match
         $upperOrderKeys=[];
         $keyMatchOptions=[];
@@ -579,7 +581,7 @@ class Container{
     {
         // This function is a suporting function for entryList() only.
         // It has no further use.
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
+        $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         foreach($settings['columns'] as $columnIndex=>$cntrArr){
             if (!isset($cntrArr['Filter'])){$settings['columns'][$columnIndex]['Filter']='';}
             if ($resetFilter){$cntrArr['Filter']='';}

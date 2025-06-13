@@ -238,11 +238,10 @@ final class MiscTools{
     
     public function explode($string,$delimiter):array
     {
-        $S=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getSeparator();
-        $string=preg_replace('/(".+)('.$delimiter.')(.+")/u','$1'.$S.'$3',$string);
+        $string=preg_replace('/(".+)('.$delimiter.')(.+")/u','$1'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'$3',$string);
         $comps=explode($delimiter,$string);
         foreach($comps as $index=>$comp){
-            $comps[$index]=str_replace($S,$delimiter,$comp);
+            $comps[$index]=str_replace(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$delimiter,$comp);
             $comps[$index]=str_replace('\s+',' ',$comps[$index]);
         }
         return $comps;
@@ -317,19 +316,11 @@ final class MiscTools{
         return $entryId;
     }
     
-    public function getEntryIdAge(string $entryId):int
-    {
-        if (mb_strpos($entryId,'eid')===FALSE || mb_strpos($entryId,'EID')===FALSE){return 0;}
-        $timestamp=mb_substr($entryId,3,mb_strpos($entryId,'-')-1);
-        $timestamp=intval($timestamp);
-        return time()-$timestamp;
-    }
-    
     public function addEntryId(array $entry,array $relevantKeys=['Source','Group','Folder','Name'],$timestampToUse=FALSE,string $suffix='',bool $keepExistingEntryId=FALSE):array
     {
         if (!empty($entry['EntryId']) && $keepExistingEntryId){return $entry;}
         $base=[];
-        foreach($relevantKeys as $keyIindex=>$relevantKey){
+        foreach($relevantKeys as $relevantKey){
             if (isset($entry[$relevantKey])){
                 if ($entry[$relevantKey]!==FALSE){$base[]=$entry[$relevantKey];}
             }
@@ -379,7 +370,7 @@ final class MiscTools{
         return '';
     }
     
-    private function emojiList2file():array
+    private function emojiList2file():array|bool
     {
         //$html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
         $html=file_get_contents('D:/Full Emoji List, v15.0.htm');
@@ -403,7 +394,7 @@ final class MiscTools{
                         foreach($key2arr as $key2index=>$key2){
                             $key2=trim($key2,'u+');
                             $key2=hexdec($key2);
-                            $result[$key0][$key1][$key2]=html_entity_decode(trim(strip_tags($cell)));
+                            $result[$key0??''][$key1??''][$key2]=html_entity_decode(trim(strip_tags($cell)));
                         }
                     }
                 }
@@ -440,24 +431,6 @@ final class MiscTools{
             return strval($value);
         } else {
             return $value.' '.$e[$p+6];
-        }
-    }
-    
-    public function var2color($var,$colorScheme=0,$light=FALSE,$decimal=TRUE):string
-    {
-        $colorArr=[];
-        $hash=$this->getHash($var);
-        $colorValuesArr=str_split($hash,2);
-        for($index=0;$index<3;$index++){
-            $colorArr[$index]=$colorValuesArr[$index+$colorScheme];
-            $colorArr[$index]=intval(0.6*hexdec($colorArr[$index]));
-            if ($light){$colorArr[$index]=255-$colorArr[$index];}
-            if (!$decimal){$colorArr[$index]=dechex($colorArr[$index]);}
-        }
-        if ($decimal){
-            return 'rgb('.implode(',',$colorArr).')';
-        } else {
-            return '#'.implode('',$colorArr);    
         }
     }
 
@@ -507,11 +480,6 @@ final class MiscTools{
             if (!$dontUpdate){$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);}
             return FALSE;
         }
-    }
-
-    public function getSeparator():string
-    {
-        return \SourcePot\Datapool\Root::ONEDIMSEPARATOR;
     }
     
     public function arr2selector(array $arr,array $defaultValues=['app'=>'','Source'=>FALSE,'EntryId'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE]):array
