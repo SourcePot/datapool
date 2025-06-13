@@ -419,8 +419,8 @@ class HTMLbuilder{
                 $filesArr=current($formData['files']['upload']);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($filesArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
-                $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->minimalSelector($selector);
-                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
+                $minSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->minimalSelector($selector);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($minSelector);
                 $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
             } else if (isset($formData['cmd']['remove'])){
