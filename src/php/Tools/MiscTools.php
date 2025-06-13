@@ -520,9 +520,15 @@ final class MiscTools{
         foreach($defaultValues as $key=>$defaultValue){
             $selector[$key]=$arr[$key]??$defaultValue;
             $selector[$key]=(strpos(strval($selector[$key]),\SourcePot\Datapool\Root::GUIDEINDICATOR)===FALSE)?$selector[$key]:FALSE;
-            if (!empty($arr['minimalSelector']) && !empty($selector['Source']) && !empty($selector['EntryId']) && strpos($selector['EntryId'],'%')===FALSE && strpos($selector['EntryId'],'?')===FALSE){
-                break;
-            }
+        }
+        return $selector;
+    }
+
+    public function minimalSelector(array $selector):array
+    {
+        $selector['EntryId']=$selector['EntryId']??FALSE;
+        if (!empty($selector['Source']) && !empty($selector['EntryId']) && strpos($selector['EntryId'],'%')===FALSE && strpos($selector['EntryId'],'?')===FALSE){
+            return ['Source'=>$selector['Source'],'EntryId'=>$selector['EntryId'],];
         }
         return $selector;
     }

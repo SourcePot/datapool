@@ -150,7 +150,8 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getEnrichEntriesSettings($callingElement){
-        $html='';
+        $idStoreAppArr=['html'=>$this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreWidget($callingElement['EntryId']),'icon'=>'Already processed'];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($idStoreAppArr);
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Enriching entries params','generic',$callingElement,['method'=>'getEnrichEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Enriching entries rules','generic',$callingElement,['method'=>'getEnrichEntriesRulesHtml','classWithNamespace'=>__CLASS__],[]);
@@ -213,12 +214,17 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base['credentials']=$setting=$this->getCredentialsSetting()['Content'];
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=[];
+        $result=['Statistics'=>['Itmes already processed and skipped'=>['value'=>0]]];
         // loop through entries
         $requestCounter=0;
         $selector=$callingElement['Content']['Selector'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $sourceEntry){
             if (empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
+                if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreIsNew($callingElement['EntryId'],$sourceEntry['EntryId'])){
+                    $result['Statistics']['Itmes already processed and skipped']['value']++;
+                    continue;
+                }
+                
                 $result=$this->enrichEntries($base,$sourceEntry,$result,$testRun);
                 $requestCounter++;
                 if ($requestCounter>=self::MAX_REQUEST_COUNT_PER_RUN){break;}
@@ -227,8 +233,16 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $iteratorClass=$sourceEntry['Params']['File']['SpreadsheetIteratorClass'];
                 $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
                 foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$sourceEntry['Params']['File']['Extension']) as $rowIndex=>$rowArr){
+                    $idStoreId=$sourceEntry['EntryId'].'_'.$rowIndex;
+                    if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreIsNew($callingElement['EntryId'],$idStoreId)){
+                        $result['Statistics']['Itmes already processed and skipped']['value']++;
+                        continue;
+                    }
                     $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
                     $result=$this->enrichEntries($base,$sourceEntry,$result,$testRun);
+                    if ($testRun==0){
+                        $this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreAdd($callingElement['EntryId'],$idStoreId);
+                    }
                     $requestCounter++;
                     if ($requestCounter>=self::MAX_REQUEST_COUNT_PER_RUN){break 2;}
                     sleep(1);
@@ -254,6 +268,7 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $applicationPublication.=$match[intval($rule['Regex match index'])];
             }
         }
+        $applicationPublication=str_replace('WO','',$applicationPublication);
         $applicationPublication=preg_replace('/\s+/','',$applicationPublication);
         // process application/publication
         if (empty($applicationPublication)){

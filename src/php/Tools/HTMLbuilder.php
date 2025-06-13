@@ -408,7 +408,6 @@ class HTMLbuilder{
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             // button command processing
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-            $formData['selector']['minimalSelector']=TRUE;
             $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($formData['selector']);
             //if (!empty($formData['cmd'])){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);}
             if (isset($formData['cmd']['download']) || isset($formData['cmd']['download all'])){
@@ -418,6 +417,7 @@ class HTMLbuilder{
                 $filesArr=current($formData['files']['upload']);
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($filesArr,$entry);
             } else if (isset($formData['cmd']['delete']) || isset($formData['cmd']['delete all'])){
+                $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->minimalSelector($selector);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
                 $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->selectorAfterDeletion($selector);
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($selector);
