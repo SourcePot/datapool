@@ -292,7 +292,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function loginUser(array $user)
     {
         $_SESSION['currentUser']=$user;
-        $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
+        $this->oc['SourcePot\Datapool\Root']->updateCurrentUser($user);
         $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',['userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
     }
     
