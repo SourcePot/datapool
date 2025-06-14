@@ -12,8 +12,17 @@ namespace SourcePot\Datapool\Foundation;
 
 class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     
-    private const SAMPLE_LENGTH=20;
-    
+    private const SAMPLE_LENGTH=30;
+    private const QUERY_SELECTORS=[
+                        ['Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                        ['Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                        ['Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                        ['Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
+                    ];
     private $oc;
     
     private $entryTable='';
@@ -83,20 +92,12 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $nowDateTime=new \DateTime('now');
         $nowDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         $calendarStartDateTime=$nowDateTime->format('Y-m-d H:i:s');
-        // create selectors
-        $selectors=[['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Content'=>'%'.$query.'%','Params'=>'%/image%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Name'=>'%'.$query.'%','Params'=>'%/image%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Folder'=>'%'.$query.'%','Params'=>'%/image%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Documents']->getEntryTable(),'Folder'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Forum']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Feeds']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getEntryTable(),'Content'=>'%'.$query.'%','Start>'=>$calendarStartDateTime,'orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
-                    ];
-        if (strlen($query)>4){
-            $selectors[]=['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Params'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10];
-        }
-        //
         $arr=['Query'=>$query,'html'=>'','Names'=>[],'Hits'=>[]];
+        if (empty($query)){
+            return $arr;
+        }
+        // loop through query selectors
+        $selectors=$this->oc['SourcePot\Datapool\Tools\MiscTools']->generic_strtr(self::QUERY_SELECTORS,['{{query}}'=>$query,'{{calendarStartDateTime}}'=>$calendarStartDateTime]);
         foreach($selectors as $selector){
             $queryColumn=$this->selector2queryColumn($selector,$query);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$selector['orderBy'],$selector['isAsc'],$selector['limit'],0) as $entry){

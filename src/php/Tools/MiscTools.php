@@ -437,6 +437,21 @@ final class MiscTools{
     /******************************************************************************************************************************************
     * Array tools
     */
+
+    public function generic_strtr(string|array $haystack,$needleReplacement=['{{query}}'=>'%test%']):string|array
+    {
+        if (is_array($haystack)){
+            $flatHaystack=$this->arr2flat($haystack);
+            foreach($flatHaystack as $flatKey=>$flatValue){
+                if (!is_string($flatValue)){continue;}
+                $flatHaystack[$flatKey]=strtr($flatValue,$needleReplacement);
+            }
+            $haystack=$this->flat2arr($flatHaystack);
+        } else {
+            $haystack=strtr($haystack,$needleReplacement);
+        }
+        return $haystack;
+    }
     
     public function formData2statisticlog($formData)
     {
