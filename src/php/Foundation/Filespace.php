@@ -150,14 +150,8 @@ class Filespace{
         } else if (!empty($selector['Class']) && !empty($selector['EntryId'])){
             $dir=$this->class2dir($selector['Class'],$mkDirIfMissing);    
             $file=$selector['EntryId'].'.json';
-        } else {
-            $selector['class']=__CLASS__;
-            $selector['function']=__FUNCTION__;
-            $this->oc['logger']->log('error','{class} &rarr; {function}() mandatory keys Source or Class or EntryId missing in selector argument',$selector);   
-            $dir='';
-            $file='';
         }
-        return $fileName=$dir.$file;
+        return ($dir??'').($file??'');
     }
 
     public function unifyEntry(array $entry):array 

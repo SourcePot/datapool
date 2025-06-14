@@ -243,7 +243,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         // get sender user entry 
         $sender=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$userEntryTable,'EntryId'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()],TRUE);
         $flatSender=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sender);
-        // 
+        //
         $flatUserContentKey=$this->getRelevantFlatUserContentKey();
         if (empty($flatRecipient[$flatUserContentKey])){
             $this->oc['logger']->log('notice','Failed to send email: recipient email address is empty',[]);    
@@ -326,12 +326,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             if (isset($entry['file'])){
                 $mail->addAttachment($entry['file']);
             }
-            if ($mail->send()) {
+            if ($mail->send()){
                 $sentEntriesCount++;
-                $this->oc['logger']->log('info','Message sent to "{To}"',$entry['Content']); 
+                $this->oc['logger']->log('info','Message "{Subject}" sent to "{To}"',$entry['Content']); 
             } else {
                 $entry['Content']['User']=$smtpSettings['User'];
-                $this->oc['logger']->log('notice','Failed to send message to "{To}" via account "{User}" from "{From}"',$entry['Content']); 
+                $this->oc['logger']->log('notice','Failed to send message "{Subject}" to "{To}" via account "{User}" from "{From}"',$entry['Content']); 
             }
         }
         return $sentEntriesCount;
