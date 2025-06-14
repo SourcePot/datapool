@@ -166,7 +166,7 @@ final class MiscTools{
         }
     }
     
-    public function xml2arr(string $xml):array|bool
+    public function xml2arr(string $xml)
     {
         if (extension_loaded('SimpleXML')){
             $this->normalize_xml2array(simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOCDATA),$result);

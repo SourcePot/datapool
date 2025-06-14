@@ -27,6 +27,7 @@ class ExifTools{
     public function addExif2entry(array $entry,string $file):array
     {
         $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addExif2entry($entry,$file);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addGPano2entry($entry,$file);
         $entry=$this->addMimeType($entry);
         $entry=$this->addOrientation($entry);
         $entry=$this->addCamera($entry);

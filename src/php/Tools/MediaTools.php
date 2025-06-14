@@ -577,6 +577,30 @@ class MediaTools{
         }
         return $entry;
     }
+
+    public function addGPano2entry(array $entry,string $file):array
+    {
+        $endNeedle='</x:xmpmeta>';
+        $fileContent=file_get_contents($file);
+        if (str_contains($fileContent,'GPano=')){
+            // get GPano section
+            $startPos=strpos($fileContent,'<x:xmpmeta');
+            $endPos=strpos($fileContent,$endNeedle);
+            $length=($endPos+strlen($endNeedle))-$startPos;
+            $xml=substr($fileContent,$startPos,$length);
+            // parse xml
+            $GPano=[];
+            $GPanoComps=explode('GPano:',$xml);
+            array_shift($GPanoComps);
+            foreach($GPanoComps as $GPanoStr){
+                preg_match('/([^=]+)="([^"]+)"/',$GPanoStr,$matches);
+                if (!isset($matches[0])){continue;}
+                $GPano[$matches[1]]=$matches[2];
+            }
+            $entry['Params']['GPano']=$GPano;
+        }
+        return $entry;
+    }
     
     private function addTmpFile(array $arr):array
     {
