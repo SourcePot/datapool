@@ -379,7 +379,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
                             'From'=>'',
                             'Password'=>''];
         $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
-        $settings['Content']['Port']=intval($settings['Content']['Port']);
+        $settings['Content']['Port']=intval($settings['Content']['Port']??465);
         return $settings;
     }
 

@@ -124,6 +124,7 @@ final class Root{
         if (!empty($loginUser)){
             // remote client | BE CAREFUL, THIE OPTION BYPASSES THE LOGIN
             $this->currentUser=$loginUser;
+            $_SESSION['currentUser']=$this->currentUser;
         } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             // empty session -> anonymous user
             $loginId=strval(mt_rand(1,999999999));
