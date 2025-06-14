@@ -853,8 +853,8 @@ div.center{
 article.widget{
     padding: 0;
     overflow-y:auto;
-    border:none;
-    box-shadow: 0px -5px 15px #ccc;
+    border-bottom: 1px solid #aaa;
+    box-shadow: 0px -0px 15px #ccc;;
 }
 .widget-entry-wrapper{
     padding:3px 2vw;

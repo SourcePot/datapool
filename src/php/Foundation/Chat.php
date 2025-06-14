@@ -112,6 +112,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function getHomeAppWidget(string $name):array
     {
         $element=['element-content'=>''];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Chat','keep-element-content'=>TRUE]);
         $newEntryHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('New entry'.__CLASS__.__FUNCTION__,'generic',['Source'=>$this->entryTable],['method'=>'newEntryHtml','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$newEntryHtml,'icon'=>'&#9993; Chat','class'=>'forum']);
         $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$this->currentUser['EntryId'].'%','refreshInterval'=>5];

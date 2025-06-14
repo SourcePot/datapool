@@ -458,7 +458,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             }
         }
         ksort($appsHtml);
-        $element=['element-content'=>implode(PHP_EOL,$appsHtml),'keep-element-content'=>TRUE];
+        $element=['element-content'=>'','keep-element-content'=>TRUE];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Remote client','keep-element-content'=>TRUE]);
+        $element['element-content'].=implode(PHP_EOL,$appsHtml);
         return $element;
     }
     

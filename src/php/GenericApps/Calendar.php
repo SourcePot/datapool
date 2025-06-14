@@ -821,7 +821,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
     {
         $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
         $element=['element-content'=>'','style'=>['padding'=>'1.5rem 0']];
-        $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
         return $element;
     }
     

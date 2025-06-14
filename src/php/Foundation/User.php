@@ -361,6 +361,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function getHomeAppWidget(string $name):array
     {
         $element=['element-content'=>''];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Active user','keep-element-content'=>TRUE]);
         $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','refreshInterval'=>10];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
         return $element;

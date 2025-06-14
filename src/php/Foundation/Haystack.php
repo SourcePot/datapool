@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     
+    private const SAMPLE_LENGTH=20;
+    
     private $oc;
     
     private $entryTable='';
@@ -49,17 +51,13 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $queryEntry=['Source'=>$this->entryTable,'Group'=>'Queries','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()];
         // process data
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (isset($formData['cmd']['search']) || isset($formData['cmd']['reloadBtnArr'])){
-            if (empty($formData['val']['Query'])){
-                //
-            } else {
-                $serachResult=$this->getSerachResultHtml($formData['val']['Query']);
-                $queryEntry['Name']=substr($formData['val']['Query'],0,20);
-                $queryEntry['Content']=['Query'=>$serachResult['Query'],'Names'=>$serachResult['Names']];
-                $queryEntry['Params']=[__CLASS__=>['Hits'=>$serachResult['Hits']]];
-                $queryEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D',\SourcePot\Datapool\Root::DB_TIMEZONE);
-                $queryEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($queryEntry);
-            }
+        if ((isset($formData['cmd']['search']) || isset($formData['cmd']['reloadBtnArr']) && !empty($formData['val']['Query']))){
+            $serachResult=$this->getSerachResultHtml($formData['val']['Query']);
+            $queryEntry['Name']=substr($formData['val']['Query'],0,20);
+            $queryEntry['Content']=['Query'=>$serachResult['Query'],'Names'=>$serachResult['Names']];
+            $queryEntry['Params']=[__CLASS__=>['Hits'=>$serachResult['Hits']]];
+            $queryEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D',\SourcePot\Datapool\Root::DB_TIMEZONE);
+            $queryEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($queryEntry);
         } else {
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($queryEntry,FALSE,'Read','Date',FALSE) as $queryEntry){
                 $serachResult['Query']=$queryEntry['Content']['Query'];
@@ -73,7 +71,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Search','key'=>['search'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'1rem 0','width'=>'inherit','background-color'=>'#ddd']]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'1rem 0','width'=>'inherit','background-color'=>'#eee']]);
         // compile html - add result div
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$serachResult['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','max-height'=>'40vh','overflow-y'=>'auto','width'=>'99vw','border-right'=>'1px dotted #000']]);
         return $arr;
@@ -81,13 +79,15 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     private function getSerachResultHtml(string $query):array
     {
-        $entryCount=0;
         // if calendar entry add Start requirement
         $nowDateTime=new \DateTime('now');
         $nowDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         $calendarStartDateTime=$nowDateTime->format('Y-m-d H:i:s');
         // create selectors
-        $selectors=[['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+        $selectors=[['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Content'=>'%'.$query.'%','Params'=>'%/image%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Name'=>'%'.$query.'%','Params'=>'%/image%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Folder'=>'%'.$query.'%','Params'=>'%/image%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                    ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Documents']->getEntryTable(),'Folder'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
                     ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Forum']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
                     ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Feeds']->getEntryTable(),'Content'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
                     ['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getEntryTable(),'Content'=>'%'.$query.'%','Start>'=>$calendarStartDateTime,'orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
@@ -96,27 +96,58 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
             $selectors[]=['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable(),'Params'=>'%'.$query.'%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10];
         }
         //
-        $arr['Query']=$query;
-        $arr['html']='';
-        $arr['Names']=[];
-        $arr['Hits']=[];
+        $arr=['Query'=>$query,'html'=>'','Names'=>[],'Hits'=>[]];
         foreach($selectors as $selector){
+            $queryColumn=$this->selector2queryColumn($selector,$query);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$selector['orderBy'],$selector['isAsc'],$selector['limit'],0) as $entry){
+                if (isset($arr['Hits'][$entry['EntryId']])){
+                    if ($arr['Hits'][$entry['EntryId']]===$entry['Source']){continue;}
+                }
+                $headline=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($entry).': '.$this->getQuerySampleText($entry,$queryColumn,$query);
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>$headline,'keep-element-content'=>TRUE,]);  
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>' ','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>['clear'=>'none','width'=>'99vw']]);
                 $arr['Names'][$entry['EntryId']]=$entry['Name'];
                 $arr['Hits'][$entry['EntryId']]=$entry['Source'];
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>['clear'=>'none']]);
             }
         }
         if (empty($arr['html'])){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'Nothing found...']);    
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'Nothing found...']);
         }
         return $arr;
     }
 
+    private function selector2queryColumn(array $selector,string $query):string|bool
+    {
+        $queryColumn=FALSE;
+        foreach($selector as $column=>$value){
+            if (mb_strpos($value,$query)!==FALSE){
+                $queryColumn=$column;
+                break;
+            }
+        }
+        return $queryColumn;
+    }
+
+    private function getQuerySampleText(array $entry,string|bool $column,string $query):string
+    {
+        if (empty($column)){return '';}
+        $halfSmapleLength=intval(self::SAMPLE_LENGTH/2);
+        $text=(is_array($entry[$column]))?($this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry[$column])):$entry[$column];
+        $queryPos=intval(mb_strpos($text,$query));
+        $startPos=($queryPos>$halfSmapleLength)?($queryPos-$halfSmapleLength):0;
+        $sampleText=mb_substr($text,$startPos,self::SAMPLE_LENGTH);
+        $sampleText=str_replace($query,'<span style="background-color:yellow;">'.$query.'</span>',$sampleText);
+        $sampleText=($startPos>0)?('...'.$sampleText):$sampleText;
+        $sampleText=(mb_strlen($text)>=self::SAMPLE_LENGTH)?($sampleText.'...'):$sampleText;
+        $sampleText='<i>'.$sampleText.'</i>';
+        return $sampleText;
+    }
+
     public function getHomeAppWidget(string $name):array
     {
-        $element=[];
-        $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'],['style'=>['padding'=>'0px']]);
+        $element=['element-content'=>''];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Search','keep-element-content'=>TRUE]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'],['style'=>['padding'=>'0px']]);
         return $element;
     }
     
