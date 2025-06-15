@@ -14,7 +14,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver{
+class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver{
     
     private const SMTP_PORTS=[25=>'25 (standard)',587=>'587 (secure submission with TLS)',465=>'465 (legacy secure SMTPS)',2525=>'2525 (alternative when others are blocked)'];
     
@@ -88,7 +88,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
         return $this->entryTemplate;
     }
     
-    public function job($vars):array
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
+    public function job(array $vars):array
     {
         if (empty($vars['Inboxes'])){
             $selector=['Class'=>__CLASS__.'-rec'];
@@ -98,11 +103,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Dat
             }
         }
         if (!empty($vars['Inboxes'])){
-            $inbox=array_shift($vars['Inboxes']);
+            $inbox=array_shift((array)$vars['Inboxes']);
             if (isset($inbox['Content']['EntryId'])){
                 $vars['Result']=$this->todaysEmails($inbox['Content']['EntryId']);
             }                
-            $vars['Inboxes to process']=count($vars['Inboxes']);
+            $vars['Inboxes to process']=count((array)$vars['Inboxes']);
         }
         return $vars;
     }

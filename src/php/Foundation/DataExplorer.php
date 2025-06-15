@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class DataExplorer{
+class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
 
     private const ROW_COUNT_LIMIT=FALSE;
     private const SIGNAL_EXPIRY_THRESHOLD='-P10D';  // Negative DateTimeIntervall string, e.g. '-P1D' for 1 day
@@ -93,7 +93,13 @@ class DataExplorer{
         return $this->entryTemplate;
     }
     
-    public function job($vars){
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
+    public function job(array $vars):array
+    {
         // loop through all canvas elements, create signals if signal creation is enabled for the respective canvas element
         $signalsUpdated=[];
         $selector=['Source'=>$this->entryTable,'Group'=>'Canvas elements'];
