@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
+class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
     private const APP_ACCESS='ALL_MEMBER_R';
     
@@ -94,7 +94,13 @@ class Calendar implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
     }
 
-    public function job($vars){
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
+    public function job(array $vars):array
+    {
         // add bank holidays
         if (!isset($vars['Bank holidays'])){$vars['Bank holidays']['lastRun']=0;}
         if (!isset($vars['Signal cleanup'])){$vars['Signal cleanup']['lastRun']=0;}

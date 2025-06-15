@@ -58,8 +58,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                                   'Math'=>['&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'],
                                   ];
 
-    private $processorOptions=[];
-    
     public function __construct(array $oc)
     {
         $this->oc=$oc;

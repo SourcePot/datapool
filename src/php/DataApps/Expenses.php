@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Expenses implements \SourcePot\Datapool\Interfaces\App{
+class Expenses implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ALL_DATA_R';
     
@@ -38,7 +38,12 @@ class Expenses implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function job($vars):array
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
+    public function job(array $vars):array
     {
         $vars=$this->oc['SourcePot\Datapool\Processing\CanvasProcessing']->runCanvasProcessingOnClass(__CLASS__,FALSE);
         return $vars;
