@@ -104,7 +104,7 @@ class DataExplorer{
             $signalsUpdated[$canvasElement['EntryId']]=$canvasElement['Folder'].' → '.$canvasElement['Content']['Style']['Text'];
         }
         $vars['Signals updated']=implode('<br/>',$signalsUpdated);
-        // cleanup - delete all signals which were not updated for 10 days
+        // cleanup - delete all signals which were not updated for the timespan set in SIGNAL_EXPIRY_THRESHOLD
         $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('%','DataExplorer');
         $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],self::SIGNAL_EXPIRY_THRESHOLD);
         $vars['Signal selector for deletion']=$toDeleteSelector;
