@@ -583,7 +583,7 @@ class MediaTools{
         $endNeedle='</x:xmpmeta>';
         $fileContent=file_get_contents($file);
         if (str_contains($fileContent,'GPano=')){
-            // get GPano section
+            // extract GPano section
             $startPos=strpos($fileContent,'<x:xmpmeta');
             $endPos=strpos($fileContent,$endNeedle);
             $length=($endPos+strlen($endNeedle))-$startPos;

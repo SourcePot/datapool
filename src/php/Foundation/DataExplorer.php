@@ -35,6 +35,7 @@ class DataExplorer{
                                                         ],
                                              'Widgets'=>[
                                                         'Processor'=>['@function'=>'processorSelector','@class'=>__CLASS__],
+                                                        'Enable signal'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                                                         'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                                                         'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                                                         'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
@@ -92,19 +93,21 @@ class DataExplorer{
     }
     
     public function job($vars){
-        // create signals from canvas elements
+        // loop through all canvas elements, create signals if signal creation is enabled for the respective canvas element
+        $signalsUpdated=[];
         $selector=['Source'=>$this->entryTable,'Group'=>'Canvas elements'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $canvasElement){
-            if (empty($canvasElement['Content']['Selector']['Source'])){continue;}
+            if (empty($canvasElement['Content']['Selector']['Source']) || empty($canvasElement['Content']['Widgets']['Enable signal'])){continue;}
             $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
             $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$value);
+            $signalsUpdated[$canvasElement['EntryId']]=$canvasElement['Folder'].' → '.$canvasElement['Content']['Style']['Text'];
         }
-        // cleanup
-        if (isset($signal['Date'])){
-            $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('%','DataExplorer');
-            $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],'-P1D');
-            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
-        }
+        $vars['Signals updated']=implode('<br/>',$signalsUpdated);
+        // cleanup - delete all signals which were not updated for 10 days
+        $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('%','DataExplorer');
+        $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],'-P10D');
+        $vars['Signal selector for deletion']=$toDeleteSelector;
+        $vars['Signals deleted']=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE)['deleted'];
         return $vars;
     }
     
@@ -123,7 +126,6 @@ class DataExplorer{
 
     /**
     * Class specific entry normalization.
-    *
     * @param    array  $entry  Entry
     * @return   array  Normalized entry
     */
@@ -157,7 +159,6 @@ class DataExplorer{
 
     /**
     * Creates array containing html-content for the canvas explorer as well as content, including widgets etc.
-    *
     * @param    string $callingClass  Class calling this method
     * @return   array  Array containing the html
     */
@@ -186,7 +187,6 @@ class DataExplorer{
     
     /**
     * Canvas element form processing.
-    *
     * @param    string $callingClass  Class calling this method
     * @return   array  Canvas element
     */
@@ -218,7 +218,6 @@ class DataExplorer{
     
     /**
     * Creates html control panel with two parts: 'cntr' and 'processor'.
-    *
     * @param    string $callingClass  Class calling this method
     * @return   array  Array containing the html
     */
@@ -279,7 +278,6 @@ class DataExplorer{
     
     /**
     * Creates canvas html inluding canvas elements.
-    *
     * @param    string $callingClass  Class calling this method
     * @return   string Html replesenting the complete canvas with canvas elements
     */
@@ -298,7 +296,6 @@ class DataExplorer{
     
     /**
     * Creates canvas element html.
-    *
     * @param    string  $callingClass  Class calling this method
     * @param    string  $callingFunction  Method calling this method
     * @param    array   $canvasElement  Canvas element array
@@ -377,12 +374,10 @@ class DataExplorer{
 
     /**
     * Returns all settings for a canvas element.
-    *
     * @param string $callingClass    The calling method's class-name
     * @param string $callingFunction The calling method's name
     * @param array  $callingElement  Is the canvas element from which the template is derived
     * @param array  $settings        Initial settings
-    *
     * @return array  Canvas element settings
     */
     public function callingElement2settings(string $callingClass,string $callingFunction,array $callingElement,array $settings=[]):array
@@ -409,11 +404,9 @@ class DataExplorer{
     /**
     * Creates an arr-template (for rules, parameters etc) for the callingElement.
     * The template is used by HTMLbuilder's entry2row(arr-template) method.
-    *
     * @param string    $callingClass       The calling method's class-name
     * @param string    $callingFunction    The calling method's name
     * @param array     $callingElement     Is the canvas element from which the template is derived
-    *
     * @return array    arr-template
     */
     public function callingElement2arr(string $callingClass,string $callingFunction,array $callingElement):array
@@ -431,7 +424,6 @@ class DataExplorer{
     
     /**
     * Canvas element selector from calling class.
-    *
     * @param string    $callingClass       The calling method's class-name
     * @return array    Selector
     */
@@ -442,16 +434,13 @@ class DataExplorer{
     }
 
     /**
-    * Canvas elements from calling class.
-    *
+    * Canvas elements of calling class. This method is called by HTMLbuilder to provide a canvas elements selector.
     * @param string    $callingClass    The calling method's class-name
     * @param string    $EntryId         If empty all relevant canvas elements will be returned, else the selected canvas element 
     * @return array    Canvas elements
     */
     public function getCanvasElements(string $callingClass, string $EntryId=''):array
     {
-        // This method is called by HTMLbuilder to provide a canvas elements selector.
-        // It returns the canvas elements in order by their position.
         $elements=[];
         $selector=$this->canvasSelector($callingClass);
         if (empty($EntryId)){
@@ -472,7 +461,6 @@ class DataExplorer{
     
     /**
     * Selector contained within a canvas element which is selected by EntryId.
-    *
     * @param string    $entryId Is the EntryId
     * @return array    Selector or an empty array
     */
@@ -517,7 +505,6 @@ class DataExplorer{
     
     /**
     * File upload form linked to the canvas element.
-    *
     * @param    array   $canvasElement  Canvas elememnt
     * @return   string  Html-form
     */
@@ -550,7 +537,6 @@ class DataExplorer{
     
     /**
     * Delete button linked to the canvas element.
-    *
     * @param    array   $canvasElement  Canvas elememnt
     * @return   string  Delete button html
     */
@@ -567,7 +553,6 @@ class DataExplorer{
     
     /**
     * Export/import form linked to the App.
-    *
     * @param    string  $callingClass  Is the class calling this method
     * @return   string  Import/export html form
     */
