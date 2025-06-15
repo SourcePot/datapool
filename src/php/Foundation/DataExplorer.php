@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 class DataExplorer{
 
     private const ROW_COUNT_LIMIT=FALSE;
+    private const SIGNAL_EXPIRY_THRESHOLD='-P10D';  // Negative DateTimeIntervall string, e.g. '-P1D' for 1 day
     
     private $oc;
     
@@ -105,7 +106,7 @@ class DataExplorer{
         $vars['Signals updated']=implode('<br/>',$signalsUpdated);
         // cleanup - delete all signals which were not updated for 10 days
         $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('%','DataExplorer');
-        $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],'-P10D');
+        $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],self::SIGNAL_EXPIRY_THRESHOLD);
         $vars['Signal selector for deletion']=$toDeleteSelector;
         $vars['Signals deleted']=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE)['deleted'];
         return $vars;
