@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver{
+class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver{
     
     private const APP_ACCESS='ALL_MEMBER_R';
     
@@ -42,7 +42,12 @@ class Feeds implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
         $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($this->urlSelector);
     }
 
-    public function job($vars):array
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
+    public function job(array $vars):array
     {
         if (empty($vars['URLs2do'])){
             $vars['URLs2do']=[];

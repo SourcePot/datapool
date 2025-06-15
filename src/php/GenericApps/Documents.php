@@ -34,11 +34,6 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function job($vars):array
-    {
-        return $vars;
-    }
-
     public function getEntryTable():string
     {
         return $this->entryTable;

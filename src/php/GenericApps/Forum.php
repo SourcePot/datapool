@@ -49,11 +49,6 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
     }
 
-    public function job($vars):array
-    {
-        return $vars;
-    }
-
     public function getEntryTable():string
     {
         return $this->entryTable;

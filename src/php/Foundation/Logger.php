@@ -13,8 +13,7 @@ namespace SourcePot\Datapool\Foundation;
 use Monolog\LogRecord;
 use Monolog\Level;
 
-class Logger
-{
+class Logger implements \SourcePot\Datapool\Interfaces\Job{
     
     private $oc;
     
@@ -58,7 +57,13 @@ class Logger
         return $this->entryTemplate;
     }
     
-    public function job($vars){
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
+    public function job(array $vars):array
+    {
         // create and update signals for relevant logging Groups
         $relevantGroups=['emergency','alert','critical','error','warning'];
         $selector=['Source'=>$this->entryTable];

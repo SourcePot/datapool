@@ -10,8 +10,8 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class Queue
-{
+class Queue implements \SourcePot\Datapool\Interfaces\Job{
+
     public const ID_STORE_ENTRYID_LIFETIME=604800;
     
     private $oc;
@@ -46,6 +46,11 @@ class Queue
         return $this->entryTemplate;
     }
 
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
     public function job(array $vars):array
     {
         $vars=$this->idStoreCleanup($vars);

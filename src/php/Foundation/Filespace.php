@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class Filespace{
+class Filespace implements \SourcePot\Datapool\Interfaces\Job{
 
     private $oc;
     
@@ -49,6 +49,11 @@ class Filespace{
         return $this->entryTemplate;
     }
     
+    /**
+    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
+    * @param    string $vars Initial persistent data space
+    * @return   array  Array Updateed persistent data space
+    */
     public function job(array $vars):array
     {
         if (isset($vars['Error'])){unset($vars['Error']);}
