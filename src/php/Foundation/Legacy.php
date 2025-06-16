@@ -15,7 +15,7 @@ class Legacy{
     private $oc;
     
     private const TIMELIMIT_SEC=550;
-    private const FILESPACE2IMPORT='F:\Backup\2025\Backup\La-Isla\2025-05-01 Code\_filespace';    // directory location of the filespace to import
+    private const FILESPACE2IMPORT='/var/www/vhosts/wallenhauer.com/httpdocs/wallenhauer/src/_filespace';    // directory location of the filespace to import
     private $sourceDB=FALSE;    // The sourceDb setting are stored at ./setup/Legacy/sourceDb.json
     
     public function __construct(array $oc)
@@ -42,7 +42,7 @@ class Legacy{
             $tables[$row[0]]=FALSE;
         }
         // load settings
-        $setting=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Read'=>65535,'Content'=>array('entries'=>[],'tables'=>[],'entryCount'=>0));
+        $setting=array('Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Read'=>65535,'Content'=>array('entries'=>[],'tables'=>[],'entryCount'=>0,'Dir'=>__DIR__));
         $setting=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);

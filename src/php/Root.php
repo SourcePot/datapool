@@ -320,7 +320,8 @@ final class Root{
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Legacy']->importPage($arr);
             } else {
-                $arr['toReplace']['{{content}}']='Access '.$this->script.' denied.....';
+                $pageContent='Access to content of "'.$this->script.'" denied...';
+                $arr['toReplace']['{{content}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>$pageContent,'keep-element-content'=>TRUE]);
             }
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($this->script==='resource.php'){

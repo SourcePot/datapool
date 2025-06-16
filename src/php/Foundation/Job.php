@@ -12,6 +12,12 @@ namespace SourcePot\Datapool\Foundation;
 
 class Job{
     
+    private const INIT_TIME_BETWEEN_RUNS=['SourcePot\Datapool\Foundation\Database'=>77,
+                                         'SourcePot\Datapool\Foundation\Logger'=>600,
+                                         'SourcePot\Datapool\GenericApps\Calendar'=>266,
+                                         'SourcePot\Datapool\GenericApps\Feeds'=>533,
+                                        ];
+
     private $oc;
     
     public function __construct(array $oc)
@@ -34,20 +40,21 @@ class Job{
         // all jobs settings - remove non-existing job methods and add new job methods
         $arr['run']=(isset($arr['run']))?$arr['run']:'';
         $jobs=array('due'=>[],'undue'=>[]);
-        $allJobsSettingInitContent=array('Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0);
+        $allJobsSettingInitContent=['class'=>'','method'=>'job','Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0];
         $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
-        $allJobsSetting=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Owner'=>'SYSTEM');
+        $allJobsSetting=['Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Owner'=>'SYSTEM'];
         $allJobsSetting=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($allJobsSetting,['Source','Group','Folder','Name'],0);
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($allJobsSetting,'ALL_R','ADMIN_R');
         $allJobsSetting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($allJobsSetting,TRUE);
         $allJobsSettingContent=$allJobsSetting['Content'];
         $allJobsSetting['Content']=[];
-        foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('job') as $class=>$initContent){
-            $initContent=array_merge($allJobsSettingInitContent,$initContent);
+        foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Job') as $class){
             if (isset($allJobsSettingContent[$class])){
                 $allJobsSetting['Content'][$class]=$allJobsSettingContent[$class];
             } else {
-                $allJobsSetting['Content'][$class]=$initContent;
+                $allJobsSettingInitContent['class']=$class;
+                $allJobsSettingInitContent['Min time in sec between each run']=self::INIT_TIME_BETWEEN_RUNS[$class]??(mt_rand(360,4320)*10);
+                $allJobsSetting['Content'][$class]=$allJobsSettingInitContent;
             }
             ksort($allJobsSetting['Content'][$class]);
             if (empty($arr['run'])){

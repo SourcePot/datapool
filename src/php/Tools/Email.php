@@ -103,11 +103,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             }
         }
         if (!empty($vars['Inboxes'])){
-            $inbox=array_shift((array)$vars['Inboxes']);
+            $inbox=array_shift($vars['Inboxes']);
             if (isset($inbox['Content']['EntryId'])){
                 $vars['Result']=$this->todaysEmails($inbox['Content']['EntryId']);
             }                
-            $vars['Inboxes to process']=count((array)$vars['Inboxes']);
+            $vars['Inboxes to process']=count($vars['Inboxes']);
         }
         return $vars;
     }

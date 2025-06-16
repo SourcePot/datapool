@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Processing;
 class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $oc;
+    private $biblio;
 
     private $entryTable='';
     private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
@@ -47,7 +48,10 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__,self::CREDENTIALS_DEF);    
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__,self::CREDENTIALS_DEF);
+        //
+        $credentials=$this->getCredentialsSetting()['Content'];
+        $this->biblio=new \SourcePot\OPS\Biblio($credentials['appName'],$credentials['consumerKey'],$credentials['consumerSecretKey']);
     }
 
     public function getEntryTable():string
@@ -83,7 +87,7 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getEnrichEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Selecting','generic',$callingElement,['method'=>'getEnrichEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Get enrich entries widget','generic',$callingElement,['method'=>'getEnrichEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
      private function getEnrichEntriesInfo($callingElement){
@@ -211,7 +215,6 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function runEnrichEntries($callingElement,$testRun=1){
         $base=['mergingparams'=>[],'mergingrules'=>[],'processId'=>$callingElement['EntryId']];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
-        $base['credentials']=$setting=$this->getCredentialsSetting()['Content'];
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=['Statistics'=>['Itmes already processed and skipped'=>['value'=>0]]];
@@ -224,8 +227,10 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $result['Statistics']['Itmes already processed and skipped']['value']++;
                     continue;
                 }
-                
                 $result=$this->enrichEntries($base,$sourceEntry,$result,$testRun);
+                if ($testRun==0){
+                    $this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreAdd($callingElement['EntryId'],$sourceEntry['EntryId']);
+                }    
                 $requestCounter++;
                 if ($requestCounter>=self::MAX_REQUEST_COUNT_PER_RUN){break;}
                 sleep(1);
@@ -268,18 +273,21 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $applicationPublication.=$match[intval($rule['Regex match index'])];
             }
         }
-        $applicationPublication=str_replace('WO','',$applicationPublication);
-        $applicationPublication=preg_replace('/\s+/','',$applicationPublication);
+        // number clean-up
+        $applicationPublication=explode('.',$applicationPublication);
+        $applicationPublication=array_shift($applicationPublication);
+        $applicationPublication=preg_replace('/[\-\s]+/','',$applicationPublication);
+        $applicationPublication=str_replace('PI','',$applicationPublication);
+        $applicationPublication=str_replace('WE','EP',$applicationPublication);
         // process application/publication
         if (empty($applicationPublication)){
             // empty application
             $result['Applications/publications'][$applicationPublication]=['OK'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
         } else {
             // application
-            $biblio=new \SourcePot\OPS\biblio($base['credentials']['appName'],$base['credentials']['consumerKey'],$base['credentials']['consumerSecretKey']);
-            $documents=$biblio->legal($applicationPublication);
+            $documents=$this->biblio->legal($applicationPublication);
             if (isset($documents['error'])){
-                $targetSelector=$base['entryTemplates'][$params['Target']];        
+                $targetSelector=$base['entryTemplates'][$params['Target on failure']];
                 $sourceEntry[$params['Map result values to']][self::ENRICHMENT_KEY]=$documents;
                 $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelector,TRUE,$testRun,$params['Keep source entries']??FALSE);
                 // result creation
@@ -288,7 +296,7 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
                 $result['Applications/publications'][$applicationPublication]=['OK'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(empty($documents['error']))];
             } else {
-                $targetSelector=$base['entryTemplates'][$params['Target on failure']];
+                $targetSelector=$base['entryTemplates'][$params['Target']];        
                 foreach($documents as $key=>$legalArr){
                     $targetSelector[$params['Map result key to']]=$key;
                     $sourceEntry[$params['Map result values to']][self::ENRICHMENT_KEY]=$legalArr;

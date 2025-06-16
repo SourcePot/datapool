@@ -344,7 +344,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
             $fileForDownload=$this->selector2file($entry);
         }
         if (is_file($fileForDownload)){
-            $fileNamePathInfo=pathinfo($entry['Params']['File']['Name']);
+            $fileNamePathInfo=pathinfo($entry['Params']['File']['Name']??$entry['Name']);
             if (!isset($fileNamePathInfo['extension'])){
                 $entry['Params']['File']['Name'].='.'.$entry['Params']['File']['Extension'];
                 $this->oc['logger']->log('notice','"{function}" file extension added to filename {fileName}',['function'=>__FUNCTION__,'fileName'=>$entry['Params']['File']['Name']]);

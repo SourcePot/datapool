@@ -110,7 +110,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $vars['Signals updated']=implode('<br/>',$signalsUpdated);
         // cleanup - delete all signals which were not updated for the timespan set in SIGNAL_EXPIRY_THRESHOLD
         $toDeleteSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('%','DataExplorer');
-        $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],self::SIGNAL_EXPIRY_THRESHOLD);
+        $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',self::SIGNAL_EXPIRY_THRESHOLD);
         $vars['Signal selector for deletion']=$toDeleteSelector;
         $vars['Signals deleted']=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE)['deleted'];
         return $vars;

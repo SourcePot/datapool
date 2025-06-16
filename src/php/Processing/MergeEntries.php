@@ -78,7 +78,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getMergeEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Selecting','generic',$callingElement,['method'=>'getMergeEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Get merge entries widget','generic',$callingElement,['method'=>'getMergeEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
      private function getMergeEntriesInfo($callingElement){

@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\DataApps;
 
-class Misc implements \SourcePot\Datapool\Interfaces\App{
+class Misc implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     

@@ -12,6 +12,12 @@ namespace SourcePot\Datapool\Foundation;
 
 class Explorer{
     
+    private const SELECTOR_KEY_DATA=[
+                                    'Source'=>['addTitle'=>'Add new Group','editTitle'=>'Edit selected Source',],
+                                    'Group'=>['addTitle'=>'Add new Folder','editTitle'=>'Edit selected Group',],
+                                    'Folder'=>['addTitle'=>'Add new Entry/Entries','editTitle'=>'Edit selected Folder',],
+                                    'EntryId'=>['addTitle'=>'Update Entry','editTitle'=>'Edit selected Entry',],
+                                    ];
     private $oc;
     
     private $entryTable='';
@@ -24,7 +30,7 @@ class Explorer{
                                 'Folder'=>['orderBy'=>'Folder','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
                                 'EntryId'=>['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE]
                                 ];
-                                    
+
     private $addEntryByFileUpload=TRUE;
 
     public function __construct(array $oc)
@@ -287,7 +293,8 @@ class Explorer{
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
         $access=TRUE;
-        $arr=['html'=>'','icon'=>'&#10010;','title'=>'Add new "'.$stateKeys['selectedKey'].'"','class'=>'explorer'];
+        var_dump($stateKeys['selectedKey']);
+        $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
             return array('html'=>'','icon'=>'&#10010;','class'=>'explorer');
         } else {
@@ -330,7 +337,7 @@ class Explorer{
             $addBtn=['tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>['edit'],'value'=>$stateKeys['selectedKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
         }
-        $arr=['html'=>$html,'icon'=>'&#9998;','title'=>'Edit selected "'.$stateKeys['selectedKey'].'"','class'=>'explorer'];
+        $arr=['html'=>$html,'icon'=>'&#9998;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['editTitle'],'class'=>'explorer'];
         return $arr;
     }
     
