@@ -495,17 +495,9 @@ jQuery(document).ready(function(){
 		}
 	})();
 	function isVisible(obj){
-		const BOTTOM_VISIBILITY_OFFSET=100;	// if value>0 objects with bottom minus value will be detected as visible
-		if (obj.length==0){return false;}
-		let element={'top':jQuery(obj).offset().top};
-		element['bottom']=element['top']+jQuery(obj).outerHeight();
-		let viewport={'top':jQuery(window).scrollTop()};
-		viewport['bottom']=viewport['top']+jQuery(window).innerHeight();
-		if ((element['top']<viewport['top'] && element['bottom']<viewport['top']) || (element['top']>viewport['bottom'] && element['bottom']>(viewport['bottom']+BOTTOM_VISIBILITY_OFFSET))){
-			return false;
-		} else {
-			return true;
-		}
+		if (typeof obj[0] =='undefined'){return false;}
+		let rect=obj[0].getBoundingClientRect();
+    	return (rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth));
 	}
 	markChages();
 	function markChages(){
