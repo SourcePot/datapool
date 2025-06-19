@@ -18,45 +18,51 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                                 'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                                 ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
     
-    public $definition=['Content'=>['Style'=>['Text'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                        'Style class'=>['@function'=>'select','@options'=>['canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'],'@default'=>'canvas-std'],
-                                                        'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
-                                                        'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
-                                                        ],
-                                            'Selector'=>['Source'=>['@function'=>'select','@options'=>[]],
-                                                        'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                        'Folder'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                        'Name'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                        'EntryId'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                        'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                                                        ],
-                                             'Widgets'=>[
-                                                        'Processor'=>['@function'=>'processorSelector','@class'=>__CLASS__],
-                                                        'Enable signal'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                        'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                        'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                        'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
-                                                        'pdf-file parser'=>['@function'=>'select','@options'=>[],'@default'=>0],
-                                                        'Delete selected entries'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>1],
-                                                        ],
-                                              ],
-                            ];
+    public $definition=[
+        'Content'=>[
+            'Style'=>[
+                'Text'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                'Style class'=>['@function'=>'select','@options'=>['canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'],'@default'=>'canvas-std'],
+                'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
+                'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
+                ],
+            'Selector'=>[
+                'Source'=>['@function'=>'select','@options'=>[]],
+                'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                'Folder'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                'Name'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                'EntryId'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                ],
+            'Widgets'=>[
+                'Processor'=>['@function'=>'processorSelector','@class'=>__CLASS__],
+                'Enable signal'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
+                'pdf-file parser'=>['@function'=>'select','@options'=>[],'@default'=>0],
+                'Delete selected entries'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>1],
+                ],
+            ],
+        ];
     
-    private $tags=['run'=>['tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'],'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'],
-                        'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
-                        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'],
-                        'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
-                        'Text'=>['tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Text box'],
-                        ];
+    private $tags=[
+        'run'=>['tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'],'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'],
+        'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
+        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'],
+        'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
+        'Text'=>['tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Text box'],
+        ];
     
-    private $graphicElemnts=['Connectors'=>['&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'],
-                                  'Symbols'=>['&VerticalSeparator;','&#8285;','&#8286;','','','&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'],
-                                  'Math'=>['&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'],
-                                  ];
+    private const GRAPHIC_ELEMENTS=['Connectors'=>['&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'],
+        'Symbols'=>['&VerticalSeparator;','&#8285;','&#8286;','','','&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'],
+        'Math'=>['&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'],
+        ];
 
     public function __construct(array $oc)
     {
@@ -73,7 +79,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        foreach($this->graphicElemnts as $category=>$htmlEntities){
+        foreach(self::GRAPHIC_ELEMENTS as $category=>$htmlEntities){
             foreach($htmlEntities as $htmlEntity){
                 $this->tags[$htmlEntity]=['tag'=>'div','element-content'=>$htmlEntity,'keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>$category,'Read'=>'ALL_CONTENTADMIN_R'];
             }
@@ -571,7 +577,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $selectors[$table]=['Source'=>$table,'Folder'=>$callingClass];
         }
         $selectors=['dataexplorer'=>['Source'=>'dataexplorer','Folder'=>$callingClass]];
-        foreach($this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('dataProcessor') as $classWithNamespace=>$ret){
+        foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Processor') as $classWithNamespace){
             $source=$this->oc['SourcePot\Datapool\Root']->class2source($classWithNamespace);
             $selectors[$source]=['Source'=>$source,'Folder'=>$callingClass];
         }
@@ -586,7 +592,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $tmpFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().'tmp.zip';
             $success=move_uploaded_file($formData["files"]["import files"][0]['tmp_name'],$tmpFile);
             if ($success){
-                foreach($selectors as $index=>$selector){$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);}
+                foreach($selectors as $selector){
+                    $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector);
+                }
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->importEntries($tmpFile,$formData["files"]["import files"][0]['name']);
             } else {
                 $this->oc['logger']->log('notice','Import of "{name}" failed',$formData["files"]["import files"][0]);    

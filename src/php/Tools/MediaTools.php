@@ -288,7 +288,7 @@ class MediaTools{
     {
         if (!isset($arr['html'])){$arr['html']='';}
         if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
-        $arr['settings']['style']=array_merge(['float'=>'left','margin'=>'10px 0 0 5px','height'=>'70vh','width'=>'95vw'],$arr['settings']['style']);
+        $arr['settings']['style']=array_merge(['float'=>'left','margin'=>'10px 0 0 5px','height'=>'50vh','width'=>'95vw'],$arr['settings']['style']);
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $objArr=$arr;
             $objArr['tag']='object';

@@ -19,9 +19,10 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $sampleTargetFile='';
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
 
     private $paper=['a4'=>'A4',
                     'a3'=>'A3',
@@ -29,29 +30,33 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     'a6'=>'A6',
                     ];
     
-    private $contentTypes=['content'=>'Page content',
-                        'header'=>'Page header',
-                        'footer'=>'Page footer',
-                        ];
+    private const CONTENT_TYPES=[
+        'content'=>'Page content',
+        'header'=>'Page header',
+        'footer'=>'Page footer',
+        ];
     
-    private $alignments=['L'=>'start',
-                        'C'=>'center',
-                        'R'=>'end',
-                        'J'=>'justify'
-                        ];
+    private const ALIGNMENTS=[
+        'L'=>'start',
+        'C'=>'center',
+        'R'=>'end',
+        'J'=>'justify'
+        ];
     
-    private $fontStyles=[''=>'normal',
-                        'B'=>'bold',
-                        'I'=>'italic',
-                        'U'=>'underline'
-                        ];
+    private const FONT_STYLES=[
+        ''=>'normal',
+        'B'=>'bold',
+        'I'=>'italic',
+        'U'=>'underline'
+        ];
     
-    private $fonts=['Arial'=>'Arial, Helvetica, sans-serif',
-                    'Courier'=>'Courier New',
-                    'Times'=>'"Times New Roman", Times, serif',
-                    'Symbol'=>'Symbol, sans-serif;',
-                    'ZapfDingbats'=>"Wingdings, 'Zapf Dingbats', sans-serif",
-                    ];
+    private const FONTS=[
+        'Arial'=>'Arial, Helvetica, sans-serif',
+        'Courier'=>'Courier New',
+        'Times'=>'"Times New Roman", Times, serif',
+        'Symbol'=>'Symbol, sans-serif;',
+        'ZapfDingbats'=>"Wingdings, 'Zapf Dingbats', sans-serif",
+        ];
 
     private $orientation=['P'=>'Portrait','L'=>'Landscape'];
     
@@ -207,12 +212,13 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function pdfParams(array $callingElement):string
     {
-        $contentStructure=['Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        'Paper'=>['method'=>'select','value'=>key($this->paper),'excontainer'=>TRUE,'options'=>$this->paper],
-                        'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>key($this->orientation),'options'=>$this->orientation],
-                        'Top margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
-                        'Bottom margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
-                        ];
+        $contentStructure=[
+            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            'Paper'=>['method'=>'select','value'=>key($this->paper),'excontainer'=>TRUE,'options'=>$this->paper],
+            'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>key($this->orientation),'options'=>$this->orientation],
+            'Top margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
+            'Bottom margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
+            ];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -250,17 +256,18 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function pdfRules(array $callingElement):string
     {
-        $contentStructure=['type'=>['method'=>'select','value'=>'','options'=>$this->contentTypes,'excontainer'=>TRUE],
-                            'text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE],
-                            'x-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE],
-                            'y-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE],
-                            'width [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
-                            'height [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
-                            'font'=>['method'=>'select','value'=>'','options'=>$this->fonts,'excontainer'=>TRUE],
-                            'fontSize'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
-                            'fontStyle'=>['method'=>'select','value'=>'','options'=>$this->fontStyles,'excontainer'=>TRUE],
-                            'alignment'=>['method'=>'select','value'=>'J','options'=>$this->alignments,'excontainer'=>TRUE],
-                            ];
+        $contentStructure=[
+            'type'=>['method'=>'select','value'=>'','options'=>self::CONTENT_TYPES,'excontainer'=>TRUE],
+            'text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE],
+            'x-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE],
+            'y-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE],
+            'width [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+            'height [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+            'font'=>['method'=>'select','value'=>'','options'=>self::FONTS,'excontainer'=>TRUE],
+            'fontSize'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+            'fontStyle'=>['method'=>'select','value'=>'','options'=>self::FONT_STYLES,'excontainer'=>TRUE],
+            'alignment'=>['method'=>'select','value'=>'J','options'=>self::ALIGNMENTS,'excontainer'=>TRUE],
+            ];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;

@@ -15,9 +15,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
         
     private $paramsTemplate=['Mode'=>'entries'];
 
@@ -130,14 +131,15 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function mappingParams($callingElement){
-        $contentStructure=['Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-                            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                            'Mode'=>['method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>['entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip']],
-                            'Attached file'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
-                            'Order by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE],
-                            'Order'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0=>'Descending',1=>'Ascending']],
-                            'No match placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE),
-                            ];
+        $contentStructure=[
+            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            'Mode'=>['method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>['entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip']],
+            'Attached file'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
+            'Order by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE],
+            'Order'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0=>'Descending',1=>'Ascending']],
+            'No match placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE),
+            ];
         $contentStructure['Order by']+=$callingElement['Content']['Selector'];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -161,13 +163,14 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function mappingRules($callingElement){
-        $contentStructure=['Target value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                            '...value selected by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>['Linked file'=>'Linked file']],
-                            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
-                            'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
-                            'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."],
-                            ];
+        $contentStructure=[
+            'Target value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            '...value selected by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>['Linked file'=>'Linked file']],
+            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+            'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
+            'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."],
+            ];
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);

@@ -16,9 +16,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $ruleOptions=[];
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
 
     private const OPERATIONS=['+'=>'+','-'=>'-','*'=>'*','/'=>'/','<'=>'<','=='=>'==','!='=>'!=','>'=>'>','&'=>'&','|'=>'|','contains'=>'contains','!contains'=>'!contains'];
     private const FAILURE_CONDITIONS=['stripos'=>'&#8839;','stripos!'=>"&#8837;",'lt'=>'&#60;','le'=>'&#8804;','eq'=>'&#61;','ne'=>'&#8800;','gt'=>'&#62;','ge'=>'&#8805;'];

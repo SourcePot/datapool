@@ -15,65 +15,72 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Privileges'=>['type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'],
-                            'LoginId'=>['type'=>'VARCHAR(512)','value'=>'','Description'=>'Is a login id derived from the passphrase.']
-                            ];
+    private $entryTemplate=[
+        'Privileges'=>['type'=>'SMALLINT UNSIGNED','value'=>1,'Description'=>'Is the user level the user was granted.'],
+        'LoginId'=>['type'=>'VARCHAR(512)','value'=>'','Description'=>'Is a login id derived from the passphrase.']
+        ];
     
-    public $definition=['Type'=>['@tag'=>'p','@default'=>'user','@Read'=>'NO_R'],
-                             'Content'=>['Contact details'=>['Title'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'First name'=>['@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE],
-                                                            'Middle name'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Family name'=>['@tag'=>'input','@type'=>'text','@default'=>'Doe','@excontainer'=>TRUE],
-                                                            'Gender'=>['@function'=>'select','@options'=>['male'=>'male','female'=>'female','divers'=>'divers'],'@default'=>'male','@excontainer'=>TRUE],
-                                                            'Language'=>['@function'=>'select','@options'=>['en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'],'@default'=>'en','@excontainer'=>TRUE],
-                                                            'Email'=>['@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'','@placeholder'=>'e.g. info@company.com','@excontainer'=>TRUE],
-                                                            'Phone'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 89 1234567','@excontainer'=>TRUE],
-                                                            'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
-                                                            'Fax'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE],
-                                                            'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
-                                                            'My user role(s)'=>['@class'=>__CLASS__,'@function'=>'getUserRolsString'],
-                                                            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
-                                                            ],
-                                        'Address'=>['Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Patent Department','@excontainer'=>TRUE],
-                                                            'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'State'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Country code'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
-                                                        ],
-                                              ],
-                        'Login'=>['@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'],
-                        'Icon etc.'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-                        'Privileges'=>['@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-                        'App credentials'=>['@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'],
-                        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>['width'=>360,'height'=>400]],
-                        ];
+    private const DEFINITION=[
+        'Type'=>['@tag'=>'p','@default'=>'user','@Read'=>'NO_R'],
+        'Content'=>[
+            'Contact details'=>[
+                'Title'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'First name'=>['@tag'=>'input','@type'=>'text','@default'=>'John','@excontainer'=>TRUE],
+                'Middle name'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Family name'=>['@tag'=>'input','@type'=>'text','@default'=>'Doe','@excontainer'=>TRUE],
+                'Gender'=>['@function'=>'select','@options'=>['male'=>'male','female'=>'female','divers'=>'divers'],'@default'=>'male','@excontainer'=>TRUE],
+                'Language'=>['@function'=>'select','@options'=>['en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'],'@default'=>'en','@excontainer'=>TRUE],
+                'Email'=>['@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'','@placeholder'=>'e.g. info@company.com','@excontainer'=>TRUE],
+                'Phone'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 89 1234567','@excontainer'=>TRUE],
+                'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
+                'Fax'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE],
+                'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
+                'My user role(s)'=>['@class'=>__CLASS__,'@function'=>'getUserRolsString'],
+                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+                ],
+            'Address'=>[
+                'Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Patent Department','@excontainer'=>TRUE],
+                'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'State'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Country code'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
+                ],
+            ],
+        'Login'=>['@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'],
+        'Icon etc.'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Privileges'=>['@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'App credentials'=>['@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'],
+        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>['width'=>360,'height'=>400]],
+        ];
 
-    private $userRols=['Content'=>[0=>['Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'],
-                                1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'],
-                                2=>['Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Member state'],
-                                3=>['Value'=>8,'Name'=>'Business','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Business'],
-                                4=>['Value'=>16,'Name'=>'Cases','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Cases'],
-                                5=>['Value'=>32,'Name'=>'Education','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Education'],
-                                6=>['Value'=>64,'Name'=>'Investments','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Investments'],
-                                7=>['Value'=>128,'Name'=>'Accounts','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Accounts'],
-                                8=>['Value'=>256,'Name'=>'Friends (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Friends (uk)'],
-                                9=>['Value'=>512,'Name'=>'Friends (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Friends (de)'],
-                                10=>['Value'=>1024,'Name'=>'Sentinel','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Sentinel access'],
-                                11=>['Value'=>2048,'Name'=>'Family (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (uk)'],
-                                12=>['Value'=>4096,'Name'=>'Family (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (de)'],
-                                13=>['Value'=>8192,'Name'=>'Parents','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Parents'],
-                                14=>['Value'=>16384,'Name'=>'Config admin','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Configuration admin'],
-                                15=>['Value'=>32768,'Name'=>'Admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Administrator']
-                                ],
-                            'Type'=>'array',
-                            'Read'=>'ALL_R',
-                            'Write'=>'ADMIN_R',
-                        ];
+    private $userRols=[
+        'Content'=>[
+            0=>['Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'],
+            1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'],
+            2=>['Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Member state'],
+            3=>['Value'=>8,'Name'=>'Business','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Business'],
+            4=>['Value'=>16,'Name'=>'Cases','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Cases'],
+            5=>['Value'=>32,'Name'=>'Education','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Education'],
+            6=>['Value'=>64,'Name'=>'Investments','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Investments'],
+            7=>['Value'=>128,'Name'=>'Accounts','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Accounts'],
+            8=>['Value'=>256,'Name'=>'Friends (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Friends (uk)'],
+            9=>['Value'=>512,'Name'=>'Friends (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Friends (de)'],
+            10=>['Value'=>1024,'Name'=>'Sentinel','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Sentinel access'],
+            11=>['Value'=>2048,'Name'=>'Family (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (uk)'],
+            12=>['Value'=>4096,'Name'=>'Family (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (de)'],
+            13=>['Value'=>8192,'Name'=>'Parents','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Parents'],
+            14=>['Value'=>16384,'Name'=>'Config admin','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Configuration admin'],
+            15=>['Value'=>32768,'Name'=>'Admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Administrator']
+            ],
+        'Type'=>'array',
+        'Read'=>'ALL_R',
+        'Write'=>'ADMIN_R',
+        ];
     
     public function __construct(array $oc)
     {
@@ -92,7 +99,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->userRols();
         // check database user entry definition 
-        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,self::DEFINITION);
         // add calendar placeholder
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{Owner}}',$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId());
     }
@@ -152,7 +159,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (!isset($entry['Folder'])){$entry['Folder']=$entry['Email'];}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry,FALSE);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry(self::DEFINITION,$entry,FALSE);
         }
         $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
         $entry['Name']=$this->userAbstract(['selector'=>$entry],3);
@@ -332,7 +339,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $arr['html']=$arr['html']??'';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],TRUE,'Read','Name',TRUE,FALSE,FALSE) as $onlineUser){
             $backgronudColor=(time()-$onlineUser['Content']['timestamp']<60)?'#0f0':((time()-$onlineUser['Content']['timestamp']<3660)?'#cc7':'#999');
-            $timeDiff=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimeDiff('@'.time(),'@'.$onlineUser['Content']['timestamp']);
+            $timeDiff=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.time(),'@'.$onlineUser['Content']['timestamp']);
             // get user
             $userEntryId=str_replace('online_','',$onlineUser['EntryId']);
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$userEntryId],TRUE);

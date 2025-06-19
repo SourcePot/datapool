@@ -14,13 +14,16 @@ class Menu{
     
     private $oc;
     
-    private $categories=['Home'=>['Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],
-                        'Login'=>['Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'],
-                        'Logout'=>['Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
-                        'Admin'=>['Emoji'=>'&#8582;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
-                        'Apps'=>['Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
-                        'Data'=>['Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Misc app'],
-                        ];
+    public $categories=[
+        'Home'=>['Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],
+        'Login'=>['Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'],
+        'Logout'=>['Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
+        'Admin'=>['Emoji'=>'&#9786;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
+        'Calendar'=>['Emoji'=>'&#9992;','Label'=>'Calendar','Class'=>'SourcePot\Datapool\Calendar\Calendar','Name'=>'Calendar app'],
+        'Forum'=>['Emoji'=>'&#9993;','Label'=>'Forum','Class'=>'SourcePot\Datapool\Forum\Forum','Name'=>'Forum app'],
+        'Apps'=>['Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
+        'Data'=>['Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Misc app'],
+        ];
                              
     private $available=['Categories'=>[],'Apps'=>[]];
     
@@ -38,7 +41,7 @@ class Menu{
     
     public function init()
     {
-        $registeredRunMethods=$this->oc['SourcePot\Datapool\Root']->getRegisteredMethods('run',TRUE);
+        $implementedApps=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\App');
         // get category from input
         $linkid=filter_input(INPUT_GET,'linkid',FILTER_SANITIZE_ENCODED);
         $linkid??FALSE;
@@ -61,7 +64,7 @@ class Menu{
             }
             // reset $_SESSION['page state']['app']
             $homeApp=$this->categories['Home']['Class'];
-            $_SESSION['page state']['app']=$registeredRunMethods[$homeApp];
+            $_SESSION['page state']['app']=$implementedApps[$homeApp];
         }
         // get app from form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
@@ -74,7 +77,8 @@ class Menu{
         }
         // get available and selected categories and apps
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        foreach($registeredRunMethods as $classWithNamespace=>$menuDef){
+        foreach($implementedApps as $classWithNamespace){
+            $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
             // check access rights
             if (empty($this->categories[$menuDef['Category']])){
                 throw new \ErrorException('Function '.__FUNCTION__.': Menu category {'.$menuDef['Category'].'} set in {'.$classWithNamespace.'} has no definition in this class {'.__CLASS__.'}',0,E_ERROR,__FILE__,__LINE__);

@@ -218,9 +218,9 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $y=str_replace(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,'→',$rule['y-selector']);
                     if ($plotData['property']['Type']==='timeY'){
                         if (is_numeric($flatEntry[$rule['x-selector']])){
-                            $flatEntry[$rule['x-selector']]=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('@'.$flatEntry[$rule['x-selector']],\SourcePot\Datapool\Root::DB_TIMEZONE,$pageTimeZone);
+                            $flatEntry[$rule['x-selector']]=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('@'.$flatEntry[$rule['x-selector']],\SourcePot\Datapool\Root::DB_TIMEZONE,$pageTimeZone);
                         } else {
-                            $flatEntry[$rule['x-selector']]=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate($flatEntry[$rule['x-selector']],\SourcePot\Datapool\Root::DB_TIMEZONE,$pageTimeZone);
+                            $flatEntry[$rule['x-selector']]=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($flatEntry[$rule['x-selector']],\SourcePot\Datapool\Root::DB_TIMEZONE,$pageTimeZone);
                         }
                     }
                     $plotData['traces'][$rule['trace name']][$index][$x]=$flatEntry[$rule['x-selector']];

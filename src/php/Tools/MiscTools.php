@@ -23,22 +23,24 @@ final class MiscTools{
     private $multipleHitsStatistic=[];
     private $combineOptionCache=[];
     
-    private $dataTypes=['string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
-                        'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
-                        'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
-                        'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
-                        'shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash','codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomFamily'=>'&rarr; UNYCOM family','unycomCountry'=>'&rarr; UNYCOM country',
-                        'unycomRegion'=>'&rarr; UNYCOM region','unycomRef'=>'&rarr; UNYCOM reference','unycomRefNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
-                        'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
-                        'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
-                        ];
+    private const DATA_TYPES=[
+        'string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+        'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
+        'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
+        'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
+        'shortHash'=>'&rarr; Hash (short)','hash'=>'&rarr; Hash','codepfad'=>'&rarr; codepfad','unycom'=>'&rarr; UNYCOM','unycomFamily'=>'&rarr; UNYCOM family','unycomCountry'=>'&rarr; UNYCOM country',
+        'unycomRegion'=>'&rarr; UNYCOM region','unycomRef'=>'&rarr; UNYCOM reference','unycomRefNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
+        'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
+        'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
+        ];
     
-    private $conditionTypes=['empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
-                            '>'=>'>','='=>'=','!='=>'&ne;','<'=>'<',
-                            '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
-                            ];
+    private const CONDITION_TYPES=[
+        'empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
+        '>'=>'>','='=>'=','!='=>'&ne;','<'=>'<',
+        '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
+        ];
     
-    private $combineOptions=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
+    private const COMBINE_OPTIONS=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
     
     private $matchObj=NULL;
 
@@ -63,17 +65,17 @@ final class MiscTools{
     
     public function getDataTypes():array
     {
-        return $this->dataTypes;
+        return self::DATA_TYPES;
     }
     
     public function getConditions():array
     {
-        return $this->conditionTypes;
+        return self::CONDITION_TYPES;
     }
     
     public function getCombineOptions():array
     {
-        return $this->combineOptions;
+        return self::COMBINE_OPTIONS;
     }
 
     public function getMatchTypes():array
@@ -993,37 +995,37 @@ final class MiscTools{
             $newValue=$value;
         } else {
             $newValue=match($dataType){
-                    'string'=>$this->str2str($value),
-                    'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
-                    'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),
-                    'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
-                    'splitString'=>$this->convert2splitString($value),
-                    'int'=>$this->str2int($value),
-                    'float'=>$this->str2float($value),
-                    'fraction'=>$this->fraction2float($value),
-                    'bool'=>(bool)$value,
-                    'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
-                    'date'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2date($value),
-                    'excelDate'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->excel2date($value),
-                    'timestamp'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date($value),
-                    'dateString'=>$this->oc['SourcePot\Datapool\GenericApps\Calendar']->str2dateString($value,'System'),
-                    'dateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->date2exchageRates($value),
-                    'excelDateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->excelDate2exchageRates($value),
-                    'shortHash'=>$this->getHash($value,TRUE),
-                    'hash'=>$this->getHash($value,False),
-                    'codepfad'=>$this->convert2codepfad($value),
-                    'unycom'=>$this->convert2unycom($value),
-                    'unycomFamily'=>$this->convert2unycomByKey($value,'Family'),
-                    'unycomCountry'=>$this->convert2unycomByKey($value,'Country'),
-                    'unycomRegion'=>$this->convert2unycomByKey($value,'Region'),
-                    'unycomRef'=>$this->convert2unycomByKey($value,'Reference'),
-                    'unycomRefNoWhitspaces'=>$this->convert2unycomByKey($value,'Reference without \s'),
-                    'useridNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,3),
-                    'useridName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,1),
-                    'useridEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,7),
-                    'useridPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,8),
-                    'useridMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,9),
-                };
+                'string'=>$this->str2str($value),
+                'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
+                'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),
+                'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
+                'splitString'=>$this->convert2splitString($value),
+                'int'=>$this->str2int($value),
+                'float'=>$this->str2float($value),
+                'fraction'=>$this->fraction2float($value),
+                'bool'=>(bool)$value,
+                'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
+                'date'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($value),
+                'excelDate'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->excel2date($value),
+                'timestamp'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->timestamp2date($value),
+                'dateString'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2dateString($value,'System'),
+                'dateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->date2exchageRates($value),
+                'excelDateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->excelDate2exchageRates($value),
+                'shortHash'=>$this->getHash($value,TRUE),
+                'hash'=>$this->getHash($value,False),
+                'codepfad'=>$this->convert2codepfad($value),
+                'unycom'=>$this->convert2unycom($value),
+                'unycomFamily'=>$this->convert2unycomByKey($value,'Family'),
+                'unycomCountry'=>$this->convert2unycomByKey($value,'Country'),
+                'unycomRegion'=>$this->convert2unycomByKey($value,'Region'),
+                'unycomRef'=>$this->convert2unycomByKey($value,'Reference'),
+                'unycomRefNoWhitspaces'=>$this->convert2unycomByKey($value,'Reference without \s'),
+                'useridNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,3),
+                'useridName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,1),
+                'useridEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,7),
+                'useridPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,8),
+                'useridMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,9),
+            };
         }
         return $newValue;
     }

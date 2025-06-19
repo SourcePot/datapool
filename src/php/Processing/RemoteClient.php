@@ -87,9 +87,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private function getClientInfo($callingElement):string
     {
-        $matrix=[];
+        $matrix=['Important'=>['Message'=>'The selector key "Name" of the Canvas Element must not be set, it must be kept empty.<br/>Only the selector keys "Source", "Group" and "Folder" can be used.']];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'!']);
         return $html;
     }
 

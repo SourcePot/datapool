@@ -14,7 +14,7 @@ class Job{
     
     private const INIT_TIME_BETWEEN_RUNS=['SourcePot\Datapool\Foundation\Database'=>77,
                                          'SourcePot\Datapool\Foundation\Logger'=>600,
-                                         'SourcePot\Datapool\GenericApps\Calendar'=>266,
+                                         'SourcePot\Datapool\Calendar\Calendar'=>266,
                                          'SourcePot\Datapool\GenericApps\Feeds'=>533,
                                         ];
 

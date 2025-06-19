@@ -83,7 +83,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $arr['html']=$arr['html']??'';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],TRUE,'Read','Name',FALSE,FALSE,FALSE) as $chat){
-            $timeDiff=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimeDiff('@'.time(),'@'.strval(intval($chat['Name'])));
+            $timeDiff=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.time(),'@'.strval(intval($chat['Name'])));
             $chatAuthor=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$chat['Group']];
             $chatAuthor=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($chatAuthor,TRUE);
             $chatAuthorName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($chatAuthor,1);

@@ -76,7 +76,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                     $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',array('file'=>$videoSrc));
                 }
             }
-            $arr['toReplace']['{{content}}']=$this->honeAppWidgets();
+            $arr['toReplace']['{{content}}']=$this->homeAppWidgets();
             return $arr;
         }
     }
@@ -119,7 +119,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
         return $arr;
     }
 
-    private function honeAppWidgets():string
+    private function homeAppWidgets():string
     {
         $html='';
         $widgetTemplate=['tag'=>'article','class'=>'widget','element-content'=>'Widget did not provide content...','keep-element-content'=>TRUE];
@@ -127,6 +127,10 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess(FALSE,intval($widgetSetting['Content']['Access']))){continue;}
             $widgetHtml='';
             $widgetClass=$widgetSetting['Content']["Widget"];
+            if (empty($this->oc[$widgetClass])){
+                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()": widget class "{widgetClass}" does not exist. Please check Admin&rarr;Settings&rarr;Quick link "Start page".',['class'=>__CLASS__,'function'=>__FUNCTION__,'widgetClass'=>$widgetClass]);
+                continue;
+            }
             $caption=$this->oc[$widgetClass]->getHomeAppInfo();
             if (!empty($caption)){
                 $widgetHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','class'=>'widget','element-content'=>$caption,'keep-element-content'=>TRUE]);

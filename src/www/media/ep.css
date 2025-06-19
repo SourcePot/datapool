@@ -1,11 +1,11 @@
-p.ep-std,p.ep-std-footer,p.ep-comment,p.ep-comment-footer{
-    padding:0;
-    margin:0;
-}
-div.ep-std{
+p.ep-std,div.ep-std{
     float:left;
     clear:both;
     margin:5px 10px;
+}
+.ep-std-footer,.ep-comment-footer{
+    font-size:0.8rem;
+    margin:0.5rem;
 }
 table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
     float:left;
@@ -16,7 +16,6 @@ table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
 }
 table.ep-footer{
     clear:both;
-    font-size:0.8rem;
 }
 table.ep-h1{
     clear:both;
@@ -31,23 +30,23 @@ iframe.ep-std{
     height:300px;
     margin:0 0 0 5px;
 }
-div.ep-std-no-clear{
+p.ep-std-no-clear,div.ep-std-no-clear{
     float:left;
     clear:both;
     margin:5px 10px;    
 }
-div.ep-h1{
+p.ep-h1,div.ep-h1{
     clear:both;
     width:98vw;
     margin:1em 0 0 5px;
     font-size:1.6rem;
 }
-div.ep-message{
+p.ep-message,div.ep-message{
     clear:right;
     margin:5px 10px;
     font-size:1.5rem;
 }
-div.ep-header-wrapper{
+p.ep-header-wrapper,div.ep-header-wrapper{
     margin:0;
     width:100%;
     background-color:#aaaa;
@@ -56,14 +55,11 @@ div.ep-header-wrapper{
 details.ep-comment{
     clear:left;
 }
-div.ep-comment{
+div.ep-comment,p.ep-comment{
     padding:3px 5px;
-}
-p.ep-comment{
     font-size:1.2rem;
     color:#a80;
 }
 .ep-comment-footer{
-    font-size:0.8rem;
     font-weight:bold;
 }

@@ -43,7 +43,7 @@ jQuery(document).ready(function(){
 	var busyLoadingEntry=false;
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]').first();
-		if (isVisible(obj)===true && busyLoadingEntry===false){
+		if (busyLoadingEntry===false){
 			let arr={'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id')},
 					 'settings':{'presentEntry':jQuery(obj).attr('class')},
 					 'style':jQuery(obj).attr('style'),'class':jQuery(obj).attr('class'),
@@ -154,7 +154,7 @@ jQuery(document).ready(function(){
             jQuery(this).parent().css({backgroundColor:"#8c4"});
         } catch (e){
 			console.log(e);
-            jQuery(this).css({backgroundColor:"#faa"});
+            jQuery(this).css({backgroundColor:"#fcc"});
         }
         
     });
@@ -490,22 +490,17 @@ jQuery(document).ready(function(){
 	(function heartbeat(){
     	setTimeout(heartbeat,100);
 		heartbeats++;
-		if (heartbeats%5===0){
+		if (heartbeats%3===0){
 			loadNextEntry();
 		}
 	})();
-	function isVisible(obj){
-		if (typeof obj[0] =='undefined'){return false;}
-		let rect=obj[0].getBoundingClientRect();
-    	return (rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth));
-	}
 	markChages();
 	function markChages(){
 		jQuery('input[type=text]').on('keypress',function(e){
-			jQuery(this).parent().parent().css({'background-color':'#faa'});
+			jQuery(this).parent().parent().css({'background-color':'#fcc'});
 		});
 		jQuery('select').on('change',function(e){
-			jQuery(this).parent().parent().css({'background-color':'#faa'});
+			jQuery(this).parent().parent().css({'background-color':'#fcc'});
 		});
 	}
 

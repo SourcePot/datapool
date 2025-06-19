@@ -106,7 +106,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
                 }
                 $headline=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($entry).': '.$this->getQuerySampleText($entry,$queryColumn,$query);
                 $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>$headline,'keep-element-content'=>TRUE,]);  
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>' ','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>['clear'=>'none','width'=>'99vw']]);
+                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'&#10227;','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>['clear'=>'both','width'=>'99vw']]);
                 $arr['Names'][$entry['EntryId']]=$entry['Name'];
                 $arr['Hits'][$entry['EntryId']]=$entry['Source'];
             }

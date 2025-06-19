@@ -295,7 +295,7 @@ class Queue implements \SourcePot\Datapool\Interfaces\Job{
         if ($entry){
             $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             $matrix['Already processed']['Value']='<p>'.count($entry['Content']).'</p>';
-            $matrix['Ids expires after']['Value']='<p>'.$this->oc['SourcePot\Datapool\GenericApps\Calendar']->sec2str(intval($entry['Params']['lifetime'])).'</p>';
+            $matrix['Ids expires after']['Value']='<p>'.$this->oc['SourcePot\Datapool\Calendar\Calendar']->sec2str(intval($entry['Params']['lifetime'])).'</p>';
             $btnArr['value']='Reset';
             $btnArr['key']=['reset'];
             $matrix['']['Value']=$btnArr;

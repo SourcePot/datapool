@@ -1,13 +1,16 @@
 :root{
+    font-size:14px;
+    font-family:system-ui,sans-serif;
     --color:black;
     --hoverColor:lightgrey;
+    --bgColorMenuBottom:#ddd;
+    --bgColorFirstMenu: #004a70a7;
+    --bgColorSecondMenu: #73adcba6;;
     --bgColor:white;
     --brand:blue;
-    --top-nav-height:33px;
+    --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
     accent-color:var(--brand);
-    font-size:13px;
-    font-family:system-ui,sans-serif;
 }
 *{
     margin:0;
@@ -31,8 +34,10 @@
 }
 main{
     position: absolute;
+    top:0;
+    left:0;
     z-index:2;
-    width: 100%;
+    width: 100vw;
     overflow-x:auto;
     overflow-y:visible; 
     background: none;
@@ -50,20 +55,20 @@ h1,h2,h3,li,ol,ul,div,p,div,fieldset,calendar-sheet-wrapper,embed,button,svg,inp
     font-style:inherit;
 }
 h1,h2,h3{
-    margin:1.4em 0 1rem 10px;
+    margin:1em 0 0.75rem 5px;
     width:98%;
 }
 h1{
-    font-size:1.4rem;
-    font-weight: bold;
+    font-size:1.6rem;
+    font-weight: lighter;
 }
 h2{
-    font-size:1.2rem;
-    font-weight: normal;
+    font-size:1.4rem;
+    font-weight: lighter;
 }
 h3,caption{
-    font-size:1.0rem;
-    font-weight: normal;
+    font-size:1.2rem;
+    font-weight: lighter;
 }
 p,li,code{
     font-size:1.1rem;
@@ -80,7 +85,7 @@ ol,ul{
     list-style-position:inside;
 }
 li{
-    margin:0.5rem 10px;
+    margin:0.5rem 1rem;
 }
 li:hover{
     background-color:var(--hoverColor);
@@ -119,12 +124,11 @@ button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.p
 select{
     max-width:280px;
     cursor:pointer;
-    margin:2px;
+    margin:0.125rem;
 }
 textarea{
-    width:95%;
+    width:90%;
     height:10vh;
-    font-size:1.4rem;
 }
 input.filter{
     width:3rem;
@@ -240,7 +244,7 @@ th{
 }
 td,th{
     position:relative;
-    padding:3px;
+    padding:0.125rem;
     max-width:95vw;
     min-width:4.5rem;
 }
@@ -265,7 +269,7 @@ article{
     display:block;
     position:relative;
     width:100vw;
-    padding-bottom: 28px;
+    padding-bottom: 2rem;
     overflow:auto;
     background-color:var(--bgColor);
     border-bottom:1px solid #999;
@@ -297,7 +301,7 @@ div.container-busy{
 }
 div.explorer{
     clear:none;
-    padding:2em 0.5em 0.5em 5px;
+    padding:1em 0.5em 0.5em 5px;
 }
 label.explorer{
     float:left;
@@ -398,55 +402,58 @@ div.first-menu,div.second-menu{
     position:fixed;
     top:0;
     left:0;
-    width:100%;
+    width:100vw;
     height:var(--top-nav-height);
     z-index:10;
-    border-bottom:1px solid var(--color);
-    background-color:#004d73aa;
+    background-color: var(--bgColorFirstMenu);
     overflow:hidden;
 }
 div.second-menu{
-    top:34px;
+    top:var(--top-nav-height);
+    background-color: var(--bgColorSecondMenu);
+    border-bottom: 1px solid var(--hoverColor);
 }
 ul.menu{
     list-style-type: none;
-    background-color:var(--bgColor);
     margin:0;
 }
 li.menu{
+    float:left;
     clear:none;
     width:6rem;
+    height:4.1rem;
     margin:0;
-    background:none;
-    border-right:1px solid #aaa;
-    border-bottom:4px solid var(--bgColor);
+    border-right:1px solid var(--hoverColor);
+    border-bottom:3px solid var(--bgColorMenuBottom);
     transition:border 200ms ease-out;
-    overflow:hidden;
+    background-color: var(--bgColor);
+    overflow: hidden;
 }
 li.menu:hover{
-    border-bottom:4px solid var(--color);
+    border-bottom:3px solid var(--color);
 }
 a.menu,a.first-menu,p.first-menu{
     display:block;
+    height: 100%;
     text-align:center;
 }
 a.first-menu,p.first-menu{
     float:left;
     clear:none;
-    font-size:20px;
+    font-size:1.5rem;
     font-weight:bold;
-    line-height:33px;
-    width:50px;
+    height:var(--top-nav-height);
+    width:var(--top-nav-height);
     border-right:1px solid #bbb;
 }
 select.menu{
     font-size:1.1rem;
-    height:34px;
+    height:2.5rem;
     margin:0;
 }
 a.first-menu{
-    color:var(--color);
-    background-color:var(--bgColor);
+    color:var(--bgColor);
+    background-color:var(--color);
     margin:1px 0 0 1px;
 }
 div.menu-item-emoji,div.menu-item-label{
@@ -487,7 +494,7 @@ summary{
     clear:none;
     min-width:3rem;
     width:100%;
-    font-size:1.2rem;
+    font-size:1.3rem;
     border-bottom:1px dotted var(--color);
     background-color: lavender;
 }

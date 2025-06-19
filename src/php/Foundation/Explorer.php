@@ -13,23 +13,36 @@ namespace SourcePot\Datapool\Foundation;
 class Explorer{
     
     private const SELECTOR_KEY_DATA=[
-                                    'Source'=>['addTitle'=>'Add new Group','editTitle'=>'Edit selected Source',],
-                                    'Group'=>['addTitle'=>'Add new Folder','editTitle'=>'Edit selected Group',],
-                                    'Folder'=>['addTitle'=>'Add new Entry/Entries','editTitle'=>'Edit selected Folder',],
-                                    'EntryId'=>['addTitle'=>'Update Entry','editTitle'=>'Edit selected Entry',],
-                                    ];
+        'Source'=>['addTitle'=>'Add new Group','editTitle'=>'Edit selected Source',],
+        'Group'=>['addTitle'=>'Add new Folder','editTitle'=>'Edit selected Group',],
+        'Folder'=>['addTitle'=>'Add new Entry/Entries','editTitle'=>'Edit selected Folder',],
+        'EntryId'=>['addTitle'=>'Update Entry','editTitle'=>'Edit selected Entry',],
+        ];
     private $oc;
     
     private $entryTable='';
     private $entryTemplate=[];
+
+    private $isVisible=[];
                                  
-    private $selectorTemplate=['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'EntryId'=>FALSE];
-    private $isVisibleTemplate=['Source'=>FALSE,'Group'=>TRUE,'Folder'=>TRUE,'EntryId'=>TRUE];
-    private $settingsTemplate=['Source'=>['orderBy'=>'Source','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
-                                'Group'=>['orderBy'=>'Group','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
-                                'Folder'=>['orderBy'=>'Folder','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
-                                'EntryId'=>['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE]
-                                ];
+    private const SELECTOR_TEMPLATE=[
+        'Source'=>FALSE,
+        'Group'=>FALSE,
+        'Folder'=>FALSE,
+        'EntryId'=>FALSE
+        ];
+    private const IS_VISIBLE_TEMPLATE=[
+        'Source'=>FALSE,
+        'Group'=>TRUE,
+        'Folder'=>TRUE,
+        'EntryId'=>TRUE
+        ];
+    private const SETTINGS_TEMPLATE=[
+        'Source'=>['orderBy'=>'Source','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
+        'Group'=>['orderBy'=>'Group','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
+        'Folder'=>['orderBy'=>'Folder','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
+        'EntryId'=>['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE]
+        ];
 
     private $addEntryByFileUpload=TRUE;
 
@@ -71,8 +84,8 @@ class Explorer{
         $selector=$this->appProcessing($callingClass);
         $this->addEntryByFileUpload=$addEntryByFileUpload;
         // set selector visibility
-        $this->isVisibleTemplate=array_merge($this->isVisibleTemplate,$visibility);
-        $this->isVisibleTemplate['Source']=!empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass]);
+        $this->isVisible=array_merge(self::IS_VISIBLE_TEMPLATE,$visibility);
+        $this->isVisible['Source']=!empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass]);
         // compile html
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Explorer'));
         $selectorsHtml=$this->getSelectors($callingClass);
@@ -88,19 +101,19 @@ class Explorer{
         $lngNeedle='|'.$_SESSION['page state']['lngCode'].'|';
         $html='';
         $selector=[];
-        foreach($this->selectorTemplate as $column=>$initValue){
+        foreach(self::SELECTOR_TEMPLATE as $column=>$initValue){
             $selectorHtml='';
             $options=[\SourcePot\Datapool\Root::GUIDEINDICATOR=>'&larrhk;'];
             if ($column==='EntryId'){
                 $label='Name';
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$this->settingsTemplate[$column]['orderBy'],$this->settingsTemplate[$column]['isAsc']) as $row){
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',self::SETTINGS_TEMPLATE[$column]['orderBy'],self::SETTINGS_TEMPLATE[$column]['isAsc']) as $row){
                     if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
                     if (!empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$selector['Source']]) && strpos($row['Type'],$lngNeedle)===FALSE){continue;}
                     $options[$row[$column]]=$row[$label];
                 }
             } else {
                 $label=$column;
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read','Name',$this->settingsTemplate[$column]['isAsc']) as $row){
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read','Name',self::SETTINGS_TEMPLATE[$column]['isAsc']) as $row){
                     if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
                     $options[$row[$column]]=$row[$label];
                 }
@@ -108,7 +121,7 @@ class Explorer{
             $selector[$column]=(isset($selectorPageState[$column]))?$selectorPageState[$column]:$initValue;
             $selectorHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['label'=>$label,'options'=>$options,'hasSelectBtn'=>TRUE,'key'=>['selector',$column],'value'=>$selector[$column],'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'explorer']);
             $selectorHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'explorer','element-content'=>$selectorHtml,'keep-element-content'=>TRUE]);
-            if (!empty($this->isVisibleTemplate[$column])){
+            if (!empty($this->isVisible[$column])){
                 // Source-selector is added based on visibility setting
                 $html.=$selectorHtml;
             }
@@ -145,7 +158,7 @@ class Explorer{
             $commentsArr=$this->comments($callingClass,$stateKeys);
             $appHtml.=$commentsArr['html'];
         }
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$appHtml,'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'5px','margin'=>'0.5em']]);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$appHtml,'keep-element-content'=>TRUE,'class'=>'explorer','style'=>['clear'=>'both']]);
         return $html;
     }
     
@@ -165,10 +178,11 @@ class Explorer{
             }
         }
         // create new guide entry, if it does not exist
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $currentUser['Privileges']=intval($currentUser['Privileges']) | $this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions()['ALL_CONTENTADMIN_R'];
+        $entry=['Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$currentUser['EntryId'],'Read'=>$currentUser['Privileges'],'Write'=>$currentUser['Privileges']];
         $unseledtedDetected=FALSE;
-        $write=(empty($selector['Group']) || ($selector['Group']??\SourcePot\Datapool\Root::GUIDEINDICATOR)===\SourcePot\Datapool\Root::GUIDEINDICATOR)?'ALL_MEMBER_R':'ALL_CONTENTADMIN_R'; // if no Group is set, all memebers can add a Group else only the owner and content admin can write a Group, Folder, Name 
-        $entry=['Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Read'=>'ALL_MEMBER_R','Write'=>$write];
-        foreach($this->selectorTemplate as $column=>$initValue){
+        foreach(self::SELECTOR_TEMPLATE as $column=>$initValue){
             if (empty($selector[$column])){$unseledtedDetected=TRUE;}
             $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
         }
@@ -185,7 +199,7 @@ class Explorer{
         $oldSelector['Type']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($oldSelector,FALSE,'Write',FALSE,TRUE,FALSE,FALSE,[],FALSE) as $entry){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($entry);
-            $entry=array_merge($entry,$this->selectorTemplate);
+            $entry=array_merge($entry,self::SELECTOR_TEMPLATE);
             $guideEntry=$this->getGuideEntry($newSelector,$entry);
         }
         return $newSelector;
@@ -293,7 +307,6 @@ class Explorer{
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
         $access=TRUE;
-        var_dump($stateKeys['selectedKey']);
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
             return array('html'=>'','icon'=>'&#10010;','class'=>'explorer');
@@ -422,6 +435,7 @@ class Explorer{
             return array('html'=>'','icon'=>$icon[0],'class'=>'explorer');
         }
         // check if there are any entries with write access
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
         $hasWritableEntries=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,FALSE,'Write',FALSE);
         if (empty($hasWritableEntries)){
             // no entries with write access found
@@ -429,7 +443,7 @@ class Explorer{
         }
         // create html
         $entry=$this->getGuideEntry($selector);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor(array('selector'=>$entry,'key'=>$right));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->integerEditor(['selector'=>$entry,'key'=>$right]);
         $arr=['html'=>$html,'icon'=>$icon[0],'title'=>'Setting "'.$right.'" access right','class'=>'explorer'];
         return $arr;
     }

@@ -15,9 +15,10 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -94,13 +95,14 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
         // get settings html
         $mimeOptions=[''=>'...','text/'=>'text/*','application/'=>'application/*','image/'=>'image/*','video/'=>'video/*','audio/'=>'audio/*','message/'=>'message/*','/zip'=>'*/zip*','/pdf'=>'*/pdf','/json'=>'*/json'];
         $fileSizeOptions=[''=>'Only system limit',10240=>'10 kB',102400=>'100 kB',1048576=>'1 MB',10485760=>'10 MB',104857600=>'100 MB',209715200=>'200 MB'];
-        $contentStructure=['File name regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
-                            'File extension regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
-                            'Relevant mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
-                            '..or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
-                            '...or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
-                            'Max file size'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$fileSizeOptions],
-                            ];
+        $contentStructure=[
+            'File name regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+            'File extension regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+            'Relevant mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
+            '..or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
+            '...or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
+            'Max file size'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$fileSizeOptions],
+            ];
         // get selctor
         $callingElementEntryId=$arr['selector']['EntryId'];
         $callingElement=['Folder'=>'Settings','EntryId'=>$callingElementEntryId];

@@ -15,9 +15,10 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
     
     private $conditions=[];
     private $operations=['&&'=>'AND','||'=>'OR'];
@@ -134,17 +135,18 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function forwardingRules($callingElement){
-        $contentStructure=['...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>$this->operations,'keep-element-content'=>TRUE],
-                        'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
-                        '| '=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-                        'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
-                        'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-                        'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
-                        ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-                        'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>$this->conditions,'keep-element-content'=>TRUE],
-                        'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
-                        'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        ];
+        $contentStructure=[
+            '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>$this->operations,'keep-element-content'=>TRUE],
+            'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
+            '| '=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
+            'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+            'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
+            'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
+            ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
+            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>$this->conditions,'keep-element-content'=>TRUE],
+            'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
+            'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            ];
         $contentStructure['Value source']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];

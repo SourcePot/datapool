@@ -91,8 +91,16 @@ final class Root{
         // distribute the object collection within the project
         foreach($this->oc as $classWithNamespace=>$obj){
             if (!is_object($this->oc[$classWithNamespace])){continue;}
-            if (!method_exists($this->oc[$classWithNamespace],'loadOc')){continue;}
-            $this->oc[$classWithNamespace]->loadOc($this->oc);
+            // get implemented interfaces
+            if ($classWithNamespace!==__CLASS__ && $classWithNamespace!=='logger' && $classWithNamespace!=='logger_1'){
+                foreach(class_implements($classWithNamespace) as $interface){
+                    $this->implementedInterfaces[$interface][$classWithNamespace]=$classWithNamespace;
+                }
+            }
+            // for classes with method loadOc -> the complete ObjectCollection will be handed over 
+            if (method_exists($this->oc[$classWithNamespace],'loadOc')){
+                $this->oc[$classWithNamespace]->loadOc($this->oc);
+            }
         }
         $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
         $this->emptyLoggerCache();
@@ -100,12 +108,6 @@ final class Root{
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
             if (!is_object($obj)){continue;}
-            // get classes implementing interfaces
-            foreach(class_implements($classWithNamespace) as $interface){
-                if (in_array($interface,class_implements($classWithNamespace))){
-                    $this->implementedInterfaces[$interface][$classWithNamespace]=$classWithNamespace;
-                }
-            }
             // init methods
             if (!method_exists($this->oc[$classWithNamespace],'init')){continue;}
             $this->oc[$classWithNamespace]->init();
@@ -290,7 +292,7 @@ final class Root{
         // get trace
         // add "page html" to the return array
         $arr=[];
-        $appClassWithNamespace=$_SESSION['page state']['app']['Class'];
+        $appClassWithNamespace=$_SESSION['page state']['app']['Class']??($this->oc['SourcePot\Datapool\Foundation\Menu']->categories['Home']['Class']);
         if ($this->script==='index.php' && method_exists($this->oc[$appClassWithNamespace],'run')){
             $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appDef['Read'])){
@@ -341,22 +343,6 @@ final class Root{
             $this->writeProfile($this->profileFileName);
         };
         return $arr;
-    }
-    
-    public function getRegisteredMethods(string $method='',$arg=NULL):array
-    {
-        $result=[];
-        foreach($this->oc as $classWithNamespace=>$obj){
-            if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
-            if (!is_object($obj)){continue;}
-            if (!method_exists($classWithNamespace,$method)){continue;}
-            if ($arg){
-                $result[$classWithNamespace]=$this->oc[$classWithNamespace]->$method($arg);
-            } else {
-                $result[$classWithNamespace]=['class'=>$classWithNamespace,'method'=>$method];
-            }
-        }
-        return $result;
     }
 
     public function getImplementedInterfaces(string $interface=''):array

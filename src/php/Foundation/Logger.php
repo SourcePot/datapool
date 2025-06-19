@@ -157,7 +157,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $sourceTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
-        $today=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
+        $today=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
         $today=mb_substr($today,0,11);
         $columns=['Date','Group','Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'msg'];
         $arr['settings']=array_replace_recursive(array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'),$arr['settings']);
@@ -171,7 +171,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
             }
             $rowHtml='';
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
-            $flatLog['Date']=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getTimezoneDate($flatLog['Date'],$sourceTimezone,$pageTimeZone);
+            $flatLog['Date']=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($flatLog['Date'],$sourceTimezone,$pageTimeZone);
             $flatLog['Date']=str_replace($today,'',$flatLog['Date']);
             foreach($arr['settings']['columns'] as $column){
                 if (!isset($flatLog[$column])){continue;}

@@ -16,22 +16,25 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $biblio;
 
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
     
     private const MAX_REQUEST_COUNT_PER_RUN=3;
     private const ENRICHMENT_KEY='ops';
     private const DESCRIPTION='This processor enriches entries with data from the EPO Open Patent Service.';
     private const METHOD_OPTIONS=['SourcePot\OPS\Biblio|legal'=>'Biblio / Legal'];
-    private const CREDENTIALS_DEF=['Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
-                                    'Content'=>['appName'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'Datapool','@excontainer'=>TRUE],
-                                                'consumerKey'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                'consumerSecretKey'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
-                                                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
-                                                'Test credentials'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Test credentials','@default'=>'testCredentials'],
-                                                ],
-                                    ];
+    private const CREDENTIALS_DEF=[
+        'Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
+        'Content'=>[
+            'appName'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'Datapool','@excontainer'=>TRUE],
+            'consumerKey'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+            'consumerSecretKey'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
+            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+            'Test credentials'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Test credentials','@default'=>'testCredentials'],
+            ],
+        ];
 
 
     public function __construct($oc){
@@ -166,13 +169,13 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function getEnrichEntriesParamsHtml($arr){
         $callingElement=$arr['selector'];
         $contentStructure=[
-                        'OPS method'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\OPS\Biblio|legal','options'=>self::METHOD_OPTIONS,'keep-element-content'=>TRUE],
-                        'Map result key to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>['Group'=>'Group','Folder'=>'Folder','Name'=>'Name','EntryId'=>'EntryId',],'keep-element-content'=>TRUE],
-                        'Map result values to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Content','options'=>['Content'=>'Content','Params'=>'Params',],'keep-element-content'=>TRUE],
-                        'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-                        ];
+            'OPS method'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\OPS\Biblio|legal','options'=>self::METHOD_OPTIONS,'keep-element-content'=>TRUE],
+            'Map result key to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>['Group'=>'Group','Folder'=>'Folder','Name'=>'Name','EntryId'=>'EntryId',],'keep-element-content'=>TRUE],
+            'Map result values to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Content','options'=>['Content'=>'Content','Params'=>'Params',],'keep-element-content'=>TRUE],
+            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+            ];
         $contentStructure['Map result key to']+=$callingElement['Content']['Selector'];
         $contentStructure['Map result values to']+=$callingElement['Content']['Selector'];
         // get selctor
@@ -199,10 +202,11 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     public function getEnrichEntriesRulesHtml($arr){
         $callingElement=$arr['selector'];
-        $contentStructure=['Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>FALSE],
-                           'Regex match selector'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                           'Regex match index'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>1,'excontainer'=>TRUE],
-                           ];
+        $contentStructure=[
+            'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>FALSE],
+            'Regex match selector'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            'Regex match index'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>1,'excontainer'=>TRUE],
+            ];
         $contentStructure['Value source']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];

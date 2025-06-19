@@ -16,20 +16,21 @@ class Signals{
     private const MAX_SIGNAL_DEPTH=500;
     
     private $entryTable='';
-    private $entryTemplate=['Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
-                            'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
-                            'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
-                            ];
+    private $entryTemplate=[
+        'Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
+        'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
+        ];
     
-    private $activeIf=['stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
-                        'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (trigger above th.)',    
-                        'up'=>'&#9601;&#9601;&#9601;&#9585;&#9620; (rel. step up)',
-                        'max'=>'&#9601;&#9601;&#9585;&#9586;&#9601; (peak)',
-                        'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip)',
-                        'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down)',
-                        'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (trigger below th.)',    
-                        ];
+    private const ACTIVE_IF=['stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
+        'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (trigger above th.)',    
+        'up'=>'&#9601;&#9601;&#9601;&#9585;&#9620; (rel. step up)',
+        'max'=>'&#9601;&#9601;&#9585;&#9586;&#9601; (peak)',
+        'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip)',
+        'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down)',
+        'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (trigger below th.)',    
+        ];
 
     public function __construct(array $oc)
     {
@@ -165,14 +166,14 @@ class Signals{
         } else {
             $threshold=intval($trigger['Content']['Threshold']);
             $condtionMet=match($trigger['Content']['Active if']){
-                            'stable'=>abs($arr['values'][0]-$arr['values'][1])<=$threshold && abs($arr['values'][1]-$arr['values'][2])<=$threshold,
-                            'above'=>$arr['values'][0]>=$threshold,
-                            'up'=>($arr['values'][0]-$arr['values'][1])>=$threshold,
-                            'down'=>($arr['values'][1]-$arr['values'][0])>=$threshold,
-                            'min'=>($arr['values'][0]-$arr['values'][1])>=$threshold && ($arr['values'][2]-$arr['values'][1])>=$threshold,
-                            'max'=>($arr['values'][1]-$arr['values'][0])>=$threshold && ($arr['values'][1]-$arr['values'][2])>=$threshold,
-                            'below'=>$arr['values'][0]<=$threshold,
-                            };
+                'stable'=>abs($arr['values'][0]-$arr['values'][1])<=$threshold && abs($arr['values'][1]-$arr['values'][2])<=$threshold,
+                'above'=>$arr['values'][0]>=$threshold,
+                'up'=>($arr['values'][0]-$arr['values'][1])>=$threshold,
+                'down'=>($arr['values'][1]-$arr['values'][0])>=$threshold,
+                'min'=>($arr['values'][0]-$arr['values'][1])>=$threshold && ($arr['values'][2]-$arr['values'][1])>=$threshold,
+                'max'=>($arr['values'][1]-$arr['values'][0])>=$threshold && ($arr['values'][1]-$arr['values'][2])>=$threshold,
+                'below'=>$arr['values'][0]<=$threshold,
+                };
         }    
         return ($condtionMet)?$condtionMet:((isset($trigger['Content']['isActive']))?$trigger['Content']['isActive']:FALSE);
     }
@@ -215,10 +216,11 @@ class Signals{
         $triggerOptions=$this->getTriggerOptions();
         if (!isset($settings['Trigger'])){$settings['Trigger']=key($triggerOptions);}
         //
-        $contentStructure=['Transmitter'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Transmitter'],'options'=>$availableTransmitter],
-                        'Recepient'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Recepient'],'options'=>$availableRecipients],
-                        'Trigger'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Trigger'],'options'=>$triggerOptions],
-                        ];
+        $contentStructure=[
+            'Transmitter'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Transmitter'],'options'=>$availableTransmitter],
+            'Recepient'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Recepient'],'options'=>$availableRecipients],
+            'Trigger'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Trigger'],'options'=>$triggerOptions],
+            ];
         $arr=['callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
         $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Transmitter','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Name'=>'Message on trigger'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
@@ -243,7 +245,7 @@ class Signals{
     {
         $callingFunction='getTriggerWidget';
         $arr=['Signal'=>$this->getSignalOptions()];
-        $arr['Active if']=$this->activeIf;
+        $arr['Active if']=self::ACTIVE_IF;
         $row=[];
         $isNewRow=empty($trigger['EntryId']);
         if (!isset($trigger['EntryId'])){$trigger['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();}

@@ -129,7 +129,7 @@ class GeoTools{
         return $entry;    
     }
     
-    private function normalizeAddress(array $address):array
+    public function normalizeAddress(array $address):array
     {
         $normAddress=[];
         foreach ($address as $oldKey=>$value){

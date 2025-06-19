@@ -21,9 +21,7 @@ class HTMLbuilder{
 
     private const SET_ACCESS_BYTE_INFO='Security relevant setting!<br/>New Priviledges will become active at the next user login.';
 
-    private $keyCache=[];
-    
-    private $btns=['test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
+    private const BUTTONS=['test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
                     'edit'=>['key'=>['edit'],'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
                     'show'=>['key'=>['show'],'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
                     'print'=>['key'=>['print'],'title'=>'Print','hasCover'=>FALSE,'element-content'=>'&#10064;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
@@ -44,7 +42,7 @@ class HTMLbuilder{
                     'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
                     ];
 
-    private $appOptions=['SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
+    private const APP_OPTIONS=['SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
                        'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
                        'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
                        'SourcePot\Datapool\Tools\HTMLbuilder|entryControls'=>'entryControls()',
@@ -55,6 +53,8 @@ class HTMLbuilder{
                        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
                     ];
         
+    private $keyCache=[];
+
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -67,8 +67,8 @@ class HTMLbuilder{
     
     public function getBtns(array $arr):array
     {
-        if (isset($this->btns[$arr['cmd']])){
-            $arr=array_merge($this->btns[$arr['cmd']],$arr);
+        if (isset(self::BUTTONS[$arr['cmd']])){
+            $arr=array_merge(self::BUTTONS[$arr['cmd']],$arr);
         }
         return $arr;
     }
@@ -373,8 +373,8 @@ class HTMLbuilder{
             $arr=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($arr);
             // check for button failure
             $btnFailed=FALSE;
-            if (isset($this->btns[$arr['cmd']])){
-                $arr=array_replace_recursive($defaultValues,$arr,$this->btns[$arr['cmd']]);
+            if (isset(self::BUTTONS[$arr['cmd']])){
+                $arr=array_replace_recursive($defaultValues,$arr,self::BUTTONS[$arr['cmd']]);
                 if (!empty($arr['requiredRight'])){
                     $hasAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],$arr['requiredRight']);
                     if (empty($hasAccess)){$btnFailed='Access denied';}
@@ -833,7 +833,7 @@ class HTMLbuilder{
             $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             $currentIndex=intval($entryIdComps[0]);
             $rowIndex=$entryIdComps[0];
-            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=['background-color'=>'#faa'];}
+            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=['background-color'=>'#fcc'];}
             foreach($arr['contentStructure'] as $contentKey=>$elementArr){
                 $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
                 $method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];
@@ -866,27 +866,27 @@ class HTMLbuilder{
             $cmdBtns='';
             $moveBtns='';
             // add buttons
-            $btnArr=array_replace_recursive($arr,$this->btns['save'],['excontainer'=>FALSE]);
+            $btnArr=array_replace_recursive($arr,self::BUTTONS['save'],['excontainer'=>FALSE]);
             $btnArr['key'][]=$entry['EntryId'];
             $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             if ($entry['rowCount']>1){
-                $btnArr=array_replace_recursive($arr,$this->btns['delete'],['excontainer'=>FALSE]);
+                $btnArr=array_replace_recursive($arr,self::BUTTONS['delete'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             }
             if ($endIndex<$arr['maxRowCount'] && $currentIndex===$endIndex){
-                $btnArr=array_replace_recursive($arr,$this->btns['add'],['excontainer'=>FALSE]);
+                $btnArr=array_replace_recursive($arr,self::BUTTONS['add'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             }
             if ($currentIndex>$startIndex){
-                $btnArr=array_replace_recursive($arr,$this->btns['moveDown'],['excontainer'=>FALSE]);
+                $btnArr=array_replace_recursive($arr,self::BUTTONS['moveDown'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']['background-color']='#89fa';}
                 $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
             }
             if ($currentIndex<$endIndex){
-                $btnArr=array_replace_recursive($arr,$this->btns['moveUp'],['excontainer'=>FALSE]);
+                $btnArr=array_replace_recursive($arr,self::BUTTONS['moveUp'],['excontainer'=>FALSE]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']['background-color']='#89fa';}
                 $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
@@ -1079,18 +1079,18 @@ class HTMLbuilder{
             return ['html'=>'Please select the presentation setting, provide the Folder...'];
         }
         $callingClassFunction=explode('::',$arr['selector']['Folder']);
-        $entryKeyOptions=$this->appOptions;
+        $entryKeyOptions=self::APP_OPTIONS;
         if (isset($this->oc[$callingClassFunction[0]])){
             $entryTemplate=$this->oc[$callingClassFunction[0]]->getEntryTemplate();
             foreach($entryTemplate as $column=>$columnInfo){$entryKeyOptions[$column]=$column;}
         }
         $styleClassOptions=$this->getStyleClassOptions($arr);
         $contentStructure=['Entry key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE],
-                                'Key filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                                'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
-                                'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                                'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
-                          ];
+                        'Key filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+                        'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
+                        'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+                        'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
+                        ];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']=$arr['selector']['Folder'];
         $arr['selector']['Name']='Setting';

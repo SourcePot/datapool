@@ -22,19 +22,20 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public const MULTIBYTE_COUNT='4';
     public const MAX_IDLIST_COUNT=2000;
     
-    private $rootEntryTemplate=['EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
-                                 'Group'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'],
-                                 'Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
-                                 'Name'=>['type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
-                                 'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
-                                 'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
-                                 'Content'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This is the entry Content data'],
-                                 'Params'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'],
-                                 'Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
-                                 'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                                 'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
-                                 'Owner'=>['type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
-                                ];
+    private $rootEntryTemplate=[
+        'EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
+        'Group'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'],
+        'Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
+        'Name'=>['type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+        'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
+        'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
+        'Content'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This is the entry Content data'],
+        'Params'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This are the entry Params, e.g. file information of any file attached to the entry, size, name, MIME-type etc.'],
+        'Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
+        'Owner'=>['type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
+    ];
     
     public function __construct(array $oc)
     {
@@ -84,7 +85,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             // delete expitred entries
             $selector=['Source'=>$selectedTable,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
             $statistic=$this->deleteEntries($selector,TRUE);
-            // update delefted signal
+            // update deleted signal
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$statistic['deleted'],'int');
             $vars['action']='Deleted expired entries of table "'.$selectedTable.'"';
         }
@@ -836,7 +837,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     /**
     * The method updates an existing entry (based on the columns provided) OR inserts an entry that does not exist. .
     * Default values are added if any entry property is missing.
-    *
     * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
     * @param boolean $isSystemCall The value is provided to access control to establish read/write access within the method 
     * @param boolean $noUpdateButCreateIfMissing If true, an existing entry won't be updated
@@ -869,7 +869,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             // add log
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-                $dateTimeArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date(time(),'UTC');
+                $dateTimeArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->timestamp2date(time(),'UTC');
                 $entry['Params']['Log'][__FUNCTION__]['insert']=['user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
             }
             // insert new entry
@@ -881,19 +881,22 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             // add log
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-                $dateTimeArr=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->timestamp2date(time(),'UTC');
+                $dateTimeArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->timestamp2date(time(),'UTC');
                 $entry['Params']['Log'][__FUNCTION__]['update']=['user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
             }
             // update entry
             $entry=$this->unifyEntry($entry,TRUE);
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
+            $entry['Info']='Entry updated by "'.__FUNCTION__.'"';
         } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> no write access -> no update 
             $entry=$existingEntry;
+            $entry['Info']='Entry not updated by "'.__FUNCTION__.'", no write access';
         } else {
-            // existing entry -> no update 
+            // existing entry -> noUpdateButCreateIfMissing -> no update 
             $entry=$existingEntry;
+            $entry['Info']='Entry not updated by "'.__FUNCTION__.'", no update of existing entry';
         }
         return $entry;
     }

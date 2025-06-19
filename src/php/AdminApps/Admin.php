@@ -19,9 +19,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     private const APP_NAMESPACE_CLASSNAME="/namespace\s([^\s]+)\s*;\s+class\s([^\s]+)/";
     private const CORE_APPS=['SourcePot\Datapool\GenericApps\Documents'=>TRUE,
                              'SourcePot\Datapool\GenericApps\Multimedia'=>TRUE,
-                             'SourcePot\Datapool\GenericApps\Calendar'=>TRUE,
                              'SourcePot\Datapool\GenericApps\Feeds'=>TRUE,
-                             'SourcePot\Datapool\GenericApps\Forum'=>TRUE,
                              'SourcePot\Datapool\DataApps\Misc'=>TRUE
                             ];
     private const TEMPLATE_APPS=['GenericApps'=>'SourcePot\Datapool\GenericApps\Documents','DataApps'=>'SourcePot\Datapool\DataApps\Misc'];
@@ -58,13 +56,13 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             return ['Category'=>'Admin','Emoji'=>'&#8582;','Label'=>'Admin','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             // get page content
+            $selector=['Source'=>$this->entryTable,'disableAutoRefresh'=>TRUE];
             $html='';
             $html.=$this->oc['SourcePot\Datapool\Foundation\Filespace']->loggerFilesWidget();
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',['Source'=>$this->entryTable],['method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Exception logs','generic',$selector,['method'=>'debugFilesHtml','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
             $html.=$this->getPageSettingsHtml();
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('FTP manual upload','generic',['Source'=>$this->entryTable],['method'=>'ftpFileUpload','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
-            //$html.=$this->appAdminHtml();
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('App management','generic',['Source'=>$this->entryTable],['method'=>'appManagement','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('FTP manual upload','generic',$selector,['method'=>'ftpFileUpload','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('App management','generic',$selector,['method'=>'appManagement','classWithNamespace'=>__CLASS__],['style'=>['margin'=>'0']]);
             $html.=$this->backupArticle();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -284,7 +282,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     public function getPageSettingsHtml()
     {
         $homePageContentOptions=[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'];
-        $timezones=$this->oc['SourcePot\Datapool\GenericApps\Calendar']->getAvailableTimezones();
+        $timezones=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getAvailableTimezones();
         $contentStructure=['pageTitle'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'],
                         'metaViewport'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>['min-width'=>'50vw']],
                         'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],

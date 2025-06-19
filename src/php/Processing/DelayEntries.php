@@ -15,9 +15,10 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -130,9 +131,10 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function delayingParams($callingElement){
         $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $contentStructure=['Forward to canvas element'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
-                            'Reset all trigger when condition is met'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>['No','Yes']],
-                            ];
+        $contentStructure=[
+            'Forward to canvas element'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
+            'Reset all trigger when condition is met'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>['No','Yes']],
+            ];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=['Column to delay'=>'Name'];
@@ -157,10 +159,11 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function delayingRules($callingElement){
         $triggerOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerOptions();
-        $contentStructure=['Trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions],
-                            'Reset trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>['No','Yes']],
-                            'Combine with next row'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>['or'=>'OR','and'=>'AND','xor'=>'XOR',]],
-                            ];
+        $contentStructure=[
+            'Trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>$triggerOptions],
+            'Reset trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>['No','Yes']],
+            'Combine with next row'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'or','options'=>['or'=>'OR','and'=>'AND','xor'=>'XOR',]],
+            ];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -174,12 +177,14 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=['Delaying statistics'=>['Condition'=>['value'=>''],
-                                        'Condition met'=>['value'=>0],
-                                        'Reset trigger'=>['value'=>0],
-                                        'Moved entries'=>['value'=>0],
-                                        ]
-                ];
+        $result=[
+            'Delaying statistics'=>[
+                'Condition'=>['value'=>''],
+                'Condition met'=>['value'=>0],
+                'Reset trigger'=>['value'=>0],
+                'Moved entries'=>['value'=>0],
+                ]
+            ];
         $result=$this->checkCondition($base,$callingElement,$result,$testRun);
         //
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
