@@ -29,7 +29,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'&','Label'=>'Database','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Admin','Emoji'=>'&','Label'=>'Database','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             // get page content
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
@@ -50,44 +50,44 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     private function dbInfo():string
     {
         $matrices=[];
-        $matrices['General']['Database name']=array('value'=>$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName(),'trStyle'=>array('background-color'=>'#bbf'));
+        $matrices['General']['Database name']=['value'=>$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName(),'trStyle'=>['background-color'=>'#bbf']];
         $sql='SELECT table_schema "Database name",SUM(data_length+index_length) "Database size" FROM information_schema.tables GROUP BY table_schema;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $dbInfo){
             if ($dbInfo['Database name']!==$matrices['General']['Database name']['value']){continue;}
             $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($dbInfo['Database size'],3,1024).'B';
-            $matrices['General']['Database size']=array('value'=>$value);
+            $matrices['General']['Database size']=['value'=>$value];
             break;
         }
         $sql='SELECT CURRENT_USER();';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $key=>$value){
-            $matrices['General'][$key]=array('value'=>$value);
+            $matrices['General'][$key]=['value'=>$value];
         }
         $sql='SHOW GLOBAL VARIABLES;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $keyValue){
             $key=$keyValue['Variable_name'];
             if ($key=='version' || $key=="version_ssl_library" || $key=='storage_engine'){
-                $matrices['General'][trim($key,'@')]=array('value'=>$keyValue['Value']);
+                $matrices['General'][trim($key,'@')]=['value'=>$keyValue['Value']];
             } else if (mb_strpos($key,'character_set')!==FALSE){
-                $matrices['Character sets'][trim($key,'@')]=array('value'=>$keyValue['Value']);
+                $matrices['Character sets'][trim($key,'@')]=['value'=>$keyValue['Value']];
             } else if (mb_strpos($key,'timeout')!==FALSE){
-                $matrices['Timeouts'][trim($key,'@')]=array('value'=>$keyValue['Value']);
+                $matrices['Timeouts'][trim($key,'@')]=['value'=>$keyValue['Value']];
             } else if (mb_strpos($key,'_size')!==FALSE){
                 if (intval($keyValue['Value'])>0){
                     $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($keyValue['Value'],3,1024).'B';
                 } else {
                     $value=$keyValue['Value'];
                 }
-                $matrices['Sizes'][trim($key,'@')]=array('value'=>$value);
+                $matrices['Sizes'][trim($key,'@')]=['value'=>$value];
             }
         }
         $html='';
         foreach($matrices as $caption=>$matrix){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$caption,'hideKeys'=>FALSE,'hideHeader'=>TRUE));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>$caption,'hideKeys'=>FALSE,'hideHeader'=>TRUE]);
         }
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
         return $html;
     }
     
@@ -102,8 +102,8 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             unset($userInfo['Host']);
             $matrix[$row]=$userInfo;
         }
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>'Database user privileges','hideKeys'=>FALSE,'hideHeader'=>FALSE));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Database user privileges','hideKeys'=>FALSE,'hideHeader'=>FALSE]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
         return $html;
     }
 
@@ -111,7 +111,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     {
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
-        $matrices=array('Columns'=>[]);
+        $matrices=['Columns'=>[]];
         $sql='SHOW INDEX FROM `'.$table.'`;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
@@ -125,7 +125,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
             $column=$columnInfo['Field'];
             unset($columnInfo['Field']);
-            if (isset($matrices['Index'][$column])){$columnInfo['trStyle']=array('background-color'=>'#bbf');}
+            if (isset($matrices['Index'][$column])){$columnInfo['trStyle']=['background-color'=>'#bbf'];}
             $matrices['Columns'][$column]=$columnInfo;
         }
         $tableKey='Table "'.$table.'"';
@@ -140,34 +140,34 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
                 } else if (mb_strpos($key,'_ROWS')!==FALSE){
                     $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($value,3,1000);
                 }
-                $matrices[$tableKey][$key]=array('value'=>$value);
+                $matrices[$tableKey][$key]=['value'=>$value];
             }
             break;
         }
         $matrices[$tableKey]=$this->addTableCmds($matrices[$tableKey]??[],$selector);
         $html='';
         foreach($matrices as $caption=>$matrix){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'caption'=>$caption,'keep-element-content'=>TRUE,'hideKeys'=>FALSE,'hideHeader'=>FALSE));
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>$caption,'keep-element-content'=>TRUE,'hideKeys'=>FALSE,'hideHeader'=>FALSE]);
         }
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
         return $html;
     }
 
     private function addTableCmds(array $matrix,array $selector):array
     {
-        $btns=array('INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table');
-        $btnArr=array('tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $btns=['INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
+        $btnArr=['tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         foreach($btns as $sqlCmd=>$key){
             $btnArr['element-content']=$key;
-            $btnArr['key']=array($sqlCmd,$selector['Source']);
-            $matrix[$key]=array('value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr));
+            $btnArr['key']=[$sqlCmd,$selector['Source']];
+            $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr)];
         }
         return $matrix;
     }
     
     private function tableCmdsProcessing()
     {
-        $context=array('currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],4),'class'=>__CLASS__,'function'=>__FUNCTION__,);
+        $context=['currentUser'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract([],4),'class'=>__CLASS__,'function'=>__FUNCTION__,];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
         if (isset($formData['cmd']['INDICES'])){
             $context['table']=key($formData['cmd']['INDICES']);

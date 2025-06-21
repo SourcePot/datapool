@@ -14,9 +14,15 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
 
     private $oc;
     
-    private $statistics=[];
-    
     const ENV_FILE='env.json';
+    private const MAX_AGE=[
+        'dirs'=>[
+            '__IMMEDIATELY__'=>60,
+            '__PUBLIC__'=>60,
+            'tmp'=>10800,
+            'privat tmp'=>60
+            ]
+        ];
 
     private $entryTemplate=[
         'Class'=>['type'=>'string','value'=>TRUE,'Description'=>'Class selects the folder within the setup dir space'],
@@ -131,7 +137,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         $class=array_pop($classComps);
         $dir=$GLOBALS['dirs']['setup'].$class.'/';
         if (!is_dir($dir) && $mkDirIfMissing){
-            mkdir($dir,0750,TRUE);
+            mkdir($dir,0770,TRUE);
         }
         return $dir;    
     }
@@ -143,7 +149,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         $sourceFile=array_pop($sourceFile);
         $dir=$GLOBALS['dirs']['filespace'].$sourceFile.'/';
         if (!is_dir($dir) && $mkDirIfMissing){
-            mkdir($dir,0750,TRUE);
+            mkdir($dir,0770,TRUE);
         }
         return $dir;    
     }
@@ -373,7 +379,13 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
     public function getTmpDir():string
     {
         if (!isset($_SESSION[__CLASS__]['tmpDir'])){
+            $isPublic=str_contains($this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'ANONYM_');
+            $sessionIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash(session_id(),TRUE);
             $_SESSION[__CLASS__]['tmpDir']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(20);
+            $_SESSION[__CLASS__]['tmpDir'].='_'.$sessionIdHash;
+            if ($isPublic){
+                $_SESSION[__CLASS__]['tmpDir'].='_PUBLIC';
+            }
             $_SESSION[__CLASS__]['tmpDir'].='/';
         }
         $tmpDir=$GLOBALS['dirs']['tmp'].$_SESSION[__CLASS__]['tmpDir'];
@@ -383,25 +395,43 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         return $tmpDir;
     }
     
-    public function removeTmpDirs():array
+    public function removeTmpDirs(string $sessionId='__NOT_SET__'):array
     {
-        $tmpDirs=[$GLOBALS['dirs']['tmp']=>28600,$GLOBALS['dirs']['privat tmp']=>30];
-        foreach($tmpDirs as $tmpDir=>$maxAge){
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        $sessionIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($sessionId,TRUE);
+        foreach($GLOBALS['dirs'] as $dirKey=>$tmpDir){
+            if (!isset(self::MAX_AGE['dirs'][$dirKey])){continue;}
+            $context['dirKey']=$dirKey;
             if (is_dir($tmpDir)){
                 $allDirs=scandir($tmpDir);
                 foreach($allDirs as $dir){
+                    $context['dir']=$dir;
                     $fullDir=$tmpDir.$dir;
                     if (!is_dir($fullDir) || strlen($dir)<4){continue;}
+                    // remove tmp dir, if expired
+                    if (str_contains($dir,$sessionIdHash)){
+                        // tmp expires immediately on session Logout
+                        $context['maxAgeKey']='__IMMEDIATELY__';
+                    } else if (str_contains($dir,'_PUBLIC')){
+                        // if public, MAX_AGE is shorter
+                        $context['maxAgeKey']='__PUBLIC__';
+                    } else {
+                        // active session MAX_AGE
+                        $context['maxAgeKey']=$dirKey;
+                    }
+                    $maxAge=self::MAX_AGE['dirs'][$context['maxAgeKey']];
+                    // check age and delete expired dir
                     $age=time()-filemtime($fullDir);
                     if ($age>$maxAge){
                         $this->delDir($fullDir);
+                        //$this->oc['logger']->log('info','Function "{class} &rarr; {function}()" expired dir "{dirKey} &rarr; {dir}" removed, MAX_AGE key "{maxAgeKey}"',$context);         
                     }
                 }
             }
         }
         return $this->getStatistic();
     }
-    
+
     public function delDir(string $dir):array
     {
         gc_collect_cycles();
@@ -823,7 +853,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                 $targetFile=$this->selector2file($entry);
                 if (is_file($sourceFile)){
                     $statistics['attached files added']++;
-                    $this->tryCopy($sourceFile,$targetFile,0750);
+                    $this->tryCopy($sourceFile,$targetFile,0770);
                 }
                 // update or insert entry
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
