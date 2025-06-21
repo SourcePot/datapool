@@ -17,11 +17,12 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     private const APP_ACCESS_REGEX="/private const APP_ACCESS='([^´;]+)'/";
     private const APP_DEF_REGEX="/return\s\['Category'=>'([^']+)','Emoji'=>'([^']+)','Label'=>'([^']+)','Read'=>([A-Z_\']+|self::APP_ACCESS),'Class'=>/";
     private const APP_NAMESPACE_CLASSNAME="/namespace\s([^\s]+)\s*;\s+class\s([^\s]+)/";
-    private const CORE_APPS=['SourcePot\Datapool\GenericApps\Documents'=>TRUE,
-                             'SourcePot\Datapool\GenericApps\Multimedia'=>TRUE,
-                             'SourcePot\Datapool\GenericApps\Feeds'=>TRUE,
-                             'SourcePot\Datapool\DataApps\Misc'=>TRUE
-                            ];
+    private const CORE_APPS=[
+        'SourcePot\Datapool\GenericApps\Documents'=>TRUE,
+        'SourcePot\Datapool\GenericApps\Multimedia'=>TRUE,
+        'SourcePot\Datapool\GenericApps\Feeds'=>TRUE,
+        'SourcePot\Datapool\DataApps\Misc'=>TRUE
+        ];
     private const TEMPLATE_APPS=['GenericApps'=>'SourcePot\Datapool\GenericApps\Documents','DataApps'=>'SourcePot\Datapool\DataApps\Misc'];
     
     private $oc;
@@ -117,8 +118,10 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $btnArr['key']=['export'];
         $btnArr['title']="Create export from database table\nand download as file";
         $btnArr['element-content']='Export';
-        $matrix['Backup to file']=['Input'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
-                                    'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr)];
+        $matrix['Backup to file']=[
+            'Input'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($tableSelect).$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($sizeSelect),
+            'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr)
+            ];
         // import html        
         $fileArr=$btnArr;
         unset($fileArr['element-content']);
@@ -283,17 +286,18 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     {
         $homePageContentOptions=[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'];
         $timezones=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getAvailableTimezones();
-        $contentStructure=['pageTitle'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'],
-                        'metaViewport'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>['min-width'=>'50vw']],
-                        'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
-                        'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
-                        'pageTimeZone'=>['method'=>'select','options'=>$timezones,'excontainer'=>TRUE],
-                        'logLevel'=>['method'=>'select','options'=>['Production','Monitoring','Debugging'],'excontainer'=>TRUE],
-                        'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
-                        'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
-                        'homePageContent'=>['method'=>'select','options'=>$homePageContentOptions,'value'=>'video','excontainer'=>TRUE],
-                        'Spatie path to Xpdf pdftotext executable'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>['min-width'=>'50vw']],
-                        ];
+        $contentStructure=[
+            'pageTitle'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'],
+            'metaViewport'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>['min-width'=>'50vw']],
+            'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
+            'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
+            'pageTimeZone'=>['method'=>'select','options'=>$timezones,'excontainer'=>TRUE],
+            'logLevel'=>['method'=>'select','options'=>['Production','Monitoring','Debugging'],'excontainer'=>TRUE],
+            'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
+            'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
+            'homePageContent'=>['method'=>'select','options'=>$homePageContentOptions,'value'=>'video','excontainer'=>TRUE],
+            'Spatie path to Xpdf pdftotext executable'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>['min-width'=>'50vw']],
+            ];
         // get selector
         $arr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById(['Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init']);

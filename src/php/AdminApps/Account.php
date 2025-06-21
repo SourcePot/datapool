@@ -42,7 +42,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
     
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html=$this->account();
             $html.=$this->userRols();
@@ -72,7 +72,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         }
         unset($user['app']);
         $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateBySelector($user);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,array('classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'),[]);    
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Account','generic',$user,['classWithNamespace'=>'SourcePot\Datapool\Foundation\User','method'=>'userAccountForm'],[]);    
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
             if (!isset($user['Params'])){
                 $html.='Please select a user...';
@@ -86,7 +86,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
             $selector=['Class'=>'SourcePot\Datapool\Foundation\User','EntryId'=>'userRols'];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User rols','generic',$selector,array('classWithNamespace'=>__CLASS__,'method'=>'userRolsWidget'),[]);    
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User rols','generic',$selector,['classWithNamespace'=>__CLASS__,'method'=>'userRolsWidget'],[]);    
         }
         return $html;
     }

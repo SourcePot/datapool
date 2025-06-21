@@ -42,7 +42,7 @@ class Transmitter implements \SourcePot\Datapool\Interfaces\App{
     
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'@','Label'=>'Transmitter','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Admin','Emoji'=>'@','Label'=>'Transmitter','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html=$this->getTransmitterHtml();
             $arr['toReplace']['{{content}}']=$html;

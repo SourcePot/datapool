@@ -44,7 +44,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             if ($selector['Group']==='signal'){
                 if (empty($selector['Folder'])){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal overview widget','generic',$selector,array('method'=>'signalDisplayWrapper','classWithNamespace'=>'SourcePot\Datapool\Foundation\Signals'),[]);
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal overview widget','generic',$selector,['method'=>'signalDisplayWrapper','classWithNamespace'=>'SourcePot\Datapool\Foundation\Signals'],[]);
                 } else {
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot($selector,['height'=>120]);
                 }
@@ -53,7 +53,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             } else if ($selector['Group']==='Transmitter'){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Message widget','generic',[],['method'=>'messageWidgetWrapper','classWithNamespace'=>__CLASS__],[]);
             } else {
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Performance','keep-element-content'=>TRUE));
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Performance','keep-element-content'=>TRUE]);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Root::run'],['height'=>120]);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Logins','keep-element-content'=>TRUE]);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Components\Login::run'],['height'=>120,'color'=>'green']);
