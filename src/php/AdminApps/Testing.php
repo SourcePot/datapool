@@ -19,7 +19,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable='';
     private $entryTemplate=[];
     
-    private $boolStr=array(0=>'FALSE',1=>'TRUE');
+    private $boolStr=[0=>'FALSE',1=>'TRUE'];
     
     public function __construct($oc){
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -48,11 +48,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
 
     public function run(array|bool $arr=TRUE):array{
         if ($arr===TRUE){
-            return array('Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',[],array('method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__),array('style'=>array('background-color'=>'#c9ffc9')));
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing result','generic',[],array('method'=>'getTestHtml','classWithNamespace'=>__CLASS__),[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',[],['method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__],['style'=>['background-color'=>'#c9ffc9']]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing result','generic',[],['method'=>'getTestHtml','classWithNamespace'=>__CLASS__],[]);
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -77,7 +77,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         $arr['selector']['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $arr['selector']['Name']=$name;
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($arr['selector'],'ALL_R','ALL_CONTENTADMIN_R');
-        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],array('Group','Folder','Name'),0);
+        $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Group','Folder','Name'],0);
 		return $arr;
 	}
 
@@ -110,22 +110,21 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 ksort($methods);
             }
         }
-        //$return=array('html'=>'','Parameter'=>[],'result'=>[]);
-        //$matchTypOptions=array('identical'=>'Identical','contains'=>'Contains','epPublication'=>'European patent publication');
-        $contentStructure=array('class'=>array('method'=>'select','value'=>'','options'=>$classes,'excontainer'=>TRUE),
-                                'method'=>array('method'=>'select','value'=>'','options'=>$methods,'excontainer'=>TRUE),
-                                );
+        $contentStructure=[
+            'class'=>['method'=>'select','value'=>'','options'=>$classes,'excontainer'=>TRUE],
+            'method'=>['method'=>'select','value'=>'','options'=>$methods,'excontainer'=>TRUE],
+        ];
         // get HTML
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select method to test';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
         if (empty($arr['selector']['Content'])){
-            $row['trStyle']=array('background-color'=>'#a00');
+            $row['trStyle']=['background-color'=>'#a00'];
         }
-        $matrix=array('Parameter'=>$row);
+        $matrix=['Parameter'=>$row];
         $arr[__FUNCTION__]=$arr['selector']['Content'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(arra['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         return $arr;
     }
 
@@ -151,11 +150,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             }
             // get type
             $dataType=strval($param->getType());
-            $contentStructure[$param->name]=array('method'=>'element','tag'=>'input','value'=>$default,'placeholder'=>$default,'type'=>'text','excontainer'=>TRUE);
-            $contentStructure[$param->name.' type ']=array('method'=>'select','value'=>$dataType,'options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE,'excontainer'=>TRUE);
+            $contentStructure[$param->name]=['method'=>'element','tag'=>'input','value'=>$default,'placeholder'=>$default,'type'=>'text','excontainer'=>TRUE];
+            $contentStructure[$param->name.' type ']=['method'=>'select','value'=>$dataType,'options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE,'excontainer'=>TRUE];
         }
         //
-        $arr=$this->finalizeSelector(array('html'=>$arr['html']),__FUNCTION__,$testingParamsId);
+        $arr=$this->finalizeSelector(['html'=>$arr['html']],__FUNCTION__,$testingParamsId);
         $arr['callingClass']=__CLASS__;
 		$arr['callingFunction']=__FUNCTION__;
 		$arr['contentStructure']=$contentStructure;
@@ -176,22 +175,22 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             $results=$this->runTest($arr,2);
         }
         // test control form
-        $btnArr=array('tag'=>'input','type'=>'submit','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']);
+        $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
         $cntrMatrix=[];
         $btnArr['value']='Run (array -> table)';
-        $btnArr['key']=array('array');
+        $btnArr['key']=['array'];
         $cntrMatrix['Commands']['Run']=$btnArr;
         $btnArr['value']='Run (array -> json';
-        $btnArr['key']=array('json');
+        $btnArr['key']=['json'];
         $cntrMatrix['Commands']['JSON']=$btnArr;
         $btnArr['value']='Run (array -> html';
-        $btnArr['key']=array('html');
+        $btnArr['key']=['html'];
         $cntrMatrix['Commands']['html']=$btnArr;
         // build html  
         $arr['html']='';
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$cntrMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Test'));
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$cntrMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Test']);
         foreach($results as $caption=>$resultMatrix){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$resultMatrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'thKeepCase'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption));
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$resultMatrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'thKeepCase'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption]);
         }
         return $arr;
     }
@@ -209,7 +208,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         // get args
         $testingParamsId=$this->getParamsId($config['params']['class'],$config['params']['method']);
         $tests=$this->finalizeSelector([],'testArgs',$testingParamsId);
-        $tests=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($tests['selector'],array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE));
+        $tests=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($tests['selector'],['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE]);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tests,TRUE,'Read','EntryId',TRUE) as $argsEntry){
             $testIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($argsEntry['EntryId']);
             $config['tests'][$testIndex]=[];
@@ -217,7 +216,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 $argName=key($argsEntry['Content']);
                 $argValue=array_shift($argsEntry['Content']);
                 $argType=array_shift($argsEntry['Content']);
-                $config['tests'][$testIndex][$argName]=array('name'=>$argName,'value'=>$argValue,'type'=>$argType);
+                $config['tests'][$testIndex][$argName]=['name'=>$argName,'value'=>$argValue,'type'=>$argType];
             }
         }
         // testing
@@ -259,7 +258,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     
     private function addContext2results(array $results,array $config,int $testIndex,array $context,int $outputFormat=0):array
     {
-        $toRemove=array('class'=>'class','method'=>'method');
+        $toRemove=['class'=>'class','method'=>'method'];
         $args=array_keys($config['tests'][$testIndex]);
         $args=implode(',',$args);
         $caption=$config['params']['class'].'&horbar;&gt;'.$config['params']['method'].'('.$args.')';
@@ -280,7 +279,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                         $value=($outputFormat===2)?strval($value):htmlentities(strval($value));
                     } else {
                         $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($value);
-                        $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(array('matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'class'=>'','style'=>array('border-left'=>'1px solid #aaa')));
+                        $value=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'class'=>'','style'=>['border-left'=>'1px solid #aaa']]);
                     }
                 }
             } else if ($value===FALSE){

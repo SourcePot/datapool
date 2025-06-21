@@ -16,45 +16,97 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     
     private $oc;
     
-    public  const SELECTORS=['Logger errors'=>['selector'=>['app'=>__CLASS__,'Source'=>'logger','Group'=>'error'],
-                                               'containerType'=>'entryList',
-                                               'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
-                                               'description'=>'Error logs can be found here.'],
-                             'Logger'=>['selector'=>['app'=>__CLASS__,'Source'=>'logger'],
-                                        'containerType'=>'entryList',
-                                        'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
-                                        'description'=>'Here you will find all the logs.'],
-                             'Start page'=>['selector'=>\SourcePot\Datapool\Components\Home::WIDGET_SETTINGS_SELECTOR,
-                                                    'containerType'=>'generic',
-                                                    'settings'=>['method'=>'configureHomeWidgetsHtml','classWithNamespace'=>'SourcePot\Datapool\Components\Home'],
-                                                    'description'=>'Configure widget to be shown on the start page'],
-                             'Job processing timimg'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing'],
-                                                    'text'=>'Use &#9998; to edit the selected Entry...',
-                                                    'containerType'=>'',
-                                                    'settings'=>[],
-                                                    'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'],
-                             'Job processing'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Job processing','Folder'=>'All jobs'],
-                                                    'containerType'=>'generic',
-                                                    'settings'=>['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'],
-                                                    'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'],
-                             'Entry presentation'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Presentation'],
-                                                    'containerType'=>'generic',
-                                                    'settings'=>['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-                                                    'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().'],
-                             'Definitions'=>['selector'=>['app'=>__CLASS__,'Source'=>'definitions','Group'=>'Templates'],
-                                                    'containerType'=>'entryList',
-                                                    'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'Folder','Filter'=>''],['Column'=>'Content','Filter'=>''],]],
-                                                    'description'=>'Here you can adjust the entry definitions.'],
-                             'Feeds'=>['selector'=>['app'=>__CLASS__,'Source'=>'settings','Group'=>'Feeds'],
-                                                    'containerType'=>'generic',
-                                                    'settings'=>['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'],
-                                                    'description'=>'Here you can add and remove Feeds.'],
-                             'Remote client definitions'=>['selector'=>['app'=>__CLASS__,'Source'=>'remoteclient','EntryId'=>'%_definition'],
-                                                    'containerType'=>'entryList',
-                                                    'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'EntryId','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>''],]],
-                                                    'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected']
-                            ];
-    
+    public  const SELECTORS=[
+        'Logger errors'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'logger',
+                'Group'=>'error'
+            ],
+            'containerType'=>'entryList',
+            'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
+            'description'=>'Error logs can be found here.'
+        ],
+        'Logger'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'logger'
+            ],
+            'containerType'=>'entryList',
+            'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
+            'description'=>'Here you will find all the logs.'
+        ],
+        'Start page'=>[
+            'selector'=>\SourcePot\Datapool\Components\Home::WIDGET_SETTINGS_SELECTOR,
+            'containerType'=>'generic',
+            'settings'=>['method'=>'configureHomeWidgetsHtml','classWithNamespace'=>'SourcePot\Datapool\Components\Home'],
+            'description'=>'Configure widget to be shown on the start page'
+        ],
+        'Job processing timimg'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'settings',
+                'Group'=>'Job processing',
+                'Folder'=>'All jobs',
+                'Name'=>'Timing'
+            ],
+            'text'=>'Use &#9998; to edit the selected Entry...',
+            'containerType'=>'',
+            'settings'=>[],
+            'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'
+        ],
+        'Job processing'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'settings',
+                'Group'=>'Job processing',
+                'Folder'=>'All jobs'
+            ],
+            'containerType'=>'generic',
+            'settings'=>['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'],
+            'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'
+        ],
+        'Entry presentation'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'settings',
+                'Group'=>'Presentation'
+            ],
+            'containerType'=>'generic',
+            'settings'=>['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+            'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().'
+        ],
+        'Definitions'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'definitions',
+                'Group'=>'Templates'
+            ],
+            'containerType'=>'entryList',
+            'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'Folder','Filter'=>''],['Column'=>'Content','Filter'=>''],]],
+            'description'=>'Here you can adjust the entry definitions.'
+        ],
+        'Feeds'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'settings',
+                'Group'=>'Feeds'
+            ],
+            'containerType'=>'generic',
+            'settings'=>['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'],
+            'description'=>'Here you can add and remove Feeds.'
+        ],
+        'Remote client definitions'=>[
+            'selector'=>[
+                'app'=>__CLASS__,
+                'Source'=>'remoteclient',
+                'EntryId'=>'%_definition'
+            ],
+            'containerType'=>'entryList',
+            'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'EntryId','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>''],]],
+            'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected'
+        ]
+    ];
 
     private $entryTable='';
     private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
