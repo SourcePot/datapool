@@ -1,6 +1,6 @@
 <?php
 /*
-* This file is part of the Datapool CMS package.
+* This file is part of the Datapool package.
 * @package Datapool
 * @author Carsten Wallenhauer <admin@datapool.info>
 * @copyright 2023 to today Carsten Wallenhauer
@@ -17,17 +17,22 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'],                    
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'],
+        ];
     
-    public $definition=['Content'=>['Message'=>['@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@hideKeys'=>TRUE],
-                                              '@hideCaption'=>FALSE,
-                                ],
-                        'Attachment'=>['@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE],
-                        'Preview'=>['@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE],
-                        '@hideHeader'=>TRUE,
-                        ];
+    public $definition=[
+        'Content'=>[
+            'Message'=>[
+                '@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@hideKeys'=>TRUE
+                ],
+            '@hideCaption'=>FALSE,
+        ],
+        'Attachment'=>['@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE],
+        'Preview'=>['@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE],
+        '@hideHeader'=>TRUE,
+        ];
                             
     public function __construct($oc)
     {
