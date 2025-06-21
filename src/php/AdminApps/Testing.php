@@ -124,7 +124,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
         }
         $matrix=['Parameter'=>$row];
         $arr[__FUNCTION__]=$arr['selector']['Content'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(arra['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         return $arr;
     }
 
