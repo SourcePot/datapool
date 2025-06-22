@@ -59,6 +59,8 @@ final class Root{
     private $loggerCache=[];
 
     private $currentUser=[];
+
+    private $builderProgress=0;
     
     public function __construct($script)
     {
@@ -68,6 +70,8 @@ final class Root{
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
+        // session start
+        $this->builderProgress++;
         session_start();
         $this->updateCurrentUser();
         // inititate the web page state
@@ -75,8 +79,10 @@ final class Root{
             $_SESSION['page state']=['app'=>['Class'=>'SourcePot\Datapool\Components\Home'],'selected'=>[]];
         }
         // set exception handler and initialize directories
+        $this->builderProgress++;
         $this->initDirs();
         // load all external components
+        $this->builderProgress++;
         $_SESSION['page state']['autoload.php loaded']=FALSE;
         $autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
         if (is_file($autoloadFile)){
@@ -90,6 +96,7 @@ final class Root{
         $this->oc['logger_1']=$this->getMonologLogger('Debugging');
         $this->registerVendorClasses();
         // distribute the object collection within the project
+        $this->builderProgress++;
         foreach($this->oc as $classWithNamespace=>$obj){
             if (!is_object($this->oc[$classWithNamespace])){continue;}
             // get implemented interfaces
@@ -106,6 +113,7 @@ final class Root{
         $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
         $this->emptyLoggerCache();
         // invoke init methoods
+        $this->builderProgress++;
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
             if (!is_object($obj)){continue;}
@@ -115,6 +123,7 @@ final class Root{
         }
         $this->checkExtensions();
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
+        $this->builderProgress++;
     }
     
     /**
@@ -282,6 +291,7 @@ final class Root{
     */
     public function run():array
     {
+        $this->builderProgress++;
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // get current temp dir
         if ($this->script!=='resource.php' && $this->script!=='job.php'){
@@ -343,6 +353,7 @@ final class Root{
             $this->profileFileName=time().'-profile-'.$fileName.'.csv';
             $this->writeProfile($this->profileFileName);
         };
+        $this->builderProgress++;
         return $arr;
     }
 
@@ -550,8 +561,11 @@ final class Root{
             file_put_contents($logFileName,$logFileContent);
             //fallback page
             $html='';
+            //var_dump($this->builderProgress);
             if ($this->script==='js.php'){
                 $html.='Have run into a problem, please check debugging dir...';
+            } else if ($this->builderProgress===7){
+                $html.=$this->getBackupPageContent('<i>Please check user-, group-settings and/or permissions of the htdocs-directory and files</i>');
             } else {
                 $html.=$this->getBackupPageContent();
             }
@@ -566,10 +580,10 @@ final class Root{
         $html.='<head>';
         $html.='</head>';
         $html.='<body style="color:#000;background-color:#fff;font:80% sans-serif;font-size:20px;">';
-        $html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
-        $html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
-        $html.='<p style="width:fit-content;margin: 20px auto;">'.$msg.'</p>';
-        $html.='<p style="width:fit-content;margin: 20px auto;">The Admin <span style="font-size:2em;">👷</span></p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">We are very sorry for the interruption.</p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">The web page will be up and running as soon as possible.</p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">'.$msg.'</p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">The Admin <span style="font-size:2em;">👷</span></p>';
         $html.='</body>';
         $html.='</html>';
         return $html;
