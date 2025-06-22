@@ -585,7 +585,7 @@ final class Root{
         return $content;
     }
 
-    public function file2arr(string $fileName):array
+    public function file2arr(string $fileName):array|bool
     {
         $arr=[];
         if (is_file($fileName)){
