@@ -15,9 +15,10 @@ class Misc implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Int
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
-                            'Name'=>['skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
-                            ];
+    private $entryTemplate=[
+        'Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
+        'Name'=>['skipContainerMonitor'=>TRUE,'type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+    ];
 
     public function __construct($oc)
     {
