@@ -6,7 +6,7 @@ Datapool is a versatile modular web application.
 - Runs on a wide range of devices, the web browser is the runtime environment
 - The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of Javascript) and modern web browsers
 - Simple interaction with other web services
-- Established infrastructures can be used for data backup
+- Established infrastructures available for data backup
 
 ## Basic features
 - Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
@@ -16,7 +16,7 @@ Datapool is a versatile modular web application.
 - Forum and Chat: communication platform for the web application users
 - RSS feed reader: flexible RSS feed rreader
 - Remote client interface: connecting remote sensor platforms, see https://github.com/SourcePot/PIclient
-- User role based app and data access control: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
+- Role-based access control to apps and data: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
 - Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 - Comprehensive logger
 
@@ -25,7 +25,7 @@ Datapool is a versatile modular web application.
 ![Home app](/assets/img/datapool.png "Home app")
 
 # Get Started
-Hosting the web application on a web server or a local computer
+You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a Linux, UNIX, MS Windows systems, etc. 
 
 ## Requirements
 This software is designed to run on a web server, i.e. the user interface is the web browser.
