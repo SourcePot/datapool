@@ -1,16 +1,24 @@
 # Datapool
 
-Datapool is a versatile modular web application. The basic functionalities are:
-1. Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
-2. DataExplorer: process driven dataflow and dataprocessing
-3. MediaPlayer: creating and playing video playlists, see https://github.com/SourcePot/mediaplayer
-4. Calendar: calendar sheet holding single and recurring events which can be connected to the DataExplorer
-5. Forum and Chat: communication platform for the web application users
-6. RSS feed reader: flexible RSS feed rreader
-7. Remote client interface: connecting remote sensor platforms, see https://github.com/SourcePot/PIclient
-8. User role based app and data access control: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
-9. Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
-10. Comprehensive logger
+Datapool is a versatile modular web application.
+
+# Advantages of a web application:
+- Runs on a wide range of devices, the web browser is the runtime environment
+- resource-saving user interface through intensive use of HTML as the living standard (less use of Javascript)
+- Simple interaction with other web services
+- established infrastructures can be used for data backup
+
+# Basic features
+- Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
+- DataExplorer: process driven dataflow and dataprocessing
+- MediaPlayer: creating and playing video playlists, see https://github.com/SourcePot/mediaplayer
+- Calendar: calendar sheet holding single and recurring events which can be connected to the DataExplorer
+- Forum and Chat: communication platform for the web application users
+- RSS feed reader: flexible RSS feed rreader
+- Remote client interface: connecting remote sensor platforms, see https://github.com/SourcePot/PIclient
+- User role based app and data access control: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
+- Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
+- Comprehensive logger
 
 ### Sample start page:
 
