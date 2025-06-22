@@ -585,17 +585,14 @@ final class Root{
         return $content;
     }
 
-    public function file2arr(string $fileName):array|bool
+    public function file2arr(string $fileName):array
     {
-        $arr=[];
         if (is_file($fileName)){
             $content=$this->file_get_contents_utf8($fileName);
-            if (!empty($content)){
-                $arr=json_decode($content,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-                if (empty($arr)){$arr=json_decode(stripslashes($content),TRUE,512,JSON_INVALID_UTF8_IGNORE);}
-            }
+            return $this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($content);
+        } else {
+            return [];
         }
-        return $arr;
     }
 
     private function addTrace2row($row):array
