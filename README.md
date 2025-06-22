@@ -1,43 +1,66 @@
 # Datapool
 
-Datapool is a versatile modular web application. The basic functionalities are:
-1. Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
-2. DataExplorer: process driven dataflow and dataprocessing
-3. MediaPlayer: creating and playing video playlists, see https://github.com/SourcePot/mediaplayer
-4. Calendar: calendar sheet holding single and recurring events which can be connected to the DataExplorer
-5. Forum and Chat: communication platform for the web application users
-6. RSS feed reader: flexible RSS feed rreader
-7. Remote client interface: connecting remote sensor platforms, see https://github.com/SourcePot/PIclient
-8. User role based app and data access control: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
-9. Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
-10. Comprehensive logger
+Datapool is a versatile modular web application.
+
+## Advantages of a web application in contrast to a desktop application
+- Runs on a wide range of devices, the web browser is the runtime environment
+- The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of Javascript) and modern web browsers
+- Simple interaction with other web services
+- Established infrastructures available for data backup
+
+## Basic features
+- Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
+- DataExplorer: process driven dataflow and dataprocessing
+- MediaPlayer: creating and playing video playlists, see https://github.com/SourcePot/mediaplayer
+- Calendar: calendar sheet holding single and recurring events which can be connected to the DataExplorer
+- Forum and Chat: communication platform for the web application users
+- RSS feed reader: flexible RSS feed rreader
+- Remote client interface: connecting remote sensor platforms, see https://github.com/SourcePot/PIclient
+- Role-based access control to apps and data: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
+- Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
+- Comprehensive logger
 
 ### Sample start page:
 
 ![Home app](/assets/img/datapool.png "Home app")
 
 # Get Started
-Hosting the web application on a web server or a local computer
+You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a wide range of systems such as Linux, UNIX, MS Windows. 
 
 ## Requirements
 This software is designed to run on a web server, i.e. the user interface is the web browser.
 
 The web application requires:
-1. a **server** (e.g. Apache, nginx installed on a web server or local computer), 
+1. a **server** software (e.g. Apache, nginx installed on a web server or local computer), 
 2. **PHP 8+** and 
 3. a **database** (and a database user, which will be used by the web application). 
 
-To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment. 
+To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment.This works well as local host on a MS Windows computer or Linux system (e.g. Debian).
 
-Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details. 
+Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details.
 
-I tend to install the web application on my personal computer first (this serves as my local backup). In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
+I tend to install the web application on my personal computer first. This serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
-## Connecting the web application with the database 
+>[!NOTE]
+>It may be that PHP extensions are missing on your system, for example. Composer will exit the script with an exception and tell you the name of the missing extension.
+
+### Example code: adding missing extensions on the local host
+
+This is based on a Debian 12 (bookworm) 64-bit system with a XAMPP installation.
+
+```
+sudo apt-get install php-xml
+sudo apt-get install php-gd
+sudo apt-get install php-zip
+sudo apt-get install php-bcmath
+sudo apt-get install php-curl   
+```
+
+## Connecting the web application with the database
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
 3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
