@@ -304,6 +304,7 @@ final class Root{
         // add "page html" to the return array
         $arr=[];
         $appClassWithNamespace=$_SESSION['page state']['app']['Class']??($this->oc['SourcePot\Datapool\Foundation\Menu']->categories['Home']['Class']);
+        $this->builderProgress++;
         if ($this->script==='index.php' && method_exists($this->oc[$appClassWithNamespace],'run')){
             $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appDef['Read'])){
@@ -564,7 +565,7 @@ final class Root{
             //var_dump($this->builderProgress);
             if ($this->script==='js.php'){
                 $html.='Have run into a problem, please check debugging dir...';
-            } else if ($this->builderProgress===7){
+            } else if ($this->builderProgress===8){
                 $html.=$this->getBackupPageContent('<i>Please check user-, group-settings and/or permissions of the htdocs-directory and files</i>');
             } else {
                 $html.=$this->getBackupPageContent();
@@ -583,7 +584,7 @@ final class Root{
         $html.='<p style="width:fit-content;margin: 1rem auto;">We are very sorry for the interruption.</p>';
         $html.='<p style="width:fit-content;margin: 1rem auto;">The web page will be up and running as soon as possible.</p>';
         $html.='<p style="width:fit-content;margin: 1rem auto;">'.$msg.'</p>';
-        $html.='<p style="width:fit-content;margin: 1rem auto;">The Admin <span style="font-size:2em;">👷</span></p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">The Admin <span style="font-size:2rem;">👷</span><span style="font-size:0.75rem;">Builder progress: '.$this->builderProgress.' </span></p>';
         $html.='</body>';
         $html.='</html>';
         return $html;
