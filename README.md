@@ -37,7 +37,7 @@ I tend to install the web application on my personal computer first. Tthis serve
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
->[!NOTICE]
+>[!NOTE]
 >It may be that PHP extensions are missing on your system, for example. Composer will exit the script with an exception and tell you the name of the missing extension.
 
 ### Example code: adding missing extensions on the local host
