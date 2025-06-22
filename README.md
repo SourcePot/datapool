@@ -25,13 +25,13 @@ Datapool is a versatile modular web application.
 ![Home app](/assets/img/datapool.png "Home app")
 
 # Get Started
-You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a Linux, UNIX, MS Windows systems, etc. 
+You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a wide range of systems such as Linux, UNIX, MS Windows. 
 
 ## Requirements
 This software is designed to run on a web server, i.e. the user interface is the web browser.
 
 The web application requires:
-1. a **server** (e.g. Apache, nginx installed on a web server or local computer), 
+1. a **server** software (e.g. Apache, nginx installed on a web server or local computer), 
 2. **PHP 8+** and 
 3. a **database** (and a database user, which will be used by the web application). 
 
@@ -39,7 +39,7 @@ To run Datapool on your computer as local host, you could install XAMPP Apache +
 
 Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details.
 
-I tend to install the web application on my personal computer first. Tthis serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
+I tend to install the web application on my personal computer first. This serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
