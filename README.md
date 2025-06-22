@@ -4,7 +4,7 @@ Datapool is a versatile modular web application.
 
 ## Advantages of a web application in contrast to a desktop application
 - Runs on a wide range of devices, the web browser is the runtime environment
-- The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of Javascript) and modern web browsers
+- The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of JavaScript) and modern web browsers
 - Simple interaction with other web services
 - Established infrastructures available for data backup
 
