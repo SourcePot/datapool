@@ -27,17 +27,32 @@ The web application requires:
 2. **PHP 8+** and 
 3. a **database** (and a database user, which will be used by the web application). 
 
-To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment. 
+To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment.This works well as local host on a MS Windows computer or Linux system (e.g. Debian).
 
-Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details. 
+Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details.
 
-I tend to install the web application on my personal computer first (this serves as my local backup). In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
+I tend to install the web application on my personal computer first. Tthis serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
-## Connecting the web application with the database 
+>[!NOTICE]
+>It may be that PHP extensions are missing on your system, for example. Composer will exit the script with an exception and tell you the name of the missing extension.
+
+### Example code: adding missing extensions on the local host
+
+This is based on a Debian 12 (bookworm) 64-bit system with a XAMPP installation.
+
+```
+sudo apt-get install php-xml
+sudo apt-get install php-gd
+sudo apt-get install php-zip
+sudo apt-get install php-bcmath
+sudo apt-get install php-curl   
+```
+
+## Connecting the web application with the database
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
 3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
