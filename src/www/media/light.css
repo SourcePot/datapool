@@ -3,6 +3,7 @@
     font-family:system-ui,sans-serif;
     --color:black;
     --hoverColor:lightgrey;
+    --headerColor: #777;
     --bgColorMenuBottom:#ddd;
     --bgColorFirstMenu: #004a70a7;
     --bgColorSecondMenu: #73adcba6;;
@@ -57,18 +58,17 @@ h1,h2,h3,li,ol,ul,div,p,div,fieldset,calendar-sheet-wrapper,embed,button,svg,inp
 h1,h2,h3{
     margin:1em 0 0.75rem 5px;
     width:98%;
+    font-weight: normal;
+    color: var(--headerColor);
 }
 h1{
     font-size:1.6rem;
-    font-weight: lighter;
 }
 h2{
     font-size:1.4rem;
-    font-weight: lighter;
 }
 h3,caption{
     font-size:1.2rem;
-    font-weight: lighter;
 }
 p,li,code{
     font-size:1.1rem;
