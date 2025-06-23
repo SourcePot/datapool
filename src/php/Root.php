@@ -59,6 +59,8 @@ final class Root{
     private $loggerCache=[];
 
     private $currentUser=[];
+
+    private $builderProgress=[];
     
     public function __construct($script)
     {
@@ -68,6 +70,8 @@ final class Root{
         $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
+        // session start
+        $this->builderProgress[]=__CLASS__.'&rarr;__constructor() called';
         session_start();
         $this->updateCurrentUser();
         // inititate the web page state
@@ -75,8 +79,10 @@ final class Root{
             $_SESSION['page state']=['app'=>['Class'=>'SourcePot\Datapool\Components\Home'],'selected'=>[]];
         }
         // set exception handler and initialize directories
+        $this->builderProgress[]='Current user & page state initialized';
         $this->initDirs();
         // load all external components
+        $this->builderProgress[]='Directories initialized';
         $_SESSION['page state']['autoload.php loaded']=FALSE;
         $autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
         if (is_file($autoloadFile)){
@@ -90,6 +96,7 @@ final class Root{
         $this->oc['logger_1']=$this->getMonologLogger('Debugging');
         $this->registerVendorClasses();
         // distribute the object collection within the project
+        $this->builderProgress[]='Object collection initialized incl. vendor classes ';
         foreach($this->oc as $classWithNamespace=>$obj){
             if (!is_object($this->oc[$classWithNamespace])){continue;}
             // get implemented interfaces
@@ -106,6 +113,7 @@ final class Root{
         $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
         $this->emptyLoggerCache();
         // invoke init methoods
+        $this->builderProgress[]='All interfaces registered & loadOC-methods invoked';
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
             if (!is_object($obj)){continue;}
@@ -115,6 +123,7 @@ final class Root{
         }
         $this->checkExtensions();
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
+        $this->builderProgress[]=__CLASS__.'&rarr;__construct() done';
     }
     
     /**
@@ -282,6 +291,7 @@ final class Root{
     */
     public function run():array
     {
+        $this->builderProgress[]=__CLASS__.'&rarr;run() method called';
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // get current temp dir
         if ($this->script!=='resource.php' && $this->script!=='job.php'){
@@ -294,6 +304,7 @@ final class Root{
         // add "page html" to the return array
         $arr=[];
         $appClassWithNamespace=$_SESSION['page state']['app']['Class']??($this->oc['SourcePot\Datapool\Foundation\Menu']->categories['Home']['Class']);
+        $this->builderProgress[]='All buttons processed';
         if ($this->script==='index.php' && method_exists($this->oc[$appClassWithNamespace],'run')){
             $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appDef['Read'])){
@@ -303,11 +314,17 @@ final class Root{
                 $this->oc['logger']->log('notice','Access denied: app "{app}". Loading "{fallbackApp}"',$context);    
             }
             // build webpage
+            $this->builderProgress[]='Checked web app access';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
+            $this->builderProgress[]='Webpage backbone built';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
+            $this->builderProgress[]='Webpage header added';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
+            $this->builderProgress[]='Webpage body static parts added';
             $arr=$this->oc[$appClassWithNamespace]->run($arr);
+            $this->builderProgress[]='Webpage body content added';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
+            $this->builderProgress[]='Webpage finalized';
         } else if ($this->script==='js.php'){
             // js-call Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
@@ -343,6 +360,7 @@ final class Root{
             $this->profileFileName=time().'-profile-'.$fileName.'.csv';
             $this->writeProfile($this->profileFileName);
         };
+        $this->builderProgress[]=__CLASS__.'&rarr;run() done';
         return $arr;
     }
 
@@ -560,16 +578,20 @@ final class Root{
         });
     }
     
-    public function getBackupPageContent($msg='But some improvements might take a while.'){
+    public function getBackupPageContent($msg='But some improvements might take a while.'):string
+    {
+        $builderProgressHtml='<li>'.implode('</li><li>',$this->builderProgress).'</li>';
+        $builderProgressHtml='<ol style="position:absolute;bottom:0;font-size:0.7rem;">'.$builderProgressHtml.'</ol>';
         $html='<!DOCTYPE html>';
         $html.='<html xmlns="http://www.w3.org/1999/xhtml" lang="en">';
         $html.='<head>';
         $html.='</head>';
         $html.='<body style="color:#000;background-color:#fff;font:80% sans-serif;font-size:20px;">';
-        $html.='<p style="width:fit-content;margin: 20px auto;">We are very sorry for the interruption.</p>';
-        $html.='<p style="width:fit-content;margin: 20px auto;">The web page will be up and running as soon as possible.</p>';
-        $html.='<p style="width:fit-content;margin: 20px auto;">'.$msg.'</p>';
-        $html.='<p style="width:fit-content;margin: 20px auto;">The Admin <span style="font-size:2em;">👷</span></p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">We are very sorry for the interruption.</p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">The web page will be up and running as soon as possible.</p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">'.$msg.'</p>';
+        $html.='<p style="width:fit-content;margin: 1rem auto;">The Admin <span style="font-size:2rem;">👷</span></p>';
+        $html.=$builderProgressHtml;
         $html.='</body>';
         $html.='</html>';
         return $html;
@@ -681,6 +703,5 @@ final class Root{
         }
         return $ip;
     }
-
 }
 ?>
