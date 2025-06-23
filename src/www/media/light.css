@@ -858,6 +858,7 @@ div.widget{
     width:100%;
     padding: 0;
     overflow-y:auto;
+    background-color: var(--bgColor);
     border-bottom: 1px solid var(--rightBottomBorderColor);
 }
 .widget-entry-wrapper{
