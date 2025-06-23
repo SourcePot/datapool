@@ -174,7 +174,7 @@ class Menu{
     {
         $href='index.php?'.http_build_query(['category'=>$def['Category']]);
         $style='';
-        if (!empty($def['isSelected'])){$style='border-bottom:4px solid #a00;';}
+        if (!empty($def['isSelected'])){$style='border-bottom:3px solid #a00;';}
         $def['Label']=$arr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);
         $html='';
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE]);
@@ -184,6 +184,5 @@ class Menu{
         
         return $html;
     }
-    
 }
 ?>

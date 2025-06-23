@@ -122,7 +122,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
     private function homeAppWidgets():string
     {
         $html='';
-        $widgetTemplate=['tag'=>'article','class'=>'widget','element-content'=>'Widget did not provide content...','keep-element-content'=>TRUE];
+        $widgetTemplate=['tag'=>'div','class'=>'widget','element-content'=>'Widget did not provide content...','keep-element-content'=>TRUE];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(self::WIDGET_SETTINGS_SELECTOR,TRUE,'Read','EntryId',TRUE) as $widgetSetting){
             if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess(FALSE,intval($widgetSetting['Content']['Access']))){continue;}
             $widgetHtml='';
@@ -167,7 +167,6 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
     {
         $info='This widget presents an <b>image shuffle view</b> or <b>background video ./assets/home.mp4</b>.<br/>Image shuffle or video need to be selected in category "Admin" &larr; "Admin"';
         return $info;
-    }
-    
+    }   
 }
 ?>
