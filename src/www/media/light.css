@@ -9,6 +9,8 @@
     --bgColorSecondMenu: #73adcba6;;
     --bgColor:white;
     --brand:blue;
+    --leftTopBorderColor:#ccc;
+    --rightBottomBorderColor:#aaa;
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
     accent-color:var(--brand);
@@ -94,7 +96,7 @@ code{
     display:block;
     white-space: pre-wrap;
     padding:0.2rem;
-    color:#ccc;
+    color:var(--leftTopBorderColor);
     background-color:var(--color);
     font-family:'Courier New',monospace;
     font-weight:bold;
@@ -108,10 +110,10 @@ button,input,textarea,select,a.btn,a.plot,.js-button{
     margin: 0 0.2rem;
     background-color:var(--bgColor);
     border-radius:unset;
-    border-left:1px solid #ccc;
-    border-top:1px solid #ccc;
-    border-right:2px solid #aaa;
-    border-bottom:2px solid #aaa;
+    border-left:1px solid var(--leftTopBorderColor);
+    border-top:1px solid var(--leftTopBorderColor);
+    border-right:2px solid var(--rightBottomBorderColor);
+    border-bottom:2px solid var(--rightBottomBorderColor);
 }
 button,input[type="submit"],a.btn,a.plot,.js-button{
     text-align:center;
@@ -200,7 +202,7 @@ table.std,div.table{
     clear:none;
     margin:0.5rem;
     box-shadow: 5px 5px 3px #ddd;
-    border: 1px solid #aaa;
+    border: 1px solid var(--rightBottomBorderColor);
 }
 table.matrix{
     border:1px dotted #444;
@@ -256,12 +258,12 @@ p.log{
 div.log{
     clear:both;
     width:100%;
-    border-bottom:1px dotted #aaa;
+    border-bottom:1px dotted var(--rightBottomBorderColor);
 }
 embed{
     min-width:500px;
     min-height:300px;
-    box-shadow:2px 2px 3px 3px #aaa;
+    box-shadow:2px 2px 3px 3px var(--rightBottomBorderColor);
 }
 article{
     float:left;
@@ -278,8 +280,8 @@ article.multimedia{
     max-width:300px;
     height:280px;
     margin:5px;
-    border:1px solid #aaa;
-    box-shadow:10px 5px 5px #ccc;
+    border:1px solid var(--rightBottomBorderColor);
+    box-shadow:10px 5px 5px var(--leftTopBorderColor);
 }
 article.transparent{
     height:25vh;
@@ -355,7 +357,7 @@ meter{
     background-image:url("busy.gif");
     background-repeat:no-repeat;
     background-position:center;
-    border:1px solid #aaa;
+    border:1px solid var(--rightBottomBorderColor);
 }
 #prev-img-btn,#next-img-btn{
     position:absolute;
@@ -379,7 +381,7 @@ meter{
     right:0;
 }
 #img-index,#overlay-title{
-    color:#aaa;
+    color:var(--rightBottomBorderColor);
     text-align:center;
 }
 
@@ -548,7 +550,7 @@ table.toolbox,tr.toolbox:hover{
 }
 div.toolbox{
     width:100%;
-    border-bottom:1px dotted #aaa;
+    border-bottom:1px dotted var(--rightBottomBorderColor);
 }
 p.toolbox{
     clear:none;
@@ -660,14 +662,13 @@ p.canvas-info{
     padding:1px;
     line-height:1rem;
 }
-
-
 /** CALENDAR **/
 div.calendar-sheet-wrapper{
     width:100%;
     margin:5px 0;
     overflow:auto;
-    border-bottom:1px solid #999;
+    border-bottom:1px solid var(--rightBottomBorderColor);
+    border-bottom:1px solid var(--rightBottomBorderColor);
 }
 div.calendar-sheet{
     position:relative;
@@ -690,15 +691,15 @@ div.calendar-day,button.calendar-day{
 button.calendar-day{
     height:65px;
     border:none;
-    font-size:0.96rem;
-    font-weight:bold;
+    font-size:1rem;
     background-color:#ddd;
 }
 p.calendar-hour,div.calendar-hour{
     position:absolute;
     color:#444;
-    top:45px;
+    top:50px;
     width:0;
+    font-size: 0.9rem;
 }
 div.calendar-hour{
     top:65px;
@@ -801,7 +802,7 @@ a.emoji{
 div.keypad{
     position:relative;
     margin:1px;
-    border:2px solid #aaa;
+    border:2px solid var(--rightBottomBorderColor);
 }
 div.keypad:hover{
     border:2px solid #a00;    
@@ -821,7 +822,7 @@ img.keypad{
     width:226px;
     padding:0;
     margin:0.2em 0;
-    border:1px solid #ccc;
+    border:1px solid var(--leftTopBorderColor);
 }
 div.phrase-preview{
     height:80px;
@@ -853,15 +854,11 @@ div.center{
     background-color: var(--bgColor);
     width: 100%;
 }
-.code{
-    color:#ccc;
-    background-color:#020044;
-}
-article.widget{
+div.widget{
+    width:100%;
     padding: 0;
     overflow-y:auto;
-    border-bottom: 1px solid #aaa;
-    box-shadow: 0px -0px 15px #ccc;;
+    border-bottom: 1px solid var(--rightBottomBorderColor);
 }
 .widget-entry-wrapper{
     padding:3px 2vw;
