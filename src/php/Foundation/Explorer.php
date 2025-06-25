@@ -12,18 +12,27 @@ namespace SourcePot\Datapool\Foundation;
 
 class Explorer{
     
-    private const SELECTOR_KEY_DATA=[
-        'Source'=>['addTitle'=>'Add new Group','editTitle'=>'Edit selected Source',],
-        'Group'=>['addTitle'=>'Add new Folder','editTitle'=>'Edit selected Group',],
-        'Folder'=>['addTitle'=>'Add new Entry/Entries','editTitle'=>'Edit selected Folder',],
-        'EntryId'=>['addTitle'=>'Update Entry','editTitle'=>'Edit selected Entry',],
-        ];
     private $oc;
-    
-    private $entryTable='';
-    private $entryTemplate=[];
-
     private $isVisible=[];
+    
+    private const SELECTOR_KEY_DATA=[
+        'Source'=>[
+            'addTitle'=>'Add new Group',
+            'editTitle'=>'Edit selected Source',
+            ],
+        'Group'=>[
+            'addTitle'=>'Add new Folder',
+            'editTitle'=>'Edit selected Group',
+            ],
+        'Folder'=>[
+            'addTitle'=>'Add new Entry/Entries',
+            'editTitle'=>'Edit selected Folder',
+            ],
+        'EntryId'=>[
+            'addTitle'=>'Update Entry',
+            'editTitle'=>'Edit selected Entry',
+            ],
+        ];
                                  
     private const SELECTOR_TEMPLATE=[
         'Source'=>FALSE,
@@ -35,13 +44,39 @@ class Explorer{
         'Source'=>FALSE,
         'Group'=>TRUE,
         'Folder'=>TRUE,
-        'EntryId'=>TRUE
+        'EntryId'=>TRUE,
+        'addEntry'=>TRUE,
+        'editEntry'=>TRUE,
+        'miscToolsEntry'=>TRUE,
+        'settingsEntry'=>TRUE,
+        'setRightsEntry'=>TRUE,
+        'comments'=>TRUE,
         ];
     private const SETTINGS_TEMPLATE=[
-        'Source'=>['orderBy'=>'Source','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
-        'Group'=>['orderBy'=>'Group','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
-        'Folder'=>['orderBy'=>'Folder','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE],
-        'EntryId'=>['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>FALSE]
+        'Source'=>[
+            'orderBy'=>'Source',
+            'isAsc'=>FALSE,
+            'limit'=>FALSE,
+            'offset'=>FALSE
+            ],
+        'Group'=>[
+            'orderBy'=>'Group',
+            'isAsc'=>FALSE,
+            'limit'=>FALSE,
+            'offset'=>FALSE
+            ],
+        'Folder'=>[
+            'orderBy'=>'Folder',
+            'isAsc'=>FALSE,
+            'limit'=>FALSE,
+            'offset'=>FALSE
+            ],
+        'EntryId'=>[
+            'orderBy'=>'Name',
+            'isAsc'=>FALSE,
+            'limit'=>FALSE,
+            'offset'=>FALSE
+            ]
         ];
 
     private $addEntryByFileUpload=TRUE;
@@ -49,28 +84,11 @@ class Explorer{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
-        $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
     Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-    }
- 
-    public function init()
-    {
-        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-    }
-
-    public function getEntryTable():string
-    {
-        return $this->entryTable;
-    }
-    
-    public function getEntryTemplate():array
-    {
-        return $this->entryTemplate;
     }
 
     public function unifyEntry(array $entry):array
@@ -87,10 +105,10 @@ class Explorer{
         $this->isVisible=array_merge(self::IS_VISIBLE_TEMPLATE,$visibility);
         $this->isVisible['Source']=!empty(\SourcePot\Datapool\Root::ALLOW_SOURCE_SELECTION[$callingClass]);
         // compile html
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h1','element-content'=>'Explorer'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Explorer']);
         $selectorsHtml=$this->getSelectors($callingClass);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE));
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>[]));
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$selectorsHtml,'keep-element-content'=>TRUE]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE,'id'=>'explorer','style'=>[]]);
         return $html;
     }
 
@@ -187,7 +205,7 @@ class Explorer{
             $entry[$column]=($unseledtedDetected)?\SourcePot\Datapool\Root::GUIDEINDICATOR:$selector[$column];
         }
         $entry=array_merge($template,$entry);
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder'),'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder'],'0',\SourcePot\Datapool\Root::GUIDEINDICATOR,FALSE);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
@@ -218,18 +236,25 @@ class Explorer{
     public function selector2setting(array $selector, string $key='')
     {
         $selectorSettings=[];
-        if (isset($selector['File upload extract archive'])){$selectorSettings['File upload extract email parts']=$selector['File upload extract archive'];}
-        if (isset($selector['File upload extract archive'])){$selectorSettings['File upload extract archive']=$selector['File upload extract archive'];}
-        if (isset($selector['pdf-file parser'])){$selectorSettings['pdf-file parser']=$selector['pdf-file parser'];}
+        if (isset($selector['File upload extract archive'])){
+            $selectorSettings['File upload extract email parts']=$selector['File upload extract archive'];
+        }
+        if (isset($selector['File upload extract archive'])){
+            $selectorSettings['File upload extract archive']=$selector['File upload extract archive'];
+        }
+        if (isset($selector['pdf-file parser'])){
+            $selectorSettings['pdf-file parser']=$selector['pdf-file parser'];
+        }
         //
-        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE));
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE]);
         $guideEntry=$this->getGuideEntry($selector);
         $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
-        $initSettings=['File upload extract email parts'=>1,
-                        'File upload extract archive'=>0,
-                        'pdf-file parser'=>$pdfParser['@default'],
-                        'widget'=>($selector['Source']=='documents')?'entryList':'entryByEntry'
-                        ];
+        $initSettings=[
+            'File upload extract email parts'=>1,
+            'File upload extract archive'=>0,
+            'pdf-file parser'=>$pdfParser['@default'],
+            'widget'=>($selector['Source']=='documents')?'entryList':'entryByEntry'
+            ];
         $setting=array_merge($initSettings,$guideEntry['Content']['settings']??[],$selectorSettings);
         if (empty($key)){
             return $setting;
@@ -255,7 +280,7 @@ class Explorer{
                     if ($newSelector[$column]!=$selector[$column]){$resetFromHere=TRUE;}
                 }
             }
-            $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector,array('Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE));
+            $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
         }
         $selector=$this->addGuideEntry2selector($selector,$guideEntry);
@@ -306,13 +331,14 @@ class Explorer{
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
+        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
         $access=TRUE;
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
-            return array('html'=>'','icon'=>'&#10010;','class'=>'explorer');
+            return ['html'=>'','icon'=>'&#10010;','class'=>'explorer'];
         } else {
             $btnId=md5(__FUNCTION__);
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Add'));
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Add']);
             if (strcmp($stateKeys['selectedKey'],'Folder')===0){
                 if ($this->addEntryByFileUpload){
                     $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['add files'],'element-content'=>'Add file(s)'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
@@ -337,10 +363,11 @@ class Explorer{
 
     private function editEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
+        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
         if (strcmp($stateKeys['selectedKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
-            return array('html'=>'','icon'=>'&#9998;','class'=>'explorer');
+            return ['html'=>'','icon'=>'&#9998;','class'=>'explorer'];
         }
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Edit'));
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Edit']);
         if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
             $selector=['Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']];
             if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,[],[]);}
@@ -356,6 +383,7 @@ class Explorer{
     
     private function miscToolsEntry(string $callingClass,array $stateKeys):array
     {
+        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
         $html=$btnHtml='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
@@ -375,6 +403,7 @@ class Explorer{
 
     private function settingsEntry(string $callingClass,array $stateKeys):array
     {
+        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
         $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
@@ -416,9 +445,9 @@ class Explorer{
     
     private function comments(string $callingClass,array $setKeys):array
     {
+        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
         $arr=['html'=>''];
         if (strcmp($setKeys['selectedKey'],'EntryId')!==0){
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'h3','element-content'=>'Misc tools'));
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
             $arr=['selector'=>$this->getGuideEntry($selector),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'class'=>'comment'];
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->comments($arr);
@@ -428,11 +457,12 @@ class Explorer{
     
     private function setRightsEntry(string $callingClass,array $stateKeys,string $right):array
     {
+        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
         $icon=ucfirst($right);
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         if (strcmp($stateKeys['selectedKey'],'Source')===0){
             // Source level
-            return array('html'=>'','icon'=>$icon[0],'class'=>'explorer');
+            return ['html'=>'','icon'=>$icon[0],'class'=>'explorer'];
         }
         // check if there are any entries with write access
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
@@ -454,7 +484,7 @@ class Explorer{
         $linkInfo=array_merge($classInfo,$selector);
         $linkInfo['linkid']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($linkInfo,TRUE);
         $_SESSION['page state']['linkids'][$linkInfo['linkid']]=$linkInfo;
-        $linkInfo['href']='index.php?'.http_build_query(array('category'=>$linkInfo['Category'],'linkid'=>$linkInfo['linkid']));
+        $linkInfo['href']='index.php?'.http_build_query(['category'=>$linkInfo['Category'],'linkid'=>$linkInfo['linkid']]);
         $linkInfo['tag']='a';
         $linkInfo['keep-element-content']=TRUE;
         return $linkInfo;
