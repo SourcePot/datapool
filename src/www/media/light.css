@@ -2,12 +2,12 @@
     font-size:14px;
     font-family:system-ui,sans-serif;
     --color:black;
+    --bgColor:white;
     --hoverColor:lightgrey;
     --headerColor: #777;
     --bgColorMenuBottom:#ddd;
     --bgColorFirstMenu: #004a70a7;
     --bgColorSecondMenu: #73adcba6;;
-    --bgColor:white;
     --brand:blue;
     --leftTopBorderColor:#ccc;
     --rightBottomBorderColor:#aaa;
@@ -270,9 +270,10 @@ article{
     clear:none;
     display:block;
     position:relative;
-    width:100vw;
+    width:100%;
     padding-bottom: 2rem;
     overflow:auto;
+    color:var(--color);
     background-color:var(--bgColor);
     border-bottom:1px solid #999;
 }
