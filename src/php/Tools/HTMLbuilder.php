@@ -21,37 +21,39 @@ class HTMLbuilder{
 
     private const SET_ACCESS_BYTE_INFO='Security relevant setting!<br/>New Priviledges will become active at the next user login.';
 
-    private const BUTTONS=['test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
-                    'edit'=>['key'=>['edit'],'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
-                    'show'=>['key'=>['show'],'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
-                    'print'=>['key'=>['print'],'title'=>'Print','hasCover'=>FALSE,'element-content'=>'&#10064;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
-                    'run'=>['key'=>['run'],'title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE],
-                    'add'=>['key'=>['add'],'title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE],
-                    'save'=>['key'=>['save'],'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE],
-                    'upload'=>['key'=>['upload'],'title'=>'Upload file','hasCover'=>FALSE,'element-content'=>'Upload','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>FALSE],
-                    'download'=>['key'=>['download'],'title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE],
-                    'download all'=>['key'=>['download all'],'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE],
-                    'export'=>['key'=>['export'],'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE],
-                    'select'=>['key'=>['select'],'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE],
-                    'approve'=>['key'=>['approve'],'title'=>'Approve entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['font-size'=>'2rem','color'=>'green'],'excontainer'=>FALSE],
-                    'decline'=>['key'=>['decline'],'title'=>'Decline entry','hasCover'=>FALSE,'element-content'=>'&#10006;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['font-size'=>'2rem','color'=>'red'],'excontainer'=>FALSE],
-                    'delete'=>['key'=>['delete'],'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
-                    'remove'=>['key'=>['remove'],'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>[],'excontainer'=>FALSE],
-                    'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
-                    'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['float'=>'right','margin'=>0]],
-                    'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
-                    ];
+    private const BUTTONS=[
+        'test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
+        'edit'=>['key'=>['edit'],'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
+        'show'=>['key'=>['show'],'title'=>'Show','hasCover'=>FALSE,'element-content'=>'&#10003;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
+        'print'=>['key'=>['print'],'title'=>'Print','hasCover'=>FALSE,'element-content'=>'&#10064;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
+        'run'=>['key'=>['run'],'title'=>'Run','hasCover'=>FALSE,'element-content'=>'Run','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>TRUE],
+        'add'=>['key'=>['add'],'title'=>'Add this entry','hasCover'=>FALSE,'element-content'=>'+','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE],
+        'save'=>['key'=>['save'],'title'=>'Save this entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE],
+        'upload'=>['key'=>['upload'],'title'=>'Upload file','hasCover'=>FALSE,'element-content'=>'Upload','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'excontainer'=>FALSE],
+        'download'=>['key'=>['download'],'title'=>'Download attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>TRUE,'excontainer'=>TRUE],
+        'download all'=>['key'=>['download all'],'title'=>'Download all attached file','hasCover'=>FALSE,'element-content'=>'&#8892;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE],
+        'export'=>['key'=>['export'],'title'=>'Export all selected entries','hasCover'=>FALSE,'element-content'=>'&#9842;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','requiresFile'=>FALSE,'excontainer'=>TRUE],
+        'select'=>['key'=>['select'],'title'=>'Select entry','hasCover'=>FALSE,'element-content'=>'&#10022;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Read','excontainer'=>TRUE],
+        'approve'=>['key'=>['approve'],'title'=>'Approve entry','hasCover'=>FALSE,'element-content'=>'&check;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['font-size'=>'2rem','color'=>'green'],'excontainer'=>FALSE],
+        'decline'=>['key'=>['decline'],'title'=>'Decline entry','hasCover'=>FALSE,'element-content'=>'&#10006;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['font-size'=>'2rem','color'=>'red'],'excontainer'=>FALSE],
+        'delete'=>['key'=>['delete'],'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
+        'remove'=>['key'=>['remove'],'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>[],'excontainer'=>FALSE],
+        'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
+        'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['float'=>'right','margin'=>0]],
+        'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
+        ];
 
-    private const APP_OPTIONS=['SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
-                       'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
-                       'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
-                       'SourcePot\Datapool\Tools\HTMLbuilder|entryControls'=>'entryControls()',
-                       'SourcePot\Datapool\Tools\HTMLbuilder|deleteBtn'=>'deleteBtn()',
-                       'SourcePot\Datapool\Tools\HTMLbuilder|downloadBtn'=>'downloadBtn()',
-                       'SourcePot\Datapool\Tools\HTMLbuilder|selectBtn'=>'selectBtn()',
-                       'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
-                       'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
-                    ];
+    private const APP_OPTIONS=[
+        'SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
+        'SourcePot\Datapool\Foundation\Container|entryEditor|container'=>'entryEditor()',
+        'SourcePot\Datapool\Foundation\Container|comments'=>'comments()',
+        'SourcePot\Datapool\Tools\HTMLbuilder|entryControls'=>'entryControls()',
+        'SourcePot\Datapool\Tools\HTMLbuilder|deleteBtn'=>'deleteBtn()',
+        'SourcePot\Datapool\Tools\HTMLbuilder|downloadBtn'=>'downloadBtn()',
+        'SourcePot\Datapool\Tools\HTMLbuilder|selectBtn'=>'selectBtn()',
+        'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
+        'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
+        ];
         
     private $keyCache=[];
 
