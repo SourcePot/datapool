@@ -39,7 +39,7 @@ To run Datapool on your computer as local host, you could install XAMPP Apache +
 
 Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details.
 
-I tend to install the web application on my personal computer first. This serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory with all it's files to the web server using FTP (FileZilla).
+I tend to install the web application on my personal computer first. This serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory, with the exception of the `../src/setup/` and `../src/filespace/` directories, with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
 1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
@@ -108,27 +108,6 @@ The following flowchart shows the sequence of object instantiations, method call
 Any class which implements the `SourcePot\Datapool\Interfaces\App` interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar→run()`. 
 
 ![Run method if an app where content is added](/assets/img/run_method.png "Run method if an app where content is added")
-
-# Sample application
-Many organizations run large complex software packages and flexibility is not necessarily their strong point. Simple customer specific adjustments or process changes are very time-consuming and expensive. Low-code development platforms or bots promise to bring back flexibility, but can themselves be a closed ecosystem. Datapool is a lightweight open source web application that gives control back to the user or smaller organizational units within an organization. Datapool can be configured to carry out periodic data crunching with processes defined at team or department level. Datapool can also bridge temporary gaps, for testing processes as well as in a production environment.
-
-![Example application](/assets/img/ComparisonWithSAP.png "Example application")
-
-Datapool was originally developed to process pdf documents. This can be invoices from service providers within a patent department. For such an application, in a frist step all invoice data is extracted, analyzed and compared with patent files. in a next step invoice data is processed in conjunction with UNYCOM and SAP. In this early production environment, Datapool processed approx. 1000 invoices per month. The data was compared with approx. 200k cost data records and 100k patent files. Processing took place 1-2 times per month.  
-
-Moving data between different packages can be challenging.
-This framework aims to fill the gap between the big software packages such as SAP and e.g. UNYCOM in the setup of an IPR or patent department. The software is designed to relieve people from mindless repetitive tasks, allowing them to focus on the valuable tasks.
-
-![Comparison SPA UNYCOM Datapool](/assets/img/ExampleApplication.png "Comparison SPA UNYCOM Datapool")
-
-The figure shows a typical application example of a company software ecosystem including SAP and UNYCOM. UNYCOM is used by patent departments of larger enterprises. UNYCOM manages patent files including cost records. There can be a substantial amount of incoming invoices. The payment is usually dealt with by SAP but the invoice data (content) as well as the documentation of the payment made through SAP needs to end up in the correct UNYCOM patent case.
-
-This example requires the following steps:
-1. Parsing: content extraction from the invoice. SAP relevant data as well as patent case specific data.
-2. Matching an SAP accounting record with the patent case.
-3. Mapping: adjusting data formats and types to create a UNYCOM compatible dataset.
-
-*The Datapool framework can achieve precisely this in a very transparent way!*
 
 ## DataExplorer features
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
