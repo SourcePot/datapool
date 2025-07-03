@@ -34,10 +34,18 @@ final class MiscTools{
         'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
         ];
     
-    private const CONDITION_TYPES=[
+    public const CONDITION_TYPES=[
         'empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
-        '>'=>'>','='=>'=','!='=>'&ne;','<'=>'<',
-        '&'=>'AND','|'=>'OR','^'=>'XOR','~'=>'Inverse',
+        '>'=>'>','='=>'==','!='=>'!=','<'=>'<','&&'=>'&&','||'=>'||',
+        '&'=>'A AND B','|'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
+        ];
+    
+    public const COMPARE_TYPES_0=[
+        '>'=>'> 0','='=>'== 0','!='=>'!= 0','<'=>'< 0',
+        ];
+    
+    public const COMPARE_TYPES=[
+        '>'=>'>','='=>'==','!='=>'!=','<'=>'<',
         ];
     
     private const COMBINE_OPTIONS=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
@@ -66,11 +74,6 @@ final class MiscTools{
     public function getDataTypes():array
     {
         return self::DATA_TYPES;
-    }
-    
-    public function getConditions():array
-    {
-        return self::CONDITION_TYPES;
     }
     
     public function getCombineOptions():array
@@ -1130,7 +1133,11 @@ final class MiscTools{
         return $unycomObj->get();
     }
 
-    public function isTrue($valueA,$valueB,$condition):bool
+    /******************************************************************************************************************************************
+    * Operations
+    */
+
+    public function isTrue($valueA,$valueB,$condition):bool|NULL
     {
         // string or simple tests
         if ($condition==='empty'){
@@ -1143,20 +1150,22 @@ final class MiscTools{
             return stripos((string)$valueA,(string)$valueB)===FALSE;
         }
         // numeric tests
-        if (is_int($valueA)){$valueB=intval(round($valueB));}
-        if (is_float($valueA)){$valueB=floatval($valueB);}
-        if (is_bool($valueA)){
+        if (is_int($valueA)){
+            $valueB=intval($valueB);
+        } else if (is_float($valueA)){
+            $valueB=floatval($valueB);
+        } else if (is_bool($valueA)){
             $valueA=intval($valueA);
             $valueB=intval($valueB);
         }
         if ($condition==='>'){
-            return $valueA>$valueB;
+            return floatval($valueA)>floatval($valueB);
         } else if ($condition==='='){
             return $valueA==$valueB;
         } else if ($condition==='!='){
             return $valueA!=$valueB;
-        } else if ($condition==='>'){
-            return $valueA<$valueB;
+        } else if ($condition==='<'){
+            return floatval($valueA)<floatval($valueB);
         } else if ($condition==='&'){
             return boolval($valueA&$valueB);
         } else if ($condition==='|'){
@@ -1166,8 +1175,7 @@ final class MiscTools{
         } else if ($condition==='~'){
             return $valueA==-1*$valueB;
         }
-        $this->oc['logger']->log('error','"{class} &rarr; {function}()" called with undefined condition "{condition}".',['class'=>__CLASS__,'function'=>__FUNCTION__,'condition'=>$condition]);    
-        return FALSE;
+        return NULL;
     }
     
     public function matchEntry($needle,$matchSelector,$matchFlatKey,$matchType='contains',$isSystemCall=FALSE):array
