@@ -149,6 +149,7 @@ class Backbone{
             $arr['page html']=strtr($arr['page html'],[$needle=>$replacement]);
         }
         $arr['page html']=preg_replace('/{{[a-zA-Z]+}}/','',$arr['page html']);
+        $arr['page html']=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ', $arr['page html']);
         return $arr;
     }
     
