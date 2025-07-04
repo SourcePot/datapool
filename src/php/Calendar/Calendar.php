@@ -17,11 +17,12 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Group'=>['value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'],
-                            'Folder'=>['value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'],
-                            'Start'=>['value'=>'{{nowDateUTC}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'],
-                            'End'=>['value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.']
-                            ];
+    private $entryTemplate=[
+        'Group'=>['value'=>'Events','type'=>'VARCHAR(255)','Description'=>'This is the Group category'],
+        'Folder'=>['value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'],
+        'Start'=>['value'=>'{{nowDateUTC}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'],
+        'End'=>['value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.']
+        ];
 
     private $setting=[];
     private $toReplace=[];
@@ -29,41 +30,46 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     private $pageState=[];
     private $pageStateTemplate=[];
 
-    private const DEFINITION=['Type'=>['@tag'=>'p','@Read'=>'NO_R'],
-                        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''],
-                        'Content'=>['Event'=>['Description'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                            'Type'=>['@function'=>'select','@options'=>['meeting'=>'Meeting','travel'=>'Travel','event'=>'Event','toTo'=>'To do'],'@default'=>'meeting','@excontainer'=>TRUE],
-                                            'Start'=>['@tag'=>'input','@type'=>'datetime-local','@default'=>'{{nowDateUTC}})','@excontainer'=>TRUE],
-                                            'Start timezone'=>['@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@options'=>self::OPTIONS['Timezone'],'@excontainer'=>TRUE],
-                                            'End'=>['@tag'=>'input','@type'=>'datetime-local','@default'=>'{{TOMORROW}})','@excontainer'=>TRUE],
-                                            'End timezone'=>['@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@options'=>self::OPTIONS['Timezone'],'@excontainer'=>TRUE],
-                                            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
-                                            ],
-                                    'Location/Destination'=>['Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                                        'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
-                                                        ],
-                                    ],
-                        'Misc'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-                        'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-                        'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-                        ];
+    private const DEFINITION=[
+        'Type'=>['@tag'=>'p','@Read'=>'NO_R'],
+        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''],
+        'Content'=>[
+            'Event'=>[
+                'Description'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Type'=>['@function'=>'select','@options'=>['meeting'=>'Meeting','travel'=>'Travel','event'=>'Event','toTo'=>'To do'],'@default'=>'meeting','@excontainer'=>TRUE],
+                'Start'=>['@tag'=>'input','@type'=>'datetime-local','@default'=>'{{nowDateUTC}})','@excontainer'=>TRUE],
+                'Start timezone'=>['@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@options'=>self::OPTIONS['Timezone'],'@excontainer'=>TRUE],
+                'End'=>['@tag'=>'input','@type'=>'datetime-local','@default'=>'{{TOMORROW}})','@excontainer'=>TRUE],
+                'End timezone'=>['@function'=>'select','@default'=>'{{TIMEZONE-SERVER}}','@options'=>self::OPTIONS['Timezone'],'@excontainer'=>TRUE],
+                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+                ],
+            'Location/Destination'=>[
+                'Company'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Department'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Street'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'House number'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
+                ],
+            ],
+        'Misc'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        ];
 
-    private const OPTIONS=['Type'=>['event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'],
-                    'Days to show'=>[10=>'Show 10 days',20=>'Show 20 days',45=>'Show 45 days',90=>'Show 90 days',180=>'Show 180 days',370=>'Show 370 days'],
-                    'Day width'=>[200=>'Small day width',400=>'Middle day width',800=>'Big day width',1600=>'Biggest day width'],
-                    'Timezone'=>['Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
-                                'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
-                                'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
-                                'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
-                                'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
-                                'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'],
-                    ];
+    private const OPTIONS=[
+        'Type'=>['event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'],
+        'Days to show'=>[10=>'Show 10 days',20=>'Show 20 days',45=>'Show 45 days',90=>'Show 90 days',180=>'Show 180 days',370=>'Show 370 days'],
+        'Day width'=>[200=>'Small day width',400=>'Middle day width',800=>'Big day width',1600=>'Biggest day width'],
+        'Timezone'=>['Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
+                    'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
+                    'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
+                    'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
+                    'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
+                    'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'],
+        ];
 
     public function __construct($oc)
     {
@@ -567,10 +573,17 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     
     private function calendarStartTimestamp()
     {
-        if (empty($this->pageState['calendarDate'])){return 0;}
         $calendarTimezone=new \DateTimeZone($this->setting['Timezone']);
-        $calendarDate=$this->stdReplacements($this->pageState['calendarDate']);
-        $calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);
+        $dbTimezone=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $selectedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($this->pageState);
+        if (!empty($selectedEntry['Start'])){
+            $calendarDateTime=new \DateTime($selectedEntry['Start'],$dbTimezone);    
+        } else if (!empty($this->pageState['calendarDate'])){
+            $calendarDate=$this->stdReplacements($this->pageState['calendarDate']);
+            $calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);
+        } else {
+            return strtotime(date('Y-m-d 00:00:00'));
+        }
         $date=$calendarDateTime->format('Y-m-d 00:00:00');
         $calendarDateTime=new \DateTime($date,$calendarTimezone);
         return $calendarDateTime->getTimestamp();

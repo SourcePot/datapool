@@ -20,7 +20,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         ];
     
-    private $conditions=[];
     private $operations=['&&'=>'AND','||'=>'OR'];
 
     public function __construct($oc){
@@ -37,7 +36,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->conditions=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getConditions();
     }
 
     public function getEntryTable():string
@@ -143,7 +141,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
             'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
             ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>$this->conditions,'keep-element-content'=>TRUE],
+            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Tools\MiscTools::CONDITION_TYPES,'keep-element-content'=>TRUE],
             'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
             'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
             ];

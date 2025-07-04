@@ -15,11 +15,11 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
-    
-    
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
+
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -73,9 +73,11 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     public function setPageStateBySelector(array $selector)
     {
         $classWithNamespace=$this->selector2class($selector);
-        // switch app based on on selected entry, but not if it is a DataApps
         if (method_exists($classWithNamespace,'run') && strpos($classWithNamespace,'DataApps')===FALSE){
             $_SESSION['page state']['app']['Class']=$classWithNamespace;
+            $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
+            $url='index.php?'.http_build_query(['category'=>$menuDef['Category']]);
+            header('Location: '.$url);
         }
         return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
     }
@@ -140,20 +142,21 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         } else if (mb_strpos($dataType,'xml')>0){
             $data=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2xml($data);
         }
-        $headerTemplate=[''=>'HTTP/1.1 200 OK',
-                        'Access-Control-Allow-Credentials'=>'true',
-                        'Access-Control-Allow-Headers'=>'Authorization',
-                        'Access-Control-Allow-Methods'=>'POST',
-                        'Access-Control-Allow-Origin'=>'*',
-                        'Cache-Control'=>'no-cache,must-revalidate',
-                        'Expires'=>'Sat, 26 Jul 1997 05:00:00 GMT',
-                        'Connection'=>'keep-alive',
-                        'Content-Language'=>'en',
-                        'Content-Type'=>$dataType.';charset='.$charset,
-                        'Content-Length'=>mb_strlen($data,$charset),
-                        'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
-                        'X-API'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle')
-                        ];
+        $headerTemplate=[
+            ''=>'HTTP/1.1 200 OK',
+            'Access-Control-Allow-Credentials'=>'true',
+            'Access-Control-Allow-Headers'=>'Authorization',
+            'Access-Control-Allow-Methods'=>'POST',
+            'Access-Control-Allow-Origin'=>'*',
+            'Cache-Control'=>'no-cache,must-revalidate',
+            'Expires'=>'Sat, 26 Jul 1997 05:00:00 GMT',
+            'Connection'=>'keep-alive',
+            'Content-Language'=>'en',
+            'Content-Type'=>$dataType.';charset='.$charset,
+            'Content-Length'=>mb_strlen($data,$charset),
+            'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
+            'X-API'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle')
+            ];
         $header=array_merge($headerTemplate,$header);
         foreach($header as $key=>$value){
             if (empty($key)){
@@ -188,10 +191,11 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     public function receiverPluginHtml(array $arr):string
     {
         // get settings html
-        $contentStructure=['A'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
-                        'B'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
-                        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-                        ];
+        $contentStructure=[
+            'A'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+            'B'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+            ];
         // get selctor
         $callingElementEntryId=$arr['selector']['EntryId'];
         $callingElement=['Folder'=>'Settings','EntryId'=>$callingElementEntryId];

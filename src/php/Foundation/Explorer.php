@@ -477,18 +477,5 @@ class Explorer{
         $arr=['html'=>$html,'icon'=>$icon[0],'title'=>'Setting "'.$right.'" access right','class'=>'explorer'];
         return $arr;
     }
-    
-    public function selector2linkInfo(string $app, array $selector):array
-    {
-        $classInfo=$this->oc[$app]->run(TRUE);
-        $linkInfo=array_merge($classInfo,$selector);
-        $linkInfo['linkid']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($linkInfo,TRUE);
-        $_SESSION['page state']['linkids'][$linkInfo['linkid']]=$linkInfo;
-        $linkInfo['href']='index.php?'.http_build_query(['category'=>$linkInfo['Category'],'linkid'=>$linkInfo['linkid']]);
-        $linkInfo['tag']='a';
-        $linkInfo['keep-element-content']=TRUE;
-        return $linkInfo;
-    }
-    
 }
 ?>

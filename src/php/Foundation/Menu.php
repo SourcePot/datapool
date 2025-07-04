@@ -43,28 +43,14 @@ class Menu{
     {
         $implementedApps=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\App');
         // get category from input
-        $linkid=filter_input(INPUT_GET,'linkid',FILTER_SANITIZE_ENCODED);
-        $linkid??FALSE;
-        if (isset($_SESSION['page state']['linkids'][$linkid])){
-            $linkinfo=$_SESSION['page state']['linkids'][$linkid];
-            $this->requested['App']=$linkinfo['Class'];
-            $this->requested['Category']=$linkinfo['Category'];
-            $selector=['Source'=>$linkinfo['Source']??FALSE,'Group'=>$linkinfo['Group']??FALSE,'Folder'=>$linkinfo['Folder']??FALSE,'Name'=>$linkinfo['Name']??FALSE,'EntryId'=>$linkinfo['EntryId']??FALSE,];
-            $_SESSION['page state']['selected'][$this->requested['App']]=$selector;
-            $_SESSION['page state']['linkids']=[];
+        $this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
+        if (!isset($this->categories[$this->requested['Category']])){
+            $this->requested['Category']='Home';
+        }
+        if (isset($_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']])){
+            $this->requested['App']=$_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']];
         } else {
-            $this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
-            if (!isset($this->categories[$this->requested['Category']])){
-                $this->requested['Category']='Home';
-            }
-            if (isset($_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']])){
-                $this->requested['App']=$_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']];
-            } else {
-                $this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
-            }
-            // reset $_SESSION['page state']['app']
-            $homeApp=$this->categories['Home']['Class'];
-            $_SESSION['page state']['app']=$implementedApps[$homeApp];
+            $this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
         }
         // get app from form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
@@ -76,6 +62,7 @@ class Menu{
             }
         }
         // get available and selected categories and apps
+        $_SESSION['page state']['app']=$implementedApps[$this->categories['Home']['Class']];    // fallback
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         foreach($implementedApps as $classWithNamespace){
             $menuDef=$this->oc[$classWithNamespace]->run(TRUE);

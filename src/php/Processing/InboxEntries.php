@@ -16,9 +16,10 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $inboxClass='__NOTSET__';
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -139,9 +140,10 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
         $options=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Receiver');
-        $contentStructure=['Inbox source'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options],
-                           'Forward on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                          ];
+        $contentStructure=[
+            'Inbox source'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options],
+            'Forward on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            ];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=['Column to delay'=>'Name'];
@@ -172,17 +174,18 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function forwardingRules($callingElement){
-        $contentStructure=['...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>['&&'=>'AND','||'=>'OR'],'keep-element-content'=>TRUE],
-                        'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
-                        '| '=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-                        'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
-                        'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-                        'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
-                        ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-                        'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getConditions(),'keep-element-content'=>TRUE],
-                        'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
-                        'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                        ];
+        $contentStructure=[
+            '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>['&&'=>'AND','||'=>'OR'],'keep-element-content'=>TRUE],
+            'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
+            '| '=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
+            'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+            'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
+            'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
+            ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
+            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Tools\MiscTools::CONDITION_TYPES,'keep-element-content'=>TRUE],
+            'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
+            'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            ];
         $contentStructure['Value source']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
@@ -206,13 +209,15 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
         }
-        $result=array('Processing statistics'=>['Entries'=>['value'=>0],
-                                                'Itmes already processed and skipped'=>['value'=>0],
-                                                'Itmes forwarded'=>['value'=>0],
-                                                'Itmes not forwarded'=>['value'=>0],
-                                                ],
-                      'Forwarded'=>[],
-                     );
+        $result=[
+            'Processing statistics'=>[
+                'Entries'=>['value'=>0],
+                'Itmes already processed and skipped'=>['value'=>0],
+                'Itmes forwarded'=>['value'=>0],
+                'Itmes not forwarded'=>['value'=>0],
+                ],
+            'Forwarded'=>[],
+            ];
         // receive entries
         if ($testRun==2 || $testRun==0){
             $inboxParams=current($base['inboxparams'])['Content'];
@@ -249,6 +254,5 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
     }
-
 }
 ?>
