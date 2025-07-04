@@ -35,7 +35,7 @@ final class MiscTools{
         ];
     
     public const CONDITION_TYPES=[
-        'empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain',
+        'empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain','regexMatch'=>'RegEx match','!regexMatch'=>'RegEx no match',
         '>'=>'>','='=>'==','!='=>'!=','<'=>'<','&&'=>'&&','||'=>'||',
         '&'=>'A AND B','|'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
         ];
@@ -202,13 +202,6 @@ final class MiscTools{
     public function containsTags(string $str):bool
     {
         if (strlen($str)===strlen(strip_tags($str))){return FALSE;} else {return TRUE;}
-    }
-    
-    public function wrapUTF8(string $str):string
-    {
-        $str=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' ${1} ',$str);
-        $str=preg_replace("/(\s)([\x{1f000}-\x{1ffff}])(\s)/u",'<span class="emoji">${2}</span>',$str);
-        return $str;
     }
     
     public function str2bool($str):bool
@@ -814,6 +807,7 @@ final class MiscTools{
         $rows=[];
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
+            if (is_string($value)){$value=htmlentities($value);}
             $columns=explode($S,strval($flatKey));
             $columnCount=count($columns);
             if (is_bool($value)){
@@ -1148,6 +1142,10 @@ final class MiscTools{
             return stripos((string)$valueA,(string)$valueB)!==FALSE;
         } else if ($condition==='!strpos'){
             return stripos((string)$valueA,(string)$valueB)===FALSE;
+        } else if ($condition==='regexMatch'){
+            return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches));
+        } else if ($condition==='!regexMatch'){
+            return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches))===FALSE;
         }
         // numeric tests
         if (is_int($valueA)){

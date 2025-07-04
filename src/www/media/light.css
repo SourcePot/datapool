@@ -771,7 +771,7 @@ p.user-abstract{
     line-height:60px;
 }
 span.emoji{
-    font-size:20px;
+    font-size:1.2em;
 }
 a.emoji{
     float:left;
@@ -856,7 +856,7 @@ div.center{
     width: 100%;
 }
 div.widget{
-    width:100%;
+    width:100vw;
     padding: 0;
     overflow-y:auto;
     background-color: var(--bgColor);

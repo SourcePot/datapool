@@ -124,6 +124,7 @@ class Container{
         $wrapperDiv['element-content']=$html.$htmlSuffix;
         $wrapperDiv['keep-element-content']=TRUE;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperDiv);
+        $html=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ',$html);
         return $html;
     }
 
@@ -236,9 +237,7 @@ class Container{
         $settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
         $debugArr=['arr in'=>$arr,'settings in'=>$settings];
         if (!isset($arr['html'])){$arr['html']='';}
-        $definition=$this->oc['SourcePot\Datapool\Foundation\Definitions']->getDefinition($arr['selector']);
         $tableInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['selector']['Source']);
-        $flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition);
         $entryCanWrite=!empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write'));
         if (empty($arr['selector'])){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'No entry found with the selector provided']);
@@ -321,6 +320,7 @@ class Container{
                     $valueHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                 } else {
                     // non-array value
+                    if (is_string($value)){$value=htmlentities($value);}
                     $element=$this->oc['SourcePot\Datapool\Foundation\Definitions']->selectorKey2element($arr['selector'],$flatKey,$value,$arr['callingClass'],$arr['callingFunction']);
                     if (empty($element)){
                         $valueHtml='';
@@ -476,6 +476,7 @@ class Container{
                         $subMatix=[];
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (is_object($value)){$value='{object}';}
+                            if (is_string($value)){$value=htmlentities($value);}
                             if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
                                 // $flatColumnKey === column selection -> standard entry presentation
                                 $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
@@ -616,8 +617,8 @@ class Container{
         foreach($Comments as $creationTimestamp=>$comment){
             $footer=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$creationTimestamp);
             $footer.=' '.$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($comment['Author'],3);
-            $commentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$comment['Comment'],'class'=>$arr['class']]);
-            $commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$footer,'keep-element-content'=>TRUE,'class'=>$arr['class'].'-footer']);
+            $commentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$comment['Comment'],'keep-element-content'=>FALSE,'class'=>$arr['class']]);
+            $commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$footer,'keep-element-content'=>FALSE,'class'=>$arr['class'].'-footer']);
             $commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>$arr['class']]);
         }
         $textId=$targetId.'-text';
@@ -632,7 +633,7 @@ class Container{
                 $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
             }
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($commentsHtml.$newComment);
+        $arr['html'].=$commentsHtml.$newComment;
         return $arr;
     }
     

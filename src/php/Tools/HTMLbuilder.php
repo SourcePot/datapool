@@ -945,7 +945,7 @@ class HTMLbuilder{
         } else {
             $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
             $htmlFile=$tmpDir.md5($html).'.html';
-            $bytes=file_put_contents($htmlFile,$html);
+            file_put_contents($htmlFile,$html);
             $arr['tag']='embed';
             $arr['type']='text/html';
             $arr['allowfullscreen']=TRUE;
@@ -1001,10 +1001,12 @@ class HTMLbuilder{
                 if (is_array($presentationValue)){
                     $flatEntryPart=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($presentationValue);
                     foreach($flatEntryPart as $flatKey=>$flatValue){
-                        // filter keys
-                        if (empty($setting['Content']['Key filter'])){continue;}
-                        if (strpos($flatKey,$setting['Content']['Key filter'])===FALSE){
+                        if (strpos($flatKey,$setting['Content']['Key filter']??'')===FALSE && !empty($setting['Content']['Key filter'])){
+                            // remove value-key if filter is set but filter constrain not met 
                             unset($flatEntryPart[$flatKey]);
+                        } else {
+                            // purify html for presentation
+                            $flatEntryPart[$flatKey]=htmlentities((string)$flatValue);
                         }
                     }
                     if (count($flatEntryPart)==1){
@@ -1026,7 +1028,7 @@ class HTMLbuilder{
                     }
                     $presentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$presentationValue,'keep-element-content'=>TRUE,'style'=>$presentArr['style'],'class'=>$presentArr['class']]);
                 }
-                $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->wrapUTF8($presentHtml);
+                $html.=$presentHtml;
             } else {
                 // App presentation
                 $callingClass=array_shift($cntrArr);
