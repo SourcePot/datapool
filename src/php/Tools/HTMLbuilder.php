@@ -21,6 +21,8 @@ class HTMLbuilder{
 
     private const SET_ACCESS_BYTE_INFO='Security relevant setting!<br/>New Priviledges will become active at the next user login.';
 
+    private const PRESENTATION_SETTINGS_INFO='<b>SECURITY ADVICE:</b><br/>If a "Key filter" leads to multiple entries with sub-keys "tag" and "element-content" set, an html-element will bey created from all sub-keys.<br/>There is no filtering applied. Ensure the values are trustworthy to prevent XSS attacks.<br/><br/><b>Example:</b><br/>"Entry key" = \'Params\'<br/>"Key filter" = \'Item link\'<br/>...will create a html button, if the respective feed item entry created by class Feeds contains a link. This is safe as long as the class Feeds is safe and trustworthy.';
+    
     private const BUTTONS=[
         'test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
         'edit'=>['key'=>['edit'],'title'=>'Edit','hasCover'=>FALSE,'element-content'=>'&#9998;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>FALSE,'style'=>[],'excontainer'=>TRUE],
@@ -1004,9 +1006,6 @@ class HTMLbuilder{
                         if (strpos($flatKey,$setting['Content']['Key filter']??'')===FALSE && !empty($setting['Content']['Key filter'])){
                             // remove value-key if filter is set but filter constrain not met 
                             unset($flatEntryPart[$flatKey]);
-                        } else {
-                            // purify html for presentation
-                            $flatEntryPart[$flatKey]=htmlentities((string)$flatValue);
                         }
                     }
                     if (count($flatEntryPart)==1){
@@ -1017,11 +1016,19 @@ class HTMLbuilder{
                     }
                 }
                 if (is_array($presentationValue)){
-                    // present as table
-                    $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($presentationValue);
-                    $presentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>(($showKey)?$key:''),'style'=>$presentArr['style'],'class'=>$presentArr['class']]);
+                    $element=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatEntryPart);
+                    if (isset($element['tag']) && isset($element['element-content'])){
+                        // present element
+                        $presentationValue=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                        $presentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$presentationValue,'keep-element-content'=>TRUE,'style'=>$presentArr['style'],'class'=>$presentArr['class']]);
+                    } else {
+                        // present as table
+                        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($presentationValue);
+                        $presentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>(($showKey)?$key:''),'style'=>$presentArr['style'],'class'=>$presentArr['class']]);
+                    }
                 } else {
                     // present as div
+                    $presentationValue=strip_tags($presentationValue);  // prevent XSS atacks
                     if ($showKey){
                         $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
                         $presentationValue='<b>'.$key.': </b>'.$presentationValue;
@@ -1089,17 +1096,19 @@ class HTMLbuilder{
             foreach($entryTemplate as $column=>$columnInfo){$entryKeyOptions[$column]=$column;}
         }
         $styleClassOptions=$this->getStyleClassOptions($arr);
-        $contentStructure=['Entry key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE],
-                        'Key filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                        'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
-                        'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-                        'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
-                        ];
+        $contentStructure=[
+            'Entry key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE],
+            'Key filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
+            'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
+            ];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']=$arr['selector']['Folder'];
         $arr['selector']['Name']='Setting';
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>self::PRESENTATION_SETTINGS_INFO,'keep-element-content'=>TRUE]);
         return $arr;
     }
     

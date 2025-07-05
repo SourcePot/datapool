@@ -39,7 +39,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->urlSelector=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Feeds','Folder'=>'Settings','Name'=>'URL');
+        $this->urlSelector=['Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Feeds','Folder'=>'Settings','Name'=>'URL'];
         $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($this->urlSelector);
     }
 
@@ -102,9 +102,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     {
         $arr['selector']=$this->urlSelector;
         $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
-        $contentStructure=['URL'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE],
-                            'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions],
-                            ];
+        $contentStructure=[
+            'URL'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE],
+            'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions],
+            ];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']=$arr['selector']['Folder'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
@@ -141,68 +142,71 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     private function storeFeed(array $feed, array $header):int
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$this->currentUrlEntryContent['URL'],'itemCount'=>0);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$this->currentUrlEntryContent['URL'],'itemCount'=>0];
+        // check feed
+        $itemKey=$feed['channel']['item']?'item':($feed['channel']['entry']?'entry':FALSE);
         if (!isset($feed['channel'])){
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel" missing for "{url}".',$context);
-            return 0;
+            return $context['itemCount'];
+        } else if (empty($itemKey)){
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel → item/entry" missing for "{url}".',$context);
+            return $context['itemCount'];
         }
-        if (!isset($feed['channel']['title'])){
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel → title" missing for "{url}".',$context);
-            return 0;
-        }
-        $date=$feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??FALSE;
-        if ($date===FALSE){
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel → lastBuildDate/published/pubDate" missing for "{url}".',$context);
-            return 0;
-        }
-        if (!isset($feed['channel']['item'])){
-            if (isset($feed['channel']['entry'])){
-                $feed['channel']['item']=$feed['channel']['entry'];
-            } else {
-                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel → item/entry" missing for "{url}".',$context);
-                return 0;
-            }
-        }
+        // create entry template
+        $language=strip_tags($feed['channel']['language']??'en');
+        $urlComps=parse_url($context['url']);
+        $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now');
+        $entryTemplate=[
+            'Source'=>$this->entryTable,
+            'Group'=>$urlComps['host'],
+            'Folder'=>strip_tags(($feed['channel']['title']??'title missing').' ('.$language.')'),
+            'Read'=>$this->currentUrlEntryContent['Visibility'],
+            'Content'=>[],
+            'Params'=>[
+                'Feed'=>[
+                    'Date'=>$dateTimeArr['DB_TIMEZONE'],
+                    'URL'=>$context['url'],
+                    'Description'=>strip_tags($feed['channel']['description']??$feed['channel']['title']),
+                    'Feed link'=>$feed['channel']['link']?['tag'=>'a','href'=>$feed['channel']['link'],'element-content'=>strip_tags($feed['channel']['title'])]:[],
+                    ],
+                'Feed item'=>[],
+                ],
+            'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P1D'),
+            ];
+        // loop through items & save to entries
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        $dateTimeArr=$this->getFeedDate($date);
-        $urlComps=parse_url($this->currentUrlEntryContent['URL']);
-        $entryTemplate=array('Source'=>$this->entryTable,'Group'=>$urlComps['host'],'Folder'=>$feed['channel']['title'],'Read'=>$this->currentUrlEntryContent['Visibility'],'Date'=>$dateTimeArr['DB_TIMEZONE'],'Content'=>[]);
-        $entryTemplate['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
-        foreach($feed['channel']['item'] as $item){
-            $tmpFile='';
+        foreach($feed['channel'][$itemKey] as $item){
+            $itemDate=$item['published']??$item['pubDate']??$feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now';
             $entry=$entryTemplate;
-            $entry['Name']=$item['title'];
-            foreach($item as $contentKey=>$contentValue){
-                if (is_array($contentValue)){
-                    $resource=(empty($contentValue['url']))?((empty($contentValue['src']))?((empty($contentValue['href']))?'':$contentValue['href']):$contentValue['src']):$contentValue['url'];        
-                    $resourceComps=pathinfo($resource);
-                    $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']);
-                    $tmpFile=$tmpDir.$fileName.'.'.$resourceComps['extension'];
-                    $fileContent=file_get_contents($resource);
-                    if (!empty($fileContent)){file_put_contents($tmpFile,$fileContent);}
-                } else {
-                    switch ($contentKey) {
-                        case 'link':
-                            $element=array('tag'=>'a','href'=>$contentValue,'title'=>$contentValue,'element-content'=>'Open','target'=>'_blank','class'=>'btn');
-                            $entry['Content']['Link']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-                            break;
-                        case 'pubDate':
-                            $dateTimeArr=$this->getFeedDate($contentValue);
-                            $entry['Date']=$dateTimeArr['DB_TIMEZONE'];
-                            $entry['Content']['Published']=$dateTimeArr['PAGE_TIMEZONE'];
-                            break;
-                        case 'published':
-                            $dateTimeArr=$this->getFeedDate($contentValue);
-                            $entry['Date']=$dateTimeArr['DB_TIMEZONE'];
-                            $entry['Content']['Published']=$dateTimeArr['PAGE_TIMEZONE'];
-                            break;
-                        default:
-                            $entry['Content'][ucfirst($contentKey)]=$contentValue;
+            $entry['Name']=strip_tags($item['title']);
+            $entry['Date']=$this->getFeedDate($itemDate)['DB_TIMEZONE'];
+            $entry['Content']['Subject']=strip_tags($item['title']??'Title missing');
+            $entry['Content']['Message']=strip_tags($item['description']??'Description missing');
+            $entry['Params']['Feed item']['Item guid']=strip_tags($item['guid']);
+            $entry['Params']['Feed item']['Item link']=$item['link']?['tag'=>'a','href'=>strip_tags($item['link']),'element-content'=>'Open','title'=>$entry['Content']['Subject'],'target'=>'_blank','class'=>'btn']:[];
+            foreach($item as $contentValue){
+                if (!is_array($contentValue)){
+                    preg_match('/\ssrc="([^"]+)"/',$contentValue,$match);
+                    if (empty($match[1])){
+                        continue;
+                    } else {
+                        $contentValue=['url'=>$match[1]];
                     }
                 }
+                $resource=$contentValue['url']??$contentValue['src']??FALSE;
+                if (empty($resource)){continue;}
+                $resourceComps=pathinfo($resource);
+                $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']);
+                $tmpFile=$tmpDir.$fileName.'.'.$resourceComps['extension'];
+                $fileContent=file_get_contents($resource);
+                if (!empty($fileContent)){
+                    file_put_contents($tmpFile,$fileContent);
+                    break;
+                }
             }
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),'0','',FALSE);
-            if (empty(is_file($tmpFile))){
+            // finalize entry
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            if (empty(is_file($tmpFile??''))){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
             } else {
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($tmpFile,$entry,FALSE,TRUE);
@@ -215,7 +219,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private function getFeedDate(string $dateTimeString):array
     {
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $dateTimeArr=array('string'=>$dateTimeString);
+        $dateTimeArr=['string'=>$dateTimeString];
         $dateTime=new \DateTime($dateTimeString);
         $dateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         $dateTimeArr['DB_TIMEZONE']=$dateTime->format('Y-m-d H:i:s');

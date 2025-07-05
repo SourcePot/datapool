@@ -807,7 +807,9 @@ final class MiscTools{
         $rows=[];
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
-            if (is_string($value)){$value=htmlentities($value);}
+            if (is_string($value)){
+                $value=strip_tags($value);  // prevent XSS atacks
+            }
             $columns=explode($S,strval($flatKey));
             $columnCount=count($columns);
             if (is_bool($value)){

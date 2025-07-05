@@ -197,8 +197,9 @@ class Explorer{
         }
         // create new guide entry, if it does not exist
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $currentUser['Privileges']=intval($currentUser['Privileges']) | $this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions()['ALL_CONTENTADMIN_R'];
-        $entry=['Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$currentUser['EntryId'],'Read'=>$currentUser['Privileges'],'Write'=>$currentUser['Privileges']];
+        $readR=intval($currentUser['Privileges']) | $this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions()['ALL_CONTENTADMIN_R'];
+        $writeR=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions()['ALL_CONTENTADMIN_R'];
+        $entry=['Name'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Owner'=>$currentUser['EntryId'],'Read'=>$readR,'Write'=>$writeR];
         $unseledtedDetected=FALSE;
         foreach(self::SELECTOR_TEMPLATE as $column=>$initValue){
             if (empty($selector[$column])){$unseledtedDetected=TRUE;}
