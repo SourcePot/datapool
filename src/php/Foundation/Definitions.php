@@ -185,6 +185,7 @@ class Definitions{
                 return [];
             }
             foreach($element as $definitionAttr=>$definitionValue){
+                if (!is_array($definitionValue)){continue;}
                 $element[$definitionAttr]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($definitionValue);
             }
             $element['selector']['Read']=(isset($entry['Read']))?$entry['Read']:'ADMIN_R';
