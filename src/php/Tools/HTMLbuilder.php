@@ -1028,7 +1028,8 @@ class HTMLbuilder{
                     }
                 } else {
                     // present as div
-                    $presentationValue=strip_tags($presentationValue);  // prevent XSS atacks
+                    $presentationValue=strip_tags((string)$presentationValue);  // prevent XSS atacks
+                    //$presentationValue=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ',$presentationValue);
                     if ($showKey){
                         $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
                         $presentationValue='<b>'.$key.': </b>'.$presentationValue;
