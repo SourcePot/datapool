@@ -436,6 +436,7 @@ class Explorer{
     
     private function sendEmail(string $callingClass,array $setKeys):array
     {
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $arr=['html'=>'','callingClass'=>$callingClass,'callingFunction'=>__FUNCTION__,'icon'=>'@','title'=>'Send entry as email','class'=>'explorer'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         if (!empty($arr['selector']['EntryId'])){
