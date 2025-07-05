@@ -99,7 +99,7 @@ class Explorer{
 
     public function getExplorer(string $callingClass, array $visibility=[], bool $addEntryByFileUpload=TRUE):string
     {
-        $selector=$this->appProcessing($callingClass);
+        $this->appProcessing($callingClass);
         $this->addEntryByFileUpload=$addEntryByFileUpload;
         // set selector visibility
         $this->isVisible=array_merge(self::IS_VISIBLE_TEMPLATE,$visibility);
@@ -332,7 +332,7 @@ class Explorer{
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
-        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $access=TRUE;
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
@@ -364,7 +364,7 @@ class Explorer{
 
     private function editEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
-        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         if (strcmp($stateKeys['selectedKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
             return ['html'=>'','icon'=>'&#9998;','class'=>'explorer'];
         }
@@ -384,7 +384,7 @@ class Explorer{
     
     private function miscToolsEntry(string $callingClass,array $stateKeys):array
     {
-        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $html=$btnHtml='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
@@ -404,7 +404,7 @@ class Explorer{
 
     private function settingsEntry(string $callingClass,array $stateKeys):array
     {
-        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
@@ -446,7 +446,7 @@ class Explorer{
     
     private function comments(string $callingClass,array $setKeys):array
     {
-        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $arr=['html'=>''];
         if (strcmp($setKeys['selectedKey'],'EntryId')!==0){
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
@@ -458,7 +458,7 @@ class Explorer{
     
     private function setRightsEntry(string $callingClass,array $stateKeys,string $right):array
     {
-        if (empty(self::IS_VISIBLE_TEMPLATE[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $icon=ucfirst($right);
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         if (strcmp($stateKeys['selectedKey'],'Source')===0){
