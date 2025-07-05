@@ -35,30 +35,36 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
 
-    public $receiverDef=['Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
-                        'Content'=>['EntryId'=>['@tag'=>'p','@default'=>'','@excontainer'=>TRUE],
-                                    'Mailbox'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}','@excontainer'=>TRUE],
-                                    'User'=>['@tag'=>'input','@type'=>'text','@default'=>'john@doe.com','@excontainer'=>TRUE],
-                                    'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
-                                    'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
-                                    ],
-                        ];
+    public $receiverDef=[
+        'Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
+        'Content'=>[
+            'EntryId'=>['@tag'=>'p','@default'=>'','@excontainer'=>TRUE],
+            'Mailbox'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}','@excontainer'=>TRUE],
+            'Mailbox (sample)'=>['@tag'=>'p','@style'=>'font-size:0.9rem','@element-content'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}'],
+            'User'=>['@tag'=>'input','@type'=>'text','@default'=>'john@doe.com','@excontainer'=>TRUE],
+            'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
+            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+            ],
+        ];
 
-    public $transmitterDef=['Type'=>['@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'],
-                            'Content'=>['Originator'=>['@tag'=>'input','@type'=>'text','@default'=>'Datapool','@excontainer'=>TRUE],
-                                        'SMTP server'=>['@tag'=>'input','@type'=>'text','@default'=>'smtp.strato.de','@excontainer'=>TRUE],
-                                        'Port'=>['@function'=>'select','@options'=>self::SMTP_PORTS,'@value'=>465,'@excontainer'=>TRUE],
-                                        'Authentication method'=>['@function'=>'select','@options'=>['no_authentication'=>'No authentication','normal_password'=>'Normal password','encrypted_password'=>'Entcrypted password','keberos'=>'Keberos/GSSAPI','ntlm'=>'NTLM'],'@excontainer'=>TRUE],
-                                        'User'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                                        'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
-                                        'From'=>['@tag'=>'input','@type'=>'email','@title'=>'This field sets the email header "from" address. The mail provider might request this address to be regisztered with the user account.','@default'=>'john@doe.com','@excontainer'=>TRUE],
-                                        'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
-                                        ],
-                            ];
+    public $transmitterDef=[
+        'Type'=>['@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'],
+        'Content'=>[
+            'Originator'=>['@tag'=>'input','@type'=>'text','@default'=>'Datapool','@excontainer'=>TRUE],
+            'SMTP server'=>['@tag'=>'input','@type'=>'text','@default'=>'smtp.strato.de','@excontainer'=>TRUE],
+            'Port'=>['@function'=>'select','@options'=>self::SMTP_PORTS,'@value'=>465,'@excontainer'=>TRUE],
+            'Authentication method'=>['@function'=>'select','@options'=>['no_authentication'=>'No authentication','normal_password'=>'Normal password','encrypted_password'=>'Entcrypted password','keberos'=>'Keberos/GSSAPI','ntlm'=>'NTLM'],'@excontainer'=>TRUE],
+            'User'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+            'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
+            'From'=>['@tag'=>'input','@type'=>'email','@title'=>'This field sets the email header "from" address. The mail provider might request this address to be regisztered with the user account.','@default'=>'john@doe.com','@excontainer'=>TRUE],
+            'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+            ],
+        ];
 
     public function __construct($oc){
         $this->oc=$oc;
