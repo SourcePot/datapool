@@ -124,7 +124,6 @@ class Container{
         $wrapperDiv['element-content']=$html.$htmlSuffix;
         $wrapperDiv['keep-element-content']=TRUE;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($wrapperDiv);
-        $html=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ',$html);
         return $html;
     }
 
@@ -618,6 +617,7 @@ class Container{
             $footer=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$creationTimestamp);
             $footer.=' '.$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($comment['Author'],3);
             $commentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$comment['Comment'],'keep-element-content'=>FALSE,'class'=>$arr['class']]);
+            $commentHtml=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ',$commentHtml);
             $commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$footer,'keep-element-content'=>FALSE,'class'=>$arr['class'].'-footer']);
             $commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>$arr['class']]);
         }
