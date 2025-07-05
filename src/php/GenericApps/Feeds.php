@@ -91,7 +91,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'&#10227;','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'none']]);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'both']]);
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -256,7 +256,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $context['Feed items loaded']++;
             }
         }
-        return array('Feed URL processed'=>$arr['jobVars']['Feed URL processed'],'Feed items loaded'=>$context['Feed items loaded'],'Already processed an skipped'=>$context['Already processed an skipped']);
+        return ['Feed URL processed'=>$arr['jobVars']['Feed URL processed'],'Feed items loaded'=>$context['Feed items loaded'],'Already processed an skipped'=>$context['Already processed an skipped']];
     }
     
     public function receiverPluginHtml(array $arr):string
@@ -267,12 +267,12 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     public function receiverSelector(string $id):array
     {
-        return array('Source'=>$this->entryTable);
+        return ['Source'=>$this->entryTable];
     }    
 
     private function id2canvasElement($id):array
     {
-        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
     }
 
