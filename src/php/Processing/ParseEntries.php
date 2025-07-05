@@ -146,12 +146,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function parserParams($callingElement){
-        $contentStructure=['Source column'=>['method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE],
-                            'Pre-processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>[''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'],'title'=>''],
-                            'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                            'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-                            'No match placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE],
-                            ];
+        $contentStructure=[
+            'Source column'=>['method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE],
+            'Pre-processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>[''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'],'title'=>''],
+            'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+            'No match placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE],
+            ];
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
         // get selector
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -175,10 +176,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function parserSectionRules($callingElement){
-        $contentStructure=['Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. I\s{0,1}n\s{0,1}v\s{0,1}o\s{0,1}i\s{0,1}c\s{0,1}e\s{0,1}','excontainer'=>TRUE],
-                            'Section type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'singleEntry','options'=>['singleEntry'=>'Single entry','multipleEntries'=>'Multiple entries'],'title'=>''],
-                            'Section name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. Invoice start','excontainer'=>TRUE],
-                            ];
+        $contentStructure=[
+            'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. I\s{0,1}n\s{0,1}v\s{0,1}o\s{0,1}i\s{0,1}c\s{0,1}e\s{0,1}','excontainer'=>TRUE],
+            'Section type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'singleEntry','options'=>['singleEntry'=>'Single entry','multipleEntries'=>'Multiple entries'],'title'=>''],
+            'Section name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. Invoice start','excontainer'=>TRUE],
+            ];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -414,16 +416,19 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!isset($rule['Content']['Target data type'])){continue;}
             if ($rule['Content']['Rule relevant on section']!==$sectionId){continue;}
             $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
-            $result[$rowKey]['Text']=$section;
+            $result[$rowKey]['Text']='';
+            $result[$rowKey]['Match']='';
             $result[$rowKey]['Key']=$rule['Content']['Target column'];
             $result[$rowKey]['Match text']='';
             // section text or constant to matchText
             if (empty($rule['Content']['Constant or...'])){
+                $result[$rowKey]['Text']=$section;
                 $ruleMatchIndex=$rule['Content']['Match index'];
                 preg_match_all('/'.$rule['Content']['regular expression'].'/u',$section,$matches);
                 if (!empty($rule['Content']['Match required']) && !isset($matches[$ruleMatchIndex][0])){
                     $ruleFailed=TRUE;
                 }
+                $result[$rowKey]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($matches[$ruleMatchIndex][0]??FALSE);
                 $matches[$ruleMatchIndex][0]=$matches[$ruleMatchIndex][0]??$params['No match placeholder']??'';
                 foreach($matches[$ruleMatchIndex] as $hitIndex=>$matchText){
                     $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
@@ -432,6 +437,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
                 }
             } else {
+                $result[$rowKey]['Text']='<b>const:</b> "'.$rule['Content']['Constant or...'].'"';
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];
                 $constant=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($rule['Content']['Constant or...'],$rule['Content']['Target data type']);
@@ -439,6 +445,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $result[$rowKey]['Match required']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Match required']);
             $result[$rowKey]['Rule Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed);
+            $result[$rowKey]['Match text']='"'.$result[$rowKey]['Match text'].'"';
             $failed=($ruleFailed)?TRUE:$failed;
         }
         $targetEntry[__FUNCTION__]['result'][$sectionId]=$result;

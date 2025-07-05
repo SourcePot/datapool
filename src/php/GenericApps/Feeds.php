@@ -87,7 +87,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         if ($arr===TRUE){
             return ['Category'=>'Apps','Emoji'=>'&#10057;','Label'=>'Feeds','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
-            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
+            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,['addEntry'=>FALSE,'editEntry'=>FALSE,'settingsEntry'=>FALSE,'setRightsEntry'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
@@ -153,21 +153,21 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             return $context['itemCount'];
         }
         // create entry template
-        $language=strip_tags($feed['channel']['language']??'en');
+        $language=strip_tags((string)$feed['channel']['language']??'en');
         $urlComps=parse_url($context['url']);
         $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now');
         $entryTemplate=[
             'Source'=>$this->entryTable,
             'Group'=>$urlComps['host'],
-            'Folder'=>strip_tags(($feed['channel']['title']??'title missing').' ('.$language.')'),
+            'Folder'=>strip_tags((string)($feed['channel']['title']??'title missing').' ('.$language.')'),
             'Read'=>$this->currentUrlEntryContent['Visibility'],
             'Content'=>[],
             'Params'=>[
                 'Feed'=>[
                     'Date'=>$dateTimeArr['DB_TIMEZONE'],
                     'URL'=>$context['url'],
-                    'Description'=>strip_tags($feed['channel']['description']??$feed['channel']['title']),
-                    'Feed link'=>$feed['channel']['link']?['tag'=>'a','href'=>$feed['channel']['link'],'element-content'=>strip_tags($feed['channel']['title'])]:[],
+                    'Description'=>strip_tags((string)$feed['channel']['description']??$feed['channel']['title']),
+                    'Feed link'=>$feed['channel']['link']?['tag'=>'a','href'=>$feed['channel']['link'],'element-content'=>strip_tags((string)$feed['channel']['title'])]:[],
                     ],
                 'Feed item'=>[],
                 ],
@@ -176,14 +176,15 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         // loop through items & save to entries
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         foreach($feed['channel'][$itemKey] as $item){
+            $tmpFile='';
             $itemDate=$item['published']??$item['pubDate']??$feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now';
             $entry=$entryTemplate;
-            $entry['Name']=strip_tags($item['title']);
+            $entry['Name']=strip_tags((string)$item['title']);
             $entry['Date']=$this->getFeedDate($itemDate)['DB_TIMEZONE'];
-            $entry['Content']['Subject']=strip_tags($item['title']??'Title missing');
-            $entry['Content']['Message']=strip_tags($item['description']??'Description missing');
-            $entry['Params']['Feed item']['Item guid']=strip_tags($item['guid']);
-            $entry['Params']['Feed item']['Item link']=$item['link']?['tag'=>'a','href'=>strip_tags($item['link']),'element-content'=>'Open','title'=>$entry['Content']['Subject'],'target'=>'_blank','class'=>'btn']:[];
+            $entry['Content']['Subject']=strip_tags((string)$item['title']??'Title missing');
+            $entry['Content']['Message']=strip_tags((string)$item['description']??'Description missing');
+            $entry['Params']['Feed item']['Item guid']=strip_tags((string)$item['guid']);
+            $entry['Params']['Feed item']['Item link']=$item['link']?['tag'=>'a','href'=>strip_tags((string)$item['link']),'element-content'=>'Open','title'=>$entry['Content']['Subject'],'target'=>'_blank','class'=>'btn']:[];
             foreach($item as $contentValue){
                 if (!is_array($contentValue)){
                     preg_match('/\ssrc="([^"]+)"/',$contentValue,$match);
@@ -206,7 +207,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             }
             // finalize entry
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-            if (empty(is_file($tmpFile??''))){
+            if (empty(is_file($tmpFile))){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
             } else {
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->file2entry($tmpFile,$entry,FALSE,TRUE);
