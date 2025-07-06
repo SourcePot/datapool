@@ -13,6 +13,48 @@ namespace SourcePot\Datapool\GenericApps;
 class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver{
     
     private const APP_ACCESS='ALL_MEMBER_R';
+
+    private const SECTIONS=[
+        // German
+        'DE - Aktuelles'=>'DE - Aktuelles',
+        'DE - Politik'=>'DE - Politik',
+        'DE - Wirtschaft'=>'DE - Wirtschaft',
+        'DE - Technologie'=>'DE - Technologie',
+        'DE - Computer'=>'DE - Computer',
+        'DE - Computersicherheit'=>'DE - Computersicherheit',
+        'DE - Wissenschaft'=>'DE - Wissenschaft',
+        'DE - Wetter'=>'DE - Wetter',
+        'DE - Tourismus'=>'DE - Tourismus',
+        'DE - Filme, Musik'=>'DE - Filme, Musik',
+        'DE - Kunst'=>'DE - Kunst',
+        'DE - Natur'=>'DE - Natur',
+        // English
+        'EN - News'=>'EN - News',
+        'DE - Politics'=>'DE - Politics',
+        'EN - Economy'=>'EN - Economy',
+        'EN - Technology'=>'DE - Technology',
+        'EN - Computer'=>'EN - Computer',
+        'EN - Cyber Security'=>'EN - Cyber Security',
+        'EN - Science'=>'EN - Science',
+        'EN - Weather'=>'EN - Weather',
+        'EN - Tourism'=>'EN - Tourism',
+        'EN - Movies Music, Musik'=>'EN - Movies Music',
+        'EN - Art'=>'EN - Art',
+        'EN - Nature'=>'EN - Nature',
+        // Spanish
+        'ES - Noticias'=>'ES - Noticias',
+        'DE - Política'=>'DE - Política',
+        'ES - Economía'=>'ES - Economía',
+        'ES - Tecnología'=>'DE - Tecnología',
+        'ES - Informática'=>'ES - Informática',
+        'ES - Ciberseguridad'=>'ES - Ciberseguridad',
+        'ES - Ciencia'=>'ES - Ciencia',
+        'ES - Tiempo'=>'ES - Tiempo',
+        'ES - Turismo'=>'ES - Turismo',
+        'ES - Películas Música'=>'ES - Películas Música',
+        'ES - Arte'=>'ES - Arte',
+        'ES - Naturaleza'=>'ES - Naturaleza',
+    ];
     
     private $oc;
     
@@ -104,6 +146,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
         $contentStructure=[
             'URL'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE],
+            'Section'=>['method'=>'select','excontainer'=>TRUE,'value'=>'EN - News','options'=>self::SECTIONS,'keep-element-content'=>TRUE],
             'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions],
             ];
         $arr['contentStructure']=$contentStructure;
@@ -154,12 +197,11 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         }
         // create entry template
         $language=strip_tags((string)$feed['channel']['language']??'en');
-        $urlComps=parse_url($context['url']);
         $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now');
         $entryTemplate=[
             'Source'=>$this->entryTable,
-            'Group'=>$urlComps['host'],
-            'Folder'=>strip_tags((string)($feed['channel']['title']??'title missing').' ('.$language.')'),
+            'Group'=>$this->currentUrlEntryContent['Section']??'EN - News',
+            'Folder'=>strip_tags((string)($feed['channel']['title']??'title missing')),
             'Read'=>$this->currentUrlEntryContent['Visibility'],
             'Content'=>[],
             'Params'=>[
@@ -171,7 +213,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                     ],
                 'Feed item'=>[],
                 ],
-            'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P1D'),
+            'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT2H'),
             ];
         // loop through items & save to entries
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();

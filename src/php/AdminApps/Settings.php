@@ -48,11 +48,10 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                 'Source'=>'settings',
                 'Group'=>'Job processing',
                 'Folder'=>'All jobs',
-                'Name'=>'Timing'
             ],
             'text'=>'Use &#9998; to edit the selected Entry...',
-            'containerType'=>'',
-            'settings'=>[],
+            'containerType'=>'generic',
+            'settings'=>['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'],
             'description'=>'Here you can access the timing of the job processing. Use "&#9998;" (Edit) &rarr; Content to change the timing of a specific job'
         ],
         'Job processing'=>[
@@ -146,7 +145,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return array('Category'=>'Admin','Emoji'=>'&#9783;','Label'=>'Settings','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
         } else {
-            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
+            $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,['addEntry'=>FALSE,'editEntry'=>TRUE,'settingsEntry'=>FALSE,'setRightsEntry'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             foreach(self::SELECTORS as $selectorName=>$containerDef){
@@ -161,9 +160,8 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                     if ($match===FALSE){break;}
                 }
                 if ($match===TRUE){
-                    if (empty($containerDef['containerType'])){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','keep-element-content'=>TRUE,'element-content'=>$containerDef['text']??'']);
-                    } else {
+                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','keep-element-content'=>TRUE,'element-content'=>$containerDef['text']??'']);
+                    if (!empty($containerDef['containerType'])){
                         $containerDef['selector']=array_merge($containerDef['selector'],$selector);
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selectorName,$containerDef['containerType'],$containerDef['selector'],$containerDef['settings'],[]);
                     }
