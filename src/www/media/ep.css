@@ -1,4 +1,16 @@
-p.ep-std,div.ep-std{
+.ep-h1{
+    font-size:1.45rem;
+    margin:1.4em 0 0 5px;
+}
+.ep-h2{
+    font-size:1.3rem;
+    margin:1.2em 0 0 5px;
+}
+.ep-h3{
+    font-size:1.15rem;
+    margin:1em 0 0 5px;
+}
+.ep-h1,.ep-h2,.ep-h3,.ep-std{
     float:left;
     clear:both;
     margin:5px 10px;
@@ -17,10 +29,6 @@ table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
 table.ep-footer{
     clear:both;
 }
-table.ep-h1{
-    clear:both;
-    font-size:1.3rem;
-}
 img.ep-std,video.ep-std{
     max-width:360px;
     margin:0.5rem;
@@ -30,23 +38,17 @@ iframe.ep-std{
     height:300px;
     margin:0 0 0 5px;
 }
-p.ep-std-no-clear,div.ep-std-no-clear{
+.ep-std-no-clear{
     float:left;
     clear:both;
     margin:5px 10px;    
 }
-p.ep-h1,div.ep-h1{
-    clear:both;
-    width:98vw;
-    margin:1em 0 0 5px;
-    font-size:1.6rem;
-}
-p.ep-message,div.ep-message{
+.ep-message{
     clear:right;
     margin:5px 10px;
     font-size:1.5rem;
 }
-p.ep-header-wrapper,div.ep-header-wrapper{
+.ep-header-wrapper{
     margin:0;
     width:100%;
     background-color:#aaaa;
