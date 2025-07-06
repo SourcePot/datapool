@@ -6,7 +6,7 @@ div.ep-footer,p.ep-footer,table.ep-footer,
 div.ep-comment,p.ep-comment,table.ep-comment,
 div.ep-comment-footer,p.ep-comment-footer,table.ep-comment-footer,
 div.ep-footer,p.ep-footer,table.ep-footer,
-img.ep-std,video.ep-std
+img.ep-std,video.ep-std,.ep-message
 {
     margin:5px;
     padding:0;
@@ -24,7 +24,7 @@ img.ep-std,video.ep-std
     margin-top:1rem;
 }
 .ep-footer,.ep-comment-footer{
-    font-size:0.8rem;
+    font-size:0.9rem;
 }
 button.ep-std{
     clear:none;
@@ -52,7 +52,6 @@ iframe.ep-std{
 }
 .ep-message{
     clear:right;
-    margin:5px 10px;
     font-size:1.5rem;
 }
 .ep-header-wrapper{
