@@ -97,6 +97,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
             return $arr;
         }
         // loop through query selectors
+        $query=preg_replace('/\s+/','%',trim($query));
         $selectors=$this->oc['SourcePot\Datapool\Tools\MiscTools']->generic_strtr(self::QUERY_SELECTORS,['{{query}}'=>$query,'{{calendarStartDateTime}}'=>$calendarStartDateTime]);
         foreach($selectors as $selector){
             $queryColumn=$this->selector2queryColumn($selector,$query);
