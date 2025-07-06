@@ -74,7 +74,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     {
         $classWithNamespace=$this->selector2class($selector);
         if (method_exists($classWithNamespace,'run') && strpos($classWithNamespace,'DataApps')===FALSE){
-            $_SESSION['page state']['app']['Class']=$classWithNamespace;
+            $classWithNamespace=$this->oc['SourcePot\Datapool\Foundation\Menu']->selectedApp($classWithNamespace)['Class'];
             $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
             $url='index.php?'.http_build_query(['category'=>$menuDef['Category']]);
             header('Location: '.$url);

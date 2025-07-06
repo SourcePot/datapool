@@ -678,10 +678,11 @@ class HTMLbuilder{
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId']) || empty($arr['selector'][$arr['key']])){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Required keys missing.']);
         } else {
-            if ($arr['key']==='Privileges'){
+            $editorHtml=$this->integerEditor($arr);
+            if ($arr['key']==='Privileges' && !empty($editorHtml)){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'both','color'=>'#f00'],'keep-element-content'=>TRUE,'element-content'=>self::SET_ACCESS_BYTE_INFO]);
             }
-            $html.=$this->integerEditor($arr);
+            $html.=$editorHtml;
         }
         return $html;
     }
@@ -1028,7 +1029,8 @@ class HTMLbuilder{
                     }
                 } else {
                     // present as div
-                    $presentationValue=strip_tags($presentationValue);  // prevent XSS atacks
+                    $presentationValue=strip_tags((string)$presentationValue);  // prevent XSS atacks
+                    //$presentationValue=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ',$presentationValue);
                     if ($showKey){
                         $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
                         $presentationValue='<b>'.$key.': </b>'.$presentationValue;

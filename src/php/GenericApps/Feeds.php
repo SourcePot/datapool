@@ -13,6 +13,48 @@ namespace SourcePot\Datapool\GenericApps;
 class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver{
     
     private const APP_ACCESS='ALL_MEMBER_R';
+
+    private const SECTIONS=[
+        // German
+        'DE - Aktuelles'=>'DE - Aktuelles',
+        'DE - Politik'=>'DE - Politik',
+        'DE - Wirtschaft'=>'DE - Wirtschaft',
+        'DE - Technologie'=>'DE - Technologie',
+        'DE - Computer'=>'DE - Computer',
+        'DE - Computersicherheit'=>'DE - Computersicherheit',
+        'DE - Wissenschaft'=>'DE - Wissenschaft',
+        'DE - Wetter'=>'DE - Wetter',
+        'DE - Tourismus'=>'DE - Tourismus',
+        'DE - Filme, Musik'=>'DE - Filme, Musik',
+        'DE - Kunst'=>'DE - Kunst',
+        'DE - Natur'=>'DE - Natur',
+        // English
+        'EN - News'=>'EN - News',
+        'DE - Politics'=>'DE - Politics',
+        'EN - Economy'=>'EN - Economy',
+        'EN - Technology'=>'DE - Technology',
+        'EN - Computer'=>'EN - Computer',
+        'EN - Cyber Security'=>'EN - Cyber Security',
+        'EN - Science'=>'EN - Science',
+        'EN - Weather'=>'EN - Weather',
+        'EN - Tourism'=>'EN - Tourism',
+        'EN - Movies Music, Musik'=>'EN - Movies Music',
+        'EN - Art'=>'EN - Art',
+        'EN - Nature'=>'EN - Nature',
+        // Spanish
+        'ES - Noticias'=>'ES - Noticias',
+        'DE - Política'=>'DE - Política',
+        'ES - Economía'=>'ES - Economía',
+        'ES - Tecnología'=>'DE - Tecnología',
+        'ES - Informática'=>'ES - Informática',
+        'ES - Ciberseguridad'=>'ES - Ciberseguridad',
+        'ES - Ciencia'=>'ES - Ciencia',
+        'ES - Tiempo'=>'ES - Tiempo',
+        'ES - Turismo'=>'ES - Turismo',
+        'ES - Películas Música'=>'ES - Películas Música',
+        'ES - Arte'=>'ES - Arte',
+        'ES - Naturaleza'=>'ES - Naturaleza',
+    ];
     
     private $oc;
     
@@ -60,6 +102,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $this->currentUrlEntryContent=$urlsEntry['Content'];
             $this->loadFeed($urlsEntry);
             $vars['Feed URL processed']=$urlsEntry['Content']['URL'];
+            $vars['html']='<h3>Processed: '.$urlsEntry['Content']['URL'].'</h3>';
             // remove from to do list
             $vars['URLs2do'][$key]=NULL;
             break;
@@ -91,7 +134,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'&#10227;','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'none']]);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'both']]);
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -104,6 +147,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $accessOptions=$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings();
         $contentStructure=[
             'URL'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest','excontainer'=>TRUE],
+            'Section'=>['method'=>'select','excontainer'=>TRUE,'value'=>'EN - News','options'=>self::SECTIONS,'keep-element-content'=>TRUE],
             'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_R','options'=>$accessOptions],
             ];
         $arr['contentStructure']=$contentStructure;
@@ -153,17 +197,16 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             return $context['itemCount'];
         }
         // create entry template
-        $language=strip_tags((string)$feed['channel']['language']??'en');
-        $urlComps=parse_url($context['url']);
         $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now');
         $entryTemplate=[
             'Source'=>$this->entryTable,
-            'Group'=>$urlComps['host'],
-            'Folder'=>strip_tags((string)($feed['channel']['title']??'title missing').' ('.$language.')'),
+            'Group'=>$this->currentUrlEntryContent['Section']??'EN - News',
+            'Folder'=>strip_tags((string)($feed['channel']['title']??'title missing')),
             'Read'=>$this->currentUrlEntryContent['Visibility'],
             'Content'=>[],
             'Params'=>[
                 'Feed'=>[
+                    'Language'=>strip_tags((string)$feed['channel']['language']??'en'),
                     'Date'=>$dateTimeArr['DB_TIMEZONE'],
                     'URL'=>$context['url'],
                     'Description'=>strip_tags((string)$feed['channel']['description']??$feed['channel']['title']),
@@ -171,7 +214,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                     ],
                 'Feed item'=>[],
                 ],
-            'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P1D'),
+            'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT2H'),
             ];
         // loop through items & save to entries
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
@@ -196,9 +239,14 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 }
                 $resource=$contentValue['url']??$contentValue['src']??FALSE;
                 if (empty($resource)){continue;}
-                $resourceComps=pathinfo($resource);
+                // create file name from url
+                $urlComps=parse_url($resource);
+                parse_str($urlComps['query']??'',$queryArr);
+                $fileNameComps=pathinfo($urlComps['path']);
+                $entry['Params']['Feed item']['Item media query']=$queryArr;
                 $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']);
-                $tmpFile=$tmpDir.$fileName.'.'.$resourceComps['extension'];
+                // store media file
+                $tmpFile=$tmpDir.$fileName.'.'.$fileNameComps['extension'];
                 $fileContent=file_get_contents($resource);
                 if (!empty($fileContent)){
                     file_put_contents($tmpFile,$fileContent);
@@ -256,7 +304,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $context['Feed items loaded']++;
             }
         }
-        return array('Feed URL processed'=>$arr['jobVars']['Feed URL processed'],'Feed items loaded'=>$context['Feed items loaded'],'Already processed an skipped'=>$context['Already processed an skipped']);
+        return ['Feed URL processed'=>$arr['jobVars']['Feed URL processed'],'Feed items loaded'=>$context['Feed items loaded'],'Already processed an skipped'=>$context['Already processed an skipped']];
     }
     
     public function receiverPluginHtml(array $arr):string
@@ -267,14 +315,34 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     public function receiverSelector(string $id):array
     {
-        return array('Source'=>$this->entryTable);
+        return ['Source'=>$this->entryTable];
     }    
 
     private function id2canvasElement($id):array
     {
-        $canvasElement=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id);
+        $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
     }
 
+    /******************************************************************************************************************************************
+    * HomeApp Interface Implementation
+    * 
+    */
+    
+    public function getHomeAppWidget(string $name):array
+    {
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
+        $element=['element-content'=>'','style'=>[]];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'News','keep-element-content'=>TRUE]);
+        //$element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        return $element;
+    }
+    
+    public function getHomeAppInfo():string
+    {
+        $info='This widget presents the news.';
+        return $info;
+    }
+    
 }
 ?>
