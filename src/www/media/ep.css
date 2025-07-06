@@ -1,27 +1,37 @@
+div.ep-std,p.ep-std,table.ep-std,
+div.ep-h1,p.ep-h1,table.ep-h1,
+div.ep-h2,p.ep-h2,table.ep-h2,
+div.ep-h3,p.ep-h3,table.ep-h3,
+div.ep-footer,p.ep-footer,table.ep-footer,
+div.ep-comment,p.ep-comment,table.ep-comment,
+div.ep-comment-footer,p.ep-comment-footer,table.ep-comment-footer,
+div.ep-footer,p.ep-footer,table.ep-footer,
+img.ep-std,video.ep-std
+{
+    margin:5px;
+    padding:0;
+}
 .ep-h1{
     font-size:1.45rem;
-    margin:1.4em 0 0 5px;
+    margin-top:1.4rem;
 }
 .ep-h2{
     font-size:1.3rem;
-    margin:1.2em 0 0 5px;
+    margin-top:1.2rem;
 }
 .ep-h3{
     font-size:1.15rem;
-    margin:1em 0 0 5px;
+    margin-top:1rem;
 }
-.ep-h1,.ep-h2,.ep-h3,.ep-std{
-    float:left;
-    clear:both;
-    margin:5px 10px;
-}
-.ep-std-footer,.ep-comment-footer{
+.ep-footer,.ep-comment-footer{
     font-size:0.8rem;
-    margin:0.5rem;
+}
+button.ep-std{
+    clear:none;
+    margin:5px;
+    padding:0.25rem;
 }
 table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
-    float:left;
-    clear:right;
     max-width:100%;
     border:none;
     box-shadow:none;
@@ -31,17 +41,14 @@ table.ep-footer{
 }
 img.ep-std,video.ep-std{
     max-width:360px;
-    margin:0.5rem;
 }
 iframe.ep-std{
     width:98%;
     height:300px;
     margin:0 0 0 5px;
 }
-.ep-std-no-clear{
-    float:left;
+.ep-clear-both{
     clear:both;
-    margin:5px 10px;    
 }
 .ep-message{
     clear:right;
@@ -57,8 +64,7 @@ iframe.ep-std{
 details.ep-comment{
     clear:left;
 }
-div.ep-comment,p.ep-comment{
-    padding:3px 5px;
+.ep-comment{
     font-size:1.2rem;
     color:#a80;
 }
