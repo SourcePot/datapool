@@ -42,7 +42,8 @@ table.ep-footer{
 img.ep-std,video.ep-std,object.ep-std{
     width:480px;
     max-width:100%;
-    background-color:#eee;
+    background:none;
+    border: 1px solid #000;
 }
 iframe.ep-std{
     width:98%;
