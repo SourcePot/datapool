@@ -39,8 +39,10 @@ table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
 table.ep-footer{
     clear:both;
 }
-img.ep-std,video.ep-std{
-    max-width:360px;
+img.ep-std,video.ep-std,object.ep-std{
+    width:480px;
+    max-width:100%;
+    background-color:#eee;
 }
 iframe.ep-std{
     width:98%;
