@@ -196,7 +196,6 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             return $context['itemCount'];
         }
         // create entry template
-        $language=strip_tags((string)$feed['channel']['language']??'en');
         $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now');
         $entryTemplate=[
             'Source'=>$this->entryTable,
@@ -206,6 +205,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             'Content'=>[],
             'Params'=>[
                 'Feed'=>[
+                    'Language'=>strip_tags((string)$feed['channel']['language']??'en'),
                     'Date'=>$dateTimeArr['DB_TIMEZONE'],
                     'URL'=>$context['url'],
                     'Description'=>strip_tags((string)$feed['channel']['description']??$feed['channel']['title']),
@@ -238,9 +238,14 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 }
                 $resource=$contentValue['url']??$contentValue['src']??FALSE;
                 if (empty($resource)){continue;}
-                $resourceComps=pathinfo($resource);
+                // create file name from url
+                $urlComps=parse_url($resource);
+                parse_str($urlComps['query'],$queryArr);
+                $fileNameComps=pathinfo($urlComps['path']);
+                $entry['Params']['Feed item']['Item media query']=$queryArr;
                 $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']);
-                $tmpFile=$tmpDir.$fileName.'.'.$resourceComps['extension'];
+                // store media file
+                $tmpFile=$tmpDir.$fileName.'.'.$fileNameComps['extension'];
                 $fileContent=file_get_contents($resource);
                 if (!empty($fileContent)){
                     file_put_contents($tmpFile,$fileContent);
@@ -318,5 +323,25 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
     }
 
+    /******************************************************************************************************************************************
+    * HomeApp Interface Implementation
+    * 
+    */
+    
+    public function getHomeAppWidget(string $name):array
+    {
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
+        $element=['element-content'=>'','style'=>[]];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'News','keep-element-content'=>TRUE]);
+        //$element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        return $element;
+    }
+    
+    public function getHomeAppInfo():string
+    {
+        $info='This widget presents the news.';
+        return $info;
+    }
+    
 }
 ?>

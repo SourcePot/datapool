@@ -834,21 +834,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         return $dateTimeObj->format($format);
     }
 
-    public function getHomeAppWidget(string $name):array
-    {
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
-        $element=['element-content'=>'','style'=>[]];
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
-        return $element;
-    }
-    
-    public function getHomeAppInfo():string
-    {
-        $info='This widget presents todays <b>calendar sheet</b>.';
-        return $info;
-    }
-    
     private function setEventCache(int $timestamp, array $events):void
     {
         $cacheTimeStamp=intval($timestamp/30)*30;
@@ -865,5 +850,26 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     {
         $_SESSION[__CLASS__]['events-cache']=[];
     }
+
+    /******************************************************************************************************************************************
+    * HomeApp Interface Implementation
+    * 
+    */
+    
+    public function getHomeAppWidget(string $name):array
+    {
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
+        $element=['element-content'=>'','style'=>[]];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        return $element;
+    }
+    
+    public function getHomeAppInfo():string
+    {
+        $info='This widget presents todays <b>calendar sheet</b>.';
+        return $info;
+    }
+    
 }
 ?>

@@ -14,13 +14,13 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private const SAMPLE_LENGTH=30;
     private const QUERY_SELECTORS=[
+                        ['Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
                         ['Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
                         ['Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
                         ['Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
                         ['Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
                         ['Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
                         ['Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
                         ['Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
                     ];
     private $oc;
