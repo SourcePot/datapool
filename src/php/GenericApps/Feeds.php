@@ -230,7 +230,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $entry['Params']['Feed item']['Item link']=$item['link']?['tag'=>'a','href'=>strip_tags((string)$item['link']),'element-content'=>'Open','title'=>$entry['Content']['Subject'],'target'=>'_blank','class'=>'btn']:[];
             foreach($item as $contentValue){
                 if (!is_array($contentValue)){
-                    preg_match('/\ssrc="([^"]+)"/',$contentValue,$match);
+                    preg_match('/\ssrc="([^"]+)"/',$contentValue??'',$match);
                     if (empty($match[1])){
                         continue;
                     } else {
