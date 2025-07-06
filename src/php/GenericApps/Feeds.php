@@ -187,21 +187,35 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private function storeFeed(array $feed, array $header):int
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$this->currentUrlEntryContent['URL'],'itemCount'=>0];
-        // check feed
-        $itemKey=$feed['channel']['item']?'item':($feed['channel']['entry']?'entry':FALSE);
-        if (!isset($feed['channel'])){
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel" missing for "{url}".',$context);
-            return $context['itemCount'];
-        } else if (empty($itemKey)){
+        // get items
+        if (isset($feed['channel']['item'])){
+            $items=$feed['channel']['item'];
+        } else if (isset($feed['channel']['entry'])){
+            $items=$feed['channel']['entry'];
+        } else if (isset($feed['entry'])){
+            $items=$feed['entry'];
+        } else {
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" feed processing failed, key "channel → item/entry" missing for "{url}".',$context);
             return $context['itemCount'];
         }
+        
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['feed'=>$feed,'items'=>$items]);
+        
+        
         // create entry template
-        $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now');
+        $dateTimeArr=$this->getFeedDate($feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??$feed['updated']??'now');
+        $title=strip_tags((string)($feed['channel']['title']??$feed['title']??'title missing'));
+        if (!empty($feed['channel']['link'])){
+            $link=['tag'=>'a','href'=>$feed['channel']['link'],'element-content'=>$title];
+        } else if (!empty($feed['link'])){
+            $link=['tag'=>'a','href'=>$feed['link'],'element-content'=>$title];
+        } else {
+            $link=[];
+        }
         $entryTemplate=[
             'Source'=>$this->entryTable,
             'Group'=>$this->currentUrlEntryContent['Section']??'EN - News',
-            'Folder'=>strip_tags((string)($feed['channel']['title']??'title missing')),
+            'Folder'=>$title,
             'Read'=>$this->currentUrlEntryContent['Visibility'],
             'Content'=>[],
             'Params'=>[
@@ -209,8 +223,8 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                     'Language'=>strip_tags((string)$feed['channel']['language']??'en'),
                     'Date'=>$dateTimeArr['DB_TIMEZONE'],
                     'URL'=>$context['url'],
-                    'Description'=>strip_tags((string)$feed['channel']['description']??$feed['channel']['title']),
-                    'Feed link'=>$feed['channel']['link']?['tag'=>'a','href'=>$feed['channel']['link'],'element-content'=>strip_tags((string)$feed['channel']['title'])]:[],
+                    'Description'=>strip_tags((string)$feed['channel']['description']??$feed['subtitle']??$feed['channel']['title']??$title),
+                    'Feed link'=>$link,
                     ],
                 'Feed item'=>[],
                 ],
@@ -218,19 +232,35 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             ];
         // loop through items & save to entries
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-        foreach($feed['channel'][$itemKey] as $item){
+        foreach($items as $itemIdex=>$item){
             $tmpFile='';
             $itemDate=$item['published']??$item['pubDate']??$feed['channel']['lastBuildDate']??$feed['channel']['published']??$feed['channel']['pubDate']??'now';
             $entry=$entryTemplate;
-            $entry['Name']=strip_tags((string)$item['title']);
             $entry['Date']=$this->getFeedDate($itemDate)['DB_TIMEZONE'];
-            $entry['Content']['Subject']=strip_tags((string)$item['title']??'Title missing');
-            $entry['Content']['Message']=strip_tags((string)$item['description']??'Description missing');
-            $entry['Params']['Feed item']['Item guid']=strip_tags((string)$item['guid']);
-            $entry['Params']['Feed item']['Item link']=$item['link']?['tag'=>'a','href'=>strip_tags((string)$item['link']),'element-content'=>'Open','title'=>$entry['Content']['Subject'],'target'=>'_blank','class'=>'btn']:[];
+            $entry['Params']['Feed item']['Item guid']=strip_tags((string)$item['guid']??$item['id']??'');
+            if (!empty($item['title'])){
+                $entry['Name']=strip_tags((string)$item['title']);
+                $entry['Content']['Subject']=$entry['Name'];
+            } else {
+                $entry['Name']=$itemIdex.' - Title missing';
+            }
+            if (!empty($item['description'])){
+                $entry['Content']['Message']=strip_tags((string)$item['description']);
+            } else if (!empty($item['summary'])){
+                $entry['Content']['Message']=strip_tags((string)$item['summary']);
+            }
+            if (!empty($item['link'])){
+                if (is_array($item['link'])){
+                    $href=strip_tags((string)$item['link']['href']??'');
+                } else {
+                    $href=strip_tags((string)$item['link']??'');
+                }
+                if (empty($href)){continue;}
+                $entry['Params']['Feed item']['Item link']=['tag'=>'a','href'=>$href,'element-content'=>'Open','title'=>$entry['Content']['Subject'],'target'=>'_blank','class'=>'btn'];
+            }
             foreach($item as $contentValue){
                 if (!is_array($contentValue)){
-                    preg_match('/\ssrc="([^"]+)"/',$contentValue,$match);
+                    preg_match('/\ssrc="([^"]+)"/',$contentValue??'',$match);
                     if (empty($match[1])){
                         continue;
                     } else {
