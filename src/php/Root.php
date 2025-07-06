@@ -76,7 +76,7 @@ final class Root{
         $this->updateCurrentUser();
         // inititate the web page state
         if (empty($_SESSION['page state'])){
-            $_SESSION['page state']=['app'=>['Class'=>'SourcePot\Datapool\Components\Home'],'selected'=>[]];
+            $_SESSION['page state']=['selectedCategory'=>'Home','selectedApp'=>[],'selected'=>[]];
         }
         // set exception handler and initialize directories
         $this->builderProgress[]='Current user & page state initialized';
@@ -303,17 +303,10 @@ final class Root{
         // get trace
         // add "page html" to the return array
         $arr=[];
-        $appClassWithNamespace=$_SESSION['page state']['app']['Class']??($this->oc['SourcePot\Datapool\Foundation\Menu']->categories['Home']['Class']);
         $this->builderProgress[]='All buttons processed';
-        if ($this->script==='index.php' && method_exists($this->oc[$appClassWithNamespace],'run')){
-            $appDef=$this->oc[$appClassWithNamespace]->run(TRUE);
-            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,$appDef['Read'])){
-                $context['app']=$appClassWithNamespace;
-                $context['fallbackApp']='SourcePot\Datapool\Components\Home';
-                $_SESSION['page state']['app']['Class']=$appClassWithNamespace=$context['fallbackApp'];
-                $this->oc['logger']->log('notice','Access denied: app "{app}". Loading "{fallbackApp}"',$context);    
-            }
+        if ($this->script==='index.php'){
             // build webpage
+            $appClassWithNamespace=$this->oc['SourcePot\Datapool\Foundation\Menu']->selectedApp()['Class'];
             $this->builderProgress[]='Checked web app access';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
             $this->builderProgress[]='Webpage backbone built';

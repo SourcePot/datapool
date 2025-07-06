@@ -102,6 +102,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $this->currentUrlEntryContent=$urlsEntry['Content'];
             $this->loadFeed($urlsEntry);
             $vars['Feed URL processed']=$urlsEntry['Content']['URL'];
+            $vars['html']='<h3>Processed: '.$urlsEntry['Content']['URL'].'</h3>';
             // remove from to do list
             $vars['URLs2do'][$key]=NULL;
             break;
@@ -240,7 +241,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 if (empty($resource)){continue;}
                 // create file name from url
                 $urlComps=parse_url($resource);
-                parse_str($urlComps['query'],$queryArr);
+                parse_str($urlComps['query']??'',$queryArr);
                 $fileNameComps=pathinfo($urlComps['path']);
                 $entry['Params']['Feed item']['Item media query']=$queryArr;
                 $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']);

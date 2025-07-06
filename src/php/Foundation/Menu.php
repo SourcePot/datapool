@@ -14,21 +14,17 @@ class Menu{
     
     private $oc;
     
-    public $categories=[
-        'Home'=>['Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],
-        'Login'=>['Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'],
-        'Logout'=>['Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
-        'Admin'=>['Emoji'=>'&#9786;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
-        'Calendar'=>['Emoji'=>'&#9992;','Label'=>'Calendar','Class'=>'SourcePot\Datapool\Calendar\Calendar','Name'=>'Calendar app'],
-        'Forum'=>['Emoji'=>'&#9993;','Label'=>'Forum','Class'=>'SourcePot\Datapool\Forum\Forum','Name'=>'Forum app'],
-        'Apps'=>['Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
-        'Data'=>['Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Misc app'],
+    public const CATEGORIES=[
+        'Home'=>['Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],
+        'Login'=>['Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'],
+        'Logout'=>['Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
+        'Admin'=>['Category'=>'Admin','Emoji'=>'&#9786;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
+        'Calendar'=>['Category'=>'Calendar','Emoji'=>'&#9992;','Label'=>'Calendar','Class'=>'SourcePot\Datapool\Calendar\Calendar','Name'=>'Calendar app'],
+        'Forum'=>['Category'=>'Forum','Emoji'=>'&#9993;','Label'=>'Forum','Class'=>'SourcePot\Datapool\Forum\Forum','Name'=>'Forum app'],
+        'Apps'=>['Category'=>'Apps','Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
+        'Data'=>['Category'=>'Data','Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Misc app'],
         ];
                              
-    private $available=['Categories'=>[],'Apps'=>[]];
-    
-    private $requested=['Category'=>'Home'];
-    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -41,70 +37,51 @@ class Menu{
     
     public function init()
     {
-        $implementedApps=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\App');
-        // get category from input
-        $this->requested['Category']=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
-        if (!isset($this->categories[$this->requested['Category']])){
-            $this->requested['Category']='Home';
-        }
-        if (isset($_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']])){
-            $this->requested['App']=$_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']];
-        } else {
-            $this->requested['App']=$this->categories[$this->requested['Category']]['Class'];
+        // get Category
+        $requestedCategory=$_SESSION['page state']['selectedCategory']??self::CATEGORIES['Home']['Category'];
+        $requestedCategory=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
+        if (isset(self::CATEGORIES[$requestedCategory])){
+            $requestedCategory=$requestedCategory;
+            $requestedAppClass=$_SESSION['page state']['selectedApp'][$requestedCategory]['Class']??self::CATEGORIES[$requestedCategory]['Class'];
         }
         // get app from form
+        $requestedAppClass=$_SESSION['page state']['selectedApp'][$requestedCategory]['Class']??self::CATEGORIES[$requestedCategory]['Class'];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'firstMenuBar',FALSE);
         if (!empty($formData['val']['Class'])){
-            $app=$formData['val']['Class'];
-            if (method_exists($app,'run')){
-                $this->requested['App']=$app;
-                $_SESSION[__CLASS__][__FUNCTION__]['selectedApp'][$this->requested['Category']]=$this->requested['App'];
+            if (method_exists($formData['val']['Class'],'run')){
+                $requestedAppClass=$formData['val']['Class'];
             }
         }
-        // get available and selected categories and apps
-        $_SESSION['page state']['app']=$implementedApps[$this->categories['Home']['Class']];    // fallback
-        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        foreach($implementedApps as $classWithNamespace){
-            $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
-            // check access rights
-            if (empty($this->categories[$menuDef['Category']])){
-                throw new \ErrorException('Function '.__FUNCTION__.': Menu category {'.$menuDef['Category'].'} set in {'.$classWithNamespace.'} has no definition in this class {'.__CLASS__.'}',0,E_ERROR,__FILE__,__LINE__);
-            }
-            $menuDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef);
-            if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){
-                // skip app if access rights are not sufficient
-                continue;
-            }
-            // get categories
-            $this->available['Categories'][$menuDef['Category']]=$this->categories[$menuDef['Category']];
-            if (strcmp($menuDef['Category'],$this->requested['Category'])===0){
-                $this->available['Categories'][$menuDef['Category']]['isSelected']=TRUE;
-                // get apps
-                $this->available['Apps'][$menuDef['Class']]=$menuDef;
-                if (strcmp($menuDef['Class'],$this->requested['App'])===0){
-                    $this->available['Apps'][$menuDef['Class']]['isSelected']=TRUE;
-                    $_SESSION['page state']['app']=$menuDef;
-                }
-            }
+        if (!empty($requestedAppClass)){
+            $this->selectedApp($requestedAppClass);
         }
     }
 
-    public function getCategories(bool $optionsOnly=FALSE):array
+    public function selectedApp(string $selectAppClass=''):array
     {
-        if ($optionsOnly){
-            $options=[];
-            foreach($this->categories as $key=>$category){
-                $options[$key]=$category['Label'];
-            }
-            return $options;
-        } else {
-            return $this->categories;
+        if (empty($selectAppClass)){
+            $selectedCategory=$_SESSION['page state']['selectedCategory']??self::CATEGORIES['Home']['Category'];
+            $selectAppClass=$_SESSION['page state']['selectedApp'][$selectedCategory]['Class']??self::CATEGORIES['Home']['Class'];
         }
+        // has user access rights for requested app
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $appDef=$this->oc[$selectAppClass]->run(TRUE);
+        $appDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($appDef);
+        if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($appDef,'Read',$user,FALSE))){
+            // access denied -> Hone app
+            $_SESSION['page state']['selectedCategory']=self::CATEGORIES['Home']['Category'];
+            $_SESSION['page state']['selectedApp'][self::CATEGORIES['Home']['Category']]=$this->oc[self::CATEGORIES['Home']['Class']]->run(TRUE);
+        } else {
+            // access granted
+            $_SESSION['page state']['selectedCategory']=$appDef['Category'];
+            $_SESSION['page state']['selectedApp'][$appDef['Category']]=$appDef;
+        }
+        return $_SESSION['page state']['selectedApp'][$_SESSION['page state']['selectedCategory']];
     }
     
     public function class2category(string $class):array|bool
     {
-        foreach($this->categories as $key=>$category){
+        foreach(self::CATEGORIES as $key=>$category){
             if (mb_strpos($category['Class'],$class)===FALSE){continue;}
             $category['Category']=$key;
             return $category;
@@ -114,26 +91,39 @@ class Menu{
 
     public function menu(array $arr):array
     {
-        $arr=$this->firstMenuBar($arr);
-        $arr=$this->secondMenuBar($arr);
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        // get available and selected categories and apps
+        $implementedApps=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\App');
+        foreach($implementedApps as $classWithNamespace){
+            $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
+            $menuDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef);
+            if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){
+                // skip app if access rights are not sufficient
+            } else {
+                $availableApps[$classWithNamespace]=$menuDef;
+                $availableCategories[$menuDef['Category']]=self::CATEGORIES[$menuDef['Category']];
+            }
+        }
+        $arr=$this->firstMenuBar($arr,$availableApps??[]);
+        $arr=$this->secondMenuBar($arr,$availableCategories??[]);
         return $arr;
     }
     
-    private function firstMenuBar(array $arr):array
+    private function firstMenuBar(array $arr,array $availableApps):array
     {
         $options=[];
-        $selected=FALSE;
         $lngSelector=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lngSelector(__CLASS__,__FUNCTION__);
+        $selectedApp=$this->selectedApp();
         // get apps selector
-        foreach($this->available['Apps'] as $class=>$def){
-            $options[$class]=$def['Label'];
-            if (!empty($def['isSelected'])){$selected=$class;}
+        foreach($availableApps as $class=>$appDef){
+            if ($selectedApp['Category']===$appDef['Category']){
+                $options[$class]=$appDef['Label'];
+            }
         }
-        $categoryEmoji=$this->categories[$this->requested['Category']]['Emoji'];
-        $categoryTitle=$this->categories[$this->requested['Category']]['Label'];
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>$categoryEmoji,'href'=>'#','title'=>$categoryTitle,'class'=>'first-menu','keep-element-content'=>TRUE]);
+        $categoryDef=self::CATEGORIES[$selectedApp['Category']];
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>$categoryDef['Emoji'],'href'=>'#','title'=>$categoryDef['Label'],'class'=>'first-menu','keep-element-content'=>TRUE]);
         if (!empty($options)){
-            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$selected,'key'=>['Class'],'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$selectedApp['Class'],'key'=>['Class'],'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         }
         // compile html
         // $html.=$lngHtml;
@@ -144,31 +134,28 @@ class Menu{
         return $arr;
     }
     
-    private function secondMenuBar(array $arr):array
+    private function secondMenuBar(array $arr, array $availableCategories):array
     {
         $html='';
-        foreach($this->available['Categories'] as $category=>$def){
-            $def['Category']=$category;
-            $html.=$this->def2div($def);    
-        }        
+        foreach($availableCategories as $categoryDef){
+            $html.=$this->def2div($categoryDef);
+        }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE]);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'second-menu','style'=>'height:0;']);
         $arr['toReplace']['{{secondMenuBar}}']=$html;
         return $arr;
     }
 
-    private function def2div(array $def):string
+    private function def2div(array $categoryDef):string
     {
-        $href='index.php?'.http_build_query(['category'=>$def['Category']]);
-        $style='';
-        if (!empty($def['isSelected'])){$style='border-bottom:3px solid #a00;';}
-        $def['Label']=$arr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($def['Label']);
-        $html='';
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$def['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE]);
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$def['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE]);
+        $selectedApp=$this->selectedApp();
+        $href='index.php?'.http_build_query(['category'=>$categoryDef['Category']]);
+        $style=($selectedApp['Category']===$categoryDef['Category'])?'border-bottom:3px solid #a00;':'';
+        $def['Label']=$arr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($categoryDef['Label']);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$categoryDef['Emoji'],'class'=>'menu-item-emoji','keep-element-content'=>TRUE]);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$categoryDef['Label'],'class'=>'menu-item-label','keep-element-content'=>TRUE]);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>$html,'href'=>$href,'class'=>'menu','keep-element-content'=>TRUE]);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'li','element-content'=>$html,'style'=>$style,'class'=>'menu','keep-element-content'=>TRUE]);
-        
         return $html;
     }
 }

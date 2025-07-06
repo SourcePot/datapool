@@ -14,14 +14,14 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private const SAMPLE_LENGTH=30;
     private const QUERY_SELECTORS=[
-                        ['Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                        ['Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                        ['Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                        ['Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
+                        ['app'=>'SourcePot\Datapool\GenericApps\Feeds','Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                        ['app'=>'ourcePot\Datapool\GenericApps\Documents','Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+                        ['app'=>'SourcePot\Datapool\Forum\Forum','Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+                        ['app'=>'SourcePot\Datapool\Calendar\Calendar','Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
                     ];
     private $oc;
     
@@ -114,6 +114,9 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         }
         if (empty($arr['html'])){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'Nothing found...']);
+        } else {
+            $hitCountHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'# '.count($arr['Hits']),'style'=>['position'=>'absolute','top'=>0,'left'=>'5px','background'=>'none'],'keep-element-content'=>FALSE,]);
+            $arr['html']=$hitCountHtml.$arr['html'];    
         }
         return $arr;
     }
