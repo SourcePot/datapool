@@ -30,7 +30,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'DE - Natur'=>'DE - Natur',
         // English
         'EN - News'=>'EN - News',
-        'DE - Politics'=>'DE - Politics',
+        'EN - Politics'=>'EN - Politics',
         'EN - Economy'=>'EN - Economy',
         'EN - Technology'=>'DE - Technology',
         'EN - Computer'=>'EN - Computer',
@@ -43,9 +43,9 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'EN - Nature'=>'EN - Nature',
         // Spanish
         'ES - Noticias'=>'ES - Noticias',
-        'DE - Política'=>'DE - Política',
+        'ES - Política'=>'ES - Política',
         'ES - Economía'=>'ES - Economía',
-        'ES - Tecnología'=>'DE - Tecnología',
+        'ES - Tecnología'=>'ES - Tecnología',
         'ES - Informática'=>'ES - Informática',
         'ES - Ciberseguridad'=>'ES - Ciberseguridad',
         'ES - Ciencia'=>'ES - Ciencia',
