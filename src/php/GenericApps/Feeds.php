@@ -206,7 +206,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private function storeFeed(array $feed, array $header):int
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$this->currentUrlEntryContent['URL'],'itemCount'=>0];
-        // get items
+        // get feed items
         if (isset($feed['channel']['item'])){
             $hasChannelKey=TRUE;
             $items=$feed['channel']['item'];

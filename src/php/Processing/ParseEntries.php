@@ -12,13 +12,20 @@ namespace SourcePot\Datapool\Processing;
 
 class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
+    private const INTERNAL_MAPPING=[
+        'sectionIndex'=>'sectionIndex',
+        'section'=>'section',
+    ];
+    
+    private $internalData=[];
+
     private $oc;
 
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
         
     private $sections=['FULL'=>'Complete text','ALL'=>'All non-multpile sections','LAST'=>'Text after last section'];
     
@@ -98,7 +105,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     public function getParseEntriesWidgetHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
         // command processing
         $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
@@ -137,7 +144,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function getParseEntriesSettingsHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
         $arr['html'].=$this->parserParams($arr['selector']);
         $arr['html'].=$this->parserSectionRules($arr['selector']);
         $arr['html'].=$this->parserRules($arr['selector']);
@@ -218,7 +225,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function mapperRules($callingElement){
         $contentStructure=[
-            'Source column'=>['method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE],
+            'Source column'=>['method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE,'addColumns'=>self::INTERNAL_MAPPING],
             '...or constant'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE],
@@ -344,6 +351,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $resultArr=[];
         foreach($sections['singleEntry'] as $sectionId=>$section){
             if (empty($section)){continue;}
+            $this->internalData['{{sectionIndex}}']=0;
+            $this->internalData['{{section}}']=$section;
             $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
             if (isset($targetEntryParsing['processParsing']['result'][$sectionId])){
                 $sectionName=$this->sections[$sectionId];
@@ -370,7 +379,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Parser statistics']['Success']['value']++;
         } else {
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
-                foreach($sectionArr as $entryIndex=>$section){
+                foreach($sectionArr as $sectionIndex=>$section){
+                    $this->internalData['{{sectionIndex}}']=$sectionIndex;
+                    $this->internalData['{{section}}']=$section;
                     if (empty($section)){continue;}
                     $targetEntryTmp=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
                     if ($targetEntryTmp['processParsing']['failed']){
@@ -462,18 +473,28 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
             // get text and add to entry
             if (empty($rule['Content']['...or constant'])){
+                // direct mapping
                 $isset=isset($entry[$rule['Content']['Source column']]);
-                $matchText=(isset($entry[$rule['Content']['Source column']]))?$entry[$rule['Content']['Source column']]:'';
+                $matchText=$entry[$rule['Content']['Source column']]??'';
+                // internal mapping
+                foreach(self::INTERNAL_MAPPING as $internalMappingKey){
+                    if ($rule['Content']['Source column']!==$internalMappingKey){continue;}
+                    $matchText='{{'.$internalMappingKey.'}}';
+                    $isset=TRUE;
+                    break;    
+                }
             } else {
+                // map constant
                 $isset=TRUE;
                 $matchText=$rule['Content']['...or constant'];
             }
             // check for error
             $ruleFailed=!empty($rule['Content']['Source value']) && !$isset;
-            $result[$rowKey]=['Source column or constant'=>$matchText,
-                            'Must be set'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Source value']??FALSE),
-                            'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed),
-                            ];
+            $result[$rowKey]=[
+                'Source column or constant'=>$matchText,
+                'Must be set'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Source value']??FALSE),
+                'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed),
+                ];
             // add entry
             if ($ruleFailed){
                 $mappingFailed=TRUE;
@@ -537,6 +558,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         unset($targetEntry['processMapping']);
         unset($targetEntry['processParsing']);
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
+        foreach($targetEntry as $flatKey=>$flatValue){
+            if (!is_string($flatValue)){continue;}
+            if (strpos($flatValue,'{{')!==0 || strpos($flatValue,'}}')===FALSE){continue;}
+            $targetEntry[$flatKey]=strtr($flatValue,$this->internalData);
+        }
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
         $entry=array_replace_recursive($sourceEntry,$targetEntry);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
