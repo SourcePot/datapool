@@ -13,8 +13,8 @@ namespace SourcePot\Datapool\Processing;
 class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private const INTERNAL_MAPPING=[
-        'sectionIndex'=>'sectionIndex',
-        'section'=>'section',
+        'sectionIndex'=>'ParseEntries :: sectionIndex',
+        'section'=>'ParseEntries :: section',
     ];
     
     private $internalData=[];
@@ -402,7 +402,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     }
                     $result['Parser statistics']['Success']['value']++;
                     $targetEntry=array_replace_recursive($targetEntry,$targetEntryTmp);
-                    $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun);
+                    $isLastSection=(count($sectionArr)-1)===$sectionIndex;
+                    $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun,!$isLastSection);
                     $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
                 }
             }
@@ -477,9 +478,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $isset=isset($entry[$rule['Content']['Source column']]);
                 $matchText=$entry[$rule['Content']['Source column']]??'';
                 // internal mapping
-                foreach(self::INTERNAL_MAPPING as $internalMappingKey){
+                foreach(self::INTERNAL_MAPPING as $internalMappingKey=>$internalMappingValue){
                     if ($rule['Content']['Source column']!==$internalMappingKey){continue;}
                     $matchText='{{'.$internalMappingKey.'}}';
+                    $rule['Content']['Target data type']='string';
                     $isset=TRUE;
                     break;    
                 }
@@ -552,7 +554,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
 
-    private function finalizeEntry(array $base,array $sourceEntry,array $targetEntry,array $result,bool $testRun):array
+    private function finalizeEntry(array $base,array $sourceEntry,array $targetEntry,array $result,bool $testRun,bool $keepSource=FALSE):array
     {
         $params=current($base['parserparams']);
         unset($targetEntry['processMapping']);
@@ -560,12 +562,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
         foreach($targetEntry as $flatKey=>$flatValue){
             if (!is_string($flatValue)){continue;}
-            if (strpos($flatValue,'{{')!==0 || strpos($flatValue,'}}')===FALSE){continue;}
+            if (strpos($flatValue,'{{')===FALSE || strpos($flatValue,'}}')===FALSE){continue;}
             $targetEntry[$flatKey]=strtr($flatValue,$this->internalData);
         }
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($targetEntry);
         $entry=array_replace_recursive($sourceEntry,$targetEntry);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun,$keepSource);
         return $entry;
     }
 
