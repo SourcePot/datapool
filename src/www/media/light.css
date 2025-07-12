@@ -365,11 +365,12 @@ meter{
     top:0;
     padding:3rem 0.5rem;
     text-align:center;
-    height:100%;
+    line-height:100vh;
     min-width:5%;
     cursor:pointer;
     font-size:3rem;
     color:#fff6;
+    background: none;
 }
 #prev-img-btn:hover,#next-img-btn:hover{
     color:#0008;
