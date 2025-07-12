@@ -464,5 +464,10 @@ jQuery(document).ready(function(){
 		addFilter();
 		markChages();
 	});
+
+
+	jQuery('div.bg-media').delay(1000).animate({'width':'120%','background-position-y':'100%'},10000,function(){
+    	jQuery('div.bg-media').animate({'width':'100%','background-position-x':'-100%'},10000);
+  	});
 	
 });
