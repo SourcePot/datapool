@@ -83,7 +83,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>'multimedia','Params'=>'%image%'],FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
                     $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addTmpFile(['selector'=>$entry])['selector'];
                     $url=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($entry['Params']['TmpFile']['Source']);
-                    $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')']]);
+                    $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')'],'function'=>'Home']);
                     $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??$entry['Name']??'';
                     $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                     break;

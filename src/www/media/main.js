@@ -467,13 +467,13 @@ jQuery(document).ready(function(){
 
 	animateBackground('swing');
 	function animateBackground(easing){
-		let width=Math.floor(100+Math.random()*40)+'%',height=Math.floor(100+Math.random()*40)+'%';
-		let widthOffset=Math.floor(100+Math.random()*40)+'%',heightOffset=Math.floor(100+Math.random()*40)+'%';
-		jQuery('div.bg-media').animate({
-			'width':width,
-			'height':height,
-			'background-position-x':widthOffset,
-			'background-position-y':heightOffset
+		let width=Math.floor(100+Math.random()*40),height=Math.floor(100+Math.random()*40);
+		let widthOffset=Math.floor(Math.random()*width),heightOffset=Math.floor(Math.random()*height);
+		jQuery('div.bg-media[function=Home]').animate({
+			'width':width+'%',
+			'height':height+'%',
+			'background-position-x':widthOffset+'%',
+			'background-position-y':heightOffset+'%'
 		},20000,easing,function(){
 			animateBackground('linear');
 		});

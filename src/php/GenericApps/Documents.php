@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Documents implements \SourcePot\Datapool\Interfaces\App{
     
-    private const TILE_STYLE=['clear'=>'none','width'=>300,'height'=>340,'padding'=>'0 5px'];
+    private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px'];
 
     private $oc;
     
