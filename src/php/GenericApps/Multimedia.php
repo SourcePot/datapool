@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
-    private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px'];
+    private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px','overflow'=>'hidden'];
 
     private $oc;
     

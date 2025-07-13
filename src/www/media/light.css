@@ -1,5 +1,5 @@
 :root{
-    font-size:16px;
+    font-size:15px;
     font-family:system-ui,sans-serif;
     --color:black;
     --colorSoft:#444;
@@ -13,7 +13,7 @@
     --brand:blue;
     --leftTopBorderColor:#ccc;
     --rightBottomBorderColor:#aaa;
-    --attentionColor:rgba(255, 48, 48, 0.667);
+    --attentionColor:rgba(255, 48, 48);
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
     accent-color:#00f;
@@ -144,8 +144,7 @@ p.filter{
 	line-height:1rem;
 	padding:0;
 	color:var(--brand);
-	font-weight:bold;
-    font-size:0.9rem;
+	font-size:0.9rem;
     margin:0 0 0 -1.3rem;
     background-color:var(--bgColor);
 }
@@ -197,6 +196,7 @@ p.cover{
     height:100%;
     color:var(--bgColor);
     background-color:var(--attentionColor);
+    opacity: 0.6;
     text-align:center;
     cursor:pointer;
 }
@@ -409,7 +409,7 @@ p.bg-media{
     opacity: 0.6;
     top:1rem;
     left:0.5rem;
-    width:26rem;
+    width:350px;
     height:auto;
     padding:0.5rem;
     border: 1px solid var(--color);
@@ -660,7 +660,7 @@ button.canvas-dark{
     padding:0;
     right:-15px;
     font-size:10px;
-    color:#f00;
+    color:var(--attentionColor);
     background:none;
     z-index:15;
 }
@@ -735,7 +735,7 @@ div.calendar-timeline{
     position:absolute;
     top:0;
     height:100%;
-    border-left:3px dashed #f00;    
+    border-left:3px dashed var(--attentionColor);    
 }
 .calendar-event,.calendar-event-selected{
     position:absolute;
@@ -747,7 +747,7 @@ div.calendar-timeline{
     background-color:var(--bgColor);
 }
 .calendar-event-selected{
-    border:2px solid #f00;
+    border:2px solid var(--attentionColor);
 }
 .calendar-settings-wrapper{
     clear:none;

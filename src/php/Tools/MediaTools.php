@@ -473,21 +473,21 @@ class MediaTools{
         $arr['settings']['style']['deg']=intval(preg_replace('/[^0-9]/','',$arr['styleClass']));
         // get exif
         $exif=$this->addExif2entry([],$file)['exif']??[];
-        $exif['Rotation']=$exif['Rotation']??$exif['Orientation']??1;
+        $exif['Orientation']=$exif['Orientation']??1;
         // rotation
-        if ($exif['Rotation']===1 || $exif['Rotation']===2){
+        if ($exif['Orientation']===1 || $exif['Orientation']===2){
             $arr['settings']['style']['deg']=0;
-        } else if ($exif['Rotation']===8 || $exif['Rotation']===7){
+        } else if ($exif['Orientation']===8 || $exif['Orientation']===7){
             $arr['settings']['style']['deg']=90;
-        } else if ($exif['Rotation']===3 || $exif['Rotation']===4){
+        } else if ($exif['Orientation']===3 || $exif['Orientation']===4){
             $arr['settings']['style']['deg']=180;
-        } else if ($exif['Rotation']===6 || $exif['Rotation']===5){
+        } else if ($exif['Orientation']===6 || $exif['Orientation']===5){
             $arr['settings']['style']['deg']=270;
         }
         // mirrored
-        if ($exif['Rotation']===2 || $exif['Rotation']===4){
+        if ($exif['Orientation']===2 || $exif['Orientation']===4){
             $arr['styleClass']='flippedX';
-        } else if ($exif['Rotation']===7 || $exif['Rotation']===5){
+        } else if ($exif['Orientation']===7 || $exif['Orientation']===5){
             $arr['styleClass']='flippedY';
         }
         // get if flipped
