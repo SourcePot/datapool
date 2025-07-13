@@ -49,6 +49,7 @@ class Explorer{
         'editEntry'=>TRUE,
         'miscToolsEntry'=>TRUE,
         'settingsEntry'=>TRUE,
+        'sendEmail'=>TRUE,
         'setRightsEntry'=>TRUE,
         'comments'=>TRUE,
         ];

@@ -81,34 +81,50 @@ class Container{
         // This function provides a dynamic web-page container, it returns html-script.
         // The state of forms whithin the container is stored in  $_SESSION['Container'][$container-id]
         if ($isJScall){
-            if (isset($_SESSION['container store'][$containerId]['callJScount'])){$_SESSION['container store'][$containerId]['callJScount']++;} else {$_SESSION['container store'][$containerId]['callJScount']=1;}
+            if (isset($_SESSION['container store'][$containerId]['callJScount'])){
+                $_SESSION['container store'][$containerId]['callJScount']++;
+            } else {
+                $_SESSION['container store'][$containerId]['callJScount']=1;
+            }
             $function=$_SESSION['container store'][$containerId]['function'];
             $containerId=$_SESSION['container store'][$containerId]['callingFunction'];
+            $settings=$_SESSION['container store'][$containerId]['settings'];
             $wrapperSettings=$_SESSION['container store'][$containerId]['wrapperSettings'];
         } else {
             $containerId=md5($key);
-            if (isset($_SESSION['container store'][$containerId]['callPageCount'])){$_SESSION['container store'][$containerId]['callPageCount']++;} else {$_SESSION['container store'][$containerId]['callPageCount']=1;}
+            if (isset($_SESSION['container store'][$containerId]['callPageCount'])){
+                $_SESSION['container store'][$containerId]['callPageCount']++;
+            } else {
+                $_SESSION['container store'][$containerId]['callPageCount']=1;
+            }
             $_SESSION['container store'][$containerId]['callingClass']=__CLASS__;
             $_SESSION['container store'][$containerId]['callingFunction']=$containerId;
             $_SESSION['container store'][$containerId]['containerId']=$containerId;
             $_SESSION['container store'][$containerId]['function']=$function;
             $_SESSION['container store'][$containerId]['selector']=$selector;
             $_SESSION['container store'][$containerId]['containerKey']=$key;
-            if (!isset($_SESSION['container store'][$containerId]['settings'])){$_SESSION['container store'][$containerId]['settings']=$settings;}
+            //if (!isset($_SESSION['container store'][$containerId]['settings'])){
+                $_SESSION['container store'][$containerId]['settings']=$settings;
+            //}
             $_SESSION['container store'][$containerId]['wrapperSettings']=$wrapperSettings;
             $this->containerMonitor($containerId,$selector);
         }
         $html='<div busy-id="busy-'.$containerId.'" class="container-busy"></div>';
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($_SESSION['container store'][$containerId]);
         $return=$this->$function($_SESSION['container store'][$containerId]);
-        if (empty($return['html'])){return '';}
+        if (empty($return['html'])){
+            return '';
+        }
         $html.=$return['html'];
         if (isset($return['wrapperSettings'])){
             $wrapperSettings=array_merge($wrapperSettings,$return['wrapperSettings']);
         }
-        if (isset($return['settings'])){$_SESSION['container store'][$containerId]['settings']=array_replace_recursive($_SESSION['container store'][$containerId]['settings'],$return['settings']);}
+        if (isset($return['settings'])){
+            $_SESSION['container store'][$containerId]['settings']=array_replace_recursive($_SESSION['container store'][$containerId]['settings'],$return['settings']);
+        }
         $reloadBtnStyle=['position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'0','border'=>'none','background'=>'none'];
-        if (!empty($wrapperSettings['hideReloadBtn'])){$reloadBtnStyle['display']='none';}
+        if (!empty($wrapperSettings['hideReloadBtn'])){
+            $reloadBtnStyle['display']='none';
+        }
         $reloadBtnArr=['tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>['reloadBtnArr'],'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($reloadBtnArr);
         // add wrappers
@@ -629,7 +645,7 @@ class Container{
                 $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>['comment'],'id'=>$textId,'style'=>['float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.2rem'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId]);
                 $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$textId,'generic',$arr['selector'],['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$textId]);
                 $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add','key'=>['Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']],'value'=>time(),'style'=>['float'=>'left','clear'=>'both','margin'=>'5px'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId]);
-                $appArr=['html'=>$newComment,'icon'=>'&#9871;','style'=>$arr['style'],'title'=>'Add comment','style'=>$arr['style'],'class'=>$arr['class']];
+                $appArr=['html'=>$newComment,'icon'=>'&#9871;','title'=>'Add comment','style'=>['clear'=>'both']];
                 $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
             }
         }
@@ -694,54 +710,37 @@ class Container{
     /**
     * This method add an html-string to the parameter $arr['html'] which contains an image presentation of entries selected by the parameter arr['selector'].
     * @param array  $arr    Contains the entry selector and settings 
-    * @param array  $isDebugging    If TRUE the method will create a debug-file when called
     * @return array
     */
-    public function getImageShuffle(array $arr,bool $isDebugging=FALSE):array
+    public function getImageShuffle(array $arr):array
     {
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
         $arr['callingFunction'].='-shuffle';
-        $selectBtnHtml='';
-        $settingsTemplate=['isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE,'presentEntry'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']];
-        $settingsTemplate['style']=['width'=>320,'height'=>400,'cursor'=>'pointer','position'=>'absolute','top'=>0,'left'=>0,'z-index'=>2];
+        $settingsTemplate=['isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']];
         $settings=array_replace_recursive($settingsTemplate,$arr['settings']);
-        $arr['wrapper']=['style'=>$settings['style']];
-        $debugArr=['arr'=>$arr,'settings'=>$settings];
-        $entrySelector=$arr['selector'];
-        $entrySelector['Params']='%image%';
-        $arr['style']=['float'=>'none','display'=>'block','margin'=>'0 auto'];
-        $entry=['rowCount'=>0,'rowIndex'=>0];
+        $items=[];
+        $presentArrTemplate=['callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'class'=>'imageShuffle','settings'=>['presentEntry'=>__FUNCTION__]];
+        $entrySelector=$arr['selector']+['Params'=>'%image%'];
+        $idPrefix=__FUNCTION__.'-'.$arr['containerId'].'-';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entrySelector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
-            $arr['selector']=$entry;
-            $imgFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-            if (!is_file($imgFile)){continue;}
-            if ($settings['autoShuffle']){
-                $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToCover($arr,$imgFile,$settings['style']);
-            } else {
-                $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->scaleImageToContain($arr,$imgFile,$settings['style']);
-            }
-            $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
-            if ($arr['wrapper']['style']['z-index']===2){$arr['wrapper']['style']['z-index']=1;}
-            $selectBtnHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(['cmd'=>'select','selector'=>$entry,'style'=>['font-size'=>'0.1rem','margin'=>'0 5px 5px 0','line-height'=>'0.3rem']]);
+            $presentArr=$presentArrTemplate;
+            $presentArr['selector']=$entry;
+            if (count($items)===0){$display='inherit';} else {$display='none';}
+            $item=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->loadEntry($presentArr);
+            $items[]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$item,'keep-element-content'=>TRUE,'id'=>$idPrefix.count($items),'class'=>'imageShuffleItem','style'=>['display'=>$display],'function'=>__FUNCTION__]); 
         }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>implode('',$items),'keep-element-content'=>TRUE,'class'=>'imageShuffleItemWrapper','style'=>['width'=>$settings['style']['width']??320,'height'=>$settings['style']['height']??400]]);
+        // get << and >> button
         if (!empty($entry['rowCount'])){
-            $captionHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$arr['containerKey'],'keep-element-content'=>TRUE,'style'=>['margin'=>'5px 0']]);
-            $arr['html']=$selectBtnHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'height'=>$settings['style']['height']]]);
             // button div
-            $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-prev','class'=>'js-button','style'=>['clear'=>'left','min-width'=>'8em','padding'=>'3px 0']]);
-            $btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>'&#10095;&#10095;','keep-element-content'=>TRUE,'id'=>__FUNCTION__.'-'.$arr['containerId'].'-next','class'=>'js-button','style'=>['float'=>'right','min-width'=>'8em','padding'=>'3px 0']]);
-            $btnWrapper=['tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'id'=>'btns-'.$arr['containerId'].'-wrapper','style'=>['clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'10px 0']];
-            if ($settings['autoShuffle']){$btnWrapper['style']['display']='none';}
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
-            if (!empty($settings['presentEntry'])){
-                $entryPlaceholder=['tag'=>'div','element-content'=>'...','id'=>'present-'.$arr['containerId'].'-entry','title'=>$settings['getImageShuffle'],'function'=>__FUNCTION__,'style'=>['clear'=>'both','position'=>'relative','width'=>$settings['style']['width'],'margin'=>'0']];    
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($entryPlaceholder);
+            $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>$idPrefix.'prev','class'=>'js-button','style'=>['clear'=>'left','min-width'=>'8em','padding'=>'3px 0']]);
+            $btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>'&#10095;&#10095;','keep-element-content'=>TRUE,'id'=>$idPrefix.'next','class'=>'js-button','style'=>['float'=>'right','min-width'=>'8em','padding'=>'3px 0']]);
+            $btnWrapper=['tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'id'=>$idPrefix.'btnWrapper','class'=>'imageShuffleBtnWrapper'];
+            if ($settings['autoShuffle']){
+                $btnWrapper['style']['display']='none';
             }
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
         }   
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
-        $arr['wrapperSettings']['hideReloadBtn']=!empty($settings['hideReloadBtn']);
         return $arr;
     }
     

@@ -19,11 +19,14 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
 
     private $pageSettings=[];
 
+    private $backgroundMediaInfo='';
+
     public const WIDGET_SETTINGS_SELECTOR=['app'=>'SourcePot\Datapool\AdminApps\Settings','Source'=>'settings','Group'=>'Home page','Folder'=>'Widgets','Name'=>'Home page'];
     
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
+    ];
     
     public function __construct($oc)
     {
@@ -75,7 +78,17 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                 } else {
                     $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',array('file'=>$videoSrc));
                 }
-            }
+            } else if (strcmp($this->pageSettings['homePageContent'],'imageShuffle')===0){
+                $settings=['isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE,'getImageShuffle'=>$arr['selector']['Source']];
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>'multimedia','Params'=>'%image%'],FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
+                    $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addTmpFile(['selector'=>$entry])['selector'];
+                    $url=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($entry['Params']['TmpFile']['Source']);
+                    $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')'],'function'=>'Home']);
+                    $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??$entry['Name']??'';
+                    $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
+                    break;
+                }
+            } 
             $arr['toReplace']['{{content}}']=$this->homeAppWidgets();
             return $arr;
         }
@@ -124,7 +137,9 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
         $html='';
         $widgetTemplate=['tag'=>'div','class'=>'widget','element-content'=>'Widget did not provide content...','keep-element-content'=>TRUE];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(self::WIDGET_SETTINGS_SELECTOR,TRUE,'Read','EntryId',TRUE) as $widgetSetting){
-            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess(FALSE,intval($widgetSetting['Content']['Access']))){continue;}
+            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess(FALSE,intval($widgetSetting['Content']['Access']))){
+                continue;
+            }
             $widgetHtml='';
             $widgetClass=$widgetSetting['Content']["Widget"];
             if (empty($this->oc[$widgetClass])){
@@ -151,10 +166,13 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
             $element['element-content']='';
         } else if (strcmp($this->pageSettings['homePageContent'],'imageShuffle')===0){
             // show image shuffle
-            $wrapperSetting=['style'=>['float'=>'none','padding'=>'10px','border'=>'none','width'=>'fit-content','margin'=>'10px auto']];
-            $setting=['hideReloadBtn'=>TRUE,'style'=>['width'=>380,'height'=>320],'autoShuffle'=>TRUE,'getImageShuffle'=>'home'];
-            $selector=['Source'=>$this->oc['SourcePot\Datapool\GenericApps\Multimedia']->getEntryTable()];
-            $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Image shuffle','getImageShuffle',$selector,$setting,$wrapperSetting);                            
+            $info=strip_tags($this->backgroundMediaInfo);
+            if (empty($info)){
+                $element['element-content']='';
+            } else {
+                $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','class'=>'bg-media','element-content'=>$info,'style'=>['display'=>'none']]);
+            }
+            $element['class']='transparent';
         } else if (strcmp($this->pageSettings['homePageContent'],'video')===0){
             // show intro video
             $element['element-content']=' ';

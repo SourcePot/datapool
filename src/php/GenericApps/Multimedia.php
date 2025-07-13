@@ -12,7 +12,8 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
-    
+    private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px','overflow'=>'hidden'];
+
     private $oc;
     
     private $entryTable='';
@@ -61,8 +62,8 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             if (empty($selector['Group']) || empty($selector['Folder'])){
-                $wrapperSetting=array('style'=>array('padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'10px','border'=>'1px dotted #999;'));
-                $setting=array('style'=>array('width'=>500,'height'=>400,'background-color'=>'#fff'),'autoShuffle'=>FALSE,'getImageShuffle'=>'multimedia');
+                $wrapperSetting=['style'=>['padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'2.5rem 5px','border'=>'1px dotted #999;']];
+                $setting=['style'=>['width'=>500,'height'=>400,'background-color'=>'#fff'],'autoShuffle'=>TRUE,'getImageShuffle'=>'multimedia'];
                 $hash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle '.$hash,'getImageShuffle',$selector,$setting,$wrapperSetting);
                 if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector)){
@@ -70,7 +71,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
                 } else {
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'No entries yet...']);
                 }
-                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE));
+                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
             } else if (empty($selector['EntryId'])){
                 $presentation=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($selector,'widget');
                 if ($presentation=='entryList'){
@@ -78,13 +79,13 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$selector,$settings,[]);    
                 } else if ($presentation=='entryByEntry'){
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>['clear'=>'none','max-width'=>300,'max-height'=>280]]);
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>self::TILE_STYLE]);
                     }
                 } else {
                     $html.='Selected widget = '.$presentation.' is not implemented';
                 }
             } else {
-                $presentArr=array('callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+                $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
                 $presentArr['selector']=$selector;
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             }

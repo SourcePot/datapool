@@ -984,7 +984,7 @@ class HTMLbuilder{
     public function presentEntry(array $presentArr):array|string
     {
         $html='';
-        if (!empty($presentArr['selector']['EntryId'])){
+        if (!empty($presentArr['selector']['EntryId']) && empty($presentArr['selector']['Params'])){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($presentArr['selector'],FALSE);
             if ($entry){
                 $presentArr['selector']=$entry;
@@ -993,7 +993,7 @@ class HTMLbuilder{
         $presentArr=$this->mapContainer2presentArr($presentArr);
         $selector=$this->getPresentationSelector($presentArr);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
-            $presentArr['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??[]);
+            $presentArr['style']=$presentArr['settings']['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??'');
             $presentArr['class']=$setting['Content']['Style class'];
             $cntrArr=explode('|',$setting['Content']['Entry key']);
             if (count($cntrArr)===1){
@@ -1030,7 +1030,6 @@ class HTMLbuilder{
                 } else {
                     // present as div
                     $presentationValue=strip_tags((string)$presentationValue);  // prevent XSS atacks
-                    //$presentationValue=preg_replace("/([\x{1f000}-\x{1ffff}])/u",' <span class="emoji">${1}</span> ',$presentationValue);
                     if ($showKey){
                         $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
                         $presentationValue='<b>'.$key.': </b>'.$presentationValue;
@@ -1046,7 +1045,7 @@ class HTMLbuilder{
                 if (empty($wrapper)){
                     $appArr=$this->oc[$callingClass]->$callingFunction($presentArr);
                 } else if ($wrapper=='container'){
-                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Container '.$setting['EntryId'],'generic',$presentArr['selector'],['method'=>$callingFunction,'classWithNamespace'=>$callingClass],[]);    
+                    $appArr=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$setting['EntryId'],'generic',$presentArr['selector'],['method'=>$callingFunction,'classWithNamespace'=>$callingClass,'presentEntrySelector'=>$selector],[]);    
                 }
                 if (is_array($appArr)){$html.=$appArr['html'];} else {$html.=$appArr;}
             }
@@ -1081,7 +1080,7 @@ class HTMLbuilder{
     {
         if (strcmp($presentArr['callingClass'],'SourcePot\\Datapool\\Foundation\\Container')===0){
             $presentArr['callingClass']=$this->oc['SourcePot\Datapool\Root']->source2class($presentArr['selector']['Source']);
-            $presentArr['callingFunction']=$presentArr['settings']['method'];
+            $presentArr['callingFunction']=$presentArr['settings']['method']??$presentArr['callingFunction'];
         }
         return $presentArr;
     }

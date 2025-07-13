@@ -1,19 +1,22 @@
 :root{
-    font-size:14px;
+    font-size:15px;
     font-family:system-ui,sans-serif;
     --color:black;
+    --colorSoft:#444;
     --bgColor:white;
     --hoverColor:lightgrey;
+    --mediaColorA:wheat;
+    --mediaColorB:rgb(210,210,255);
     --headerColor: #777;
-    --bgColorMenuBottom:#ddd;
     --bgColorFirstMenu: #004a70a7;
     --bgColorSecondMenu: #73adcba6;;
     --brand:blue;
     --leftTopBorderColor:#ccc;
     --rightBottomBorderColor:#aaa;
+    --attentionColor:rgba(255, 48, 48);
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
-    accent-color:var(--brand);
+    accent-color:#00f;
 }
 *{
     margin:0;
@@ -80,7 +83,7 @@ a.std:hover{
 }
 a.textlink{
     font-weight:bold;
-    text-decoration: underline dotted #00f;
+    text-decoration: underline dotted var(--brand);
 }
 ol,ul{
     margin-left:1rem;
@@ -134,15 +137,14 @@ textarea{
 }
 input.filter{
     width:3rem;
-    border:1px dotted #084;
+    border:1px dotted var(--attentionColor);
 }
 p.filter{
 	clear:none;
 	line-height:1rem;
 	padding:0;
-	color:#084;
-	font-weight:bold;
-    font-size:0.9rem;
+	color:var(--brand);
+	font-size:0.9rem;
     margin:0 0 0 -1.3rem;
     background-color:var(--bgColor);
 }
@@ -153,7 +155,7 @@ p.sample{
     font-size:0.9rem;
     padding: 0;
     margin: 0 0.2rem;
-    color:#ca843d;
+    color:var(--brand);
 }
 .td-content-wrapper{
     white-space:break-spaces;
@@ -167,6 +169,9 @@ div.preview,main,div,select,video,img,p{
 div.preview,video,img{
     clear:left;
     background:none;
+}
+div.preview{
+    margin: 5px;
 }
 div.cover-wrapper{
     clear:none;
@@ -190,7 +195,8 @@ p.cover{
     width:100%;
     height:100%;
     color:var(--bgColor);
-    background-color:#f88a;
+    background-color:var(--attentionColor);
+    opacity: 0.6;
     text-align:center;
     cursor:pointer;
 }
@@ -201,11 +207,11 @@ table{
 table.std,div.table{
     clear:none;
     margin:0.5rem;
-    box-shadow: 5px 5px 3px #ddd;
+    box-shadow: 5px 5px 3px var(--rightBottomBorderColor);
     border: 1px solid var(--rightBottomBorderColor);
 }
 table.matrix{
-    border:1px dotted #444;
+    border:1px dotted var(--colorSoft);
 }
 td.matrix{
     padding:1px;
@@ -241,8 +247,8 @@ tr:hover{
     background-color:var(--hoverColor);
 }
 th{
-    color:#ca843d;
-    border-bottom:1px solid #888;
+    color:var(--colorSoft);
+    border-bottom:1px solid var(--rightBottomBorderColor);
 }
 td,th{
     position:relative;
@@ -275,18 +281,14 @@ article{
     overflow:auto;
     color:var(--color);
     background-color:var(--bgColor);
-    border-bottom:1px solid #999;
+    border-bottom:1px solid var(--leftTopBorderColor);
 }
 article.multimedia{
     max-width:300px;
     height:280px;
     margin:5px;
-    border:1px solid var(--rightBottomBorderColor);
+    border:1px solid var(--leftTopBorderColor);
     box-shadow:10px 5px 5px var(--leftTopBorderColor);
-}
-article.transparent{
-    height:25vh;
-    background:none;
 }
 div.container-busy{
     display:none;
@@ -324,7 +326,7 @@ div.icon{
 }
 p.icon{
     text-align:center;
-    background-color:#27d;
+    background-color:var(--brand);
     color:var(--bgColor);
 }
 .logo{
@@ -345,7 +347,8 @@ meter{
     width:100%;
     height:100%;
     cursor:pointer;
-    background-color:#000d;
+    background-color:var(--color);
+    opacity: 0.9;
     z-index:100;
 }
 #overlay-image{
@@ -365,15 +368,17 @@ meter{
     top:0;
     padding:3rem 0.5rem;
     text-align:center;
-    height:100%;
+    line-height:100vh;
     min-width:5%;
     cursor:pointer;
     font-size:3rem;
-    color:#fff6;
+    color:var(--bgColor);
+    background: none;
 }
 #prev-img-btn:hover,#next-img-btn:hover{
-    color:#0008;
-    background-color:#fff8;
+    color:var(--color);
+    background-color:var(--bgColor);
+    opacity: 0.6;
 }
 #prev-img-btn{
     left:0;
@@ -390,11 +395,30 @@ meter{
 .bg-media{
     position: fixed;
     background-size:cover;
+    top:0;
+    left:0;
     width:100%;
     height:100vh;
     overflow: hidden;
 }
-
+p.bg-media{
+    position: absolute;
+    display:none;
+    color:var(--mediaColorA);
+    background-color:var(--color);
+    opacity: 0.6;
+    top:1rem;
+    left:0.5rem;
+    width:350px;
+    height:auto;
+    padding:0.5rem;
+    border: 1px solid var(--color);
+}
+div.transparent{
+    position: relative;
+    height:25vh;
+    background:none;
+}
 /** MENUs **/
 #top-filler{
     height:var(--top-nav-height);
@@ -427,7 +451,7 @@ li.menu{
     height:4.1rem;
     margin:0;
     border-right:1px solid var(--hoverColor);
-    border-bottom:3px solid var(--bgColorMenuBottom);
+    border-bottom:3px solid var(--leftTopBorderColor);
     transition:border 200ms ease-out;
     background-color: var(--bgColor);
     overflow: hidden;
@@ -447,7 +471,7 @@ a.first-menu,p.first-menu{
     font-weight:bold;
     height:var(--top-nav-height);
     width:var(--top-nav-height);
-    border-right:1px solid #bbb;
+    border-right:1px solid var(--rightBottomBorderColor);
 }
 select.menu{
     font-size:1.1rem;
@@ -475,7 +499,7 @@ select.lng-selector{
 /** WIDGETS **/
 div.file-upload{
     padding:5px;
-    background-color:lavender;
+    background-color:var(--mediaColorA);
 }
 input.file-upload{
     clear:both;
@@ -488,7 +512,7 @@ progress.file-upload{
     clear:both;
     width:200px;
     margin-top:3px;
-    background-color: #eee;
+    background-color: var(--leftTopBorderColor);
 }
 
 /** DETAILS, SUMMARY, APPs **/
@@ -499,12 +523,12 @@ summary{
     width:100%;
     font-size:1.3rem;
     border-bottom:1px dotted var(--color);
-    background-color: lavender;
+    background-color: var(--mediaColorB);
 }
 summary:hover{
     cursor:pointer;
     color:var(--color);
-    background-color:var(--hoverColor);
+    background-color:var(--hoverColorB);
 }
 details{
     position:relative;
@@ -555,7 +579,7 @@ div.toolbox{
 }
 p.toolbox{
     clear:none;
-    color:#ddd;
+    color:var(--leftTopBorderColor);
 }
 /** CANVAS **/
 #canvas{
@@ -564,8 +588,8 @@ p.toolbox{
     height:500px;
     font-size:16px;
     background-color:var(--bgColor);
-    border-top:1px solid #888;
-    border-bottom:1px solid #888;
+    border-top:1px solid var(--headerColor);
+    border-bottom:1px solid var(--headerColor);
     overflow:auto;
     background-image:url("canvaslightbg.png");
 }
@@ -580,7 +604,7 @@ p.toolbox{
 .canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     min-width:140px;
     border:1px solid var(--color);
-    box-shadow:3px 3px 5px 1px #aaa9;
+    box-shadow:3px 3px 5px 1px var(--rightBottomBorderColor);
 }
 .canvas-symbol{
     font-size:30px;
@@ -588,13 +612,13 @@ p.toolbox{
     padding:0px;
 }
 button.canvas-trigger,button.canvas-std,button.canvas-red,button.canvas-green{
-    color:#000;
+    color:var(--color);
 }
 button.canvas-trigger:hover,button.canvas-std:hover,button.canvas-red:hover,button.canvas-green:hover{
-    color:#fff;
+    color:var(--bgColor);
 }
 button.canvas-processor{
-    color:#fff;
+    color:var(--bgColor);
     background-color:#00f;
 }
 button.canvas-trigger{
@@ -605,7 +629,7 @@ button.canvas-std{
     background-color:#eee;
 }
 button.canvas-std:hover{
-    background-color:#888;
+    background-color:var(--headerColor);
 }
 button.canvas-red{
     background-color:#fcc;
@@ -620,11 +644,11 @@ button.canvas-green:hover{
     background-color:#0a0;
 }
 button.canvas-dark{
-    color:#fff;
-    background-color:#444;
+    color:var(--bgColor);
+    background-color:var(--colorSoft);
 }
 .canvas-symbol{
-    color:#000;
+    color:var(--color);
     background: none;
 }
 .canvas-cntr-btn{
@@ -636,12 +660,12 @@ button.canvas-dark{
     padding:0;
     right:-15px;
     font-size:10px;
-    color:#f00;
+    color:var(--attentionColor);
     background:none;
     z-index:15;
 }
 div.canvas-symbol:hover{
-    background-color:#0004;
+    background-color:var(--color)4;
 }
 button.canvas{
     float:left;
@@ -658,7 +682,7 @@ p.canvas-info{
     bottom:-18px;
     left:0px;
     font-size:10px;
-    color:#000;
+    color:var(--color);
     background:none;
     padding:1px;
     line-height:1rem;
@@ -683,21 +707,21 @@ div.calendar-day,button.calendar-day{
     height:100%;
     margin:0;
     padding:0;
-    color:#444;
+    color:var(--colorSoft);
     text-align:center;
     overflow:hidden;
-    border-right:1px solid #888;
+    border-right:1px solid var(--headerColor);
     background: none;
 }
 button.calendar-day{
     height:65px;
     border:none;
     font-size:1rem;
-    background-color:#ddd;
+    background-color:var(--leftTopBorderColor);
 }
 p.calendar-hour,div.calendar-hour{
     position:absolute;
-    color:#444;
+    color:var(--colorSoft);
     top:50px;
     width:0;
     font-size: 0.9rem;
@@ -705,13 +729,13 @@ p.calendar-hour,div.calendar-hour{
 div.calendar-hour{
     top:65px;
     height:5px;
-    border-left:1px solid #444;
+    border-left:1px solid var(--colorSoft);
 }
 div.calendar-timeline{
     position:absolute;
     top:0;
     height:100%;
-    border-left:3px dashed #f00;    
+    border-left:3px dashed var(--attentionColor);    
 }
 .calendar-event,.calendar-event-selected{
     position:absolute;
@@ -723,11 +747,11 @@ div.calendar-timeline{
     background-color:var(--bgColor);
 }
 .calendar-event-selected{
-    border:2px solid #f00;
+    border:2px solid var(--attentionColor);
 }
 .calendar-settings-wrapper{
     clear:none;
-    background-color:#ddd;
+    background-color:var(--leftTopBorderColor);
     margin:0.5rem 0.5rem 0.5rem 0;
     padding:0.25rem;
 }
@@ -865,7 +889,7 @@ div.widget{
 .widget-entry-wrapper{
     padding:3px 2vw;
     width:94vw;
-    border-bottom:1px dotted #000;
+    border-bottom:1px dotted var(--color);
 }
 .widget-entry-header{
     clear:right;
@@ -878,4 +902,28 @@ div.widget{
 }
 .widget-entry-content{
     font-size:1.2rem;
+}
+/** image shuffle**/
+div.imageShuffleItemWrapper,div.imageShuffleItem,article.imageShuffle,.imageShuffleBtnWrapper{
+    margin:0;
+    padding:0;
+    max-width: 95%;
+}
+div.imageShuffleItem{
+    position:absolute;
+    top:0;
+    bottom:0;
+    height:100%;
+    width:100%;
+}
+article.imageShuffle{
+    max-width: 100%;
+    max-height: 100%;
+    border: none;
+}
+.imageShuffleBtnWrapper{
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
 }

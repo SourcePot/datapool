@@ -36,19 +36,28 @@ class MediaTools{
 
     public function getPreview(array $arr):array
     {
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
+        if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){
+            return $arr;
+        }
+        $arr=$this->addTmpFile($arr);
+        // style property adjustments
+        $arr['maxDim']=$arr['maxDim']??$arr['settings']['maxDim']??NULL;
+        $arr['minDim']=$arr['minDim']??$arr['settings']['minDim']??NULL;
         if (!empty($arr['maxDim'])){
-            $arr['settings']['style']['max-width']=$arr['maxDim'];
-            $arr['settings']['style']['max-height']=$arr['maxDim'];
+            $arr['settings']['style']['max-width']=$arr['settings']['style']['max-height']=$arr['maxDim'];
         }
         if (!empty($arr['wrapperSettings']['style'])){
             $styleArr=(is_array($arr['wrapperSettings']['style']))?$arr['wrapperSettings']['style']:$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($arr['wrapperSettings']['style']);
-            if (isset($styleArr['max-width'])){$arr['settings']['style']['max-width']=intval($styleArr['max-width'])-10;}
-            if (isset($styleArr['max-height'])){$arr['settings']['style']['max-height']=intval($styleArr['max-height'])-40;}
+            if (isset($styleArr['max-width'])){
+                $arr['settings']['style']['max-width']=intval($styleArr['max-width'])-10;
+            }
+            if (isset($styleArr['max-height'])){
+                $arr['settings']['style']['max-height']=intval($styleArr['max-height'])-40;
+            }
         }
         $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['width']));
-        if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){return $arr;}
-        $arr=$this->addTmpFile($arr);
+        // create preview based on 'MIME-Type'
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
@@ -250,7 +259,7 @@ class MediaTools{
     
     private function getMarkdown(array $arr):array
     {
-        if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
+        $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
         // process form
         $markDownId=md5(__FUNCTION__.$arr['selector']['Source'].$arr['selector']['EntryId']);
@@ -286,9 +295,12 @@ class MediaTools{
     
     private function getObj(array $arr):array
     {
-        if (!isset($arr['html'])){$arr['html']='';}
-        if (!isset($arr['settings']['style'])){$arr['settings']['style']=[];}
-        $arr['settings']['style']=array_merge(['float'=>'left','margin'=>'10px 0 0 5px','height'=>'50vh','width'=>'95vw'],$arr['settings']['style']);
+        $arr['html']=$arr['html']??'';
+        $arr['settings']['style']=$arr['settings']['style']??[];
+        $arr['settings']['style']['float']=$arr['settings']['style']['float']??'left';
+        $arr['settings']['style']['margin']=$arr['settings']['style']['margin']??'10px 0 0 5px';
+        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-height']??NULL;
+        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-width']??NULL;
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $objArr=$arr;
             $objArr['tag']='object';
@@ -307,161 +319,186 @@ class MediaTools{
     
     private function getImage(array $arr):string|array
     {
-        if (isset($arr['settings']['style']['max-width'])){
-            $arr['maxDim']=$arr['settings']['style']['max-width'];
-        }
-        if (isset($arr['settings']['style']['max-height'])){
-            $arr['maxDim']=$arr['settings']['style']['max-height'];
-        }
+        $entry=$arr['selector']??$arr;
         // return svg file without processing 
-        if (stripos($arr['selector']['Params']['TmpFile']['MIME-Type'],'/svg')!==FALSE){
-            return $this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
+        if (stripos($entry['Params']['TmpFile']['MIME-Type'],'/svg')!==FALSE){
+            return $this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($entry['Params']['TmpFile']['Source']);
         }
-        // target file saved in the tmp directory
-        $arr['targetFile']=$arr['selector']['Params']['TmpFile']['Source'];
-        $arr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['targetFile']);
-        // resampling will destroy exif data, rotation and flipping required
-        $tmpArr=@getimagesize($arr['selector']['Params']['TmpFile']['Source']);
+        // get image properties
+        $tmpArr=@getimagesize($entry['Params']['TmpFile']['Source']);
         if (empty($tmpArr)){
             // is not an image
             $arr['tag']='p';
-            $arr['element-content']=$arr['selector']['Params']['TmpFile']['Name'].' seems to be not an image file...';
+            $arr['element-content']=$entry['Params']['TmpFile']['Name'].' seems to be not an image file...';
             return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
+        }
+        // target file to be saved in the tmp directory
+        $arr['targetFile']=$entry['Params']['TmpFile']['Source'];
+        $arr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['targetFile']);
+        // is an image
+        $arr['styleClass']=(empty($entry['Params']['TmpFile']['Style class']))?'rotate0':$entry['Params']['TmpFile']['Style class'];
+        $arr=$this->stylestyleClass2style($arr,$entry['Params']['TmpFile']['Source']);
+        $imgPropArr=[
+            'sourceFile'=>$entry['Params']['TmpFile']['Source'],
+            'targetFile'=>$arr['targetFile'],
+            'fileType'=>$tmpArr['mime'],
+            'absSinRot'=>abs(sin(deg2rad($arr['settings']['style']['deg'])))??0,
+            'scaler'=>1,
+            'orgWidth'=>$tmpArr[0],
+            'orgHeight'=>$tmpArr[1],
+            'orgRot'=>$arr['settings']['style']['deg'],
+            'orgFlipped'=>$arr['settings']['style']['flip']??FALSE,
+            'quality'=>90,
+            'maxDim'=>$arr['maxDim']??$arr['settings']['style']['maxDim']??$arr['style']['maxDim']??NULL,
+            'minDim'=>$arr['minDim']??$arr['settings']['style']['minDim']??$arr['style']['minDim']??0,
+            'max-width'=>$arr['settings']['style']['max-width']??$arr['style']['max-width']??NULL,
+            'max-height'=>$arr['settings']['style']['max-height']??$arr['style']['max-height']??NULL,
+            ];
+        // create image from file
+        $orgImage=FALSE;
+        try{
+            if (mb_strpos($imgPropArr['fileType'],'/png')!==FALSE){
+                $orgImage=imagecreatefrompng($imgPropArr['sourceFile']);
+            } else if (mb_strpos($imgPropArr['fileType'],'/gif')!==FALSE){
+                $orgImage=imagecreatefromgif($imgPropArr['sourceFile']);
+            } else if (mb_strpos($imgPropArr['fileType'],'/bmp')!==FALSE){
+                $orgImage=imagecreatefromwbmp($imgPropArr['sourceFile']);
+            } else if (mb_strpos($imgPropArr['fileType'],'/webp')!==FALSE){
+                $orgImage=imagecreatefromwebp($imgPropArr['sourceFile']);
+            } else if (mb_strpos($imgPropArr['fileType'],'/jpg')!==FALSE){
+                $orgImage=imagecreatefromjpeg($imgPropArr['sourceFile']);
+            } else if (mb_strpos($imgPropArr['fileType'],'/jpeg')!==FALSE){
+                $orgImage=imagecreatefromjpeg($imgPropArr['sourceFile']);
+            } else {
+                $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($entry['Params']['TmpFile']['Source']);
+                if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
+                $orgImage=@imagecreatefromstring($string);
+                if ($orgImage===FALSE){return 'Failed to create image';}
+            }
+        } catch(\Exception $e) {
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" caught exception {message}.',['class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()]);
+            return $arr;
+        }
+        // get orgininal width, height after rotation
+        if ($imgPropArr['absSinRot']>0.5){
+            $tmp=$imgPropArr['max-width'];
+            $imgPropArr['max-width']=$imgPropArr['max-width'];
+            $imgPropArr['max-width']=$tmp;
+            //
+            $tmp=$imgPropArr['min-width'];
+            $imgPropArr['min-width']=$imgPropArr['min-width'];
+            $imgPropArr['min-width']=$tmp;
+        }
+        // get minimum scaler if scaling-up if minDim is set
+        if ($imgPropArr['orgWidth']<$imgPropArr['minDim']){
+            $scaler=$imgPropArr['minDim']/$imgPropArr['orgWidth'];
+            $imgPropArr['scaler']=($imgPropArr['scaler']<$scaler)?$scaler:$imgPropArr['scaler'];
+        }
+        if ($imgPropArr['orgHeight']<$imgPropArr['minDim']){
+            $scaler=$imgPropArr['minDim']/$imgPropArr['orgHeight'];
+            $imgPropArr['scaler']=($imgPropArr['scaler']<$scaler)?$scaler:$imgPropArr['scaler'];
+        }
+        // get maximum scaler from max-width, max-height
+        if ($imgPropArr['orgWidth']>$imgPropArr['max-width'] && $imgPropArr['max-width']!==NULL){
+            $scaler=$imgPropArr['max-width']/$imgPropArr['orgWidth'];
+            $imgPropArr['scaler']=($imgPropArr['scaler']>$scaler)?$scaler:$imgPropArr['scaler'];
+        }
+        if ($imgPropArr['orgHeight']>$imgPropArr['max-height'] && $imgPropArr['max-height']!==NULL){
+            $scaler=$imgPropArr['max-height']/$imgPropArr['orgHeight'];
+            $imgPropArr['scaler']=($imgPropArr['scaler']>$scaler)?$scaler:$imgPropArr['scaler'];
+        }
+        // reduce scale if height of width larger than maxDim
+        if ($imgPropArr['orgWidth']>$imgPropArr['maxDim'] && $imgPropArr['maxDim']!==NULL){
+            $scaler=$imgPropArr['maxDim']/$imgPropArr['orgWidth'];
+            $imgPropArr['scaler']=($imgPropArr['scaler']>$scaler)?$scaler:$imgPropArr['scaler'];
+        }
+        if ($imgPropArr['orgHeight']>$imgPropArr['maxDim'] && $imgPropArr['maxDim']!==NULL){
+            $scaler=$imgPropArr['maxDim']/$imgPropArr['orgHeight'];
+            $imgPropArr['scaler']=($imgPropArr['scaler']>$scaler)?$scaler:$imgPropArr['scaler'];
+        }
+        // scale image
+        if ($imgPropArr['scaler']===1){
+            $newImage=$orgImage;
         } else {
-            // is an image
-            (empty($arr['selector']['Params']['TmpFile']['Style class']))?$arr['styleClass']='rotate0':$arr['styleClass']=$arr['selector']['Params']['TmpFile']['Style class'];
-            $transformArr=$this->styleClass2Params($arr);
-            $absSinRot=abs(sin(deg2rad($transformArr['deg'])));
-            $imgArr=['sourceFile'=>$arr['selector']['Params']['TmpFile']['Source'],
-                    'targetFile'=>$arr['targetFile'],
-                    'fileType'=>$tmpArr['mime'],
-                    'absSinRot'=>$absSinRot,
-                    'scaler'=>1,
-                    'orgWidth'=>$tmpArr[0],
-                    'orgHeight'=>$tmpArr[1],
-                    'orgRot'=>$transformArr['deg'],
-                    'orgFlipped'=>$transformArr['flip'],
-                    'newSize'=>(isset($arr['newSize']))?$arr['newSize']:FALSE,
-                    'newWidth'=>(isset($arr['newWidth']))?$arr['newWidth']:FALSE,
-                    'newHeight'=>(isset($arr['newHeight']))?$arr['newHeight']:FALSE,
-                    'maxDim'=>(isset($arr['maxDim']))?$arr['maxDim']:FALSE,
-                    'minDim'=>(isset($arr['minDim']))?$arr['minDim']:FALSE,
-                    'quality'=>90,
-                    ];
-            //-- create image from file
-            $orgImage=FALSE;
-            try{
-                if (mb_strpos($imgArr['fileType'],'/png')!==FALSE){
-                    $orgImage=imagecreatefrompng($imgArr['sourceFile']);
-                } else if (mb_strpos($imgArr['fileType'],'/gif')!==FALSE){
-                    $orgImage=imagecreatefromgif($imgArr['sourceFile']);
-                } else if (mb_strpos($imgArr['fileType'],'/bmp')!==FALSE){
-                    $orgImage=imagecreatefromwbmp($imgArr['sourceFile']);
-                } else if (mb_strpos($imgArr['fileType'],'/webp')!==FALSE){
-                    $orgImage=imagecreatefromwebp($imgArr['sourceFile']);
-                } else if (mb_strpos($imgArr['fileType'],'/jpg')!==FALSE){
-                    $orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
-                } else if (mb_strpos($imgArr['fileType'],'/jpeg')!==FALSE){
-                    $orgImage=imagecreatefromjpeg($imgArr['sourceFile']);
-                } else {
-                    $string=$this->oc['SourcePot\Datapool\Root']->file_get_contents_utf8($arr['selector']['Params']['TmpFile']['Source']);
-                    if ($this->isBase64Encoded($string)){$string=base64_decode($string);}
-                    $orgImage=@imagecreatefromstring($string);
-                    if ($orgImage===FALSE){return 'Failed to create image';}
-                }
-            } catch(\Exception $e) {
-                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" caught exception {message}.',['class'=>__CLASS__,'function'=>__FUNCTION__,'message'=>$e->getMessage()]);
-                return $arr;
-            }
-            //-- scale image
-            if ($imgArr['absSinRot']>0.5){
-                $imgArr['_newWidth']=$imgArr['orgHeight'];
-                $imgArr['_newHeight']=$imgArr['orgWidth'];
+            $imgPropArr['newWidth']=intval($imgPropArr['scaler']*$imgPropArr['orgWidth']);
+            $imgPropArr['newHeight']=intval($imgPropArr['scaler']*$imgPropArr['orgHeight']);
+            $newImage=imagecreatetruecolor($imgPropArr['newWidth'],$imgPropArr['newHeight']);
+            imagecopyresampled($newImage,$orgImage,0,0,0,0,$imgPropArr['newWidth'],$imgPropArr['newHeight'],$imgPropArr['orgWidth'],$imgPropArr['orgHeight']);
+        }
+        imagealphablending($newImage,TRUE); 
+        // rotate image
+        if ($imgPropArr['orgRot']!==0){
+            $newImage=imagerotate($newImage,$imgPropArr['orgRot'],0);
+        }
+        // flip image
+        if (!empty($imgPropArr['orgFlipped'])){
+            imageflip($newImage,$imgPropArr['orgFlipped']);
+        }
+        // save to target
+        $html='';
+        $imageTagArr=$arr['tag']??[];
+        $imageTagArr['tag']='img';
+        $imageTagArr['title']=$entry['Params']['TmpFile']['Name'];
+        $imageTagArr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($imgPropArr);
+        if (isset($arr['containerId'])){$imageTagArr['container-id']=$arr['containerId'];}
+        if (empty($arr['encodeBase64'])){
+            imagejpeg($newImage,$arr['targetFile'],$imgPropArr['quality']);
+            chmod($arr['targetFile'],0774);
+            imagedestroy($orgImage);
+            @imagedestroy($newImage);
+            if (empty($arr['returnImgFileOnly'])){
+                $imageTagArr['src']=$arr['src'];
+                $dims=getimagesize($arr['targetFile']);
+                $imageTagArr['orgwidth']=$dims[0];
+                $imageTagArr['orgheight']=$dims[1];
+                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageTagArr);
+                if (!empty($arr['Date'])){$html.='<p class="imgOverlay">'.$arr['Date'].'</p>';}
             } else {
-                $imgArr['_newWidth']=$imgArr['orgWidth'];
-                $imgArr['_newHeight']=$imgArr['orgHeight'];    
+                return $arr['src'];
             }
-            if ($imgArr['_newWidth']>$imgArr['_newHeight']){
-                $imgArr['_maxDim']=$imgArr['_newWidth'];
-                $imgArr['_minDim']=$imgArr['_newHeight'];
-            } else {
-                $imgArr['_maxDim']=$imgArr['_newHeight'];
-                $imgArr['_minDim']=$imgArr['_newWidth'];
-            }
-            if (!empty($imgArr['minDim'])){
-                $imgArr['scaler']=intval($imgArr['minDim'])/$imgArr['_minDim'];
-            } else if (!empty($imgArr['maxDim'])){
-                $imgArr['scaler']=intval($imgArr['maxDim'])/$imgArr['_maxDim'];
-            } else if (!empty($imgArr['newSize'])){
-                $imgArr['scaler']=sqrt($imgArr['newSize']/($imgArr['_newWidth']*$imgArr['_newHeight']));
-            } else {
-                if ($imgArr['newWidth']===FALSE){$scalerWidth=1;} else {$scalerWidth=$imgArr['newWidth']/$imgArr['_newWidth'];}
-                if ($imgArr['newHeight']===FALSE){$scalerHeight=1;} else {$scalerHeight=$imgArr['newHeight']/$imgArr['_newHeight'];}
-                if ($scalerHeight>$scalerWidth){$imgArr['scaler']=$scalerWidth;} else {$imgArr['scaler']=$scalerHeight;}
-            }
-            if ($imgArr['scaler']===1){
-                $newImage=$orgImage;
-            } else {
-                $imgArr['newWidth']=intval(round($imgArr['scaler']*$imgArr['orgWidth']));
-                $imgArr['newHeight']=intval(round($imgArr['scaler']*$imgArr['orgHeight']));
-                $newImage=imagecreatetruecolor($imgArr['newWidth'],$imgArr['newHeight']);
-                imagecopyresampled($newImage,$orgImage,0,0,0,0,$imgArr['newWidth'],$imgArr['newHeight'],$imgArr['orgWidth'],$imgArr['orgHeight']);
-            }
-            imagealphablending($newImage,TRUE); 
-            // rotate and image
-            if ($imgArr['orgRot']!==0){$newImage=imagerotate($newImage,-$imgArr['orgRot'],0);}
-            if ($imgArr['orgFlipped']!==FALSE){imageflip($newImage,$imgArr['orgFlipped']);}
-            // save to target
-            $html='';
-            $imageTagArr=$arr;
-            $imageTagArr['tag']='img';
-            $imageTagArr['title']=$arr['selector']['Params']['TmpFile']['Name'];
-            $imageTagArr['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($imgArr);
-            if (isset($arr['containerId'])){$imageTagArr['container-id']=$arr['containerId'];}
-            if (empty($arr['encodeBase64'])){
-                imagejpeg($newImage,$arr['targetFile'],$imgArr['quality']);
-                chmod($arr['targetFile'],0774);
-                imagedestroy($orgImage);
-                @imagedestroy($newImage);
-                if (empty($arr['returnImgFileOnly'])){
-                    $imageTagArr['src']=$arr['src'];
-                    
-                    $dims=getimagesize($arr['targetFile']);
-                    $imageTagArr['orgwidth']=$dims[0];
-                    $imageTagArr['orgheight']=$dims[1];
-                    
-                    $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageTagArr);
-                    if (!empty($arr['Date'])){$html.='<p class="imgOverlay">'.$arr['Date'].'</p>';}
-                } else {
-                    return $arr['src'];
-                }
-            } else {
-                ob_start();
-                imagejpeg($newImage);
-                $imagedata=ob_get_contents();
-                ob_end_clean();
-                $imageTagArr['src']='data:image/png;base64,'.base64_encode($imagedata);
-                $imageTagArr['keep-element-content']=TRUE;
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageTagArr);
-            }
+        } else {
+            ob_start();
+            imagejpeg($newImage);
+            $imagedata=ob_get_contents();
+            ob_end_clean();
+            $imageTagArr['src']='data:image/png;base64,'.base64_encode($imagedata);
+            $imageTagArr['keep-element-content']=TRUE;
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($imageTagArr);
         }
         return $html;
     }
         
-    private function styleClass2Params(array $arr):array
+    private function stylestyleClass2style(array $arr, string $file=''):array
     {
-        $transformArr=['deg'=>0,'flip'=>FALSE];
-        $styleComps=explode(' ',$arr['styleClass']);
-        $transformArr['deg']=intval(preg_replace('/[^0-9]/','',$styleComps[0]));
-        if (empty($styleComps[1])){return $transformArr;}
-        if (strcmp($styleComps[1],'flippedX')){
-            $transformArr['flip']=IMG_FLIP_HORIZONTAL;
-        } else if (strcmp($styleComps[1],'flippedY')){
-            $transformArr['flip']=IMG_FLIP_VERTICAL;
-        } else if (strcmp($styleComps[1],'flippedXY')){
-            $transformArr['flip']=IMG_FLIP_BOTH;
+        $arr['settings']['style']['deg']=intval(preg_replace('/[^0-9]/','',$arr['styleClass']));
+        // get exif
+        $exif=$this->addExif2entry([],$file)['exif']??[];
+        $exif['Orientation']=$exif['Orientation']??1;
+        // rotation
+        if ($exif['Orientation']===1 || $exif['Orientation']===2){
+            $arr['settings']['style']['deg']=0;
+        } else if ($exif['Orientation']===8 || $exif['Orientation']===7){
+            $arr['settings']['style']['deg']=90;
+        } else if ($exif['Orientation']===3 || $exif['Orientation']===4){
+            $arr['settings']['style']['deg']=180;
+        } else if ($exif['Orientation']===6 || $exif['Orientation']===5){
+            $arr['settings']['style']['deg']=270;
+        }
+        // mirrored
+        if ($exif['Orientation']===2 || $exif['Orientation']===4){
+            $arr['styleClass']='flippedX';
+        } else if ($exif['Orientation']===7 || $exif['Orientation']===5){
+            $arr['styleClass']='flippedY';
+        }
+        // get if flipped
+        if (strpos($arr['styleClass'],'flippedX')!==FALSE){
+            $arr['settings']['style']['flip']=IMG_FLIP_HORIZONTAL;
+        } else if (strpos($arr['styleClass'],'flippedY')!==FALSE){
+            $arr['settings']['style']['flip']=IMG_FLIP_VERTICAL;
+        } else if (strpos($arr['styleClass'],'flippedXY')!==FALSE){
+            $arr['settings']['style']['flip']=IMG_FLIP_BOTH;
         } 
-        return $transformArr;
+        return $arr;
     }
 
     private function isBase64Encoded($data):bool
@@ -471,111 +508,6 @@ class MediaTools{
         } else {
             return FALSE;
         }
-    }
-
-    public function scaleImageToCover(array $arr,string $imgFile,array $boxStyleArr):array
-    {
-        $imgPropArr=$this->getImgPropArr($imgFile);
-        $arr=$this->resetScaleImage($arr);
-        if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
-            $arr['minDim']=$boxStyleArr['width'];
-        } else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
-            $arr['minDim']=$boxStyleArr['height'];
-        } else {
-            // scale image width to match box width
-            $newImgHeight=$imgPropArr['height']*$boxStyleArr['width']/$imgPropArr['width'];
-            if ($newImgHeight>$boxStyleArr['height']){
-                // height > box
-                $arr['newWidth']=$boxStyleArr['width'];
-                $arr['newHeight']=$newImgHeight;
-            } else {
-                // height < box
-                $newImgWidth=$imgPropArr['width']*$boxStyleArr['height']/$imgPropArr['height'];
-                $arr['newHeight']=$boxStyleArr['height'];
-                $arr['newWidth']=$newImgWidth;
-            }
-        }
-        return $arr;
-    }    
-
-    public function scaleImageToContain(array $arr,string $imgFile,array $boxStyleArr):array
-    {
-        $imgPropArr=$this->getImgPropArr($imgFile);
-        $arr=$this->resetScaleImage($arr);
-        if ($imgPropArr['width']<$boxStyleArr['width'] && $imgPropArr['height']>$boxStyleArr['height']){
-            $variant='C';    // OK
-            //$arr['settings']['style']['max-height']='100%';
-            $arr['newHeight']=$boxStyleArr['height'];
-        } else if ($imgPropArr['width']>$boxStyleArr['width'] && $imgPropArr['height']<$boxStyleArr['height']){
-            $variant='D';    // OK
-            //$arr['settings']['style']['max-width']='100%';
-            $arr['newWidth']=$boxStyleArr['width'];
-        } else {
-            // scale image width to match box width
-            $newImgHeight=$imgPropArr['height']*$boxStyleArr['width']/$imgPropArr['width'];
-            $newImgWidth=$imgPropArr['width']*$boxStyleArr['height']/$imgPropArr['height'];
-            if ($newImgHeight>$boxStyleArr['height']){
-                // height > box
-                $arr['newWidth']=$newImgWidth;
-                $arr['newHeight']=$boxStyleArr['height'];
-            } else {
-                // height > box
-                $arr['newWidth']=$boxStyleArr['width'];
-                $arr['newHeight']=$newImgHeight;
-            }
-        }
-        return $arr;
-    }
-    
-    private function resetScaleImage(array $arr):array
-    {
-        if (isset($arr['width'])){unset($arr['width']);}
-        if (isset($arr['height'])){unset($arr['height']);}
-        if (isset($arr['newWidth'])){unset($arr['newWidth']);}
-        if (isset($arr['newHeight'])){unset($arr['newHeight']);}
-        if (isset($arr['newWidth'])){unset($arr['newWidth']);}
-        if (isset($arr['newHeight'])){unset($arr['newHeight']);}
-        if (isset($arr['minDim'])){unset($arr['minDim']);}
-        if (isset($arr['maxDim'])){unset($arr['maxDim']);}
-        if (isset($arr['settings']['style']['max-width'])){unset($arr['settings']['style']['max-width']);}
-        if (isset($arr['settings']['style']['max-height'])){unset($arr['settings']['style']['max-height']);}
-        return $arr;
-    }
-    
-    private function getImgPropArr(string $imgFile):array
-    {
-        $exif=$this->addExif2entry([],$imgFile);
-        $exif=current($exif);
-        $imgPropArr=getimagesize($imgFile);
-        if (isset($exif['Orientation'])){
-            if (intval($exif['Orientation'])>4){
-                $imgPropArr['width']=$imgPropArr[1];
-                $imgPropArr['height']=$imgPropArr[0];
-            } else {
-                $imgPropArr['width']=$imgPropArr[0];
-                $imgPropArr['height']=$imgPropArr[1];
-            }
-        } else if (empty($imgPropArr)){
-            $imgPropArr=['width'=>1,'height'=>1];
-        } else {
-            $imgPropArr['width']=$imgPropArr[0];
-            $imgPropArr['height']=$imgPropArr[1];
-        }
-        return $imgPropArr;
-    }
-    
-    public function addExif2entry(array $entry,string $file):array
-    {
-        $entry['exif']=[];   
-        if (!is_file($file)){
-            // no attched file
-        } else if (!function_exists('exif_read_data')){
-            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',[]);   
-        } else {
-            $exif=@exif_read_data($file,'IFD0');
-            $entry['exif']=(empty($exif))?[]:$exif;
-        }
-        return $entry;
     }
 
     public function addGPano2entry(array $entry,string $file):array
@@ -602,7 +534,7 @@ class MediaTools{
         return $entry;
     }
     
-    private function addTmpFile(array $arr):array
+    public function addTmpFile(array $arr):array
     {
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         $tmpFileName=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($arr['selector'],TRUE);
@@ -627,5 +559,20 @@ class MediaTools{
         $arr['selector']['Params']['TmpFile']['Source']=$tmpFile;
         return $arr;
     }
+    
+    public function addExif2entry(array $entry,string $file):array
+    {
+        $entry['exif']=[];   
+        if (!is_file($file)){
+            // no attched file
+        } else if (!function_exists('exif_read_data')){
+            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',[]);   
+        } else {
+            $exif=@exif_read_data($file,'IFD0');
+            $entry['exif']=(empty($exif))?[]:$exif;
+        }
+        return $entry;
+    }
+
 }
 ?>

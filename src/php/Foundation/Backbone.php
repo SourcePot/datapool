@@ -14,21 +14,22 @@ class Backbone{
     
     private $oc;
         
-    private $settings=['pageTitle'=>'Datapool',
-                    'metaViewport'=>'width=device-width, initial-scale=1',
-                    'metaDescription'=>'Light weight web application',
-                    'metaRobots'=>'index',
-                    'pageTimeZone'=>'Europe/Berlin',
-                    'loginForm'=>0,
-                    'iconFile'=>'main.ico',
-                    'logoFile'=>'logo.jpg',
-                    'homePageContent'=>'video',
-                    'charset'=>'utf-8',
-                    'cssFiles'=>['jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','light.css','ep.css'],
-                    'jsFiles'=>['jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js','container.js','plots.js','fileupload.js'],
-                    'emailWebmaster'=>'admin@datapool.info',
-                    'path to Xpdf pdftotext executable'=>'',
-                    ];
+    private $settings=[
+        'pageTitle'=>'Datapool',
+        'metaViewport'=>'width=device-width, initial-scale=1',
+        'metaDescription'=>'Light weight web application',
+        'metaRobots'=>'index',
+        'pageTimeZone'=>'Europe/Berlin',
+        'loginForm'=>0,
+        'iconFile'=>'main.ico',
+        'logoFile'=>'logo.jpg',
+        'homePageContent'=>'video',
+        'charset'=>'utf-8',
+        'cssFiles'=>['jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','light.css','ep.css'],
+        'jsFiles'=>['jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js','container.js','plots.js','fileupload.js'],
+        'emailWebmaster'=>'admin@datapool.info',
+        'path to Xpdf pdftotext executable'=>'',
+        ];
     
     public function __construct(array $oc)
     {
@@ -72,15 +73,16 @@ class Backbone{
     public function addHtmlPageBackbone(array $arr):array
     {
         $formId=md5($this->settings['pageTitle']);
-        $arr['toReplace']=['{{head}}'=>'',
-                            '{{body}}'=>'',
-                            '{{bgMedia}}'=>'',
-                            '{{content}}'=>'Page content is missing...',
-                            '{{firstMenuBar}}'=>'',
-                            '{{firstMenuBarExt}}'=>'',
-                            '{{secondMenuBar}}'=>'',
-                            '{{explorer}}'=>'',
-                            ];
+        $arr['toReplace']=[
+            '{{head}}'=>'',
+            '{{body}}'=>'',
+            '{{bgMedia}}'=>'',
+            '{{content}}'=>'Page content is missing...',
+            '{{firstMenuBar}}'=>'',
+            '{{firstMenuBarExt}}'=>'',
+            '{{secondMenuBar}}'=>'',
+            '{{explorer}}'=>'',
+            ];
         $arr['page html']='';
         $arr['page html'].="<!DOCTYPE html>".PHP_EOL;
         $arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$_SESSION['page state']['lngCode'].'">'.PHP_EOL;
@@ -108,10 +110,11 @@ class Backbone{
     
     public function addHtmlPageHeader(array $arr):array
     {
-        $headerFiles=['iconFile'=>'<link rel="shortcut icon" href="{{iconFile}}">',
-                    'cssFiles'=>'<link type="text/css" rel="stylesheet" href="{{cssFiles}}">',
-                    'jsFiles'=>'<script src="{{jsFiles}}"></script>',
-                     ];
+        $headerFiles=[
+            'iconFile'=>'<link rel="shortcut icon" href="{{iconFile}}">',
+            'cssFiles'=>'<link type="text/css" rel="stylesheet" href="{{cssFiles}}">',
+            'jsFiles'=>'<script src="{{jsFiles}}"></script>',
+            ];
         foreach($headerFiles as $settingsKey=>$template){
             if (!empty($headerFiles=$this->settings[$settingsKey])){
                 if (!is_array($headerFiles)){$headerFiles=[$headerFiles];}
