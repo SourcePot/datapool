@@ -2,10 +2,12 @@
     font-size:14px;
     font-family:system-ui,sans-serif;
     --color:black;
+    --mediaColorA:wheat;
+    --mediaColorB:rgb(192, 196, 255);
     --bgColor:white;
     --hoverColor:lightgrey;
     --headerColor: #777;
-    --bgColorMenuBottom:#ddd;
+    --bgColorMenuBottom:var(--leftTopBorderColor);
     --bgColorFirstMenu: #004a70a7;
     --bgColorSecondMenu: #73adcba6;;
     --brand:blue;
@@ -140,7 +142,7 @@ p.filter{
 	clear:none;
 	line-height:1rem;
 	padding:0;
-	color:#084;
+	color:var(--brand);
 	font-weight:bold;
     font-size:0.9rem;
     margin:0 0 0 -1.3rem;
@@ -153,7 +155,7 @@ p.sample{
     font-size:0.9rem;
     padding: 0;
     margin: 0 0.2rem;
-    color:#ca843d;
+    color:var(--brand);
 }
 .td-content-wrapper{
     white-space:break-spaces;
@@ -204,7 +206,7 @@ table{
 table.std,div.table{
     clear:none;
     margin:0.5rem;
-    box-shadow: 5px 5px 3px #ddd;
+    box-shadow: 5px 5px 3px var(--rightBottomBorderColor);
     border: 1px solid var(--rightBottomBorderColor);
 }
 table.matrix{
@@ -244,8 +246,8 @@ tr:hover{
     background-color:var(--hoverColor);
 }
 th{
-    color:#ca843d;
-    border-bottom:1px solid #888;
+    color:var(--brand);
+    border-bottom:1px solid var(--rightBottomBorderColor);
 }
 td,th{
     position:relative;
@@ -278,13 +280,13 @@ article{
     overflow:auto;
     color:var(--color);
     background-color:var(--bgColor);
-    border-bottom:1px solid #999;
+    border-bottom:1px solid var(--leftTopBorderColor);
 }
 article.multimedia{
     max-width:300px;
     height:280px;
     margin:5px;
-    border:1px solid var(--rightBottomBorderColor);
+    border:1px solid var(--leftTopBorderColor);
     box-shadow:10px 5px 5px var(--leftTopBorderColor);
 }
 div.container-busy{
@@ -323,7 +325,7 @@ div.icon{
 }
 p.icon{
     text-align:center;
-    background-color:#27d;
+    background-color:var(--brand);
     color:var(--bgColor);
 }
 .logo{
@@ -344,7 +346,8 @@ meter{
     width:100%;
     height:100%;
     cursor:pointer;
-    background-color:#000d;
+    background-color:var(--color);
+    opacity: 0.7;
     z-index:100;
 }
 #overlay-image{
@@ -368,12 +371,13 @@ meter{
     min-width:5%;
     cursor:pointer;
     font-size:3rem;
-    color:#fff6;
+    color:var(--bgColor);
     background: none;
 }
 #prev-img-btn:hover,#next-img-btn:hover{
-    color:#0008;
-    background-color:#fff8;
+    color:var(--color);
+    background-color:var(--bgColor);
+    opacity: 0.6;
 }
 #prev-img-btn{
     left:0;
@@ -399,14 +403,15 @@ meter{
 p.bg-media{
     position: absolute;
     display:none;
-    color:wheat;
-    background-color:#0009;
+    color:var(--mediaColorA);
+    background-color:var(--color);
+    opacity: 0.6;
     top:1rem;
     left:0.5rem;
     width:26rem;
     height:auto;
     padding:0.5rem;
-    border: 1px solid #000;
+    border: 1px solid var(--color);
 }
 div.transparent{
     position: relative;
@@ -465,7 +470,7 @@ a.first-menu,p.first-menu{
     font-weight:bold;
     height:var(--top-nav-height);
     width:var(--top-nav-height);
-    border-right:1px solid #bbb;
+    border-right:1px solid var(--rightBottomBorderColor);
 }
 select.menu{
     font-size:1.1rem;
@@ -493,7 +498,7 @@ select.lng-selector{
 /** WIDGETS **/
 div.file-upload{
     padding:5px;
-    background-color:lavender;
+    background-color:var(--mediaColorA);
 }
 input.file-upload{
     clear:both;
@@ -506,7 +511,7 @@ progress.file-upload{
     clear:both;
     width:200px;
     margin-top:3px;
-    background-color: #eee;
+    background-color: var(--leftTopBorderColor);
 }
 
 /** DETAILS, SUMMARY, APPs **/
@@ -517,12 +522,12 @@ summary{
     width:100%;
     font-size:1.3rem;
     border-bottom:1px dotted var(--color);
-    background-color: lavender;
+    background-color: var(--mediaColorB);
 }
 summary:hover{
     cursor:pointer;
     color:var(--color);
-    background-color:var(--hoverColor);
+    background-color:var(--hoverColorB);
 }
 details{
     position:relative;
@@ -573,7 +578,7 @@ div.toolbox{
 }
 p.toolbox{
     clear:none;
-    color:#ddd;
+    color:var(--leftTopBorderColor);
 }
 /** CANVAS **/
 #canvas{
@@ -582,8 +587,8 @@ p.toolbox{
     height:500px;
     font-size:16px;
     background-color:var(--bgColor);
-    border-top:1px solid #888;
-    border-bottom:1px solid #888;
+    border-top:1px solid var(--headerColor);
+    border-bottom:1px solid var(--headerColor);
     overflow:auto;
     background-image:url("canvaslightbg.png");
 }
@@ -598,7 +603,7 @@ p.toolbox{
 .canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     min-width:140px;
     border:1px solid var(--color);
-    box-shadow:3px 3px 5px 1px #aaa9;
+    box-shadow:3px 3px 5px 1px var(--rightBottomBorderColor);
 }
 .canvas-symbol{
     font-size:30px;
@@ -606,13 +611,13 @@ p.toolbox{
     padding:0px;
 }
 button.canvas-trigger,button.canvas-std,button.canvas-red,button.canvas-green{
-    color:#000;
+    color:var(--color);
 }
 button.canvas-trigger:hover,button.canvas-std:hover,button.canvas-red:hover,button.canvas-green:hover{
-    color:#fff;
+    color:var(--bgColor);
 }
 button.canvas-processor{
-    color:#fff;
+    color:var(--bgColor);
     background-color:#00f;
 }
 button.canvas-trigger{
@@ -623,7 +628,7 @@ button.canvas-std{
     background-color:#eee;
 }
 button.canvas-std:hover{
-    background-color:#888;
+    background-color:var(--headerColor);
 }
 button.canvas-red{
     background-color:#fcc;
@@ -638,11 +643,11 @@ button.canvas-green:hover{
     background-color:#0a0;
 }
 button.canvas-dark{
-    color:#fff;
+    color:var(--bgColor);
     background-color:#444;
 }
 .canvas-symbol{
-    color:#000;
+    color:var(--color);
     background: none;
 }
 .canvas-cntr-btn{
@@ -659,7 +664,7 @@ button.canvas-dark{
     z-index:15;
 }
 div.canvas-symbol:hover{
-    background-color:#0004;
+    background-color:var(--color)4;
 }
 button.canvas{
     float:left;
@@ -676,7 +681,7 @@ p.canvas-info{
     bottom:-18px;
     left:0px;
     font-size:10px;
-    color:#000;
+    color:var(--color);
     background:none;
     padding:1px;
     line-height:1rem;
@@ -704,14 +709,14 @@ div.calendar-day,button.calendar-day{
     color:#444;
     text-align:center;
     overflow:hidden;
-    border-right:1px solid #888;
+    border-right:1px solid var(--headerColor);
     background: none;
 }
 button.calendar-day{
     height:65px;
     border:none;
     font-size:1rem;
-    background-color:#ddd;
+    background-color:var(--leftTopBorderColor);
 }
 p.calendar-hour,div.calendar-hour{
     position:absolute;
@@ -745,7 +750,7 @@ div.calendar-timeline{
 }
 .calendar-settings-wrapper{
     clear:none;
-    background-color:#ddd;
+    background-color:var(--leftTopBorderColor);
     margin:0.5rem 0.5rem 0.5rem 0;
     padding:0.25rem;
 }
@@ -883,7 +888,7 @@ div.widget{
 .widget-entry-wrapper{
     padding:3px 2vw;
     width:94vw;
-    border-bottom:1px dotted #000;
+    border-bottom:1px dotted var(--color);
 }
 .widget-entry-header{
     clear:right;
