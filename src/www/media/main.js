@@ -227,19 +227,22 @@ jQuery(document).ready(function(){
 		html=html+'<p style="float:inherit;" id="overlay-title">'+img['title']+'</p>';
 		html=html+imgBtn;
 		let htmlObj=$(html);
-		jQuery('#overlay').html(htmlObj).fadeIn(500);
-		jQuery('#overlay,#overlay-image').on('click',function(e){
-			jQuery('#overlay').hide();
-		});
-		jQuery('#prev-img-btn').on('click',function(e){
-			e.stopPropagation();
-			if (index==0){index=lastIndex;} else {{index--;}}
-			loadImage(index);
-		});
-		jQuery('#next-img-btn').on('click',function(e){
-			e.stopPropagation();
-			if (index>=lastIndex){index=0;} else {{index++;}}
-			loadImage(index);
+		jQuery('#overlay').fadeIn(500).fadeIn(200,function(){
+			jQuery('#overlay-image-container').html(htmlObj).fadeIn(400);	
+			jQuery('#overlay,#overlay-image').on('click',function(e){
+				jQuery('#overlay').hide();
+				jQuery('#overlay-image-container').hide();
+			});
+			jQuery('#prev-img-btn').on('click',function(e){
+				e.stopPropagation();
+				if (index==0){index=lastIndex;} else {{index--;}}
+				loadImage(index);
+			});
+			jQuery('#next-img-btn').on('click',function(e){
+				e.stopPropagation();
+				if (index>=lastIndex){index=0;} else {{index++;}}
+				loadImage(index);
+			});
 		});
 	}
 	document.addEventListener("keydown",function(e){

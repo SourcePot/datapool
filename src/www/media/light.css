@@ -339,7 +339,10 @@ meter{
     margin:3px 0.25rem 0 0;
 }
 /** IMAGE VIEWER **/
-#overlay{
+#overlay,#overlay-image,#prev-img-btn,#next-img-btn,#img-index,#overlay-title,#overlay-image-container{
+    z-index:100;
+}
+#overlay,#overlay-image-container{
     position:fixed;
     float:unset;
     top:0;
@@ -348,17 +351,19 @@ meter{
     height:100%;
     cursor:pointer;
     background-color:var(--color);
-    opacity: 0.9;
-    z-index:100;
+    opacity: 0.8;
+}
+#overlay-image-container{
+    background:none;
+    opacity: 1;
 }
 #overlay-image{
-    display:block;
+    position: relative;
+    display: block;
     max-width:90vw;
     max-height:90vh;
     margin:0 auto;
     cursor:pointer;
-    background-color:var(--color);
-    background-image:url("busy.gif");
     background-repeat:no-repeat;
     background-position:center;
     border:1px solid var(--rightBottomBorderColor);
