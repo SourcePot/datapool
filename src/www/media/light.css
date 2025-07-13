@@ -396,7 +396,20 @@ meter{
     height:100vh;
     overflow: hidden;
 }
+p.bg-media{
+    position: absolute;
+    display:none;
+    color:wheat;
+    background-color:#0009;
+    top:1rem;
+    left:1rem;
+    width:25vw;
+    height:auto;
+    padding:0.5rem;
+    border: 1px solid #000;
+}
 div.transparent{
+    position: relative;
     height:25vh;
     background:none;
 }

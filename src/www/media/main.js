@@ -465,9 +465,22 @@ jQuery(document).ready(function(){
 		markChages();
 	});
 
-
-	jQuery('div.bg-media').delay(1000).animate({'width':'120%','background-position-y':'100%'},10000,function(){
-    	jQuery('div.bg-media').animate({'width':'100%','background-position-x':'-100%'},10000);
-  	});
+	animateBackground('swing');
+	function animateBackground(easing){
+		let width=Math.floor(100+Math.random()*40)+'%',height=Math.floor(100+Math.random()*40)+'%';
+		let widthOffset=Math.floor(100+Math.random()*40)+'%',heightOffset=Math.floor(100+Math.random()*40)+'%';
+		jQuery('div.bg-media').animate({
+			'width':width,
+			'height':height,
+			'background-position-x':widthOffset,
+			'background-position-y':heightOffset
+		},50000,easing,function(){
+			animateBackground('linear');
+		});
+	}
+	showBackgroundInfo()
+	function showBackgroundInfo(){
+		jQuery('p.bg-media').fadeIn(1000);
+	}
 	
 });
