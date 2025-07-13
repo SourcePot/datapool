@@ -1,21 +1,22 @@
 :root{
-    font-size:14px;
+    font-size:16px;
     font-family:system-ui,sans-serif;
     --color:black;
-    --mediaColorA:wheat;
-    --mediaColorB:rgb(192, 196, 255);
+    --colorSoft:#444;
     --bgColor:white;
     --hoverColor:lightgrey;
+    --mediaColorA:wheat;
+    --mediaColorB:rgb(210,210,255);
     --headerColor: #777;
-    --bgColorMenuBottom:var(--leftTopBorderColor);
     --bgColorFirstMenu: #004a70a7;
     --bgColorSecondMenu: #73adcba6;;
     --brand:blue;
     --leftTopBorderColor:#ccc;
     --rightBottomBorderColor:#aaa;
+    --attentionColor:rgba(255, 48, 48, 0.667);
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
-    accent-color:var(--brand);
+    accent-color:#00f;
 }
 *{
     margin:0;
@@ -82,7 +83,7 @@ a.std:hover{
 }
 a.textlink{
     font-weight:bold;
-    text-decoration: underline dotted #00f;
+    text-decoration: underline dotted var(--brand);
 }
 ol,ul{
     margin-left:1rem;
@@ -136,7 +137,7 @@ textarea{
 }
 input.filter{
     width:3rem;
-    border:1px dotted #084;
+    border:1px dotted var(--attentionColor);
 }
 p.filter{
 	clear:none;
@@ -195,7 +196,7 @@ p.cover{
     width:100%;
     height:100%;
     color:var(--bgColor);
-    background-color:#f88a;
+    background-color:var(--attentionColor);
     text-align:center;
     cursor:pointer;
 }
@@ -210,7 +211,7 @@ table.std,div.table{
     border: 1px solid var(--rightBottomBorderColor);
 }
 table.matrix{
-    border:1px dotted #444;
+    border:1px dotted var(--colorSoft);
 }
 td.matrix{
     padding:1px;
@@ -246,7 +247,7 @@ tr:hover{
     background-color:var(--hoverColor);
 }
 th{
-    color:var(--brand);
+    color:var(--colorSoft);
     border-bottom:1px solid var(--rightBottomBorderColor);
 }
 td,th{
@@ -450,7 +451,7 @@ li.menu{
     height:4.1rem;
     margin:0;
     border-right:1px solid var(--hoverColor);
-    border-bottom:3px solid var(--bgColorMenuBottom);
+    border-bottom:3px solid var(--leftTopBorderColor);
     transition:border 200ms ease-out;
     background-color: var(--bgColor);
     overflow: hidden;
@@ -644,7 +645,7 @@ button.canvas-green:hover{
 }
 button.canvas-dark{
     color:var(--bgColor);
-    background-color:#444;
+    background-color:var(--colorSoft);
 }
 .canvas-symbol{
     color:var(--color);
@@ -706,7 +707,7 @@ div.calendar-day,button.calendar-day{
     height:100%;
     margin:0;
     padding:0;
-    color:#444;
+    color:var(--colorSoft);
     text-align:center;
     overflow:hidden;
     border-right:1px solid var(--headerColor);
@@ -720,7 +721,7 @@ button.calendar-day{
 }
 p.calendar-hour,div.calendar-hour{
     position:absolute;
-    color:#444;
+    color:var(--colorSoft);
     top:50px;
     width:0;
     font-size: 0.9rem;
@@ -728,7 +729,7 @@ p.calendar-hour,div.calendar-hour{
 div.calendar-hour{
     top:65px;
     height:5px;
-    border-left:1px solid #444;
+    border-left:1px solid var(--colorSoft);
 }
 div.calendar-timeline{
     position:absolute;
