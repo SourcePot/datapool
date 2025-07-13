@@ -84,7 +84,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                     $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addTmpFile(['selector'=>$entry])['selector'];
                     $url=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($entry['Params']['TmpFile']['Source']);
                     $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')']]);
-                    $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??'';
+                    $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??$entry['Name']??'';
                     $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                     break;
                 }
@@ -167,7 +167,9 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
         } else if (strcmp($this->pageSettings['homePageContent'],'imageShuffle')===0){
             // show image shuffle
             $info=strip_tags($this->backgroundMediaInfo);
-            if (!empty($info)){
+            if (empty($info)){
+                $element['element-content']='';
+            } else {
                 $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','class'=>'bg-media','element-content'=>$info,'style'=>['display'=>'none']]);
             }
             $element['class']='transparent';

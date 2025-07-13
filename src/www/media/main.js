@@ -474,7 +474,7 @@ jQuery(document).ready(function(){
 			'height':height,
 			'background-position-x':widthOffset,
 			'background-position-y':heightOffset
-		},50000,easing,function(){
+		},20000,easing,function(){
 			animateBackground('linear');
 		});
 	}

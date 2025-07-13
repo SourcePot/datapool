@@ -346,10 +346,10 @@ class MediaTools{
             'orgRot'=>$arr['settings']['style']['deg'],
             'orgFlipped'=>$arr['settings']['style']['flip']??FALSE,
             'quality'=>90,
-            'maxDim'=>$arr['maxDim']??NULL,
-            'minDim'=>$arr['minDim']??0,
-            'max-width'=>$arr['settings']['style']['max-width']??NULL,
-            'max-height'=>$arr['settings']['style']['max-height']??NULL,
+            'maxDim'=>$arr['maxDim']??$arr['settings']['style']['maxDim']??$arr['style']['maxDim']??NULL,
+            'minDim'=>$arr['minDim']??$arr['settings']['style']['minDim']??$arr['style']['minDim']??0,
+            'max-width'=>$arr['settings']['style']['max-width']??$arr['style']['max-width']??NULL,
+            'max-height'=>$arr['settings']['style']['max-height']??$arr['style']['max-height']??NULL,
             ];
         // create image from file
         $orgImage=FALSE;
@@ -379,7 +379,11 @@ class MediaTools{
         // get orgininal width, height after rotation
         if ($imgPropArr['absSinRot']>0.5){
             $tmp=$imgPropArr['max-width'];
-            $imgPropArr['max-width']=$imgPropArr['min-width'];
+            $imgPropArr['max-width']=$imgPropArr['max-width'];
+            $imgPropArr['max-width']=$tmp;
+            //
+            $tmp=$imgPropArr['min-width'];
+            $imgPropArr['min-width']=$imgPropArr['min-width'];
             $imgPropArr['min-width']=$tmp;
         }
         // get minimum scaler if scaling-up if minDim is set

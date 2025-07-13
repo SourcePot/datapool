@@ -12,7 +12,8 @@ namespace SourcePot\Datapool\GenericApps;
 
 class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
     
-    
+    private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px'];
+
     private $oc;
     
     private $entryTable='';
@@ -78,7 +79,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$selector,$settings,[]);    
                 } else if ($presentation=='entryByEntry'){
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>['clear'=>'none','max-width'=>300,'max-height'=>280]]);
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>self::TILE_STYLE]);
                     }
                 } else {
                     $html.='Selected widget = '.$presentation.' is not implemented';
