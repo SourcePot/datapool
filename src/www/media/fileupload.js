@@ -66,13 +66,18 @@ jQuery(document).ready(function(){
     }
 
     function handleXhrEvent(event){
-        if (event.type=="loadstart"){
-        
-        } else if (event.type=="progress"){
-            
-        } else if (event.type=="load"){
-        
+        let infoSelector='#'+btnName2process[0]+'_info';
+        let file=fileStore[btnName2process[0]]['filesArr'][0];
+        if (event.type=="loadstart" && typeof file!=='undefined'){
+            jQuery(infoSelector).text('Start:'+file.name);
+        } else if (event.type=="progress" && typeof file!=='undefined'){
+            jQuery(infoSelector).text('Processing: '+file.name);
+        } else if (event.type=="load" && typeof file!=='undefined'){
+            jQuery(infoSelector).text('Loading: '+file.name);
+        } else if (event.type=="loadend" && typeof file!=='undefined'){
+            postFile();
         } else if (event.type=="loadend"){
+            jQuery(infoSelector).text('Please wait...');
             postFile();
         }
     }

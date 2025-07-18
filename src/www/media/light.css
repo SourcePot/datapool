@@ -349,7 +349,6 @@ meter{
     left:0;
     width:100%;
     height:100%;
-    cursor:pointer;
     background-color:var(--color);
     opacity: 0.8;
 }
@@ -360,6 +359,7 @@ meter{
 #overlay-image{
     position: relative;
     display: block;
+    cursor:pointer;
     max-width:90vw;
     max-height:90vh;
     margin:0 auto;
@@ -508,8 +508,8 @@ div.file-upload{
 }
 input.file-upload{
     clear:both;
-    height:50px;
-    width:200px;
+    height:100px;
+    width:300px;
     margin:0;
     padding:0; 
 }
@@ -518,6 +518,9 @@ progress.file-upload{
     width:200px;
     margin-top:3px;
     background-color: var(--leftTopBorderColor);
+}
+p.file-upload{
+    font-size: 0.8rem;
 }
 
 /** DETAILS, SUMMARY, APPs **/

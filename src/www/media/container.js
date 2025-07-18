@@ -149,15 +149,12 @@ jQuery(document).ready(function(){
                     myXhr.addEventListener('load',function(e){
                         try{
                             var jsonResp=JSON.parse(this.response);
-                            jQuery('article[container-id='+containerId+']').replaceWith(jsonResp['html']);
-                            attachEventsToContainer(containerId);
-                            jQuery('[id=js-refresh]').click();
                         } catch(e){
-                            console.log(e);
-                            console.log(this.response);
-                            jQuery('article[container-id='+containerId+']').replaceWith('<p class="error">Error detected: "'+e.message+'".<br/>Check the log, the server protocol. If the memory was exhausted,<br/>check the memory_limit....</p>');
-                            alert('Invalid response from the application. Check the network connection, the log and the server protocol. Maybe the memory was exhausted, check the memory_limit....');
+                            var jsonResp={'html':this.response};
                         }
+                        jQuery('article[container-id='+containerId+']').replaceWith(jsonResp['html']);
+                        attachEventsToContainer(containerId);
+                        jQuery('[id=js-refresh]').click();
                         containerBusy(containerId,false);
                     },false);
                     myXhr.addEventListener('error',function(e){

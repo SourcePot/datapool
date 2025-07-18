@@ -35,17 +35,22 @@ final class MiscTools{
         ];
     
     public const CONDITION_TYPES=[
-        'empty'=>'empty','!empty'=>'not empty','strpos'=>'contains','!strpos'=>'does not contain','regexMatch'=>'RegEx match','!regexMatch'=>'RegEx no match',
-        '>'=>'>','='=>'==','!='=>'!=','<'=>'<','&&'=>'&&','||'=>'||',
+        'empty'=>'empty(A)','!empty'=>'!empty(A)','strpos'=>'A contains B','!strpos'=>'A does not contain B',
+        '>'=>'A > B','='=>'A == B','!='=>'A != B','<'=>'A < B',
         '&'=>'A AND B','|'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
+        ];
+    
+    public const COMPARE_TYPES=[
+        '>'=>'>','='=>'==','!='=>'!=','<'=>'<',
         ];
     
     public const COMPARE_TYPES_0=[
         '>'=>'> 0','='=>'== 0','!='=>'!= 0','<'=>'< 0',
         ];
     
-    public const COMPARE_TYPES=[
-        '>'=>'>','='=>'==','!='=>'!=','<'=>'<',
+    public const OPERATIONS=[
+        '+'=>'A + B','-'=>'A - B','*'=>'A * B','/'=>'A / B','pow'=>'pow(A,B)','%'=>'A modulus B',
+        'regexMatch'=>'A RegEx B',
         ];
     
     private const COMBINE_OPTIONS=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
@@ -1149,6 +1154,8 @@ final class MiscTools{
         } else if ($condition==='!regexMatch'){
             return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches))===FALSE;
         }
+        $valueA=(is_string($valueA))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueA):$valueA;
+        $valueB=(is_string($valueB))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueB):$valueB;
         // numeric tests
         if (is_int($valueA)){
             $valueB=intval($valueB);
@@ -1176,6 +1183,53 @@ final class MiscTools{
             return $valueA==-1*$valueB;
         }
         return NULL;
+    }
+
+    public function operation($valueA,$valueB,$operation)
+    {
+        $maxValue=NULL;
+        $result=$this->isTrue($valueA,$valueB,$operation);
+        if ($result===NULL){
+            $valueA=(is_string($valueA))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueA):$valueA;
+            $valueB=(is_string($valueB))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueB):$valueB;
+            // numeric tests
+            if (is_int($valueA)){
+                $valueB=intval($valueB);
+                $maxValue=PHP_INT_MAX;
+            } else if (is_float($valueA)){
+                $valueB=floatval($valueB);
+                $maxValue=INF;
+            } else if (is_bool($valueA)){
+                $valueA=intval($valueA);
+                $valueB=intval($valueB);
+                $maxValue=PHP_INT_MAX;
+            }
+            if ($operation==='-'){
+                return $valueA-$valueB;
+            } else if ($operation==='+'){
+                return $valueA-$valueB;
+            } else if ($operation==='*'){
+                return $valueA*$valueB;
+            } else if ($operation==='pow'){
+                return pow($valueA,$valueB);
+            } else if ($operation==='/'){
+                if ($valueB===0){
+                    return intval($valueA<0 xor $valueB<0)*$maxValue;
+                } else {
+                    return $valueA/$valueB;
+                }
+            } else if ($operation==='%'){
+                if ($valueB===0){
+                    return intval($valueA<0 xor $valueB<0)*$maxValue;
+                } else {
+                    return $valueA%$valueB;
+                }
+            } else if ($operation==='regexMatch'){
+                preg_match('/'.$valueB.'/',$valueA,$match);
+                return $match[0]??NULL;
+            }
+        }
+        return $result;
     }
     
     public function matchEntry($needle,$matchSelector,$matchFlatKey,$matchType='contains',$isSystemCall=FALSE):array
