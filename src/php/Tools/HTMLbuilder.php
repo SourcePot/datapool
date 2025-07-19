@@ -238,7 +238,7 @@ class HTMLbuilder{
                 $html=str_replace($needle,$value,$html);
             }
             if (count($arr['options'])>self::SHOW_FILTER_OPTION_COUNT && !empty($selectArr['id'])){
-                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'style'=>$arr['style']??[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'style'=>['width'=>'2rem','min-width'=>'unset'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
                 $countArr=['tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($countArr);

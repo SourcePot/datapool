@@ -134,8 +134,7 @@ select{
 textarea{
     min-height:3rem;
 }
-input.filter{
-    width:3rem;
+input.filter[type="text"]{
     border:1px dotted var(--attentionColor);
 }
 p.filter{
