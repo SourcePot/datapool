@@ -502,20 +502,26 @@ select.lng-selector{
 }
 
 /** WIDGETS **/
+.file-upload{
+    clear:both;
+    width:100%;
+    padding: 0;
+}
 div.file-upload{
+    height:100px;
+    width:250px;
     padding:5px;
     background-color:var(--mediaColorA);
 }
+
 input.file-upload{
     clear:both;
-    height:100px;
-    width:300px;
     margin:0;
-    padding:0; 
+    padding:0;
+    height:60%;
 }
 progress.file-upload{
     clear:both;
-    width:200px;
     margin-top:3px;
     background-color: var(--leftTopBorderColor);
 }

@@ -448,7 +448,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $matchText=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($matchText,$rule['Content']['Target data type']);
                     $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
                 }
-            } else {
+            } else if (!empty($section)){
                 $result[$rowKey]['Text']='<b>const:</b> "'.$rule['Content']['Constant or...'].'"';
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];
