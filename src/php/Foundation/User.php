@@ -35,7 +35,6 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
                 'Fax'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE],
                 'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
-                'My user role(s)'=>['@class'=>__CLASS__,'@function'=>'getUserRolsString'],
                 'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                 ],
             'Address'=>[
@@ -53,12 +52,13 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             ],
         'Login'=>['@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'],
         'Icon etc.'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'My user rols'=>['@class'=>__CLASS__,'@function'=>'getUserRolesString','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ALL_REGISTERED_R','@key'=>'myRoles','@isApp'=>'My rols','@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
         'Privileges'=>['@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
         'App credentials'=>['@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'],
         'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>['width'=>360,'height'=>400]],
         ];
 
-    private $userRols=[
+    private $userRoles=[
         'Content'=>[
             0=>['Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'],
             1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'],
@@ -97,7 +97,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->userRols();
+        $this->userRoles();
         // check database user entry definition 
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,self::DEFINITION);
         // add calendar placeholder
@@ -114,36 +114,39 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $this->entryTemplate;
     }
     
-    public function userRols():array
+    public function userRoles():array
     {
-        $entry=$this->userRols;
+        $entry=$this->userRoles;
         $entry['Class']=__CLASS__;
         $entry['EntryId']=__FUNCTION__;
-        $this->userRols=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($entry,TRUE);
-        return $this->userRols;
+        $this->userRoles=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($entry,TRUE);
+        return $this->userRoles;
     }
     
-    public function getUserRols(bool $asOptions=FALSE):array
+    public function getUserRoles(bool $asOptions=FALSE):array
     {
         if ($asOptions){
             $options=[];
-            foreach($this->userRols['Content'] as $index=>$userRole){
+            foreach($this->userRoles['Content'] as $userRole){
                 $options[$userRole['Value']]=$userRole['Name'];
             }
             return $options;
         } else {
-            return $this->userRols['Content'];
+            return $this->userRoles['Content'];
         }
     }
     
-    public function getUserRolsString(array $user):string
+    public function getUserRolesString(array $user):string
     {
-        $userRols=[];
+        $user['class']='';
+        $user['matrix']=[];
         $privileges=$user['Privileges']??$user['selector']['Privileges']??[];
-        foreach($this->userRols['Content'] as $index=>$rolArrc){
-            if ((intval($privileges) & $rolArrc['Value'])>0){$userRols[]=$rolArrc['Name'];}
+        foreach($this->userRoles['Content'] as $index=>$rolArrc){
+            if ((intval($privileges) & $rolArrc['Value'])>0){
+                $user['matrix'][$index]=['Role'=>$rolArrc['Name']];
+            }
         }
-        return implode('; ',$userRols);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($user);
     }
     
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array

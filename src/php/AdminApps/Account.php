@@ -45,7 +45,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
             return ['Category'=>'Admin','Emoji'=>'&#9787;','Label'=>'Account','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html=$this->account();
-            $html.=$this->userRols();
+            $html.=$this->userRoles();
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -81,30 +81,30 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
 
-    private function userRols():string
+    private function userRoles():string
     {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-            $selector=['Class'=>'SourcePot\Datapool\Foundation\User','EntryId'=>'userRols'];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User rols','generic',$selector,['classWithNamespace'=>__CLASS__,'method'=>'userRolsWidget'],[]);    
+            $selector=['Class'=>'SourcePot\Datapool\Foundation\User','EntryId'=>'userRoles'];
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('User rols','generic',$selector,['classWithNamespace'=>__CLASS__,'method'=>'userRolesWidget'],[]);    
         }
         return $html;
     }
 
-    public function userRolsWidget($arr):array
+    public function userRolesWidget($arr):array
     {
         $arr['html']=$arr['html']??'';
-        $userRols=$this->oc['SourcePot\Datapool\Foundation\User']->userRols();
+        $userRoles=$this->oc['SourcePot\Datapool\Foundation\User']->userRoles();
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (!empty($formData['cmd'])){
-            $userRols['Content']=array_replace_recursive($userRols['Content'],$formData['val']);
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($userRols,TRUE);
+            $userRoles['Content']=array_replace_recursive($userRoles['Content'],$formData['val']);
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($userRoles,TRUE);
         }
-        foreach($userRols['Content'] as $index=>$row){
-            $userRols['Content'][$index]['Name']=['tag'=>'input','type'=>'text','value'=>$row['Name'],'key'=>[$index,'Name'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
-            $userRols['Content'][$index]['Description']=['tag'=>'input','type'=>'text','value'=>$row['Description'],'key'=>[$index,'Description'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+        foreach($userRoles['Content'] as $index=>$row){
+            $userRoles['Content'][$index]['Name']=['tag'=>'input','type'=>'text','value'=>$row['Name'],'key'=>[$index,'Name'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+            $userRoles['Content'][$index]['Description']=['tag'=>'input','type'=>'text','value'=>$row['Description'],'key'=>[$index,'Description'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$userRols['Content'],'keep-element-content'=>TRUE,'caption'=>'User rols']);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$userRoles['Content'],'keep-element-content'=>TRUE,'caption'=>'User rols']);
         return $arr;
     }
     

@@ -14,22 +14,23 @@ class Access{
     
     private $oc;
 
-    private $access=['NO_R'=>0,
-                    'PUBLIC_R'=>1,
-                    'REGISTERED_R'=>2,
-                    'MEMBER_R'=>4,
-                    'ALL_DATA_R'=>65532,
-                    'SENTINEL_R'=>1024,
-                    'ALL_DATA_SENTINEL_R'=>1272,
-                    'ALL_FRIENDS_R'=>768,
-                    'ALL_FAMILY_R'=>6144,
-                    'PARENTS_R'=>8192,
-                    'ADMIN_R'=>32768,
-                    'ALL_CONTENTADMIN_R'=>49152,
-                    'ALL_REGISTERED_R'=>65534,
-                    'ALL_MEMBER_R'=>65532,
-                    'ALL_R'=>65535
-                    ];
+    private $access=[
+        'NO_R'=>0,
+        'PUBLIC_R'=>1,
+        'REGISTERED_R'=>2,
+        'MEMBER_R'=>4,
+        'ALL_DATA_R'=>65532,
+        'SENTINEL_R'=>1024,
+        'ALL_DATA_SENTINEL_R'=>1272,
+        'ALL_FRIENDS_R'=>768,
+        'ALL_FAMILY_R'=>6144,
+        'PARENTS_R'=>8192,
+        'ADMIN_R'=>32768,
+        'ALL_CONTENTADMIN_R'=>49152,
+        'ALL_REGISTERED_R'=>65534,
+        'ALL_MEMBER_R'=>65532,
+        'ALL_R'=>65535
+        ];
         
     public function __construct($oc)
     {
@@ -231,7 +232,7 @@ class Access{
     {
         $arr['html']='';
         if (isset($arr['selector'][$right])){
-            foreach($this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE) as $value=>$name){
+            foreach($this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE) as $value=>$name){
                 if ((intval($value) & intval($arr['selector'][$right]))>0){
                     if (!empty($arr['html'])){$arr['html'].='<br/>';}
                     if (stripos($name,'admin')!==FALSE){

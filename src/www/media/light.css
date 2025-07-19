@@ -16,6 +16,7 @@
     --attentionColor:rgba(255, 48, 48);
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
+    --textFieldMinWidth:13rem;
     accent-color:#00f;
 }
 *{
@@ -127,13 +128,11 @@ button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.p
     background-color:var(--color);   
 }
 select{
-    max-width:280px;
+    max-width:20rem;
     cursor:pointer;
-    margin:0.125rem;
 }
 textarea{
-    width:90%;
-    height:10vh;
+    min-height:3rem;
 }
 input.filter{
     width:3rem;
@@ -231,6 +230,9 @@ legend{
 div.fieldset{
     padding:0.5rem 0;
 }
+input[type="text"],input[type="tel"],input[type="password"],input[type="email"],textarea{
+    min-width: var(--textFieldMinWidth);
+}
 input[type="checkbox"]{
     clear:left;
     width:1.2rem;
@@ -254,7 +256,7 @@ td,th{
     position:relative;
     padding:0.125rem;
     max-width:95vw;
-    min-width:4.5rem;
+    max-height:80vh;
 }
 p.log{
     clear:none;

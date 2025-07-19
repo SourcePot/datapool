@@ -608,7 +608,7 @@ class HTMLbuilder{
         // Typical use is for keys 'Read', 'Write' or 'Privileges'.
         //
         if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
-        $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16];
+        $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
         $entry=$arr['selector'];
         // only the Admin has access to the method if columns 'Privileges' is selected
