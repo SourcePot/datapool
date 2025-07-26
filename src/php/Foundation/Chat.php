@@ -53,28 +53,20 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         // create new chat entry
-        $chatEntry=['Source'=>$this->entryTable,'Owner'=>'SYSTEM','Group'=>$this->currentUser['EntryId'],'Name'=>str_pad(strval(time()),20,'0',STR_PAD_LEFT)];
-        $chatEntry['Folder']=($formData['val']['selectedUser']??'').'|'.$this->currentUser['EntryId'];
+        $chatEntry=['Source'=>$this->entryTable,'Owner'=>'SYSTEM','Group'=>$this->currentUser['EntryId'],'Name'=>str_pad(strval(time()),20,'0',STR_PAD_LEFT),'Read'=>'ALL_MEMBER_R','Write'=>'ALL_CONTENTADMIN_R'];
+        $chatEntry['Folder']=$this->currentUser['EntryId'];
         $chatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($chatEntry);
         if (isset($formData['cmd']['send']) && !empty($formData['val']['new'])){
             $chatEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',self::Expires);
             $chatEntry['Content']=['Message'=>$formData['val']['new'],];
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($chatEntry,TRUE);
-            $formData['val']['selectedUser']='';
         }
         $arr['html']=$arr['html']??'';
-        // user selector
-        $selectArr=['options'=>[''=>''],'selected'=>$formData['val']['selectedUser']??($this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()),'key'=>['selectedUser'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
-        $userSelctor=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId!'=>'online_%','EntryId!!'=>'%-oneTimeLink'];
-        $selectArr['options']=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$this->oc['SourcePot\Datapool\Tools\Email']->getRelevantFlatUserContentKey());
         $matrix=[];
-        $matrix['To']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         // New chat entry
-        if (!empty($formData['val']['selectedUser'])){
-            $matrix['Msg']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'textarea','element-content'=>$formData['val']['new']??'','placeholder'=>'e.g. This was a great day 😁','keep-element-content'=>TRUE,'id'=>$chatEntry['EntryId'],'key'=>['new'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
-            $matrix['Emoji']['value']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for new entry '.$chatEntry['EntryId'],'generic',$chatEntry,['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$chatEntry['EntryId']]);
-            $matrix['']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'button','element-content'=>'Send','key'=>['send'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
-        }
+        $matrix['Msg']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'textarea','element-content'=>$formData['val']['new']??'','placeholder'=>'e.g. This was a great day 😁','keep-element-content'=>TRUE,'id'=>$chatEntry['EntryId'],'key'=>['new'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+        $matrix['Emoji']['value']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for new entry '.$chatEntry['EntryId'],'generic',$chatEntry,['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$chatEntry['EntryId']]);
+        $matrix['']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'button','element-content'=>'Send','key'=>['send'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'']);
         return $arr;
     }
@@ -87,12 +79,6 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
             $chatAuthor=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$chat['Group']];
             $chatAuthor=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($chatAuthor,TRUE);
             $chatAuthorName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($chatAuthor,1);
-            if ($chat['Group']===$this->currentUser['EntryId']){
-                $pair=explode('|',$chat['Folder']);
-                $to=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$pair[0]],TRUE);
-                $toName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($to,1);
-                $chatAuthorName=' &#10150; '.$toName;
-            }
             if (!empty($timeDiff)){
                 $chatAuthorName.=' (-'.$timeDiff.')';
             }
@@ -113,7 +99,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
         $element=['element-content'=>''];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Chat','keep-element-content'=>TRUE]);
         $newEntryHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('New entry'.__CLASS__.__FUNCTION__,'generic',['Source'=>$this->entryTable],['method'=>'newEntryHtml','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$newEntryHtml,'icon'=>'&#9993; Chat','class'=>'forum']);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$newEntryHtml,'icon'=>'&#9993; Member chat','class'=>'forum']);
         $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$this->currentUser['EntryId'].'%','refreshInterval'=>5];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chat '.__CLASS__.__FUNCTION__,'generic',$selector,['method'=>'getChat','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
         return $element;
