@@ -1187,7 +1187,6 @@ final class MiscTools{
 
     public function operation($valueA,$valueB,$operation)
     {
-        $maxValue=NULL;
         $result=$this->isTrue($valueA,$valueB,$operation);
         if ($result===NULL){
             $valueA=(is_string($valueA))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueA):$valueA;
@@ -1195,14 +1194,11 @@ final class MiscTools{
             // numeric tests
             if (is_int($valueA)){
                 $valueB=intval($valueB);
-                $maxValue=PHP_INT_MAX;
             } else if (is_float($valueA)){
                 $valueB=floatval($valueB);
-                $maxValue=INF;
             } else if (is_bool($valueA)){
                 $valueA=intval($valueA);
                 $valueB=intval($valueB);
-                $maxValue=PHP_INT_MAX;
             }
             if ($operation==='-'){
                 return $valueA-$valueB;
@@ -1214,13 +1210,13 @@ final class MiscTools{
                 return pow($valueA,$valueB);
             } else if ($operation==='/'){
                 if ($valueB===0){
-                    return intval($valueA<0 xor $valueB<0)*$maxValue;
+                    return $valueA*INF; // avoid division by zero
                 } else {
                     return $valueA/$valueB;
                 }
             } else if ($operation==='%'){
                 if ($valueB===0){
-                    return intval($valueA<0 xor $valueB<0)*$maxValue;
+                    return $valueA*INF; // avoid division by zero
                 } else {
                     return $valueA%$valueB;
                 }
