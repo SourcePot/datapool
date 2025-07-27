@@ -89,7 +89,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$statistic['deleted'],'int');
             $vars['action']='Deleted expired entries of table "'.$selectedTable.'"';
         }
-        // add inofs to html
+        // add infos to html
         $vars['html']='<h3>'.$vars['action'].'</h3>';
         $vars['Last run']=time();
         return $vars;
@@ -870,7 +870,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             if ($addLog){
                 $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
                 $dateTimeArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->timestamp2date(time(),'UTC');
-                $entry['Params']['Log'][__FUNCTION__]['insert']=['user'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
+                $entry['Params']['Log'][__FUNCTION__]['insert']=['userName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,1),'userEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUserId,7),'userId'=>$currentUserId,'timestamp'=>$dateTimeArr['Timestamp'],'System'=>$dateTimeArr['System'],'RFC2822'=>$dateTimeArr['RFC2822']];
             }
             // insert new entry
             $entry=$this->insertEntry($entry,TRUE);

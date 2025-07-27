@@ -112,6 +112,7 @@ class MediaTools{
     {
         $arr['html']=$arr['html']??'';
         $arr['maxDim']=$arr['maxDim']??50;
+        $arr['margin']=$arr['margin']??'0';
         $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['TmpFile']['MIME-Type']??'text';
         $fontSize=round($arr['maxDim']*0.4);
         $arr=$this->addTmpFile($arr);
@@ -133,7 +134,7 @@ class MediaTools{
             $iconHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($iconArr);
         }
         // add wrapper div
-        $style=['width'=>$arr['maxDim'],'height'=>$arr['maxDim']];
+        $style=['width'=>$arr['maxDim'],'height'=>$arr['maxDim'],'margin'=>$arr['margin']];
         $imageArr=['tag'=>'div','element-content'=>'<br/>','keep-element-content'=>TRUE,'class'=>'icon','style'=>$style];
         $imageArr['title']=$text;
         if (isset($iconHtml)){

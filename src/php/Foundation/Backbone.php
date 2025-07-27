@@ -140,7 +140,7 @@ class Backbone{
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'main','element-content'=>$main,'keep-element-content'=>TRUE]).PHP_EOL;
         // end of page        
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Logger']->getMyLogs().PHP_EOL;
-        $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div>'.PHP_EOL;
+        $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div><div id="overlay-image-container" style="display:none;"></div>'.PHP_EOL;
         $arr['toReplace']['{{body}}'].='<script>jQuery("article").hide();</script>'.PHP_EOL;
         $arr=$this->oc['SourcePot\Datapool\Foundation\Menu']->menu($arr);
         return $arr;

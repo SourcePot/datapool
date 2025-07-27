@@ -174,10 +174,11 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function calculationRules(array $callingElement):string
     {
         $addKeys=(isset($this->ruleOptions[mb_strtolower(__FUNCTION__)]))?$this->ruleOptions[mb_strtolower(__FUNCTION__)]:[];
+        $operations=\SourcePot\Datapool\Tools\MiscTools::CONDITION_TYPES+\SourcePot\Datapool\Tools\MiscTools::OPERATIONS;
         $contentStructure=[
             '"A" selected by...'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys],
             'Default value "A"'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>\SourcePot\Datapool\Tools\MiscTools::CONDITION_TYPES,'keep-element-content'=>TRUE],
+            'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>$operations,'keep-element-content'=>TRUE],
             '"B" selected by...'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>$addKeys],
             'Default value "B"'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             ''=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
@@ -291,23 +292,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     }
                     $result['Calc rule'][$calculationRuleIndex][$index]=$value[$index];
                 }
-                $tmpResult=$this->oc['SourcePot\Datapool\Tools\MiscTools']->isTrue($value['A'],$value['B'],$rule['Content']['Operation']);
-                if ($tmpResult===NULL){
-                    // non-boolean operation detected
-                    $ruleResults[$calculationRuleIndex]=match($rule['Content']['Operation']){
-                        '+'=>$value['A']+$value['B'],
-                        '-'=>$value['A']-$value['B'],
-                        '*'=>$value['A']*$value['B'],
-                        '/'=>($value['B']==0)?FALSE:($value['A']/$value['B']),
-                        '%'=>($value['B']==0)?FALSE:($value['A']%$value['B']),
-                        '&&'=>intval($value['A']) & intval($value['B']),
-                        '||'=>intval($value['A']) | intval($value['B']),
-                        };
-                
-                } else {
-                    // boolean operation detected
-                    $ruleResults[$calculationRuleIndex]=$tmpResult;
-                }
+                $ruleResults[$calculationRuleIndex]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->operation($value['A'],$value['B'],$rule['Content']['Operation']);
                 $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$ruleResults[$calculationRuleIndex],$rule['Content']['Target data type']);
                 $result['Calc rule'][$calculationRuleIndex]['Operation']=$rule['Content']['Operation'];
                 $result['Calc rule'][$calculationRuleIndex]['Result']=$ruleResults[$calculationRuleIndex];

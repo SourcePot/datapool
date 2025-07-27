@@ -16,6 +16,7 @@
     --attentionColor:rgba(255, 48, 48);
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
+    --textFieldMinWidth:13rem;
     accent-color:#00f;
 }
 *{
@@ -75,6 +76,9 @@ h2{
 h3,caption{
     font-size:1.2rem;
 }
+object{
+    overflow:hidden;
+}
 p,li,code{
     font-size:1.1rem;
 }
@@ -127,16 +131,13 @@ button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.p
     background-color:var(--color);   
 }
 select{
-    max-width:280px;
+    max-width:20rem;
     cursor:pointer;
-    margin:0.125rem;
 }
 textarea{
-    width:90%;
-    height:10vh;
+    min-height:3rem;
 }
-input.filter{
-    width:3rem;
+input.filter[type="text"]{
     border:1px dotted var(--attentionColor);
 }
 p.filter{
@@ -231,6 +232,9 @@ legend{
 div.fieldset{
     padding:0.5rem 0;
 }
+input[type="text"],input[type="tel"],input[type="password"],input[type="email"],textarea{
+    min-width: var(--textFieldMinWidth);
+}
 input[type="checkbox"]{
     clear:left;
     width:1.2rem;
@@ -254,7 +258,7 @@ td,th{
     position:relative;
     padding:0.125rem;
     max-width:95vw;
-    min-width:4.5rem;
+    max-height:80vh;
 }
 p.log{
     clear:none;
@@ -316,7 +320,6 @@ div.icon{
     clear:none;
     display: block;
     overflow:hidden;
-    margin:0 3px;
     background-size:cover;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -339,26 +342,31 @@ meter{
     margin:3px 0.25rem 0 0;
 }
 /** IMAGE VIEWER **/
-#overlay{
+#overlay,#overlay-image,#prev-img-btn,#next-img-btn,#img-index,#overlay-title,#overlay-image-container{
+    z-index:100;
+}
+#overlay,#overlay-image-container{
     position:fixed;
     float:unset;
     top:0;
     left:0;
     width:100%;
     height:100%;
-    cursor:pointer;
     background-color:var(--color);
-    opacity: 0.9;
-    z-index:100;
+    opacity: 0.8;
+}
+#overlay-image-container{
+    background:none;
+    opacity: 1;
 }
 #overlay-image{
-    display:block;
+    position: relative;
+    display: block;
+    cursor:pointer;
     max-width:90vw;
     max-height:90vh;
     margin:0 auto;
     cursor:pointer;
-    background-color:var(--color);
-    background-image:url("busy.gif");
     background-repeat:no-repeat;
     background-position:center;
     border:1px solid var(--rightBottomBorderColor);
@@ -497,22 +505,31 @@ select.lng-selector{
 }
 
 /** WIDGETS **/
+.file-upload{
+    clear:both;
+    width:100%;
+    padding: 0;
+}
 div.file-upload{
+    height:100px;
+    width:250px;
     padding:5px;
     background-color:var(--mediaColorA);
 }
+
 input.file-upload{
     clear:both;
-    height:50px;
-    width:200px;
     margin:0;
-    padding:0; 
+    padding:0;
+    height:60%;
 }
 progress.file-upload{
     clear:both;
-    width:200px;
     margin-top:3px;
     background-color: var(--leftTopBorderColor);
+}
+p.file-upload{
+    font-size: 0.8rem;
 }
 
 /** DETAILS, SUMMARY, APPs **/
@@ -879,6 +896,7 @@ div.center{
     background-color: var(--bgColor);
     width: 100%;
 }
+/** widget **/
 div.widget{
     width:100vw;
     padding: 0;
@@ -891,17 +909,9 @@ div.widget{
     width:94vw;
     border-bottom:1px dotted var(--color);
 }
-.widget-entry-header{
-    clear:right;
-    font-size:1.2rem;
-    font-weight:bold;
-}
 .widget-entry-content-wrapper{
     clear:none;
     width:70vw;
-}
-.widget-entry-content{
-    font-size:1.2rem;
 }
 /** image shuffle**/
 div.imageShuffleItemWrapper,div.imageShuffleItem,article.imageShuffle,.imageShuffleBtnWrapper{

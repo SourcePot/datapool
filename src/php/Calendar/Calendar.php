@@ -63,12 +63,14 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         'Type'=>['event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'],
         'Days to show'=>[10=>'Show 10 days',20=>'Show 20 days',45=>'Show 45 days',90=>'Show 90 days',180=>'Show 180 days',370=>'Show 370 days'],
         'Day width'=>[200=>'Small day width',400=>'Middle day width',800=>'Big day width',1600=>'Biggest day width'],
-        'Timezone'=>['Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
-                    'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
-                    'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
-                    'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
-                    'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
-                    'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'],
+        'Timezone'=>[
+            'Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
+            'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
+            'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
+            'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
+            'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
+            'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'
+            ],
         ];
 
     public function __construct($oc)
@@ -90,10 +92,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         // get settings
         $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $settingKey=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-        $this->setting=['Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone];
-        $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$this->setting,'Calendar',FALSE);
+        $setting=['Days to show'=>45,'Day width'=>400,'Timezone'=>$pageTimeZone];
+        $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting(__CLASS__,$settingKey,$setting,'Calendar',FALSE);
+        $this->setting=(empty($this->setting['Timezone']))?$setting:$this->setting;
         // get page state
-        $this->pageStateTemplate=['Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>date('Y-m-d H:i:s'),'addDate'=>'','refreshInterval'=>300];
+        $this->pageStateTemplate=['Source'=>$this->entryTable,'EntryId'=>'{{EntryId}}','calendarDate'=>date('Y-m-d H:i:s'),'addDate'=>'','refreshInterval'=>0];
         $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,$this->pageStateTemplate);
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
     }
@@ -274,17 +277,18 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             if ($index<25){$hourOptions[$fullIndex]=$fullIndex;}
             if ($index<60){$minOptions[$fullIndex]=$fullIndex;}
         }
-        $contentStructure=['Name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Serial event','excontainer'=>TRUE],
-                        'Type'=>['method'=>'select','excontainer'=>TRUE,'value'=>current(self::OPTIONS['Type']),'options'=>self::OPTIONS['Type']],
-                        'Month'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthOptions],
-                        'Day'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthdayOptions],
-                        'Week day'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$weekdayOptions],
-                        'Hour'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$hourOptions],
-                        'Minute'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$minOptions],
-                        'Duration'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$durationOptions],
-                        'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'options'=>self::OPTIONS['Timezone']],
-                        'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(TRUE)],
-                        ];
+        $contentStructure=[
+            'Name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Serial event','excontainer'=>TRUE],
+            'Type'=>['method'=>'select','excontainer'=>TRUE,'value'=>current(self::OPTIONS['Type']),'options'=>self::OPTIONS['Type']],
+            'Month'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthOptions],
+            'Day'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$monthdayOptions],
+            'Week day'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$weekdayOptions],
+            'Hour'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$hourOptions],
+            'Minute'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$minOptions],
+            'Duration'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$durationOptions],
+            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'options'=>self::OPTIONS['Timezone']],
+            'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE)],
+            ];
         $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'owner'=>$currentUserId];
         $arr['contentStructure']=$contentStructure;
@@ -325,17 +329,21 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $arr['callingClass']=__CLASS__;
         $arr['callingFunction']=__FUNCTION__;
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (isset($formData['cmd']['Home'])){
+        if (isset($formData['cmd']['Home']) || isset($formData['cmd']['Set'])){
             $this->pageState['Group']='Events';
             $this->pageState['EntryId']='{{EntryId}}';
-            $this->pageState['calendarDate']='{{YESTERDAY}}';
+            if (isset($formData['cmd']['Set'])){
+                $this->pageState['calendarDate']=$formData['val']['pageState']['calendarDate'];
+            } else {
+                $this->pageState['calendarDate']='{{YESTERDAY}}';
+            }
             $this->pageState['addDate']='';
             $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
             $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
         } else if (!empty($formData['val']['pageState'])){
             $this->resetEventCache();
-            $newPageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
-            $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$newPageState);
+            $this->pageState=array_merge($this->pageStateTemplate,$this->pageState,$formData['val']['pageState']);
+            $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
             $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),$formData['val']['setting'],'Calendar',FALSE);
         }
         $tagArr=$btnArr=$arr;
@@ -355,7 +363,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $calendarDateArr['key']=['pageState','calendarDate'];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($calendarDateArr);
         $btnArr['key']=['Set'];
-        $btnArr['title']='Set';
+        $btnArr['title']=$btnArr['key'][0];
         $btnArr['element-content']='&#10022;';
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>'calendar-settings-wrapper']);
@@ -858,6 +866,14 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     
     public function getHomeAppWidget(string $name):array
     {
+        // reset page setting
+        $this->pageState['Group']='Events';
+        $this->pageState['EntryId']='{{EntryId}}';
+        $this->pageState['calendarDate']='{{YESTERDAY}}';
+        $this->pageState['addDate']='';
+        $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
+        $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,$this->pageState);
+        // get container
         $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);

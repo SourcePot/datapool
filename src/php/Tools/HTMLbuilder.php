@@ -238,7 +238,7 @@ class HTMLbuilder{
                 $html=str_replace($needle,$value,$html);
             }
             if (count($arr['options'])>self::SHOW_FILTER_OPTION_COUNT && !empty($selectArr['id'])){
-                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'style'=>$arr['style']??[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+                $filterArr=['tag'=>'input','type'=>'text','placeholder'=>'filter','key'=>['filter'],'class'=>'filter','id'=>'filter-'.$selectArr['id'],'excontainer'=>TRUE,'style'=>['width'=>'2rem','min-width'=>'unset'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($filterArr);
                 $countArr=['tag'=>'p','element-content'=>count($arr['options']),'class'=>'filter','id'=>'count-'.$selectArr['id']];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($countArr);
@@ -534,12 +534,16 @@ class HTMLbuilder{
         $elementFile=$this->oc['SourcePot\Datapool\Foundation\Element']->addNameIdAttr($elementFile);
         $elementFile['trigger-id']=$elementBtn['id'];
         // progross bar
-        $elemntProgress=['tag'=>'progress','value'=>1,'min'=>0,'max'=>100,'class'=>$element['class']];
+        $elemntProgress=['tag'=>'progress','element-content'=>'Progress','value'=>1,'min'=>0,'max'=>100,'class'=>$element['class']];
         $elemntProgress['name']=$elemntProgress['id']=$elementFile['trigger-id'].'_progress';
+        // info field
+        $elemntInfo=['tag'=>'p','element-content'=>'','class'=>$element['class']];
+        $elemntInfo['name']=$elemntInfo['id']=$elementFile['trigger-id'].'_info';
         // compile html
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementFile);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementBtn);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elemntProgress);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elemntInfo);
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'class'=>$element['class'],'style'=>$divStyle??[]]);
         return $html;
     }
@@ -604,7 +608,7 @@ class HTMLbuilder{
         // Typical use is for keys 'Read', 'Write' or 'Privileges'.
         //
         if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
-        $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRols(),'bitCount'=>16];
+        $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
         $entry=$arr['selector'];
         // only the Admin has access to the method if columns 'Privileges' is selected
@@ -1078,7 +1082,7 @@ class HTMLbuilder{
     
     private function mapContainer2presentArr(array $presentArr):array
     {
-        if (strcmp($presentArr['callingClass'],'SourcePot\\Datapool\\Foundation\\Container')===0){
+        if (strcmp($presentArr['callingClass']??'','SourcePot\\Datapool\\Foundation\\Container')===0){
             $presentArr['callingClass']=$this->oc['SourcePot\Datapool\Root']->source2class($presentArr['selector']['Source']);
             $presentArr['callingFunction']=$presentArr['settings']['method']??$presentArr['callingFunction'];
         }

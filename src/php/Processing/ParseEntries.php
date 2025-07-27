@@ -177,7 +177,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['caption']='Parser control: Select parser target and type';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
+        if (empty($arr['selector']['Content'])){
+            $row['trStyle']=['background-color'=>'#a00'];
+        }
         $matrix=['Parameter'=>$row];
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
@@ -349,8 +351,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // parse single entry sections
         $parserFailed=FALSE;
         $resultArr=[];
-        foreach($sections['singleEntry'] as $sectionId=>$section){
-            if (empty($section)){continue;}
+        foreach($sections['singleEntry']??[] as $sectionId=>$section){
             $this->internalData['{{sectionIndex}}']=0;
             $this->internalData['{{section}}']=$section;
             $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
@@ -382,7 +383,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 foreach($sectionArr as $sectionIndex=>$section){
                     $this->internalData['{{sectionIndex}}']=$sectionIndex;
                     $this->internalData['{{section}}']=$section;
-                    if (empty($section)){continue;}
                     $targetEntryTmp=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
                     if ($targetEntryTmp['processParsing']['failed']){
                         // parser failed
@@ -444,11 +444,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $matches[$ruleMatchIndex][0]=$matches[$ruleMatchIndex][0]??$params['No match placeholder']??'';
                 foreach($matches[$ruleMatchIndex] as $hitIndex=>$matchText){
                     $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
-                    $result[$rowKey]['Match text'].=empty($result[$rowKey]['Match text'])?$matchText:(' | '.$matchText);
+                    $result[$rowKey]['Match text'].=(empty($result[$rowKey]['Match text']))?$matchText:(' | '.$matchText);
                     $matchText=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($matchText,$rule['Content']['Target data type']);
                     $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
                 }
-            } else {
+            } else if (!empty($section)){
                 $result[$rowKey]['Text']='<b>const:</b> "'.$rule['Content']['Constant or...'].'"';
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];

@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver{
+class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
     
     private const APP_ACCESS='ALL_MEMBER_R';
 
@@ -384,10 +384,11 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     public function getHomeAppWidget(string $name):array
     {
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
+        // get container
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>5];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'News','keep-element-content'=>TRUE]);
-        //$element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('News item '.__FUNCTION__,'generic',$elector,['method'=>'userItemHtml','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
         return $element;
     }
     
@@ -396,6 +397,47 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $info='This widget presents the news.';
         return $info;
     }
-    
+
+    private function updateUserSpecificItems()
+    {
+        $_SESSION[__CLASS__]['userItems']=[];
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $selector=['Source'=>$this->entryTable];
+        $selectors[]=$selector+['Name'=>'%'.$user['Content']['Address']['Town'].'%'];
+        $tags=preg_split('/[,;|\f\t\n\v\r]+/',$user['Content']['Contact details']['My tags']??'');
+        foreach($tags as $tag){
+            $selectors[]=$selector+['Content'=>'%'.trim($tag).'%'];
+        }
+        foreach($selectors as $id=>$selector){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,5,0) as $entry){
+                $_SESSION[__CLASS__]['userItems'][$entry['EntryId']]=['Source'=>$this->getEntryTable(),'EntryId'=>$entry['EntryId'],'SelectorId'=>$id];
+            }
+        }
+    }
+
+    private function getUserSpecificItem():array
+    {
+        // try to get feed item
+        if (empty($_SESSION[__CLASS__]['userItems'])){
+            $this->updateUserSpecificItems();
+        }
+        $feedItemEntrySelector=array_pop($_SESSION[__CLASS__]['userItems']);
+        $feedItem=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($feedItemEntrySelector??[]);
+        if (empty($feedItem)){
+            // final try to get feed item
+            $this->updateUserSpecificItems();    
+            $feedItemEntrySelector=array_pop($_SESSION[__CLASS__]['userItems']);
+            $feedItem=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($feedItemEntrySelector??[]);
+        }
+        return $feedItem;
+    }
+
+    public function userItemHtml(array $arr):array
+    {
+        $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$this->getUserSpecificItem()];
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
+        return $arr;
+    }
+
 }
 ?>

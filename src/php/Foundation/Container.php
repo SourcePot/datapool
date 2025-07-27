@@ -149,7 +149,7 @@ class Container{
             // check if data selected by registered selector for the selected container has changed
             if (!isset($_SESSION['container monitor'][$containerId])){return TRUE;}
             $isUpToDate=TRUE;
-            if (isset($_SESSION['container monitor'][$containerId]['selector']['refreshInterval'])){
+            if (!empty($_SESSION['container monitor'][$containerId]['selector']['refreshInterval'])){
                 $isUpToDate=((time()-$_SESSION['container monitor'][$containerId]['refreshed'])<$_SESSION['container monitor'][$containerId]['selector']['refreshInterval']);
             }
             $newHash=$this->selector2hash($_SESSION['container monitor'][$containerId]['selector']);
