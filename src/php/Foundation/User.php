@@ -35,6 +35,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
                 'Fax'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@excontainer'=>TRUE],
                 'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
+                'My tags'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Schwarzheide, London, München','@excontainer'=>TRUE],
                 'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                 ],
             'Address'=>[
@@ -371,7 +372,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $element=['element-content'=>''];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Active user','keep-element-content'=>TRUE]);
-        $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','refreshInterval'=>10];
+        $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','refreshInterval'=>27];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
         return $element;
     }

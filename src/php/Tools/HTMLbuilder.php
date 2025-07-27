@@ -1082,7 +1082,7 @@ class HTMLbuilder{
     
     private function mapContainer2presentArr(array $presentArr):array
     {
-        if (strcmp($presentArr['callingClass'],'SourcePot\\Datapool\\Foundation\\Container')===0){
+        if (strcmp($presentArr['callingClass']??'','SourcePot\\Datapool\\Foundation\\Container')===0){
             $presentArr['callingClass']=$this->oc['SourcePot\Datapool\Root']->source2class($presentArr['selector']['Source']);
             $presentArr['callingFunction']=$presentArr['settings']['method']??$presentArr['callingFunction'];
         }

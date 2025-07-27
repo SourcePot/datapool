@@ -17,15 +17,15 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     private const MAX_HEIGHT_RESULTS='60vh';
     
     private const QUERY_SELECTORS=[
-                        ['app'=>'SourcePot\Datapool\GenericApps\Feeds','Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                        ['app'=>'ourcePot\Datapool\GenericApps\Documents','Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-                        ['app'=>'SourcePot\Datapool\Forum\Forum','Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-                        ['app'=>'SourcePot\Datapool\Calendar\Calendar','Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
-                    ];
+        ['app'=>'SourcePot\Datapool\GenericApps\Feeds','Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+        ['app'=>'ourcePot\Datapool\GenericApps\Documents','Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
+        ['app'=>'SourcePot\Datapool\Forum\Forum','Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
+        ['app'=>'SourcePot\Datapool\Calendar\Calendar','Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
+    ];
     private $oc;
     
     private $entryTable='';
