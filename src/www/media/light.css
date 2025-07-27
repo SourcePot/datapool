@@ -913,22 +913,6 @@ div.widget{
     clear:none;
     width:70vw;
 }
-.widget-entry-header,.widget-entry-content,.widget-entry-footer{
-    clear:both;
-    padding:0;
-    margin:0 0 0.25rem 1rem;
-}
-.widget-entry-header{
-    font-size:1.2rem;
-    font-weight:bold;
-}
-.widget-entry-content{
-    font-size:1.2rem;
-}
-.widget-entry-footer{
-    font-size:0.8rem;
-    font-weight:bold;
-}
 /** image shuffle**/
 div.imageShuffleItemWrapper,div.imageShuffleItem,article.imageShuffle,.imageShuffleBtnWrapper{
     margin:0;

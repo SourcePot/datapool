@@ -159,8 +159,8 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
-        if (!isset($entry['Group'])){$entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');}
-        if (!isset($entry['Folder'])){$entry['Folder']=$entry['Email'];}
+        $entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+        $entry['Folder']=$entry['Email'];
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry(self::DEFINITION,$entry,FALSE);
@@ -328,11 +328,15 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function userStatusLog():void
     {
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R')){
-            $expires=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10H');
-            $onlineUser=$_SESSION['currentUser'];
-            $onlineUser=array_merge($onlineUser,['LoginId'=>'online','Privileges'=>1,'Owner'=>'SYSTEM','EntryId'=>'online_'.$onlineUser['EntryId'],'Expires'=>$expires]);
-            $onlineUser['Content']=['timestamp'=>time(),'location'=>''];
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($onlineUser,TRUE);
+            $onlineUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+            $onlineUser['LoginId']='online';
+            $onlineUser['Privileges']=1;
+            $onlineUser['Owner']='SYSTEM';
+            $onlineUser['EntryId']='online_'.$onlineUser['EntryId'];
+            $onlineUser['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10H');
+            $onlineUser['Content']['timestamp']=time();
+            $onlineUser['Content']['location']='';
+            $onlineUser=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($onlineUser,TRUE);
         } else {
             // no online log for public or registered user
         }
@@ -340,6 +344,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     public function getActiveUser(array $arr):array
     {
+        $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $arr['html']=$arr['html']??'';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],TRUE,'Read','Name',TRUE,FALSE,FALSE) as $onlineUser){
             $backgronudColor=(time()-$onlineUser['Content']['timestamp']<60)?'#0f0':((time()-$onlineUser['Content']['timestamp']<3660)?'#cc7':'#999');
@@ -348,15 +353,17 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $userEntryId=str_replace('online_','',$onlineUser['EntryId']);
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$userEntryId],TRUE);
             // user html
-            $userHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
-            $textHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$user['Content']['Contact details']['First name'].' '.$user['Content']['Contact details']['Family name'],'keep-element-content'=>TRUE,'class'=>'widget-entry-header']);
-            // last seen
-            if (!empty($timeDiff)){
+            if (empty($timeDiff)){
+                $onlineUser['Content']['lastSeenStr']='';
+            } else {
                 $lastSeenStr=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Last seen');
                 $lastSeenStr.=' '.$timeDiff.' ';
                 $lastSeenStr.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('ago');
-                $textHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$lastSeenStr,'keep-element-content'=>TRUE,'class'=>'widget-entry-content']);
+                $onlineUser['Content']['lastSeenStr']=$lastSeenStr;
             }
+            $presentArr['selector']=$onlineUser;
+            $textHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
+            $userHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
             $userHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$textHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
             // html wrapper
             $style=['border-left'=>'1vw solid '.$backgronudColor];
