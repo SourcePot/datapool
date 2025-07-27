@@ -404,9 +404,9 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $selector=['Source'=>$this->entryTable];
         $selectors[]=$selector+['Name'=>'%'.$user['Content']['Address']['Town'].'%'];
-        $tags=preg_split('/[,;|\s]+/',$user['Content']['Contact details']['My tags']??'');
+        $tags=preg_split('/[,;|\f\t\n\v\r]+/',$user['Content']['Contact details']['My tags']??'');
         foreach($tags as $tag){
-            $selectors[]=$selector+['Content'=>'%'.$tag.'%'];
+            $selectors[]=$selector+['Content'=>'%'.trim($tag).'%'];
         }
         foreach($selectors as $id=>$selector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,5,0) as $entry){
