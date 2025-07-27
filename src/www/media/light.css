@@ -76,6 +76,9 @@ h2{
 h3,caption{
     font-size:1.2rem;
 }
+object{
+    overflow:hidden;
+}
 p,li,code{
     font-size:1.1rem;
 }
@@ -317,7 +320,6 @@ div.icon{
     clear:none;
     display: block;
     overflow:hidden;
-    margin:0 3px;
     background-size:cover;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -894,6 +896,7 @@ div.center{
     background-color: var(--bgColor);
     width: 100%;
 }
+/** widget **/
 div.widget{
     width:100vw;
     padding: 0;
@@ -906,17 +909,25 @@ div.widget{
     width:94vw;
     border-bottom:1px dotted var(--color);
 }
-.widget-entry-header{
-    clear:right;
-    font-size:1.2rem;
-    font-weight:bold;
-}
 .widget-entry-content-wrapper{
     clear:none;
     width:70vw;
 }
+.widget-entry-header,.widget-entry-content,.widget-entry-footer{
+    clear:both;
+    padding:0;
+    margin:0 0 0.25rem 1rem;
+}
+.widget-entry-header{
+    font-size:1.2rem;
+    font-weight:bold;
+}
 .widget-entry-content{
     font-size:1.2rem;
+}
+.widget-entry-footer{
+    font-size:0.8rem;
+    font-weight:bold;
 }
 /** image shuffle**/
 div.imageShuffleItemWrapper,div.imageShuffleItem,article.imageShuffle,.imageShuffleBtnWrapper{

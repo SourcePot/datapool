@@ -82,9 +82,9 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
             if (!empty($timeDiff)){
                 $chatAuthorName.=' (-'.$timeDiff.')';
             }
-            $entryHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['maxDim'=>30,'selector'=>$chatAuthor,'returnHtmlOnly'=>TRUE]);
-            $entryContentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$chatAuthorName,'keep-element-content'=>TRUE,'class'=>'widget-entry-header']);
-            $entryContentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$chat['Content']['Message'],'keep-element-content'=>False,'class'=>'widget-entry-content']);
+            $entryHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['maxDim'=>30,'margin'=>'1rem 0.25rem','selector'=>$chatAuthor,'returnHtmlOnly'=>TRUE]);
+            $entryContentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$chat['Content']['Message'],'keep-element-content'=>False,'class'=>'widget-entry-content']);
+            $entryContentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$chatAuthorName,'keep-element-content'=>TRUE,'class'=>'widget-entry-footer']);
             $entryHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryContentHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper']);
         }
