@@ -100,7 +100,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Chat','keep-element-content'=>TRUE]);
         $newEntryHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('New entry'.__CLASS__.__FUNCTION__,'generic',['Source'=>$this->entryTable],['method'=>'newEntryHtml','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$newEntryHtml,'icon'=>'&#9993; Member chat','class'=>'forum']);
-        $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$this->currentUser['EntryId'].'%','refreshInterval'=>5];
+        $selector=['Source'=>$this->entryTable,'disableAutoRefresh'=>FALSE];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chat '.__CLASS__.__FUNCTION__,'generic',$selector,['method'=>'getChat','classWithNamespace'=>__CLASS__,'target'=>'newforumentry'],['style'=>['margin'=>'0','border'=>'none']]);
         return $element;
     }
