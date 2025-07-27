@@ -74,6 +74,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function getChat(array $arr):array
     {
         $arr['html']=$arr['html']??'';
+        $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],TRUE,'Read','Name',FALSE,FALSE,FALSE) as $chat){
             $timeDiff=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.time(),'@'.strval(intval($chat['Name'])));
             $chatAuthor=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$chat['Group']];
@@ -82,9 +83,10 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
             if (!empty($timeDiff)){
                 $chatAuthorName.=' (-'.$timeDiff.')';
             }
+            $chat['Content']['Author']=$chatAuthorName;
             $entryHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['maxDim'=>30,'margin'=>'1rem 0.25rem','selector'=>$chatAuthor,'returnHtmlOnly'=>TRUE]);
-            $entryContentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$chat['Content']['Message'],'keep-element-content'=>False,'class'=>'widget-entry-content']);
-            $entryContentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$chatAuthorName,'keep-element-content'=>TRUE,'class'=>'widget-entry-footer']);
+            $presentArr['selector']=$chat;
+            $entryContentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             $entryHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryContentHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper']);
         }
