@@ -43,6 +43,8 @@ class Menu{
         if (isset(self::CATEGORIES[$requestedCategory])){
             $requestedCategory=$requestedCategory;
             $requestedAppClass=$_SESSION['page state']['selectedApp'][$requestedCategory]['Class']??self::CATEGORIES[$requestedCategory]['Class'];
+        } else {
+            $requestedCategory='Home';
         }
         // get app from form
         $requestedAppClass=$_SESSION['page state']['selectedApp'][$requestedCategory]['Class']??self::CATEGORIES[$requestedCategory]['Class'];
@@ -60,6 +62,7 @@ class Menu{
     public function selectedApp(string $selectAppClass=''):array
     {
         if (empty($selectAppClass)){
+            // get currently selected app class and Category
             $selectedCategory=$_SESSION['page state']['selectedCategory']??self::CATEGORIES['Home']['Category'];
             $selectAppClass=$_SESSION['page state']['selectedApp'][$selectedCategory]['Class']??self::CATEGORIES['Home']['Class'];
         }
