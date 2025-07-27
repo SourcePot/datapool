@@ -406,10 +406,12 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $selectors[]=$selector+['Name'=>'%'.$user['Content']['Address']['Town'].'%'];
         $tags=preg_split('/[,;|\f\t\n\v\r]+/',$user['Content']['Contact details']['My tags']??'');
         foreach($tags as $tag){
-            $selectors[]=$selector+['Content'=>'%'.trim($tag).'%'];
+            $tag=trim($tag);
+            if (mb_strlen($tag)<3){continue;}
+            $selectors[]=$selector+['Content'=>'%'.$tag.'%'];
         }
         foreach($selectors as $id=>$selector){
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,5,0) as $entry){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,10,0) as $entry){
                 $_SESSION[__CLASS__]['userItems'][$entry['EntryId']]=['Source'=>$this->getEntryTable(),'EntryId'=>$entry['EntryId'],'SelectorId'=>$id];
             }
         }
