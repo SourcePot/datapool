@@ -1,4 +1,5 @@
 /src/www/assets/*
+/templates/*
 !/src/www/assets/logo.jpg
 !/src/www/assets/login.jpg
 !/src/www/assets/home.mp4
