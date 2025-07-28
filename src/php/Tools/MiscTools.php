@@ -16,6 +16,8 @@ final class MiscTools{
     
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
     public const UNYCOM_REGEX='/([0-9]{4})([ ]{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2})\s/u';
+
+    private const COMPARE_WITH_0_PRECISION=5;
     
     public $emojis=[];
     private $emojiFile='';
@@ -36,21 +38,22 @@ final class MiscTools{
     
     public const CONDITION_TYPES=[
         'empty'=>'empty(A)','!empty'=>'!empty(A)','strpos'=>'A contains B','!strpos'=>'A does not contain B',
-        '>'=>'A > B','='=>'A == B','!='=>'A != B','<'=>'A < B',
-        '&'=>'A AND B','|'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
+        '>'=>'A > B','=='=>'A == B','!='=>'A != B','<'=>'A < B',
+        '&&'=>'A AND B','||'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
+        'containsRegexMatch'=>'A contains RegEx(B)','!containsRegexMatch'=>'A !contains RegEx(B)',
         ];
     
-    public const COMPARE_TYPES=[
-        '>'=>'>','='=>'==','!='=>'!=','<'=>'<',
-        ];
-    
-    public const COMPARE_TYPES_0=[
-        '>'=>'> 0','='=>'== 0','!='=>'!= 0','<'=>'< 0',
+    public const COMPARE_TYPES_CONST=[
+        '>0'=>'> 0','==0'=>'== 0','!=0'=>'!= 0','<0'=>'< 0',
+        '==INF'=>'== &infin;','!=INF'=>'!= &infin;',
+        '==-INF'=>'== -&infin;','!=-INF'=>'!= -&infin;',
+        '==±INF'=>'== &plusmn;&infin;','!=±INF'=>'!= &plusmn;&infin;',
         ];
     
     public const OPERATIONS=[
         '+'=>'A + B','-'=>'A - B','*'=>'A * B','/'=>'A / B','pow'=>'pow(A,B)','%'=>'A modulus B',
-        'regexMatch'=>'A RegEx B',
+        '|'=>'A | B','&'=>'A & B',
+        'regexMatch'=>'f(A,RegEx(B))',
         ];
     
     private const COMBINE_OPTIONS=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
@@ -1135,8 +1138,52 @@ final class MiscTools{
     }
 
     /******************************************************************************************************************************************
-    * Operations
+    * Comparisons and Operations
     */
+
+    private function value2numeric($value):float|int|null
+    {
+        $value=($value==='INF')?(INF):(($value==='-INF')?(-INF):$value);
+        if (is_string($value)){
+            if (strpos($value,'.')===FALSE && strpos($value,',')===FALSE && stripos($value,'e')===FALSE){
+                $value=intval($value);
+            } else {
+                $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($value);
+            }
+        }
+        $value=($value===INF)?PHP_INT_MAX:(($value===-INF)?(-PHP_INT_MAX):$value);
+        return $value;
+    }
+
+    public function isTrueConst($value,$condition):bool|NULL
+    {
+        // value conditioning
+        $value=$this->value2numeric($value);
+        if (strpos($condition,'INF')!==FALSE){
+            $value=intval($value);
+            $value=(strpos($condition,'±')===FALSE)?$value:abs($value);
+            $const=(strpos($condition,'-')===FALSE)?PHP_INT_MAX:-PHP_INT_MAX;
+        } else if (strpos($condition,'0')!==FALSE){
+            if (strpos($condition,'=')!==FALSE && abs(floatval($value))<1){
+                $value=intval(pow(10,self::COMPARE_WITH_0_PRECISION)*floatval($value));
+            }
+            $value=intval($value);
+            $const=0;
+        } else {
+            return NULL;
+        }
+        // comparison
+        if (strpos($condition,'==')!==FALSE){
+            return $value==$const;
+        } else if (strpos($condition,'!=')!==FALSE){
+            return $value!=$const;
+        } else if (strpos($condition,'<')!==FALSE){
+            return $value<$const;
+        } else if (strpos($condition,'>')!==FALSE){
+            return $value>$const;
+        }
+        return NULL;
+    }
 
     public function isTrue($valueA,$valueB,$condition):bool|NULL
     {
@@ -1149,33 +1196,25 @@ final class MiscTools{
             return stripos((string)$valueA,(string)$valueB)!==FALSE;
         } else if ($condition==='!strpos'){
             return stripos((string)$valueA,(string)$valueB)===FALSE;
-        } else if ($condition==='regexMatch'){
+        } else if ($condition==='containsRegexMatch'){
             return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches));
-        } else if ($condition==='!regexMatch'){
+        } else if ($condition==='!containsRegexMatch'){
             return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches))===FALSE;
         }
-        $valueA=(is_string($valueA))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueA):$valueA;
-        $valueB=(is_string($valueB))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueB):$valueB;
+        $valueA=$this->value2numeric($valueA);
+        $valueB=$this->value2numeric($valueB);
         // numeric tests
-        if (is_int($valueA)){
-            $valueB=intval($valueB);
-        } else if (is_float($valueA)){
-            $valueB=floatval($valueB);
-        } else if (is_bool($valueA)){
-            $valueA=intval($valueA);
-            $valueB=intval($valueB);
-        }
         if ($condition==='>'){
-            return floatval($valueA)>floatval($valueB);
-        } else if ($condition==='='){
+            return $valueA>$valueB;
+        } else if ($condition==='=='){
             return $valueA==$valueB;
         } else if ($condition==='!='){
             return $valueA!=$valueB;
         } else if ($condition==='<'){
-            return floatval($valueA)<floatval($valueB);
-        } else if ($condition==='&'){
+            return $valueA<$valueB;
+        } else if ($condition==='&&'){
             return boolval($valueA&$valueB);
-        } else if ($condition==='|'){
+        } else if ($condition==='||'){
             return boolval($valueA|$valueB);
         } else if ($condition==='^'){
             return boolval($valueA^$valueB);
@@ -1189,39 +1228,36 @@ final class MiscTools{
     {
         $result=$this->isTrue($valueA,$valueB,$operation);
         if ($result===NULL){
-            $valueA=(is_string($valueA))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueA):$valueA;
-            $valueB=(is_string($valueB))?$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($valueB):$valueB;
-            // numeric tests
-            if (is_int($valueA)){
-                $valueB=intval($valueB);
-            } else if (is_float($valueA)){
-                $valueB=floatval($valueB);
-            } else if (is_bool($valueA)){
-                $valueA=intval($valueA);
-                $valueB=intval($valueB);
-            }
+            $valueAstr=strval($valueA);
+            $valueBstr=strval($valueB);
+            $valueA=$this->value2numeric($valueA);
+            $valueB=$this->value2numeric($valueB);
             if ($operation==='-'){
                 return $valueA-$valueB;
             } else if ($operation==='+'){
-                return $valueA-$valueB;
+                return $valueA+$valueB;
             } else if ($operation==='*'){
                 return $valueA*$valueB;
             } else if ($operation==='pow'){
                 return pow($valueA,$valueB);
+            } else if ($operation==='|'){
+                return intval($valueA)|intval($valueB);
+            } else if ($operation==='&'){
+                return intval($valueA)&intval($valueB);
             } else if ($operation==='/'){
                 if ($valueB===0){
-                    return $valueA*INF; // avoid division by zero
+                    return ($valueA<0)?(-PHP_INT_MAX):PHP_INT_MAX; // avoid division by zero
                 } else {
                     return $valueA/$valueB;
                 }
             } else if ($operation==='%'){
                 if ($valueB===0){
-                    return $valueA*INF; // avoid division by zero
+                    return ($valueA<0)?(-PHP_INT_MAX):PHP_INT_MAX;; // avoid division by zero
                 } else {
                     return $valueA%$valueB;
                 }
             } else if ($operation==='regexMatch'){
-                preg_match('/'.$valueB.'/',$valueA,$match);
+                preg_match('/'.$valueBstr.'/',$valueAstr,$match);
                 return $match[0]??NULL;
             }
         }
