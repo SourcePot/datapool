@@ -17,7 +17,7 @@ final class MiscTools{
     //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
     public const UNYCOM_REGEX='/([0-9]{4})([ ]{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2})\s/u';
 
-    private const COMPARE_WITH_0_PRECISION=5;
+    private const COMPARE_EQUAL_PRECISION=5;
     
     public $emojis=[];
     private $emojiFile='';
@@ -1144,6 +1144,8 @@ final class MiscTools{
     private function value2numeric($value):float|int|null
     {
         $value=($value==='INF')?(INF):(($value==='-INF')?(-INF):$value);
+        $value=($value==='NAN')?NAN:$value;
+        $value=($value==='NULL')?NULL:$value;
         if (is_string($value)){
             if (strpos($value,'.')===FALSE && strpos($value,',')===FALSE && stripos($value,'e')===FALSE){
                 $value=intval($value);
@@ -1151,7 +1153,6 @@ final class MiscTools{
                 $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($value);
             }
         }
-        $value=($value===INF)?PHP_INT_MAX:(($value===-INF)?(-PHP_INT_MAX):$value);
         return $value;
     }
 
@@ -1159,15 +1160,16 @@ final class MiscTools{
     {
         // value conditioning
         $value=$this->value2numeric($value);
+        if ($value===NAN){
+            return NULL;
+        }
         if (strpos($condition,'INF')!==FALSE){
             $value=intval($value);
             $value=(strpos($condition,'±')===FALSE)?$value:abs($value);
-            $const=(strpos($condition,'-')===FALSE)?PHP_INT_MAX:-PHP_INT_MAX;
         } else if (strpos($condition,'0')!==FALSE){
-            if (strpos($condition,'=')!==FALSE && abs(floatval($value))<1){
-                $value=intval(pow(10,self::COMPARE_WITH_0_PRECISION)*floatval($value));
+            if (strpos($condition,'=')!==FALSE){
+                $value=round($value,self::COMPARE_EQUAL_PRECISION);
             }
-            $value=intval($value);
             $const=0;
         } else {
             return NULL;
@@ -1203,13 +1205,16 @@ final class MiscTools{
         }
         $valueA=$this->value2numeric($valueA);
         $valueB=$this->value2numeric($valueB);
+        if ($valueA===NAN || $valueB===NAN){
+            return NULL;
+        }
         // numeric tests
         if ($condition==='>'){
             return $valueA>$valueB;
         } else if ($condition==='=='){
-            return $valueA==$valueB;
+            return round($valueA,self::COMPARE_EQUAL_PRECISION)==round($valueB,self::COMPARE_EQUAL_PRECISION);
         } else if ($condition==='!='){
-            return $valueA!=$valueB;
+            return round($valueA,self::COMPARE_EQUAL_PRECISION)!=round($valueB,self::COMPARE_EQUAL_PRECISION);
         } else if ($condition==='<'){
             return $valueA<$valueB;
         } else if ($condition==='&&'){
@@ -1232,36 +1237,42 @@ final class MiscTools{
             $valueBstr=strval($valueB);
             $valueA=$this->value2numeric($valueA);
             $valueB=$this->value2numeric($valueB);
-            if ($operation==='-'){
-                return $valueA-$valueB;
+            if ($valueA===NAN || $valueB===NAN){
+                $return=NAN;
+            } else if ($operation==='-'){
+                $return=$valueA-$valueB;
             } else if ($operation==='+'){
-                return $valueA+$valueB;
+                $return=$valueA+$valueB;
             } else if ($operation==='*'){
-                return $valueA*$valueB;
+                $return=$valueA*$valueB;
             } else if ($operation==='pow'){
-                return pow($valueA,$valueB);
+                $return=pow($valueA,$valueB);
             } else if ($operation==='|'){
-                return intval($valueA)|intval($valueB);
+                $return=intval($valueA)|intval($valueB);
             } else if ($operation==='&'){
-                return intval($valueA)&intval($valueB);
+                $return=intval($valueA)&intval($valueB);
             } else if ($operation==='/'){
-                if ($valueB===0){
-                    return ($valueA<0)?(-PHP_INT_MAX):PHP_INT_MAX; // avoid division by zero
+                if ($valueB==0){
+                    $return=($valueA<0)?(-INF):INF; // avoid division by zero
                 } else {
-                    return $valueA/$valueB;
+                    $return=$valueA/$valueB;
                 }
             } else if ($operation==='%'){
-                if ($valueB===0){
-                    return ($valueA<0)?(-PHP_INT_MAX):PHP_INT_MAX;; // avoid division by zero
+                if ($valueB==0){
+                    $return=($valueA<0)?(-INF):INF; // avoid division by zero
                 } else {
-                    return $valueA%$valueB;
+                    $return=$valueA%$valueB;
                 }
             } else if ($operation==='regexMatch'){
                 preg_match('/'.$valueBstr.'/',$valueAstr,$match);
-                return $match[0]??NULL;
+                $return=$match[0]??NULL;
             }
         }
-        return $result;
+        $return=($return===NULL)?'NULL':$return;
+        $return=($return===NAN)?'NAN':$return;
+        $return=($return===INF)?'INF':$return;
+        $return=($return===-INF)?'-INF':$return;
+        return $return;
     }
     
     public function matchEntry($needle,$matchSelector,$matchFlatKey,$matchType='contains',$isSystemCall=FALSE):array
