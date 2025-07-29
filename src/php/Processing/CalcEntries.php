@@ -79,8 +79,9 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getCalcEntriesInfo($callingElement):string
     {
         $matrix=[];
-        $matrix['Comparisons with "&infin;" (infinite): ']=['Comment'=>'<b style="font-size:1.5rem;">&infin;</b> is represented by the system\'s largest integer, i.e. PHP_INT_MAX. If you shift data between systems with different PHP_INT_MAX values, comparisons such as ==INF or !=INF might fail.'];
-        $matrix['Division by zero: ']=['Comment'=>'To avoid division by zero errors and to allow comparisions, x/0 will return PHP_INT_MAX or -PHP_INT_MAX if x<0'];
+        $matrix['"&infin;" (infinite): ']=['Comment'=>'<b style="font-size:1.5rem;">&infin;</b> is represented within Entries as string "INF" or "-INF". Only for comarisons or operations it is mapped to INF or -INF.'];
+        $matrix['Division by zero: ']=['Comment'=>'To avoid division by zero errors and to allow comparisions, x/0 will return "INF" or -INF if x<0'];
+        $matrix['Not a number (NAN) and NULL: ']=['Comment'=>'As with INF, NAN and NULL are stored in Entries as string "NAN", "NULL" and only mapped to PHP constants during comparisons and opeartions.'];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'!']);
         return $html;
