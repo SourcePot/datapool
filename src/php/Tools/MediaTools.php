@@ -300,8 +300,9 @@ class MediaTools{
         $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']['float']=$arr['settings']['style']['float']??'left';
         $arr['settings']['style']['margin']=$arr['settings']['style']['margin']??'10px 0 0 5px';
-        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-height']??NULL;
-        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-width']??NULL;
+        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']?:$arr['settings']['style']['max-height']?:'unset';
+        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']?:$arr['settings']['style']['max-width']?:'unset';
+        $arr['settings']['style']['height']='60vh';
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $objArr=$arr;
             $objArr['tag']='object';
