@@ -372,7 +372,7 @@ class Explorer{
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Edit']);
         if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
             $selector=['Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']];
-            if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,[],[]);}
+            if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,['hideEntryControls'=>TRUE],[]);}
         } else {
             $fileElement=['tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>[$stateKeys['selectedKey']],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);

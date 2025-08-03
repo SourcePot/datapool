@@ -38,7 +38,7 @@ jQuery(document).ready(function(){
                             };
                         }());
             function drawPlots(){
-                jQuery('div.plot').each(function(i){
+                jQuery('div.plot:visible').each(function(i){
                     var plotObj=this;
                     var arr={'function':'plotDataProvider','id':jQuery(plotObj).attr('id')};
                     jQuery.ajax({
