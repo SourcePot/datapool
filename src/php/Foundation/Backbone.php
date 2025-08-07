@@ -12,6 +12,12 @@ namespace SourcePot\Datapool\Foundation;
 
 class Backbone{
     
+    private const HEADER_FILES_TEMPLATES=[
+        'ico'=>'<link rel="shortcut icon" href="{{ico}}">',
+        'css'=>'<link type="text/css" rel="stylesheet" href="{{css}}">',
+        'js'=>'<script src="{{js}}"></script>',
+        ];
+
     private $oc;
         
     private $settings=[
@@ -25,8 +31,8 @@ class Backbone{
         'logoFile'=>'logo.jpg',
         'homePageContent'=>'video',
         'charset'=>'utf-8',
-        'cssFiles'=>['jquery-ui/jquery-ui.min.css','jquery-ui/jquery-ui.structure.min.css','jquery-ui/jquery-ui.theme.min.css','light.css','ep.css'],
-        'jsFiles'=>['jquery/jquery-3.6.1.min.js','jquery-ui/jquery-ui.min.js','main.js','container.js','plots.js','fileupload.js'],
+        'cssFiles'=>['light.css','ep.css'],
+        'jsFiles'=>['jquery/jquery-3.7.1.min.js','main.js','container.js','plots.js','fileupload.js'],
         'emailWebmaster'=>'admin@datapool.info',
         'path to Xpdf pdftotext executable'=>'',
         ];
@@ -92,6 +98,7 @@ class Backbone{
         $arr['page html'].='<meta name="viewport" content="'.$this->settings['metaViewport'].'">'.PHP_EOL;
         $arr['page html'].='<meta name="description" content="'.$this->settings['metaDescription'].'">'.PHP_EOL;
         $arr['page html'].='<meta name="robots" content="'.$this->settings['metaRobots'].'">'.PHP_EOL;
+        $arr['page html'].='<meta name="referrer" content="strict-origin" />'.PHP_EOL;
         $arr['page html'].='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
         $arr['page html'].='{{head}}'.PHP_EOL;
         $arr['page html'].='</head>'.PHP_EOL;
@@ -107,25 +114,29 @@ class Backbone{
         $arr['page html'].="</html>";
         return $arr;
     }
-    
+
     public function addHtmlPageHeader(array $arr):array
     {
-        $headerFiles=[
-            'iconFile'=>'<link rel="shortcut icon" href="{{iconFile}}">',
-            'cssFiles'=>'<link type="text/css" rel="stylesheet" href="{{cssFiles}}">',
-            'jsFiles'=>'<script src="{{jsFiles}}"></script>',
-            ];
-        foreach($headerFiles as $settingsKey=>$template){
-            if (!empty($headerFiles=$this->settings[$settingsKey])){
-                if (!is_array($headerFiles)){$headerFiles=[$headerFiles];}
-                foreach($headerFiles as $fileName){
-                    $href=(mb_strpos($fileName,'://')===FALSE)?$this->mediaFile2href($fileName):$fileName;
-                    if ($href){
-                        $arr['toReplace']['{{head}}'].=str_replace('{{'.$settingsKey.'}}',$href,$template).PHP_EOL;
-                    }
-                }
+        $jQueryImport='';
+        $jQueryUIImport='';
+        $arr['toReplace']['{{head}}']=$arr['toReplace']['{{head}}']??'';
+        $wwwMediaFiles=scandir($GLOBALS['relDirs']['media']);
+        sort($wwwMediaFiles);
+        foreach($wwwMediaFiles as $wwwMediaFile){
+            $fileName=$GLOBALS['relDirs']['media'].'/'.$wwwMediaFile;
+            $fileArr=pathinfo($fileName);
+            if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
+                continue;
+            }
+            if (strpos($fileName,'jquery-ui')!==FALSE){
+                $jQueryUIImport.=str_replace('{{'.$fileArr['extension'].'}}',$fileName,self::HEADER_FILES_TEMPLATES[$fileArr['extension']]).PHP_EOL;
+            } else if (strpos($fileName,'jquery')!==FALSE){
+                $jQueryImport=str_replace('{{'.$fileArr['extension'].'}}',$fileName,self::HEADER_FILES_TEMPLATES[$fileArr['extension']]).PHP_EOL;
+            } else {
+                $arr['toReplace']['{{head}}'].=str_replace('{{'.$fileArr['extension'].'}}',$fileName,self::HEADER_FILES_TEMPLATES[$fileArr['extension']]).PHP_EOL;
             }
         }
+        $arr['toReplace']['{{head}}']=$jQueryImport.$jQueryUIImport.$arr['toReplace']['{{head}}'];
         return $arr;
     }
 
@@ -154,18 +165,6 @@ class Backbone{
         $arr['page html']=preg_replace('/{{[a-zA-Z]+}}/','',$arr['page html']);
         return $arr;
     }
-    
-    public function mediaFile2href(string $mediaFile):string|bool
-    {
-        $mediaFileAbs=$GLOBALS['dirs']['media'].$mediaFile;
-        if (empty($mediaFile)){
-            return FALSE;
-        } else if (is_file($mediaFileAbs)){
-            return $GLOBALS['relDirs']['media'].'/'.$mediaFile;
-        } else {
-            $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" failed to open media file "{mediaFile}"',['class'=>__CLASS__,'function'=>__FUNCTION__,'mediaFile'=>$mediaFile]);         
-            return FALSE;
-        }
-    }
+
 }
 ?>

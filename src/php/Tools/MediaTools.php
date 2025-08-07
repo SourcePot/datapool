@@ -543,7 +543,7 @@ class MediaTools{
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         if (is_file($sourceFile) && !empty($arr['selector']['Params']['File']['Extension'])){
             $tmpFile=$tmpDir.$tmpFileName.'.'.$arr['selector']['Params']['File']['Extension'];
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile);
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile,0774);
             $arr['selector']['Params']['TmpFile']=$arr['selector']['Params']['File'];
         } else if(isset($arr['selector']['Content']['Html'])){
             $tmpFile=$tmpDir.$tmpFileName.'.html';
