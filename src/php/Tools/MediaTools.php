@@ -300,8 +300,9 @@ class MediaTools{
         $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']['float']=$arr['settings']['style']['float']??'left';
         $arr['settings']['style']['margin']=$arr['settings']['style']['margin']??'10px 0 0 5px';
-        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-height']??NULL;
-        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-width']??NULL;
+        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']?:$arr['settings']['style']['max-height']?:'unset';
+        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']?:$arr['settings']['style']['max-width']?:'unset';
+        $arr['settings']['style']['height']='60vh';
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $objArr=$arr;
             $objArr['tag']='object';
@@ -542,7 +543,7 @@ class MediaTools{
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         if (is_file($sourceFile) && !empty($arr['selector']['Params']['File']['Extension'])){
             $tmpFile=$tmpDir.$tmpFileName.'.'.$arr['selector']['Params']['File']['Extension'];
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile);
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile,0774);
             $arr['selector']['Params']['TmpFile']=$arr['selector']['Params']['File'];
         } else if(isset($arr['selector']['Content']['Html'])){
             $tmpFile=$tmpDir.$tmpFileName.'.html';

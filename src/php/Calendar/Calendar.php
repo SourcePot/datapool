@@ -698,8 +698,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $entryIdSuffix=0;
         $maxTimestamp=(empty($maxTimestamp))?($timestamp+(intval($this->setting['Days to show']??'10')-1)*86400+90000):$maxTimestamp;
         // scan calendar range
-        $durationMinutes=intval($entry['Content']['Duration']??60);
-        $durationSeconds=$durationMinutes*60;
+        if (empty($entry['Content'])){
+            return $entries;
+        }
+        $durationSeconds=60*intval($entry['Content']['Duration']?:10);
         $timestamp-=$durationSeconds;
         while($timestamp<$maxTimestamp){
             $entryId=$entry['EntryId'].'|'.$entryIdSuffix;
@@ -718,7 +720,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 $timestamp=$endTimestamp;
                 $entryIdSuffix++;
             } else {
-                $timestamp+=60;
+                $timestamp+=300;
             }
         }
         return $entries;
@@ -867,6 +869,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     public function getHomeAppWidget(string $name):array
     {
         // reset page setting
+        $this->setting['Days to show']=14;
+        $this->setting['Day width']=320;
         $this->pageState['Group']='Events';
         $this->pageState['EntryId']='{{EntryId}}';
         $this->pageState['calendarDate']='{{YESTERDAY}}';

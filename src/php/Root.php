@@ -72,7 +72,7 @@ final class Root{
         date_default_timezone_set('UTC');
         // session start
         $this->builderProgress[]=__CLASS__.'&rarr;__constructor() called';
-        session_start();
+        session_start(['cookie_lifetime'=>43200,'cookie_secure'=>TRUE,'cookie_httponly'=>TRUE]);
         $this->updateCurrentUser();
         // inititate the web page state
         if (empty($_SESSION['page state'])){
@@ -354,6 +354,8 @@ final class Root{
             $this->writeProfile($this->profileFileName);
         };
         $this->builderProgress[]=__CLASS__.'&rarr;run() done';
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        header('X-Content-Type-Options: nosniff');
         return $arr;
     }
 

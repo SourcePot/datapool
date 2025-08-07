@@ -244,6 +244,12 @@ class Container{
         return $arr;
     }
     
+    /**
+    * This standard entry editor returns an array containing the editors html form under key 'html'
+    * @param array arr Is an array containing the entry to be edited under key 'selector' and settings under key 'settings', e.g. arr['settings']['hideEntryControls']=TRUE, 
+    *
+    * @return array An array containing the editor html form under key 'html'
+    */
     public function entryEditor(array $arr,bool $isDebugging=FALSE):array
     {
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
@@ -368,7 +374,7 @@ class Container{
                 $matrix['<i>Add</i>']=['value'=>$valueHtml,'cmd'=>$cmdHtml];
             }
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name']]);
-            if ($level==0){
+            if ($level==0 && empty($arr['settings']['hideEntryControls'])){
                 $arr['hideKeys']=TRUE;
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
             }

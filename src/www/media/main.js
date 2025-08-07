@@ -42,7 +42,7 @@ jQuery(document).ready(function(){
 /** STEP-BY-STEP ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;
 	function loadNextEntry(){
-		let obj=jQuery('[function=loadEntry]').first();
+		let obj=jQuery('[function=loadEntry]:visible').first();
 		if (busyLoadingEntry===false){
 			let arr={'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id')},
 					 'settings':{'presentEntry':jQuery(obj).attr('class')},

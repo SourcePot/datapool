@@ -463,7 +463,9 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
     {
         try{
             $this->addStatistic('inserted files',intval(copy($source,$targetFile)));
-            if ($rights){chmod($targetFile,$rights);}
+            if ($rights){
+                chmod($targetFile,$rights);
+            }
         } catch(\Exception $e){
             // Exception handling
         }
