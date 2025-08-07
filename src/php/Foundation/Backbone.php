@@ -31,8 +31,6 @@ class Backbone{
         'logoFile'=>'logo.jpg',
         'homePageContent'=>'video',
         'charset'=>'utf-8',
-        'cssFiles'=>['light.css','ep.css'],
-        'jsFiles'=>['jquery/jquery-3.7.1.min.js','main.js','container.js','plots.js','fileupload.js'],
         'emailWebmaster'=>'admin@datapool.info',
         'path to Xpdf pdftotext executable'=>'',
         ];
