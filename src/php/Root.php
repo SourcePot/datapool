@@ -20,8 +20,18 @@ use Monolog\Handler\StreamHandler;
 final class Root{
 
     // header & session cockie
-    private const SESSION_COCKIE=['cookie_lifetime'=>43200,'cookie_secure'=>TRUE,'cookie_httponly'=>TRUE];
-    private const HTTP_HEADER=['Strict-Transport-Security: max-age=31536000; includeSubDomains; preload','Cache-Control: max-age=300','X-Content-Type-Options: nosniff',"Content-Security-Policy: frame-ancestors 'self'"];
+    private const SESSION_COCKIE=[
+        'cookie_lifetime'=>43200,
+        'cookie_secure'=>TRUE,
+        'cookie_httponly'=>TRUE,
+    ];
+    private const HTTP_HEADER=[
+        'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
+        'Cache-Control: max-age=300',
+        'X-Content-Type-Options: nosniff',
+        'X-Frame-Options: SAMEORIGIN',
+        "Content-Security-Policy: frame-ancestors 'self'",
+    ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
     public const ADD_VENDOR_CLASSES=[
