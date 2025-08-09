@@ -17,9 +17,13 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
     
     private $entryTable;
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+    ];
     
-    public $definition=['EntryId'=>['@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0]];
+    public const DEFINITION=[
+        'EntryId'=>['@tag'=>'input','@type'=>'text','@default'=>'','@Write'=>0]
+    ];
 
     public function __construct($oc)
     {
@@ -36,7 +40,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,self::DEFINITION);
     }
 
     public function getEntryTable():string
