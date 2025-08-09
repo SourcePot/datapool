@@ -13,13 +13,18 @@ namespace SourcePot\Datapool\Foundation;
 class Backbone{
     
     private const HEADER_FILES_TEMPLATES=[
-        'ico'=>'<link rel="shortcut icon" href="{{ico}}">',
-        'css'=>'<link type="text/css" rel="stylesheet" href="{{css}}">',
-        'js'=>'<script src="{{js}}"></script>',
+        'ico'=>'<link rel="shortcut icon" href="{{ico}}" nonce="{{nonce}}">',
+        'css'=>'<link type="text/css" rel="stylesheet" href="{{css}}" nonce="{{nonce}}">',
+        'js'=>'<script src="{{js}}" nonce="{{nonce}}"></script>',
         ];
 
-    private $oc;
-        
+    private const EXTERNAL_HEADER_ELEMENTS=[
+        'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>''],
+        'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>''],
+    ];
+
+    private $oc=NULL;
+    
     private $settings=[
         'pageTitle'=>'Datapool',
         'metaViewport'=>'width=device-width, initial-scale=1',
@@ -136,6 +141,10 @@ class Backbone{
             }
         }
         $arr['toReplace']['{{head}}']=$jQueryImport.$jQueryUIImport.$arr['toReplace']['{{head}}'];
+        // Leavelet plugin
+        foreach(self::EXTERNAL_HEADER_ELEMENTS as $label=>$element){
+            $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+        }
         return $arr;
     }
 
@@ -151,13 +160,19 @@ class Backbone{
         // end of page        
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Logger']->getMyLogs().PHP_EOL;
         $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div><div id="overlay-image-container" style="display:none;"></div>'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='<script>jQuery("article").hide();</script>'.PHP_EOL;
+        $arr['toReplace']['{{body}}'].='<script nonce="{{nonce}}">jQuery("article").hide();</script>'.PHP_EOL;
         $arr=$this->oc['SourcePot\Datapool\Foundation\Menu']->menu($arr);
         return $arr;
     }
     
     public function finalizePage(array $arr):array
     {
+        // trust plugin scripts and styles, e.g. Mediaplayer
+        $arr['toReplace']['{{content}}']=str_replace('<script>','<script nonce="{{nonce}}">',$arr['toReplace']['{{content}}']);
+        $arr['toReplace']['{{content}}']=str_replace('<style>','<style nonce="{{nonce}}">',$arr['toReplace']['{{content}}']);
+        // add nonce replacement
+        $arr['toReplace']['{{nonce}}']=$GLOBALS['nonce'];
+        // replace page sceleton placeholders
         foreach($arr['toReplace'] as $needle=>$replacement){
             $arr['page html']=strtr($arr['page html'],[$needle=>$replacement]);
         }

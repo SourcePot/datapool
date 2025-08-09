@@ -28,10 +28,10 @@ final class Root{
     ];
     private const HTTP_HEADER=[
         'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
-        'Cache-Control: max-age=300',
+        'Cache-Control: max-age=1',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: frame-ancestors 'self'",
+        "Content-Security-Policy: frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
@@ -100,6 +100,7 @@ final class Root{
         // initialize the environment, setup the Object Collection (oc) with a temporary logger and setting up the user
         $this->oc=[__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this];
         $GLOBALS['script start time']=hrtime(TRUE);
+        $GLOBALS['nonce']=bin2hex(random_bytes(12));
         date_default_timezone_set('UTC');
         // session start
         $this->builderProgress[hrtime(TRUE)]=__CLASS__.'&rarr;__constructor() called';
@@ -401,7 +402,10 @@ final class Root{
 
     public function sendHeader()
     {
-        foreach(self::HTTP_HEADER as $headerLine){header($headerLine);}
+        foreach(self::HTTP_HEADER as $headerLine){
+            $headerLine=str_replace('{{nonce}}',$GLOBALS['nonce'],$headerLine);
+            header($headerLine);
+        }
     }
 
     public function getImplementedInterfaces(string $interface=''):array

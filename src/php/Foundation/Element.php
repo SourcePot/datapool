@@ -39,7 +39,7 @@ class Element{
             'popover'=>FALSE,'role'=>FALSE,'slot'=>FALSE,'spellcheck'=>FALSE,'style'=>FALSE,'tabindex'=>FALSE,'title'=>FALSE,
             'virtualkeyboardpolicy'=>FALSE,
             'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
-            'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,
+            'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,'nonce'=>FALSE,
             ],
         
         // Table
@@ -146,6 +146,8 @@ class Element{
             $arr['tag']='p';
             $arr['element-content']='ERROR "tag"-attribute missing';
             $arr['style']['background-color']='#f00';
+        } else if ($arr['tag']==='script' || $arr['tag']==='object' || $arr['tag']==='link' || $arr['tag']==='img' || $arr['tag']==='video' || $arr['tag']==='iframe'){
+            $arr['nonce']='{{nonce}}';
         }
         if (isset(self::DEF[$arr['tag']])){
             if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}
