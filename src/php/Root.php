@@ -22,6 +22,7 @@ final class Root{
     // header & session cockie
     private const SESSION_COCKIE=[
         'cookie_lifetime'=>43200,
+        'cookie_samesite'=>'Strict',
         'cookie_secure'=>TRUE,
         'cookie_httponly'=>TRUE,
     ];
@@ -385,15 +386,22 @@ final class Root{
             $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',['script'=>$this->script]);
             exit;  
         }
+        // send header
+        $this->sendHeader();
+        $this->builderProgress[hrtime(TRUE)]='Header sent';
         // script time consumption in ms
-        header(implode('; ',self::HTTP_HEADER));
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
-        $this->builderProgress[hrtime(TRUE)]='Header sent, time consumption signal updated. Page content will be echoed next';
+        $this->builderProgress[hrtime(TRUE)]='Time consumption signal updated. Page content will be echoed next';
         // write log files
         $logLevel=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel');
         $this->writeBuilderProgress($logLevel);
         $this->writeProfile($logLevel);
         return $arr;
+    }
+
+    public function sendHeader()
+    {
+        foreach(self::HTTP_HEADER as $headerLine){header($headerLine);}
     }
 
     public function getImplementedInterfaces(string $interface=''):array
@@ -579,9 +587,17 @@ final class Root{
             }
             // create www-index.php files
             if (!empty($def['createIndexFile'])){
+                // create index.php content
+                $indexFileContent='<?php'.PHP_EOL;
+                foreach(self::HTTP_HEADER as $headerLine){
+                    $indexFileContent.="header(\"$headerLine\");".PHP_EOL;
+                }
+                $indexFileContent.="echo '<p>FORBIDDEN :)<p>';".PHP_EOL;
+                $indexFileContent.='?>';
+                // save index.php
                 $indexFileName=$GLOBALS['dirs'][$label].'/index.php';
                 if (!is_file($indexFileName)){
-                    file_put_contents($indexFileName,'');
+                    file_put_contents($indexFileName,$indexFileContent);
                     chmod($indexFileName,0774);
                 }
             }
@@ -625,6 +641,7 @@ final class Root{
     
     public function getBackupPageContent($msg='But some improvements might take a while.'):string
     {
+        foreach(self::HTTP_HEADER as $headerLine){header($headerLine);}
         $builderProgressHtml='<li>'.implode('</li><li>',$this->builderProgress).'</li>';
         $builderProgressHtml='<ol style="position:absolute;bottom:0;font-size:0.6rem;">'.$builderProgressHtml.'</ol>';
         $html='<!DOCTYPE html>';
