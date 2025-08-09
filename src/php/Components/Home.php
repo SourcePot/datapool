@@ -18,7 +18,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
     private $entryTable='';
 
     private $pageSettings=[];
-
+    private $hasHomeWidgetApp=FALSE;
     private $backgroundMediaInfo='';
 
     public const WIDGET_SETTINGS_SELECTOR=['app'=>'SourcePot\Datapool\AdminApps\Settings','Source'=>'settings','Group'=>'Home page','Folder'=>'Widgets','Name'=>'Home page'];
@@ -88,8 +88,11 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                     $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                     break;
                 }
-            } 
+            }
             $arr['toReplace']['{{content}}']=$this->homeAppWidgets();
+            if (!$this->hasHomeWidgetApp){
+                $arr['toReplace']['{{bgMedia}}']='';
+            }
             return $arr;
         }
     }
@@ -142,6 +145,9 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
             }
             $widgetHtml='';
             $widgetClass=$widgetSetting['Content']["Widget"];
+            if ($widgetClass===__CLASS__){
+                $this->hasHomeWidgetApp=TRUE;
+            }
             if (empty($this->oc[$widgetClass])){
                 $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()": widget class "{widgetClass}" does not exist. Please check Admin&rarr;Settings&rarr;Quick link "Start page".',['class'=>__CLASS__,'function'=>__FUNCTION__,'widgetClass'=>$widgetClass]);
                 continue;

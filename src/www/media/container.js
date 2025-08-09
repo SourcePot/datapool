@@ -181,11 +181,11 @@ jQuery(document).ready(function(){
 	(function heartbeat(){
     	setTimeout(heartbeat,100);
 		heartbeats++;
-		if (heartbeats%6===0){
+        if (heartbeats%6===0){
             containerMonitor();
-		} else if (heartbeats%5===0){
-			
-		}
+        } else if (heartbeats%5===0){
+            
+        }
 	})();
 
     jQuery('[id=js-refresh]').on('click',function(element){

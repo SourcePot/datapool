@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Tools;
 class MediaTools{
 
     private $oc;
+    private const TMP_FILE_PERMISSIONS=0774;
     
     public function __construct(array $oc)
     {
@@ -543,16 +544,18 @@ class MediaTools{
         $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         if (is_file($sourceFile) && !empty($arr['selector']['Params']['File']['Extension'])){
             $tmpFile=$tmpDir.$tmpFileName.'.'.$arr['selector']['Params']['File']['Extension'];
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile,0774);
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$tmpFile,self::TMP_FILE_PERMISSIONS);
             $arr['selector']['Params']['TmpFile']=$arr['selector']['Params']['File'];
         } else if(isset($arr['selector']['Content']['Html'])){
             $tmpFile=$tmpDir.$tmpFileName.'.html';
             file_put_contents($tmpFile,$arr['selector']['Content']['Html']);
+            chmod($tmpFile,self::TMP_FILE_PERMISSIONS);
             $arr['selector']['Params']['TmpFile']['Extension']='html';
             $arr['selector']['Params']['TmpFile']['MIME-Type']='application/xhtml+xml';
         } else if(isset($arr['selector']['Content']['Plain'])){
             $tmpFile=$tmpDir.$tmpFileName.'.txt';
             file_put_contents($tmpFile,$arr['selector']['Content']['Plain']);
+            chmod($tmpFile,self::TMP_FILE_PERMISSIONS);
             $arr['selector']['Params']['File']['Extension']='txt';
             $arr['selector']['Params']['File']['MIME-Type']='text/plain';
         } else {

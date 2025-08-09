@@ -50,7 +50,9 @@ jQuery(document).ready(function(){
 					 'function':jQuery(obj).attr('function'),
 					 'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
 					};
-			loadNextSelectedView(arr);
+			if (arr['selector']['EntryId']!==undefined){
+				loadNextSelectedView(arr);
+			}
 		}
 	}
 	const loadNextSelectedView=function(arr){
