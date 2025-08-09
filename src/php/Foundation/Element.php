@@ -146,7 +146,7 @@ class Element{
             $arr['tag']='p';
             $arr['element-content']='ERROR "tag"-attribute missing';
             $arr['style']['background-color']='#f00';
-        } else if ($arr['tag']==='script' || $arr['tag']==='object' || $arr['tag']==='link' || $arr['tag']==='img' || $arr['tag']==='video' || $arr['tag']==='iframe'){
+        } else if ($arr['tag']==='script' || $arr['tag']==='object' || $arr['tag']==='embed' || $arr['tag']==='link' || $arr['tag']==='img' || $arr['tag']==='video' || $arr['tag']==='iframe'){
             $arr['nonce']='{{nonce}}';
         }
         if (isset(self::DEF[$arr['tag']])){
