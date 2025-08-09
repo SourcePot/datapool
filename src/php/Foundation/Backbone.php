@@ -27,6 +27,7 @@ class Backbone{
         'metaRobots'=>'index',
         'pageTimeZone'=>'Europe/Berlin',
         'loginForm'=>0,
+        'logLevel'=>'monitoring',
         'iconFile'=>'main.ico',
         'logoFile'=>'logo.jpg',
         'homePageContent'=>'video',

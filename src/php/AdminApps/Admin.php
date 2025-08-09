@@ -292,7 +292,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
             'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
             'pageTimeZone'=>['method'=>'select','options'=>$timezones,'excontainer'=>TRUE],
-            'logLevel'=>['method'=>'select','options'=>['Production','Monitoring','Debugging'],'excontainer'=>TRUE],
+            'logLevel'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::LOG_LEVEL,'excontainer'=>TRUE],
             'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
             'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
             'homePageContent'=>['method'=>'select','options'=>$homePageContentOptions,'value'=>'video','excontainer'=>TRUE],

@@ -19,10 +19,26 @@ use Monolog\Handler\StreamHandler;
 
 final class Root{
 
+    // header & session cockie
+    private const SESSION_COCKIE=['cookie_lifetime'=>43200,'cookie_secure'=>TRUE,'cookie_httponly'=>TRUE];
+    private const HTTP_HEADER=['Strict-Transport-Security: max-age=31536000; includeSubDomains; preload','Cache-Control: max-age=300','X-Content-Type-Options: nosniff',"Content-Security-Policy: frame-ancestors 'self'"];
+    
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
-    public const ADD_VENDOR_CLASSES=['SourcePot\MediaPlayer\MediaPlayer','SourcePot\Sms\Sms','SourcePot\checkentries\checkentries','SourcePot\statistic\statistic','SourcePot\Asset\Rates'];
+    public const ADD_VENDOR_CLASSES=[
+        'SourcePot\MediaPlayer\MediaPlayer',
+        'SourcePot\Sms\Sms',
+        'SourcePot\checkentries\checkentries',
+        'SourcePot\statistic\statistic',
+        'SourcePot\Asset\Rates'
+    ];
+    
     // SECURITY NOTICE: ALLOW_SOURCE_SELECTION should only be TRUE for Classes restricted to Admin access
-    public const ALLOW_SOURCE_SELECTION=['SourcePot\Datapool\AdminApps\Admin'=>TRUE,'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,'SourcePot\Datapool\AdminApps\Settings'=>TRUE];
+    public const ALLOW_SOURCE_SELECTION=[
+        'SourcePot\Datapool\AdminApps\Admin'=>TRUE,
+        'SourcePot\Datapool\AdminApps\DbAdmin'=>TRUE,
+        'SourcePot\Datapool\AdminApps\Settings'=>TRUE
+    ];
+    
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     public const DB_TIMEZONE='UTC';
     public const NULL_DATE='9999-12-30 12:12:12';
@@ -31,10 +47,14 @@ final class Root{
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE];
     public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
+    
     // profiling settings
-    public const PROFILING_RATE=0;        // 0 ... 1.0 with "1"=100% profiling and "0"=0% profiling
-    public const PROFILING_PROFILE=['index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'import.php'=>FALSE,'resource.php'=>TRUE];
+    public const LOG_LEVEL=['production'=>'Production','monitoring'=>'Monitoring','debugging'=>'Debugging'];
+    public const PROFILE=['index.php'=>TRUE,'js.php'=>FALSE,'job.php'=>TRUE,'import.php'=>FALSE,'resource.php'=>TRUE];
     public const PROFILING_BACKTRACE=4;
+    public const PROFILE_WARNING_THRESHOLD_MICROSECONDS=5000;
+    public const BUILDER_WARNING_THRESHOLD_MILLISECONDS=600;
+    
     // required extensions
     public const REQUIRED_EXTENSIONS=[
         'ldap'=>FALSE,'curl'=>TRUE,'ffi'=>FALSE,'ftp'=>FALSE,
@@ -46,20 +66,21 @@ final class Root{
         'shmop'=>FALSE,'snmp'=>FALSE,'soap'=>FALSE,'sockets'=>FALSE,'sodium'=>FALSE,
         'sqlite3'=>FALSE,'tidy'=>FALSE,'xsl'=>FALSE,'zip'=>TRUE,'opcache'=>FALSE
         ];
+    
+        // csv-file settings
+    public const CSV_SETTINGS=['separator'=>";",'enclosure'=>"\"",'escape'=>"\\",'eol'=>"\n"];
 
     private $oc=[];
     private $placeholder=[];
     private $implementedInterfaces=[];
     private $script='';
-    
-    private $profileActive=NULL;
-    private $profile=[];
-    private $profileFileName=FALSE;
 
     private $loggerCache=[];
 
     private $currentUser=[];
 
+    private $detections=['warning'=>FALSE,'error'=>FALSE];
+    private $profile=[];
     private $builderProgress=[];
     
     public function __construct($script)
@@ -67,22 +88,23 @@ final class Root{
         $this->script=$script;
         // initialize the environment, setup the Object Collection (oc) with a temporary logger and setting up the user
         $this->oc=[__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this];
-        $this->profileActive=(mt_rand(0,9999)<floatval(self::PROFILING_RATE)*10000);
         $GLOBALS['script start time']=hrtime(TRUE);
         date_default_timezone_set('UTC');
         // session start
-        $this->builderProgress[]=__CLASS__.'&rarr;__constructor() called';
-        session_start(['cookie_lifetime'=>43200,'cookie_secure'=>TRUE,'cookie_httponly'=>TRUE]);
+        $this->builderProgress[hrtime(TRUE)]=__CLASS__.'&rarr;__constructor() called';
+        session_start(self::SESSION_COCKIE);
+        $this->builderProgress[hrtime(TRUE)]='Session started';
         $this->updateCurrentUser();
+        $this->builderProgress[hrtime(TRUE)]='Current user updated';
         // inititate the web page state
         if (empty($_SESSION['page state'])){
             $_SESSION['page state']=['selectedCategory'=>'Home','selectedApp'=>[],'selected'=>[]];
         }
         // set exception handler and initialize directories
-        $this->builderProgress[]='Current user & page state initialized';
+        $this->builderProgress[hrtime(TRUE)]='Page state initialized';
         $this->initDirs();
         // load all external components
-        $this->builderProgress[]='Directories initialized';
+        $this->builderProgress[hrtime(TRUE)]='Directories initialized';
         $_SESSION['page state']['autoload.php loaded']=FALSE;
         $autoloadFile=$GLOBALS['dirs']['vendor'].'/autoload.php';
         if (is_file($autoloadFile)){
@@ -96,7 +118,7 @@ final class Root{
         $this->oc['logger_1']=$this->getMonologLogger('Debugging');
         $this->registerVendorClasses();
         // distribute the object collection within the project
-        $this->builderProgress[]='Object collection initialized incl. vendor classes ';
+        $this->builderProgress[hrtime(TRUE)]='Object collection initialized incl. vendor classes ';
         foreach($this->oc as $classWithNamespace=>$obj){
             if (!is_object($this->oc[$classWithNamespace])){continue;}
             // get implemented interfaces
@@ -110,20 +132,27 @@ final class Root{
                 $this->oc[$classWithNamespace]->loadOc($this->oc);
             }
         }
+        $this->builderProgress[hrtime(TRUE)]='Interfaces registered & loadOC-methods invoked';
         $this->oc['logger']=$this->configureMonologLogger($this->oc['logger']);
         $this->emptyLoggerCache();
+        $this->builderProgress[hrtime(TRUE)]='logger initialized';
         // invoke init methoods
-        $this->builderProgress[]='All interfaces registered & loadOC-methods invoked';
         foreach($this->oc as $classWithNamespace=>$obj){
             if ($classWithNamespace===__CLASS__ || $classWithNamespace==='logger' || $classWithNamespace==='logger_1'){continue;}
-            if (!is_object($obj)){continue;}
+            if (!is_object($obj)){
+                continue;
+            }
             // init methods
-            if (!method_exists($this->oc[$classWithNamespace],'init')){continue;}
+            if (!method_exists($this->oc[$classWithNamespace],'init')){
+                continue;
+            }
             $this->oc[$classWithNamespace]->init();
+            $this->builderProgress[hrtime(TRUE)]=$classWithNamespace.'→init() invoked';
         }
         $this->checkExtensions();
+        $this->builderProgress[hrtime(TRUE)]='checkExtensions done';
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
-        $this->builderProgress[]=__CLASS__.'&rarr;__construct() done';
+        $this->builderProgress[hrtime(TRUE)]='initAdminAccount done';
     }
     
     /**
@@ -173,12 +202,12 @@ final class Root{
         $logger = new Logger($channel);
         $logger->pushProcessor(new PsrLogMessageProcessor());
         $logger->pushProcessor(new LoadAverageProcessor());
-        if ($logLevel===0){
-            $streamHandler = new StreamHandler($logFile,Level::Warning);
-        } else if ($logLevel===1){
-            $streamHandler = new StreamHandler($logFile,Level::Notice);
-        } else if ($logLevel>1){
+        if ($logLevel==='debugging'){
             $streamHandler = new StreamHandler($logFile,Level::Debug);
+        } else if ($logLevel==='monitoring'){
+            $streamHandler = new StreamHandler($logFile,Level::Notice);
+        } else{
+            $streamHandler = new StreamHandler($logFile,Level::Warning);
         }
         $logger->pushHandler($streamHandler);
         return $logger;
@@ -291,7 +320,7 @@ final class Root{
     */
     public function run():array
     {
-        $this->builderProgress[]=__CLASS__.'&rarr;run() method called';
+        $this->builderProgress[hrtime(TRUE)]=__CLASS__.'&rarr;run() method called';
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // get current temp dir
         if ($this->script!=='resource.php' && $this->script!=='job.php'){
@@ -303,21 +332,21 @@ final class Root{
         // get trace
         // add "page html" to the return array
         $arr=[];
-        $this->builderProgress[]='All buttons processed';
+        $this->builderProgress[hrtime(TRUE)]='All buttons processed';
         if ($this->script==='index.php'){
             // build webpage
             $appClassWithNamespace=$this->oc['SourcePot\Datapool\Foundation\Menu']->selectedApp()['Class'];
-            $this->builderProgress[]='Checked web app access';
+            $this->builderProgress[hrtime(TRUE)]='Checked web app access';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
-            $this->builderProgress[]='Webpage backbone built';
+            $this->builderProgress[hrtime(TRUE)]='Webpage backbone built';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
-            $this->builderProgress[]='Webpage header added';
+            $this->builderProgress[hrtime(TRUE)]='Webpage header added';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
-            $this->builderProgress[]='Webpage body static parts added';
+            $this->builderProgress[hrtime(TRUE)]='Webpage body static parts added';
             $arr=$this->oc[$appClassWithNamespace]->run($arr);
-            $this->builderProgress[]='Webpage body content added';
+            $this->builderProgress[hrtime(TRUE)]='Webpage body content added';
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
-            $this->builderProgress[]='Webpage finalized';
+            $this->builderProgress[hrtime(TRUE)]='Webpage finalized';
         } else if ($this->script==='js.php'){
             // js-call Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Container']->jsCall($arr);
@@ -342,20 +371,18 @@ final class Root{
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);
         } else {
             // invalid
+            $this->detections['error']=TRUE;
             $this->oc['logger']->log('error','Invalid script or run-method missing "{script}" called',['script'=>$this->script]);
             exit;  
         }
         // script time consumption in ms
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',round((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
-        if (self::PROFILING_PROFILE[$this->script]){
-            $scriptComps=explode('.',$this->script);
-            $fileName=array_shift($scriptComps);
-            $this->profileFileName=time().'-profile-'.$fileName.'.csv';
-            $this->writeProfile($this->profileFileName);
-        };
-        $this->builderProgress[]=__CLASS__.'&rarr;run() done';
-        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
-        header('X-Content-Type-Options: nosniff');
+        header(implode('; ',self::HTTP_HEADER));
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
+        $this->builderProgress[hrtime(TRUE)]='Header sent, time consumption signal updated. Page content will be echoed next';
+        // write log files
+        $logLevel=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel');
+        $this->writeBuilderProgress($logLevel);
+        $this->writeProfile($logLevel);
         return $arr;
     }
 
@@ -412,22 +439,23 @@ final class Root{
     */
     private function createObjList(string $objListFile)
     {
-        $orderedInitialization=['MiscTools.php'=>'301|',
-                                'Access.php'=>'302|',
-                                'Filespace.php'=>'303|',
-                                'Backbone.php'=>'304|',
-                                'Database.php'=>'305|',
-                                'Definitions.php'=>'306|',
-                                'Dictionary.php'=>'307|',
-                                'User.php'=>'308|',
-                                'HTMLbuilder.php'=>'309|',
-                                'Logging.php'=>'310|',
-                                'Logger.php'=>'311|',
-                                'Home.php'=>'701|',
-                                'Account.php'=>'702|',
-                                'Login.php'=>'901|',
-                                'Logout.php'=>'902|',
-                                ];
+        $orderedInitialization=[
+            'MiscTools.php'=>'301|',
+            'Access.php'=>'302|',
+            'Filespace.php'=>'303|',
+            'Backbone.php'=>'304|',
+            'Database.php'=>'305|',
+            'Definitions.php'=>'306|',
+            'Dictionary.php'=>'307|',
+            'User.php'=>'308|',
+            'HTMLbuilder.php'=>'309|',
+            'Logging.php'=>'310|',
+            'Logger.php'=>'311|',
+            'Home.php'=>'701|',
+            'Account.php'=>'702|',
+            'Login.php'=>'901|',
+            'Logout.php'=>'902|',
+            ];
         $fileIndex=0;
         $objectsArr=['000|Header|'.$fileIndex=>['class','classWithNamespace','file','type']];
         // scan dirs
@@ -435,12 +463,13 @@ final class Root{
         $dirs=scandir($dir);
         foreach($dirs as $dirIndex=>$dirName){
             if (mb_strpos($dirName,'.php')!==FALSE || mb_strpos($dirName,'.md')!==FALSE || empty(trim($dirName,'.'))){continue;}
-            $type=match($dirName){'Interfaces'=>'200|Interface',
-                                  'Foundation'=>'400|Kernal object',
-                                  'Tools'=>'500|Kernal object',
-                                  'Processing'=>'600|Kernal object',
-                                  default=>'800|Application object'
-                                 };
+            $type=match($dirName){
+                'Interfaces'=>'200|Interface',
+                'Foundation'=>'400|Kernal object',
+                'Tools'=>'500|Kernal object',
+                'Processing'=>'600|Kernal object',
+                default=>'800|Application object'
+                };
             // scan files
             $subDir=$dir.$dirName.'/';
             $files=scandir($subDir);
@@ -505,22 +534,23 @@ final class Root{
         $relThisDirSuffix='/src/php';
         $wwwDirIndicator='/src/www';
         // relative dirs from root
-        $GLOBALS['dirDefs']=['root'=>['relPath'=>'.','permissions'=>0770],
-                            'vendor'=>['relPath'=>'./vendor','permissions'=>0770],
-                            'src'=>['relPath'=>'./src','permissions'=>0770],
-                            'setup'=>['relPath'=>'./src/setup','permissions'=>0770],
-                            'filespace'=>['relPath'=>'./src/filespace','permissions'=>0770],
-                            'privat tmp'=>['relPath'=>'./src/tmp_private','permissions'=>0770],
-                            'debugging'=>['relPath'=>'./src/debugging','permissions'=>0770],
-                            'logging'=>['relPath'=>'./src/logging','permissions'=>0770],
-                            'ftp'=>['relPath'=>'./src/ftp','permissions'=>0770],
-                            'fonts'=>['relPath'=>'./src/fonts','permissions'=>0770],
-                            'php'=>['relPath'=>'./src/php','permissions'=>0770],
-                            'public'=>['relPath'=>'./src/www','permissions'=>0775],
-                            'media'=>['relPath'=>'./src/www/media','permissions'=>0775],
-                            'assets'=>['relPath'=>'./src/www/assets','permissions'=>0775],
-                            'tmp'=>['relPath'=>'./src/www/tmp','permissions'=>0775],
-                            ];
+        $GLOBALS['dirDefs']=[
+            'root'=>['relPath'=>'.','permissions'=>0770],
+            'vendor'=>['relPath'=>'./vendor','permissions'=>0770],
+            'src'=>['relPath'=>'./src','permissions'=>0770],
+            'setup'=>['relPath'=>'./src/setup','permissions'=>0770],
+            'filespace'=>['relPath'=>'./src/filespace','permissions'=>0770],
+            'privat tmp'=>['relPath'=>'./src/tmp_private','permissions'=>0770],
+            'debugging'=>['relPath'=>'./src/debugging','permissions'=>0770],
+            'logging'=>['relPath'=>'./src/logging','permissions'=>0770],
+            'ftp'=>['relPath'=>'./src/ftp','permissions'=>0770],
+            'fonts'=>['relPath'=>'./src/fonts','permissions'=>0770],
+            'php'=>['relPath'=>'./src/php','permissions'=>0770],
+            'public'=>['relPath'=>'./src/www','permissions'=>0775],
+            'media'=>['relPath'=>'./src/www/media','permissions'=>0775,'createIndexFile'=>TRUE],
+            'assets'=>['relPath'=>'./src/www/assets','permissions'=>0775,'createIndexFile'=>TRUE],
+            'tmp'=>['relPath'=>'./src/www/tmp','permissions'=>0775,'createIndexFile'=>TRUE],
+            ];
         $absRootPath=strtr(__DIR__,['\\'=>'/']);
         $absRootPath=strtr($absRootPath,[$relThisDirSuffix=>'']);
         // get absolute dirs
@@ -532,9 +562,19 @@ final class Root{
             if (count($relDirComps)===2){
                 $GLOBALS['relDirs'][$label]='.'.$relDirComps[1];
             }
+            // create non-exsisting dirs
             if (!is_dir($GLOBALS['dirs'][$label])){
                 mkdir($GLOBALS['dirs'][$label],$def['permissions'],TRUE);
-            }    
+                
+            }
+            // create www-index.php files
+            if (!empty($def['createIndexFile'])){
+                $indexFileName=$GLOBALS['dirs'][$label].'/index.php';
+                if (!is_file($indexFileName)){
+                    file_put_contents($indexFileName,'');
+                    chmod($indexFileName,0774);
+                }
+            }
         }
         return $GLOBALS['dirs'];
     }
@@ -576,7 +616,7 @@ final class Root{
     public function getBackupPageContent($msg='But some improvements might take a while.'):string
     {
         $builderProgressHtml='<li>'.implode('</li><li>',$this->builderProgress).'</li>';
-        $builderProgressHtml='<ol style="position:absolute;bottom:0;font-size:0.7rem;">'.$builderProgressHtml.'</ol>';
+        $builderProgressHtml='<ol style="position:absolute;bottom:0;font-size:0.6rem;">'.$builderProgressHtml.'</ol>';
         $html='<!DOCTYPE html>';
         $html.='<html xmlns="http://www.w3.org/1999/xhtml" lang="en">';
         $html.='<head>';
@@ -612,6 +652,21 @@ final class Root{
         }
     }
 
+    public function add2profile($callingClass,$callingFunction,$name,$startTimeStamp=NULL):bool
+    {
+        $profileTimeStamp=hrtime(TRUE);
+        $timeConsumption=intval(($profileTimeStamp-$startTimeStamp)/1000);
+        $row=['CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name];
+        $row=$this->addTrace2row($row);
+        $row['Finished [ms]']=intval(($profileTimeStamp-$GLOBALS['script start time'])/1000000);
+        $row['Time consumption [us]']=$timeConsumption;
+        if ($row['Time consumption [us]']>self::PROFILE_WARNING_THRESHOLD_MICROSECONDS){
+            $this->detections['warning']=TRUE;
+        }
+        $this->profile[$profileTimeStamp]=$row;
+        return TRUE;     
+    }
+
     private function addTrace2row($row):array
     {
         $btOffset=2;
@@ -623,63 +678,59 @@ final class Root{
         $row['Hash']=md5(implode('|',$row));
         return $row;
     }
+    
+    private function writeProfile($logLevel)
+    {
+        if (empty(self::PROFILE[$this->script])){return FALSE;}
+        if ($logLevel==='production' && !$this->detections['error']){return FALSE;}
+        if ($logLevel==='monitoring' && !$this->detections['warning']){return FALSE;}
+        // write profile
+        $scriptComps=explode('.',$this->script);
+        $scriptName=array_shift($scriptComps);
+        $profileFileName=time().'-profile-'.$scriptName.'.csv';
+        $profileFile=$GLOBALS['dirs']['logging'].$profileFileName;
+        $this->arr2csvFile($profileFile,$this->profile);
+    }
 
-    public function startStopWatch($callingClass,$callingFunction,$name)
+    private function writeBuilderProgress($logLevel)
     {
-        $startTimeStamp=hrtime(TRUE);
-        if ($this->profileActive){
-            if (!isset($this->profile['meta'])){
-                $this->profile['meta']=['Date'=>date('Y-m-d H:i:s'),'Zero'=>$startTimeStamp];
+        if (empty(self::PROFILE[$this->script])){return FALSE;}
+        if ($logLevel==='production' && !$this->detections['error']){return FALSE;}
+        // check building progress
+        $builderProgress=[];
+        $oldTimestamp=$GLOBALS['script start time'];
+        foreach($this->builderProgress as $timestamp=>$description){
+            $timeConsumptionStep=intval(($timestamp-$oldTimestamp)/1000000);
+            $timeConsumption=intval(($timestamp-$GLOBALS['script start time'])/1000000);
+            $builderProgress[$timestamp]=['Time consumption step [ms]'=>$timeConsumptionStep,'Time consumption script [ms]'=>$timeConsumption,'Stage'=>$description];
+            $oldTimestamp=$timestamp;
+            if ($timeConsumptionStep>self::BUILDER_WARNING_THRESHOLD_MILLISECONDS){
+                $this->detections['warning']=TRUE;
             }
-            $row=['CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name];
-            $row=$this->addTrace2row($row);
-            $row['Start [ms]']=$startTimeStamp;
-            $row['Diff [ms]']=FALSE;
-            $row['Count']=1;
-            $this->profile[$row['Hash']][$startTimeStamp]=$row;
-            return TRUE;
-        } else {
+        }
+        if ($logLevel==='monitoring' && !$this->detections['warning']){return FALSE;}
+        // write building progress
+        $scriptComps=explode('.',$this->script);
+        $scriptName=array_shift($scriptComps);
+        $builderFileName=time().'-builder-'.$scriptName.'.csv';
+        $builderFile=$GLOBALS['dirs']['logging'].$builderFileName;
+        $this->arr2csvFile($builderFile,$builderProgress);
+    }
+
+    private function arr2csvFile(string $file,array $arr):bool
+    {
+        try{
+            $fp=fopen($file,'w');
+            $columns=array_keys(current($arr));
+            fputcsv($fp,$columns,self::CSV_SETTINGS['separator'],self::CSV_SETTINGS['enclosure'],self::CSV_SETTINGS['escape'],self::CSV_SETTINGS['eol']);
+            foreach($arr as $rowIndex=>$row){
+                fputcsv($fp,$row,self::CSV_SETTINGS['separator'],self::CSV_SETTINGS['enclosure'],self::CSV_SETTINGS['escape'],self::CSV_SETTINGS['eol']);
+            }
+            fclose($fp);
+        } catch(\Exception $e){
             return FALSE;
         }
-    }
-    
-    public function stopStopWatch($callingClass,$callingFunction,$name)
-    {
-        if ($this->profileActive){
-            $stopTimeStamp=hrtime(TRUE);
-            $profileMeta=$this->profile['meta'];
-            $row=['CallingClass'=>$callingClass,'CallingFunction'=>$callingFunction,'Name'=>$name];
-            $row=$this->addTrace2row($row);
-            foreach($this->profile[$row['Hash']] as $startTimeStamp=>$row){
-                if ($row['Diff [ms]']===FALSE){
-                    $row['Start [ms]']=round(($row['Start [ms]']-$profileMeta['Zero'])/1000000,3);
-                    $row['Diff [ms]']=round(($stopTimeStamp-$startTimeStamp)/1000000,3);
-                    $this->profile[$row['Hash']][$startTimeStamp]=$row;
-                    break;
-                } else {
-                   $row['Count']++;
-                }
-            }
-            return TRUE;
-        } else {
-            return FALSE;
-        }
-    }
-    
-    private function writeProfile($fileName)
-    {
-        if (!$this->profileActive || empty($this->profile)){return FALSE;}
-        unset($this->profile['meta']);
-        $lb="\n";
-        $delimiter="\t";
-        $file=$GLOBALS['dirs']['logging'].$fileName;
-        $fileContent=implode($delimiter,array_keys(current(current($this->profile))));
-        foreach($this->profile as $hash=>$profileArr){
-            foreach($profileArr as $stopTimeStamp=>$row){
-                $fileContent.=$lb.implode($delimiter,$row);
-            }
-        }
-        file_put_contents($file,$fileContent);
+        return TRUE;
     }
 
     public function getIP(bool $hashOnly=TRUE, string $salt=''):string

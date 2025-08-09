@@ -378,9 +378,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function executeStatement(string $sql,array $inputs=[],object|bool $dbObj=FALSE):object
     {
+        $startTimeStamp=hrtime(TRUE);
         if ($dbObj===FALSE){$dbObj=$this->dbObj;}
         $stmtArr=$this->bindValues($sql,$inputs,$dbObj);
-        $this->oc['SourcePot\Datapool\Root']->startStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
         try{
             $stmtArr['stmt']->execute();
         } catch (\Exception $e){
@@ -388,7 +388,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $context['error']=$e->getMessage();
             $this->oc['logger']->log('critical','SQL execution for "{sqlSimulated}" triggered error: "{error}".',$context);
         }
-        $this->oc['SourcePot\Datapool\Root']->stopStopWatch(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated']);
+        $this->oc['SourcePot\Datapool\Root']->add2profile(__CLASS__,__FUNCTION__,$stmtArr['sqlSimulated'],$startTimeStamp);
         return $stmtArr['stmt'];
     }
     

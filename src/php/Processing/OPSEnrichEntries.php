@@ -52,9 +52,6 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__,self::CREDENTIALS_DEF);
-        //
-        $credentials=$this->getCredentialsSetting()['Content'];
-        $this->biblio=new \SourcePot\OPS\Biblio($credentials['appName'],$credentials['consumerKey'],$credentials['consumerSecretKey']);
     }
 
     public function getEntryTable():string
@@ -126,7 +123,9 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     public function getEnrichEntriesWidgetHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
+        $credentials=$this->getCredentialsSetting()['Content'];
+        $this->biblio=new \SourcePot\OPS\Biblio($credentials['appName'],$credentials['consumerKey'],$credentials['consumerSecretKey']);
         // command processing
         $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
