@@ -28,7 +28,7 @@ final class Root{
     ];
     private const HTTP_HEADER=[
         'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
-        'Cache-Control: max-age=1',
+        'Cache-Control: max-age=600',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
         "Content-Security-Policy: frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
