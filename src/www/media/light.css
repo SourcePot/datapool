@@ -947,7 +947,7 @@ div.signal-plot-wrapper{
 }
 div.signal-plot{
     position: absolute;
-    border: 1px dotted #000;
+    border: 1px solid var(--colorSoft);
     overflow: hidden;
     padding:0;
     margin:0;
