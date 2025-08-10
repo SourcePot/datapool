@@ -68,6 +68,7 @@ class Menu{
         }
         // has user access rights for requested app
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $selectAppClass=(empty($this->oc[$selectAppClass]))?self::CATEGORIES['Home']['Class']:$selectAppClass;
         $appDef=$this->oc[$selectAppClass]->run(TRUE);
         $appDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($appDef);
         if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($appDef,'Read',$user,FALSE))){
