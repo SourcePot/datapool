@@ -151,7 +151,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             // get type
             $dataType=strval($param->getType());
             $contentStructure[$param->name]=['method'=>'element','tag'=>'input','value'=>$default,'placeholder'=>$default,'type'=>'text','excontainer'=>TRUE];
-            $contentStructure[$param->name.' type ']=['method'=>'select','value'=>$dataType,'options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE,'excontainer'=>TRUE];
+            $contentStructure[$param->name.' type ']=['method'=>'select','value'=>$dataType,'options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE,'excontainer'=>TRUE];
         }
         //
         $arr=$this->finalizeSelector(['html'=>$arr['html']],__FUNCTION__,$testingParamsId);
