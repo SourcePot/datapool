@@ -110,11 +110,12 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
             $widget='<p style="font-size:1.2rem;padding:5px 0;">'.$widget.'</p>';
             $infoMatrix[$widget]=['Widget'=>$widget,'Info'=>$info,'Class'=>$widgetClass];
         }
-        $contentStructure=['Widget'=>['method'=>'select','excontainer'=>TRUE,'value'=>key($widgets),'options'=>$widgets],
-                           'Name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'component','excontainer'=>TRUE],
-                           'Access'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_MEMBER_R','options'=>$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings()],
-                           'Wrapper style'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'height:20vh;','excontainer'=>TRUE],
-                         ];
+        $contentStructure=[
+            'Widget'=>['method'=>'select','excontainer'=>TRUE,'value'=>key($widgets),'options'=>$widgets],
+            'Name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'component','excontainer'=>TRUE],
+            'Access'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ALL_MEMBER_R','options'=>$this->oc['SourcePot\Datapool\Foundation\Access']->getAccessOptionsStrings()],
+            'Wrapper style'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'height:20vh;','excontainer'=>TRUE],
+            ];
         // get selctor
         $arr['selector']=self::WIDGET_SETTINGS_SELECTOR;
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],0,'',FALSE);
