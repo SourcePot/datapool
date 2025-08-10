@@ -166,10 +166,10 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=[
             'Target value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             '...value selected by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>['Linked file'=>'Linked file']],
-            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
             'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getCombineOptions(),'title'=>"Controls the resulting value, fIf the target already exsists."],
+            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Tools\MiscTools::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
             ];
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -298,7 +298,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $targetValue=$params['Content']['No match placeholder']??'';
                 }
             }
-            $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($targetValue,$rule['Content']['Target data type']);
+            $targetValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($targetValue,$rule['Content']['Target data type']);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue,$rule['Content']['Combine']??'');
         }
         $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);

@@ -219,12 +219,6 @@ class GeoTools{
     public function getDynamicMap(array $arr=[]):string
     {
         $html='';
-        $toLoadArr=['leafletCss'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>'','element-content'=>''],
-                    'leafletJ'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','crossorigin'=>'','element-content'=>''],
-                    ];
-        foreach($toLoadArr as $index=>$elementArr){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
-        }
         $arr['tag']='div';
         $arr['id']='dynamic-map';
         $arr['style']['width']=600;
