@@ -14,20 +14,22 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private const ENTRY_EXPIRATION_SEC=600;
     private const ONEDIMSEPARATOR='||';
-    private const INDICATORS=[self::ONEDIMSEPARATOR.'@value'=>'value',
-                            self::ONEDIMSEPARATOR.'@dataType'=>'dataTypes',
-                            self::ONEDIMSEPARATOR.'@isSignal'=>'signals',
-                            self::ONEDIMSEPARATOR.'@min'=>'min',
-                            self::ONEDIMSEPARATOR.'@max'=>'max',
-                            self::ONEDIMSEPARATOR.'@color'=>'color',
-                        ];
+    private const INDICATORS=[
+        self::ONEDIMSEPARATOR.'@value'=>'value',
+        self::ONEDIMSEPARATOR.'@dataType'=>'dataTypes',
+        self::ONEDIMSEPARATOR.'@isSignal'=>'signals',
+        self::ONEDIMSEPARATOR.'@min'=>'min',
+        self::ONEDIMSEPARATOR.'@max'=>'max',
+        self::ONEDIMSEPARATOR.'@color'=>'color',
+    ];
 
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        ];
     
     public function __construct($oc)
     {
@@ -298,7 +300,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         foreach($flatSignals as $subKey=>$isSignal){
             if (intval($isSignal)<1 || !isset($flatContent[$subKey])){continue;}
             $dataType=$flatDataTypes[$subKey]??'float';
-            $signalValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($flatContent[$subKey],$dataType);
+            $signalValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($flatContent[$subKey],$dataType);
             $signalName=str_replace(self::ONEDIMSEPARATOR,'→',$subKey);
             $params=['dataType'=>$dataType,'height'=>120];
             if (isset($flatMin[$subKey])){$params['min']=$flatMin[$subKey];}
@@ -432,7 +434,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             if (strpos($flatKey,'Content')!==0){continue;}
             $dataTypeKey=$this->getDataPropertyFlatKey($flatKey,'dataTypes');
             $dataType=(isset($flatEntry[$dataTypeKey]))?$flatEntry[$dataTypeKey]:'int';
-            $flatEntry[$flatKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($flatValue,$dataType);
+            $flatEntry[$flatKey]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($flatValue,$dataType);
         }
         if ($returnFlat){
             return $flatEntry;

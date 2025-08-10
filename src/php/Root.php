@@ -31,7 +31,7 @@ final class Root{
         'Cache-Control: max-age=600',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; script-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
+        "Content-Security-Policy: frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'self' 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"

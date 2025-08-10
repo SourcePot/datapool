@@ -133,7 +133,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Column to match'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
             'Match with'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
             'Match with column'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
-            'Match type'=>['method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getMatchTypes(),'excontainer'=>TRUE],
+            'Match type'=>['method'=>'select','value'=>'unycom','options'=>$this->oc['SourcePot\Datapool\Foundation\Computations']->getMatchTypes(),'excontainer'=>TRUE],
             'Match probability'=>['method'=>'select','value'=>80,'options'=>[99=>'=100',90=>'>90',80=>'>80',70=>'>70',60=>'>60',50=>'>50',45=>'>45',40=>'>40',30=>'>30',25=>'>25'],'excontainer'=>TRUE],
             'Match failure'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
             'Match success'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
@@ -219,7 +219,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
         // get best match
         $needle=$flatEntry[$params['Content']['Column to match']];
-        $bestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
+        $bestMatch=$this->oc['SourcePot\Datapool\Foundation\Computations']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
         // process best match
         $probability=round(100*$bestMatch['Content']['match']['probability']);
         $entry['Params']['Processed'][__CLASS__]=$probability;

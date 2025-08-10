@@ -137,11 +137,11 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>$this->operations,'keep-element-content'=>TRUE],
             'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
             '| '=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-            'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+            'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
             'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
             ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Tools\MiscTools::CONDITION_TYPES,'keep-element-content'=>TRUE],
+            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES,'keep-element-content'=>TRUE],
             'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
             'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
             ];
@@ -194,8 +194,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $valueA='';
             }
-            $valueA=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($valueA,$rule['Content']['Value data type']);
-            $conditionMet=$this->oc['SourcePot\Datapool\Tools\MiscTools']->isTrue($valueA,$rule['Content']['with'],$rule['Content']['compare']);
+            $valueA=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($valueA,$rule['Content']['Value data type']);
+            $conditionMet=$this->oc['SourcePot\Datapool\Foundation\Computations']->isTrue($valueA,$rule['Content']['with'],$rule['Content']['compare']);
             //
             $equations[$forwardOnSuccess]=$equations[$forwardOnSuccess]??'';
             $conditionMetElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,['element-content'=>$ruleIndex,'style'=>['min-width'=>'unset','padding'=>'0']]);

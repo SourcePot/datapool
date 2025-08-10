@@ -73,7 +73,7 @@ final class FileContent{
         $entry['UNYCOM']=$pList=$fList=[];
         $unycomObj = new \SourcePot\Match\UNYCOM();
         foreach($unycomObj->fetchCase($text) as $case){
-            $unycomArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert2unycom($case);
+            $unycomArr=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert2unycom($case);
             $pList[]=$unycomArr['Reference'];
             $fList[]=$unycomArr['Family'];
             if (empty($entry['UNYCOM'])){$entry['UNYCOM']=$unycomArr;}
@@ -100,7 +100,7 @@ final class FileContent{
                 $descDetectStr=preg_replace('/[0-9,. \+\-]+/','',$part);
                 if (strpos($part,$code)!==FALSE){
                     // value
-                    $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->str2float($part);
+                    $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->str2float($part);
                     $leftValid=TRUE;
                 } else if (strlen($descDetectStr)>2){
                     // description

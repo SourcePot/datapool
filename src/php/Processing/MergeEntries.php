@@ -175,7 +175,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
             'Key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
             'or const value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDataTypes(),'keep-element-content'=>TRUE],
+            'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             ];
         $contentStructure['Key']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -267,7 +267,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $calcDebug[$debugFlatKey]['error']='Operation "'.$rule['Content']['Operation'].'" undefined';
             }
             $calcDebug[$debugFlatKey]['Result']=$rule['Content']['Data type'].'('.$newValue.')';
-            $flatSourceEntry[$flatTargetKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($newValue,$rule['Content']['Data type']);
+            $flatSourceEntry[$flatTargetKey]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($newValue,$rule['Content']['Data type']);
             if (is_array($flatSourceEntry[$flatTargetKey])){
                 $calcDebug[$debugFlatKey]['Result final']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($flatSourceEntry[$flatTargetKey]);
             } else {
