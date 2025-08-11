@@ -94,7 +94,14 @@ If you use PLESK for your server administration, you can add the correct path as
 
 ![Added the PEAR directory in PLESK](/assets/img/plesk_settings_pear.png "Added the PEAR directory in PLESK")
 
-You need to append the PEAR folder path relative to the selected PHP version to ``include_path`` (e.g. .**:/opt/plesk/php/8.4/share/pear**) and ``open_basedir`` (e.g. {WEBSPACEROOT}{/}{:}{TMP}{/}**:/opt/plesk/php/8.4/share/pear**). 
+You need to append the PEAR folder path relative to the selected PHP version to **include_path** e.g. 
+```
+.:/opt/plesk/php/8.4/share/pear
+``` 
+and **open_basedir** e.g. 
+```
+{WEBSPACEROOT}{/}{:}{TMP}{/}:/opt/plesk/php/8.4/share/pear
+``` 
 
 # Under the Hood
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
@@ -129,3 +136,4 @@ Data apps use the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer
 The DataExplorer has two modes: **view** and **edit** The figure below shows how to togle between **view** and **edit** mode. In edit mode each canvas element can be dragged, selected or deleted. To change canvas element properties the canvas element needs to be selected by clicking on the diamond shaped red button of the respective canvas element.
 
 ![Canvas element properties](/assets/img/DataExplorer.png "Canvas element properties")
+
