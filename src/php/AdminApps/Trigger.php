@@ -44,7 +44,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             $html='';
             if ($selector['Group']==='signal'){
                 if (empty($selector['Folder'])){
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal overview widget','generic',$selector,['method'=>'signalDisplayWrapper','classWithNamespace'=>'SourcePot\Datapool\Foundation\Signals'],[]);
+                    $html.=$this->signalWidget($selector);
                 } else {
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot($selector,['height'=>120]);
                 }
@@ -53,11 +53,9 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             } else if ($selector['Group']==='Transmitter'){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Message widget','generic',[],['method'=>'messageWidgetWrapper','classWithNamespace'=>__CLASS__],[]);
             } else {
-                $metaOverwrite=['yMin'=>0,'xMin'=>time()-3600];
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Performance','keep-element-content'=>TRUE]);
+                $metaOverwrite=['yMin'=>0,'xMin'=>time()-3600,'caption'=>'Performance'];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Root::run'],$metaOverwrite);
-                $metaOverwrite=['yMin'=>0];
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Logins','keep-element-content'=>TRUE]);
+                $metaOverwrite=['yMin'=>0,'caption'=>'Logins'];
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['Source'=>'signals','Group'=>'signal','Folder'=>'SourcePot\Datapool\Components\Login::run'],$metaOverwrite);
             }
             // finalize page
@@ -70,6 +68,23 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getTriggerWidget(__CLASS__,__FUNCTION__);
         return $arr;
+    }
+
+    private function signalWidget(array $selector):string
+    {
+        $html='';
+        $lastSignalClass=FALSE;
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Folder',TRUE) as $signal){
+            if ($signal['isSkipRow']){continue;}
+            $folderComps=explode('::',$signal['Folder']);
+            if (!empty($lastSignalClass) && $lastSignalClass!==$folderComps[0]){
+                $containserSelector=$selector;
+                $containserSelector['Folder']=$lastSignalClass.'%';
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot($containserSelector,['caption'=>$lastSignalClass]);
+            }
+            $lastSignalClass=$folderComps[0];
+        }
+        return $html;
     }
 
     public function messageWidgetWrapper($arr){

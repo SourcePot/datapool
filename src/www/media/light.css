@@ -938,23 +938,27 @@ article.imageShuffle{
     width: 100%;
 }
 /** signal chart, plot**/
+p.signal-chart{
+    margin: 2rem 0 1rem 5px;
+}
 div.signal-chart{
-    padding:0;
+    clear: none;
+    padding:0 4rem 0 0;
 }
 div.signal-plot-wrapper{
     position: relative;
-    margin: 1.5rem 5px;
+    margin: 0 5px;
 }
 div.signal-plot{
     position: absolute;
     border: 1px solid var(--colorSoft);
-    overflow: hidden;
     padding:0;
     margin:0;
     background-image:url("canvaslightbg.png");
 }
 div.signal-bar{
     position: absolute;
+    z-index: 10;
 }
 div.signal-tick{
     position: absolute;
@@ -965,4 +969,8 @@ p.signal-label{
     margin:0;
     padding:0;
     background: none;
+}
+div.signal-cursor-x,div.signal-cursor-y{
+    position: absolute;
+    border:1px dashed #d00;
 }
