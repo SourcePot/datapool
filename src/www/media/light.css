@@ -937,3 +937,32 @@ article.imageShuffle{
     bottom: 0;
     width: 100%;
 }
+/** signal chart, plot**/
+div.signal-chart{
+    padding:0;
+}
+div.signal-plot-wrapper{
+    position: relative;
+    margin: 1.5rem 5px;
+}
+div.signal-plot{
+    position: absolute;
+    border: 1px solid var(--colorSoft);
+    overflow: hidden;
+    padding:0;
+    margin:0;
+    background-image:url("canvaslightbg.png");
+}
+div.signal-bar{
+    position: absolute;
+}
+div.signal-tick{
+    position: absolute;
+}
+p.signal-label{
+    position: absolute;
+    font-size: 0.8rem;
+    margin:0;
+    padding:0;
+    background: none;
+}

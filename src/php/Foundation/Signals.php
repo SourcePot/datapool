@@ -47,6 +47,8 @@ class Signals{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+        $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry(['Source'=>$this->getEntryTable(),'Group'=>'trigger']);
+        $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry(['Source'=>$this->getEntryTable(),'Group'=>'Transmitter']);
     }
     
     public function getEntryTable():string
@@ -377,85 +379,21 @@ class Signals{
         return $html;
     }
 
-    public function selector2plot(array $selector=[],array $params=[]):string|array
+    public function selector2plot(array $selector=[],array $metaOverwrite=['yMin'=>0]):string|array
     {
-        if (empty($selector['id'])){
-            // draw plot pane request
-            return $this->selector2plotPlane(__CLASS__,__FUNCTION__,$selector,$params);
-        } else {
-            // return plot data request
-            return $this->plotId2data($selector['id']);
-        }
+        //$selector['refreshInterval']=600;
+        //$selector['disableAutoRefresh']=TRUE;
+        $settings=['method'=>'signalsChart','classWithNamespace'=>__CLASS__,'yMin'=>0];
+        $settings=array_merge($metaOverwrite,$settings);
+        $hash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Signal chart a '.$hash,'generic',$selector,$settings,['style'=>['border'=>'none']]);
+        return $html;
     }
 
-    public function signal2plot(string|array $callingClass,string $callingFunction='',string $name=''):string|array
+    public function signal2plot(string|array $callingClass,string $callingFunction='',string $name='',$metaOverwrite=['yMin'=>0]):string
     {
-        if (empty($callingClass['function'])){
-            // draw plot pane request
-            $selector=$this->getSignalSelector($callingClass,$callingFunction,$name);
-            return $this->selector2plotPlane(__CLASS__,__FUNCTION__,$selector);
-        } else {
-            // return plot data request
-            return $this->plotId2data($callingClass['id']);
-        }
-    }
-
-    private function selector2plotPlane(string $callingClass,string $callingFunction,array $selector,array $params=[]):string
-    {
-        $html='';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name') as $entry){
-            $plotDataMeta=array_merge(['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId'],'id'=>$entry['EntryId'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction],($entry['Params']['signal']??[]),$params);
-            $_SESSION['plots'][$entry['EntryId']]=$plotDataMeta;
-            $elArr=['tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$entry['EntryId'].'" placeholder','id'=>$entry['EntryId']];
-            $plotHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$entry['EntryId']];
-            $plotHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'div','class'=>'plot-wrapper','style'=>[],'keep-element-content'=>TRUE,'element-content'=>$plotHtml];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-        }
-        $elArr=['tag'=>'div','class'=>'plot-wrapper','style'=>[],'keep-element-content'=>TRUE,'element-content'=>$html];
-        return $this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);    
-    }
-
-    private function plotId2data($id):array
-    {
-        $selector=$_SESSION['plots'][$id]??[];
-        $timezone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
-        if (isset($selector['min'])){$selector['min']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($selector['min'],$selector['dataType']);}
-        if (isset($selector['max'])){$selector['max']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->convert($selector['max'],$selector['dataType']);}
-        $plotData=['use'=>'signalPlot','meta'=>$selector,'data'=>[]];
-        if ($entry){
-            $folderComps=explode('\\',$entry['Folder']);
-            $plotData['meta']['title']=array_pop($folderComps);
-            $plotData['meta']['title'].=' → '.$entry['Name'];
-            $timeIndices=[];
-            foreach($entry['Content']['signal'] as $index=>$signal){
-
-                $debugArr['signals'][$entry['EntryId']]=$entry;
-
-                $plotData['data'][$index]['DateTime']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$signal['timeStamp'],'',$timezone);
-                // get time index
-                $currentTimeIndex=10*(time()-$signal['timeStamp']);
-                while(isset($timeIndices[$currentTimeIndex])){
-                    $currentTimeIndex=$currentTimeIndex+1;
-                }
-                $timeIndices[$currentTimeIndex]=TRUE;
-                $currentTimeIndex=$currentTimeIndex/10;
-                // add data to plot
-                $plotData['data'][$index]['History [sec]']=$currentTimeIndex;
-                if ($signal['dataType']==='int'){
-                    $plotData['data'][$index]['Value']=round(floatval($signal['value']));
-                } else if ($signal['dataType']==='float'){
-                    $plotData['data'][$index]['Value']=floatval($signal['value']);
-                } else if ($signal['dataType']==='bool'){
-                    $plotData['data'][$index]['Value']=boolval($signal['value']);
-                } else {
-                    $plotData['data'][$index]['Value']=$signal['value'];
-                }
-            }
-        }
-        return $plotData;
+        $selector=$this->getSignalSelector($callingClass,$callingFunction,$name);
+        return $this->selector2plot($selector,$metaOverwrite);
     }
     
     public function getSignalOptions(array $selector=[]):array
@@ -483,6 +421,109 @@ class Signals{
         }
         asort($options);
         return $options;
+    }
+
+    /**
+     *  HTML Signal Charts
+     */
+
+    public function signalsChart($arr,$isSystemCall=TRUE):array
+    {
+        $html='';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],$isSystemCall,'Read',$arr['selector']['orderBy']??FALSE,$arr['selector']['isAsc']??TRUE,$arr['selector']['limit']??FALSE,$arr['selector']['offset']??FALSE) as $signal){
+            if (!isset($signal['Content']['signal'])){continue;}
+            $elArr=['tag'=>'p','class'=>'signal-plot','keep-element-content'=>TRUE,'element-content'=>$signal['Folder'].' &rarr; '.$signal['Name']];
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $html.=$this->signalPlot($signal,$arr['settings']);
+        }
+        $elArr=['tag'=>'div','class'=>'signal-chart','style'=>$arr['selector']['style']??[],'keep-element-content'=>TRUE,'element-content'=>$html];
+        $arr['html']=$arr['html']??'';
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+        return $arr;
+    }
+
+    public function signalPlot($signal,$metaOverwrite=[]):string
+    {
+        $metaOverwrite['tickLength']=$metaOverwrite['tickLength']?:6;
+        $plot=['tag'=>'div','class'=>'signal-plot','style'=>['width'=>600,'height'=>100,'left'=>60,'bottom'=>50],'keep-element-content'=>TRUE];
+        $plotWrapper=['tag'=>'div','class'=>'signal-plot-wrapper','style'=>['width'=>$plot['style']['width']+$plot['style']['left'],'height'=>$plot['style']['height']+$plot['style']['bottom']],'keep-element-content'=>TRUE];
+        // reorganize data & get data properties
+        $data=[];
+        $meta=['xScaler'=>1,'xOffset'=>0,'yScaler'=>1,'yOffset'=>0,'xMin'=>NULL,'xMax'=>NULL,'yMin'=>NULL,'yMax'=>NULL,'dateFormat'=>'Y-m-d H:i:s'];
+        foreach($signal['Content']['signal'] as $item){
+            $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],$item['dataType']);
+            if (isset($metaOverwrite['xMin']) && ($item['timeStamp']??0)<$metaOverwrite['xMin']){continue;}
+            if (isset($metaOverwrite['xMax']) && ($item['timeStamp']??0)>$metaOverwrite['xMax']){continue;}
+            $meta['xMin']=$meta['xMin']??$item['timeStamp'];
+            $meta['xMax']=$meta['xMax']??$item['timeStamp'];
+            $meta['yMin']=$meta['yMin']??$value;
+            $meta['yMax']=$meta['yMax']??$value;
+            if ($meta['xMin']>$item['timeStamp']){$meta['xMin']=$item['timeStamp'];}
+            if ($meta['xMax']<$item['timeStamp']){$meta['xMax']=$item['timeStamp'];}
+            if ($meta['yMin']>$value){$meta['yMin']=$value;}
+            if ($meta['yMax']<$value){$meta['yMax']=$value;}
+            $data[$item['timeStamp']][]=$value;
+        }
+        $meta=array_merge($meta,$metaOverwrite);
+        // sorting and scaling data
+        ksort($data);
+        $meta['xScaler']=($meta['xMax']==$meta['xMin'])?INF:$plot['style']['width']/($meta['xMax']-$meta['xMin']);
+        $meta['yScaler']=($meta['yMax']==$meta['yMin'])?INF:$plot['style']['height']/($meta['yMax']-$meta['yMin']);
+        $meta['xOffset']=$meta['xMin']*$meta['xScaler'];
+        $meta['yOffset']=$meta['yMin']*$meta['yScaler'];
+        
+        // generate bars html
+        $html='';
+        foreach($data as $timeStamp=>$valueArr){
+            $value=0;
+            foreach($valueArr as $valueItem){$value+=$valueItem;}
+            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>'#10f5'],'keep-element-content'=>TRUE,'element-content'=>''];
+            // calculate coordinates
+            $bar['style']['bottom']=0;
+            $bar['style']['height']=round($value*$meta['yScaler']-$meta['yOffset']);
+            $bar['style']['left']=round($timeStamp*$meta['xScaler']-$meta['xOffset']);
+            $bar['style']['width']=5;
+            if ($bar['style']['width']<2){$bar['style']['width']=2;}
+            //
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($bar);
+        }
+        $plot['element-content']=$html;
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($plot);
+        // generate wrapper, ticks, labels
+        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $plot['countX']=floor($plot['style']['width']/100);
+        $tick=['tag'=>'div','style'=>['height'=>$metaOverwrite['tickLength'],'width'=>0,'border'=>'1px solid #000'],'class'=>'signal-tick','element-content'=>''];
+        $label=['tag'=>'p','style'=>['bottom'=>0],'class'=>'signal-label','element-content'=>'','keep-element-content'=>TRUE];
+        for($tickIndexX=0;$tickIndexX<=$plot['countX'];$tickIndexX++){
+            $label['style']['left']=$tick['style']['left']=round($tickIndexX*$plot['style']['width']/$plot['countX']+$plot['style']['left']);
+            $timeStamp=round(($label['style']['left']+$meta['xOffset']-$plot['style']['left'])/$meta['xScaler']);
+            $dateTime=new \DateTime('@'.$timeStamp);
+            $dateTime->setTimezone(new \DateTimeZone($pageTimeZone));
+            $dateTimeStr=$dateTime->format($meta['dateFormat']);
+            $label['element-content']=str_replace(' ','<br/>',$dateTimeStr);
+            //
+            $label['style']['left']-=intdiv(strlen($dateTimeStr),2);
+            $tick['style']['bottom']=$plot['style']['bottom']-$metaOverwrite['tickLength'];
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tick);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($label);
+        }
+        $plot['countY']=floor($plot['style']['height']/25);
+        $tick['style']['height']=0;
+        $tick['style']['width']=$metaOverwrite['tickLength'];
+        for($tickIndexY=0;$tickIndexY<=$plot['countY'];$tickIndexY++){
+            $label['style']['bottom']=$tick['style']['bottom']=$tickIndexY*$plot['style']['height']/$plot['countY']+$plot['style']['bottom'];
+            $value=round(($label['style']['bottom']+$meta['yOffset']-$plot['style']['bottom'])/$meta['yScaler']);
+            $label['element-content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($value);
+            //
+            $label['style']['left']=0;
+            $label['style']['bottom']-=5;
+            $tick['style']['left']=$plot['style']['left']-$metaOverwrite['tickLength'];
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tick);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($label);
+        }
+        $plotWrapper['element-content']=$html;
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($plotWrapper);
+        return $html;
     }
 
 }
