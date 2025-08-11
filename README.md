@@ -94,7 +94,7 @@ If you use PLESK for your server administration, you can add the correct path as
 
 ![Added the PEAR directory in PLESK](/assets/img/plesk_settings_pear.png "Added the PEAR directory in PLESK")
 
-You need to append the PEAR folder path relative to the selected PHP version to ``include_path`` (e.g. .**:/opt/plesk/php/8.4/share/pear**) and ``open_basedir`` (e.g. {WEBSPACEROOT}{/}{:}{TMP}{/}**:/opt/plesk/php/8.4/share/pear**). 
+You need to append the PEAR folder path relative to the selected PHP version to **include_path** e.g. ```.:/opt/plesk/php/8.4/share/pear``` and **open_basedir**``** e.g. ```{WEBSPACEROOT}{/}{:}{TMP}{/}:/opt/plesk/php/8.4/share/pear``` 
 
 # Under the Hood
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
