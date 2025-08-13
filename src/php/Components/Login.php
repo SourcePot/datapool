@@ -33,15 +33,22 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return ['Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
-            // update signals
+            // update signals - normal login
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'Login for%'],TRUE);
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login ok',$loginCount,'int'); 
+            $description='Login count within a time span defined by: '.\SourcePot\Datapool\Foundation\Logger::LOG_LEVEL_CONFIG['info']['lifetime'];
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login ok',$loginCount,'int',['description'=>$description]);
+            // login with one-time token
+            $description='One-time token login count within a time span defined by: '.\SourcePot\Datapool\Foundation\Logger::LOG_LEVEL_CONFIG['info']['lifetime'];
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'One-time login%'],TRUE);
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login one-time psw',$loginCount,'int'); 
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login one-time psw',$loginCount,'int',['description'=>$description]); 
+            // failed login
+            $description='Faild login count within a time span defined by: '.\SourcePot\Datapool\Foundation\Logger::LOG_LEVEL_CONFIG['notice']['lifetime'];
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'Login failed%'],TRUE);
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login failed',$loginCount,'int'); 
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Login failed',$loginCount,'int',['description'=>$description]);
+            // registration
+            $description='Registrations within a time span defined by: '.\SourcePot\Datapool\Foundation\Logger::LOG_LEVEL_CONFIG['info']['lifetime'];
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'%registered as new user%'],TRUE);
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'New registration',$loginCount,'int'); 
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'New registration',$loginCount,'int',['description'=>$description]); 
             // compile page
             $bgStyle=array('background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')');
             $arr['toReplace']['{{bottomArticle}}']='';

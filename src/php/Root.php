@@ -391,7 +391,9 @@ final class Root{
         $this->sendHeader();
         $this->builderProgress[hrtime(TRUE)]='Header sent';
         // script time consumption in ms
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
+        $description='When a script is called, the time consumption in miliseconds and timestamp is added to the signal';
+        $timeConsumption=intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',$timeConsumption,'int',['description'=>$description]);
         $this->builderProgress[hrtime(TRUE)]='Time consumption signal updated. Page content will be echoed next';
         // write log files
         $logLevel=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel');

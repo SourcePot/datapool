@@ -77,7 +77,7 @@ class Signals{
     
     public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[]):array
     {
-        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time()];
+        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time(),'label'=>$params['label']??''];
         $params=array_merge(['maxSignalDepth'=>self::MAX_SIGNAL_DEPTH],$params);
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
@@ -265,7 +265,7 @@ class Signals{
             $reset='';
             $row['Cmd']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'+','keep-element-content'=>TRUE,'key'=>['New',$trigger['EntryId']],'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE]);
         } else {
-            $signalPlot=$this->selector2plot(['EntryId'=>$trigger['Content']['Signal']],['style'=>['width'=>340,'height'=>50,'bottom'=>40]]);
+            $signalPlot=$this->selector2plot(['EntryId'=>$trigger['Content']['Signal']],['xMax'=>time(),'style'=>['width'=>340,'height'=>50,'bottom'=>40]]);
             $isActive=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($trigger['Content']['isActive']));
             $reset=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Reset','keep-element-content'=>TRUE,'key'=>['Reset',$trigger['EntryId']],'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE]);
             $row['Cmd']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'&check;','keep-element-content'=>TRUE,'key'=>['Save',$trigger['EntryId']],'value'=>$trigger['EntryId'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction,'excontainer'=>FALSE]);
@@ -343,11 +343,14 @@ class Signals{
         } else {
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
         }
+        $index=0;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],$isSystemCall,'Read',$arr['selector']['orderBy']??FALSE,$arr['selector']['isAsc']??TRUE,$arr['selector']['limit']??FALSE,$arr['selector']['offset']??FALSE) as $signal){
             if (!isset($signal['Content']['signal'])){continue;}
-            $elArr=['tag'=>'p','class'=>'signal-chart','keep-element-content'=>TRUE,'element-content'=>$signal['Folder'].' &rarr; '.$signal['Name']];
+            $style=($index===0)?['margin-top'=>0]:[];
+            $elArr=['tag'=>'p','class'=>'signal-chart','keep-element-content'=>TRUE,'element-content'=>$signal['Folder'].' &rarr; '.$signal['Name'],'style'=>$style];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
             $html.=$this->signalPlot($signal,$arr['settings']);
+            $index++;
         }
         $elArr=['tag'=>'div','class'=>'signal-chart','style'=>$arr['selector']['style']??[],'keep-element-content'=>TRUE,'element-content'=>$html];
         $arr['html']=$arr['html']??'';
@@ -358,19 +361,21 @@ class Signals{
     public function signalPlot($signal,$metaOverwrite=[]):string
     {
         $metaOverwrite['tickLength']=$metaOverwrite['tickLength']?:6;
-        $plot=['tag'=>'div','class'=>'signal-plot','style'=>[],'keep-element-content'=>TRUE];
+        $plotBaseId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId']],TRUE);
+        $plot=['tag'=>'div','class'=>'signal-plot','style'=>[],'id'=>$plotBaseId.'-plot','keep-element-content'=>TRUE];
         $plot['style']['width']=$metaOverwrite['style']['width']??600;
         $plot['style']['height']=$metaOverwrite['style']['height']??100;
         $plot['style']['left']=$metaOverwrite['style']['left']??60;
         $plot['style']['bottom']=$metaOverwrite['style']['bottom']??50;
-        $plotWrapper=['tag'=>'div','class'=>'signal-plot-wrapper','style'=>['width'=>$plot['style']['width']+$plot['style']['left'],'height'=>$plot['style']['height']+$plot['style']['bottom']],'keep-element-content'=>TRUE];
+        $infoPanel=['tag'=>'div','class'=>'signal-plot-info','style'=>['width'=>200],'id'=>$plotBaseId.'-info','keep-element-content'=>TRUE];
+        $plotWrapper=['tag'=>'div','class'=>'signal-plot-wrapper','style'=>['width'=>$plot['style']['width']+$plot['style']['left']+$infoPanel['style']['width']+45,'height'=>$plot['style']['height']+$plot['style']['bottom']],'keep-element-content'=>TRUE];
         // reorganize data & get data properties
         $data=[];
         $meta=['xScaler'=>1,'xOffset'=>0,'yScaler'=>1,'yOffset'=>0,'xMin'=>NULL,'xMax'=>NULL,'yMin'=>NULL,'yMax'=>NULL,'dateFormat'=>'Y-m-d H:i:s'];
         foreach($signal['Content']['signal'] as $item){
             $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],$item['dataType']);
-            if (isset($data[$item['timeStamp']])){
-                $value+=$data[$item['timeStamp']];
+            if (isset($data[$item['timeStamp']]['value'])){
+                $value+=$data[$item['timeStamp']]['value'];
             }
             // check if inside pre-set range
             if (isset($metaOverwrite['xMin']) && ($item['timeStamp']??0)<$metaOverwrite['xMin']){continue;}
@@ -381,7 +386,7 @@ class Signals{
             if ($meta['yMin']>$value || $meta['yMin']===NULL){$meta['yMin']=$value;}
             if ($meta['yMax']<$value || $meta['yMax']===NULL){$meta['yMax']=$value;}
             // add datapoint
-            $data[$item['timeStamp']]=$value;
+            $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-'];
         }
         $meta=array_merge($meta,$metaOverwrite);
         // sorting and scaling data
@@ -392,15 +397,16 @@ class Signals{
         $meta['yOffset']=$meta['yMin']*$meta['yScaler'];
         // generate bars html
         $html='';
-        foreach($data as $timeStamp=>$value){
+        foreach($data as $timeStamp=>$item){
             $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>'#10f5'],'keep-element-content'=>TRUE,'element-content'=>''];
             $bar['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId'],$timeStamp],TRUE);
             $bar['style']['bottom']=0;
-            $bar['style']['height']=round($value*$meta['yScaler']-$meta['yOffset']);
+            $bar['style']['height']=round($item['value']*$meta['yScaler']-$meta['yOffset']);
             $bar['style']['left']=round($timeStamp*$meta['xScaler']-$meta['xOffset']);
             $bar['style']['width']=5;
-            $bar['data-value']=$value;
-            $bar['data-timestamp']=$timeStamp;
+            $bar['data-value']=$item['value'];
+            $bar['data-timestamp']=$item['timeStamp'];
+            $bar['data-label']=preg_replace('[^A-ZÄÜÖa-zäüö0-9\-\_@ \\//]','',$item['label']);
             //
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($bar);
         }
@@ -422,7 +428,7 @@ class Signals{
             $dateTimeStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$timeStamp,'','',$meta['dateFormat'],$pageTimeZone);
             $label['element-content']=str_replace(' ','<br/>',$dateTimeStr);
             //
-            $label['style']['left']-=intdiv(strlen($dateTimeStr),2);
+            $label['style']['left']-=30;
             $tick['style']['bottom']=$plot['style']['bottom']-$metaOverwrite['tickLength'];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tick);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($label);
@@ -441,6 +447,44 @@ class Signals{
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tick);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($label);
         }
+        // create info panel template
+        $hEl=['tag'=>'h3','class'=>'info','element-content'=>'Info panel','style'=>['float'=>'left','margin'=>'0 0 0.25rem 0']];
+        $infoPanelHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($hEl);
+        // Label
+        $pEl=['tag'=>'p','class'=>'info','element-content'=>'Label','style'=>['float'=>'left','clear'=>'left']];
+        $infoRowHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-label','element-content'=>'...','style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
+        $infoRowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $rowEl=['tag'=>'div','class'=>'info','element-content'=>$infoRowHtml,'style'=>['width'=>'100%','padding'=>'0 0 0.25rem 0'],'keep-element-content'=>TRUE];
+        $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($rowEl);
+        // Value
+        $pEl=['tag'=>'p','class'=>'info','element-content'=>'Value','style'=>['clear'=>'left']];
+        $infoRowHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-value','element-content'=>'...','style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
+        $infoRowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $rowEl=['tag'=>'div','class'=>'info','element-content'=>$infoRowHtml,'style'=>['width'=>'100%','padding'=>'0 0 0.25rem 0'],'keep-element-content'=>TRUE];
+        $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($rowEl);
+        // Date
+        $pEl=['tag'=>'p','class'=>'info','element-content'=>'Date','style'=>['clear'=>'left']];
+        $infoRowHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-timestamp','element-content'=>'...','style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
+        $infoRowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $rowEl=['tag'=>'div','class'=>'info','element-content'=>$infoRowHtml,'style'=>['width'=>'100%','padding'=>'0 0 0.25rem 0'],'keep-element-content'=>TRUE];
+        $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($rowEl);
+        // Timezone
+        $pEl=['tag'=>'p','class'=>'info','element-content'=>'Timezone','style'=>['clear'=>'left']];
+        $infoRowHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-timezone','element-content'=>$pageTimeZone,'style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
+        $infoRowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        $rowEl=['tag'=>'div','class'=>'info','element-content'=>$infoRowHtml,'style'=>['width'=>'100%','padding'=>'0 0 0.25rem 0'],'keep-element-content'=>TRUE];
+        $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($rowEl);
+        // Descritpion
+        $pEl=['tag'=>'p','class'=>'info','element-content'=>$signal['Params']['signal']['description']??'Signal description missing','style'=>['font-style'=>'italic','clear'=>'left']];
+        $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
+        //
+        $infoPanel['element-content']=$infoPanelHtml;
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($infoPanel);
+        // add plot wrapper
         $plotWrapper['element-content']=$html;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($plotWrapper);
         return $html;

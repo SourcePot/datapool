@@ -12,11 +12,12 @@ namespace SourcePot\Datapool\Foundation;
 
 class Job{
     
-    private const INIT_TIME_BETWEEN_RUNS=['SourcePot\Datapool\Foundation\Database'=>77,
-                                         'SourcePot\Datapool\Foundation\Logger'=>600,
-                                         'SourcePot\Datapool\Calendar\Calendar'=>266,
-                                         'SourcePot\Datapool\GenericApps\Feeds'=>533,
-                                        ];
+    private const INIT_TIME_BETWEEN_RUNS=[
+        'SourcePot\Datapool\Foundation\Database'=>77,
+        'SourcePot\Datapool\Foundation\Logger'=>600,
+        'SourcePot\Datapool\Calendar\Calendar'=>266,
+        'SourcePot\Datapool\GenericApps\Feeds'=>533,
+    ];
 
     private $oc;
     
@@ -86,12 +87,13 @@ class Job{
             $dueJob=key($jobs['due']);
             $dueMethod=$allJobsSetting['Content'][$dueJob]['method'];
             // job var space and run job
-            $jobVars=array('Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
-                           'Group'=>'Job processing','Folder'=>'Var space',
-                           'Name'=>$dueJob,
-                           'Type'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
-                           'Content'=>[],
-                           );
+            $jobVars=[
+                'Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
+                'Group'=>'Job processing','Folder'=>'Var space',
+                'Name'=>$dueJob,
+                'Type'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),
+                'Content'=>[],
+                ];
             $jobVars=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($jobVars,['Source','Group','Folder','Name'],'0','',FALSE);
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($jobVars,'ADMIN_R','ADMIN_R');
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($jobVars,TRUE);
@@ -109,6 +111,10 @@ class Job{
             $allJobsSetting['Content'][$dueJob]['Last run']=time();
             $allJobsSetting['Content'][$dueJob]['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
             $allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]']=round((hrtime(TRUE)-$jobStartTime)/1000000);
+            // update signal
+            $timeConsumption=$allJobsSetting['Content'][$dueJob]['Last run time consumption [ms]'];
+            $description='Time used in miliseconds to run this job';
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption [ms]',$timeConsumption,'float',['label'=>$dueJob,'description'=>$description]);
             // update job vars
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);
             // show results
