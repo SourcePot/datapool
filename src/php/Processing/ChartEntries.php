@@ -16,16 +16,42 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $oc;
 
-    private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
-
-    private $chartTypeOptions=['timeY'=>'DateTime-Y-chart','XY'=>'XY-chart',];
-    private $orderByOptions=['Group'=>'Group','Folder'=>'Folder','Name'=>'Name','Date'=>'Date'];
-
-
+    private const CHART_OPTIONS=[
+        'timeY'=>'Value over time chart',
+        'XY'=>'XY-chart',
+        'histogram'=>'Histogram',
+    ];
     
+    private const ORDER_BY_OPTIONS=[
+        'Group'=>'Group',
+        'Folder'=>'Folder',
+        'Name'=>'Name',
+        'Date'=>'Date'
+    ];
+
+    private const CHART_PARAMS_TEMPLATE=[
+        'Width'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE],
+        'Height'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE],
+        'Type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'timeY','options'=>self::CHART_OPTIONS,'keep-element-content'=>TRUE],
+        'OrderBy'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Date','options'=>self::ORDER_BY_OPTIONS,'keep-element-content'=>TRUE],
+        'Normalize'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[''=>'-','x'=>'X','y'=>'Y'],'keep-element-content'=>TRUE],
+    ];
+
+    private const CHART_RULES_TEMPLATE=[
+        'trace name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE],
+        'x-selector'=>['method'=>'keySelect','value'=>'Date','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
+        'y-selector'=>['method'=>'keySelect','value'=>'Group','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],                
+        'yMin'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>'','title'=>'Leave empty if unused','excontainer'=>TRUE],
+        'yMax'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>'','title'=>'Leave empty if unused','excontainer'=>TRUE],
+        'label-selector'=>['method'=>'keySelect','value'=>'Group','standardColumsOnly'=>FALSE,'addColumn'=>[''=>'-'],'excontainer'=>TRUE],                
+    ];
+
+    private $entryTable='';
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+    ];
+
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -111,14 +137,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function chartParams($callingElement){
-        $contentStructure=['Width'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE],
-                        'Height'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE],
-                        'offset'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>0,'min'=>0,'excontainer'=>TRUE],
-                        'limit'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>-1,'min'=>-1,'excontainer'=>TRUE],
-                        'Type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'timeY','options'=>$this->chartTypeOptions,'keep-element-content'=>TRUE],
-                        'OrderBy'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Date','options'=>$this->orderByOptions,'keep-element-content'=>TRUE],
-                        'Normalize'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[''=>'-','x'=>'X','y'=>'Y'],'keep-element-content'=>TRUE],
-                        ];
+        $contentStructure=self::CHART_PARAMS_TEMPLATE;
         // get selector
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -141,95 +160,82 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function chartRules($callingElement){
-        $contentStructure=['trace name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE],
-                        'x-selector'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>FALSE],
-                        'y-selector'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Group','standardColumsOnly'=>FALSE],
-                        ];
+        $contentStructure=self::CHART_RULES_TEMPLATE;
         $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
         $contentStructure['y-selector']+=$callingElement['Content']['Selector'];
+        $contentStructure['label-selector']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Parser rules: Parse selected entry and copy result to target entry';
+        $arr['caption']='Plot rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
 
     private function runChartEntries($callingElement,$testRun=FALSE){
+        $signals=[];
+        $signalsIndex=[];
+        $result=['html'=>''];
         $base=['chartrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
-        $plotSelector=$callingElement['Content']['Selector'];
-        $plotSelector['property']=current($base['chartparams'])['Content'];
-        $plotSelector['property']['Title']=$callingElement['Content']['Style']['Text'];
-        foreach($base['chartrules'] as $ruleId=>$rule){
-            $plotSelector['rule'][$ruleId]=$rule['Content'];
+        $params=current($base['chartparams'])['Content'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['OrderBy'],TRUE) as $entry){
+            $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+            foreach($base['chartrules'] as $ruleId=>$rule){
+                // create signal
+                $traceName=$rule['Content']['trace name'];
+                $xSelector=$rule['Content']['x-selector'];
+                $ySelector=$rule['Content']['y-selector'];
+                $labelSelector=$rule['Content']['label-selector'];
+                $index=$signalsIndex[$traceName]??0;
+                $signals[$traceName]['Folder']=__CLASS__;
+                $signals[$traceName]['Name']=$traceName;
+                $signals[$traceName]['EntryId']=$ruleId;
+                if ($params['Type']==='timeY'){
+                    if ($flatEntry[$xSelector]===NULL){
+                        continue;
+                    } else if (is_object($flatEntry[$xSelector])){
+                        $timeStamp=$flatEntry[$xSelector]->getTimestamp();
+                    } else if (!is_numeric($flatEntry[$xSelector])){
+                        $xDateTime=new \DateTime($flatEntry[$xSelector]);
+                        $timeStamp=$xDateTime->getTimestamp();
+                    } else {
+                        $timeStamp=intval($flatEntry[$xSelector]);        
+                    }
+                    $signals[$traceName]['metaOverwrite']=$signals[$traceName]['metaOverwrite']??[];
+                    if ($params['Normalize']==='y' && !empty($flatEntry[$ySelector])){
+                        if (isset($signals[$traceName]['metaOverwrite']['normalizer']['timeStamp'])){
+                            if ($signals[$traceName]['metaOverwrite']['normalizer']['timeStamp']>$timeStamp){
+                                $signals[$traceName]['metaOverwrite']['normalizer']=['timeStamp'=>$timeStamp,'value'=>$flatEntry[$ySelector]];
+                            }
+                        } else {
+                            $signals[$traceName]['metaOverwrite']['normalizer']=['timeStamp'=>$timeStamp,'value'=>$flatEntry[$ySelector]];
+                        }
+                    }
+                    if (is_numeric($rule['Content']['yMin'])){
+                        $signals[$traceName]['metaOverwrite']['yMin']=$rule['Content']['yMin'];
+                    }
+                    if (is_numeric($rule['Content']['yMax'])){
+                        $signals[$traceName]['metaOverwrite']['yMax']=$rule['Content']['yMax'];
+                    }
+                    $signals[$traceName]['metaOverwrite']['style']['height']=$params['Height'];
+                    $signals[$traceName]['metaOverwrite']['style']['width']=$params['Width'];
+                    $signals[$traceName]['Content']['signal'][$index]=['timeStamp'=>$timeStamp,'value'=>$flatEntry[$ySelector],'label'=>$flatEntry[$labelSelector]??''];
+                }
+                $signalsIndex[$traceName]=$index+1;
+            }
         }
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic($plotSelector);
-        $result=['html'=>$this->getChartProcessorPlot($plotSelector)];
+        $index=0;
+        foreach($signals as $traceName=>$signal){
+            $style=($index===0)?['margin-top'=>0]:[];
+            $elArr=['tag'=>'p','class'=>'signal-chart','keep-element-content'=>TRUE,'element-content'=>$signal['Folder'].' &rarr; '.$signal['Name'],'style'=>$style];
+            $result['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
+            $result['html'].=$this->oc['SourcePot\Datapool\Foundation\Signals']->signalPlot($signal,$signal['metaOverwrite']);
+            $index++;
+        }
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
-    }
-
-    public function getChartProcessorPlot(array $selector=[]):string|array
-    {
-        if (empty($selector['function'])){
-            // draw plot pane request
-            $selector['callingClass']=__CLASS__;
-            $selector['callingFunction']=__FUNCTION__;
-            $selector['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
-            $_SESSION['plots'][$selector['id']]=$selector;
-            $elArr=['tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$selector['property']['Title']];
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'div','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'Plot "'.$selector['id'].'" placeholder','id'=>$selector['id']];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'a','class'=>'plot','keep-element-content'=>TRUE,'element-content'=>'SVG','id'=>'svg-'.$selector['id']];
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $elArr=['tag'=>'div','class'=>'plot-wrapper','style','keep-element-content'=>TRUE,'element-content'=>$html];
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            return $html;
-        } else {
-            // return plot data request
-            $index=0;
-            $plotData=$selector;
-            $plotData['meta']['id']=$selector['id'];
-            if ($plotData['property']['Type']==='timeY'){
-                $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-                $plotData['property']['Title'].=' | timezone='.$pageTimeZone;
-            }
-            $plotData['use']=$plotData['property']['Type'].'plot';
-            $plotData['traces']=[];
-            if ($plotData['property']['offset']<1){
-                $plotData['property']['offset']=FALSE;
-            }
-            if ($plotData['property']['limit']<2){
-                if ($plotData['property']['offset']===FALSE){
-                    $plotData['property']['limit']=FALSE;       
-                } else {
-                    $plotData['property']['limit']=\SourcePot\Datapool\Processing\ChartEntries::MAX_LIMIT;
-                }
-            }
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($plotData,TRUE,'Read',$plotData['property']['OrderBy'],TRUE,$plotData['property']['limit'],$plotData['property']['offset'],) as $entry){
-                $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
-                foreach($plotData['rule'] as $ruleId=>$rule){
-                    if (empty($rule)){continue;}
-                    if (!isset($flatEntry[$rule['x-selector']]) || !isset($flatEntry[$rule['y-selector']])){continue;}
-                    $x=str_replace(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,'→',$rule['x-selector']);
-                    $y=str_replace(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,'→',$rule['y-selector']);
-                    if ($plotData['property']['Type']==='timeY'){
-                        if (is_numeric($flatEntry[$rule['x-selector']])){
-                            $flatEntry[$rule['x-selector']]=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('@'.$flatEntry[$rule['x-selector']],\SourcePot\Datapool\Root::DB_TIMEZONE,$pageTimeZone);
-                        } else {
-                            $flatEntry[$rule['x-selector']]=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($flatEntry[$rule['x-selector']],\SourcePot\Datapool\Root::DB_TIMEZONE,$pageTimeZone);
-                        }
-                    }
-                    $plotData['traces'][$rule['trace name']][$index][$x]=$flatEntry[$rule['x-selector']];
-                    $plotData['traces'][$rule['trace name']][$index][$y]=$flatEntry[$rule['y-selector']];
-                    $index++;
-                }
-            }
-            return $plotData;
-        }
     }
 
 }

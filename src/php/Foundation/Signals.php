@@ -374,6 +374,11 @@ class Signals{
         $meta=['xScaler'=>1,'xOffset'=>0,'yScaler'=>1,'yOffset'=>0,'xMin'=>NULL,'xMax'=>NULL,'yMin'=>NULL,'yMax'=>NULL,'dateFormat'=>'Y-m-d H:i:s'];
         foreach($signal['Content']['signal'] as $item){
             $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],$item['dataType']);
+            if (!empty($metaOverwrite['normalizer'])){
+                $normalizer=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($metaOverwrite['normalizer']['value'],$item['dataType']);
+                $value=$value/$normalizer;
+                $value-=1;
+            }
             if (isset($data[$item['timeStamp']]['value'])){
                 $value+=$data[$item['timeStamp']]['value'];
             }
@@ -396,14 +401,24 @@ class Signals{
         $meta['xOffset']=$meta['xMin']*$meta['xScaler'];
         $meta['yOffset']=$meta['yMin']*$meta['yScaler'];
         // generate bars html
+        $barBase=0;
         $html='';
+        $html.=$this->getY0axis($meta,$plot);
         foreach($data as $timeStamp=>$item){
-            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>'#10f5'],'keep-element-content'=>TRUE,'element-content'=>''];
+            $barHeight=$this->value2pixel($item['value']+$meta['yMin']-$barBase,$meta,TRUE);
+            $barBottom=$this->value2pixel($barBase,$meta,TRUE);
+            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>'#10f4','border-top'=>'1px solid #10f'],'keep-element-content'=>TRUE,'element-content'=>''];
+            if ($barHeight<0){
+                $barBottom=$barBottom+$barHeight;
+                $barHeight=-$barHeight;
+                $bar['style']['background-color']='#f004';
+                $bar['style']['border-bottom']='1px solid #f00';
+            }
             $bar['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId'],$timeStamp],TRUE);
-            $bar['style']['bottom']=0;
-            $bar['style']['height']=round($item['value']*$meta['yScaler']-$meta['yOffset']);
-            $bar['style']['left']=round($timeStamp*$meta['xScaler']-$meta['xOffset']);
-            $bar['style']['width']=5;
+            $bar['style']['bottom']=$barBottom;
+            $bar['style']['height']=$barHeight;
+            $bar['style']['width']=6;
+            $bar['style']['left']=round($timeStamp*$meta['xScaler']-$meta['xOffset']-intdiv($bar['style']['width'],2));
             $bar['data-value']=$item['value'];
             $bar['data-timestamp']=$item['timeStamp'];
             $bar['data-label']=preg_replace('[^A-ZÄÜÖa-zäüö0-9\-\_@ \\//]','',$item['label']);
@@ -490,5 +505,24 @@ class Signals{
         return $html;
     }
 
+    private function value2pixel($value,array $meta,$scaleY=TRUE):int
+    {
+        if ($scaleY){
+            return intval($value*$meta['yScaler']-$meta['yOffset']);
+        }
+        return intval($value*$meta['yScaler']-$meta['yOffset']);
+    }
+    
+    private function getY0axis(array $meta, array $plot):string
+    {
+        $axisEl=['tag'=>'div','style'=>['position'=>'absolute','left'=>0,'width'=>$plot['style']['width'],'height'=>0,'border-bottom'=>'1px solid #444'],'element-content'=>''];
+        if ($meta['yMin']<0 || $meta['yMax']>0){
+            $axisEl['style']['bottom']=$this->value2pixel(0,$meta,TRUE);
+            return $this->oc['SourcePot\Datapool\Foundation\Element']->element($axisEl);
+        } else {
+            return '';
+        }
+        
+    }
 }
 ?>

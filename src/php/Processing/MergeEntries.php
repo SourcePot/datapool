@@ -153,7 +153,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // get HTML
         $callingElementArr['canvasCallingClass']=$callingElement['Folder'];
         $callingElementArr['contentStructure']=$contentStructure;
-        $callingElementArr['caption']='Merginging control: Select target for merged entries';
+        $callingElementArr['caption']='Merging control: Select target for merged entries';
         $callingElementArr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($callingElementArr);
         if (empty($callingElementArr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
@@ -240,13 +240,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $newValue='';
             $operation=$calcDebug[$debugFlatKey]['Operaton']=trim($rule['Content']['Operation'],'abcdefghijklmnopqrstuvwxyzAB()');
             if (strpos($rule['Content']['Operation'],'number')===0){
-                $newValue=match($operation){
-                    '+'=>floatval($operandA)+floatval($operandB),
-                    '-'=>floatval($operandA)-floatval($operandB),
-                    '/'=>floatval($operandA)/floatval($operandB),
-                    '*'=>floatval($operandA)*floatval($operandB),
-                    '%'=>floatval($operandA)%floatval($operandB)   
-                };
+                $newValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->operation($operandA,$operandB,$operation);
             } else if (strpos($rule['Content']['Operation'],'money')===0){
                 $asset=new \SourcePot\Asset\Asset();
                 $asset->setFromString(strval($operandA));

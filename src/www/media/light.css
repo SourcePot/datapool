@@ -955,6 +955,7 @@ div.signal-plot{
     padding:0;
     margin:0;
     background-image:url("canvaslightbg.png");
+    overflow:hidden;
 }
 div.signal-bar{
     position: absolute;
@@ -973,7 +974,7 @@ p.signal-label{
 }
 div.signal-plot-info{
     position:absolute;
-    top:-50px;
+    top:-30px;
     right:0;
     overflow:hidden;
 }
