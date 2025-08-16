@@ -48,7 +48,25 @@ class Computations{
         'regexMatch'=>'f(A,RegEx(B))',
         ];
     
+    public const COMBINE_OPTIONS=[
+        ''=>'{...}',
+        'lastHit'=>'Last hit',
+        'firstHit'=>'First hit',
+        'int(A+B+...)'=>'int(A+B+...)',
+        'float(A+B+...)'=>'float(A+B+...)',
+        'average(A,B,...)'=>'average(A,B,...)',
+        'string(A B)'=>'string(A B)',
+        'string(A|B)'=>'string(A|B)',
+        'string(A, B)'=>'string(A, B)',
+        'string(A; B)'=>'string(A; B)'
+    ];
+
+    private const RELEVANT_DATATYPE_KEY=['System short','Reference','Amount',];
+
+    private const ARR_COLUMNS=['Content'=>TRUE,'PARAMS'=>TRUE,];
+    
     private $matchObj=NULL;
+    private $combineCache=[];
 
     private $oc;
 
@@ -72,6 +90,104 @@ class Computations{
         return $this->matchObj->getMatchTypes();
     }
     
+    /******************************************************************************************************************************************
+    * Array operations
+    */
+
+    public function add2combineCache(string $combineOperation,string $column,string $key,$value)
+    {
+        $cacheIdStr=$combineOperation.$column;
+        $cacheIdStr.=(empty(self::ARR_COLUMNS[$column]))?'':$key;
+        $cachId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($cacheIdStr,TRUE);
+        $this->combineCache[$cachId]['__COLUMN__']=$column;
+        $this->combineCache[$cachId]['__OPERATION__']=$combineOperation;
+        if (stripos($combineOperation,'float')!==FALSE){
+            $value=$this->arr2value($value);
+            $value=floatval($value);
+        } else if (stripos($combineOperation,'int')!==FALSE || stripos($combineOperation,'byte')!==FALSE){
+            $value=$this->arr2value($value);
+            $value=intval($value);
+        } else if (stripos($combineOperation,'string')!==FALSE){
+            $value=$this->arr2value($value);
+            $value=strval($value);
+        } else if (stripos($combineOperation,'bool')!==FALSE){
+            $value=$this->arr2value($value);
+            $value=!empty($value);
+        }
+        if (!empty(self::ARR_COLUMNS[$column])){
+            $index=count($this->combineCache[$cachId]['__VALUES__'][$key]??[]);
+            $this->combineCache[$cachId]['__VALUES__'][$key][$index]=$value;
+        } else {
+            $this->combineCache[$cachId]['__VALUES__'][$key]=$value;
+        }
+    }
+
+    public function combineAll(array $flatEntry):array
+    {
+        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($this->combineCache,'combineCache.json');
+        foreach($this->combineCache as $fcacheId=>$cache){
+            $flatEntry=$this->combine($flatEntry,$cache);
+        }
+        $this->combineCache=[];
+        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($flatEntry,'flatEntry.json');
+        return $flatEntry;
+    }
+
+    public function combine(array $flatEntry,array $cache):array
+    {
+        if (empty(self::ARR_COLUMNS[$cache['__COLUMN__']])){
+            // non-array columns
+            $arr=[];
+            foreach($cache['__VALUES__'] as $key=>$value){
+                $arr[$key]=$value=$this->arr2value($value);
+            }
+            $flatEntry[$cache['__COLUMN__']]=$this->arrOperation($arr,$cache['__OPERATION__'],TRUE);
+        } else {
+            // array columns
+            foreach($cache['__VALUES__'] as $key=>$value){
+                if (empty($cache['__OPERATION__'])){
+                    // Operation ''=>'{...}'
+                    $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],FALSE);
+                } else {
+                    // Operation not ''=>'{...}'
+                    $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],TRUE);
+                }
+            }
+        }
+        return $flatEntry;
+    }
+
+    private function arrOperation(array $arr,$operation,$forceScalar=FALSE)
+    {
+        ksort($arr);
+        if (strpos($operation,'string')!==FALSE){
+            $glue=trim($operation,'string()AB.');
+            $result=implode($glue,$arr);
+        } else if (strpos($operation,'+')!==FALSE){
+            $result=array_sum($arr);
+        } else if ($operation==='average'){
+            $result=array_sum($arr)/count($arr);
+        } else if ($operation==='lastHit' || $operation==='firstHit'){
+            if ($operation==='lastHit'){end($arr);} else {reset($arr);}
+            $result[key($arr)]=current($arr);
+        } else {
+            $result=$arr;
+        }
+        $result=(is_array($result) && $forceScalar)?($this->arr2value($result)):$result;
+        return $result;
+    }
+
+    public function arr2value($arr,$keyNeedle='')
+    {
+        if (!is_array($arr)){return $arr;}
+        if (isset($arr[$keyNeedle])){return $arr[$keyNeedle];}
+        foreach(self::RELEVANT_DATATYPE_KEY as $keyNeedle){
+            if (isset($arr[$keyNeedle])){return $arr[$keyNeedle];}
+        }
+        reset($arr);
+        return current($arr);
+    }
+
     /******************************************************************************************************************************************
     * Generic conversions
     */

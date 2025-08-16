@@ -18,9 +18,6 @@ final class MiscTools{
     private $emojiFile='';
 
     private $multipleHitsStatistic=[];
-    private $combineOptionCache=[];
-    
-    public const COMBINE_OPTIONS=[''=>'{...}','lastHit'=>'Last hit','firstHit'=>'First hit','addFloat'=>'float(A + B)','chainSpace'=>'string(A B)','chainPipe'=>'string(A|B)','chainComma'=>'string(A, B)','chainSemicolon'=>'string(A; B)'];
     
     public function __construct()
     {
@@ -291,14 +288,14 @@ final class MiscTools{
         return $entry;
     }
 
-    public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone='',string $format='Y-m-d H:i:s'):string
+    public function getDateTime(string $datetime='now',string $addDateInterval='',string $timezone='',string $format='Y-m-d H:i:s',string $targetTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE):string
     {
         if ($datetime[0]==='@'){
             $timestamp=intval(trim($datetime,'@'));
             $dateTime=new \DateTime();
             $dateTime->setTimestamp($timestamp); 
         } else {
-            $timezone=(empty($timezone))?(\SourcePot\Datapool\Root::DB_TIMEZONE):$timezone;
+            $timezone=$timezone?:(\SourcePot\Datapool\Root::DB_TIMEZONE);
             $dateTime=new \DateTime($datetime,new \DateTimeZone($timezone));
         }
         if (!empty($addDateInterval)){
@@ -309,7 +306,7 @@ final class MiscTools{
                 $dateTime->add(new \DateInterval($dateInterval));
             }
         }
-        $dateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+        $dateTime->setTimeZone(new \DateTimeZone($targetTimezone));
         return $dateTime->format($format);
     }
     
@@ -395,7 +392,9 @@ final class MiscTools{
         if (is_array($haystack)){
             $flatHaystack=$this->arr2flat($haystack);
             foreach($flatHaystack as $flatKey=>$flatValue){
-                if (!is_string($flatValue)){continue;}
+                if (!is_string($flatValue)){
+                    continue;
+                }
                 $flatHaystack[$flatKey]=strtr($flatValue,$needleReplacement);
             }
             $haystack=$this->flat2arr($flatHaystack);
@@ -485,7 +484,9 @@ final class MiscTools{
         $flatResultArr=[];
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $flatKey=>$value){
-            if (empty($value)){continue;}
+            if (empty($value)){
+                continue;
+            }
             $flatResultArr[$flatKey]=$value;
         }
         return $this->flat2arr($flatResultArr);
@@ -609,25 +610,12 @@ final class MiscTools{
         }
         return $result;
     }
-
-    /**
-    * @return arr This method returns a sub array from a flat array selected by $subFlatKey.
-    */
-    public function subflat2arr(array $flatArr,string $subFlatKey='',string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
-    {
-        $subFlatArr=[];
-        foreach($flatArr as $flatKey=>$flatValue){
-            if (strpos($flatKey,$subFlatKey)===0){
-                $newKey=trim(substr($flatKey,mb_strlen($subFlatKey)),$S);
-                $subFlatArr[$newKey]=$flatValue;
-            }
-        }
-        return $this->flat2arr($subFlatArr);
-    }
     
     private function flatKey2arr($key,$value,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
-        if (!is_string($key)){return [$key=>$value];}
+        if (!is_string($key)){
+            return [$key=>$value];
+        }
         $k=explode($S,$key);
         while(count($k)>0){
             $subKey=array_pop($k);
@@ -643,7 +631,9 @@ final class MiscTools{
     {
         $flatArr=$this->arr2flat($arr);
         foreach($flatArr as $arrKey=>$arrValue){
-            if (mb_strpos($arrKey,$flatKey)===FALSE){continue;}
+            if (mb_strpos($arrKey,$flatKey)===FALSE){
+                continue;
+            }
             $flatArr[$arrKey]=NULL;
         }
         $arr=$this->flat2arr($flatArr);
@@ -822,104 +812,6 @@ final class MiscTools{
             }
         });
         return $result;
-    }
-
-    /**
-    * @return array This method aadds an array [addKey=>value] to flatArr and combineOptions information to flatArr
-    */
-    public function addValue2flatArr(array $flatArr,string $flatKey,string $addKey='',$value,string $combineOptions='')
-    {
-        // initialize array- for provieded flatKey
-        if (!isset($flatArr[$flatKey])){
-            $flatArr[$flatKey]=[];
-        } else if (!is_array($flatArr[$flatKey])){
-            $flatArr[$flatKey]=[];
-        }
-        // array data type values only permitted for columns Content and Params
-        if (strpos($flatKey,'Content')!==0 && strpos($flatKey,'Params')!==0 && is_array($value)){
-            $value=$this->valueArr2value($value);
-        } else if (strpos($combineOptions,'chain')===0){
-            $value=$this->valueArr2value($value);
-        }
-        if (strlen($addKey)>0){
-            if (strpos($flatKey,'Content')===0 || strpos($flatKey,'Params')===0){
-                $flatKey.=\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$addKey;
-                $flatArr[$flatKey][]=$value;
-            } else {
-                $flatArr[$flatKey][$addKey]=$value;
-            }
-        } else {
-            $flatArr[$flatKey][]=$value;
-        }
-        $this->combineOptionCache[$flatKey]=$combineOptions;
-        return $flatArr;
-    }
-
-    public function valueArr2value($value,$keyNeedle='')
-    {
-        if (!is_array($value)){return $value;}
-        if (isset($value[$keyNeedle])){
-            return $value[$keyNeedle];
-        }
-        foreach(['System short','Amount','Reference'] as $keyNeedle){
-            if (isset($value[$keyNeedle])){
-                return $value[$keyNeedle];
-            }
-        }
-        reset($value);
-        return current($value);
-    }
-
-    /**
-    * @return array This method adds an array [addKey=>value] to flatArr and combineOptions information to flatArr
-    */
-    public function flatArrCombineValues(array $flatArr)
-    {
-        $combinedFlatArr=[];
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
-        foreach($flatArr as $flatArrKey=>$valueArr){
-            $context['column']=$flatArrKey;
-            if (is_array($valueArr)){ksort($valueArr);}
-            if (isset($this->combineOptionCache[$flatArrKey])){
-                $combineOption=$this->combineOptionCache[$flatArrKey];
-            } else {
-                $combineOption='';
-            }
-            if ($combineOption==='lastHit'){
-                $value=array_pop($valueArr);
-            } else if ($combineOption==='firstHit'){
-                $value=array_shift($valueArr);
-            } else if ($combineOption==='addFloat'){
-                $value=0;
-                foreach($valueArr as $arrValue){
-                    $value+=floatval($arrValue);
-                }
-            } else if ($combineOption==='chainSpace'){
-                $value=implode(' ',$valueArr);
-            } else if ($combineOption==='chainPipe'){
-                $value=implode('|',$valueArr);
-            } else if ($combineOption==='chainComma'){
-                $value=implode(', ',$valueArr);
-            } else if ($combineOption==='chainSemicolon'){
-                $value=implode('; ',$valueArr);
-            } else {
-                $value=$valueArr;
-            }
-            if (is_array($value)){
-                if (strpos($flatArrKey,'Content')!==0 && strpos($flatArrKey,'Params')!==0){
-                    $combinedFlatArr[$flatArrKey]='{}';
-                    $this->oc['logger']->log('notice','Mapping failed for column "{column}". Please check "Combine"-option..',$context);
-                } else {
-                    $subFlatArr=$this->arr2flat($value);
-                    foreach($subFlatArr as $subkey=>$subValue){
-                        $combinedFlatArr[$flatArrKey.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$subkey]=$subValue;
-                    }
-                }
-            } else {
-                $combinedFlatArr[$flatArrKey]=$value;
-            }
-        }
-        return $combinedFlatArr;
     }
 
     public function add2hitStatistics(array $entry,string $comment='')

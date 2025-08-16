@@ -169,7 +169,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
             'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Tools\MiscTools::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
             ];
         $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -299,9 +299,9 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             $targetValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($targetValue,$rule['Content']['Target data type']);
-            $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue,$rule['Content']['Combine']??'');
+            $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue);
         }
-        $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
+        $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($targetEntry);
         // wrapping up
         foreach($targetEntry as $key=>$value){
             $targetEntry=$this->valueSizeLimitCompliance($key,$targetEntry);
