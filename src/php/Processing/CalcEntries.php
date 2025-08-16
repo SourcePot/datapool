@@ -362,7 +362,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (mb_strpos($key,'Content')===0 || mb_strpos($key,'Params')===0){continue;}
             if (!is_array($value)){continue;}
             foreach($value as $subKey=>$subValue){
-                $subValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->valueArr2value($subValue);
+                $subValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->arr2value($subValue);
                 if (is_array($subValue)){$subValue=implode('|',$subValue);}
                 $value[$subKey]=$subValue;
             }

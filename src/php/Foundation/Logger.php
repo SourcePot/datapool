@@ -20,15 +20,16 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
     private $entryTable='';
     private $entryTemplate=[];
     
-    private $levelConfig=['emergency'=>['hashIp'=>FALSE,'lifetime'=>'P1Y','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f00','min-width'=>'6rem']],
-                        'alert'=>['hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f44','min-width'=>'6rem']],
-                        'critical'=>['hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f88','min-width'=>'6rem']],
-                        'error'=>['hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#faa','min-width'=>'6rem']],
-                        'warning'=>['hashIp'=>TRUE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#fcc','min-width'=>'6rem']],
-                        'notice'=>['hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>['color'=>'#ff0','min-width'=>'6rem']],
-                        'info'=>['hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>['color'=>'#fff','min-width'=>'6rem']],
-                        'debug'=>['hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>['color'=>'#fff','min-width'=>'6rem']],
-                        ];
+    public const LOG_LEVEL_CONFIG=[
+        'emergency'=>['hashIp'=>FALSE,'lifetime'=>'P1Y','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f00','min-width'=>'6rem']],
+        'alert'=>['hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f44','min-width'=>'6rem']],
+        'critical'=>['hashIp'=>FALSE,'lifetime'=>'P30D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#f88','min-width'=>'6rem']],
+        'error'=>['hashIp'=>FALSE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#faa','min-width'=>'6rem']],
+        'warning'=>['hashIp'=>TRUE,'lifetime'=>'P10D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>TRUE,'style'=>['color'=>'#fcc','min-width'=>'6rem']],
+        'notice'=>['hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>['color'=>'#ff0','min-width'=>'6rem']],
+        'info'=>['hashIp'=>TRUE,'lifetime'=>'P1D','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>FALSE,'addTrace'=>FALSE,'style'=>['color'=>'#fff','min-width'=>'6rem']],
+        'debug'=>['hashIp'=>TRUE,'lifetime'=>'PT10M','Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM','addTrace'=>FALSE,'style'=>['color'=>'#fff','min-width'=>'6rem']],
+        ];
     
     public function __construct(array $oc)
     {
@@ -123,10 +124,10 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
     {
         $level=mb_strtolower($record->level->name);
         $context=array_merge($record->context,$record->extra);
-        $lifetime=(empty($context['lifetime']))?$this->levelConfig[$level]['lifetime']:$context['lifetime'];
-        $context['ip']=$this->oc['SourcePot\Datapool\Root']->getIP($this->levelConfig[$level]['hashIp']);
+        $lifetime=(empty($context['lifetime']))?self::LOG_LEVEL_CONFIG[$level]['lifetime']:$context['lifetime'];
+        $context['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(self::LOG_LEVEL_CONFIG[$level]['hashIp']);
         $context['timestamp']=time();
-        $entry=$this->levelConfig[$level];
+        $entry=self::LOG_LEVEL_CONFIG[$level];
         $entry['Owner']=(empty($entry['Owner']))?$_SESSION['currentUser']['EntryId']:$entry['Owner'];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
@@ -136,7 +137,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now',$lifetime);
         $entry['Content']=$context;
         $entry['Content']['msg']=$record->message;
-        if ($this->levelConfig[$level]['addTrace']){
+        if (self::LOG_LEVEL_CONFIG[$level]['addTrace']){
             $entry['Content']['trace']=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             // remove traces due to logging itsself
             unset($entry['Content']['trace'][0]);
@@ -175,7 +176,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
             $flatLog['Date']=str_replace($today,'',$flatLog['Date']);
             foreach($arr['settings']['columns'] as $column){
                 if (!isset($flatLog[$column])){continue;}
-                $rowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$flatLog[$column],'keep-element-content'=>TRUE,'style'=>$this->levelConfig[$log['Group']]['style'],'class'=>$arr['settings']['class']]);
+                $rowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$flatLog[$column],'keep-element-content'=>TRUE,'style'=>self::LOG_LEVEL_CONFIG[$log['Group']]['style'],'class'=>$arr['settings']['class']]);
             }
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$rowHtml,'keep-element-content'=>TRUE,'class'=>$arr['settings']['class']]);
         }

@@ -1,4 +1,14 @@
 jQuery(document).ready(function(){
+
+    function formatTimeStamp(timestamp,timezone){
+        const dtFormat=new Intl.DateTimeFormat('en-GB',{
+            dateStyle:'short',
+            timeStyle:'medium',
+            timeZone: timezone
+        });
+        return dtFormat.format(new Date(timestamp*1000));
+    }
+
     /** HTML-CONTAINER MANAGEMENT **/	
     initTriggerIds();
     function initTriggerIds(){
@@ -155,6 +165,7 @@ jQuery(document).ready(function(){
                         jQuery('article[container-id='+containerId+']').replaceWith(jsonResp['html']);
                         attachEventsToContainer(containerId);
                         jQuery('[id=js-refresh]').click();
+                        addPlotHoverFeatures(containerId);
                         containerBusy(containerId,false);
                     },false);
                     myXhr.addEventListener('error',function(e){
@@ -167,6 +178,38 @@ jQuery(document).ready(function(){
                 return myXhr;
             }
         });	
+    }
+    /** Plots **/
+    jQuery('div.signal-bar').hover(function(){
+        hoveringSignalBar(jQuery(this));
+    });
+
+    function addPlotHoverFeatures(containerId){
+        jQuery('article[container-id='+containerId+'] div.signal-bar').hover(function(){
+            hoveringSignalBar(this);
+        });
+    }
+
+    function hoveringSignalBar(bar){
+        // get bar & plot id
+        let barLeft=parseInt(jQuery(bar).css('left')),barBottom=parseInt(jQuery(bar).css('bottom')),barHeight=parseInt(jQuery(bar).css('height'));
+        let plot=jQuery(bar).parent().first();
+        let plotIdComps=jQuery(plot).attr('id').split('-');
+        // get values
+        jQuery('#'+plotIdComps[0]+'-label').text(jQuery(bar).attr('data-label'));
+        var dateTime=formatTimeStamp(parseInt(jQuery(bar).attr('data-timestamp')),jQuery('#'+plotIdComps[0]+'-timezone').text());
+        jQuery('#'+plotIdComps[0]+'-timestamp').text(dateTime);
+        var value=jQuery(bar).attr('data-value');
+        jQuery('#'+plotIdComps[0]+'-value').text(value);
+        // get cursors
+        let cursorX=jQuery(plot).children('.signal-cursor-x');
+        let cursorY=jQuery(plot).children('.signal-cursor-y');
+        jQuery(cursorX).fadeIn(100).css({'left':barLeft});
+        if (value<0){
+            jQuery(cursorY).fadeIn(100).css({'bottom':(barBottom)});
+        } else {
+            jQuery(cursorY).fadeIn(100).css({'bottom':(barBottom+barHeight)});
+        }
     }
 
     /** TOOLBOX **/

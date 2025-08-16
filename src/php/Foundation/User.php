@@ -160,12 +160,11 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
         $entry['Group']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
-        $entry['Folder']=$entry['Email'];
+        if (isset($entry['Email'])){$entry['Folder']=$entry['Email'];}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
             $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry(self::DEFINITION,$entry,FALSE);
         }
-        $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
         $entry['Name']=$this->userAbstract(['selector'=>$entry],3);
         return $entry;
     }

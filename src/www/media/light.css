@@ -1,5 +1,5 @@
 :root{
-    font-size:15px;
+    font-size:14px;
     font-family:system-ui,sans-serif;
     --color:black;
     --colorSoft:#444;
@@ -715,7 +715,7 @@ div.calendar-sheet-wrapper{
 div.calendar-sheet{
     position:relative;
     overflow:hidden;
-    min-height:200px;
+    min-height:300px;
     background-image:url("canvaslightbg.png");
 }
 div.calendar-day,button.calendar-day{
@@ -938,23 +938,28 @@ article.imageShuffle{
     width: 100%;
 }
 /** signal chart, plot**/
+p.signal-chart{
+    margin: 2rem 0 1rem 5px;
+}
 div.signal-chart{
-    padding:0;
+    clear: none;
+    padding:0 4rem 0 0;
 }
 div.signal-plot-wrapper{
     position: relative;
-    margin: 1.5rem 5px;
+    margin: 0 5px;
 }
 div.signal-plot{
     position: absolute;
     border: 1px solid var(--colorSoft);
-    overflow: hidden;
     padding:0;
     margin:0;
     background-image:url("canvaslightbg.png");
+    overflow:hidden;
 }
 div.signal-bar{
     position: absolute;
+    z-index: 10;
 }
 div.signal-tick{
     position: absolute;
@@ -965,4 +970,22 @@ p.signal-label{
     margin:0;
     padding:0;
     background: none;
+    text-align:center;
+}
+div.signal-plot-info{
+    position:absolute;
+    top:-30px;
+    right:0;
+    overflow:hidden;
+}
+p.info{
+    float:left;
+    padding:0;
+    font-size:0.9rem;
+    line-break: anywhere;
+}
+div.signal-cursor-x,div.signal-cursor-y{
+    position: absolute;
+    border:1px dashed #d00;
+    display: none;
 }

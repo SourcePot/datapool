@@ -28,7 +28,7 @@ final class Root{
     ];
     private const HTTP_HEADER=[
         'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
-        'Cache-Control: max-age=30',
+        'Cache-Control: max-age=2',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
         "Content-Security-Policy: frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'self' 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
@@ -391,7 +391,9 @@ final class Root{
         $this->sendHeader();
         $this->builderProgress[hrtime(TRUE)]='Header sent';
         // script time consumption in ms
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000),'int');
+        $description='When a script is called, the time consumption in miliseconds and timestamp is added to the signal';
+        $timeConsumption=intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',$timeConsumption,'int',['description'=>$description]);
         $this->builderProgress[hrtime(TRUE)]='Time consumption signal updated. Page content will be echoed next';
         // write log files
         $logLevel=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel');

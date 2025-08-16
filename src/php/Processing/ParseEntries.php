@@ -213,7 +213,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
             'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Tools\MiscTools::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
             'Match required'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
             ];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -233,7 +233,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE],
             'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             'Source value'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['any','must be set'],'keep-element-content'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Tools\MiscTools::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
             ];
         //$contentStructure['Source column']['addColumns']
         $contentStructure['Source column']+=$callingElement['Content']['Selector'];
@@ -446,14 +446,14 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                     $result[$rowKey]['Match text'].=(empty($result[$rowKey]['Match text']))?$matchText:(' | '.$matchText);
                     $matchText=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($matchText,$rule['Content']['Target data type']);
-                    $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
+                    $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText);
                 }
             } else if (!empty($section)){
                 $result[$rowKey]['Text']='<b>const:</b> "'.$rule['Content']['Constant or...'].'"';
                 $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];
                 $constant=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($rule['Content']['Constant or...'],$rule['Content']['Target data type']);
-                $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$constant,$rule['Content']['Combine']??'');
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$constant);
             }
             $result[$rowKey]['Match required']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Match required']);
             $result[$rowKey]['Rule Failed']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed);
@@ -502,9 +502,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $mappingFailed=TRUE;
             } else {
                 $matchText=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($matchText,$rule['Content']['Target data type']);
-                $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addValue2flatArr($targetEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText,$rule['Content']['Combine']??'');
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText);
                 $debugArr[]=['Target column'=>$rule['Content']['Target column'],'matchText'=>$matchText,'targetEntry'=>$targetEntry];
-            
             }
         }
         $targetEntry[__FUNCTION__]['result']=$result;
@@ -559,7 +558,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $params=current($base['parserparams']);
         unset($targetEntry['processMapping']);
         unset($targetEntry['processParsing']);
-        $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrCombineValues($targetEntry);
+        $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($targetEntry);
         foreach($targetEntry as $flatKey=>$flatValue){
             if (!is_string($flatValue)){continue;}
             if (strpos($flatValue,'{{')===FALSE || strpos($flatValue,'}}')===FALSE){continue;}

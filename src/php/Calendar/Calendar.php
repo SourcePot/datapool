@@ -239,7 +239,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             if (isset($entry['Content']['Name'])){$entry['Name']=$entry['Content']['Name'];}
             if (isset($entry['Content']['Visibility'])){$entry['Read']=$entry['Content']['Visibility'];}
         }
-        $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
         return $entry;
     }
     

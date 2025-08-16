@@ -309,6 +309,7 @@ class Definitions{
                             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$entry);
                         }
                     } else {
+                        $entry=$this->oc['SourcePot\Datapool\Tools\GeoTools']->address2location($entry);
                         $this->oc[$dataStorageClass]->updateEntry($entry,FALSE,FALSE);
                     }
                     $statistics=$this->oc[$dataStorageClass]->getStatistic();
