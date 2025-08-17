@@ -13,14 +13,14 @@ namespace SourcePot\Datapool\Foundation;
 class Backbone{
     
     private const HEADER_FILES_TEMPLATES=[
-        'ico'=>'<link rel="shortcut icon" href="{{ico}}" nonce="{{nonce}}">',
-        'css'=>'<link type="text/css" rel="stylesheet" href="{{css}}" nonce="{{nonce}}">',
-        'js'=>'<script src="{{js}}" nonce="{{nonce}}"></script>',
-        ];
+        'ico'=>['tag'=>'link','rel'=>'shortcut icon','srcAttr'=>'href'],
+        'css'=>['tag'=>'link','type'=>'text/css','rel'=>'stylesheet','srcAttr'=>'href'],
+        'js'=>['tag'=>'script','element-content'=>'','srcAttr'=>'src'],
+    ];
 
     private const EXTERNAL_HEADER_ELEMENTS=[
-        'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>'','nonce'=>'{{nonce}}'],
-        'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>'','nonce'=>'{{nonce}}'],
+        'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>''],
+        'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>''],
     ];
 
     private $oc=NULL;
@@ -132,12 +132,15 @@ class Backbone{
             if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
                 continue;
             }
+            $elArr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']];
+            $srcAttr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']]['srcAttr'];
+            $elArr[$srcAttr]=$fileName;
             if (strpos($fileName,'jquery-ui')!==FALSE){
-                $jQueryUIImport.=str_replace('{{'.$fileArr['extension'].'}}',$fileName,self::HEADER_FILES_TEMPLATES[$fileArr['extension']]).PHP_EOL;
+                $jQueryUIImport.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr).PHP_EOL;
             } else if (strpos($fileName,'jquery')!==FALSE){
-                $jQueryImport=str_replace('{{'.$fileArr['extension'].'}}',$fileName,self::HEADER_FILES_TEMPLATES[$fileArr['extension']]).PHP_EOL;
+                $jQueryImport.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr).PHP_EOL;
             } else {
-                $arr['toReplace']['{{head}}'].=str_replace('{{'.$fileArr['extension'].'}}',$fileName,self::HEADER_FILES_TEMPLATES[$fileArr['extension']]).PHP_EOL;
+                $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr).PHP_EOL;
             }
         }
         $arr['toReplace']['{{head}}']=$jQueryImport.$jQueryUIImport.$arr['toReplace']['{{head}}'];
@@ -160,18 +163,14 @@ class Backbone{
         // end of page        
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Logger']->getMyLogs().PHP_EOL;
         $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div><div id="overlay-image-container" style="display:none;"></div>'.PHP_EOL;
-        $arr['toReplace']['{{body}}'].='<script nonce="{{nonce}}">jQuery("article").hide();</script>'.PHP_EOL;
+        $elArr=['tag'=>'script','element-content'=>'jQuery("article").hide();','keep-element-content'=>TRUE];
+        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr).PHP_EOL;
         $arr=$this->oc['SourcePot\Datapool\Foundation\Menu']->menu($arr);
         return $arr;
     }
     
     public function finalizePage(array $arr):array
     {
-        // trust plugin scripts and styles, e.g. Mediaplayer
-        $arr['toReplace']['{{content}}']=str_replace('<script>','<script nonce="{{nonce}}">',$arr['toReplace']['{{content}}']);
-        $arr['toReplace']['{{content}}']=str_replace('<style>','<style nonce="{{nonce}}">',$arr['toReplace']['{{content}}']);
-        // add nonce replacement
-        $arr['toReplace']['{{nonce}}']=$GLOBALS['nonce'];
         // replace page sceleton placeholders
         foreach($arr['toReplace'] as $needle=>$replacement){
             $arr['page html']=strtr($arr['page html'],[$needle=>$replacement]);

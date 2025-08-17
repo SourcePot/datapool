@@ -93,7 +93,8 @@ class Element{
         'img'=>['src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE],
         'link'=>['rel'=>FALSE,'href'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
         'picture'=>['src'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
-        'script'=>['src'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
+        'script'=>['src'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE],
+        'style'=>['href'=>FALSE,'type'=>FALSE,'crossorigin'=>FALSE],
         'svg'=>['src'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE],
         'video'=>['src'=>FALSE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE],
         'source'=>['src'=>TRUE,'type'=>FALSE,'srcset'=>FALSE,'sizes'=>FALSE,'media'=>FALSE,'height'=>FALSE,'width'=>FALSE],
@@ -147,8 +148,8 @@ class Element{
             $arr['tag']='p';
             $arr['element-content']='ERROR "tag"-attribute missing';
             $arr['style']['background-color']='#f00';
-        } else if ($arr['tag']==='script' || $arr['tag']==='object' || $arr['tag']==='embed' || $arr['tag']==='link' || $arr['tag']==='img' || $arr['tag']==='video' || $arr['tag']==='iframe'){
-            $arr['nonce']='{{nonce}}';
+        } else if ($arr['tag']==='script' || $arr['tag']==='style' || $arr['tag']==='object' || $arr['tag']==='embed' || $arr['tag']==='link' || $arr['tag']==='img' || $arr['tag']==='video' || $arr['tag']==='iframe' || !empty($arr['style'])){
+            $arr['nonce']=$GLOBALS['nonce'];
         }
         if (isset(self::DEF[$arr['tag']])){
             if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}

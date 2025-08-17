@@ -72,7 +72,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                 $videoSrc=$GLOBALS['relDirs']['assets'].'/home.mp4';
                 $mime=@mime_content_type($videoSrc);
                 if ($mime){
-                    $mediaHtml='<video width="100%" loop="true" autoplay="true" style="z-index:1;min-width:720px;" controls muted><source src="'.$videoSrc.'" type="'.$mime.'" nonce="{{nonce}}"/></video>';
+                    $mediaHtml='<video width="100%" loop="true" autoplay="true" style="z-index:1;min-width:720px;" controls muted><source src="'.$videoSrc.'" type="'.$mime.'"/></video>';
                     $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>$mediaHtml,'keep-element-content'=>TRUE]);
                     $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                 } else {
@@ -83,7 +83,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>'multimedia','Params'=>'%image%'],FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
                     $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addTmpFile(['selector'=>$entry])['selector'];
                     $url=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($entry['Params']['TmpFile']['Source']);
-                    $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')'],'function'=>'Home','nonce'=>'{{nonce}}']);
+                    $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')'],'function'=>'Home']);
                     $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??$entry['Name']??'';
                     $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                     break;
