@@ -20,7 +20,7 @@ Datapool is a versatile modular web application.
 - Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 - Comprehensive logger
 
-## Sample use cases
+## Use cases
 The two typical use cases are process-driven data processing and a content management system. The functionality of complex spreadsheets can alternatively be easily implemented as a process data flow. Easily accessible intermediate results help to maintain an overview and to find and fix problems.
 
 ### Sample start page:
