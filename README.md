@@ -68,7 +68,7 @@ sudo apt-get install php-curl
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
 3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser.
 
->[!INFO]
+>[!NOTE]
 >If errors occur when you first access the website, this may be due to insufficient access rights. Access rights may need to be adjusted for folders and files newly created during installation and initial access.
 
 ## Create your Admin account for your web application
