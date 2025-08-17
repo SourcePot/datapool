@@ -208,7 +208,6 @@ table{
 table.std,div.table{
     clear:none;
     margin:0.5rem;
-    box-shadow: 5px 5px 3px var(--rightBottomBorderColor);
     border: 1px solid var(--rightBottomBorderColor);
 }
 table.matrix{
@@ -515,6 +514,7 @@ div.file-upload{
     width:250px;
     padding:5px;
     background-color:var(--mediaColorA);
+    overflow:hidden;
 }
 
 input.file-upload{
