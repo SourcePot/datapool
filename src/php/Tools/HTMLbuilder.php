@@ -712,21 +712,26 @@ class HTMLbuilder{
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement');
         $hasCheckEntriesProcessor=(($selectedCanvasElement['Content']['Widgets']['Processor']??'')==='SourcePot\\checkentries\\checkentries');
         // create tmeplate
-        $template=['callingClass'=>__CLASS__,
-                'callingFunction'=>__FUNCTION__,
-                'hideHeader'=>TRUE,
-                'hideKeys'=>TRUE,
-                'previewStyle'=>['max-width'=>self::MAX_PREV_WIDTH,'max-height'=>self::MAX_PREV_HEIGHT],
-                'settings'=>['hideApprove'=>($hasCheckEntriesProcessor?FALSE:TRUE),
-                             'hideDecline'=>($hasCheckEntriesProcessor?FALSE:TRUE),
-                             'hideSelect'=>FALSE,
-                             'hideRemove'=>FALSE,
-                             'hideDelete'=>FALSE,
-                             'hideDownload'=>FALSE,
-                             'hideUpload'=>FALSE,
-                             'hideDelete'=>FALSE
-                            ],
-                ];
+        $template=[
+            'callingClass'=>__CLASS__,
+            'callingFunction'=>__FUNCTION__,
+            'hideHeader'=>TRUE,
+            'hideKeys'=>TRUE,
+            'previewStyle'=>[
+                'max-width'=>self::MAX_PREV_WIDTH,
+                'max-height'=>self::MAX_PREV_HEIGHT
+            ],
+            'settings'=>[
+                'hideApprove'=>($hasCheckEntriesProcessor?FALSE:TRUE),
+                'hideDecline'=>($hasCheckEntriesProcessor?FALSE:TRUE),
+                'hideSelect'=>FALSE,
+                'hideRemove'=>FALSE,
+                'hideDelete'=>FALSE,
+                'hideDownload'=>FALSE,
+                'hideUpload'=>FALSE,
+                'hideDelete'=>FALSE
+            ],
+        ];
         $arr=array_replace_recursive($template,$arr);
         // create preview
         $matrix=['Preview'=>['Value'=>''],'Btns'=>['Value'=>'']];
@@ -832,12 +837,15 @@ class HTMLbuilder{
             $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveDownEntryId'=>$selector['EntryId']]);
         }
         // html creation
-        $csvMatrix=[];
-        $matrix=[];
+        $noWriteAccess=FALSE;
+        $matrix=$csvMatrix=[];
         $startIndex=$endIndex=1;
         $selector=$baseSelector;
         $selector['EntryId']='%'.$arr['selector']['EntryId'];
         foreach($this->oc[$storageObj]->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
+            if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write'))){
+                $noWriteAccess=TRUE;
+            }
             $endIndex=$entry['rowCount'];
             $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             $currentIndex=intval($entryIdComps[0]);
@@ -904,6 +912,9 @@ class HTMLbuilder{
             if ($entry['rowCount']>1){$matrix[$rowIndex]['Move']=$moveBtns;}
         } // end of loop through list entries
         $matrix[$rowIndex]['Move']=($matrix[$rowIndex]['Move']??'').$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
+        // write protection
+        if ($noWriteAccess){$matrix=[];}
+        // prepare return values
         if ($arr['returnRow']){
             return (empty(current($matrix)))?['value'=>'']:current($matrix);
         } else {
@@ -1107,7 +1118,7 @@ class HTMLbuilder{
             'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
             'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
-            ];
+        ];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']=$arr['selector']['Folder'];
         $arr['selector']['Name']='Setting';
@@ -1150,6 +1161,5 @@ class HTMLbuilder{
         }
         return $plotData;
     }
-
 }
 ?>
