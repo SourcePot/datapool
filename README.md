@@ -3,10 +3,10 @@
 Datapool is a versatile modular web application.
 
 ## Advantages of a web application in contrast to a desktop application
-- Runs on a wide range of devices, the web browser is the runtime environment
-- The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of JavaScript) and modern web browsers
-- Simple interaction with other web services
-- Established infrastructures available for data backup
+- Runs on a wide range of devices. The web browser is the runtime environment.
+- The user interface is always up-to-date thanks to the use of HTML as the living standard and modern web browsers. Redused use of JavaScript. 
+- Simple interaction with other web services.
+- Established infrastructures available for data backup.
 
 ## Basic features
 - Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
@@ -19,6 +19,9 @@ Datapool is a versatile modular web application.
 - Role-based access control to apps and data: 16 user roles, e.g. web admin, config admin, member, registered, public etc.
 - Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 - Comprehensive logger
+
+## Sample use cases
+The two typical use cases are process-driven data processing and a content management system. The functionality of complex spreadsheets can alternatively be easily implemented as a process data flow. Easily accessible intermediate results help to maintain an overview and to find and fix problems.
 
 ### Sample start page:
 
@@ -63,7 +66,10 @@ sudo apt-get install php-curl
 ## Connecting the web application with the database
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
-3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
+3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser.
+
+>[!INFO]
+>If errors occur when you first access the website, this may be due to insufficient access rights. Access rights may need to be adjusted for folders and files newly created during installation and initial access.
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
@@ -74,9 +80,6 @@ sudo apt-get install php-curl
 
 >[!IMPORTANT]
 >Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited. 
-
-### Example installation using `Composer` and setting up your first user account on a notebook computer running MS Windows, XAMPP server and MariaDB:
-https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
