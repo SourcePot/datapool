@@ -19,8 +19,8 @@ class Backbone{
         ];
 
     private const EXTERNAL_HEADER_ELEMENTS=[
-        'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>''],
-        'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>''],
+        'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>'','nonce'=>'{{nonce}}'],
+        'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>'','nonce'=>'{{nonce}}'],
     ];
 
     private $oc=NULL;
