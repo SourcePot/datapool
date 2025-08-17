@@ -61,18 +61,19 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Home','Emoji'=>'&#128366;','Label'=>'Docs','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             // add explorer and set selector
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,['EntryId'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($selector,'ALL_R','ALL_CONTENTADMIN_R');
             // add content article
-            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,[],['style'=>[]]);
+            $html='';
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
                 $html.=$this->assetManager($selector);
                 $this->copy2assetsDir();
             }
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Doc','mdContainer',$selector,[],['style'=>[]]);
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
         }
@@ -91,19 +92,18 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
                 $pathInfo=pathinfo($fileArr['name']);
                 $selector['Content']['src']=$this->entry2asset($selector,$pathInfo['extension'],TRUE);
                 if ($pathInfo['extension']=='pdf'){
-                    $selector['Content']['tag']='<object data="'.$selector['Content']['src'].'" type="application/pdf" title="" style="width:95vw;height:70vh;"/>';
+                    $selector['Content']['tag']='<object data="'.$selector['Content']['src'].'" type="application/pdf" title="" style="width:95vw;height:70vh;" nonce="[[nonce]]"></object>';
                 } else if ($pathInfo['extension']=='mp4' || $pathInfo['extension']=='webm'){
-                    $selector['Content']['tag']='<video controls width="360"><source src="'.$selector['Content']['src'].'" type="video/'.$pathInfo['extension'].'" /></video>';
+                    $selector['Content']['tag']='<video controls width="360"><source src="'.$selector['Content']['src'].'" type="video/'.$pathInfo['extension'].'"  nonce="[[nonce]]"/></video>';
                 } else {
-                    $selector['Content']['tag']='<img src="'.$selector['Content']['src'].'" title="'.$fileArr['name'].'" style=""/>';
+                    $selector['Content']['tag']='<img src="'.$selector['Content']['src'].'" title="'.$fileArr['name'].'" style="" nonce="[[nonce]]"></img>';
                 }
-                $selector['Content']['tag']=htmlentities($selector['Content']['tag']);
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
             }
         }
         $html='';
         // file upload
-        $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(array('tag'=>'input','type'=>'file','element-content'=>'','key'=>['add'],'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__));
+        $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'file','element-content'=>'','key'=>['add'],'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add','key'=>['add'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         $matrix['']=array('New asset file'=>$fileUpload,'Cmd'=>$btn);
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content']);
@@ -114,7 +114,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'tag','Filter'=>'']];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets','entryList',$selector,$settings,[]);
         //
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9887;']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9887;','style'=>['clear'=>'both']]);
         return $html;
     }
     
@@ -138,7 +138,7 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
             if (isset(\SourcePot\Datapool\Root::ASSETS_WHITELIST[$fileName])){continue;}
             $fileNameComps=preg_split('/[-_\.]/',$fileName);
             if (!isset($GLOBALS['dbInfo'][$fileNameComps[0]])){continue;}
-            $selector=array('Source'=>$fileNameComps[0],'EntryId'=>$fileNameComps[1].'_%');
+            $selector=['Source'=>$fileNameComps[0],'EntryId'=>$fileNameComps[1].'_%'];
             if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE)){
                 // match of asset file with database entry
                 $entriesPresentAsAssetFiles[$entry['EntryId']]=$entry['Source'];

@@ -31,7 +31,7 @@ final class Root{
         'Cache-Control: max-age=2',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
+        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
@@ -96,11 +96,11 @@ final class Root{
     
     public function __construct($script)
     {
+        $this->getNonce(TRUE);
         $this->script=$script;
         // initialize the environment, setup the Object Collection (oc) with a temporary logger and setting up the user
         $this->oc=[__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this];
         $GLOBALS['script start time']=hrtime(TRUE);
-        $GLOBALS['nonce']=bin2hex(random_bytes(12));
         date_default_timezone_set('UTC');
         // session start
         $this->builderProgress[hrtime(TRUE)]=__CLASS__.'&rarr;__constructor() called';
@@ -200,6 +200,14 @@ final class Root{
     public function getCurrentUserEntryId():string
     {
         return $this->currentUser['EntryId'];
+    }
+
+    public function getNonce($requestNew=FALSE):string
+    {
+        if ($requestNew || empty($GLOBALS['nonce'])){
+            $GLOBALS['nonce']=base64_encode(random_bytes(20));
+        }
+        return $GLOBALS['nonce'];
     }
 
     /**
@@ -404,8 +412,9 @@ final class Root{
 
     public function sendHeader()
     {
+        $nonce=$this->getNonce(FALSE);
         foreach(self::HTTP_HEADER as $headerLine){
-            $headerLine=str_replace('{{nonce}}',$GLOBALS['nonce'],$headerLine);
+            $headerLine=str_replace('{{nonce}}',$nonce,$headerLine);
             header($headerLine);
         }
     }

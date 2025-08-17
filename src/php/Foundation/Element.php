@@ -149,7 +149,7 @@ class Element{
             $arr['element-content']='ERROR "tag"-attribute missing';
             $arr['style']['background-color']='#f00';
         } else if ($arr['tag']==='script' || $arr['tag']==='style' || $arr['tag']==='object' || $arr['tag']==='embed' || $arr['tag']==='link' || $arr['tag']==='img' || $arr['tag']==='video' || $arr['tag']==='iframe' || !empty($arr['style'])){
-            $arr['nonce']=$GLOBALS['nonce'];
+            $arr['nonce']=$this->oc['SourcePot\Datapool\Root']->getNonce(FALSE);
         }
         if (isset(self::DEF[$arr['tag']])){
             if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}

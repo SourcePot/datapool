@@ -285,13 +285,12 @@ class MediaTools{
             $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($contentArr);
             $btnArr['cmd']='show';
         } else {
+            $md=str_replace('[[nonce]]',$this->oc['SourcePot\Datapool\Root']->getNonce(FALSE),$md);
             $contentHtml=\Michelf\Markdown::defaultTransform($md);
             $btnArr['cmd']='edit';
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
-        if (empty($arr['settings']['style']['height']) && empty($arr['settings']['style']['max-height'])){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
-        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         return $arr;
     }
     
