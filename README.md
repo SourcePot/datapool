@@ -20,7 +20,7 @@ Datapool is a versatile modular web application.
 - Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 - Comprehensive logger
 
-## Sample use cases
+## Use cases
 The two typical use cases are process-driven data processing and a content management system. The functionality of complex spreadsheets can alternatively be easily implemented as a process data flow. Easily accessible intermediate results help to maintain an overview and to find and fix problems.
 
 ### Sample start page:
@@ -68,7 +68,7 @@ sudo apt-get install php-curl
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
 3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser.
 
->[!INFO]
+>[!NOTE]
 >If errors occur when you first access the website, this may be due to insufficient access rights. Access rights may need to be adjusted for folders and files newly created during installation and initial access.
 
 ## Create your Admin account for your web application
