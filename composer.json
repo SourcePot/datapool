@@ -25,7 +25,7 @@
         "sourcepot/bankholidays":"^v2.2.0",
         "sourcepot/email":"^v1.0.0",
         "sourcepot/asset":"^v2.2.3",
-        "sourcepot/match":"^v1.6.2"
+        "sourcepot/match":"^v1.6.3"
     },
     "autoload":{
         "psr-4":{
