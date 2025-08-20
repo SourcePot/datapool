@@ -210,6 +210,11 @@ final class Root{
         return $GLOBALS['nonce'];
     }
 
+    public function getScript():string
+    {
+        return $this->script;
+    }
+
     /**
     * This method returns a Monolog logger instance.
     *

@@ -76,8 +76,10 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         if (method_exists($classWithNamespace,'run') && strpos($classWithNamespace,'DataApps')===FALSE){
             $classWithNamespace=$this->oc['SourcePot\Datapool\Foundation\Menu']->selectedApp($classWithNamespace)['Class'];
             $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
-            $url='index.php?'.http_build_query(['category'=>$menuDef['Category']]);
-            header('Location: '.$url);
+            if (strpos($this->oc['SourcePot\Datapool\Root']->getScript(),'js')===FALSE){
+                $url='index.php?'.http_build_query(['category'=>$menuDef['Category']]);
+                header('Location: '.$url);
+            }
         }
         return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
     }
