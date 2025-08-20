@@ -1139,27 +1139,5 @@ class HTMLbuilder{
         }
         return $options;
     }
-
-    public function plotDataProvider(array $arr):array
-    {
-        $plotData=['class'=>__CLASS__,'function'=>__FUNCTION__];
-        if (isset($_SESSION['plots'][$arr['id']])){
-            $plotData=array_merge($plotData,$_SESSION['plots'][$arr['id']]);
-            if (!empty($plotData['callingClass']) && !empty($plotData['callingFunction'])){
-                if (is_object($this->oc[$plotData['callingClass']])){
-                    $callingClass=$plotData['callingClass'];
-                    $callingFunction=$plotData['callingFunction'];
-                    $plotData=$this->oc[$callingClass]->$callingFunction($plotData);
-                } else {
-                    $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called, but callingClass="{callingClass}" is not an object.',$plotData);
-                }
-            } else {
-                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with empty callingClass="{callingClass}" and/or callingClass="{callingFunction}".',$plotData);
-            }
-        } else {
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called but $_SESSION vars not set.',$plotData);
-        }
-        return $plotData;
-    }
 }
 ?>

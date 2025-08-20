@@ -43,8 +43,6 @@ class Container{
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementStyle($_POST);
             } else if (strcmp($_POST['function'],'entryById')===0){
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
-            } else if (strcmp($_POST['function'],'plotDataProvider')===0){
-                $jsAnswer=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->plotDataProvider($_POST);
             } else {
                 // unknown function
             }
