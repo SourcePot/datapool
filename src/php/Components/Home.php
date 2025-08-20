@@ -76,16 +76,20 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
                     $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>$mediaHtml,'keep-element-content'=>TRUE]);
                     $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
                 } else {
-                    $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',array('file'=>$videoSrc));
+                    $this->oc['logger']->log('error','Intro video File "{file}" missing. Please add this file.',['file'=>$videoSrc]);
                 }
             } else if (strcmp($this->pageSettings['homePageContent'],'imageShuffle')===0){
                 $settings=['isSystemCall'=>FALSE,'orderBy'=>'rand()','isAsc'=>FALSE,'limit'=>4,'offset'=>0,'autoShuffle'=>TRUE];
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>'multimedia','Params'=>'%image%'],FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset']) as $entry){
                     $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addTmpFile(['selector'=>$entry])['selector'];
-                    $url=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($entry['Params']['TmpFile']['Source']);
-                    $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')'],'function'=>'Home']);
-                    $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??$entry['Name']??'';
-                    $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
+                    if (empty($entry['Params']['TmpFile']['Source'])){
+                        $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'Background media file missing: '.$entry['Name'],'style'=>['position'=>'fixed','top'=>'50vh']]);
+                    } else {
+                        $url=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($entry['Params']['TmpFile']['Source']);
+                        $mediaHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','element-content'=>' ','keep-element-content'=>TRUE,'style'=>['background-image'=>'url('.$url.')'],'function'=>'Home']);
+                        $this->backgroundMediaInfo=$entry['Params']['Address']['display_name']??$entry['Content']['Location/Destination']['display_name']??$entry['Name']??'';
+                        $arr['toReplace']['{{bgMedia}}']=$mediaHtml;
+                    }
                     break;
                 }
             }
