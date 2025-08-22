@@ -277,6 +277,7 @@ class MediaTools{
         } else {
             $md=file_get_contents($arr['selector']['Params']['TmpFile']['Source']);
         }
+        $md=$md?:'Markdown content missing...';
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
             $contentArr=['tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId];
             $contentArr['key']=['content',$arr['selector']['Source'],$arr['selector']['EntryId']];
