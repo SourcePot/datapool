@@ -1,21 +1,23 @@
-/src/www/assets/*
+/vendor
 /templates/*
+# /src-directory
+/src/debugging
+/src/filespace
+/src/logging
+/src/setup
+/src/tmp_private
+# /src/www-directory
+/src/www/tmp
+/src/www/assets/*
 !/src/www/assets/logo.jpg
 !/src/www/assets/login.jpg
 !/src/www/assets/home.mp4
 !/src/www/assets/Example_data_flow.png
-/src/www/tmp
-/src/setup/*/
-/src/setup/objectList.csv
-/src/debugging
-/src/filespace
-/src/logging
-/src/tmp_private
+# ignore all generic apps except 3 standard apps
 /src/php/GenericApps/*
 !/src/php/GenericApps/Multimedia.php
-!/src/php/GenericApps/Forum.php
 !/src/php/GenericApps/Feeds.php
 !/src/php/GenericApps/Documents.php
-!/src/php/GenericApps/Calendar.php
+# ignore all data apps except Misc
 /src/php/DataApps/*
 !/src/php/DataApps/Misc.php
