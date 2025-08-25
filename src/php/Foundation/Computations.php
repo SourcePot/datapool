@@ -115,10 +115,15 @@ class Computations{
             $value=!empty($value);
         }
         if (!empty(self::ARR_COLUMNS[$column])){
+            // array columns
             $index=count($this->combineCache[$cachId]['__VALUES__'][$key]??[]);
             $this->combineCache[$cachId]['__VALUES__'][$key][$index]=$value;
         } else {
-            $this->combineCache[$cachId]['__VALUES__'][$key]=$value;
+            // non-array columns
+            if (!isset($this->combineCache[$cachId]['__VALUES__'][$key])){
+                // only safe the first value at a specific key
+                $this->combineCache[$cachId]['__VALUES__'][$key]=$value;
+            }
         }
     }
 
@@ -177,15 +182,20 @@ class Computations{
         return $result;
     }
 
-    public function arr2value($arr,$keyNeedle='')
+    public function arr2value($arr,$keyNeedle='__NOT_SET__')
     {
-        if (!is_array($arr)){return $arr;}
-        if (isset($arr[$keyNeedle])){return $arr[$keyNeedle];}
-        foreach(self::RELEVANT_DATATYPE_KEY as $keyNeedle){
-            if (isset($arr[$keyNeedle])){return $arr[$keyNeedle];}
+        if (!is_array($arr)){
+            return $arr;
         }
-        reset($arr);
-        return current($arr);
+        if (isset($arr[$keyNeedle])){
+            return $arr[$keyNeedle];
+        }
+        foreach(self::RELEVANT_DATATYPE_KEY as $keyNeedle){
+            if (isset($arr[$keyNeedle])){
+                return $arr[$keyNeedle];
+            }
+        }
+        return array_shift($arr);
     }
 
     /******************************************************************************************************************************************
@@ -205,7 +215,7 @@ class Computations{
                 'int'=>$this->str2int($value),
                 'float'=>$this->str2float($value),
                 'fraction'=>$this->fraction2float($value),
-                'bool'=>(bool)$value,
+                'bool'=>($value==='TRUE')?TRUE:(!empty($value)),
                 'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                 'date'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($value),
                 'excelDate'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->excel2date($value),
