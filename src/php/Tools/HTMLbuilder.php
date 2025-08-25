@@ -1008,6 +1008,10 @@ class HTMLbuilder{
         $presentArr=$this->mapContainer2presentArr($presentArr);
         $selector=$this->getPresentationSelector($presentArr);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','EntryId') as $setting){
+            if (empty($setting['Content']['Entry key'])){
+                $this->oc['logger']->log('error','Entry presentation setting is empty Folder="{Folder}", Name="{Name}"',$setting);
+                continue;
+            }
             $presentArr['style']=$presentArr['settings']['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??'');
             $presentArr['class']=$setting['Content']['Style class'];
             $cntrArr=explode('|',$setting['Content']['Entry key']);
@@ -1066,7 +1070,7 @@ class HTMLbuilder{
             }
         }
         if (empty($setting['rowCount'])){
-            $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',['selectorFolder'=>$selector['Folder']]);    
+            $this->oc['logger']->log('error','Entry presentation setting missing for "{selectorFolder}"',['selectorFolder'=>$selector['Folder']]);
         }
         if (isset($presentArr['containerId'])){
             $presentArr['html']=$html;

@@ -229,6 +229,7 @@ class Container{
             $selectorString=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($arr['selector']);
             $entry['Params']['File']=['UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md'];
             $fileContent="[//]: # (This a Markdown document in ".$language."!)\n\n";
+            $fileContent.="[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n";
             $fileContent.='Sorry, there is no content available for <i>"'.$selectorString.'"</i> in <i>"'.$language.'"</i> yet...';
             if (!empty($arr['selector']['md'])){$fileContent=$arr['selector']['md'];}
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
@@ -388,13 +389,14 @@ class Container{
     private function entryList(array $arr,bool $isDebugging=FALSE):array
     {
         $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
-        $SettingsTemplate=['columns'=>[['Column'=>'Name','Filter'=>'']],
-                            'isSystemCall'=>FALSE,
-                            'orderBy'=>'Name',
-                            'isAsc'=>TRUE,
-                            'limit'=>10,
-                            'offset'=>FALSE
-                            ];
+        $SettingsTemplate=[
+            'columns'=>[['Column'=>'Name','Filter'=>'']],
+            'isSystemCall'=>FALSE,
+            'orderBy'=>'Name',
+            'isAsc'=>TRUE,
+            'limit'=>10,
+            'offset'=>FALSE
+            ];
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=(isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]))?$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]:$arr['settings'];
         // get settings
