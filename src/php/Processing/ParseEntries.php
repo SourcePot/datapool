@@ -441,7 +441,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $ruleFailed=TRUE;
                 }
                 $result[$rowKey]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($matches[$ruleMatchIndex][0]??FALSE);
-                $matches[$ruleMatchIndex][0]=$matches[$ruleMatchIndex][0]??$params['No match placeholder']??'';
+                $noMtachPlaceholder=(strpos($rule['Content']['Target data type'],'string')===FALSE)?'':($params['No match placeholder']??'');
+                $matches[$ruleMatchIndex][0]=$matches[$ruleMatchIndex][0]??$noMtachPlaceholder;
                 foreach($matches[$ruleMatchIndex] as $hitIndex=>$matchText){
                     $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
                     $result[$rowKey]['Match text'].=(empty($result[$rowKey]['Match text']))?$matchText:(' | '.$matchText);
