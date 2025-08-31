@@ -16,11 +16,12 @@ class PdfTools{
 
     private $pageSettings=[];
     
-    private $formats=['a4'=>['width'=>210,'height'=>297],
-                    'a3'=>['width'=>297,'height'=>420],
-                    'a5'=>['width'=>148,'height'=>210],
-                    'a6'=>['width'=>105,'height'=>148],
-                    ];
+    private $formats=[
+        'a4'=>['width'=>210,'height'=>297],
+        'a3'=>['width'=>297,'height'=>420],
+        'a5'=>['width'=>148,'height'=>210],
+        'a6'=>['width'=>105,'height'=>148],
+    ];
     
     public function __construct(array $oc)
     {    
