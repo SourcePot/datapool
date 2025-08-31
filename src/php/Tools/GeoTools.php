@@ -12,18 +12,26 @@ namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
     
+    private const MISSING_PERMISSION_ELEMENT=[
+        'tag'=>'p',
+        'element-content'=>'OpenStreetMap permission missing! Adjust data protection / cookie settings on the start page (Home) to enable OpenStreetMap on this page.',
+        'keep-element-content'=>TRUE,
+        'style'=>['color'=>'#c00','padding'=>'0.5rem'],
+    ];
+
     private $oc;
 
     private $referrer='';
-    
-    private $alias=['Number'=>'House number','Street number'=>'House number','House_number'=>'House number','House number'=>'House number',
-                    'Road'=>'Street','Street'=>'Street',
-                    'City'=>'Town','Village'=>'Town','Stadt'=>'Town','Town'=>'Town',
-                    'Postcode'=>'Zip','Post code'=>'Zip','Post_code'=>'Zip','Zip'=>'Zip',
-                    'Bundesland'=>'State','State'=>'State',
-                    'Country'=>'Country',
-                    'Country_code'=>'Country code','Country code'=>'Country code',
-                    ];
+    private $permitted=FALSE;
+    private $alias=[
+        'Number'=>'House number','Street number'=>'House number','House_number'=>'House number','House number'=>'House number',
+        'Road'=>'Street','Street'=>'Street',
+        'City'=>'Town','Village'=>'Town','Stadt'=>'Town','Town'=>'Town',
+        'Postcode'=>'Zip','Post code'=>'Zip','Post_code'=>'Zip','Zip'=>'Zip',
+        'Bundesland'=>'State','State'=>'State',
+        'Country'=>'Country',
+        'Country_code'=>'Country code','Country code'=>'Country code',
+    ];
     
     private $countryCodes=[];
     
@@ -39,6 +47,7 @@ class GeoTools{
 
     public function init()
     {
+        $this->permitted=$this->oc['SourcePot\Datapool\Foundation\Legal']->permitted('OpenStreetMap');
         // get HTTP Referrer
         $this->referrer=$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $queryPos=mb_strpos($this->referrer,'?');
@@ -59,13 +68,13 @@ class GeoTools{
     {
         $debugArr=['entry_in'=>$entry];
         $entry['Params'][$targetKey]=[];
-        if (isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
+        if ($this->permitted && isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
             $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
-            $options=['headers'=>['Accept'=>'application/xml','Content-Type'=>'text/plain'],
-                    'query'=>$entry['Params']['Geo']
-                    ];
-            
+            $options=[
+                'headers'=>['Accept'=>'application/xml','Content-Type'=>'text/plain'],
+                'query'=>$entry['Params']['Geo']
+            ];
             $client = new \GuzzleHttp\Client(['headers'=>['Referer'=>$this->referrer],'base_uri'=>'https://nominatim.openstreetmap.org']);
             try{
                 $response=$client->request('GET','/reverse',$options);
@@ -103,7 +112,7 @@ class GeoTools{
             $address=[];
         }
         $debugArr['address']=$address;
-        if (!empty($address)){
+        if ($this->permitted && !empty($address)){
             $query=$this->getRequestAddress($address);
             $debugArr['query']=$query;
             $options=['headers'=>[],'query'=>$query];
@@ -144,13 +153,14 @@ class GeoTools{
 
     private function getRequestAddress(array $address=[]):array
     {
-        $osmAlias=['House number'=>'housenumber',
-                    'Street'=>'street',
-                    'Town'=>'city',
-                    'State'=>'state',
-                    //'Country'=>'country',
-                    'Zip'=>'postalcode'
-                    ];
+        $osmAlias=[
+            'House number'=>'housenumber',
+            'Street'=>'street',
+            'Town'=>'city',
+            'State'=>'state',
+            //'Country'=>'country',
+            'Zip'=>'postalcode'
+            ];
         $query=[];
         foreach($osmAlias as $from=>$to){
             if (empty($address[$from])){continue;}
@@ -171,10 +181,18 @@ class GeoTools{
         //
         $template=['style'=>['float'=>'left','clear'=>'both'],'class'=>'ep-std','dL'=>0.001];
         $arr=array_replace_recursive($template,$arr);
-        if (!isset($arr['html'])){$arr['html']='';}
-        if (empty($arr['selector'])){return $arr;}
+        $arr['html']=$arr['html']??'';
+        if (!$this->permitted){
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(self::MISSING_PERMISSION_ELEMENT);
+            return $arr;
+        }
+        if (empty($arr['selector'])){
+            return $arr;
+        }
         $entry=$arr['selector'];
-        if (empty($entry['Params']['Geo']['lat'])){return $arr;}
+        if (empty($entry['Params']['Geo']['lat'])){
+            return $arr;
+        }
         $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
         $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
         $bbLat1=$entry['Params']['Geo']['lat']-$arr['dL'];
@@ -191,7 +209,9 @@ class GeoTools{
     
     private function getMapLink(array $entry):string
     {
-        if (empty($entry['Params']['Geo'])){return '';}
+        if (!$this->permitted || empty($entry['Params']['Geo'])){
+            return '';
+        }
         $href='http://www.openstreetmap.org/';
         $href.='?lat='.$entry['Params']['Geo']['lat'].'&amp;lon='.$entry['Params']['Geo']['lon'];
         $href.='&amp;zoom=16&amp;layers=M&amp;mlat='.$entry['Params']['Geo']['lat'].'&amp;mlon='.$entry['Params']['Geo']['lon'];
@@ -219,13 +239,18 @@ class GeoTools{
     public function getDynamicMap(array $arr=[]):string
     {
         $html='';
+        if ($this->permitted){
+            $html='';
+        } else {
+            return $this->oc['SourcePot\Datapool\Foundation\Element']->element(self::MISSING_PERMISSION_ELEMENT);
+        }
         $arr['tag']='div';
         $arr['id']='dynamic-map';
         $arr['style']['width']=600;
         $arr['style']['height']=400;
         $arr['function']=__FUNCTION__;
-        if (!isset($arr['element-content'])){$arr['element-content']=' ';}
-        if (!isset($arr['keep-element-content'])){$arr['keep-element-content']=TRUE;}
+        $arr['element-content']=$arr['element-content']??' ';
+        $arr['keep-element-content']=$arr['keep-element-content']??TRUE;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
         $matrix=[['value'=>$html]];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Map']);

@@ -217,16 +217,15 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $mailboxArr=[
             'port'=>$setting['Content']['Port'],
             'host'=>$setting['Content']['IMAP server'],
-            //'timeout'=>intval($setting['Content']['Timeout'])??30,
-            'timeout'=>intval($setting['Content']['Timeout'])??3,
-            'debug'=>boolval($setting['Content']['Debug'])??FALSE,
-            'username'=>$setting['Content']['User'],
-            'password'=>$setting['Content']['Password'],
-            'encryption'=>$encryptionAuthentication['encryption'],
+            'timeout'=>intval($setting['Content']['Timeout']??3),
+            'debug'=>boolval($setting['Content']['Debug']??FALSE),
+            'username'=>$setting['Content']['User']??'',
+            'password'=>$setting['Content']['Password']??'',
+            'encryption'=>$encryptionAuthentication['encryption']??'',
             'validate_cert'=>boolval($setting['Content']['Validate certificate'])??TRUE,
             'authentication'=>$encryptionAuthentication['authentication'],
-            'proxy'=>json_decode($setting['Content']['Proxy [array json-encoded]'])?:[],
-            'Folder'=>$setting['Content']['Email account folder'],
+            'proxy'=>json_decode($setting['Content']['Proxy [array json-encoded]']??'[]'),
+            'Folder'=>$setting['Content']['Email account folder']??'',
         ];
         return $mailboxArr;
     }
