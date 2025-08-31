@@ -87,7 +87,7 @@ jQuery(document).ready(function(){
                 });
             }
         });
-        jQuery(wrapper).find('[type=text],[type=password],[type=email],[type=tel],[type=file]').each(function(i){
+        jQuery(wrapper).find('textarea,[type=text],[type=password],[type=email],[type=tel],[type=file]').each(function(i){
             if (jQuery(this).attr('excontainer')===undefined){
                 jQuery(this).unbind('focusout');
                 jQuery(this).focusout(function(e){

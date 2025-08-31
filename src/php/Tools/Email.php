@@ -17,9 +17,17 @@ use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\FileMessage;
 use Carbon\Carbon;
 use Hfig\MAPI\MapiMessageFactory;
-use Hfig\MAPI\OLE\Pear\DocumentFactory; 
+use Hfig\MAPI\OLE\Pear\DocumentFactory;
 
 class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
+
+    private const CONTACT_FORM_SUBJECTS=[
+        'Interest in training, editing or similar',
+        'My last class',
+        'My last invoice',
+        'Regarding the web page',
+        'Miscellaneous',
+    ];
 
     private const SMTP_PORTS=[
         25=>'25 (standard)',
@@ -424,7 +432,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             // send entry
             $mail = new PHPMailer();
             $mail->isSMTP();
-
             //Enable SMTP debugging
             $mail->SMTPDebug=SMTP::DEBUG_OFF;       // for production use
             //$mail->SMTPDebug=SMTP::DEBUG_CLIENT;   // client messages;
@@ -543,35 +550,103 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
         return $html;
     }
-
     /******************************************************************************************************************************************
     * HomeApp Interface Implementation
     * 
     */
     
-    public function transmitterPluginWrapper($arr):array
+    public function contactForm(array $arr):array
     {
+        // get settings
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $flatCurrentUser=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($currentUser);
+        $template=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
+        $template=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($template,TRUE);
+        // process form
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        if (isset($formData['cmd']['send']) && $this->isValidForm($formData['val'])){
+            $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
+            $email=htmlentities(mb_substr($formData['val']['Email'],0,255));
+            $phone=htmlentities(mb_substr($formData['val']['Phone'],0,30));
+            $sentBy=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUser,4);
+            $message=htmlentities(mb_substr($formData['val']['Message'],0,1000));
+            $message=str_replace("\n",'<br/>',$message);
+            $content=[];
+            $content['Subject']=htmlentities($pageTitle).': '.self::CONTACT_FORM_SUBJECTS[intval($formData['val']['Subject'])];
+            $content['Message']=$message;
+            $content['Provided email'].=$email;
+            $content['Provided phone number'].=$phone;
+            $content['Sent by'].=$sentBy;
+            $this->send($template['Content']['To'],['Content'=>$content]);
+            $this->oc['logger']->log('info','Message sent by "{Email}" via contact form.',$formData['val']);
+            $sentMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($content);
+            $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$sentMatix,'caption'=>'Thank you for your message','hideKeys'=>TRUE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'class'=>'contact-form']);
+            $refreshBtn=['tag'=>'input','type'=>'submit','value'=>'OK','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['refresh']];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($refreshBtn);
+            return $arr;
+        } else if (!empty($formData['val'])){
+            $values=$formData['val'];
+            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+                $template['Content']=$formData['val'];
+                $template=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($template,TRUE);
+            }
+        }
+        // compile html
         $arr['html']=$arr['html']??'';
-        $arr['html'].=$this->transmitterPluginHtml($arr);
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+            $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$this->getRelevantFlatUserContentKey());
+            $toEl=['options'=>$availableRecipients,'selected'=>$template['Content']['To'],'key'=>['To'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Recepient (admin setting to be genarally used by this form)','keep-element-content'=>TRUE]);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($toEl);
+        }
+        if (empty($template['Content']['To'])){
+            return $arr;
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Subject','keep-element-content'=>TRUE]);
+        $subjectEl=['options'=>self::CONTACT_FORM_SUBJECTS,'selected'=>intval($values['Subject']),'key'=>['Subject'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($subjectEl);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Message*','keep-element-content'=>TRUE]);
+        $messageEl=['tag'=>'textarea','minlength'=>10,'required'=>TRUE,'element-content'=>$values['Message']??'','placeholder'=>'Enter your message here...','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Message']];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($messageEl);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Your email address*','keep-element-content'=>TRUE]);
+        $currentUserEmail=$values['Email']?:$flatCurrentUser[$this->getRelevantFlatUserContentKey()]??'';
+        $emailEl=['tag'=>'input','type'=>'email','minlength'=>6,'required'=>TRUE,'value'=>$currentUserEmail,'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Email']];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($emailEl);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Your phone number','keep-element-content'=>TRUE]);
+        $phoneEl=['tag'=>'input','type'=>'tel','value'=>$values['Phone']??'','placeholder'=>'+49...','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Phone']];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($phoneEl);
+        // send button
+        if ($this->isValidForm($values)){
+            $sendBtn=['tag'=>'input','type'=>'submit','value'=>'Send','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['send']];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($sendBtn);
+        }
         return $arr;
+    }
+
+    private function isValidForm($values):bool
+    {
+        $isValid=TRUE;
+        if (mb_strlen($values['Message']??'')<10){$isValid=FALSE;}
+        $atSignPos=intval(strpos($values['Email']??'','@'));
+        $dotPos=intval(strrpos($values['Email']??'','.'));
+        if ($atSignPos<1 || $atSignPos>$dotPos){$isValid=FALSE;}
+        return $isValid;
     }
 
     public function getHomeAppWidget(string $name):array
     {
-        // reset page setting
-        $containerSettings=['method'=>'transmitterPluginWrapper','classWithNamespace'=>__CLASS__,'isContactForm'=>TRUE];
         $element=['element-content'=>'','style'=>[]];
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Get in touch...','keep-element-content'=>TRUE]);
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',['Source'=>$this->getEntryTable()],$containerSettings,['style'=>['border'=>'none']]);
+        // contact form
+        $selector=['Source'=>$this->getEntryTable(),'Group'=>'Forms','Name'=>__FUNCTION__,'disableAutoRefresh'=>TRUE];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Contact form','keep-element-content'=>TRUE]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Web contact form '.__FUNCTION__,'generic',$selector,['method'=>'contactForm','classWithNamespace'=>__CLASS__,],['style'=>['border'=>'none']]);
         return $element;
     }
     
     public function getHomeAppInfo():string
     {
-        $info='This widget provides a email creation form';
+        $info='This widget provides an email contact form';
         return $info;
     }
-    
-
 }
 ?>

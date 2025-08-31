@@ -131,20 +131,20 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
         $selector=['Source'=>$this->getEntryTable(),'Group'=>'legal','Folder'=>'Public','Name'=>$name];
         $selector['md']="\n";
         if ($name==='legal'){
-            $selector['md'].="Dies ist eine private Webseite. Diese Webseite nutzt Cookies zur Session-Verwaltung und Speicherung der Datenschutzeinstellungen.\n";
+            $selector['md'].="_Dies ist eine private Webseite. Diese Webseite nutzt Cookies zur Session-Verwaltung und Speicherung der Datenschutzeinstellungen.\n";
             $selector['md'].="Die Webpage nutzt externe Kartendaten und Geo-Daten, die von OpenStreetMaps zur Verfügung gestellt werden. Nutzungsrechte der Kartendaten liegen bei OpenStreetMaps (<a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"textlink\">The OpenStreetMap License</a>).\n";
             $selector['md'].="Sofern nicht abweichend angegeben, liegen die Nutzungsrechte zu Bildern und Texten beim Webseitenbetreiber. Ein ggf. vorhandenes Video auf der Startseite ist von Pressmaster und verfügbar auf www.pexels.com.\n";
-            $selector['md'].="Die Haftung für verlinkte Inhalte ist im Umfang des gesetzlich Zulässigen ausgeschlossen.\n";
+            $selector['md'].="Die Haftung für verlinkte Inhalte ist im Umfang des gesetzlich Zulässigen ausgeschlossen._\n";
             $selector['md'].="\n";
-            $selector['md'].="This is a private website. This website uses cookies for session management and to store privacy settings.\n";
+            $selector['md'].="_This is a private website. This website uses cookies for session management and to store privacy settings.\n";
             $selector['md'].="The webpage uses external map data and geo-data provided by OpenStreetMaps. The rights of use for the map data are held by OpenStreetMaps (see <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"textlink\">The OpenStreetMap License</a>).\n";
             $selector['md'].="Unless otherwise stated, the rights of use for images and texts are held by the website operator. Any videos on the home page are from Pressmaster and available at www.pexels.com.\n";
-            $selector['md'].="Liability for linked content is excluded to the extent permitted by law.\n";
+            $selector['md'].="Liability for linked content is excluded to the extent permitted by law._\n";
             $selector['md'].="\n";
-            $selector['md'].="Esta es una página web privada. Esta página web utiliza cookies para gestionar sesiones y almacenar la configuración de privacidad.\n";
+            $selector['md'].="_Esta es una página web privada. Esta página web utiliza cookies para gestionar sesiones y almacenar la configuración de privacidad.\n";
             $selector['md'].="La página web utiliza datos cartográficos y geográficos externos proporcionados por OpenStreetMaps. Los derechos de uso de los datos cartográficos pertenecen a OpenStreetMaps (<a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"textlink\">The OpenStreetMap License</a>).\n";
             $selector['md'].="Salvo que se indique lo contrario, los derechos de uso de las imágenes y los textos pertenecen al operador del sitio web. Cualquier vídeo que pueda aparecer en la página de inicio es de Pressmaster y está disponible en www.pexels.com.\n";
-            $selector['md'].="Se excluye la responsabilidad por los contenidos enlazados en la medida en que lo permita la ley.\n";
+            $selector['md'].="Se excluye la responsabilidad por los contenidos enlazados en la medida en que lo permita la ley._\n";
         } else if ($name==='contact'){
             $selector['md'].="[//]: # (Enter your text in Markdown fomat here)\n\n";
         } else if ($name==='logo'){
