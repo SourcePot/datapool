@@ -187,6 +187,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function parserSectionRules($callingElement){
         $contentStructure=[
             'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. I\s{0,1}n\s{0,1}v\s{0,1}o\s{0,1}i\s{0,1}c\s{0,1}e\s{0,1}','excontainer'=>TRUE],
+            '...is section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['end indicator','start indicator'],'title'=>''],
             'Section type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'singleEntry','options'=>['singleEntry'=>'Single entry','multipleEntries'=>'Multiple entries'],'title'=>''],
             'Section name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. Invoice start','excontainer'=>TRUE],
             ];
@@ -519,19 +520,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($base['parsersectionrules'] as $ruleKey=>$rule){
             if (!isset($rule['Content']['Section type']) || !isset($rule['Content']['Regular expression'])){continue;}
             $sectionId=$rule['EntryId'];
+            $sectionsArr=$this->splitIntoSection($rule['Content']['Regular expression'],$text,boolval($rule['Content']['...is section']));
             if ($rule['Content']['Section type']==='multipleEntries'){
-                $sections['multipleEntries'][$sectionId]=[];
-                do{
-                    $textComps=$this->preg_single_split('/'.$rule['Content']['Regular expression'].'/',$text);
-                    $text=$textComps[0];
-                    if (isset($textComps[1])){
-                        $sections['multipleEntries'][$sectionId][]=$textComps[1];
-                    }
-                }while(isset($textComps[1]));
+                $sections['multipleEntries'][$sectionId]=$sectionsArr;
             } else {
-                $textComps=$this->preg_single_split('/'.$rule['Content']['Regular expression'].'/',$text);
-                $text=$textComps[0];
-                $sections['singleEntry'][$sectionId]=$textComps[1]??'';
+                $sections['singleEntry'][$sectionId]=array_shift($sectionsArr);
+                $text=implode('',$sectionsArr);
             }
         }
         $sections['singleEntry']['LAST']=$text;
@@ -540,18 +534,17 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $sections;
     }
 
-    private function preg_single_split(string $regex,string $str):array
+    private function splitIntoSection(string $regEx,string $text,bool $isSectionStartIndicator=FALSE):array
     {
-        $result=[];
-        preg_match($regex,$str,$match,PREG_OFFSET_CAPTURE);
-        if (isset($match[0][1])){
-            $splitpos=$match[0][1]+strlen($match[0][0]);
-            $result[1]=substr($str,0,$splitpos);
-            $result[0]=substr($str,$splitpos);
-        } else {
-            $result[0]=$str;
+        $sections=[];
+        $sectionIndex=0;
+        $chunks=preg_split('/('.$regEx.')/i',$text,-1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        foreach($chunks as $chunkIndex=>$chunk){
+            $sections[$sectionIndex]=($sections[$sectionIndex]??'').$chunk;
+            $isEven=($chunkIndex%2===0);
+            $sectionIndex+=($isEven&&$isSectionStartIndicator)?1:((!$isEven&&!$isSectionStartIndicator)?1:0);
         }
-        return $result;
+        return $sections;
     }
 
     private function finalizeEntry(array $base,array $sourceEntry,array $targetEntry,array $result,bool $testRun,bool $keepSource=FALSE):array

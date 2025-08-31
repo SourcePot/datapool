@@ -153,8 +153,8 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
             if ($widgetClass===__CLASS__){
                 $this->hasHomeWidgetApp=TRUE;
             }
-            if (empty($this->oc[$widgetClass])){
-                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()": widget class "{widgetClass}" does not exist. Please check Admin&rarr;Settings&rarr;Quick link "Start page".',['class'=>__CLASS__,'function'=>__FUNCTION__,'widgetClass'=>$widgetClass]);
+            if (method_exists($this->oc[$widgetClass],'getHomeAppInfo')===FALSE){
+                $this->oc['logger']->log('error','Function "{class} &rarr; {function}()": widget "{widgetClass}" does not exist. Please check Admin&rarr;Settings&rarr;Quick link "Start page".',['class'=>__CLASS__,'function'=>__FUNCTION__,'widgetClass'=>$widgetClass]);
                 continue;
             }
             $caption=$this->oc[$widgetClass]->getHomeAppInfo();

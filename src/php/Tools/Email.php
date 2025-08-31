@@ -13,24 +13,47 @@ namespace SourcePot\Datapool\Tools;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
+use DirectoryTree\ImapEngine\Mailbox;
+use DirectoryTree\ImapEngine\FileMessage;
+use Carbon\Carbon;
+use Hfig\MAPI\MapiMessageFactory;
+use Hfig\MAPI\OLE\Pear\DocumentFactory; 
 
-class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver{
+class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
+
+    private const SMTP_PORTS=[
+        25=>'25 (standard)',
+        587=>'587 (secure submission with TLS)',
+        465=>'465 (legacy secure SMTPS)',
+        2525=>'2525 (alternative when others are blocked)'
+    ];
     
-    private const SMTP_PORTS=[25=>'25 (standard)',587=>'587 (secure submission with TLS)',465=>'465 (legacy secure SMTPS)',2525=>'2525 (alternative when others are blocked)'];
+    private const IMAP_PORTS=[
+        143=>'143 (unencrypted or STARTTLS)',
+        993=>'993 (OAuth, SSL)',
+    ];
+
+    private const AUTHENTIFICATION_ENCRYPTION=[
+        'OAuth'=>'OAuth',
+        'STARTTLS'=>'STARTTLS',
+        'SSL'=>'SSL',
+        'Unencrypted'=>'None',
+    ];
     
-    private const HTML_TEMPLATE='<!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <title>{{title}}</title>
-                                    <style>
-                                        *{font-family: -apple-system, system-ui, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\',\'Fira Sans\',Ubuntu,Oxygen,\'Oxygen Sans\',Cantarell,\'Droid Sans\',\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Segoe UI Emoji\',\'Segoe UI Symbol\',\'Lucida Grande\',Helvetica,Arial, sans-serif;}
-                                        h1{font-size:1.255em;}
-                                        h2{font-size:1.125em;}
-                                    </style>
-                                </head>
-                                <body>{{html}}</body>
-                                </html>
-                                ';
+    private const HTML_TEMPLATE='
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{{title}}</title>
+            <style>
+                *{font-family: -apple-system, system-ui, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\',\'Fira Sans\',Ubuntu,Oxygen,\'Oxygen Sans\',Cantarell,\'Droid Sans\',\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Segoe UI Emoji\',\'Segoe UI Symbol\',\'Lucida Grande\',Helvetica,Arial, sans-serif;}
+                h1{font-size:1.255em;}
+                h2{font-size:1.125em;}
+            </style>
+        </head>
+        <body>{{html}}</body>
+        </html>
+    ';
 
     private $oc;
     
@@ -44,10 +67,16 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
         'Content'=>[
             'EntryId'=>['@tag'=>'p','@default'=>'','@excontainer'=>TRUE],
-            'Mailbox'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}','@excontainer'=>TRUE],
-            'Mailbox (sample)'=>['@tag'=>'p','@style'=>'font-size:0.9rem','@element-content'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}'],
+            'Email account folder'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'e.g. Bills/Energy','title'=>'If empty, the inbox is selcted','@excontainer'=>TRUE],
             'User'=>['@tag'=>'input','@type'=>'text','@default'=>'john@doe.com','@excontainer'=>TRUE],
             'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
+            'IMAP server'=>['@tag'=>'input','@type'=>'text','@default'=>'smtp.strato.de','@excontainer'=>TRUE],
+            'Security'=>['@function'=>'select','@options'=>self::AUTHENTIFICATION_ENCRYPTION,'@value'=>'STARTTLS','@excontainer'=>TRUE],
+            'Validate certificate'=>['@function'=>'select','@options'=>['No','Yes'],'@value'=>0,'@excontainer'=>TRUE],
+            'Port'=>['@function'=>'select','@options'=>self::IMAP_PORTS,'@value'=>993,'@excontainer'=>TRUE],
+            'Timeout'=>['@tag'=>'input','@type'=>'number','@default'=>30,'@excontainer'=>TRUE],
+            'Proxy [array json-encoded]'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
+            'Debug'=>['@function'=>'select','@options'=>['No','Yes'],'@value'=>0,'@excontainer'=>TRUE],
             'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
             ],
         ];
@@ -139,9 +168,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $settingsHtml=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$settingsHtml,'icon'=>'Settings']);
         // add meta data info
-        $meta=$this->getReceiverMeta($arr['selector']['EntryId']);
-        $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($meta);
-        $metaHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Meta']);   
+        $metaHtml=$this->getReceiverMeta($arr['selector']['EntryId']);
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$metaHtml,'icon'=>'Meta']);
         return $html;
     }
@@ -167,78 +194,197 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     {
         $id=preg_replace('/\W/','_','INBOX-'.$id);
         $setting=['Class'=>__CLASS__.'-rec','EntryId'=>$id];
-        $setting['Content']=['EntryId'=>$id,
-                            'Mailbox'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}',
-                            'User'=>'',
-                            'Password'=>''];
+        $setting['Content']=[
+            'EntryId'=>$id,
+            'User'=>'',
+            'Password'=>'',
+            'IMAP server'=>'imap.strato.de',
+            'Security'=>'STARTTLS',
+            'Port'=>143,
+        ];
         return $this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
     }
-    
-    private function getReceiverMeta($id)
+
+    private function receiverSetting2mailboxArr($id):array
     {
-        $meta=[];
         $setting=$this->getReceiverSetting($id);
-        $mbox=@imap_open(strval($setting['Content']['Mailbox']),$setting['Content']['User'],$setting['Content']['Password']);
-        imap_errors();
-        imap_alerts();
-        if (empty($mbox)){
-            $meta['Error']=imap_last_error();
-        } else {
-            $status=imap_status($mbox,$setting['Content']['Mailbox'],SA_ALL);
-            $meta=['messages'=>$status->messages,
-                    'Recent'=>$status->recent,
-                    'Unseen'=>$status->unseen,
-                    'UIDnext'=>$status->uidnext,
-                    'UIDvalidity'=>$status->uidvalidity
-                    ]; 
-            imap_close($mbox);
+        $encryptionAuthentication= match($setting['Content']['Security']){
+            'OAuth'=>['encryption'=>'ssl','authentication'=>'oauth'],
+            'STARTTLS'=>['encryption'=>'starttls','authentication'=>'plain'],
+            'SSL'=>['encryption'=>'ssl','authentication'=>'plain'],
+            'Unencrypted'=>['encryption'=>NULL,'authentication'=>'plain'],
+        };
+        $mailboxArr=[
+            'port'=>$setting['Content']['Port'],
+            'host'=>$setting['Content']['IMAP server'],
+            //'timeout'=>intval($setting['Content']['Timeout'])??30,
+            'timeout'=>intval($setting['Content']['Timeout'])??3,
+            'debug'=>boolval($setting['Content']['Debug'])??FALSE,
+            'username'=>$setting['Content']['User'],
+            'password'=>$setting['Content']['Password'],
+            'encryption'=>$encryptionAuthentication['encryption'],
+            'validate_cert'=>boolval($setting['Content']['Validate certificate'])??TRUE,
+            'authentication'=>$encryptionAuthentication['authentication'],
+            'proxy'=>json_decode($setting['Content']['Proxy [array json-encoded]'])?:[],
+            'Folder'=>$setting['Content']['Email account folder'],
+        ];
+        return $mailboxArr;
+    }
+    
+    private function getReceiverMeta($id):string
+    {
+        $mailboxArr=$this->receiverSetting2mailboxArr($id);
+        $mailbox=new Mailbox($mailboxArr);
+        $matrix=[];
+        $folderName=$mailboxArr['Folder']?:'INBOX';
+        try{
+            $folders=$mailbox->folders()->get();
+            foreach($folders as $folder){
+                foreach($folder->status() as $key=>$value){
+                    $matrix[$folder->name()][$key]=$value;
+                }
+                if (stripos($folder->name(),$folderName)!==FALSE){
+                    $matrix[$folder->name()]['trStyle']=['background-color'=>'#ccc'];
+                }
+            }
+        } catch(\Exception $e){
+            $matrix['Error'][]=$e->getMessage();
         }
-        return $meta;
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Selected folder: '.$folderName]);
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Account folder']);
+        return $html;
     }
 
     private function todaysEmails($id)
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'emailsAdded'=>0,'alerts'=>'','errors'=>''];
-        $entrySelector=$this->id2entrySelector($id);
-        $setting=$this->getReceiverSetting($id);
-        $context['Mailbox']=$setting['Content']['Mailbox'];
-        // initialize mailbox
-        if (empty($setting['Content']['Mailbox']) || empty($setting['Content']['User'])){
-            $context['Error']='Setting "Mailbox" and/or "User" is empty.';
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" added "{emailsAdded}" Mailbox settings are empty.',$context);    
-            return $context;
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'messageEntries'=>0,'alerts'=>'','errors'=>''];
+        // get the mailbox
+        $mailboxArr=$this->receiverSetting2mailboxArr($id);
+        $mailbox=new Mailbox($mailboxArr);
+        if (empty($mailboxArr['Folder'])){
+            $folder=$mailbox->inbox();
+        } else {
+            $folder=$mailbox->folders()->find($mailboxArr['Folder']);
         }
-        $mbox=@imap_open($setting['Content']['Mailbox'],$setting['Content']['User'],$setting['Content']['Password']);
-        // error handling and documentation
-        $errors=imap_errors();
-        if (!empty($errors)){
-            $context['errors']=implode(', ',$errors);
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with errors: {errors}',$context);    
-        }
-        $alerts=imap_alerts();
-        if (!empty($alerts)){
-            $context['alerts']=implode(', ',$alerts);
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with alerts: {alerts}',$context);    
-        }
-        // open mailbox
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        if (!empty($mbox)){
-            $status=imap_status($mbox,$setting['Content']['Mailbox'],SA_ALL);
-            $context['messages']=$status->messages;
-            $entry=$entrySelector;
-            $entry['Params']['File']['MIME-Type']='message/rfc822';
-            $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
-            $messages=imap_search($mbox,'SINCE "'.date('d-M-Y').'"');
-            if ($messages){
-                foreach($messages as $mid){
-                    $msg=\imap_fetchbody($mbox,$mid,"");
-                    $statistic=$this->oc['SourcePot\Datapool\Foundation\Filespace']->email2files($msg,$entry);
-                    $context['emailsAdded']++;
-                }
-            }
-            imap_close($mbox);
+        //create entry template
+        $entry=$this->id2entrySelector($id);
+        $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
+        foreach($folder->messages()->since(Carbon::now()->subDays(7))->withHeaders()->withFlags()->withBody()->get() as $message){
+            $id=$mailboxArr['host'].$mailboxArr['username'].$message->uid();
+            $context=$this->messageObj2entries($entry,$message,$id,$context);
         }
         return $context;
+    }
+
+    public function msg2entries(array $entry,string $msg,string $id,array $context):array
+    {
+        $message=new FileMessage($msg);
+        return $this->messageObj2entries($entry,$message,$id,$context);
+    }
+
+    public function ole2entries(array $entry,string $oleMsg,string $id,array $context):array
+    {
+        if (empty($oleMsg)){return $context;}
+        $context['messages']++;
+        // ole-content -> message object
+        $messageFactory = new MapiMessageFactory();
+        $documentFactory = new DocumentFactory(); 
+        $stream=fopen('data://text/plain;base64,'.base64_encode($oleMsg),'r');
+        $ole=$documentFactory->createFromStream($stream);
+        $message=$messageFactory->parseMessage($ole);
+        // entry base data
+        $entry=$this->header2entry($entry,new FileMessage($message->properties()->transport_message_headers));
+        $entry['Content']['Subject']=$message->properties['subject']??'{Missing subject}';
+        $entry['Content']['File content']=$message->getBody();
+        $entry['Content']['Message']=strip_tags($entry['Content']['File content']);
+        $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
+        // html message
+        $context['messageEntries']++;
+        $htmlContent=$message->getBodyHTML()??'';
+        if (empty($htmlContent)){
+            $entry['Name']=$nameBase.') [text/plain]';
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+        } else {
+            $entry['Name']=$nameBase.') [text/html]';
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            $entry['fileName']='message.html';
+            $entry['fileContent']=$htmlContent;
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+        }
+        // message attachments
+        foreach($message->getAttachments() as $attachment){
+            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment->getContentId(),TRUE);
+            $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment->getMimeType().']';
+            $entry['Name']=str_replace('{Missing subject}',$entry['fileName'],$entry['Name']);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            $entry['fileName']=$attachment->getFilename()?:($contentIdHash.'.file');
+            $entry['fileContent']=$attachment->getData();
+            $entry['Params']['File']['MIME-Type']=$attachment->getMimeType();
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+            $context['messageEntries']++;
+        }
+        return $context;
+    }
+
+    private function messageObj2entries(array $entry,$message,$id,$context):array
+    {
+        if (empty($message)){return $context;}
+        $context['messages']++;
+        // html and/or text message
+        $entry=$this->header2entry($entry,$message);
+        $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
+        $entry['Content']['Message']=$message->text()?:strip_tags($htmlContent??'');
+        $entry['Content']['File content']=$message->text();
+        $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
+        // html entry
+        $context['messageEntries']++;
+        $htmlContent=$message->html();
+        if (empty($htmlContent)){
+            $entry['Name']=$nameBase.') [text/plain]';
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+        } else {
+            $entry['Name']=$nameBase.') [text/html]';
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            $entry['fileName']='message.html';
+            $entry['fileContent']=$htmlContent;
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+            $context['messageEntries']++;
+        }
+        // attachment entries
+        foreach($message->attachments() as $attachment){
+            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment->contentId(),TRUE);
+            $entry['fileName']=$attachment->filename()?:($contentIdHash.'.file');
+            $entry['fileContent']=$attachment->contents();
+            $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment->contentType().']';
+            $entry['Name']=str_replace('{Missing subject}',$entry['fileName'],$entry['Name']);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+            $entry['Params']['File']['MIME-Type']=$attachment->contentType();
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+            $context['messageEntries']++;
+        }      
+        return $context;
+    }
+
+    private function header2entry(array $entry, $message):array
+    {
+        foreach(['from','sender','replyTo','inReplyTo','to','cc','bcc'] as $addrKey){
+            $addrs=$message->$addrKey();
+            if (empty($addrs)){continue;}
+            if (!is_array($addrs)){
+                $addrs=[$addrs];
+            }
+            foreach($addrs as $addr){
+                $entry['Params']['Email'][$addrKey.' mailboxes'][]=['email'=>$addr->email(),'name'=>$addr->name()];  
+            }
+        }
+        $entry['Params']['Email']['Flags']=$message->flags();
+        $dateObj=$message->date();
+        if (!empty($dateObj)){
+            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($dateObj->toRfc2822String(),'',\SourcePot\Datapool\Root::DB_TIMEZONE);
+        }
+        return $entry;
     }
 
     /******************************************************************************************************************************************
@@ -351,6 +497,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     public function transmitterPluginHtml(array $arr):string
     {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
+        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$this->getRelevantFlatUserContentKey());
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $settingsHtml=$this->getTransmitterSettingsWidgetHtml(['callingClass'=>__CLASS__]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Email Settings','html'=>$settingsHtml]);
@@ -360,9 +507,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['send'])){
             $entry=array_replace_recursive($entry,$formData['val']);
-            $this->send($formData['val']['recipient'],$entry);
+            if (isset($availableRecipients[$formData['val']['recipient']])){
+                $this->send($formData['val']['recipient'],$entry);
+            }
         }
-        $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$this->getRelevantFlatUserContentKey());
         $selectArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'options'=>$availableRecipients,'key'=>['recipient'],'selected'=>$entry['recipient']];
         $emailMatrix=[];
         $emailMatrix['Recepient']['Value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
@@ -383,12 +531,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     private function getTransmitterSetting($callingClass){
         $EntryId=preg_replace('/\W/','_','OUTBOX-'.$callingClass);
-        $setting=['Class'=>__CLASS__.'-tec','EntryId'=>$EntryId];
-        $setting['Content']=['EntryId'=>$EntryId,
-                            'Mailbox'=>'{imap.gmail.com:993/imap/ssl/novalidate-cert/user=...}',
-                            'User'=>'',
-                            'From'=>'',
-                            'Password'=>''];
+        $setting=['Class'=>'!'.__CLASS__.'-tec','EntryId'=>$EntryId];
+        $setting['Content']=[];
         $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);
         $settings['Content']['Port']=intval($settings['Content']['Port']??465);
         return $settings;
@@ -400,6 +544,35 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($setting,FALSE);
         return $html;
     }
+
+    /******************************************************************************************************************************************
+    * HomeApp Interface Implementation
+    * 
+    */
+    
+    public function transmitterPluginWrapper($arr):array
+    {
+        $arr['html']=$arr['html']??'';
+        $arr['html'].=$this->transmitterPluginHtml($arr);
+        return $arr;
+    }
+
+    public function getHomeAppWidget(string $name):array
+    {
+        // reset page setting
+        $containerSettings=['method'=>'transmitterPluginWrapper','classWithNamespace'=>__CLASS__,'isContactForm'=>TRUE];
+        $element=['element-content'=>'','style'=>[]];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Get in touch...','keep-element-content'=>TRUE]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',['Source'=>$this->getEntryTable()],$containerSettings,['style'=>['border'=>'none']]);
+        return $element;
+    }
+    
+    public function getHomeAppInfo():string
+    {
+        $info='This widget provides a email creation form';
+        return $info;
+    }
+    
 
 }
 ?>

@@ -628,61 +628,29 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
 
     private function specialFileHandling(string $file,array $entry,bool $createOnlyIfMissing=FALSE,bool $isSystemCall=FALSE):array|bool
     {
-        if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE || $entry['Params']['File']['Extension']=='eml' || $entry['Params']['File']['Extension']=='msg')){
+        if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || $entry['Params']['File']['Extension']=='msg')){
+            // Outlook email
             $email=file_get_contents($file);
-            $this->email2files($email,$entry);
+            $this->oc['SourcePot\Datapool\Tools\Email']->ole2entries($entry,$email,'',[]);
+            return TRUE;
+        } else if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && $entry['Params']['File']['Extension']=='p7m'){
+            // signed email
+            $email=file_get_contents($file);
+            $this->oc['SourcePot\Datapool\Tools\Email']->msg2entries($entry,$email,'',[]);
+            return TRUE;
+        } else if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && (stripos($entry['Params']['File']['MIME-Type'],'/rfc822')!==FALSE || $entry['Params']['File']['Extension']=='eml')){
+            // standard email
+            $email=file_get_contents($file);
+            $this->oc['SourcePot\Datapool\Tools\Email']->msg2entries($entry,$email,'',[]);
             return TRUE;
         } else if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract archive') && stripos($entry['Params']['File']['MIME-Type'],'/zip')!==FALSE){
+            // zip-archive
             $this->archive2files($file,$entry,$createOnlyIfMissing,$isSystemCall);
             return TRUE;
         }
         return FALSE;
     }
-
-    public function email2files(string $email,array $entry):array
-    {
-        $statistic=['parts'=>0,'files'=>0];
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
-        // initialize and load email scanner
-        $scanner = new \SourcePot\Email\Scanner();
-        $scanner->load($email);
-        // read result
-        $emailTransferHeader = $scanner->getHeader();
-        $emailParts = $scanner->getParts();
-        $msgId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($emailTransferHeader['message-id'],TRUE);
-        // create entry template
-        foreach($emailParts as $name=>$part){
-            $newEntry=$entry;
-            $newEntry['Name']=$context['name']=$name.' {'.$msgId.'}';
-            $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($newEntry['Name'],FALSE);
-            $newEntry['Params']['Email']=$emailTransferHeader;
-            // use "received" datetime to calculate entry[Date]
-            if (is_object($emailTransferHeader['received dateTimeObj'])){
-                $emailTransferHeader['received dateTimeObj']->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-                $newEntry['Date']=$emailTransferHeader['received dateTimeObj']->format('Y-m-d H:i:s');
-            }
-            if (!isset($part['header']['content-type'][0])){
-                $this->oc['logger']->log('notice','"{class} &rarr; {function}()" called with undefined content-type for "{name}"',$context);    
-            } else if ($part['header']['content-type'][0]==="text/plain"){
-                $newEntry['Content']['Message']=$part['data'];
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($newEntry);
-            } else if ($part['header']['content-type'][0]==="text/html"){
-                $newEntry['Content']['Html']=$part['data'];
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($newEntry);
-            } else {
-                $contentTypeComps=explode('/',$part['header']['content-type'][0]);
-                $fileName=$part['header']['content-disposition']['filename']??$part['header']['content-type']['name']??'noname.'.$contentTypeComps[1];
-                $newEntry['fileName']=$fileName;
-                $newEntry['fileContent']=$part['data'];
-                $newEntry['Params']['File']['MIME-Type']=$part['header']['content-type'][0];
-                $this->fileContent2entry($newEntry);
-                $statistic['files']++;
-            }
-            $statistic['parts']++;
-        }
-        return $statistic;
-    }
-        
+   
     private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall):array
     {
         $zipStatistic=['errors'=>[],'files'=>[]];
