@@ -56,7 +56,7 @@ final class Root{
     public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
-    public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE];
+    public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE,'legal'=>TRUE];
     public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
     
     // profiling settings
@@ -588,7 +588,7 @@ final class Root{
             'media'=>['relPath'=>'./src/www/media','permissions'=>0775,'createIndexFile'=>TRUE],
             'assets'=>['relPath'=>'./src/www/assets','permissions'=>0775,'createIndexFile'=>TRUE],
             'tmp'=>['relPath'=>'./src/www/tmp','permissions'=>0775,'createIndexFile'=>TRUE],
-            ];
+        ];
         $absRootPath=strtr(__DIR__,['\\'=>'/']);
         $absRootPath=strtr($absRootPath,[$relThisDirSuffix=>'']);
         // get absolute dirs

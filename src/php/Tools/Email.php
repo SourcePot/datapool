@@ -21,14 +21,6 @@ use Hfig\MAPI\OLE\Pear\DocumentFactory;
 
 class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
 
-    private const CONTACT_FORM_SUBJECTS=[
-        'Interest in training, editing or similar',
-        'My last class',
-        'My last invoice',
-        'Regarding the web page',
-        'Miscellaneous',
-    ];
-
     private const SMTP_PORTS=[
         25=>'25 (standard)',
         587=>'587 (secure submission with TLS)',
@@ -638,14 +630,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     {
         $isInvalid=[];
         if (mb_strlen($values['Message']??'')<10){
-            $isInvalid[]='Message too short';
+            $isInvalid[]=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Message is too short');
         }
         $atSignPos=intval(strpos($values['Email']??'','@'));
         $dotPos=intval(strrpos($values['Email']??'','.'));
         if ($atSignPos<1 || $atSignPos>$dotPos-2 || mb_strlen($values['Email'])<$dotPos+3){
-            $isInvalid[]='Invalid email';
+            $isInvalid[]=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Please provide a valid email address');
         }
-        return implode(', ',$isInvalid);
+        return implode('; ',$isInvalid);
     }
 
     private function getSubjectOptions($values,$getThisOption=FALSE):array|string
@@ -667,7 +659,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $element=['element-content'=>'','style'=>[]];
         // contact form
         $selector=['Source'=>$this->getEntryTable(),'Group'=>'Forms','Name'=>__FUNCTION__,'disableAutoRefresh'=>TRUE];
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Contact form','keep-element-content'=>TRUE]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Get in touch...','keep-element-content'=>TRUE]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Web contact form '.__FUNCTION__,'generic',$selector,['method'=>'contactForm','classWithNamespace'=>__CLASS__,],['style'=>['border'=>'none']]);
         return $element;
     }

@@ -21,17 +21,197 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     private const LANGUAGE_CODES=['en'=>'English','de'=>'Deutsch','es'=>'Español'];
 
     private const INIT_DICTIONARY=[
-        'de'=>['Add'=>'Hinzufügen','Save'=>'Speichern','Update'=>'Aktualisieren','Login'=>'Anmelden','Logout'=>'Abmelden','Calendar'=>'Kalender','TRUE'=>'WAHR','FALSE'=>'FALSCH',
-            'Register'=>'Registrieren','Send login link'=>'Login link anfordern','Password'=>'Passwort','...repeat'=>'...wiederholen','Delete'=>'Löschen',
-            'Language'=>'Sprache','Home'=>'Start','Account'=>'Konto','Email'=>'E-Mail',
-            'Dear'=>'Hallo','Please use your requested one-time link to log into'=>'Bitte benutze den angeforderten Einmal-Link zur Anmeldung bei',
-            'Requested login link from'=>'Der angefprderte Link von','The link is valid for 24hrs'=>'Der Link ist gültig für 24h','Best regards'=>'Viele Grüße'
+        'de'=>[
+            '...repeat'=>'...wiederholen',
+            'Account'=>'Konto',
+            'Address'=>'Adresse',
+            'Add'=>'Hinzufügen',
+            'Add comment'=>'Kommentar hinzufügen',
+            'Add Folder'=>'Ordner hinzufügen',
+            'Add Group'=>'Gruppe hinzufügen',
+            'Admin email contact'=>'E-Mail-Kontakt des Administrators',
+            'Attachment'=>'Anhang',
+            'Attachments'=>'Anhänge',
+            'Best regards'=>'Viele Grüße',
+            'Calendar'=>'Kalender',
+            'Check'=>'Eingaben prüfen',
+            'Company'=>'Unternehmen',	
+            'Contact'=>'Adresse',
+            'Contact details'=>'Kontaktdaten',
+            'Content'=>'Inhalt',
+            'Cookies and permissions'=>'Cookies und Berechtigungen',
+            'Country'=>'Land',
+            'Country code'=>'Ländercode',
+            'Dear'=>'Hallo',
+            'Delete'=>'Löschen',
+            'Delete entry'=>'Eintrag löschen',
+            'Department'=>'Abteilung',
+            'Description'=>'Beschreibung',
+            'Edit'=>'Ändern',
+            'Edit Folder'=>'Ordner ändern',
+            'Edit Group'=>'Gruppe ändern',
+            'Email'=>'E-Mail',
+            'Enter your message here...'=>'Geben Sie Ihre Nachricht hier ein...',
+            'Explorer'=>'Explorer',
+            'FALSE'=>'FALSCH',
+            'Family name'=>'Familienname',
+            'Fax'=>'Fax',
+            'filter'=>'filtern',
+            'First name'=>'Vorname',
+            'Folder'=>'Ordner',
+            'Gender'=>'Geschlecht',
+            'Get in touch...'=>'Sprechen Sie uns an...',
+            'Get login token'=>'Login anfordern',
+            'Group'=>'Gruppe',
+            'Home'=>'Start',
+            'House number'=>'Hausnummer',
+            'Language'=>'Sprache',
+            'Legal'=>'Impressum',
+            'Location'=>'Ort',
+            'Login'=>'Anmelden',
+            'Logout'=>'Abmelden',
+            'key'=>'Schlüssel',
+            'Key'=>'Schlüssel',
+            'Map'=>'Karte',
+            'Message*'=>'Nachricht',
+            'Misc tools'=>'Werkzeuge',
+            'Middle name'=>'Zweiter Vorname',
+            'Mobile'=>'Mobilnummer',
+            'My reference'=>'Mein Zeichen',
+            'My rols'=>'Meine Rollen',
+            'My tags'=>'Meine Tags',
+            'My user rols'=>'Meine Rollen',
+            'Name'=>'Name',
+            'New comment'=>'Neuer Kommentar',
+            'No'=>'Nein',
+            'Off'=>'Aus',
+            'On'=>'Ein',
+            'Password'=>'Passwort',
+            'Permissions'=>'Berechtigungen',
+            'Permitted'=>'Erlaubt',
+            'Please use your requested one-time link to log into'=>'Bitte benutze den angeforderten Einmal-Link zur Anmeldung bei',
+            'Phone'	=>'Telefon',
+            'TRUE'=>'WAHR',
+            'Register'=>'Registrieren',
+            'Requested login link from'=>'Der angefprderte Link von',
+            'Save'=>'Speichern',
+            'Select entry'=>'Eintrag auswählen',
+            'Send'=>'Abschicken',
+            'Send login link'=>'Login link anfordern',
+            'Settings'=>'Einstellungen',
+            'Source'=>'Laufwerk',
+            'State'=>'Bundesland',
+            'Street'=>'Straße',
+            'Subject'=>'Betreff',
+            'Switch'=>'Umschalten',
+            'The link is valid for 24hrs'=>'Der Link ist gültig für 24h',
+            'Title'=>'Anrede',
+            'Town'=>'Stadt',
+            'Type'=>'Typ',
+            'Update'=>'Aktualisieren',
+            'Upload settings'=>'Upload Einstellungen',
+            'value'=>'Wert',
+            'Value'=>'Wert',
+            'Yes'=>'Ja',
+            'Your email address*'=>'Ihre E-Mail-Adresse*',
+            'Your phone number'=>'Ihre Telefonnummer',
+            'Zip'=>'Postleitzahl',
             ],
-        'es'=>['Add'=>'Añadir','Save'=>'Guardar','Update'=>'Actualizar','Login'=>'Entrar','Logout'=>'Salir','Calendar'=>'Calendario','TRUE'=>'VERDADERO','FALSE'=>'FALSO',
-            'Register'=>'Registrar','Send login link'=>'Enviar enlace de acceso','Password'=>'Contraseña','...repeat'=>'...repetir','Delete'=>'Borrar',
-            'Language'=>'Lengua','Home'=>'Inicio','Account'=>'Cuenta','Email'=>'Correo electrónico',
-            'Dear'=>'Querido','Please use your requested one-time link to log into'=>'Por favor, utilice el enlace solicitado para iniciar sesión',
-            'Requested login link from'=>'Solicitado enlace de inicio de sesión de','The link is valid for 24hrs'=>'El enlace es válido durante 24 horas','Best regards'=>'Saludos cordiales'
+        'es'=>[
+            '...repeat'=>'...repetir',
+            'Address'=>'Dirección',
+            'Account'=>'Cuenta',
+            'Add'=>'Añadir',
+            'Add comment'=>'Añadir comentario',
+            'Add Folder'=>'Añadir carpeta',
+            'Add Group'=>'Añadir grupo',
+            'Admin email contact'=>'E-Mail-Kontakt des Administrators',
+            'Attachment'=>'Anexo',
+            'Attachments'=>'Anexos',
+            'Best regards'=>'Saludos cordiales',
+            'Calendar'=>'Calendario',
+            'Check'=>'Comprobar entradas',
+            'Company'=>'Empresa',
+            'Contact'=>'Dirección',
+            'Contact details'=>'Datos de contacto',
+            'Content'=>'Contenido',
+            'Cookies and permissions'=>'Cookies y permisos',
+            'Country'=>'País',
+            'Country code'=>'Código del país',
+            'Dear'=>'Querido',
+            'Delete'=>'Borrar',
+            'Delete entry'=>'Eliminar entrada',
+            'Department'=>'Departamento',	
+            'Description'=>'Descripción',
+            'Edit'=>'Cambiar',
+            'Edit Folder'=>'Cambiar carpeta',
+            'Edit Group'=>'Cambiar grupo',
+            'Email'=>'Correo electrónico',
+            'Enter your message here...'=>'Escriba aquí su mensaje...',
+            'Explorer'=>'Explorador',
+            'FALSE'=>'FALSO',
+            'Family name'=>'Apellido',
+            'Fax'=>'Fax',
+            'filter'=>'filtrar',
+            'First name'=>'Nombre',
+            'Folder'=>'Carpeta',
+            'Gender'=>'Género',
+            'Get in touch...'=>'Póngase en contacto con nosotros...',
+            'Get login token'=>'Solicitar inicio de sesión',
+            'Group'=>'Grupo',
+            'Home'=>'Inicio',
+            'House number'=>'Número de casa',
+            'key'=>'Llave',
+            'Key'=>'Llave',
+            'Language'=>'Lengua',
+            'Legal'=>'Aviso legal',
+            'Location'=>'Localización',
+            'Login'=>'Entrar',
+            'Logout'=>'Salir',
+            'Map'=>'Mapa',
+            'Message*'=>'Mensaje',
+            'Middle name'=>'Segundo nombre',
+            'Misc tools'=>'Herramientas',
+            'Mobile'=>'Móvil',
+            'My reference'=>'Mi referencia',
+            'My rols'=>'Mis roles de usuario',
+            'My tags'=>'Mis etiquetas',
+            'My user rols'=>'Mis roles de usuario',
+            'Name'=>'Nombre',
+            'New comment'=>'Nuevo comentario',
+            'No'=>'No',
+            'Off'=>'Apagado',
+            'On'=>'Encendido',
+            'Password'=>'Contraseña',
+            'Permissions'=>'Autorizaciones',
+            'Permitted'=>'Permitido',
+            'Phone'	=>'Teléfono',
+            'Please use your requested one-time link to log into'=>'Por favor, utilice el enlace solicitado para iniciar sesión',
+            'Register'=>'Registrar',
+            'Requested login link from'=>'Solicitado enlace de inicio de sesión de',
+            'Save'=>'Guardar',
+            'Select entry'=>'Seleccionar entrada',
+            'Send'=>'Enviar',
+            'Send login link'=>'Enviar enlace de acceso',
+            'Settings'=>'Configuración',
+            'Source'=>'Drive',
+            'State'=>'Provincia',
+            'Street'=>'Calle',	
+            'Subject'=>'Asunto',
+            'Switch'=>'Cambiar',
+            'Town'=>'Población',
+            'TRUE'=>'VERDADERO',
+            'The link is valid for 24hrs'=>'El enlace es válido durante 24 horas',
+            'Title'=>'Título',
+            'Type'=>'Tipo',
+            'Update'=>'Actualizar',
+            'Upload settings'=>'Configuración de carga',
+            'value'=>'Valor',
+            'Value'=>'Valor',
+            'Yes'=>'Sí',
+            'Your email address*'=>'Su dirección de correo electrónico*',
+            'Your phone number'=>'Su número de teléfono',
+            'Zip'=>'Código postal',	
             ],
         ];
     
@@ -111,36 +291,20 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
         if (empty($hasEntry)){
             foreach(self::INIT_DICTIONARY as $langCode=>$phrases){
                 foreach($phrases as $phrase=>$translation){
+                    $added++;
                     $this->lng($phrase,$langCode,$translation);
                 }
             }
+            $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" called, init set of "{added}" translations added',['class'=>__CLASS__,'function'=>__FUNCTION__,'added'=>$added]);         
         }
         return $added;
     }
     
-    public function unifyEntry(array $entry):array
-    {
-        if (!isset($entry['phrase']) || !isset($entry['langCode'])){
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called but required entry-key missing.',array('class'=>__CLASS__,'function'=>__FUNCTION__));         
-            return $entry;
-        } else {
-            $entry['EntryId']=md5($entry['phrase'].'|'.$entry['langCode']);
-            $entry['Group']='Translations from en';
-            $entry['Folder']=$entry['langCode'];
-            $entry['Name']=mb_substr($entry['phrase'],0,100);
-            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-            $entry['Owner']='SYSTEM';
-            $entry['Content']=array('translation'=>$entry['translation']);
-            $entry['Read']='ALL_R';
-            $entry['Write']='ADMIN_R';
-        }
-        return $entry;
-    }
-    
-    public function lng($phrase,string $langCode='',string|bool$translation=FALSE)
+    public function lng($phrase,string $langCode='',string|bool $translation=FALSE,bool $isSystemCall=FALSE)
     {
         $langCode=(empty($langCode))?($this->getLanguageCode()):mb_strtolower($langCode);
         if (!is_string($phrase) || strcmp($langCode,'en')===0){return $phrase;}
+        $phrase=trim($phrase);
         if (strlen($phrase)!==strlen(strip_tags($phrase))){return $phrase;}
         $elementId=md5($phrase.'|'.$langCode);
         if ($translation===FALSE && isset($this->lngCache[$elementId])){
@@ -150,14 +314,16 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
             // translation request
             $selector=['Source'=>$this->entryTable,'EntryId'=>$elementId];
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
-            if (!empty($entry)){$phrase=$entry['Content']['translation'];}
+            if (!empty($entry)){
+                $phrase=$entry['Content']['translation'];
+            }
             $this->lngCache[$elementId]=$phrase;
         } else {
             // update translation
-            $phrase=strip_tags($phrase);
-            $phrase=trim($phrase);
-            $entry=array('Source'=>$this->entryTable,'phrase'=>$phrase,'translation'=>$translation,'langCode'=>$langCode);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+            $entry=['Source'=>$this->entryTable,'Group'=>'Translations from en','Folder'=>$langCode,'Name'=>mb_substr($phrase,0,100),'EntryId'=>$elementId,'Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM'];
+            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+            $entry['Content']=['translation'=>$translation];
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
             return $translation;
         }
         return $phrase;
@@ -185,7 +351,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
             $_SESSION['page state']['lngCode']=$formData['val']['lngCode'];
         }
         //
-        $selectArr=array('options'=>self::LANGUAGE_CODES,'value'=>$_SESSION['page state']['lngCode'],'key'=>['lngCode'],'title'=>'select page language','hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__);
+        $selectArr=['options'=>self::LANGUAGE_CODES,'value'=>$_SESSION['page state']['lngCode'],'key'=>['lngCode'],'title'=>'select page language','hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         return $html;
     }
@@ -204,17 +370,14 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['update']) && !empty($formData['val']['phrase']['en'])){
             $_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
-            $translation=['Source'=>$this->entryTable,'phrase'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'translation'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'langCode'=>$langCode];
-            $translation=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($translation);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($translation);    
+            $translation=$this->lng($_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],$langCode,$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],FALSE);
         } else if (!empty($formData['val']['phrase']['en'])){
             $_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
-            $elementId=md5($formData['val']['phrase']['en'].'|'.$langCode);
-            $translation=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$elementId]);
+            $translation=$this->lng($formData['val']['phrase']['en'],$langCode);
             if (empty($translation)){
                 $_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]='';
             } else {
-                $_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]=$translation['Content']['translation'];    
+                $_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]=$translation;    
             }
         }
         // compile html
@@ -223,7 +386,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
         $matrix['Translation']['Phrase']=['tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'key'=>['phrase','en'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix['Translation']['Label translation']=['tag'=>'p','element-content'=>strtoupper($langCode)];
         $matrix['Translation']['Translation']=['tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>['translation',$langCode],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE];
-        $matrix['Translation']['Cmd']=['tag'=>'input','type'=>'submit','value'=>'Set','key'=>array('update'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $matrix['Translation']['Cmd']=['tag'=>'input','type'=>'submit','value'=>'Set','key'=>['update'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Translation']);
         return ['html'=>$html,'wrapperSettings'=>[]];
     }

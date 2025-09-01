@@ -22,6 +22,7 @@ class Element{
         'span'=>'element-content|title',
         'submit'=>'value|title',
         'text'=>'placeholder|title',
+        'textarea'=>'placeholder|title',
         'button'=>'element-content|title',
         'th'=>'element-content',
         'td'=>'element-content',
