@@ -113,15 +113,15 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
         // compile html
         $matrix=[];
         foreach($values as $name=>$value){
-            $permitted=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$name,'style'=>['clear'=>'both','padding'=>'0.5rem 0']]);
-            $permitted.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($value,['style'=>['clear'=>'both']]));
+            $permitted=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($value,['style'=>['clear'=>'both']]));
             if (self::COOKIES[$name]['disabled']){
-                $setBtn='';
+                $btn='';
             } else {
-                $setBtn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'Off':'On'),'style'=>['line-height'=>'2rem'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+                $btn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'Off':'On'),'style'=>['line-height'=>'2rem'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             }
-            $description=['tag'=>'p','element-content'=>self::COOKIES[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding'=>'1rem 0']];
-            $matrix[$name]=['Permitted'=>$permitted,'Set'=>$setBtn,'Description'=>$description];
+            $description=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$name,'style'=>['clear'=>'both','font-weight'=>'bold','padding-top'=>'1rem ']]);
+            $description.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>self::COOKIES[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding-bottom'=>'1rem ']]);
+            $matrix[$name]=['Permitted'=>$permitted,'Switch'=>$btn,'Description'=>$description];
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Permissions','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE,'style'=>['border'=>'none']]);
         return $arr;
