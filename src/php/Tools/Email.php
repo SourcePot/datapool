@@ -572,7 +572,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $message=htmlentities(mb_substr($formData['val']['Message'],0,1000));
             $message=str_replace("\n",'<br/>',$message);
             $content=[];
-            $content['Subject']=htmlentities($pageTitle).': '.self::CONTACT_FORM_SUBJECTS[intval($formData['val']['Subject'])];
+            $content['Subject']=htmlentities($pageTitle).': '.$this->getSubjectOptions($template['Content'],intval($formData['val']['Subject']));
             $content['Message']=$message;
             $content['Provided email'].=$email;
             $content['Provided phone number'].=$phone;
@@ -591,7 +591,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $template=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($template,TRUE);
             }
         }
-        $values=array_merge($values??[],['To'=>$template['Content']['To'],'subjectOptions'=>$template['Content']['subjectOptions']]);
         // compile html
         $arr['html']=$arr['html']??'';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
@@ -599,8 +598,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $toEl=['options'=>$availableRecipients,'selected'=>$template['Content']['To'],'key'=>['To'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE];
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Recepient (admin setting to be genarally used by this form)','keep-element-content'=>TRUE]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($toEl);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Subject options (Seperate option by a line break)','keep-element-content'=>TRUE]);
-            $subjectOptionsEl=['tag'=>'textarea','minlength'=>10,'element-content'=>$values['subjectOptions']??"Option 1\nOption 2\nOption 3\nOption 4\n",'placeholder'=>'Option 1<br/>Option 2<br/>Option 3<br/>','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['subjectOptions'],'excontainer'=>TRUE];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Subject options (Please seperate options by a line break)','keep-element-content'=>TRUE]);
+            $subjectOptionsEl=['tag'=>'textarea','minlength'=>10,'element-content'=>$template['Content']['subjectOptions']??"Option 1\nOption 2\nOption 3\nOption 4\n",'placeholder'=>'Option 1<br/>Option 2<br/>Option 3<br/>','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['subjectOptions'],'excontainer'=>TRUE];
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($subjectOptionsEl);
             $saveBtn=['tag'=>'input','type'=>'submit','value'=>'Save','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['save']];
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($saveBtn);
@@ -609,7 +608,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             return $arr;
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Subject','keep-element-content'=>TRUE]);
-        $subjectEl=['options'=>$this->getSubjectOptions($values),'selected'=>intval($values['Subject']),'key'=>['Subject'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE];
+        $subjectEl=['options'=>$this->getSubjectOptions($template['Content'],FALSE),'selected'=>intval($values['Subject']),'key'=>['Subject'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($subjectEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Message*','keep-element-content'=>TRUE]);
         $messageEl=['tag'=>'textarea','minlength'=>10,'element-content'=>$values['Message']??'','placeholder'=>'Enter your message here...','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Message'],'excontainer'=>TRUE];
@@ -649,11 +648,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return implode(', ',$isInvalid);
     }
 
-    private function getSubjectOptions($values):array
+    private function getSubjectOptions($values,$getThisOption=FALSE):array|string
     {
         $options=[];
         $subjectOptions=explode("\n",$values['subjectOptions']?:'Miscellaneous');
-        foreach($subjectOptions as $subjectOption){
+        foreach($subjectOptions as $index=>$subjectOption){
+            if ($getThisOption!==FALSE && $getThisOption===$index){
+                return $subjectOption;
+            }
             if (empty($subjectOption)){continue;}
             $options[]=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($subjectOption);
         }
