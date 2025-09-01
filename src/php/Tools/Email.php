@@ -587,11 +587,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         } else if (!empty($formData['val'])){
             $values=$formData['val'];
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-                $template['Content']=['To'=>$formData['val']['To'],'subjectOptions'=>$formData['val']['subjectOptions']];
+                $template['Content']=$formData['val'];
                 $template=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($template,TRUE);
             }
         }
-        $values=array_merge($values??[],$template['Content']);
+        $values=array_merge($values??[],['To'=>$template['Content']['To'],'subjectOptions'=>$template['Content']['subjectOptions']]);
         // compile html
         $arr['html']=$arr['html']??'';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
