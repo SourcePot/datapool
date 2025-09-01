@@ -564,7 +564,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $template=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($template,TRUE);
         // process form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (isset($formData['cmd']['send']) && $this->isValidForm($formData['val'])){
+        if (isset($formData['cmd']['send']) && empty($this->isInvalidForm($formData['val']))){
             $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
             $email=htmlentities(mb_substr($formData['val']['Email'],0,255));
             $phone=htmlentities(mb_substr($formData['val']['Phone'],0,30));
@@ -606,31 +606,40 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $subjectEl=['options'=>self::CONTACT_FORM_SUBJECTS,'selected'=>intval($values['Subject']),'key'=>['Subject'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($subjectEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Message*','keep-element-content'=>TRUE]);
-        $messageEl=['tag'=>'textarea','minlength'=>10,'required'=>TRUE,'element-content'=>$values['Message']??'','placeholder'=>'Enter your message here...','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Message']];
+        $messageEl=['tag'=>'textarea','minlength'=>10,'element-content'=>$values['Message']??'','placeholder'=>'Enter your message here...','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Message']];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($messageEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Your email address*','keep-element-content'=>TRUE]);
         $currentUserEmail=$values['Email']?:$flatCurrentUser[$this->getRelevantFlatUserContentKey()]??'';
-        $emailEl=['tag'=>'input','type'=>'email','minlength'=>6,'required'=>TRUE,'value'=>$currentUserEmail,'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Email']];
+        $emailEl=['tag'=>'input','type'=>'email','minlength'=>6,'value'=>$currentUserEmail,'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Email']];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($emailEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Your phone number','keep-element-content'=>TRUE]);
         $phoneEl=['tag'=>'input','type'=>'tel','value'=>$values['Phone']??'','placeholder'=>'+49...','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Phone']];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($phoneEl);
         // send button
-        if ($this->isValidForm($values)){
-            $sendBtn=['tag'=>'input','type'=>'submit','value'=>'Send','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['send']];
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($sendBtn);
+        $problemStr=$this->isInvalidForm($values);
+        $problemsEL=['tag'=>'p','element-content'=>$problemStr,'class'=>'contact-form','style'=>['color'=>'#f00','padding-top'=>'1rem']];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($problemsEL);
+        if (empty($problemStr)){
+            $btnEL=['tag'=>'input','type'=>'submit','value'=>'Send','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['send']];
+        } else {
+            $btnEL=['tag'=>'input','type'=>'submit','value'=>'Check','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['check']];
         }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnEL);
         return $arr;
     }
 
-    private function isValidForm($values):bool
+    private function isInvalidForm($values):string
     {
-        $isValid=TRUE;
-        if (mb_strlen($values['Message']??'')<10){$isValid=FALSE;}
+        $isInvalid=[];
+        if (mb_strlen($values['Message']??'')<10){
+            $isInvalid[]='Message too short';
+        }
         $atSignPos=intval(strpos($values['Email']??'','@'));
         $dotPos=intval(strrpos($values['Email']??'','.'));
-        if ($atSignPos<1 || $atSignPos>$dotPos){$isValid=FALSE;}
-        return $isValid;
+        if ($atSignPos<1 || $atSignPos>$dotPos){
+            $isInvalid[]='Invalid email';
+        }
+        return implode(', ',$isInvalid);
     }
 
     public function getHomeAppWidget(string $name):array

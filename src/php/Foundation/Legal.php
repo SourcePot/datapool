@@ -113,16 +113,17 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
         // compile html
         $matrix=[];
         foreach($values as $name=>$value){
-            $permitted=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($value);
+            $permitted=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$name,'style'=>['clear'=>'both','padding'=>'0.5rem 0']]);
+            $permitted.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($value,['style'=>['clear'=>'both']]));
             if (self::COOKIES[$name]['disabled']){
                 $setBtn='';
             } else {
-                $setBtn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'Off':'On'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+                $setBtn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'Off':'On'),'style'=>['line-height'=>'2rem'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             }
-            $description=['tag'=>'p','element-content'=>self::COOKIES[$name]['description'],'keep-element-content'=>TRUE];
+            $description=['tag'=>'p','element-content'=>self::COOKIES[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding'=>'1rem 0']];
             $matrix[$name]=['Permitted'=>$permitted,'Set'=>$setBtn,'Description'=>$description];
         }
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Permissions','keep-element-content'=>TRUE,'hideKeys'=>FALSE,'hideHeader'=>FALSE,'style'=>['border'=>'none']]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Permissions','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE,'style'=>['border'=>'none']]);
         return $arr;
     }
 
@@ -146,11 +147,11 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
             $selector['md'].="Salvo que se indique lo contrario, los derechos de uso de las imágenes y los textos pertenecen al operador del sitio web. Cualquier vídeo que pueda aparecer en la página de inicio es de Pressmaster y está disponible en www.pexels.com.\n";
             $selector['md'].="Se excluye la responsabilidad por los contenidos enlazados en la medida en que lo permita la ley._\n";
         } else if ($name==='contact'){
-            $selector['md'].="[//]: # (Enter your text in Markdown fomat here)\n\n";
+            $selector['md'].="[//]: # (Enter your text in Markdown format here)\n\n";
         } else if ($name==='logo'){
             $selector['md'].="<img src=\"./assets/logo.jpg\" title=\"logo.jpg\" style=\"width:300px;\"/>";
         } else {
-            $selector['md'].="[//]: # (Enter your text in Markdown fomat here)\n\n";
+            $selector['md'].="[//]: # (Enter your text in Markdown format here)\n\n";
         }
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,[],['style'=>[]]);
     }

@@ -1002,9 +1002,9 @@ input[type="text"].contact-form,input[type="email"].contact-form,input[type="tel
     background-color: var(--mediaColorB);
 }
 input[type="submit"].contact-form{
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 textarea.contact-form{
-    width:95vw;
-    height: 30vh;
+    min-width:320px;
+    height: 25vh;
 }
