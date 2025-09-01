@@ -451,11 +451,11 @@ jQuery(document).ready(function(){
 	})();
 	markChages();
 	function markChages(){
-		jQuery('input[type=text]').on('keypress',function(e){
-			jQuery(this).parent().parent().css({'background-color':'#fcc'});
+		jQuery('input[type=text],input[type=email],input[type=tel],input[type=password],textarea').on('keypress',function(e){
+			jQuery(this).parent().parent().filter('tr').css({'background-color':'#fcc'});
 		});
 		jQuery('select').on('change',function(e){
-			jQuery(this).parent().parent().css({'background-color':'#fcc'});
+			jQuery(this).parent().parent().filter('tr').css({'background-color':'#fcc'});
 		});
 	}
 

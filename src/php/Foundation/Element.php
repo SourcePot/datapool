@@ -22,6 +22,7 @@ class Element{
         'span'=>'element-content|title',
         'submit'=>'value|title',
         'text'=>'placeholder|title',
+        'textarea'=>'placeholder|title',
         'button'=>'element-content|title',
         'th'=>'element-content',
         'td'=>'element-content',
@@ -42,7 +43,6 @@ class Element{
             'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,'nonce'=>FALSE,
             'data-value'=>FALSE,'data-timestamp'=>FALSE,'data-label'=>FALSE,
             ],
-        
         // Table
         'table'=>[],
         'caption'=>[],
@@ -54,9 +54,8 @@ class Element{
         'button'=>['name'=>TRUE],
         'datalist'=>['name'=>TRUE],
         'fieldset'=>['name'=>TRUE],
-        'form'=>['action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,
-                    'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE],
-        'input'=>['type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE],
+        'form'=>['action'=>FALSE,'accept-charset'=>FALSE,'autocomplete'=>FALSE,'enctype'=>'multipart/form-data',''=>FALSE,'method'=>'post','name'=>FALSE,'novalidate'=>FALSE,'rel'=>FALSE,'target'=>FALSE],
+        'input'=>['type'=>TRUE,'value'=>FALSE,'accept'=>FALSE,'name'=>TRUE,'disabled'=>FALSE,'required'=>FALSE,'multiple'=>FALSE,'checked'=>FALSE,'min'=>FALSE,'max'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE],
         'label'=>['for'=>TRUE],
         'legend'=>['name'=>TRUE],
         'optgroup'=>['name'=>TRUE],
@@ -65,8 +64,7 @@ class Element{
         'progress'=>['value'=>FALSE,'min'=>FALSE,'max'=>FALSE,],
         'meter'=>['min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE],
         'select'=>['name'=>TRUE],
-        'textarea'=>['name'=>TRUE,'placeholder'=>FALSE,'rows'=>FALSE,'cols'=>FALSE],
-        
+        'textarea'=>['name'=>TRUE,'rows'=>FALSE,'cols'=>FALSE,'required'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE],
         'a'=>['href'=>FALSE,'target'=>FALSE],
         // Structural elements
         'main'=>[],

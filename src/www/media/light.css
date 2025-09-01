@@ -114,7 +114,7 @@ button,input,textarea,select,a.btn,a.plot,.js-button{
     clear:none;
     font-size:1rem;
     padding:0.2rem 0.4rem;
-    margin: 0 0.2rem;
+    margin: 0 0.2rem 0.2rem 5px;
     background-color:var(--bgColor);
     border-radius:unset;
     border-left:1px solid var(--leftTopBorderColor);
@@ -129,6 +129,9 @@ button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.p
     cursor:pointer;
     color:var(--bgColor);
     background-color:var(--color);   
+}
+input:invalid,textarea:invalid{
+    border: 2px solid #f00;
 }
 select{
     max-width:20rem;
@@ -986,6 +989,22 @@ p.info{
 }
 div.signal-cursor-x,div.signal-cursor-y{
     position: absolute;
-    border:1px dashed #d00;
+    border:1px dashed var(--attentionColor);
     display: none;
+}
+/* CONTACT FORM */
+.contact-form{
+    clear:both;
+    font-size: 1.3rem;
+    border-radius: 5px;
+}
+input[type="text"].contact-form,input[type="email"].contact-form,input[type="tel"].contact-form,textarea.contact-form,select.contact-form,table.contact-form{
+    background-color: var(--mediaColorB);
+}
+textarea.contact-form{
+    min-width:320px;
+    height: 25vh;
+}
+option.contact-form{
+    background-color: var(--bgColor);
 }
