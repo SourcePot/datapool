@@ -114,7 +114,7 @@ button,input,textarea,select,a.btn,a.plot,.js-button{
     clear:none;
     font-size:1rem;
     padding:0.2rem 0.4rem;
-    margin: 0 0.2rem;
+    margin: 0 0.2rem 0.2rem 5px;
     background-color:var(--bgColor);
     border-radius:unset;
     border-left:1px solid var(--leftTopBorderColor);
@@ -1001,10 +1001,10 @@ div.signal-cursor-x,div.signal-cursor-y{
 input[type="text"].contact-form,input[type="email"].contact-form,input[type="tel"].contact-form,textarea.contact-form,select.contact-form,table.contact-form{
     background-color: var(--mediaColorB);
 }
-input[type="submit"].contact-form{
-    margin-top: 1rem;
-}
 textarea.contact-form{
     min-width:320px;
     height: 25vh;
+}
+option.contact-form{
+    background-color: var(--bgColor);
 }
