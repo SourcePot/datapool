@@ -613,7 +613,7 @@ p.toolbox{
     overflow:auto;
     background-image:url("canvaslightbg.png");
 }
-.canvas-text,.canvas-symbol,.canvas-processor,.canvas-trigger,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
+.canvas-text,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-trigger,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     position:absolute;
     font-size:16px;
     margin:0;
