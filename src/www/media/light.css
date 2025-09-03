@@ -258,7 +258,7 @@ th{
 }
 td,th{
     position:relative;
-    padding:0.125rem;
+    padding:0.25rem;
     max-width:95vw;
     max-height:80vh;
 }
