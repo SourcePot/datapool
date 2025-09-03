@@ -11,7 +11,9 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Processing;
 
 class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
-    
+
+    private const INFO='This processor receives entries from a data source. You need to select the receiver through "Inbox source" first. This will load the respective receiver widget.<br/><br/>In addition this processor forwards received or uploaded entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.';
+
     private $oc;
     private $inboxClass='__NOTSET__';
     
@@ -74,8 +76,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getInboxEntriesInfo($callingElement){
-        $matrix=['Info'=>['Message'=>'Select an receiver through "Inbox source" first']];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $matrix=['Info'=>[self::INFO]];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
@@ -142,8 +144,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $options=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Receiver');
         $contentStructure=[
             'Inbox source'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>$options],
-            'Forward on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            ];
+        ];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=['Column to delay'=>'Name'];
