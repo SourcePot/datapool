@@ -127,7 +127,7 @@ class Access{
         if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){$user['EntryId']='User id Invalid';}
         if (strcmp($entry['Owner'],$user['EntryId'])===0){
             // owner access
-            return 'CREATOR MATCH';
+            return 'OWNER MATCH';
         } else if (isset($entry[$type])){
             // standard access
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
