@@ -342,11 +342,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
             foreach($sections['singleEntry'] as $sectionId=>$section){
-                $result['Sections singleEntry'][$this->sections[$sectionId]]=['value'=>htmlspecialchars($section)];
+                $result['Sections singleEntry'][$this->sections[$sectionId]]=['value'=>htmlspecialchars($section??'')];
             }
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $sectionIndex=>$section)
-                $result['Sections multipleEntries "'.$this->sections[$sectionId].'"'][$sectionIndex]=['value'=>htmlspecialchars($section)];
+                $result['Sections multipleEntries "'.$this->sections[$sectionId].'"'][$sectionIndex]=['value'=>htmlspecialchars($section??'')];
             }
         }
         // parse single entry sections
@@ -355,7 +355,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($sections['singleEntry']??[] as $sectionId=>$section){
             $this->internalData['{{sectionIndex}}']=0;
             $this->internalData['{{section}}']=$section;
-            $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
+            $targetEntryParsing=$this->processParsing($base,$flatSourceEntry,$sectionId,$section??'');
             if (isset($targetEntryParsing['processParsing']['result'][$sectionId])){
                 $sectionName=$this->sections[$sectionId];
                 $resultArr=array_replace_recursive($resultArr,$targetEntryParsing['processParsing']['result'][$sectionId]);
@@ -524,8 +524,12 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if ($rule['Content']['Section type']==='multipleEntries'){
                 $sections['multipleEntries'][$sectionId]=$sectionsArr;
             } else {
-                $sections['singleEntry'][$sectionId]=array_shift($sectionsArr);
-                $text=implode('',$sectionsArr);
+                if (count($sectionsArr)<2){
+                    $sections['singleEntry'][$sectionId]='';
+                } else {
+                    $sections['singleEntry'][$sectionId]=array_shift($sectionsArr);
+                    $text=implode('',$sectionsArr);
+                }
             }
         }
         $sections['singleEntry']['LAST']=$text;
