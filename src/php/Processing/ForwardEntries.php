@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Processing;
 
 class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
+    private const INFO='This processor forwards entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.';
+
     private $oc;
     
     private $entryTable='';
@@ -76,7 +78,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
      private function getForwardEntriesInfo($callingElement){
         $matrix=[];
-        $matrix['Description']=['<p style="width:40em;">This processor forwards entries to various targets on the basis of conditions. If there are several rules for a forwarding target, all rules must be fulfilled in order to forward the entry.<br/>Rules are linked by "AND" or "OR" (rule key "..."), the oparation is ignored for the first rule of each target.</p>'];
+        $matrix['Description']=[self::INFO];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
