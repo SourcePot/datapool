@@ -93,8 +93,15 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $values=$values?:$this->getCookieIntialValues();
         $cookieValue=json_encode($values);
-        $domain=($_SERVER['HTTP_HOST']=='localhost')?'':$_SERVER['HTTP_HOST'];
-        if (setcookie('dataprotection',$cookieValue,time()+self::COOKIE_LIFETIME,'/',$domain,FALSE,TRUE)){
+        $cookieOptions=[
+            'expires'=>time()+self::COOKIE_LIFETIME, 
+            'path'=>'/', 
+            'domain'=>($_SERVER['HTTP_HOST']=='localhost')?'':$_SERVER['HTTP_HOST'],
+            'secure'=>FALSE,
+            'httponly'=>TRUE,
+            'samesite'=>'Strict', // None || Lax  || Strict
+        ];
+        if (setcookie('dataprotection',$cookieValue,$cookieOptions)){
             return $values;
         } else {
             return [];
@@ -123,7 +130,7 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
             $description.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>self::COOKIES[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding-bottom'=>'1rem ']]);
             $matrix[$name]=['Permitted'=>$permitted,'Switch'=>$btn,'Description'=>$description];
         }
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Permissions','keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE,'style'=>['border'=>'none']]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'hideKeys'=>TRUE,'hideHeader'=>FALSE,'style'=>['border'=>'none']]);
         return $arr;
     }
 

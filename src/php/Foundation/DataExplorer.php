@@ -14,6 +14,17 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
 
     private const ROW_COUNT_LIMIT=FALSE;
     private const SIGNAL_EXPIRY_THRESHOLD='-P10D';  // Negative DateTimeIntervall string, e.g. '-P1D' for 1 day
+    private const STYLE_CLASSES=[
+        'canvas-std'=>'Standard',
+        'canvas-red'=>'Error',
+        'canvas-green'=>'Data interface',
+        'canvas-dark'=>'Other canvas',
+        'canvas-text'=>'Text',
+        'canvas-text-la'=>'Text (left-aligned)',
+        'canvas-text-ra'=>'Text (right-aligned)',
+        'canvas-symbol'=>'Symbol',
+        'canvas-processor'=>'Processor',
+    ];
     
     private $oc;
     
@@ -27,7 +38,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'Content'=>[
             'Style'=>[
                 'Text'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                'Style class'=>['@function'=>'select','@options'=>['canvas-std'=>'Standard','canvas-red'=>'Error','canvas-green'=>'Data interface','canvas-dark'=>'Other canvas','canvas-text'=>'Text','canvas-symbol'=>'Symbol','canvas-processor'=>'Processor'],'@default'=>'canvas-std'],
+                'Style class'=>['@function'=>'select','@options'=>self::STYLE_CLASSES,'@default'=>'canvas-std'],
                 'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
                 'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
                 ],

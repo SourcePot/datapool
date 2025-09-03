@@ -613,13 +613,19 @@ p.toolbox{
     overflow:auto;
     background-image:url("canvaslightbg.png");
 }
-.canvas-text,.canvas-symbol,.canvas-processor,.canvas-trigger,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
+.canvas-text,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-trigger,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     position:absolute;
     font-size:16px;
     margin:0;
     color:var(--color);
     padding:5px;
     text-align:center;
+}
+.canvas-text-la{
+    text-align: left;
+}
+.canvas-text-ra{
+    text-align: right;
 }
 .canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     min-width:140px;
