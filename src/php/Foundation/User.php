@@ -224,12 +224,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $user=$arr;
         }
         if (!isset($user['Content'])){
-            if ($template<4){
-                $isSystemCall=TRUE;
-            } else {
-                $isSystemCall=FALSE;
-            }
-            $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,$isSystemCall);
+            $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,($template<4)?TRUE:FALSE);
             if (empty($user)){
                 return '';
             }
