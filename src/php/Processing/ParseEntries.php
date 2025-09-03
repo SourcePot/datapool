@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Processing;
 
 class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
-    
+
     private const INTERNAL_MAPPING=[
         'sectionIndex'=>'ParseEntries :: sectionIndex',
         'section'=>'ParseEntries :: section',
@@ -27,7 +27,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
         
-    private $sections=['FULL'=>'Complete text','ALL'=>'All non-multpile sections','LAST'=>'Text after last section'];
+    private $sections=['FULL'=>'Complete text','LAST'=>'Text after last section'];
     
     private $paramsTemplate=['Source column'=>'useValue','Target on success'=>'','Target on failure'=>''];
 
@@ -533,7 +533,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         $sections['singleEntry']['LAST']=$text;
-        $sections['singleEntry']['ALL']=implode(' ',$sections['singleEntry']);
         $sections['singleEntry']['FULL']=$fullText;
         return $sections;
     }
