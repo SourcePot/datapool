@@ -500,8 +500,8 @@ class Explorer{
         $readRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Read');
         $writeRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Write');
         $matrix=[];
-        $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess),'Owner'=>$owner];
-        $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess),'Owner'=>$owner];
+        $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
+        $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Access infos']);
         $arr=['html'=>$html,'icon'=>'i','title'=>'Info','class'=>'explorer'];
         return $arr;
