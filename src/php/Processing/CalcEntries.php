@@ -282,7 +282,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 // get A and B
                 $result['Calc rule'][$calculationRuleIndex]=['A'=>0,'Operation'=>'','B'=>0,'Result'=>''];
                 foreach(['A','B'] as $index){
-                    $key=$rule['Content']['"'.$index.'" selected by...'];
+                    $key=$rule['Content']['"'.$index.'" selected by...']??'';
                     $debugArr[]=['ruleEntryId'=>$calculationRuleIndex,'key'=>$key];
                     if (strcmp($key,'useValue')===0){
                         $value[$index]=$rule['Content']['Default value "'.$index.'"'];

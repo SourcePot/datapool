@@ -50,6 +50,7 @@ class Explorer{
         'miscToolsEntry'=>TRUE,
         'settingsEntry'=>TRUE,
         'sendEmail'=>TRUE,
+        'accessInfo'=>TRUE,
         'setRightsEntry'=>TRUE,
         'comments'=>TRUE,
         ];
@@ -169,6 +170,8 @@ class Explorer{
         $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isMember()){
             $arr=$this->sendEmail($callingClass,$stateKeys);
+            $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);            
+            $arr=$this->accessInfo($callingClass,$stateKeys);
             $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
             $arr=$this->setRightsEntry($callingClass,$stateKeys,'Read');
             $appHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($arr);
@@ -480,5 +483,29 @@ class Explorer{
         $arr=['html'=>$html,'icon'=>$icon[0],'title'=>'Setting "'.$right.'" access right','class'=>'explorer'];
         return $arr;
     }
+
+    private function accessInfo(string $callingClass,array $stateKeys):array
+    {
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
+        $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
+        $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
+        if (empty($selector['EntryId'])){return ['html'=>''];}
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
+        // create html
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $owner=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($entry['Owner'],1);
+        $readAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Read');
+        $writeAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write');
+        $userRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$user],'Privileges');
+        $readRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Read');
+        $writeRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Write');
+        $matrix=[];
+        $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
+        $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Access infos']);
+        $arr=['html'=>$html,'icon'=>'i','title'=>'Info','class'=>'explorer'];
+        return $arr;
+    }
+
 }
 ?>
