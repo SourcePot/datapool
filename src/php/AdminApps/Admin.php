@@ -232,7 +232,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         } else {
             $fileMeta=$this->oc['SourcePot\Datapool\Root']->class2fileMeta($class);
             if (is_file($fileMeta['file'])){
-                $classFileContent=file_get_contents($fileMeta['file']);
+                $classFileContent=file_get_contents($fileMeta['file'])?:'';
                 preg_match(self::APP_ACCESS_REGEX,$classFileContent,$accessMatch);
                 preg_match(self::APP_DEF_REGEX,$classFileContent,$match);
                 if (strpos($match[4]??'','APP_ACCESS')!==FALSE){unset($match[4]);}

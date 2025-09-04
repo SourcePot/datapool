@@ -361,7 +361,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $style['cursor']='pointer';
         } else {
             if (empty($canvasElement['Content']['Selector']['Source'])){
-                if ($canvasElement['Content']['Style']['Style class']!=='canvas-text' && $canvasElement['Content']['Style']['Style class']!=='canvas-symbol'){
+                if (strpos($canvasElement['Content']['Style']['Style class'],'canvas-text')===FALSE && $canvasElement['Content']['Style']['Style class']!=='canvas-symbol'){
                     $rowCount='SOURCE NOT SET!';
                 }
             } else {

@@ -227,8 +227,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
             $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             if ($conditionMet){
-                $wasForwarded=TRUE;
-                $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE);
+                $wasForwarded=!$testRun;
+                $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE);
             }
         }
         if ($wasForwarded){
