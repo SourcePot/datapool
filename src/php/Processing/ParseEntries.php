@@ -16,6 +16,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'sectionIndex'=>'ParseEntries :: sectionIndex',
         'section'=>'ParseEntries :: section',
     ];
+
+    private const SPLIT_MARKER='__SPLIT__';
     
     private $internalData=[];
 
@@ -374,19 +376,20 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             if (!isset($result['Parser singleEntry sections <b>success</b>']) || mt_rand(0,100)>70){$result['Parser singleEntry sections <b>success</b>']=$resultArr;}
         }
-        // parse multiple entries sections
         if (empty($sections['multipleEntries'])){
+            // finalize single entry
             $goodEntry=$this->finalizeEntry($base,$sourceEntry,$targetEntry,$result,$testRun);
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
             $result['Parser statistics']['Success']['value']++;
         } else {
+            // parse multiple entries sections
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $sectionIndex=>$section){
                     $this->internalData['{{sectionIndex}}']=$sectionIndex;
                     $this->internalData['{{section}}']=$section;
                     $targetEntryTmp=$this->processParsing($base,$flatSourceEntry,$sectionId,$section);
+                    // check if parser failed
                     if ($targetEntryTmp['processParsing']['failed']){
-                        // parser failed
                         $result['Parser statistics']['Failed']['value']++;
                         $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);            
                         if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){
@@ -515,39 +518,77 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function sections(array $base,string $fullText):array
     {
-        $text=$fullText;
-        $sections=['singleEntry'=>['FULL'=>''],'multipleEntries'=>[]];
-        foreach($base['parsersectionrules'] as $ruleKey=>$rule){
-            if (!isset($rule['Content']['Section type']) || !isset($rule['Content']['Regular expression'])){continue;}
-            $sectionId=$rule['EntryId'];
-            $sectionsArr=$this->splitIntoSection($rule['Content']['Regular expression'],$text,boolval($rule['Content']['...is section']));
-            if ($rule['Content']['Section type']==='multipleEntries'){
-                $sections['multipleEntries'][$sectionId]=$sectionsArr;
-            } else {
-                if (count($sectionsArr)<2){
-                    $sections['singleEntry'][$sectionId]='';
-                } else {
-                    $sections['singleEntry'][$sectionId]=array_shift($sectionsArr);
-                    $text=implode('',$sectionsArr);
-                }
+        $sections=['singleEntry'=>[],'multipleEntries'=>[]];
+        $splitParams=[];
+        foreach($base['parsersectionrules'] as $ruleId=>$rule){
+            if (!isset($rule['Content']['Section type']) || !isset($rule['Content']['Regular expression'])){
+                continue;
             }
+            $splitParams[$rule['Content']['Section type']][$ruleId]=[
+                'ruleId'=>$ruleId,
+                'regEx'=>$rule['Content']['Regular expression'],
+                'isSectionStartIndicator'=>boolval($rule['Content']['...is section']),
+            ];
         }
-        $sections['singleEntry']['LAST']=$text;
+        $sections['singleEntry']=$this->singleEntrySplit($splitParams['singleEntry']??[],$fullText);
         $sections['singleEntry']['FULL']=$fullText;
+        $sections['multipleEntries']=$this->multiEntriesSplit($splitParams['multipleEntries']??[],$fullText);
         return $sections;
     }
 
-    private function splitIntoSection(string $regEx,string $text,bool $isSectionStartIndicator=FALSE):array
+    private function singleEntrySplit(array $splitParams,string $text):array
     {
         $sections=[];
-        $sectionIndex=0;
-        $chunks=preg_split('/('.$regEx.')/i',$text,-1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-        foreach($chunks as $chunkIndex=>$chunk){
-            $sections[$sectionIndex]=($sections[$sectionIndex]??'').$chunk;
-            $isEven=($chunkIndex%2===0);
-            $sectionIndex+=($isEven&&$isSectionStartIndicator)?1:((!$isEven&&!$isSectionStartIndicator)?1:0);
+        foreach($splitParams as $ruleId=>$splitParam){
+            $textComps=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],TRUE);
+            if (count($textComps)<2){continue;}
+            $sections[$ruleId]=array_shift($textComps);
+            $text=implode('',$textComps);
         }
         return $sections;
+    }
+
+    private function multiEntriesSplit(array $splitParams,string $text):array
+    {
+        $multiEntryKeys=count($splitParams);
+        // first level split
+        $texts=[$text];
+        if (count($splitParams)>1){
+            $splitParam=array_shift($splitParams);
+            $text=array_shift($texts);
+            $texts=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],FALSE);
+        }
+        // second level split
+        $splitParam=array_shift($splitParams);
+        foreach($texts as $text){
+            $textComps=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],TRUE);
+            if ($splitParam['isSectionStartIndicator']){
+                $startText=array_shift($textComps);
+            } else {
+                $endText=array_pop($textComps);
+            }
+            foreach($textComps as $textComp){
+                $sections[$splitParam['ruleId']][]=trim(trim($startText??'').'|'.$textComp.'|'.trim($endText??''),'| ');
+            }
+        }
+        if (array_shift($splitParams)){
+            $this->oc['logger']->log('notice','A maximum of 2 "Multiple entries" rules is supported. You have "{multiEntryKeys}" rules defined.',['multiEntryKeys'=>$multiEntryKeys]);
+        }
+        return $sections??[];
+    }
+
+    private function textSplit(string $text,string $regEx,bool $splitBeforeMatch=TRUE,bool $returnAllComps=FALSE):array
+    {
+        $text=preg_replace('/('.$regEx.')/u',($splitBeforeMatch)?(self::SPLIT_MARKER.'${1}'):('${1}'.self::SPLIT_MARKER),$text);
+        $textComps=explode(self::SPLIT_MARKER,$text);
+        if (count($textComps)<2){return [$text];}
+        if ($returnAllComps){return $textComps;}
+        if ($splitBeforeMatch){
+            array_shift($textComps);
+        } else {
+            array_pop($textComps);
+        }
+        return $textComps;
     }
 
     private function finalizeEntry(array $base,array $sourceEntry,array $targetEntry,array $result,bool $testRun,bool $keepSource=FALSE):array
