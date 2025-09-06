@@ -264,10 +264,8 @@ class MediaTools{
         $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
         // process form
-        $markDownId=md5(__FUNCTION__.$arr['selector']['Source'].$arr['selector']['EntryId']);
-        $arr['callingFunction']=$markDownId;
-        $btnArr=$arr;
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,$markDownId);
+        $btnArr=['selector'=>$arr['selector'],'callingClass'=>$arr['callingClass']??__CLASS__,'callingFunction'=>md5(__FUNCTION__.$arr['selector']['Source'].$arr['selector']['EntryId'])];
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($btnArr['callingClass'],$btnArr['callingFunction']);
         if (isset($formData['val']['content'])){
             $source=key($formData['val']['content']);
             $entryId=key($formData['val']['content'][$source]);
@@ -279,7 +277,7 @@ class MediaTools{
         }
         $md=$md?:'Markdown content missing...';
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
-            $contentArr=['tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>$markDownId];
+            $contentArr=['tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>$btnArr['callingClass'],'callingFunction'=>$btnArr['callingFunction']];
             $contentArr['key']=['content',$arr['selector']['Source'],$arr['selector']['EntryId']];
             $contentArr['style']=['text-align'=>'left','width'=>'98%','height'=>'50vh'];
             $contentArr['class']='code';
@@ -290,8 +288,8 @@ class MediaTools{
             $contentHtml=\Michelf\Markdown::defaultTransform($md);
             $btnArr['cmd']='edit';
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
         return $arr;
     }
     
