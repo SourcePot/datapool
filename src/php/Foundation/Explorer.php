@@ -81,6 +81,19 @@ class Explorer{
             ]
         ];
 
+    private const SPECIFIC_SETTINGS_TEMPLATE=[
+        'docs'=>[
+            'Group'=>[
+                'isAsc'=>TRUE,
+            ],
+        ],
+        'documents'=>[
+            'Group'=>[
+                'isAsc'=>TRUE,
+            ],
+        ],
+    ];
+
     private $addEntryByFileUpload=TRUE;
 
     public function __construct(array $oc)
@@ -122,18 +135,19 @@ class Explorer{
         $html='';
         $selector=[];
         foreach(self::SELECTOR_TEMPLATE as $column=>$initValue){
+            $settingsTemplate=array_merge(self::SETTINGS_TEMPLATE,self::SPECIFIC_SETTINGS_TEMPLATE[$selector['Source']??'']??[]);
             $selectorHtml='';
             $options=[\SourcePot\Datapool\Root::GUIDEINDICATOR=>'&larrhk;'];
             if ($column==='EntryId'){
                 $label='Name';
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',self::SETTINGS_TEMPLATE[$column]['orderBy'],self::SETTINGS_TEMPLATE[$column]['isAsc']) as $row){
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$settingsTemplate[$column]['orderBy'],$settingsTemplate[$column]['isAsc']) as $row){
                     if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
                     if (!empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$selector['Source']]) && strpos($row['Type'],$lngNeedle)===FALSE){continue;}
                     $options[$row[$column]]=$row[$label];
                 }
             } else {
                 $label=$column;
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read','Name',self::SETTINGS_TEMPLATE[$column]['isAsc']) as $row){
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->getDistinct($selector,$column,FALSE,'Read','Name',$settingsTemplate[$column]['isAsc']) as $row){
                     if ($row[$label]===\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
                     $options[$row[$column]]=$row[$label];
                 }

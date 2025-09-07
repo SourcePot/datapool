@@ -105,14 +105,13 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
         // file upload
         $fileUpload=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'file','element-content'=>'','key'=>['add'],'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         $btn=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add','key'=>['add'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
-        $matrix['']=array('New asset file'=>$fileUpload,'Cmd'=>$btn);
+        $matrix['']=['New asset file'=>$fileUpload,'Cmd'=>$btn];
         $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Assets - public static web page content']);
         // asset manager
-        $selector['Name']=FALSE;
-        $selector['EntryId']='%_asset';
-        $settings=array('orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE);
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Components\Home']->getEntryTable(),'Name'=>FALSE,'EntryId'=>'%_asset'];
+        $settings=['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
         $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'tag','Filter'=>'']];
-        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets','entryList',$selector,$settings,[]);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Assets ','entryList',$selector,$settings,[]);
         //
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9887;','style'=>['clear'=>'both']]);
         return $html;
