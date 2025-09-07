@@ -183,8 +183,6 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
         // admin email contact form
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Admin email contact','keep-element-content'=>TRUE]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'img','src'=>'./assets/email.png','element-content'=>'','keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'0.5rem']]);
-        // logo
-        $element['element-content'].=$this->legalForm('logo');
         return $element;
     }
     
