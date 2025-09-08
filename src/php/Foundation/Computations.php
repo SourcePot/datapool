@@ -232,11 +232,11 @@ class Computations{
                 'unycomRegion'=>$this->convert2unycomByKey($value,'Region'),
                 'unycomRef'=>$this->convert2unycomByKey($value,'Reference'),
                 'unycomRefNoWhitspaces'=>$this->convert2unycomByKey($value,'Reference without \s'),
-                'useridNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,3),
-                'useridName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,1),
-                'useridEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,7),
-                'useridPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,8),
-                'useridMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($value,9),
+                'userIdNameComma'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(strval($value),3),
+                'userIdName'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(strval($value),1),
+                'userIdEmail'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(strval($value),7),
+                'userIdPhone'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(strval($value),8),
+                'userIdMobile'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(strval($value),9),
             };
         }
         return $newValue;

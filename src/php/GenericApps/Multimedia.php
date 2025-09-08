@@ -114,12 +114,6 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
         $selector['md'].="# Graphical data flow builder (DataExploerer-class)\n\nA dataflow consists of two types of (canvas) elements: \"connecting elements\" and \"processing blocks\" The connecting elements have no function other then helping to visualize the data flow.\n";
         $selector['md'].="The processing blocks contain all functionallity, i.e. \"providing a database table view\", \"storing settings\" and \"linking a processor\". The settings define the target or targets canvas elements for the result data. There are basic processor, e.g. for data acquisition, mapping, parsing or data distribution. In addition, user-defined processor can be added.\n\n";
         $selector['md'].="<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'Example_data_flow.png')."\" alt=\"Datapool date type example\" style=\"\"/>\n\n";
-        $selector['md'].="\n";
-        $selector['md'].="\n";
-        $selector['md'].="# Attributions\nThis webpage uses map data from *OpenStreetMap*. Please refer to <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" class=\"textlink\">The OpenStreetMap License</a> for the license conditions.\n\nThe original intro video is by *Pressmaster*, www.pexels.com\n";
-        $selector['md'].="# Contact\n## Address\n";
-        $selector['md'].="## Email\n<img src=\"".$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($GLOBALS['dirs']['assets'].'email.png')."\" style=\"float:none;\">\n";
-        $selector['md'].="# Legal\nThis is a private web page. The web page uses cookies for session handling.\n\n";
         $element['element-content']=$this->oc['SourcePot\Datapool\Foundation\Container']->container($selector['Name'],'mdContainer',$selector,[],['style'=>[]]);
         return $element;
     }
