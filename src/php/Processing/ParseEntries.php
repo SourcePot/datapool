@@ -425,7 +425,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result[$rowKey]['Key']=$rule['Content']['Target column'];
             $result[$rowKey]['Match text']='';
             // section text or constant to matchText
-            if (empty($rule['Content']['Constant or...'])){
+            if (strlen($rule['Content']['Constant or...'])===0){
                 $result[$rowKey]['Text']=$section;
                 $ruleMatchIndex=$rule['Content']['Match index'];
                 if (empty($rule['Content']['regular expression'])){
