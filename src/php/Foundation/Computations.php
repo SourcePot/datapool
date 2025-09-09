@@ -33,6 +33,7 @@ class Computations{
         '>'=>'A > B','=='=>'A == B','!='=>'A != B','<'=>'A < B',
         '&&'=>'A AND B','||'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
         'containsRegexMatch'=>'A contains RegEx(B)','!containsRegexMatch'=>'A !contains RegEx(B)',
+        'TRUE'=>'always TRUE','FALSE'=>'always FALSE',
         ];
     
     public const COMPARE_TYPES_CONST=[
@@ -402,6 +403,10 @@ class Computations{
             return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches));
         } else if ($condition==='!containsRegexMatch'){
             return boolval(preg_match('/'.(string)$valueB.'/',(string)$valueA,$matches))===FALSE;
+        } else if ($condition==='TRUE'){
+            return TRUE;
+        } else if ($condition==='FALSE'){
+            return FALSE;
         }
         $valueA=$this->value2numeric($valueA);
         $valueB=$this->value2numeric($valueB);

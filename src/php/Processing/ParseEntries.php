@@ -29,7 +29,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
         
-    private $sections=['FULL'=>'Complete text','LAST'=>'Text after last section'];
+    private $sectionNamesById=[];
     
     private $paramsTemplate=['Source column'=>'useValue','Target on success'=>'','Target on failure'=>''];
 
@@ -146,6 +146,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function getParseEntriesSettingsHtml($arr){
+        $this->sectionNamesById=$this->sectionNamesById($arr['selector']);
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->parserParams($arr['selector']);
         $arr['html'].=$this->parserSectionRules($arr['selector']);
@@ -203,13 +204,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function parserRules($callingElement){
         // complete section selector
-        $entriesSelector=['Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Group'=>'parserSectionRules'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            if (!isset($entry['Content']['Section name'])){continue;}
-            $this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
-        }
         $contentStructure=[
-            'Rule relevant on section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sections],
+            'Rule relevant on section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sectionNamesById],
             'Constant or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             'regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE,'title'=>"Add your regular expression to search for matches within the 'Source column' content here. You can check your regular expressions on different web pages. Use brackets to define sub matches. 'Match index'=0 wil return the whole match,\n'Match index'=1 the first sub match defined by the first set if brakets,..."],
             'Match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9,10]],
@@ -251,11 +247,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function runParseEntries($callingElement,$testRun=FALSE){
         // complete section selector
-        $entriesSelector=['Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Group'=>'parserSectionRules'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            if (!isset($entry['Content']['Section name'])){continue;}
-            $this->sections[$entry['EntryId']]=$entry['Content']['Section name'];
-        }
+        $this->sectionNamesById=$this->sectionNamesById($callingElement);
         $base=['parserparams'=>[],'parsersectionrules'=>[],'parserrules'=>[],'mapperrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
@@ -332,22 +324,22 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
             foreach($sections['singleEntry'] as $sectionId=>$section){
-                $result['Sections singleEntry'][$this->sections[$sectionId]]=['value'=>htmlspecialchars($section??'')];
+                $result['Sections singleEntry'][$this->sectionNamesById[$sectionId]]=['value'=>htmlspecialchars($section??'')];
             }
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $sectionIndex=>$section)
-                $result['Sections multipleEntries "'.$this->sections[$sectionId].'"'][$sectionIndex]=['value'=>htmlspecialchars($section??'')];
+                $result['Sections multipleEntries "'.$this->sectionNamesById[$sectionId].'"'][$sectionIndex]=['value'=>htmlspecialchars($section??'')];
             }
         }
         // parse single entry sections
         $parserFailed=FALSE;
         $resultArr=[];
         foreach($sections['singleEntry']??[] as $sectionId=>$section){
-            $this->internalData['{{sectionIndex}}']=0;
-            $this->internalData['{{section}}']=$section;
+            $this->internalData['[[sectionIndex]]']=0;
+            $this->internalData['[[section]]']=$section;
             $parserResult=$this->processParsing($base,$sectionId,$section??'');
             if (isset($parserResult['result'][$sectionId])){
-                $sectionName=$this->sections[$sectionId];
+                $sectionName=$this->sectionNamesById[$sectionId];
                 $resultArr=array_replace_recursive($resultArr,$parserResult['result'][$sectionId]);
             }
             $parserFailed=($parserResult['failed'])?TRUE:$parserFailed;
@@ -375,8 +367,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // parse multiple entries sections
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
                 foreach($sectionArr as $sectionIndex=>$section){
-                    $this->internalData['{{sectionIndex}}']=$sectionIndex;
-                    $this->internalData['{{section}}']=$section;
+                    $this->internalData['[[sectionIndex]]']=$sectionIndex;
+                    $this->internalData['[[section]]']=$section;
                     $parserResult=$this->processParsing($base,$sectionId,$section);
                     // check if parser failed
                     if ($parserResult['failed']){
@@ -385,7 +377,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     }
                     $multipleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]); 
                     // create result entry
-                    $sectionName=$this->sections[$sectionId];
+                    $sectionName=$this->sectionNamesById[$sectionId];
                     $sectionKey='Parser multipleEntries section '.$sectionName;
                     if (isset($parserResult['result'][$sectionId]) && (!isset($result[$sectionKey]) || mt_rand(0,100)>70)){
                         $result[$sectionKey]=$parserResult['result'][$sectionId];
@@ -433,12 +425,16 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $result[$rowKey]['Key']=$rule['Content']['Target column'];
             $result[$rowKey]['Match text']='';
             // section text or constant to matchText
-            if (empty($rule['Content']['Constant or...'])){
+            if (strlen($rule['Content']['Constant or...'])===0){
                 $result[$rowKey]['Text']=$section;
                 $ruleMatchIndex=$rule['Content']['Match index'];
-                preg_match_all('/'.$rule['Content']['regular expression'].'/u',$section,$matches);
-                if (!empty($rule['Content']['Match required']) && !isset($matches[$ruleMatchIndex][0])){
-                    $ruleFailed=TRUE;
+                if (empty($rule['Content']['regular expression'])){
+                    $matches=[0=>[0=>$section]];
+                } else {
+                    preg_match_all('/'.$rule['Content']['regular expression'].'/u',$section,$matches);
+                    if (!empty($rule['Content']['Match required']) && !isset($matches[$ruleMatchIndex][0])){
+                        $ruleFailed=TRUE;
+                    }
                 }
                 $result[$rowKey]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($matches[$ruleMatchIndex][0]??FALSE);
                 $noMtachPlaceholder=(strpos($rule['Content']['Target data type'],'string')===FALSE)?'':($params['No match placeholder']??'');
@@ -477,9 +473,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $isset=isset($entry[$rule['Content']['Source column']]);
                 $matchText=$entry[$rule['Content']['Source column']]??'';
                 // internal mapping
-                foreach(self::INTERNAL_MAPPING as $internalMappingKey=>$internalMappingValue){
+                foreach(self::INTERNAL_MAPPING as $internalMappingKey=>$internalMappingLabel){
                     if ($rule['Content']['Source column']!==$internalMappingKey){continue;}
-                    $matchText='{{'.$internalMappingKey.'}}';
+                    $matchText='[['.$internalMappingKey.']]';
                     $rule['Content']['Target data type']='string';
                     $isset=TRUE;
                     break;    
@@ -508,6 +504,21 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return ['result'=>$result,'failed'=>$mappingFailed];
     }
 
+    private function sectionNamesById(array $callingElement):array
+    {
+        $sectionsById=[];
+        $entriesSelector=['Source'=>$this->entryTable,'Name'=>$callingElement['EntryId'],'Group'=>'parserSectionRules'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
+            if (!isset($entry['Content']['Section name'])){continue;}
+            $sectionsById[$entry['EntryId']]=$entry['Content']['Section name'];
+        }
+        foreach(self::INTERNAL_MAPPING as $internalMappingLabel){
+            $sectionsById[$internalMappingLabel]=$internalMappingLabel;
+        }
+        $sectionsById['FULL']='Complete text';
+        return $sectionsById;
+    }
+
     private function sections(array $base,string $fullText):array
     {
         $sections=['singleEntry'=>[],'multipleEntries'=>[]];
@@ -525,6 +536,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $sections['singleEntry']=$this->singleEntrySplit($splitParams['singleEntry']??[],$fullText);
         $sections['singleEntry']['FULL']=$fullText;
         $sections['multipleEntries']=$this->multiEntriesSplit($splitParams['multipleEntries']??[],$fullText);
+        foreach(self::INTERNAL_MAPPING as $internalMappingKey=>$internalMappingLabel){
+            $sections['singleEntry'][$internalMappingLabel]='[['.$internalMappingKey.']]';
+        }
         return $sections;
     }
 
@@ -594,10 +608,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $flatTargetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);
             $flatEntry=array_merge($flatEntry??$flatSourceEntry,$flatTargetEntry);
         }
-        // internalData placeholder
+        // placeholder replacements by internal data 
         foreach($flatEntry as $flatKey=>$flatValue){
             if (!is_string($flatValue)){continue;}
-            if (strpos($flatValue,'{{')===FALSE || strpos($flatValue,'}}')===FALSE){continue;}
+            if (strpos($flatValue,'[[')===FALSE || strpos($flatValue,']]')===FALSE){continue;}
             $flatEntry[$flatKey]=strtr($flatValue,$this->internalData);
         }
         // move entry
