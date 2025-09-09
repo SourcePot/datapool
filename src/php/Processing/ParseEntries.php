@@ -608,7 +608,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $flatTargetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);
             $flatEntry=array_merge($flatEntry??$flatSourceEntry,$flatTargetEntry);
         }
-        // internalData placeholder
+        // placeholder replacements by internal data 
         foreach($flatEntry as $flatKey=>$flatValue){
             if (!is_string($flatValue)){continue;}
             if (strpos($flatValue,'[[')===FALSE || strpos($flatValue,']]')===FALSE){continue;}
