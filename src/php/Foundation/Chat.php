@@ -64,7 +64,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
         $arr['html']=$arr['html']??'';
         $matrix=[];
         // New chat entry
-        $matrix['Msg']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'textarea','element-content'=>$formData['val']['new']??'','placeholder'=>'e.g. This was a great day 😁','keep-element-content'=>TRUE,'id'=>$chatEntry['EntryId'],'key'=>['new'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+        $matrix['Msg']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'textarea','element-content'=>$formData['val']['new']??'','placeholder'=>'e.g. This was a great day 😁','keep-element-content'=>TRUE,'id'=>$chatEntry['EntryId'],'key'=>['new'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE]);
         $matrix['Emoji']['value']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for new entry '.$chatEntry['EntryId'],'generic',$chatEntry,['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$chatEntry['EntryId']]);
         $matrix['']['value']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'button','element-content'=>'Send','key'=>['send'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'']);
