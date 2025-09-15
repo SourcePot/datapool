@@ -1017,3 +1017,9 @@ textarea.contact-form{
 option.contact-form{
     background-color: var(--bgColor);
 }
+/* CHAT */
+textarea.chat{
+    width: 90vw;
+    height:3rem;
+    font-size: 1.4rem;
+}
