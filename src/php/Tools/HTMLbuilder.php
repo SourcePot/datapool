@@ -590,7 +590,7 @@ class HTMLbuilder{
         $categorySelectArr=['options'=>$options,'key'=>['Category'],'selected'=>$_SESSION[__CLASS__]['settings'][$callingFunction]['Category'],'callingClass'=>__CLASS__,'callingFunction'=>$callingFunction];
         $html=$this->select($categorySelectArr);
         if (count($currentKeys)>1){
-            $tagArr=['tag'=>'a','href'=>'#','class'=>'emoji','target'=>$arr['settings']['target']];
+            $tagArr=['tag'=>'a','href'=>'#','class'=>'emoji','target'=>$arr['settings']['target'],'excontainer'=>TRUE];
             foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->emojis[$currentKeys[0]][$currentKeys[1]] as $code=>$title){
                 $tagArr['id']='utf8-'.$code;
                 $tagArr['title']=$title;

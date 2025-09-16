@@ -550,8 +550,7 @@ summary{
 }
 summary:hover{
     cursor:pointer;
-    color:var(--color);
-    background-color:var(--hoverColorB);
+    background-color:var(--mediaColorA);
 }
 details{
     position:relative;
@@ -1016,4 +1015,10 @@ textarea.contact-form{
 }
 option.contact-form{
     background-color: var(--bgColor);
+}
+/* CHAT */
+textarea.chat{
+    width: 90vw;
+    height:3rem;
+    font-size: 1.4rem;
 }
