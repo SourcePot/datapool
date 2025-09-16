@@ -550,8 +550,7 @@ summary{
 }
 summary:hover{
     cursor:pointer;
-    color:var(--color);
-    background-color:var(--hoverColorB);
+    background-color:var(--mediaColorA);
 }
 details{
     position:relative;

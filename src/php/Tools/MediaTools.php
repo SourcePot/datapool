@@ -277,7 +277,7 @@ class MediaTools{
         }
         $md=$md?:'Markdown content missing...';
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->getEditMode($arr['selector'])){
-            $contentArr=['tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>$btnArr['callingClass'],'callingFunction'=>$btnArr['callingFunction']];
+            $contentArr=['tag'=>'textarea','element-content'=>$md,'keep-element-content'=>TRUE,'callingClass'=>$btnArr['callingClass'],'callingFunction'=>$btnArr['callingFunction'],'excontainer'=>TRUE];
             $contentArr['key']=['content',$arr['selector']['Source'],$arr['selector']['EntryId']];
             $contentArr['style']=['text-align'=>'left','width'=>'98%','height'=>'50vh'];
             $contentArr['class']='code';
