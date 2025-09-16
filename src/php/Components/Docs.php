@@ -94,9 +94,9 @@ class Docs implements \SourcePot\Datapool\Interfaces\App{
                 if ($pathInfo['extension']=='pdf'){
                     $selector['Content']['tag']='<object data="'.$selector['Content']['src'].'" type="application/pdf" title="" style="width:95vw;height:70vh;" nonce="[[nonce]]"></object>';
                 } else if ($pathInfo['extension']=='mp4' || $pathInfo['extension']=='webm'){
-                    $selector['Content']['tag']='<video controls width="360"><source src="'.$selector['Content']['src'].'" type="video/'.$pathInfo['extension'].'" style="max-width:100vw;" nonce="[[nonce]]"/></video>';
+                    $selector['Content']['tag']='<video controls width="360"><source src="'.$selector['Content']['src'].'" type="video/'.$pathInfo['extension'].'" style="max-width:90vw;" nonce="[[nonce]]"/></video>';
                 } else {
-                    $selector['Content']['tag']='<img src="'.$selector['Content']['src'].'" title="'.$fileArr['name'].'" style="max-width:100vw;" nonce="[[nonce]]"></img>';
+                    $selector['Content']['tag']='<img src="'.$selector['Content']['src'].'" title="'.$fileArr['name'].'" style="max-width:90vw;" nonce="[[nonce]]"></img>';
                 }
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
             }
