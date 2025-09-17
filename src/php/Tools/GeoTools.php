@@ -47,7 +47,7 @@ class GeoTools{
 
     public function init()
     {
-        $this->permitted=$this->oc['SourcePot\Datapool\Foundation\Legal']->permitted('OpenStreetMap');
+        $this->permitted=$this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('OpenStreetMap');
         // get HTTP Referrer
         $this->referrer=$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $queryPos=mb_strpos($this->referrer,'?');

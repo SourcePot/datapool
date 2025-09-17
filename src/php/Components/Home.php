@@ -64,7 +64,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
-            return array('Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>self::APP_ACCESS,'Class'=>__CLASS__);
+            return ['Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $this->pageSettings=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings();
             if (strcmp($this->pageSettings['homePageContent'],'video')===0){

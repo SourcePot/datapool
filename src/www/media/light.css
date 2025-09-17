@@ -1022,3 +1022,17 @@ textarea.chat{
     height:3rem;
     font-size: 1.4rem;
 }
+/* COOKIES */
+a.cookies{
+    cursor:pointer;
+    position:fixed;
+    bottom:0;
+    right:0;
+    padding:0 1rem;
+    line-height:var(--bottom-nav-height);
+    background-color: var(--bgColor);
+    z-index:20;
+}
+a.cookies:hover{
+    background-color: var(--mediaColorA);
+}

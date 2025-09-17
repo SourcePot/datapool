@@ -162,6 +162,7 @@ class Backbone{
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'main','element-content'=>$main,'keep-element-content'=>TRUE]).PHP_EOL;
         // end of page        
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Logger']->getMyLogs().PHP_EOL;
+        $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','href'=>'./index.php?category=Cookies','element-content'=>'Cookies','class'=>'cookies']).PHP_EOL;
         $arr['toReplace']['{{body}}'].='<div id="overlay" style="display:none;"></div><div id="overlay-image-container" style="display:none;"></div>'.PHP_EOL;
         $elArr=['tag'=>'script','element-content'=>'jQuery("article").hide();','keep-element-content'=>TRUE];
         $arr['toReplace']['{{body}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr).PHP_EOL;

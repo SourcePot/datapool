@@ -16,6 +16,7 @@ class Menu{
     
     public const CATEGORIES=[
         'Home'=>['Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],
+        'Cookies'=>['Category'=>'Cookies','Emoji'=>'&#9737;','Label'=>'Cookies','Class'=>'SourcePot\Datapool\Cookies\Cookies','Name'=>'Cookies app'],
         'Login'=>['Category'=>'Login','Emoji'=>'&#8614;','Label'=>'Login','Class'=>'SourcePot\Datapool\Components\Login','Name'=>'Login app'],
         'Logout'=>['Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Class'=>'SourcePot\Datapool\Components\Logout','Name'=>'Logout app'],
         'Admin'=>['Category'=>'Admin','Emoji'=>'&#9786;','Label'=>'Admin','Class'=>'SourcePot\Datapool\AdminApps\Account','Name'=>'Account app'],
