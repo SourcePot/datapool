@@ -484,7 +484,6 @@ final class Root{
             'Backbone.php'=>'304|',
             'Database.php'=>'305|',
             'Definitions.php'=>'306|',
-            'Cookies.php'=>'307|',
             'Dictionary.php'=>'308|',
             'User.php'=>'309|',
             'HTMLbuilder.php'=>'310|',

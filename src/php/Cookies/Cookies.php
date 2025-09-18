@@ -166,7 +166,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
 
     private function refreshSettingsCookie():array
     {
-        $cookieValue=$_COOKIE["settings"]??'';
+        $cookieValue=$_COOKIE["settings"]??'[]';
         $this->setSettingsCookieValue($cookieValue);
         return json_decode($cookieValue,TRUE);
     }

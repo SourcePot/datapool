@@ -283,7 +283,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
 
     public function getLanguageCode():string
     {
-        $browserLngCode=substr(trim($_SERVER['HTTP_ACCEPT_LANGUAGE'],'\'",-.='),0,2);
+        $browserLngCode=substr(trim($_SERVER['HTTP_ACCEPT_LANGUAGE']??'','\'",-.='),0,2);
         $browserLngCode=(isset(self::LANGUAGE_CODES[$browserLngCode]))?$browserLngCode:self::SOURCE_LNG;
         return $this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Interface language')??$browserLngCode;
     }
