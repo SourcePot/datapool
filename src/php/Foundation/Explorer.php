@@ -129,9 +129,10 @@ class Explorer{
 
     private function getSelectors(string $callingClass):string
     {
+        $lngCode=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode();
         $selectorPageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $stateKeys=['selectedKey'=>key($selectorPageState),'nextKey'=>key($selectorPageState)];
-        $lngNeedle='|'.$_SESSION['page state']['lngCode'].'|';
+        $lngNeedle='|'.$lngCode.'|';
         $html='';
         $selector=[];
         foreach(self::SELECTOR_TEMPLATE as $column=>$initValue){

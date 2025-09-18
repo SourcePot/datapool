@@ -82,11 +82,14 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $vars['OPTIMIZE TABLE'][$selectedTable]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             $vars['action']='Check and repair table "'.$selectedTable.'"';
         } else {
-            // delete expitred entries
+            // delete expired entries
             $selector=['Source'=>$selectedTable,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
             $statistic=$this->deleteEntries($selector,TRUE);
             // update deleted signal
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$statistic['deleted'],'int');
+            $params=[];
+            $params['description']='Each data point represents a deletion event for expired entries for the table provided by label';
+            $params['label']=$selectedTable;
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$statistic['deleted'],'int',$params);
             $vars['action']='Deleted expired entries of table "'.$selectedTable.'"';
         }
         // add infos to html
@@ -313,7 +316,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $typeArr[0]=str_pad('',strlen(\SourcePot\Datapool\Root::GUIDEINDICATOR),'0');
         }
         // use language code?
-        $typeArr[1]=(empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$entry['Source']]))?('00'):$_SESSION['page state']['lngCode'];
+        $lngCode=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode();
+        $typeArr[1]=(empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$entry['Source']]))?('00'):$lngCode;
         // MIME-type of linked file
         if (empty($entry['Params']['File']['MIME-Type'])){
             $typeArr[2]='000';

@@ -82,6 +82,7 @@ class Backbone{
 
     public function addHtmlPageBackbone(array $arr):array
     {
+        $lngCode=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode();
         $formId=md5($this->settings['pageTitle']);
         $arr['toReplace']=[
             '{{head}}'=>'',
@@ -95,7 +96,7 @@ class Backbone{
             ];
         $arr['page html']='';
         $arr['page html'].="<!DOCTYPE html>".PHP_EOL;
-        $arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$_SESSION['page state']['lngCode'].'">'.PHP_EOL;
+        $arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$lngCode.'">'.PHP_EOL;
         // page header
         $arr['page html'].='<head>'.PHP_EOL;
         $arr['page html'].='<meta charset="'.$this->settings['charset'].'">'.PHP_EOL;

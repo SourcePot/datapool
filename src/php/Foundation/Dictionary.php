@@ -17,7 +17,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     private $entryTable='';
     private $entryTemplate=[];
     
-    private $sourceLng='en';
+    private const SOURCE_LNG='en';
     private const LANGUAGE_CODES=['en'=>'English','de'=>'Deutsch','es'=>'Español'];
 
     private const INIT_DICTIONARY=[
@@ -230,7 +230,6 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     public function __construct(array $oc)
     {
         $this->oc=$oc;
-        $this->getLanguageCode();
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
@@ -284,14 +283,9 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
 
     public function getLanguageCode():string
     {
-        if (empty($_SESSION['page state']['lngCode'])){
-            if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])){
-                $_SESSION['page state']['lngCode']=$this->getValidLng($_SERVER['HTTP_ACCEPT_LANGUAGE'],TRUE);
-            } else {
-                $_SESSION['page state']['lngCode']='en';
-            }
-        }
-        return $_SESSION['page state']['lngCode'];
+        $browserLngCode=substr(trim($_SERVER['HTTP_ACCEPT_LANGUAGE'],'\'",-.='),0,2);
+        $browserLngCode=(isset(self::LANGUAGE_CODES[$browserLngCode]))?$browserLngCode:self::SOURCE_LNG;
+        return $this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Interface language')??$browserLngCode;
     }
 
     private function initDictionaryIfEmpty()
@@ -299,10 +293,10 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
         $added=0;
         $hasEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$this->entryTable,'Group'=>'Translations from en']);
         if (empty($hasEntry)){
-            foreach(self::INIT_DICTIONARY as $langCode=>$phrases){
+            foreach(self::INIT_DICTIONARY as $lngCode=>$phrases){
                 foreach($phrases as $phrase=>$translation){
                     $added++;
-                    $this->lng($phrase,$langCode,$translation);
+                    $this->lng($phrase,$lngCode,$translation);
                 }
             }
             $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" called, init set of "{added}" translations added',['class'=>__CLASS__,'function'=>__FUNCTION__,'added'=>$added]);         
@@ -310,13 +304,13 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
         return $added;
     }
     
-    public function lng($phrase,string $langCode='',string|bool $translation=FALSE,bool $isSystemCall=FALSE)
+    public function lng($phrase,string $lngCode='',string|bool $translation=FALSE,bool $isSystemCall=FALSE)
     {
-        $langCode=(empty($langCode))?($this->getLanguageCode()):mb_strtolower($langCode);
-        if (!is_string($phrase) || strcmp($langCode,'en')===0){return $phrase;}
+        $lngCode=(empty($lngCode))?($this->getLanguageCode()):mb_strtolower($lngCode);
+        if (!is_string($phrase) || strcmp($lngCode,'en')===0){return $phrase;}
         $phrase=trim($phrase);
         if (strlen($phrase)!==strlen(strip_tags($phrase))){return $phrase;}
-        $elementId=md5($phrase.'|'.$langCode);
+        $elementId=md5($phrase.'|'.$lngCode);
         if ($translation===FALSE && isset($this->lngCache[$elementId])){
             // translation request answered by cache
             $phrase=$this->lngCache[$elementId];
@@ -330,7 +324,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
             $this->lngCache[$elementId]=$phrase;
         } else {
             // update translation
-            $entry=['Source'=>$this->entryTable,'Group'=>'Translations from en','Folder'=>$langCode,'Name'=>mb_substr($phrase,0,100),'EntryId'=>$elementId,'Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM'];
+            $entry=['Source'=>$this->entryTable,'Group'=>'Translations from en','Folder'=>$lngCode,'Name'=>mb_substr($phrase,0,100),'EntryId'=>$elementId,'Read'=>'ALL_R','Write'=>'ADMIN_R','Owner'=>'SYSTEM'];
             $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
             $entry['Content']=['translation'=>$translation];
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
@@ -358,44 +352,45 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     {
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['select'])){
-            $_SESSION['page state']['lngCode']=$formData['val']['lngCode'];
+            $this->oc['SourcePot\Datapool\Cookies\Cookies']->setSettingsCookie('Interface language',$formData['val']['lngCode']);
         }
         //
-        $selectArr=['options'=>self::LANGUAGE_CODES,'value'=>$_SESSION['page state']['lngCode'],'key'=>['lngCode'],'title'=>'select page language','hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $lngCode=$this->getLanguageCode();
+        $selectArr=['options'=>self::LANGUAGE_CODES,'value'=>$lngCode,'key'=>['lngCode'],'title'=>'select page language','hasSelectBtn'=>TRUE,'class'=>'menu','style'=>'float:right;','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
         return $html;
     }
     
     public function dictWidget(array $arr=[]):array
     {
-        $langCode=$_SESSION['page state']['lngCode'];
-        if (strcmp($langCode,$this->sourceLng)===0){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Please select a language different to '.self::LANGUAGE_CODES[$this->sourceLng],'style'=>['font-size'=>'1.2rem','padding'=>'10px','color'=>'#f00']]);
+        $lngCode=$this->getLanguageCode();
+        if (strcmp($lngCode,self::SOURCE_LNG)===0){
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Please select a language different to '.self::LANGUAGE_CODES[self::SOURCE_LNG],'style'=>['font-size'=>'1.2rem','padding'=>'10px','color'=>'#f00']]);
             return $arr;
         }
         // form processing
-        if (!isset($_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode])){
-            $_SESSION[__CLASS__][__FUNCTION__]=['phrase'=>['en'=>''],'translation'=>[$langCode=>'']];
+        if (!isset($_SESSION[__CLASS__][__FUNCTION__]['translation'][$lngCode])){
+            $_SESSION[__CLASS__][__FUNCTION__]=['phrase'=>['en'=>''],'translation'=>[$lngCode=>'']];
         }
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['update']) && !empty($formData['val']['phrase']['en'])){
             $_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
-            $translation=$this->lng($_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],$langCode,$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],FALSE);
+            $translation=$this->lng($_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],$lngCode,$_SESSION[__CLASS__][__FUNCTION__]['translation'][$lngCode],FALSE);
         } else if (!empty($formData['val']['phrase']['en'])){
             $_SESSION[__CLASS__][__FUNCTION__]=$formData['val'];
-            $translation=$this->lng($formData['val']['phrase']['en'],$langCode);
+            $translation=$this->lng($formData['val']['phrase']['en'],$lngCode);
             if (empty($translation)){
-                $_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]='';
+                $_SESSION[__CLASS__][__FUNCTION__]['translation'][$lngCode]='';
             } else {
-                $_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode]=$translation;    
+                $_SESSION[__CLASS__][__FUNCTION__]['translation'][$lngCode]=$translation;    
             }
         }
         // compile html
         $matrix=['Translation'=>[]];
         $matrix['Translation']['Label phrase']=['tag'=>'p','element-content'=>'EN'];
         $matrix['Translation']['Phrase']=['tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['phrase']['en'],'key'=>['phrase','en'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
-        $matrix['Translation']['Label translation']=['tag'=>'p','element-content'=>strtoupper($langCode)];
-        $matrix['Translation']['Translation']=['tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$langCode],'key'=>['translation',$langCode],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE];
+        $matrix['Translation']['Label translation']=['tag'=>'p','element-content'=>strtoupper($lngCode)];
+        $matrix['Translation']['Translation']=['tag'=>'input','type'=>'text','value'=>$_SESSION[__CLASS__][__FUNCTION__]['translation'][$lngCode],'key'=>['translation',$lngCode],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE];
         $matrix['Translation']['Cmd']=['tag'=>'input','type'=>'submit','value'=>'Set','key'=>['update'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Translation']);
         return ['html'=>$html,'wrapperSettings'=>[]];
