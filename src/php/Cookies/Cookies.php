@@ -203,6 +203,5 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
 
-
 }
 ?>
