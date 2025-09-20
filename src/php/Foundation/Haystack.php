@@ -83,7 +83,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Search','key'=>['search'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'1rem 0','width'=>'inherit','background-color'=>'#eee']]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'1rem 0','width'=>'inherit']]);
         // compile html - add result div
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$serachResult['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','max-height'=>self::MAX_HEIGHT_RESULTS,'overflow-y'=>'auto','width'=>'99vw','border-right'=>'1px dotted #000']]);
         return $arr;

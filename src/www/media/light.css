@@ -17,7 +17,7 @@
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
     --textFieldMinWidth:13rem;
-    accent-color:#00f;
+    accent-color:var(--brand);
 }
 *{
     margin:0;
@@ -81,6 +81,7 @@ object{
 }
 p,li,code{
     font-size:1.1rem;
+    background: none;
 }
 a.std:hover{
     background-color:var(--hoverColor);
@@ -187,9 +188,6 @@ div.cover-wrapper{
     width:auto;
 }
 p{
-    padding:0.5rem 1rem;
-}
-p.std,p.calendar-hour,p.cover,p.icon,p.first-menu,p.toolbox,p.comment,p.comment-footer,p.user-abstract{
     padding:0;
     line-height:initial;
     white-space:break-spaces;
@@ -264,16 +262,6 @@ td,th{
     padding:0.25rem;
     max-width:95vw;
     max-height:80vh;
-}
-p.log{
-    clear:none;
-    font-size:0.95rem;
-    padding:0 1rem 0 0.5rem;
-}
-div.log{
-    clear:both;
-    width:100%;
-    border-bottom:1px dotted var(--rightBottomBorderColor);
 }
 embed{
     min-width:500px;
@@ -562,47 +550,52 @@ details{
 details.comment{
     clear:both;
 }
-details.forum,details.toolbox{
+details.forum,details.log{
     width:100%;
     padding:0;
     overflow:auto;
 }
-details.toolbox{
+details.log{
     position:fixed;
     bottom:0;
     z-index:10;
     color:var(--bgColor);
     background-color:var(--color);
 }
-summary.forum,summary.toolbox{
+summary.forum,summary.log{
     margin:0;
     line-height:var(--bottom-nav-height);
 }
-summary.toolbox{
+summary.log{
     color:var(--bgColor);
     background: none;
 }
-article.toolbox{
+article.log{
     color:var(--hoverColor);
-    background-color:var(--color);
+    background-color:var(--colorSoft);
     height:11vh;
     width:100%;
     margin:0;
     padding:0;
 }
-table.toolbox,tr.toolbox:hover{
+table.log,tr.log:hover{
     color:var(--bgColor);
     background:none;
     box-shadow:none;
 }
-div.toolbox{
+div.log{
+    clear:both;
     width:100%;
     border-bottom:1px dotted var(--rightBottomBorderColor);
+    background: none;
 }
-p.toolbox{
+p.log{
     clear:none;
     color:var(--leftTopBorderColor);
+    font-size:0.95rem;
+    padding:0 1rem 0 0.5rem;
 }
+
 /** CANVAS **/
 #canvas{
     position:relative;
@@ -804,7 +797,7 @@ div.comment{
 }
 p.comment{
     font-size:1.2rem;
-    color:#a80;
+    color:var(--mediaColorA);
 }
 p.comment-footer{
     font-size:0.8rem;
@@ -837,10 +830,10 @@ a.emoji{
     float:none;
     margin:5em auto;
     width:max-content;
-    background-color:#eee;
+    background-color:var(--leftTopBorderColor);
 }
 #login-table{
-    background-color:#eee;
+    background-color:var(--leftTopBorderColor);
     box-shadow:none;
 }
 #login-email,#login-psw{
@@ -857,7 +850,7 @@ div.keypad{
     border:2px solid var(--rightBottomBorderColor);
 }
 div.keypad:hover{
-    border:2px solid #a00;    
+    border:2px solid var(--attentionColor);    
 }
 a.keypad{
     position:absolute;
