@@ -23,8 +23,8 @@
     margin:0;
     padding:0;
     text-decoration:none;
-    color:inherit;
-    background-color:inherit;
+    color:var(--color);
+    background-color:var(--bgColor);
 }
 @media print{
     :root{
@@ -612,7 +612,6 @@ p.toolbox{
     background-color:var(--bgColor);
     border-top:1px solid var(--headerColor);
     border-bottom:1px solid var(--headerColor);
-    overflow:auto;
     background-image:url("canvaslightbg.png");
 }
 .canvas-text,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-trigger,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
