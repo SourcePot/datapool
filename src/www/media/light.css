@@ -78,7 +78,8 @@ h1,h2,h3{
     width:98%;
 }
 h1{
-    font-size:1.6rem;
+    color:var(--color);
+    font-size:1.7rem;
 }
 h2{
     font-size:1.5rem;
