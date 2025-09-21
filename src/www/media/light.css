@@ -20,6 +20,7 @@
     --yellow:#fc9;
     --yellowH:#fa4;
     --attentionColor:rgba(255, 48, 48);
+    --looggerBg:#444;
     /** dimensions **/
     --top-nav-height:2.5rem;
     --bottom-nav-height:27px;
@@ -592,8 +593,7 @@ summary.log{
     background: none;
 }
 article.log{
-    color:var(--bgColor);
-    background-color:var(--colorM);
+    background-color:var(--looggerBg);
     height:11vh;
     width:100%;
     margin:0;
@@ -607,7 +607,7 @@ table.log,tr.log:hover{
 div.log{
     clear:both;
     width:100%;
-    border-bottom:1px dotted var(--colorM);
+    border-bottom:1px dotted var(--color);
     background: none;
 }
 p.log{
@@ -615,6 +615,7 @@ p.log{
     color:var(--bgColorA);
     font-size:0.95rem;
     padding:0 1rem 0 0.5rem;
+    min-width:6rem;
 }
 
 /** CANVAS **/
