@@ -406,5 +406,10 @@ class Element{
         return $attrValue;
     }
 
+    public function addclass2simpleTags(string $html,string $tag,string $styleClass):string
+    {
+        return strtr($html,['<'.$tag.'>'=>'<'.$tag.' class="'.$styleClass.'">']);
+    }
+
 }
 ?>

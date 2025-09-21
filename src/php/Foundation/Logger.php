@@ -188,10 +188,10 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $arr=[];
         $arr['selector']=['Source'=>$this->entryTable,'Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()];
         $arr['settings']=['method'=>'getLogsHtml','classWithNamespace'=>__CLASS__];
-        $arr['wrapper']=['class'=>'toolbox','style'=>['overflow-y'=>'scroll','background-color'=>'#444']];
+        $arr['wrapper']=['class'=>'log','style'=>['overflow-y'=>'scroll']];
         $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         // add to app
-        $appArr=['class'=>'toolbox','icon'=>'Logger'];
+        $appArr=['class'=>'log','icon'=>'Logger'];
         if ($_SESSION[__CLASS__]['age']<2){$appArr['open']=TRUE;}
         $appArr['html']=$contentHtml;
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
