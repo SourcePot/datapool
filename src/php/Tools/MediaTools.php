@@ -14,6 +14,8 @@ class MediaTools{
 
     private $oc;
     private const TMP_FILE_PERMISSIONS=0774;
+
+    private const MD_STYLECLASS_TAGS=['h1','h2','h3','code','ul','ol','li','b','i','p'];
     
     public function __construct(array $oc)
     {
@@ -286,15 +288,7 @@ class MediaTools{
         } else {
             $md=str_replace('[[nonce]]',$this->oc['SourcePot\Datapool\Root']->getNonce(FALSE),$md);
             $contentHtml=\Michelf\Markdown::defaultTransform($md);
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'h1','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'h2','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'h3','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'ul','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'ol','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'li','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'b','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'i','md');
-            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,'p','md');
+            $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->addclass2simpleTags($contentHtml,self::MD_STYLECLASS_TAGS,'md');
             $btnArr['cmd']='edit';
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
