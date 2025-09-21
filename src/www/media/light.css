@@ -415,7 +415,7 @@ meter{
 p.bg-media{
     position: absolute;
     display:none;
-    color:var(--yellow);
+    color:var(--yellowH);
     background-color:var(--color);
     opacity: 0.6;
     top:1rem;
