@@ -10,6 +10,7 @@
     --bgColor:#fff;
     --bgColorA:#ddd;
     --bgColorH:#000;
+    --bgMenu:#3364;
     /** colors **/
     --red:#f99;
     --redH:#f44;
@@ -68,8 +69,6 @@ span{
 h1,h2,h3,li,ol,ul,div,p,div,fieldset,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,progress,a.btn,.js-button{
     float:left;
     clear:both;
-    font-size:inherit;
-    font-style:inherit;
 }
 h1,h2,h3{
     margin:1em 0 0.75rem 5px;
@@ -119,27 +118,14 @@ a.textlink{
     font-weight:bold;
     text-decoration: underline dotted var(--blueH);
 }
-button,input,textarea,select,a.btn,a.cookies,a.plot,.js-button{
-    float:left;
+/** INPUT FIELDS **/
+input,textarea,select{
     clear:none;
     font-size:1rem;
     padding:0.2rem 0.4rem;
     margin: 0 0.2rem 0.2rem 5px;
     color:var(--colorA);
     background-color:var(--bgColor);
-    border-radius:unset;
-    border-left:1px solid var(--bgColorA);
-    border-top:1px solid var(--bgColorA);
-    border-right:2px solid var(--colorM);
-    border-bottom:2px solid var(--colorM);
-}
-button,input[type="submit"],a.btn,a.plot,.js-button{
-    text-align:center;
-}
-button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.cookies:hover,a.plot:hover,.js-button:hover{
-    cursor:pointer;
-    color:var(--bgColor);
-    background-color:var(--color);   
 }
 input:invalid,textarea:invalid{
     border: 2px solid #f00;
@@ -153,6 +139,26 @@ textarea{
 }
 input.filter[type="text"]{
     border:1px dotted var(--attentionColor);
+}
+/** BUTTONS **/
+button,input[type="submit"],input[type="file"],a.btn,a.cookies,a.plot,.js-button{
+    clear:none;
+    background-color:var(--bgColor);
+    color:var(--colorA);   
+    font-size: 1.2rem;
+    text-align:center;
+    min-width:2rem;
+    padding:0 0.25rem;
+    line-height: 1.8rem;
+    border-left:1px solid var(--bgColorA);
+    border-top:1px solid var(--bgColorA);
+    border-right:2px solid var(--colorM);
+    border-bottom:2px solid var(--colorM);
+}
+button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.cookies:hover,a.plot:hover,.js-button:hover{
+    cursor:pointer;
+    color:var(--bgColor);
+    background-color:var(--colorA);   
 }
 p.filter{
 	clear:none;
@@ -439,7 +445,7 @@ div.first-menu,div.second-menu{
     left:0;
     width:100vw;
     height:var(--top-nav-height);
-    background-color:var(--bgColorA);
+    background-color:var(--bgMenu);
     overflow:hidden;
 }
 div.second-menu{
@@ -653,11 +659,11 @@ p.log{
 }
 .canvas-symbol{
     font-size:30px;
-    margin:0px;
     padding:0px;
 }
 button.canvas-std,button.canvas-red,button.canvas-green,button.canvas-processor{
     color:var(--color);
+    line-height: 1.25;
 }
 button.canvas-processor{
     color:var(--bgColor);
@@ -701,13 +707,17 @@ button.canvas-dark:hover{
     position:absolute;
     padding:0;
     right:-15px;
-    font-size:10px;
+    font-size:0.8rem;
     color:var(--attentionColor);
     background:none;
-    z-index:15;
+    min-width:unset;
+    line-height:unset;
+    border:1px solid #aaa;
+    z-index:25;
 }
-div.canvas-symbol:hover{
-    background-color:var(--color)4;
+div:has( > .canvas-element-btn:hover){
+    background-color:var(--blueH);
+    opacity: 0.7;
 }
 button.canvas{
     float:left;
