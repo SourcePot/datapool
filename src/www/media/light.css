@@ -11,6 +11,7 @@
     --bgColorA:#ddd;
     --bgColorH:#000;
     --bgMenu:#3364;
+    --bgDarkT:#0007;
     /** colors **/
     --red:#f99;
     --redH:#f44;
@@ -419,8 +420,7 @@ p.bg-media{
     position: absolute;
     display:none;
     color:var(--yellow);
-    background-color:var(--color);
-    opacity: 0.6;
+    background-color:var(--bgDarkT);
     top:1rem;
     left:0.5rem;
     width:350px;
@@ -805,15 +805,15 @@ div.calendar-timeline{
     padding:0.25rem;
 }
 /** STATUS **/
-.status-off{
+.status-off,input.status-off{
     color:var(--color);
     background-color:var(--greenH);
 }
-.status-on{
+.status-on,input.status-on{
     color:var(--bgColor);
     background-color:var(--blueH);
 }
-.status-on,.status-off{
+.status-on,.status-off,input.status-on,input.status-off{
     clear:none;
     min-width:4rem;
     padding:0.1rem;
