@@ -535,7 +535,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             if (empty($event['Content']['Event']['Start']) || empty($event['Content']['Event']['End'])){continue;}
             if (is_array($event['Content']['Event']['Start'])){implode(' ',$event['Content']['Event']['Start']);}
             if (is_array($event['Content']['Event']['End'])){implode(' ',$event['Content']['Event']['End']);}
-            $style=[];
+            $style=['min-width'=>'unset'];
             $style['top']=100+$event['y']*40;
             if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
             $style['left']=$event['x0'];

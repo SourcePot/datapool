@@ -268,7 +268,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $btnTemplate=['tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$key],'style'=>['position'=>'relative','padding'=>'0','margin'=>'0.1em','font-size'=>'18px']];
             $btn=array_replace_recursive($btn,$btnTemplate);
             $btn['class']='canvas-cntr-btn';
-            if (!isset($matrix[$tag['type']]['Btn'])){$matrix[$tag['type']]['Btn']='';}
+            if (!isset($matrix[$tag['type']]['Btn'])){
+                $matrix[$tag['type']]['Btn']='';
+            }
             $matrix[$tag['type']]['Btn'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btn);
         }
         $htmlArr=['cntr'=>'','processor'=>''];
@@ -625,6 +627,5 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9850;']);
         return $html;
     }
-
 }
 ?>

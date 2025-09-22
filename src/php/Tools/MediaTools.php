@@ -115,7 +115,7 @@ class MediaTools{
     {
         $arr['html']=$arr['html']??'';
         $arr['maxDim']=$arr['maxDim']??50;
-        $arr['margin']=$arr['margin']??'0';
+        $arr['margin']=$arr['margin']??'5px';
         $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['TmpFile']['MIME-Type']??'text';
         $fontSize=round($arr['maxDim']*0.4);
         $arr=$this->addTmpFile($arr);

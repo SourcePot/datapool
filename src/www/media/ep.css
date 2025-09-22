@@ -58,10 +58,9 @@ iframe.ep-std{
     font-size:1.5rem;
 }
 .ep-header-wrapper{
-    margin:0;
     width:100%;
-    background-color:#aaaa;
-    border-top:1px solid #aaae;
+    background-color:#ddd;
+    border-top:1px solid #aaa;
 }
 details.ep-comment{
     clear:left;
