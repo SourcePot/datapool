@@ -292,7 +292,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $ole=$documentFactory->createFromStream($stream);
         $message=$messageFactory->parseMessage($ole);
         // entry base data
-        $entry=$this->header2entry($entry,new FileMessage($message->properties()->transport_message_headers));
+        $entry=$this->header2entry($entry,$message->properties()->transport_message_headers??'');
         $entry['Content']['Subject']=$message->properties['subject']??'{Missing subject}';
         $entry['Content']['File content']=$message->getBody();
         $entry['Content']['Message']=strip_tags($entry['Content']['File content']);
@@ -328,10 +328,13 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     private function messageObj2entries(array $entry,$message,$id,$context):array
     {
-        if (empty($message)){return $context;}
+        if (empty($message)){
+            return $context;
+        }
         $context['messages']++;
         // html and/or text message
-        $entry=$this->header2entry($entry,$message);
+        $rawEmail=$message->__toString();
+        $entry=$this->header2entry($entry,substr($rawEmail,0,strpos($rawEmail,"\r\n\r\n")));
         $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
         $entry['Content']['Message']=$message->text()?:strip_tags($htmlContent??'');
         $entry['Content']['File content']=$message->text();
@@ -366,23 +369,36 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $context;
     }
 
-    private function header2entry(array $entry, $message):array
+    private function header2entry(array $entry, string $headerStr):array
     {
-        foreach(['from','sender','replyTo','inReplyTo','to','cc','bcc'] as $addrKey){
-            $addrs=$message->$addrKey();
-            if (empty($addrs)){continue;}
-            if (!is_array($addrs)){
-                $addrs=[$addrs];
-            }
-            foreach($addrs as $addr){
-                $entry['Params']['Email'][$addrKey.' mailboxes'][]=['email'=>$addr->email(),'name'=>$addr->name()];  
-            }
+        $entry['Params']['Email']=[];
+        $headerStr=preg_replace('/\r\n([A-Za-z])/','__SPLIT__$1',$headerStr);
+        $headerChunks=explode('__SPLIT__',$headerStr);
+        foreach($headerChunks as $headerChunk){
+            $keyValueDivPos=strpos($headerChunk,': ');
+            $key=strtolower(substr($headerChunk,0,$keyValueDivPos));
+            $value=substr($headerChunk,$keyValueDivPos+2);
+            $value=preg_replace('/\r\n\s+/','',$value);
+            $values=explode(';',$value);
+            foreach($values as $value){
+                // convert encoding
+                $tmpValue='';
+                foreach(imap_mime_header_decode($value) as $encodingValueObj){
+                    $encoding=str_replace('default','US-ASCII',$encodingValueObj->charset);
+                    $tmpValue.=mb_convert_encoding($encodingValueObj->text,"UTF-8",$encoding);  
+                }
+                $value=$tmpValue;
+                // get sub arrays
+                preg_match('/([a-zA-Z]+)\=([^?].*)/',$value,$match);
+                $subKey=$match[1]??'root';
+                $value=$match[2]??$value;
+                $entry['Params']['Email'][$key][$subKey]=$value;
+
+            }            
         }
-        $entry['Params']['Email']['Flags']=$message->flags();
-        $dateObj=$message->date();
-        if (!empty($dateObj)){
-            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($dateObj->toRfc2822String(),'',\SourcePot\Datapool\Root::DB_TIMEZONE);
-        }
+        // add date
+        $emailDate=$entry['Params']['Email']['date']['root']??$entry['Params']['Email']['received']['root']??('@'.time());
+        $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($emailDate,'',\SourcePot\Datapool\Root::DB_TIMEZONE);
         return $entry;
     }
 
