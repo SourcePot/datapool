@@ -621,6 +621,7 @@ class Container{
         $targetId=(isset($arr['containerId']))?$arr['containerId']:$arr['callingFunction'];
         $arr['class']=(isset($arr['class']))?$arr['class']:'comment';
         $arr['style']=(isset($arr['style']))?$arr['style']:[];
+        // process form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$targetId);
         if (isset($formData['cmd']['Add comment'])){
             if (empty($formData['val']['comment'])){
@@ -633,7 +634,12 @@ class Container{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector']);
             }
         }
-        if (isset($arr['selector']['Content']['Comments'])){$Comments=$arr['selector']['Content']['Comments'];} else {$Comments=[];}
+        // show comments
+        if (isset($arr['selector']['Content']['Comments'])){
+            $Comments=$arr['selector']['Content']['Comments'];
+        } else {
+            $Comments=[];
+        }
         $commentsHtml='';
         foreach($Comments as $creationTimestamp=>$comment){
             $footer=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$creationTimestamp);
@@ -643,15 +649,16 @@ class Container{
             $commentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$footer,'keep-element-content'=>FALSE,'class'=>$arr['class'].'-footer']);
             $commentsHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$commentHtml,'keep-element-content'=>TRUE,'class'=>$arr['class']]);
         }
+        // new comment
         $textId=$targetId.'-text';
         $newComment='';
         if (isset($arr['selector']['Write'])){
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write')){
                 $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'New comment','style'=>['float'=>'left','clear'=>'both','margin'=>'0 5px']]);
-                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'textarea','element-content'=>'','placeholder'=>'e.g. My new comment','key'=>['comment'],'id'=>$textId,'style'=>['float'=>'left','clear'=>'both','margin'=>'5px','font-size'=>'1.2rem'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId]);
+                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'textarea','element-content'=>$formData['val']['comment']??'','placeholder'=>'e.g. My new comment','key'=>['comment'],'id'=>$textId,'style'=>['float'=>'left','clear'=>'both','width'=>'95%','font-size'=>'1.2rem'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId,'excontaainer'=>TRUE]);
                 $newComment.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Emojis for '.$textId,'generic',$arr['selector'],['method'=>'emojis','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder','target'=>$textId]);
-                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add','key'=>['Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']],'value'=>time(),'style'=>['float'=>'left','clear'=>'both','margin'=>'5px'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId]);
-                $appArr=['html'=>$newComment,'icon'=>'&#9871;','title'=>'Add comment','style'=>['clear'=>'both']];
+                $newComment.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add','key'=>['Add comment',$arr['selector']['Source'],$arr['selector']['EntryId']],'value'=>time(),'style'=>['float'=>'left','clear'=>'both','margin'=>'5px'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$targetId,]);
+                $appArr=['html'=>$newComment,'icon'=>'&#9871;','title'=>'Add comment','style'=>['clear'=>'both'],'open'=>!empty($formData['val'])];
                 $newComment=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
             }
         }

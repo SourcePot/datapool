@@ -868,6 +868,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     public function getHomeAppWidget(string $name):array
     {
         // reset page setting
+        $this->resetEventCache();
         $this->setting['Days to show']=14;
         $this->setting['Day width']=320;
         $this->setting['Timezone']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');

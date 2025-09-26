@@ -11,6 +11,7 @@
     --bgColorA:#ddd;
     --bgColorH:#000;
     --bgMenu:#3364;
+    --bgDarkT:#0007;
     /** colors **/
     --red:#f99;
     --redH:#f44;
@@ -93,7 +94,8 @@ ol,ul{
     font-size: 1.2rem;
 }
 li{
-    float:none;
+    line-height: 1.5;
+    margin: 0 0 1rem 1rem;
 }
 li:hover{
     background-color:var(--bgColorA);
@@ -418,8 +420,7 @@ p.bg-media{
     position: absolute;
     display:none;
     color:var(--yellow);
-    background-color:var(--color);
-    opacity: 0.6;
+    background-color:var(--bgDarkT);
     top:1rem;
     left:0.5rem;
     width:350px;
@@ -460,7 +461,6 @@ li.menu{
     float:left;
     clear:none;
     width:6rem;
-    height:4.1rem;
     margin:0;
     border-right:1px solid var(--colorM);
     border-bottom:3px solid var(--colorM);
@@ -548,10 +548,6 @@ h3.md{
 }
 ul.md,ol.md,p.md{
     margin: 1rem 1.25rem 0 1.25rem;
-}
-li.md{
-    line-height: 1.5;
-    margin: 0 0 1rem 1rem;
 }
 ul li.md{
     list-style:disclosure-closed;
@@ -808,15 +804,15 @@ div.calendar-timeline{
     padding:0.25rem;
 }
 /** STATUS **/
-.status-off{
+.status-off,input.status-off{
     color:var(--color);
     background-color:var(--greenH);
 }
-.status-on{
+.status-on,input.status-on{
     color:var(--bgColor);
     background-color:var(--blueH);
 }
-.status-on,.status-off{
+.status-on,.status-off,input.status-on,input.status-off{
     clear:none;
     min-width:4rem;
     padding:0.1rem;

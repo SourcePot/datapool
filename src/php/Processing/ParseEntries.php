@@ -497,7 +497,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $mappingFailed=TRUE;
             } else {
                 $matchText=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($matchText,$rule['Content']['Target data type']);
-                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText);
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine']??'',$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText);
                 $debugArr[]=['Target column'=>$rule['Content']['Target column'],'matchText'=>$matchText,'targetEntry'=>$targetEntry];
             }
         }
