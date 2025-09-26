@@ -578,7 +578,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
         if ($this->specialFileHandling($file,$entry,$noUpdateButCreateIfMissing,$isSystemCall)){
             // Files are processed by specialFileHandling()
-            // If a file is an archive or email which is separated into file, this method will be called again with each of the separated files
+            // If a file is an archive or an email, this method will be called again with each of the separated files
             $context['specialFileHandling']=TRUE;
         } else {
             // single file handling
@@ -690,6 +690,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'steps'=>''];
         // if pdf parse content
         if (stripos($entry['Params']['File']['MIME-Type'],'pdf')!==FALSE){
+            // pdf-content to text
             $parserMethod=$entry['parserMethod']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'pdf-file parser');
             if (empty($parserMethod)){
                 $this->oc['logger']->log('notice','File upload, pdf parsing failed: no parser selected',[]);    
@@ -701,6 +702,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                     $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" parser failed: {msg}',$context);
                 }
             }
+            // extract attachments
             try{
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
             } catch (\Exception $e){
