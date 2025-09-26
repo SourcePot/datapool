@@ -137,7 +137,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         // compile html
         $matrix=[];
         foreach($values as $name=>$value){
-            $btn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'TRUE':'FALSE'),'style'=>['line-height'=>'2rem','font-weight'=>'bold'],'class'=>(boolval($value)?'status-on':'status-off'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'disabled'=>self::PERMISSIONS_COOKIE[$name]['disabled']];
+            $btn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'TRUE':'FALSE'),'style'=>['line-height'=>'2rem'],'class'=>(boolval($value)?'status-on':'status-off'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'disabled'=>self::PERMISSIONS_COOKIE[$name]['disabled']];
             $description=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$name,'style'=>['clear'=>'both','font-weight'=>'bold','padding-top'=>'1rem ']]);
             $description.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>self::PERMISSIONS_COOKIE[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding-bottom'=>'1rem ']]);
             $matrix[$name]=['Permitted'=>$btn,'Description'=>$description];
