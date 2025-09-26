@@ -130,7 +130,7 @@ input,textarea,select{
     background-color:var(--bgColor);
 }
 input:invalid,textarea:invalid{
-    border: 2px solid #f00;
+    border: 2px solid var(--attentionColor);
 }
 select{
     max-width:20rem;
@@ -1029,12 +1029,21 @@ div.signal-cursor-x,div.signal-cursor-y{
 input[type="text"].contact-form,input[type="email"].contact-form,input[type="tel"].contact-form,textarea.contact-form,select.contact-form,table.contact-form{
     background-color: var(--blue);
 }
+input[type="submit"].contact-form{
+    clear:both;
+}
 textarea.contact-form{
     min-width:320px;
     height: 25vh;
 }
 option.contact-form{
     background-color: var(--bgColor);
+}
+p.contact-form{
+    color:var(--attentionColor);
+    padding:1rem 0;
+    font-size:1rem;
+    margin: 0 0.2rem 0.2rem 5px;
 }
 /* CHAT */
 textarea.chat{

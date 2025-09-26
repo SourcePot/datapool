@@ -630,7 +630,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($phoneEl);
         // button div
         $problemStr=$this->isInvalidForm($values);
-        $checkEL=['tag'=>'p','element-content'=>$problemStr,'class'=>'contact-form','style'=>['color'=>'#b00','padding-top'=>'1rem','font-size'=>'1rem']];
+        $checkEL=['tag'=>'p','element-content'=>$problemStr,'class'=>'contact-form'];
         $btnDivHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($checkEL);
         if (empty($problemStr)){
             $btnEL=['tag'=>'input','type'=>'submit','value'=>'Send','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['send']];
@@ -653,7 +653,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         if ($atSignPos<1 || $atSignPos>$dotPos-2 || mb_strlen($values['Email'])<$dotPos+3){
             $isInvalid[]=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Please provide a valid email address');
         }
-        return implode('; ',$isInvalid);
+        return implode("\n",$isInvalid);
     }
 
     private function getSubjectOptions($values,$getThisOption=FALSE):array|string
