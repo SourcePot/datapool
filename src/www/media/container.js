@@ -14,11 +14,21 @@ jQuery(document).ready(function(){
     function initTriggerIds(){
         jQuery('[trigger-id]').each(function(i){
             let btnSelector='#'+jQuery(this).attr('trigger-id');
-            jQuery(this).unbind('change');
-            jQuery(this).on('change',function(e){
-                jQuery(btnSelector).click();
-            });
-            jQuery(btnSelector).hide();
+            if (jQuery(this).attr("type")==='text'){
+                jQuery(this).unbind('keydown');
+                jQuery(this).on('keydown',function(e){
+                    if (e.keyCode===13){
+                        e.preventDefault();
+                        jQuery(btnSelector).click();
+                    }
+                });
+            } else {
+                jQuery(this).unbind('change');
+                jQuery(this).on('change',function(e){
+                    jQuery(btnSelector).click();
+                });
+                jQuery(btnSelector).hide();
+            }
         });
     }
     function containerBusy(containerId,isBusy){

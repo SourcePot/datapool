@@ -351,32 +351,43 @@ class Explorer{
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
-        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){
+            return ['html'=>''];
+        }
         $access=TRUE;
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
             return ['html'=>'','icon'=>'&#10010;','class'=>'explorer'];
         } else {
-            $btnId=md5(__FUNCTION__);
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Add']);
+            $contentHtml='';
+            $btnId=md5(json_encode($selector+[__FUNCTION__]));
             if (strcmp($stateKeys['selectedKey'],'Folder')===0){
                 if ($this->addEntryByFileUpload){
-                    $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['add files'],'element-content'=>'Add file(s)'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
+                    $headline='Add file';
+                    $contentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['add files'],'element-content'=>'Add file(s)'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
                 } else {
-                    $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','key'=>['add entry'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
-                    $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add entry','key'=>['add entry'],'value'=>$stateKeys['nextKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
+                    $headline='Add entry';
+                    $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','key'=>['add entry'],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
+                    $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add entry','key'=>['add entry'],'value'=>$stateKeys['nextKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
                 }
             } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0 && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
                 if ($this->addEntryByFileUpload){
-                    $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['update file'],'element-content'=>'Update entry file'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
+                    $headline='Replace file';
+                    $contentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['update file'],'element-content'=>'Update entry file'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
                 } else {
-                    $arr['html']='';
+                    $headline='';
+                    $contentHtml='';
                 }
             } else {
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','placeholder'=>'e.g. Documents','key'=>[$stateKeys['nextKey']],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add '.$stateKeys['nextKey'],'key'=>['add'],'value'=>$stateKeys['nextKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
+                $headline='Add';
+                $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','placeholder'=>'e.g. Documents','key'=>[$stateKeys['nextKey']],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
+                $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add '.$stateKeys['nextKey'],'key'=>['add'],'value'=>$stateKeys['nextKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
             }
-            if (empty($access)){$arr['html']='';}
+            $headlineHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$headline]);
+            $arr['html']=$headlineHtml.$contentHtml;
+            if (empty($access)){
+                $arr['html']='';
+            }
         }
         return $arr;
     }
@@ -392,9 +403,10 @@ class Explorer{
             $selector=['Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']];
             if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,['hideEntryControls'=>TRUE],[]);}
         } else {
-            $fileElement=['tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>[$stateKeys['selectedKey']],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']];
+            $btnId=md5(json_encode($selector+[__FUNCTION__]));
+            $fileElement=['tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>[$stateKeys['selectedKey']],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
-            $addBtn=['tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>['edit'],'value'=>$stateKeys['selectedKey'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]];
+            $addBtn=['tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>['edit'],'value'=>$stateKeys['selectedKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($addBtn);
         }
         $arr=['html'=>$html,'icon'=>'&#9998;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['editTitle'],'class'=>'explorer'];
@@ -466,7 +478,9 @@ class Explorer{
     
     private function comments(string $callingClass,array $setKeys):array
     {
-        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
+        if (empty($this->isVisible[__FUNCTION__])){
+            return ['html'=>''];
+        }
         $arr=['html'=>''];
         if (strcmp($setKeys['selectedKey'],'EntryId')!==0){
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
