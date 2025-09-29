@@ -36,7 +36,7 @@
 }
 @media print{
     :root{
-        font-size:9px;
+        font-size:0.8rem;
         color:#000;
         background-color: #fff;
     }
@@ -348,6 +348,13 @@ meter{
     clear:both;
     margin:3px 0.25rem 0 0;
 }
+/** COLOR CLASSES **/
+.blue{
+    background-color: var(--blue);
+}
+.attention{
+    background-color: var(--attentionColor);
+}
 /** IMAGE VIEWER **/
 #overlay,#overlay-image,#prev-img-btn,#next-img-btn,#img-index,#overlay-title,#overlay-image-container{
     z-index:100;
@@ -501,7 +508,7 @@ div.menu-item-emoji,div.menu-item-label{
     width:100%;
 }
 div.menu-item-emoji{
-    font-size:24px;
+    font-size:1.7rem;
 }
 select.lng-selector{
     float:right;
@@ -537,13 +544,19 @@ p.file-upload{
     font-size: 0.8rem;
 }
 /** MARKDOWN **/
+.md{
+    font-size: 1.2rem;
+}
 h1.md{
+    font-size: 1.7rem;
     margin: 2.5rem 0 0 0.75rem;
 }
 h2.md{
+    font-size: 1.5rem;
     margin: 2.25rem 0 0 0.75rem;
 }
 h3.md{
+    font-size: 1.3rem;
     margin: 2rem 0 0 1rem;
 }
 ul.md,ol.md,p.md{

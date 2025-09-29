@@ -19,9 +19,12 @@ class HTMLbuilder{
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
 
-    private const SET_ACCESS_BYTE_INFO='Security relevant setting!<br/>New Priviledges will become active at the next user login.';
+    private const APPROVE_STYLE=['border'=>'2px solid #0f0'];
+    private const DECLINE_STYLE=['border'=>'2px solid #f00'];
 
-    private const PRESENTATION_SETTINGS_INFO='<b>SECURITY ADVICE:</b><br/>If a "Key filter" leads to multiple entries with sub-keys "tag" and "element-content" set, an html-element will bey created from all sub-keys.<br/>There is no filtering applied. Ensure the values are trustworthy to prevent XSS attacks.<br/><br/><b>Example:</b><br/>"Entry key" = \'Params\'<br/>"Key filter" = \'Item link\'<br/>...will create a html button, if the respective feed item entry created by class Feeds contains a link. This is safe as long as the class Feeds is safe and trustworthy.';
+    private const SET_ACCESS_BYTE_INFO="Security relevant setting!\nNew Priviledges will become active at the next user login.";
+
+    private const PRESENTATION_SETTINGS_INFO="<b>SECURITY ADVICE:</b>\nIf a \"Key filter\" leads to multiple entries with sub-keys \"tag\" and \"element-content\" set, an html-element will bey created from all sub-keys.\nThere is no filtering applied. Ensure the values are trustworthy to prevent XSS attacks.\n\n<b>Example:</b>\n\"Entry key\" = 'Params'\n\"Key filter\" = 'Item link'\n...will create a html button, if the respective feed item entry created by class Feeds contains a link. This is safe as long as the class Feeds is safe and trustworthy.";
     
     private const BUTTONS=[
         'test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
@@ -41,9 +44,9 @@ class HTMLbuilder{
         'delete'=>['key'=>['delete'],'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
         'remove'=>['key'=>['remove'],'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>[],'excontainer'=>FALSE],
         'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
-        'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['float'=>'right','margin'=>0]],
+        'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
         'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
-        ];
+    ];
 
     private const APP_OPTIONS=[
         'SourcePot\Datapool\Tools\GeoTools|getMapHtml'=>'getMapHtml()',
@@ -55,7 +58,7 @@ class HTMLbuilder{
         'SourcePot\Datapool\Tools\HTMLbuilder|selectBtn'=>'selectBtn()',
         'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
         'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
-        ];
+    ];
         
     private $keyCache=[];
 
@@ -79,12 +82,15 @@ class HTMLbuilder{
     
     public function traceHtml(string $msg='This has happend:'):string
     {
-        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);    
-        $html='<p>'.$msg.'</p><ol>';
+        $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);
+        $mgHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$msg]);   
+        $html='';
         for($index=1;$index<4;$index++){
             if (!isset($trace[$index])){break;}
             $html.='<li>'.$trace[$index]['class'].'::'.$trace[$index]['function'].'() '.$trace[$index-1]['line'].'</li>';
         }
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'ol','element-content'=>$html,'keep-element-content'=>TRUE]);
+        $html=$mgHtml.$html;
         return $html;
     }
     
@@ -196,9 +202,17 @@ class HTMLbuilder{
             }
             // create select
             $selected='';
-            if (isset($arr['selected'])){$selected=$arr['selected'];unset($arr['selected']);}
-            if (isset($arr['value'])){$selected=$arr['value'];unset($arr['value']);}
-            if (!isset($arr['options'][$selected]) && !empty($selected)){$arr['options'][$selected]=$selected;}
+            if (isset($arr['selected'])){
+                $selected=$arr['selected'];
+                unset($arr['selected']);
+            }
+            if (isset($arr['value'])){
+                $selected=$arr['value'];
+                unset($arr['value']);
+            }
+            if (!isset($arr['options'][$selected]) && !empty($selected)){
+                $arr['options'][$selected]=$selected;
+            }
             $toReplace=[];
             $selectArr=$arr;
             if (!empty($arr['hasSelectBtn'])){$selectArr['trigger-id']=$triggerId;}
@@ -209,12 +223,6 @@ class HTMLbuilder{
             $selectArr['keep-element-content']=TRUE;
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($selectArr);
             // create options
-            /*
-            if (isset($arr['style'])){
-                $arrStyle=$arr['style'];
-                unset($arr['style']);
-            }
-            */
             $toReplace['{{options}}']='';
             $optionCount=0;
             foreach($arr['options'] as $name=>$label){
@@ -550,11 +558,13 @@ class HTMLbuilder{
 
     public function app(array $arr):string
     {
-        if (empty($arr['html'])){return '';}
-        $arr['icon']=(isset($arr['icon']))?$arr['icon']:'?';
-        $arr['style']=(isset($arr['style']))?$arr['style']:[];
-        $arr['class']=(isset($arr['class']))?$arr['class']:'app';
-        $arr['title']=(isset($arr['title']))?$arr['title']:'';
+        if (empty($arr['html'])){
+            return '';
+        }
+        $arr['icon']=$arr['icon']??'?';
+        $arr['style']=$arr['style']??[];
+        $arr['class']=$arr['class']??'app';
+        $arr['title']=$arr['title']??'';
         $summaryArr=['tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($summaryArr);
         $detailsArr=['tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']];
@@ -568,7 +578,7 @@ class HTMLbuilder{
         if (empty($arr['settings']['target'])){
             throw new \ErrorException('Method '.__FUNCTION__.' called without target setting.',0,E_ERROR,__FILE__,__LINE__);    
         }
-        $arr['html']=(isset($arr['html']))?$arr['html']:'';        
+        $arr['html']=$arr['html']??'';        
         // get emoji options
         $options=[];
         foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->emojis as $category=>$categoryArr){
@@ -607,7 +617,9 @@ class HTMLbuilder{
         // This function provides the HTML-script for an integer editor for the provided entry argument.
         // Typical use is for keys 'Read', 'Write' or 'Privileges'.
         //
-        if (empty($arr['selector']['Source'])){return 'Method '.__FUNCTION__.' called but Source missing.';}
+        if (empty($arr['selector']['Source'])){
+            return 'Method '.__FUNCTION__.' called but Source missing.';
+        }
         $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
         $entry=$arr['selector'];
@@ -676,8 +688,10 @@ class HTMLbuilder{
     */
     public function setAccessByte(array $arr):string
     {
-        if (!isset($arr['selector'])){return 'Selector missing!';}
-        if (empty($arr['key'])){$arr['key']='Read';}
+        if (!isset($arr['selector'])){
+            return 'Selector missing!';
+        }
+        $arr['key']=$arr['key']?:'Read';
         $html='';
         if (empty($arr['selector']['Source']) || empty($arr['selector']['EntryId']) || empty($arr['selector'][$arr['key']])){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'Required keys missing.']);
@@ -750,9 +764,9 @@ class HTMLbuilder{
             $tableTitle='Your decission for the entry: '.$userAction;
         }
         if ($userAction==='approve'){
-            $tableStyle['border']='2px solid #0f0';
+            $tableStyle=array_merge($tableStyle,self::APPROVE_STYLE);
         } else if ($userAction==='decline'){
-            $tableStyle['border']='2px solid #f00';
+            $tableStyle=array_merge($tableStyle,self::DECLINE_STYLE);
         }
         // create buttons
         foreach($arr['settings'] as $key=>$value){
@@ -843,23 +857,23 @@ class HTMLbuilder{
         $selector=$baseSelector;
         $selector['EntryId']='%'.$arr['selector']['EntryId'];
         foreach($this->oc[$storageObj]->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
-            if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write'))){
-                $noWriteAccess=TRUE;
-            }
+            $noWriteAccess=empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write'));
             $endIndex=$entry['rowCount'];
             $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
             $currentIndex=intval($entryIdComps[0]);
             $rowIndex=$entryIdComps[0];
-            if (empty($entry['Content'])){$matrix[$rowIndex]['trStyle']=['background-color'=>'#fcc'];}
             foreach($arr['contentStructure'] as $contentKey=>$elementArr){
                 $classWithNamespace=(empty($elementArr['classWithNamespace']))?__CLASS__:$elementArr['classWithNamespace'];
                 $method=(empty($elementArr['method']))?'method-arg-missing':$elementArr['method'];
+                $emptyRow[$contentKey]='';
                 if (method_exists($classWithNamespace,$method)){
                     // if classWithNamespace::method() exists
                     if (isset($entry['Content'][$contentKey])){
                         if (isset($elementArr['element-content'])){
                             $elementArr['element-content']=$entry['Content'][$contentKey];
-                            if (!empty($elementArr['value'])){$elementArr['value']=$elementArr['value'];}
+                            if (!empty($elementArr['value'])){
+                                $elementArr['value']=$elementArr['value'];
+                            }
                         } else {
                             $elementArr['value']=$entry['Content'][$contentKey];
                         }
@@ -867,7 +881,9 @@ class HTMLbuilder{
                     $elementArr['callingClass']=$arr['callingClass'];
                     $elementArr['callingFunction']=$arr['callingFunction'];
                     $elementArr['key']=[$entry['EntryId'],'Content',$contentKey];
-                    if (isset($arr['canvasCallingClass'])){$elementArr['canvasCallingClass']=$arr['canvasCallingClass'];}
+                    if (isset($arr['canvasCallingClass'])){
+                        $elementArr['canvasCallingClass']=$arr['canvasCallingClass'];
+                    }
                     $matrix[$rowIndex][$contentKey]=$this->oc[$classWithNamespace]->$method($elementArr);
                     if (isset($elementArr['type']) && isset($elementArr['value'])){
                         if (strcmp($elementArr['type'],'hidden')===0){
@@ -880,38 +896,46 @@ class HTMLbuilder{
                     $matrix[$rowIndex][$contentKey]=$this->traceHtml('Not found: '.$classWithNamespace.'::'.$method.'(arr)');
                 }
             } // end of loop through content structure
-            $cmdBtns='';
-            $moveBtns='';
+            $matrix[$rowIndex]=array_merge($matrix[$rowIndex],[' '=>'','  '=>'','   '=>'','    '=>'',]);
+            $emptyRow+=[' '=>'','  '=>'','   '=>'','    '=>'',];
             // add buttons
-            $btnArr=array_replace_recursive($arr,self::BUTTONS['save'],['excontainer'=>FALSE]);
+            $btnArr=array_merge($arr,self::BUTTONS['save'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
             $btnArr['key'][]=$entry['EntryId'];
-            $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+            $matrix[$rowIndex][' ']=$btnArr;
             if ($entry['rowCount']>1){
-                $btnArr=array_replace_recursive($arr,self::BUTTONS['delete'],['excontainer'=>FALSE]);
+                $btnArr=array_merge($arr,self::BUTTONS['delete'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
-                $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+                $matrix[$rowIndex]['  ']=$btnArr;
             }
             if ($endIndex<$arr['maxRowCount'] && $currentIndex===$endIndex){
-                $btnArr=array_replace_recursive($arr,self::BUTTONS['add'],['excontainer'=>FALSE]);
+                $btnArr=array_merge($arr,self::BUTTONS['add'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
-                $cmdBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
+                $addBtn=$btnArr;
             }
             if ($currentIndex>$startIndex){
-                $btnArr=array_replace_recursive($arr,self::BUTTONS['moveDown'],['excontainer'=>FALSE]);
+                $btnArr=array_merge($arr,self::BUTTONS['moveDown'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>'0 0 0 5px']]);
                 $btnArr['key'][]=$entry['EntryId'];
-                if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']['background-color']='#89fa';}
-                $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+                if (strcmp($entry['EntryId'],$movedEntryId)===0){
+                    $btnArr['class']='blue';
+                }
+                $matrix[$rowIndex]['   ']=$btnArr;    
             }
             if ($currentIndex<$endIndex){
-                $btnArr=array_replace_recursive($arr,self::BUTTONS['moveUp'],['excontainer'=>FALSE]);
+                $btnArr=array_merge($arr,self::BUTTONS['moveUp'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
-                if (strcmp($entry['EntryId'],$movedEntryId)===0){$btnArr['style']['background-color']='#89fa';}
-                $moveBtns.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);    
+                if (strcmp($entry['EntryId'],$movedEntryId)===0){
+                    $btnArr['class']='blue';
+                }
+                $matrix[$rowIndex]['    ']=$btnArr;    
             }
-            $matrix[$rowIndex]['']=$cmdBtns;
-            if ($entry['rowCount']>1){$matrix[$rowIndex]['Move']=$moveBtns;}
+            if ($entry['rowCount']<2){
+                $matrix[$rowIndex]['   ']=$matrix[$rowIndex]['    ']='';
+            }
+            if (empty($entry['Content'])){
+                $matrix[$rowIndex]['trStyle']['background-color']='#fcc';
+            }
         } // end of loop through list entries
-        $matrix[$rowIndex]['Move']=($matrix[$rowIndex]['Move']??'').$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
+        $matrix['']=array_merge($emptyRow,[' '=>$addBtn,'    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);
         // write protection
         if ($noWriteAccess){$matrix=[];}
         // prepare return values
@@ -979,9 +1003,7 @@ class HTMLbuilder{
         if (empty($arr['excontainer'])){
             $settingsTemplate=['method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'];
             $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
-            $wrapperSetting=[];
-            $wrapperSetting['class']=(empty($arr['class']))?'std':$arr['class'];
-            $wrapperSetting['style']=(empty($arr['style']))?'':$arr['style'];
+            $wrapperSetting=['class'=>$arr['class']?:'','style'=>$arr['style']??[]];
             return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Present entry '.$arr['settings']['presentEntry'].' '.$arr['selector']['EntryId'],'generic',$arr['selector'],$arr['settings'],$wrapperSetting);
         } else {
             $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
@@ -1128,7 +1150,7 @@ class HTMLbuilder{
         $arr['selector']['Name']='Setting';
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>self::PRESENTATION_SETTINGS_INFO,'keep-element-content'=>TRUE]);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>self::PRESENTATION_SETTINGS_INFO,'keep-element-content'=>TRUE,'style'=>['font-size'=>'1.25rem','margin'=>'5px']]);
         return $arr;
     }
     

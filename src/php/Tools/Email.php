@@ -376,6 +376,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $headerChunks=explode('__SPLIT__',$headerStr);
         foreach($headerChunks as $headerChunk){
             $keyValueDivPos=strpos($headerChunk,': ');
+            if ($keyValueDivPos===FALSE){continue;}
             $key=strtolower(substr($headerChunk,0,$keyValueDivPos));
             $value=substr($headerChunk,$keyValueDivPos+2);
             $value=preg_replace('/\r\n\s+/','',$value);
