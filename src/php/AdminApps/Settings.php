@@ -21,9 +21,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             "--colorH"=>"#fff",
             "--colorM"=>"#aaa",
             "--bgColor"=>"#fff",
-            "--bgColorA"=>"#ddd",
+            "--bgColorA"=>"#eee",
             "--bgColorH"=>"#000",
-            "--bgMenu"=>"#3364",
+            "--bgMenu"=>"#3395",
             "--bgDarkT"=>"#0007",
             "--red"=>"#f99",
             "--redH"=>"#f44",
@@ -32,7 +32,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             "--blue"=>"#ccf",
             "--blueH"=>"#44f",
             "--yellow"=>"#fc9",
-            "--yellowH"=>"#fa4",
+            "--yellowH"=>"#c83",
             "--attentionColor"=>"rgba(255, 48, 48)",
             "--looggerBg"=>"#444",
             "--top-nav-height"=>"2.5rem",
@@ -44,15 +44,15 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             "--colorA"=>"#ddd",
             "--colorH"=>"#000",
             "--colorM"=>"#aaa",
-            "--bgColor"=>"#000",
+            "--bgColor"=>"#111",
             "--bgColorA"=>"#444",
             "--bgColorH"=>"#fff",
-            "--bgMenu"=>"#3364",
+            "--bgMenu"=>"#fff4",
             "--bgDarkT"=>"#0007",
-            "--red"=>"#f99",
+            "--red"=>"rgba(155, 0, 0, 1)",
             "--redH"=>"#f44",
-            "--green"=>"#afa",
-            "--greenH"=>"#4f4",
+            "--green"=>"#4f4",
+            "--greenH"=>"rgba(0, 134, 0, 1)",
             "--blue"=>"#44d",
             "--blueH"=>"#ccf",
             "--yellow"=>"#fa4",
@@ -243,7 +243,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             // get quick links if no Folder is selected
             if (empty($selector['Folder'])){
                 $html.=$this->settingsOverviewHtml();
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Page style','generic',['Source'=>$this->getEntryTable(),'Group'=>'Styles'],['classWithNamespace'=>__CLASS__,'method'=>'pageStyleSettingsHtml'],[]);    
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Page style','generic',['Source'=>$this->getEntryTable(),'Group'=>'Styles'],['classWithNamespace'=>__CLASS__,'method'=>'pageStyleSettingsHtml'],['style'=>['width'=>'unset']]);    
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -269,7 +269,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
 
-    private function getCssVars():array
+    public function getCssVars():array
     {
         $cssVars=[];
         $file=$GLOBALS['relDirs']['media'].'/light.css';
@@ -302,7 +302,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             if (file_put_contents($file,$cssFileContent)===FALSE){
                 return 'Writing css-file "'.$file.'" failed';
             } else {
-                return '"'.$file.'" updated';
+                return "\"$file\" updated.\nYou may need to clear your history and reload the page for the changes to take effect.";
             }
         }
     }
@@ -351,7 +351,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         $matrix=[];
         $matrix['Font-size']=['Value'=>$this->getFontSizeTemplateSelector($arr['callingClass'],$arr['callingFunction'])];
         $matrix['CSS template']=['Value'=>$this->getCssTemplateSelector($arr['callingClass'],$arr['callingFunction'])];
-        $matrix['Status']=['Value'=>$status];
+        $matrix['Status']=['Value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$status])];
         $matrix['']=['Value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Set','key'=>['set'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']])];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Page styles','hideKeys'=>FALSE,'hideHeader'=>FALSE,'keep-element-content'=>TRUE]);
         return $arr;

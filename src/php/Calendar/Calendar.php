@@ -489,11 +489,11 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $calendarDateTime->add($dayInterval);
             $newDayPos=$this->date2pos($calendarDateTime->format('Y-m-d H:i:s'));
             $dayStyle=['left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1];
-            if ($date==$this->pageState['addDate']??''){$dayStyle['background-color']='#f008';}
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>'calendar-day','style'=>$dayStyle]);
+            $class=($date==$this->pageState['addDate']??'')?'calendar-selected-day':'calendar-day';
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'','keep-element-content'=>TRUE,'class'=>$class,'style'=>$dayStyle]);
             $dayStyle=['left'=>$lastDayPos,'width'=>$newDayPos-$lastDayPos-1];
-            if (strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0){$dayStyle['background-color']='#af6';}
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>$dayContent,'keep-element-content'=>TRUE,'key'=>['Add',$date],'title'=>'Click here to open a new event','callingClass'=>__CLASS__,'callingFunction'=>'addEvents','class'=>'calendar-day','style'=>$dayStyle]);
+            $class=(strcmp($weekDay,'Sun')===0 || strcmp($weekDay,'Sat')===0)?'calendar-weekend-day':'calendar-day';
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>$dayContent,'keep-element-content'=>TRUE,'key'=>['Add',$date],'title'=>'Click here to open a new event','callingClass'=>__CLASS__,'callingFunction'=>'addEvents','class'=>$class,'style'=>$dayStyle]);
             $arr['html'].=$this->timeLineHtml($date);
             $lastDayPos=$newDayPos;
         }
@@ -547,7 +547,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                     $class='calendar-event-selected';
                 }
             }
-            if ($event['Group']=="Bank holidays"){$style['background-color']='#71d71f';} else {$style['background-color']='#c0b3ee';}
+            if ($event['Group']=="Bank holidays"){
+                $class='.calendar-event-bankholiday';
+            }
             $title=$event['Name']."\n";
             $title.=str_replace('T',' ',$event['Content']['Event']['Start']).' ('.$event['Content']['Event']['Start timezone'].")\n";
             $title.=str_replace('T',' ',$event['Content']['Event']['End']).' ('.$event['Content']['Event']['End timezone'].')';
