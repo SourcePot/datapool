@@ -59,15 +59,15 @@ iframe.ep-std{
 }
 .ep-header-wrapper{
     width:100%;
-    background-color:#ddd;
-    border-top:1px solid #aaa;
+    background-color:var(--bgColorA);
+    border-top:1px solid var(--colorA);
 }
 details.ep-comment{
     clear:left;
 }
 .ep-comment{
     font-size:1.2rem;
-    color:#a80;
+    color:var(--yellowH);
 }
 .ep-comment-footer{
     font-weight:bold;

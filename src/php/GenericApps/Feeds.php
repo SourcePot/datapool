@@ -32,7 +32,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'EN - News'=>'EN - News',
         'EN - Politics'=>'EN - Politics',
         'EN - Economy'=>'EN - Economy',
-        'EN - Technology'=>'DE - Technology',
+        'EN - Technology'=>'EN - Technology',
         'EN - Computer'=>'EN - Computer',
         'EN - Cyber Security'=>'EN - Cyber Security',
         'EN - Science'=>'EN - Science',
@@ -362,7 +362,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     public function receiverPluginHtml(array $arr):string
     {
-        $html='HALLO';
+        $html='';
         return $html;
     }
 

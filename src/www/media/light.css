@@ -8,9 +8,9 @@
     --colorM:#aaa;
     /** background color **/
     --bgColor:#fff;
-    --bgColorA:#ddd;
+    --bgColorA:#eee;
     --bgColorH:#000;
-    --bgMenu:#3364;
+    --bgMenu:#3395;
     --bgDarkT:#0007;
     /** colors **/
     --red:#f99;
@@ -20,8 +20,9 @@
     --blue:#ccf;
     --blueH:#44f;
     --yellow:#fc9;
-    --yellowH:#fa4;
+    --yellowH:#c83;
     --attentionColor:rgba(255, 48, 48);
+    --attentionColorTransparent:#f446;
     --looggerBg:#444;
     /** dimensions **/
     --top-nav-height:2.5rem;
@@ -127,7 +128,7 @@ input,textarea,select{
     padding:0.2rem 0.4rem;
     margin: 0 0.2rem 0.2rem 5px;
     color:var(--colorA);
-    background-color:var(--bgColor);
+    background-color:var(--bgColorA);
 }
 input:invalid,textarea:invalid{
     border: 2px solid var(--attentionColor);
@@ -140,12 +141,12 @@ textarea{
     min-height:3rem;
 }
 input.filter[type="text"]{
-    border:1px dotted var(--attentionColor);
+    border:2px dotted var(--blueH);
 }
 /** BUTTONS **/
 button,input[type="submit"],input[type="file"],a.btn,a.cookies,a.plot,.js-button{
     clear:none;
-    background-color:var(--bgColor);
+    background-color:var(--bgColorA);
     color:var(--colorA);   
     font-size: 1.2rem;
     text-align:center;
@@ -299,8 +300,8 @@ article.multimedia{
     max-width:300px;
     height:280px;
     margin:5px;
-    border:1px solid var(--bgColorA);
-    box-shadow:10px 5px 5px var(--bgColorA);
+    border:1px solid var(--colorM);
+    box-shadow:5px 5px 15px var(--bgColorA);
 }
 div.container-busy{
     display:none;
@@ -354,6 +355,9 @@ meter{
 }
 .attention{
     background-color: var(--attentionColor);
+}
+.attention-transparent{
+    background-color: var(--attentionColorTransparent);
 }
 /** IMAGE VIEWER **/
 #overlay,#overlay-image,#prev-img-btn,#next-img-btn,#img-index,#overlay-title,#overlay-image-container{
@@ -762,7 +766,7 @@ div.calendar-sheet{
     min-height:300px;
     background-image:url("canvaslightbg.png");
 }
-div.calendar-day,button.calendar-day{
+div.calendar-day,button.calendar-day,div.calendar-weekend-day,button.calendar-weekend-day,div.calendar-selected-day,button.calendar-selected-day{
     position:absolute;
     top:0;
     height:100%;
@@ -774,11 +778,17 @@ div.calendar-day,button.calendar-day{
     border-right:1px solid var(--colorA);
     background: none;
 }
-button.calendar-day{
+button.calendar-day,button.calendar-weekend-day{
     height:65px;
     border:none;
     font-size:1rem;
     background-color:var(--bgColorA);
+}
+button.calendar-weekend-day{
+    background-color:var(--greenH);
+}
+div.calendar-selected-day{
+    background-color:var(--attentionColorTransparent);
 }
 p.calendar-hour,div.calendar-hour{
     position:absolute;
@@ -798,14 +808,17 @@ div.calendar-timeline{
     height:100%;
     border-left:3px dashed var(--attentionColor);    
 }
-.calendar-event,.calendar-event-selected{
+.calendar-event,.calendar-event-selected,.calendar-event-bankholiday{
     position:absolute;
     padding:0;
     height:25px;
     overflow:hidden;
     text-align:center;
     color:var(--color);
-    background-color:var(--bgColor);
+    background-color:var(--blue);
+}
+.calendar-event-bankholiday{
+    background-color:var(--green);
 }
 .calendar-event-selected{
     border:2px solid var(--attentionColor);

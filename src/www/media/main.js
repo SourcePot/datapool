@@ -153,10 +153,10 @@ jQuery(document).ready(function(){
         jQuery('button[id^=clipboard]').parent().css({backgroundColor:""});
         try{
             navigator.clipboard.writeText(text);
-            jQuery(this).parent().css({backgroundColor:"#8c4"});
+            jQuery(this).parent().addClass('blue');
         } catch (e){
 			console.log(e);
-            jQuery(this).css({backgroundColor:"#fcc"});
+            jQuery(this).addClass('attention');
         }
         
     });
@@ -452,10 +452,10 @@ jQuery(document).ready(function(){
 	markChages();
 	function markChages(){
 		jQuery('input[type=text],input[type=email],input[type=tel],input[type=password],textarea').on('keypress',function(e){
-			jQuery(this).parent().parent().filter('tr').css({'background-color':'#fcc'});
+			jQuery(this).parent().parent().filter('tr').addClass('attention-transparent');
 		});
 		jQuery('select').on('change',function(e){
-			jQuery(this).parent().parent().filter('tr').css({'background-color':'#fcc'});
+			jQuery(this).parent().parent().filter('tr').addClass('attention-transparent');
 		});
 	}
 
