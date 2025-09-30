@@ -382,13 +382,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $value=preg_replace('/\r\n\s+/','',$value);
             $values=explode(';',$value);
             foreach($values as $value){
-                // convert encoding
-                $tmpValue='';
-                foreach(imap_mime_header_decode($value) as $encodingValueObj){
-                    $encoding=str_replace('default','US-ASCII',$encodingValueObj->charset);
-                    $tmpValue.=mb_convert_encoding($encodingValueObj->text,"UTF-8",$encoding);  
-                }
-                $value=$tmpValue;
+                $value=mb_decode_mimeheader($value);
                 // get sub arrays
                 preg_match('/([a-zA-Z]+)\=([^?].*)/',$value,$match);
                 $subKey=$match[1]??'root';

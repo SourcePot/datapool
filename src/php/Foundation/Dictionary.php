@@ -93,7 +93,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
             'Password'=>'Passwort',
             'Permissions'=>'Berechtigungen',
             'Permitted'=>'Erlaubt',
-            'Please provide a valid email address'=>'Bitte geben Sie ein valide E-Mail ein',
+            'Please provide a valid email address'=>'Bitte geben Sie ein valide E-Mail-Adresse ein',
             'Please use your requested one-time link to log into'=>'Bitte benutze den angeforderten Einmal-Link zur Anmeldung bei',
             'Phone'	=>'Telefon',
             'TRUE'=>'WAHR',
