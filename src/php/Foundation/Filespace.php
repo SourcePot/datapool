@@ -21,8 +21,8 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
             '__PUBLIC__'=>60,
             'tmp'=>10800,
             'privat tmp'=>60
-            ]
-        ];
+        ]
+    ];
 
     private $entryTemplate=[
         'Class'=>['type'=>'string','value'=>TRUE,'Description'=>'Class selects the folder within the setup dir space'],
@@ -33,7 +33,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         'Read'=>['type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'int','value'=>'ADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
         'Owner'=>['type'=>'string','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
-        ];
+    ];
 
     public function __construct(array $oc)
     {
@@ -63,7 +63,9 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function job(array $vars):array
     {
-        if (isset($vars['Error'])){unset($vars['Error']);}
+        if (isset($vars['Error'])){
+            unset($vars['Error']);
+        }
         if (empty($vars['Dirs to process'])){
             $dirs=scandir($GLOBALS['dirs']['filespace']);
             foreach($dirs as $dir){
@@ -835,10 +837,11 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
             $statistics['zip errors']++;
         }
         $dbStatistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-        $context=['statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),
-                  'dbStatistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($dbStatistics),
-                  'orgFileName'=>$orgFileName
-                 ];
+        $context=[
+            'statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics),
+            'dbStatistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($dbStatistics),
+            'orgFileName'=>$orgFileName
+        ];
         $this->oc['logger']->log('info','Import of "{orgFileName}" resulted in "{statistics}", the database statistic is "{dbStatistics}"',$context);    
         return $statistics;
     }

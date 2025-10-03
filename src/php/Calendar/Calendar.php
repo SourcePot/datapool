@@ -22,7 +22,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         'Folder'=>['value'=>'event','type'=>'VARCHAR(255)','Description'=>'This is the Group category'],
         'Start'=>['value'=>'{{nowDateUTC}}','type'=>'DATETIME','Description'=>'Is the start of an event, event, etc.'],
         'End'=>['value'=>'{{TOMORROW}}','type'=>'DATETIME','Description'=>'Is the end of an event, event, etc.']
-        ];
+    ];
 
     private $setting=[];
     private $toReplace=[];
@@ -57,7 +57,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         'Misc'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
         'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
         'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-        ];
+    ];
 
     private const OPTIONS=[
         'Type'=>['event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'],
@@ -70,8 +70,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
             'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
             'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'
-            ],
-        ];
+        ],
+    ];
 
     public function __construct($oc)
     {
@@ -109,8 +109,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     public function job(array $vars):array
     {
         // add bank holidays
-        if (!isset($vars['Bank holidays'])){$vars['Bank holidays']['lastRun']=0;}
-        if (!isset($vars['Signal cleanup'])){$vars['Signal cleanup']['lastRun']=0;}
+        $vars['Bank holidays']=$vars['Bank holidays']??$vars['Bank holidays']=['lastRun'=>0];
+        $vars['Signal cleanup']=$vars['Signal cleanup']??$vars['Signal cleanup']=['lastRun'=>0];
         $action='';
         if (time()-$vars['Bank holidays']['lastRun']>26000){
             // load bank holidays
@@ -287,7 +287,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             'Duration'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$durationOptions],
             'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'options'=>self::OPTIONS['Timezone']],
             'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE)],
-            ];
+        ];
         $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'owner'=>$currentUserId];
         $arr['contentStructure']=$contentStructure;
@@ -346,8 +346,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $this->setting=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting(__CLASS__,$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),$formData['val']['setting'],'Calendar',FALSE);
         }
         $tagArr=$btnArr=$arr;
-        $tagArr['style']=['padding'=>'7px 3px'];
-        $btnArr['style']=['font-size'=>'20px','padding'=>'2px'];
         $btnArr['tag']='button';
         $btnArr['excontainer']=FALSE;
         $btnArr['key']=['Home'];
@@ -481,7 +479,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $calendarDateTime=new \DateTime('@'.$this->calendarStartTimestamp());
         $calendarDateTime->setTimezone(new \DateTimeZone($this->setting['Timezone']));
         for($day=0;$day<$this->setting['Days to show'];$day++){
-            //var_dump($calendarDateTime->format('Y-m-d H:i:s'));
             $weekDay=$calendarDateTime->format('D');
             $date=$calendarDateTime->format('Y-m-d');
             $dayContent=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Week').' '.intval($calendarDateTime->format('W')).', '.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($weekDay).'<br/>';
@@ -532,9 +529,15 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $events=$this->getEvents($timestamp);
         $arr['calendarSheetHeight']=120;
         foreach($events as $EntryId=>$event){
-            if (empty($event['Content']['Event']['Start']) || empty($event['Content']['Event']['End'])){continue;}
-            if (is_array($event['Content']['Event']['Start'])){implode(' ',$event['Content']['Event']['Start']);}
-            if (is_array($event['Content']['Event']['End'])){implode(' ',$event['Content']['Event']['End']);}
+            if (empty($event['Content']['Event']['Start']) || empty($event['Content']['Event']['End'])){
+                continue;
+            }
+            if (is_array($event['Content']['Event']['Start'])){
+                implode(' ',$event['Content']['Event']['Start']);
+            }
+            if (is_array($event['Content']['Event']['End'])){
+                implode(' ',$event['Content']['Event']['End']);
+            }
             $style=['min-width'=>'unset'];
             $style['top']=100+$event['y']*40;
             if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
@@ -548,7 +551,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 }
             }
             if ($event['Group']=="Bank holidays"){
-                $class='.calendar-event-bankholiday';
+                $class='calendar-event-bankholiday';
             }
             $title=$event['Name']."\n";
             $title.=str_replace('T',' ',$event['Content']['Event']['Start']).' ('.$event['Content']['Event']['Start timezone'].")\n";
@@ -782,7 +785,6 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $str='';
         $nonZeroDetected=FALSE;
         $template=['years'=>'y','months'=>'m','days'=>'d','hours'=>'h','minutes'=>'i'];
-        //$template=['years'=>'y','months'=>'m','days'=>'d','hours'=>'h','minutes'=>'i','seconds'=>'s'];
         foreach($template as $label=>$index){
             $value=$interval->format('%'.$index);
             if (intval($value)===1){$label=rtrim($label,'s');}

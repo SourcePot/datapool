@@ -144,7 +144,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $queryPos=intval(mb_strpos($text,$query));
         $startPos=($queryPos>$halfSmapleLength)?($queryPos-$halfSmapleLength):0;
         $sampleText=mb_substr($text,$startPos,self::SAMPLE_LENGTH);
-        $sampleText=str_replace($query,'<span style="background-color:yellow;">'.$query.'</span>',$sampleText);
+        $sampleText=str_replace($query,'<span style="background-color:#0f0;color:#000;">'.$query.'</span>',$sampleText);
         $sampleText=($startPos>0)?('...'.$sampleText):$sampleText;
         $sampleText=(mb_strlen($text)>=self::SAMPLE_LENGTH)?($sampleText.'...'):$sampleText;
         $sampleText='<i>'.$sampleText.'</i>';
