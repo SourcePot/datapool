@@ -125,7 +125,7 @@ a.textlink{
 input,textarea,select{
     clear:none;
     font-size:1rem;
-    padding:0.2rem 0.4rem;
+    padding:0.25rem 0.4rem;
     margin: 0 0.2rem 0.2rem 5px;
     color:var(--colorA);
     background-color:var(--bgColorA);
@@ -251,7 +251,7 @@ legend{
 div.fieldset{
     padding:0.5rem 0;
 }
-input[type="text"],input[type="tel"],input[type="password"],input[type="email"],textarea{
+input[type="text"],input[type="tel"],input[type="password"],input[type="email"],input[type="date"],textarea{
     min-width: var(--textFieldMinWidth);
 }
 input[type="checkbox"]{
@@ -757,7 +757,7 @@ div.calendar-sheet-wrapper{
     width:100%;
     margin:5px 0;
     overflow:auto;
-    border-bottom:1px solid var(--colorM);
+    border-top:1px solid var(--colorM);
     border-bottom:1px solid var(--colorM);
 }
 div.calendar-sheet{
@@ -775,7 +775,7 @@ div.calendar-day,button.calendar-day,div.calendar-weekend-day,button.calendar-we
     color:var(--colorA);
     text-align:center;
     overflow:hidden;
-    border-right:1px solid var(--colorA);
+    border-right:1px solid var(--colorM);
     background: none;
 }
 button.calendar-day,button.calendar-weekend-day{
@@ -825,9 +825,9 @@ div.calendar-timeline{
 }
 .calendar-settings-wrapper{
     clear:none;
-    background-color:var(--bgColorA);
     margin:0.5rem 0.5rem 0.5rem 0;
     padding:0.25rem;
+    border: 1px solid var(--colorM);
 }
 /** STATUS **/
 .status-off,input.status-off{

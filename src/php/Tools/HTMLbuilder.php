@@ -425,7 +425,6 @@ class HTMLbuilder{
             // button command processing
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
             $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($formData['selector']);
-            //if (!empty($formData['cmd'])){$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($formData);}
             if (isset($formData['cmd']['download']) || isset($formData['cmd']['download all'])){
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->entry2fileDownload($selector);
             } else if (isset($formData['cmd']['upload'])){
@@ -934,7 +933,7 @@ class HTMLbuilder{
                 $matrix[$rowIndex]['   ']=$matrix[$rowIndex]['    ']='';
             }
             if (empty($entry['Content'])){
-                $matrix[$rowIndex]['trStyle']['background-color']=$this->cssVars['--attentionColor']??'#faa';
+                $matrix[$rowIndex]['trStyle']['background-color']=$this->cssVars['--attentionColorTransparent']??'#faa';
             }
         } // end of loop through list entries
         $matrix['']=array_merge($emptyRow,[' '=>$addBtn,'    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);
