@@ -13,15 +13,11 @@ namespace SourcePot\Datapool\Foundation;
 class Definitions{
     
     private $oc;
-    
-    private $entryTable='';
-    private $entryTemplate=[];
+    private $definition=[];
     
     public function __construct($oc)
     {
         $this->oc=$oc;
-        $table=str_replace(__NAMESPACE__,'',__CLASS__);
-        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
     Public function loadOc(array $oc):void
@@ -29,21 +25,6 @@ class Definitions{
         $this->oc=$oc;
     }
 
-    public function init()
-    {
-        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-    }
-    
-    public function getEntryTable()
-    {
-        return $this->entryTable;
-    }
-
-    public function getEntryTemplate()
-    {
-        return $this->entryTemplate;
-    }
-    
     /**
     * This method returns the definition name from the class argument provided. 
     * @return string
@@ -68,10 +49,9 @@ class Definitions{
     */
     public function addDefintion(string $callingClass,array $definition)
     {
-        $entry=['Source'=>$this->entryTable,'Group'=>'Templates','Folder'=>$callingClass,'Name'=>$this->class2name($callingClass),'Owner'=>'SYSTEM'];
-        $entry['EntryId']=md5(json_encode($entry));
-        $entry['Content']=$definition;
-        return $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
+        $key=$this->class2name($callingClass);
+        $this->definition[$key]=$definition;
+        return ['Name'=>$key,'Content'=>$definition];
     }
     
     /**
@@ -81,18 +61,14 @@ class Definitions{
     */
     public function getDefinition(array $entry):array|bool
     {
-        $selector=['Source'=>$this->entryTable,'Group'=>'Templates'];
+        $key='';    
         if (!empty($entry['app'])){
-            $selector['Name']=$this->class2name($entry['app']);
+            $key=$this->class2name($entry['app']);
         } else if (!empty($entry['Type'])){
             $typeComps=explode('|',$entry['Type']);
-            $selector['Name']=array_pop($typeComps);
-        } else {
-            $entry['function']=__FUNCTION__;
-            $this->oc['logger']->log('error','Function "{function}": Entry missing Type-key or Class-key.',$entry);
+            $key=array_pop($typeComps);
         }
-        $definition=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
-        return (is_array($definition))?$definition:[];
+        return ['Name'=>$key,'Content'=>$this->definition[$key]??[]];
     }
     
     /**

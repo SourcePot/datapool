@@ -179,7 +179,7 @@ class GeoTools{
         // This method returns the html-code for a map.
         // The map is based on the data provided by $entry['Params']['Geo'], if $entry is empty the current user obj will be used
         //
-        $template=['style'=>['float'=>'left','clear'=>'both'],'class'=>'ep-std','dL'=>0.001];
+        $template=['style'=>['float'=>'left','clear'=>'both','min-width'=>'31rem','min-height'=>'19rem',],'class'=>'ep-std','dL'=>0.001];
         $arr=array_replace_recursive($template,$arr);
         $arr['html']=$arr['html']??'';
         if (!$this->permitted){
@@ -199,7 +199,6 @@ class GeoTools{
         $bbLat2=$entry['Params']['Geo']['lat']+$arr['dL'];
         $bbLon1=$entry['Params']['Geo']['lon']-$arr['dL'];
         $bbLon2=$entry['Params']['Geo']['lon']+$arr['dL'];
-        $arr['html'].='<h3 class="whiteBoard">'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Location').'</h3>';
         $elementArr=['tag'=>'iframe','element-content'=>'','style'=>$arr['style'],'class'=>$arr['class']];
         $elementArr['src']='https://www.openstreetmap.org/export/embed.html?bbox='.$bbLon1.','.$bbLat1.','.$bbLon2.','.$bbLat2.'&marker='.$entry['Params']['Geo']['lat'].','.$entry['Params']['Geo']['lon'].'&layer=mapnik';
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementArr);
