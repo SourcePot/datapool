@@ -406,7 +406,8 @@ final class Root{
         // script time consumption in ms
         $description='When a script is called, the time consumption in miliseconds and timestamp is added to the signal';
         $timeConsumption=intval((hrtime(TRUE)-$GLOBALS['script start time'])/1000000);
-        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',$timeConsumption,'int',['description'=>$description]);
+        $color=($timeConsumption>2000)?'#a00':(($timeConsumption>300)?'#00a':'#0a0');
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$this->script.' time consumption [ms]',$timeConsumption,'int',['label'=>$_SESSION['page state']['selectedCategory']??'','description'=>$description,'color'=>$color]);
         $this->builderProgress[hrtime(TRUE)]='Time consumption signal updated. Page content will be echoed next';
         // write log files
         $logLevel=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel');
@@ -796,6 +797,5 @@ final class Root{
         }
         return $ip;
     }
-
 }
 ?>

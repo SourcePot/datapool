@@ -21,7 +21,7 @@ class Signals{
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
-        ];
+    ];
     
     private const ACTIVE_IF=['stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
         'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (trigger above th.)',    
@@ -30,7 +30,7 @@ class Signals{
         'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip)',
         'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down)',
         'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (trigger below th.)',    
-        ];
+    ];
 
     public function __construct(array $oc)
     {
@@ -77,7 +77,7 @@ class Signals{
     
     public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[]):array
     {
-        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time(),'label'=>$params['label']??''];
+        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time(),'label'=>$params['label']??'','color'=>$params['color']??''];
         $params=array_merge(['maxSignalDepth'=>self::MAX_SIGNAL_DEPTH],$params);
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
@@ -391,7 +391,7 @@ class Signals{
             if ($meta['yMin']>$value || $meta['yMin']===NULL){$meta['yMin']=$value;}
             if ($meta['yMax']<$value || $meta['yMax']===NULL){$meta['yMax']=$value;}
             // add datapoint
-            $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-'];
+            $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-','color'=>$item['color']??''];
         }
         $meta=array_merge($meta,$metaOverwrite);
         // sorting and scaling data
@@ -407,7 +407,7 @@ class Signals{
         foreach($data as $timeStamp=>$item){
             $barHeight=$this->value2pixel($item['value']+$meta['yMin']-$barBase,$meta,TRUE);
             $barBottom=$this->value2pixel($barBase,$meta,TRUE);
-            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>'#10f4','border-top'=>'1px solid #10f'],'keep-element-content'=>TRUE,'element-content'=>''];
+            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>($item['color']?:'#10a').'4','border-top'=>'1px solid '.($item['color']?:'#10a')],'keep-element-content'=>TRUE,'element-content'=>''];
             if ($barHeight<0){
                 $barBottom=$barBottom+$barHeight;
                 $barHeight=-$barHeight;

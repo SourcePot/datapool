@@ -29,7 +29,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
     
     public function __construct($oc)
     {
@@ -138,8 +138,8 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         if (!empty($params['Content']['Client']) && !empty($callingElement['callingElement']['Selector'])){
             $baseEntryId=$params['Content']['Client'];
             // get client settings form
-            $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_setting','disableAutoRefresh'=>FALSE];
-            $htmlSettings=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client specific settings '.$baseEntryId,'generic',$selector,['method'=>'getClientSettingsContainter','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
+            $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_setting','disableAutoRefresh'=>TRUE];
+            $htmlSettings=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client specific settings '.$baseEntryId,'generic',$selector,['method'=>'getClientSettingsContainer','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
             // get client status form
             $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_lastentry','disableAutoRefresh'=>FALSE];
             $callingElement['lastEntrySelector']=$selector;
@@ -174,7 +174,18 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private function clientParams($callingElement):string
     {
-        $contentStructure=['Client'=>['method'=>'select','value'=>'','options'=>$this->getClientOptions(),'excontainer'=>TRUE],];
+        $plotOptions=[];
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,['clientparams'=>[]]);
+        $params=current($base['clientparams']??[]);
+        $signalSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector(__CLASS__,$params['Content']['Client']??'__NOTHING_HERE__','%');
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($signalSelector) as $signal){
+            if (!isset($signal['Content']['signal'])){continue;}
+            $plotOptions[$signal['Name']]=$signal['Name'];
+        }
+        $contentStructure=[
+            'Client'=>['method'=>'select','value'=>'','options'=>$this->getClientOptions(),'excontainer'=>TRUE],
+            'Plot to show'=>['method'=>'select','value'=>key($plotOptions),'options'=>$plotOptions,'excontainer'=>TRUE],
+        ];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=[];
@@ -192,7 +203,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $arr['caption']='Select client';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
         $matrix=['Parameter'=>$row];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Params']);
@@ -313,7 +323,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     public function getClientPlot(array $callingElement):string
     {
         $params=current($callingElement['clientparams']??[]);
-        return $this->oc['SourcePot\Datapool\Foundation\Signals']->signal2plot(__CLASS__,$params['Content']['Client']??'__NOTHING_HERE__','%');
+        return $this->oc['SourcePot\Datapool\Foundation\Signals']->signal2plot(__CLASS__,$params['Content']['Client']??'__NOTHING_HERE__',$params['Content']['Plot to show']??'%');
     }
 
     private function getClientOptions():array
@@ -327,7 +337,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         return $options;
     }
 
-    public function getClientSettingsContainter(array $arr)
+    public function getClientSettingsContainer(array $arr)
     {
         $arr['html']='Entry missing...';
         $entryIdcomps=explode('_',$arr['selector']['EntryId']);

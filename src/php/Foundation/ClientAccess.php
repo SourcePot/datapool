@@ -19,10 +19,11 @@ class ClientAccess{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
-                            'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
+        'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.'],
+    ];
 
     private $methodBlackList=['run','init'];
     
@@ -103,8 +104,8 @@ class ClientAccess{
     */
     private function request2data($data,$isDebugging=FALSE){
         $this->deleteExpiredEntries();
-        $data['grant_type']=(isset($data['grant_type']))?$data['grant_type']:'';
-        $data['Authorization']=(isset($data['Authorization']))?$data['Authorization']:'';
+        $data['grant_type']=$data['grant_type']??'';
+        $data['Authorization']=$data['Authorization']??'';
         if (strcmp($data['grant_type'],'authorization_code')===0 && mb_strpos($data['Authorization'],'Basic ')===0){
             // new token request
             $data=$this->newToken($data);
@@ -259,12 +260,13 @@ class ClientAccess{
     public function clientAppCredentialsForm($arr){
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',FALSE,FALSE,TRUE)){return $arr;}
-        $contentStructure=['scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\Datapool\Processing\RemoteClient','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()],
-                            'method'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE],
-                            'client_id'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'pi','excontainer'=>TRUE],
-                            'client_secret'=>['method'=>'element','tag'=>'input','value'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(32),'type'=>'text','excontainer'=>TRUE],
-                            'Access token request'=>['method'=>'getClientInfo'],
-                            ];
+        $contentStructure=[
+            'scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\Datapool\Processing\RemoteClient','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()],
+            'method'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE],
+            'client_id'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'pi','excontainer'=>TRUE],
+            'client_secret'=>['method'=>'element','tag'=>'input','value'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(32),'type'=>'text','excontainer'=>TRUE],
+            'Access token request'=>['method'=>'getClientInfo'],
+        ];
         $selector=['Source'=>$this->entryTable,'Group'=>'Client credentials','Folder'=>$arr['selector']['EntryId'],'Owner'=>$arr['selector']['Owner']];
         $selector['Name']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract(['selector'=>$arr['selector']],4);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector,['Group','Folder','Name'],0);
