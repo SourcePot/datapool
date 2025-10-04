@@ -150,7 +150,12 @@ class Element{
             $arr['nonce']=$this->oc['SourcePot\Datapool\Root']->getNonce(FALSE);
         }
         if (isset(self::DEF[$arr['tag']])){
-            if (isset($arr['element-content'])){$arr['element-content']=strval($arr['element-content']);}
+            if (isset($arr['element-content'])){
+                $arr['element-content']=strval($arr['element-content']);
+                
+            } else if ($arr['type']==='date'){
+                $arr['value']=substr($arr['value']??'',0,10);
+            }
             $def=array_merge(self::DEF[''],self::DEF[$arr['tag']],self::SECIAL_ATTR);
             $nameRequired=(!empty($def['name']));
             $elementArr=['tag'=>$arr['tag'],'attr'=>[],'sessionArr'=>['type'=>'']];

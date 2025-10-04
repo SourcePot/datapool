@@ -618,12 +618,10 @@ class HTMLbuilder{
         // This function provides the HTML-script for an integer editor for the provided entry argument.
         // Typical use is for keys 'Read', 'Write' or 'Privileges'.
         //
-        if (empty($arr['selector']['Source'])){
-            return 'Method '.__FUNCTION__.' called but Source missing.';
-        }
         $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
-        $entry=$arr['selector'];
+        $entry=$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']??[],FALSE);
+        if (empty($entry)){return '';}
         // only the Admin has access to the method if columns 'Privileges' is selected
         if (is_array($arr['key'])){
             $arr['key']=array_shift($arr['key']);
@@ -714,15 +712,8 @@ class HTMLbuilder{
     public function entryControls(array $arr,bool $isDebugging=FALSE):string
     {
         $tableStyle=['clear'=>'none','margin'=>'0','min-width'=>'200px'];
-        if (!isset($arr['selector'])){return 'Selector missing';}
-        $debugArr=['arr_in'=>$arr];
-        $arr['html']='';
-        if (!isset($arr['selector']['Content'])){
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-        }
-        if (empty($arr['selector'])){
-            return 'Entry does not exsist (yet).';
-        }
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']??[],FALSE);
+        if (empty($entry)){return '';}
         // check if a canvas element is selected and it's processor
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement');
         $hasCheckEntriesProcessor=(($selectedCanvasElement['Content']['Widgets']['Processor']??'')==='SourcePot\\checkentries\\checkentries');
@@ -757,11 +748,11 @@ class HTMLbuilder{
             $matrix['Preview']['Value'].=$previewArr['html'];
         }
         // detected user action
-        $tableTitle=$arr['selector']['Name'];
+        $tableTitle=$entry['Name'];
         $userAction='none';
         $userKey=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId().'_action';
-        if (isset($arr['selector']['Params']['User'][$userKey])){
-            $userAction=$arr['selector']['Params']['User'][$userKey]['action'];
+        if (isset($entry['Params']['User'][$userKey])){
+            $userAction=$entry['Params']['User'][$userKey]['action'];
             $tableTitle='Your decission for the entry: '.$userAction;
         }
         if ($userAction==='approve'){
@@ -777,15 +768,11 @@ class HTMLbuilder{
                 $arr['excontainer']=TRUE;
                 $arr['cmd']=$cmd;
                 $matrix['Btns']['Value'].=$this->btn($arr);
-                $debugArr['btn'][]=$arr;
             }
         }
         // finalize
         $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$matrix['Btns']['Value'],'keep-element-content'=>TRUE,'style'=>['width'=>'max-content']]);
         $html=$this->table(['matrix'=>$matrix,'hideHeader'=>$arr['hideHeader'],'hideKeys'=>$arr['hideKeys'],'caption'=>FALSE,'keep-element-content'=>TRUE,'title'=>$tableTitle,'style'=>$tableStyle,'class'=>'matrix']);
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
         return $html;
     }
     

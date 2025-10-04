@@ -21,7 +21,6 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         ];
     
     private const DEFINITION=[
-        'Type'=>['@tag'=>'p','@default'=>'user','@Read'=>'NO_R'],
         'Content'=>[
             'Contact details'=>[
                 'Title'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],

@@ -126,16 +126,6 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'settings'=>['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
             'description'=>'Here you can adjust the entry presentation which is based on the Class and Method used to present the entry. The method presemnting an entry is typically run() or for javascript calls presentEntry().'
         ],
-        'Definitions'=>[
-            'selector'=>[
-                'app'=>__CLASS__,
-                'Source'=>'definitions',
-                'Group'=>'Templates'
-            ],
-            'containerType'=>'entryList',
-            'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'Folder','Filter'=>''],['Column'=>'Content','Filter'=>''],]],
-            'description'=>'Here you can adjust the entry definitions.'
-        ],
         'Feeds'=>[
             'selector'=>[
                 'app'=>__CLASS__,
