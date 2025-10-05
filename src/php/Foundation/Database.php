@@ -24,9 +24,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     private $rootEntryTemplate=[
         'EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
-        'Group'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'First level ordering criterion'],
-        'Folder'=>['type'=>'VARCHAR(255)','value'=>'...','Description'=>'Second level ordering criterion'],
-        'Name'=>['type'=>'VARCHAR(1024)','value'=>'New','Description'=>'Third level ordering criterion'],
+        'Group'=>['type'=>'VARCHAR(255)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'First level ordering criterion'],
+        'Folder'=>['type'=>'VARCHAR(255)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Second level ordering criterion'],
+        'Name'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Third level ordering criterion'],
         'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
         'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
         'Content'=>['type'=>'MEDIUMBLOB','value'=>[],'Description'=>'This is the entry Content data'],
@@ -300,7 +300,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     * @param array $entry Is the orginal entry  
     * @return array $entry Is the enriched entry
     */
-    public function addType2entry(array $entry):array
+    public function addType2entry(array $entry, $lngCode=NULL):array
     {
         // recover existing type
         $typeComps=explode('|',(strval($entry['Type']??'')));
@@ -315,8 +315,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         } else {
             $typeArr[0]=str_pad('',strlen(\SourcePot\Datapool\Root::GUIDEINDICATOR),'0');
         }
-        // use language code?
-        $lngCode=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode();
+        // use current language code, if no language code is provided
+        $lngCode=$lngCode??$typeArr[1]??$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode();
         $typeArr[1]=(empty(\SourcePot\Datapool\Root::USE_LANGUAGE_IN_TYPE[$entry['Source']]))?('00'):$lngCode;
         // MIME-type of linked file
         if (empty($entry['Params']['File']['MIME-Type'])){

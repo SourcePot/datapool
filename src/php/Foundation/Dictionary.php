@@ -18,7 +18,7 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     private $entryTemplate=[];
     
     private const SOURCE_LNG='en';
-    private const LANGUAGE_CODES=['en'=>'English','de'=>'Deutsch','es'=>'Español'];
+    public const LANGUAGE_CODES=['en'=>'English','de'=>'Deutsch','es'=>'Español'];
 
     private const INIT_DICTIONARY=[
         'de'=>[

@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class Container{
 
+    private const MD_TEMPLATE="[//]: # (This a Markdown document)\n\n[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n#Empty document...";
+
     private $oc;
     
     public function __construct(array $oc)
@@ -211,36 +213,68 @@ class Container{
     
     public function mdContainer(array $arr)
     {
-        if (empty($arr['selector']['EntryId']) && empty($arr['selector']['Name'])){
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($arr['selector']);
-        } else {
-            $entry=$arr['selector'];
+        // copy to other languages form
+        $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Copy','title'=>'Copy to all other available languages','hasCover'=>TRUE,'style'=>[],'key'=>['copy'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+        $btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Reset','title'=>'Replave by template','hasCover'=>TRUE,'style'=>[],'key'=>['reset'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        $arr['selector']=$this->updateDoc($arr['selector'],isset($formData['cmd']['copy']),isset($formData['cmd']['reset']));
+        // create first md-entry if none exists and provide preview 
+        $arr['settings']=['style'=>['width'=>'100vw','max-width'=>'100%']];
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+            $arr['html']=$btnHtml;
         }
-        unset($entry['EntryId']);
-        unset($entry['Type']);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry);
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name','Type'],'0','',TRUE);
-        $entry['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
-        $entry['Owner']='SYSTEM';
-        $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-        if (!is_file($fileName)){
-            $typeComps=explode('|',$entry['Type']);
-            $language=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getValidLng($typeComps[1],FALSE);
-            $selectorString=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($arr['selector']);
-            $entry['Params']['File']=['UploaderId'=>'SYSTEM','UploaderName'=>'System','Name'=>$arr['containerKey'].'.md','Date (created)'=>time(),'MIME-Type'=>'text/plain','Extension'=>'md'];
-            $fileContent="[//]: # (This a Markdown document in ".$language."!)\n\n";
-            $fileContent.="[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n";
-            $fileContent.='Sorry, there is no content available for <i>"'.$selectorString.'"</i> in <i>"'.$language.'"</i> yet...';
-            if (!empty($arr['selector']['md'])){$fileContent=$arr['selector']['md'];}
-            $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
-            file_put_contents($fileName,$fileContent);
-        }
-        $entry['Read']='ALL_R';
-        $entry['Write']='ALL_CONTENTADMIN_R';
-        $arr=['settings'=>['style'=>['width'=>'100vw','max-width'=>'100%']]];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
         $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
         return $arr;
+    }
+
+    private function updateDoc($entry,bool $copy=FALSE, bool $reset=FALSE):array
+    {
+        $mdTemplate=$entry['md']??self::MD_TEMPLATE;
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>($copy)?'copied':'updated','currentLanguage'=>$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode()];
+        // create entry and safe file content
+        // make current language, first language of available languages
+        $anyUpdate=FALSE;
+        $lngCodes=[$context['currentLanguage']=>\SourcePot\Datapool\Foundation\Dictionary::LANGUAGE_CODES[$context['currentLanguage']]];
+        $lngCodes+=\SourcePot\Datapool\Foundation\Dictionary::LANGUAGE_CODES;
+        foreach($lngCodes as $lngCode=>$language){
+            $entry['EntryId']=NULL;
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry,['app'=>'','Source'=>FALSE,'EntryId'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE]);
+            $entry=array_merge($entry,['Expires'=>\SourcePot\Datapool\Root::NULL_DATE,'Owner'=>'SYSTEM','Read'=>'ALL_R','Write'=>'ALL_CONTENTADMIN_R']);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,$entry['Read'],$entry['$Write']);
+            $entry['Params']['File']=['UploaderId'=>'SYSTEM','UploaderName'=>'System','Extension'=>'md','MIME-Type'=>'text/plain'];
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry,$lngCode);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name','Type'],'0','',TRUE);
+            // get file content
+            $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            if (!empty($fileContent) && $copy){
+                $newContent=TRUE;
+            } else if (is_file($fileName)){
+                $fileContent=file_get_contents($fileName);
+                $newContent=(($lngCode!==$context['currentLanguage']) && $copy);
+            } else {
+                $newContent=TRUE;
+            }
+            if ($reset && $lngCode===$context['currentLanguage']){
+                $newContent=TRUE;
+                $fileContent=$mdTemplate;
+            }
+            // update entry
+            $entry['Params']['File']['Name']=$entry['EntryId'].'.md';
+            if ($newContent){
+                $anyUpdate=TRUE;
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+                $success=file_put_contents($fileName,$fileContent?:$mdTemplate);
+                $info=(boolval($success??FALSE))?('updated'):('failed');
+            } else {
+                $info='skipped';
+            }
+            $context['languages']=(isset($context['languages']))?($context['languages'].', '.$lngCode.' ('.$info.')'):($lngCode.' ('.$info.')');
+            $returnEntry=$returnEntry??$entry;
+        }
+        if ($anyUpdate){
+            $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" base language "{currentLanguage}"; "{type}" Markdown content for the following languages "{languages}"',$context);            
+        }
+        return $returnEntry;
     }
     
     /**

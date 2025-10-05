@@ -98,6 +98,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         // get page state
         $this->pageState=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,self::PAGE_STATE_TEMPLATE);
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($this->pageState);
+        $this->synchWithPageState();
     }
 
     /**

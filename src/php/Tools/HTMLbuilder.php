@@ -419,6 +419,8 @@ class HTMLbuilder{
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr);
                 }
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
+            } else {
+                //$html.=$btnFailed;
             }
         } else {
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
@@ -807,7 +809,7 @@ class HTMLbuilder{
         // initialization
         $arr['returnRow']=!empty($arr['returnRow']);
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
-        $arr['maxRowCount']=(empty($arr['maxRowCount']))?999:$arr['maxRowCount'];
+        $arr['maxRowCount']=$arr['maxRowCount']?:999;
         if ($arr['returnRow']){$arr['maxRowCount']=1;}
         $firstEntry=$arr['selector'];
         if ($arr['maxRowCount']>1){
