@@ -231,16 +231,44 @@ class Container{
             $fileContent="[//]: # (This a Markdown document in ".$language."!)\n\n";
             $fileContent.="[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n";
             $fileContent.='Sorry, there is no content available for <i>"'.$selectorString.'"</i> in <i>"'.$language.'"</i> yet...';
-            if (!empty($arr['selector']['md'])){$fileContent=$arr['selector']['md'];}
+            if (!empty($arr['selector']['md'])){
+                $fileContent=$arr['selector']['md'];
+            }
             $entry['Params']['File']['Uploaded']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','');
             file_put_contents($fileName,$fileContent);
         }
+        // copy to other languages form
+        $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Copy to the other languages','hasCover'=>TRUE,'key'=>['copy'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        // create first md-entry if none exists and provide preview 
         $entry['Read']='ALL_R';
         $entry['Write']='ALL_CONTENTADMIN_R';
         $arr=['settings'=>['style'=>['width'=>'100vw','max-width'=>'100%']]];
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
+        $arr['html']=$btnHtml;
         $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($arr);
+        if (isset($formData['cmd']['copy'])){$this->copy2otherLanguages($entry,$fileName);}
         return $arr;
+    }
+
+    private function copy2otherLanguages($entry,$fileName)
+    {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'currentLanguage'=>$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode()];
+        $fileContent=file_get_contents($fileName);
+        foreach(\SourcePot\Datapool\Foundation\Dictionary::LANGUAGE_CODES as $lngCode=>$language){
+            if ($lngCode===$context['currentLanguage']){
+                continue;
+            }
+            unset($entry['EntryId']);
+            unset($entry['Type']);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry,$lngCode);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name','Type'],'0','',TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+            $fileName=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            file_put_contents($fileName,$fileContent);
+            $context['languages']=(isset($context['languages']))?($context['languages'].', '.$lngCode):$lngCode;
+        }
+        $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" copied Markdown content from "{currentLanguage}" to the following languages "{languages}"',$context);            
     }
     
     /**
