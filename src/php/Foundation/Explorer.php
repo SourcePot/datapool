@@ -86,9 +86,15 @@ class Explorer{
             'Group'=>[
                 'isAsc'=>TRUE,
             ],
+            'Folder'=>[
+                'isAsc'=>TRUE,
+            ],
         ],
         'documents'=>[
             'Group'=>[
+                'isAsc'=>TRUE,
+            ],
+            'Folder'=>[
                 'isAsc'=>TRUE,
             ],
         ],
