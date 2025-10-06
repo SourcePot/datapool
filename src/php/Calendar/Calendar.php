@@ -301,12 +301,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     
     public function getSerialEventsFrom($arr=[]):array
     {
-        $monthOptions=[''=>''];
-        $weekOptions=[''=>''];
-        $monthdayOptions=[''=>''];
+        $monthOptions=$weekOptions=$monthdayOptions=$hourOptions=$minOptions=[''=>''];
         $weekdayOptions=[''=>'','1'=>'Monday','2'=>'Tuesday','3'=>'Wednesday','4'=>'Thursday','5'=>'Friday','6'=>'Saturday','7'=>'Sunday'];
-        $hourOptions=[''=>''];
-        $minOptions=[''=>''];
         $weekdayOptions=[''=>'','1'=>'Monday','2'=>'Tuesday','3'=>'Wednesday','4'=>'Thursday','5'=>'Friday','6'=>'Saturday','7'=>'Sunday'];
         $durationOptions=[10=>'10 min',15=>'15 min',60=>'1 hour',120=>'2 hours',360=>'6 hours',480=>'8 hours',720=>'12 hours',1440=>'24 hours'];
         for($index=0;$index<60;$index++){
@@ -361,6 +357,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
             $event['owner']=(empty($event['owner']))?$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId():$event['owner'];
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
+            $this->resetEventCache();
         }
         return $arr;        
     }
@@ -522,7 +519,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             }
             $style=['min-width'=>'unset'];
             $style['top']=100+$event['y']*40;
-            if ($style['top']+50>$arr['calendarSheetHeight']){$arr['calendarSheetHeight']=$style['top']+50;}
+            if ($style['top']+50>$arr['calendarSheetHeight']){
+                $arr['calendarSheetHeight']=$style['top']+50;
+            }
             $style['left']=$event['x0'];
             $style['width']=$event['x1']-$event['x0']-2;
             if ($style['width']<10){$style['width']=10;}
