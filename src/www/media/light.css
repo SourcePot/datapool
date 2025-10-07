@@ -128,7 +128,7 @@ input,textarea,select{
     padding:0.25rem 0.4rem;
     margin: 0 0.2rem 0.2rem 5px;
     color:var(--colorA);
-    background-color:var(--bgColorA);
+    background-color:var(--bgColor);
 }
 input:invalid,textarea:invalid{
     border: 2px solid var(--attentionColor);
@@ -883,12 +883,22 @@ a.emoji{
 #login-article{
     float:none;
     margin:5em auto;
+    padding:1rem;
     width:max-content;
-    background-color:var(--bgColorA);
+    color:var(--bgColor);
+    background-color:var(--bgMenu);
+    border: 1px solid var(--colorM);
+}
+tr.login:hover{
+    color:var(--bgColor);
+    background: none;
+}
+td.login{
+    padding:1rem 0;
 }
 #login-table{
-    background-color:var(--bgColorA);
     box-shadow:none;
+    border: none;
 }
 #login-email,#login-psw{
     clear:both;
@@ -925,17 +935,15 @@ img.keypad{
 }
 div.phrase-preview{
     height:80px;
-    background-color:var(--bgColor);
     overflow:hidden;
 }
 a.phrase-preview{
     float:left;
     text-align:center;
-    background-color:var(--bgColor);
 }
 a.phrase-preview:hover{
-    color:var(--bgColor);
-    background-color:var(--color);
+    color:var(--color);
+    background-color:var(--colorM);
 }
 .leaflet-container{
     height:400px;

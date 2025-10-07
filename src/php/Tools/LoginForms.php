@@ -111,9 +111,9 @@ class LoginForms{
         $emailLabel=['tag'=>'label','element-content'=>'Email','for'=>'login-email'];
         $email=['tag'=>'input','type'=>'email','key'=>['Email'],'id'=>'login-email','placeholder'=>'Email','style'=>['clear'=>'both','width'=>220],'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
         $updateBtn=['tag'=>'input','type'=>'submit','key'=>['Update'],'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
-        $loginBtn=['tag'=>'input','type'=>'submit','key'=>['Login'],'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['position'=>'absolute','top'=>'0.2em','left'=>'0','width'=>'45%','margin'=>0,'border'=>'2px solid #4d0','font-weight'=>'bold']];
-        $registerBtn=['tag'=>'input','type'=>'submit','key'=>['Register'],'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['position'=>'absolute','top'=>'0.2em','right'=>'0','width'=>'45%','margin'=>'0 4px 0 0']];
-        $loginLinkBtn=['tag'=>'input','type'=>'submit','key'=>['pswRequest'],'value'=>'Get login token','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['margin'=>'1em 0']];
+        $loginBtn=['tag'=>'input','type'=>'submit','key'=>['Login'],'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['width'=>'45%','margin'=>0,'border-bottom'=>'3px solid #0f0','border-top'=>'3px solid #0f0']];
+        $registerBtn=['tag'=>'input','type'=>'submit','key'=>['Register'],'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['float'=>'right','width'=>'45%','margin'=>0,'border-bottom'=>'3px solid #aaa','border-top'=>'3px solid #aaa']];
+        $loginLinkBtn=['tag'=>'input','type'=>'submit','key'=>['pswRequest'],'value'=>'Get login token','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['margin'=>0]];
         if ($this->formType===1){
             $passphrase=$this->getSymbolKeypad($arr);
         } else {
@@ -132,7 +132,7 @@ class LoginForms{
             $matrix['Recover']=['Value'=>$loginLinkBtn];
         }
         $matrix['Btns']['trStyle']=['height'=>'3em'];
-        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login '.($arr['result']['Email']??''),'id'=>'login-table']);
+        $formHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Login '.($arr['result']['Email']??''),'class'=>'login','id'=>'login-table']);
         $formHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$formHtml,'keep-element-content'=>TRUE,'id'=>'login-article']);
         if (isset($arr['html'])){$arr['html'].=$formHtml;} else {$arr['html']=$formHtml;}
         return $arr;
