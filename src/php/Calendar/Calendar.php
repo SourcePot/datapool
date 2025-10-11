@@ -295,7 +295,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         ];
         $arr['contentStructure']=$contentStructure;
         $matrix=[''=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr)];
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'']);        
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'']);        
         return $arr;
     }
     

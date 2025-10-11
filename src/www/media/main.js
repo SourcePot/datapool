@@ -454,7 +454,7 @@ jQuery(document).ready(function(){
 		jQuery('input[type=text],input[type=email],input[type=tel],input[type=password],textarea').on('keypress',function(e){
 			jQuery(this).parent().parent().filter('tr').addClass('attention-transparent');
 		});
-		jQuery('select').on('change',function(e){
+		jQuery('select,input[type=date],input[type=datetime-local]').on('change',function(e){
 			jQuery(this).parent().parent().filter('tr').addClass('attention-transparent');
 		});
 	}

@@ -821,7 +821,9 @@ class HTMLbuilder{
         // command processing
         $movedEntryId='';
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (!empty($formData['cmd'])){
+        if (isset($formData['cmd']['reloadBtnArr'])){
+            // form reload
+        } else if (!empty($formData['cmd'])){
             $selector=$baseSelector;
             $selector['EntryId']=key(current($formData['cmd']));
         }
