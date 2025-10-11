@@ -68,14 +68,13 @@ jQuery(document).ready(function(){
     function handleXhrEvent(event){
         let infoSelector='#'+btnName2process[0]+'_info';
         let file=fileStore[btnName2process[0]]['filesArr'][0];
-        if (event.type=="loadstart" && typeof file!=='undefined'){
-            jQuery(infoSelector).text('Start:'+file.name);
-        } else if (event.type=="progress" && typeof file!=='undefined'){
-            jQuery(infoSelector).text('Processing: '+file.name);
-        } else if (event.type=="load" && typeof file!=='undefined'){
-            jQuery(infoSelector).text('Loading: '+file.name);
-        } else if (event.type=="loadend" && typeof file!=='undefined'){
-            postFile();
+        if (typeof file=='undefined'){var fileName='...';} else {var fileName=file.name;}
+        if (event.type=="loadstart"){
+            jQuery(infoSelector).text('Starting:'+fileName);
+        } else if (event.type=="progress"){
+            jQuery(infoSelector).text('Processing: '+fileName);
+        } else if (event.type=="load"){
+            jQuery(infoSelector).text('Loading: '+fileName);
         } else if (event.type=="loadend"){
             jQuery(infoSelector).text('Please wait...');
             postFile();
