@@ -25,7 +25,7 @@
         "sourcepot/checkentries":"^v1.4.0",
         "sourcepot/statistic":"^v1.1.0",
         "sourcepot/bankholidays":"^v2.2.0",
-        "sourcepot/asset":"^v2.2.5",
+        "sourcepot/asset":"^v2.2.6",
         "sourcepot/match":"^v1.6.4"
     },
     "autoload":{
