@@ -57,8 +57,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
 
     private const OPTIONS=[
         'Type'=>['event'=>'Event','trip'=>'Trip','meeting'=>'Meeting','todo'=>'To do','done'=>'To do done','training_0'=>'Training scheduled','training_1'=>'Training prepared','training_2'=>'Training canceled','training_3'=>'Training no-show'],
-        'Days to show'=>[10=>'Show 10 days',20=>'Show 20 days',45=>'Show 45 days',90=>'Show 90 days',180=>'Show 180 days',370=>'Show 370 days'],
-        'Day width'=>[200=>'Small day width',400=>'Middle day width',800=>'Big day width',1600=>'Biggest day width'],
+        'Days to show'=>[10=>'10 days',20=>'20 days',45=>'45 days',90=>'90 days',180=>'180 days',370=>'370 days'],
+        'Day width'=>[200=>'Small',400=>'Middle',800=>'Big',1600=>'Biggest'],
         'Timezone'=>[
             'Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
             'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
