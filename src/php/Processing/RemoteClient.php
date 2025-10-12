@@ -14,21 +14,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private const ENTRY_EXPIRATION_SEC=600;
     private const ONEDIMSEPARATOR='||';
-    private const INDICATORS=[
-        self::ONEDIMSEPARATOR.'@value'=>'value',
-        self::ONEDIMSEPARATOR.'@dataType'=>'dataTypes',
-        self::ONEDIMSEPARATOR.'@isSignal'=>'signals',
-        self::ONEDIMSEPARATOR.'@min'=>'min',
-        self::ONEDIMSEPARATOR.'@max'=>'max',
-        self::ONEDIMSEPARATOR.'@color'=>'color',
-    ];
 
     private $oc;
     
     private $entryTable='';
     private $entryTemplate=[
-        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
     
     public function __construct($oc)
@@ -46,6 +36,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
+        /*
+        $testEntry='{"Source":"remoteclient","EntryId":"qhv9g85o68_lastentry","app":"","isFirst":true,"rowIndex":0,"rowCount":1,"primaryKey":"EntryId","primaryValue":"qhv9g85o68_lastentry","unlock":false,"Group":"München","Folder":"Guntherstraße 13","Name":"Wohnzimmer","Type":"000000|00|jpeg|remoteclient","Date":"2025-06-19 12:32:15","Content":{"Settings":{"mode":"sms","captureTime":600,"light":false,"alarm":false,"A":false,"B":false},"Status":{"mode":"sms","captureTime":600,"activity":1,"light":true,"alarm":false,"escalate":true,"A":false,"B":false,"timestamp":1760268638,"cpuTemperature":45.084,"Msg":""}},"Params":{"dataTypes":{"Settings":{"mode":"string","captureTime":"int","light":"bool","alarm":"bool","A":"bool","B":"bool"},"Status":{"mode":"string","captureTime":"int","activity":"int","light":"bool","alarm":"bool","escalate":"bool","A":"bool","B":"bool","timestamp":"int","cpuTemperature":"float","Msg":"string"}},"min":{"Status":{"activity":"0","light":"1","alarm":"1","escalate":"1","A":"1","B":"1","cpuTemperature":"30"}},"max":{"Status":{"activity":"20","light":"0","alarm":"0","escalate":"0","A":"0","B":"0","cpuTemperature":"100"}},"color":{"Status":{"activity":"#ff8d02","light":"blue","alarm":"red","escalate":"blue","A":"blue","B":"blue"}},"signals":{"Status":{"activity":"1","light":"1","alarm":"1","escalate":"1","cpuTemperature":"1"}},"File":{"Name":"motionA_1760268638_1.jpg","Extension":"jpeg","MIME-Type":"image\/jpeg"},"DateTime":{"File":"2025-10-12 11:31:40","EXIF":"2025:10:12 13:30:38","Original":"2025:10:12 13:30:38","Digitized":"2025:10:12 13:30:38"},"Log":{"updateEntry":{"insert":{"user":"","userEmail":"","userId":"ANONYM_$2y$10$pdc6VUu74w71njBsmbUuS.2k7SJFlTIsZDM2eyojZz6Gyk\/3EuR4G","timestamp":1750336335,"System":"2025-06-19 12:32:15","RFC2822":"Thu, 19 Jun 2025 12:32:15 +0000"},"update":{"user":"","userEmail":"","userId":"ANONYM_$2y$12$FmZ7ZqMcUI6e1RasE00OT.dw8ClFUV3TSicdrgCxUzSTkx26K6yTm","timestamp":1760268700,"System":"2025-10-12 11:31:40","RFC2822":"Sun, 12 Oct 2025 11:31:40 +0000"}}},"Camera":{"Model":"RP_ov5647","Make":"RaspberryPi","XResolution":"72","YResolution":"72","ISOSpeedRatings":"100","FNumber":"2.8984","ExposureTime":"0.006127","FocalLength":"3.5976","ShutterSpeedValue":"7.350603","ApertureValue":"3.0705","BrightnessValue":"4.16","MaxApertureValue":"3.0705","MeteringMode":"2","Flash":"0"},"Geo":[],"Address":[]},"Expires":"9999-12-30 12:12:12","Read":65532,"Write":49152,"Owner":"SYSTEM","Date (Europe\/Berlin)":"2025-06-19 14:32:15","currentUserId":"ANONYM_$2y$12$FmZ7ZqMcUI6e1RasE00OT.dw8ClFUV3TSicdrgCxUzSTkx26K6yTm","currentUser":"Anonym Anonym","nowTimeStamp":1760268700,"nowDateTimeUTC":"2025-10-12 11:31:40","nowDateUTC":"2025-10-12","nowTimeUTC":"11:31:40","+1DayFromNowUTC":"2025-10-13 11:31:40","+10DaysFromNowUTC":"2025-10-22 11:31:40","Info":"Entry updated by \"updateEntry\""}';
+        $testEntry=json_decode($testEntry,TRUE);
+        $this->updateSignalsFromEntry($testEntry);
+        */
     }
     
     public function getEntryTable():string
@@ -138,12 +133,12 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         if (!empty($params['Content']['Client']) && !empty($callingElement['callingElement']['Selector'])){
             $baseEntryId=$params['Content']['Client'];
             // get client settings form
-            $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_setting','disableAutoRefresh'=>TRUE];
-            $htmlSettings=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client specific settings '.$baseEntryId,'generic',$selector,['method'=>'getClientSettingsContainer','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
+            $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_settings','disableAutoRefresh'=>TRUE];
+            $htmlSettings=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client settings '.$baseEntryId,'generic',$selector,['method'=>'getClientSettingsContainer','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
             // get client status form
-            $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_lastentry','disableAutoRefresh'=>FALSE];
+            $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_status','disableAutoRefresh'=>FALSE];
             $callingElement['lastEntrySelector']=$selector;
-            $htmlStatus=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client Status '.$baseEntryId,'generic',$selector,['method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
+            $htmlStatus=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client status '.$baseEntryId,'generic',$selector,['method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
             // get plot
             $htmlPlot=$this->getClientPlot($callingElement);
             // get image shuffle
@@ -238,85 +233,96 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         return $result;
     }
 
-
     public function clientCall($clientRequest):array
     {
-        // enrich client request
-        $clientRequest['Read']=(empty($clientRequest['Read']))?$this->entryTemplate['Read']['value']:$clientRequest['Read'];
-        $clientRequest['Write']=(empty($clientRequest['Write']))?$this->entryTemplate['Write']['value']:$clientRequest['Write'];
         $idArr=['client_id'=>$clientRequest['client_id'],'Group'=>$clientRequest['Group'],'Folder'=>$clientRequest['Folder'],'Name'=>$clientRequest['Name']];
         $baseEntryId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($idArr,TRUE);
-        // create definition from clientRequest it contains Status and Settings definition
-        $flatDefinition=['Source'=>$this->entryTable,'Owner'=>'SYSTEM','EntryId'=>$baseEntryId.'_definition','Expires'=>\SourcePot\Datapool\Root::NULL_DATE];
-        $flatEntry=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_lastentry','Owner'=>'SYSTEM'];
+        // create templates from clientRequest
+        $flatEntryTemplates=[
+            'Settings'=>['Source'=>$this->entryTable,'Owner'=>'SYSTEM','EntryId'=>$baseEntryId,'Read'=>'ALL_DATA_SENTINEL_R','Write'=>'ADMIN_R','Expires'=>\SourcePot\Datapool\Root::NULL_DATE],
+            'Status'=>['Source'=>$this->entryTable,'Owner'=>'SYSTEM','EntryId'=>$baseEntryId,'Read'=>'ALL_DATA_SENTINEL_R','Write'=>'ADMIN_R','Expires'=>\SourcePot\Datapool\Root::NULL_DATE],
+        ];
+        $flatEntries=[];
         foreach($clientRequest as $flatKey=>$value){
             $keyComps=explode(self::ONEDIMSEPARATOR,$flatKey);
-            $testKey=self::ONEDIMSEPARATOR.array_pop($keyComps);
-            $newKey=implode(self::ONEDIMSEPARATOR,$keyComps);
-            if (strpos($flatKey,'@')===FALSE){
-                // not a definition
-                $flatEntry[$flatKey]=$value;
-            } else if (isset(self::INDICATORS[$testKey])){
-                // value, data type or signal
-                if (self::INDICATORS[$testKey]!=='value'){
-                    $newKey=$this->getDataPropertyFlatKey($newKey,self::INDICATORS[$testKey]);
+            $entryType=array_shift($keyComps);
+            $flatKey=implode(self::ONEDIMSEPARATOR,$keyComps);
+            if (strpos($flatKey,'@excontainer')!==FALSE){
+                $flatEntries[$entryType][$flatKey]=boolval(intval($value));
+            } else if (strpos($flatKey,'@xMin')!==FALSE || strpos($flatKey,'@xMax')!==FALSE || strpos($flatKey,'@yMin')!==FALSE || strpos($flatKey,'@yMax')!==FALSE){
+                $flatEntries[$entryType][$flatKey]=floatval($value);
+            } else {
+                $flatEntries[$entryType][$flatKey]=$value;
+            }
+        }
+        foreach($flatEntryTemplates as $entryType=>$flatEntryTemplate){
+            if (!isset($flatEntries[$entryType])){continue;}
+            $flatEntryTemplate['EntryId']=$flatEntryTemplate['EntryId'].'_'.strtolower($entryType);
+            $flatEntry=array_merge($flatEntryTemplate,$flatEntries[$entryType]);
+            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
+            if ($entryType==='Settings'){
+                // create settings entry
+                $settingsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
+                $clientSetting=[];
+                foreach($settingsEntry['Content']['Settings'] as $key=>$propertyValueArr){
+                    if (!isset($propertyValueArr['@value'])){continue;}
+                    $clientSetting['Settings']['Content']['Settings'][$key]['@value']=$propertyValueArr['@value'];
                 }
-                $flatEntry[$newKey]=$value;
-            }
-            // defintion
-            if (strpos($flatKey,'@')!==FALSE || strpos($flatKey,self::ONEDIMSEPARATOR)===FALSE){
-                $flatDefinition[$flatKey]=$value;
+                $this->updateSignalsFromEntry($settingsEntry,$entryType);
+            } else {
+                // create status entry
+                $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+                $fileArr=current($_FILES);
+                if ($fileArr && empty($fileArr['error'])){
+                    $success=move_uploaded_file($fileArr['tmp_name'],$sourceFile);
+                    $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$sourceFile);
+                } else if ($fileArr && !empty($fileArr['error'])){
+                    unlink($sourceFile);
+                    unset($entry['Params']['File']);
+                }
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
+                $this->updateSignalsFromEntry($entry,$entryType);
+                $this->distributeClientEntries($entry);
             }
         }
-        // save definition
-        $definition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatDefinition,self::ONEDIMSEPARATOR);
-        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($definition,TRUE);
-        // save the entry from clientRequest
-        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
-        $entry=$this->adjustByDataType($entry,FALSE);
-        $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-        $fileArr=current($_FILES);
-        if ($fileArr && empty($fileArr['error'])){
-            $success=move_uploaded_file($fileArr['tmp_name'],$sourceFile);
-            $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$sourceFile);
-        } else {
-            if (is_file($sourceFile)){unlink($sourceFile);}
-            if (isset($entry['Params']['File'])){unset($entry['Params']['File']);}
-        }
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
-        $this->updateSignalsFromEntry($entry);
-        $this->distributeClientEntries($entry);
-        // create the initial setting and get current setting
-        $setting=$entry;
-        $setting['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
-        $setting['EntryId']=$baseEntryId.'_setting';
-        $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($setting,TRUE);
-        // prepare settings to be sent back to client
-        $setting=$this->adjustByDataType($setting,FALSE);
-        if (isset($setting['Content']['Status'])){unset($setting['Content']['Status']);}
-        if (isset($setting['Params'])){unset($setting['Params']);}
-        return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(['Content'=>$setting['Content']],self::ONEDIMSEPARATOR);
+        return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($clientSetting,self::ONEDIMSEPARATOR);
     }
 
-    private function updateSignalsFromEntry(array $entry)
+    private function distributeClientEntries(array $entry)
+    {
+        $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
+        $remoteClientComps=explode('\\',__CLASS__);
+        // loop through all canvas elements with RemoteClient processor -> move entry to RemoteClient processor Selector
+        $canvasElementsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Content'=>'%'.implode('%',$remoteClientComps).'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE) as $canvasElement){
+            $target=$canvasElement['Content']['Selector'];
+            $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
+            $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+            $target['Owner']='SYSTEM';
+            $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($expiresTimestamp));
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$target,TRUE,FALSE,TRUE,FALSE);
+        }
+    }
+
+    private function updateSignalsFromEntry(array $entry, string $type)
     {
         $signalClient=$this->getCientId($entry);
-        $flatContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Content']??[]),self::ONEDIMSEPARATOR);
-        $flatSignals=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['signals']??[]),self::ONEDIMSEPARATOR);
-        $flatDataTypes=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['dataTypes']??[]),self::ONEDIMSEPARATOR);
-        $flatMin=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['min']??[]),self::ONEDIMSEPARATOR);
-        $flatMax=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['max']??[]),self::ONEDIMSEPARATOR);
-        $flatColor=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat(($entry['Params']['color']??[]),self::ONEDIMSEPARATOR);
-        foreach($flatSignals as $subKey=>$isSignal){
-            if (intval($isSignal)<1 || !isset($flatContent[$subKey])){continue;}
-            $dataType=$flatDataTypes[$subKey]??'float';
-            $signalValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($flatContent[$subKey],$dataType);
-            $signalName=str_replace(self::ONEDIMSEPARATOR,'→',$subKey);
-            $params=['dataType'=>$dataType,'height'=>120];
-            if (isset($flatMin[$subKey])){$params['min']=$flatMin[$subKey];}
-            if (isset($flatMax[$subKey])){$params['max']=$flatMax[$subKey];}
-            if (isset($flatColor[$subKey])){$params['color']=$flatColor[$subKey];}
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$signalClient,$signalName,$signalValue,$dataType,$params);
+        $dataType='float';
+        foreach(current($entry['Content']) as $name=>$properties){
+            $signalParams=['height'=>120];
+            foreach($properties as $property=>$value){
+                $property=trim($property,'@');
+                if ($property==='dataType'){
+                    $dataType=$value;
+                } else if ($property==='value'){
+                    $signalValue=$value;
+                } else {
+                    $signalParams[$property]=$value;
+                }
+            }
+            if (intval($signalParams['isSignal']??0)<1){continue;}
+            $signalName=$type.'→'.$name;
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$signalClient,$signalName,$signalValue,$dataType,$signalParams);
         }
     }
 
@@ -339,37 +345,33 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     public function getClientSettingsContainer(array $arr)
     {
-        $arr['html']='Entry missing...';
-        $entryIdcomps=explode('_',$arr['selector']['EntryId']);
-        $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$arr['selector']['Source'],'EntryId'=>$entryIdcomps[0].'_setting']);
+        $arr['html']='Settings entry missing...';
+        $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($arr['selector']);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (isset($formData['val']['Settings'])){
-            $setting['Content']['Settings']=$formData['val']['Settings'];
-            $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($setting,TRUE);
+            foreach($formData['val']['Settings'] as $key=>$value){
+                $settings['Content']['Settings'][$key]['@value']=$value;
+            }
+            $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($settings,TRUE);
+            //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['content'=>$settings['Content'],'formData'=>$formData]);
         }
-        // get defintion entry, removed Status definition and retun Settings form
-        $defEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$arr['selector']['Source'],'EntryId'=>$entryIdcomps[0].'_definition']);
-        if (empty($setting) || empty($defEntry)){return $arr;}
-        unset($defEntry['Content']['Status']);
-        $defEntry['Content']['Settings']['']=['@tag'=>'button','@value'=>'Save'];
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($defEntry,$setting['Content'],$arr['callingClass'],$arr['callingFunction'],$isDebugging=FALSE);
+        if (empty($settings)){return $arr;}
+        $defEntry['Content']['']=['@tag'=>'button','@value'=>'Save'];
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($settings,[],$arr['callingClass'],$arr['callingFunction'],$isDebugging=FALSE);
         return $arr;
     }
 
     public function getClientStatusContainter(array $arr):array
     {
-        $arr['html']='Entry missing...';
-        $entryIdcomps=explode('_',$arr['selector']['EntryId']);
-        $lastEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$arr['selector']['Source'],'EntryId'=>$entryIdcomps[0].'_lastentry']);
-        $defEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$arr['selector']['Source'],'EntryId'=>$entryIdcomps[0].'_definition']);
-        if (empty($lastEntry) || empty($defEntry)){return $arr;}
-        unset($defEntry['Content']['Settings']);
-        if (isset($lastEntry['Content']['Status']['timestamp'])){
-            $returnTime=round(time()-$lastEntry['Content']['Status']['timestamp']);
-            $lastEntry['Content']['Status']['timestamp']=$returnTime.' sec';
+        $arr['html']='Status entry missing...';
+        $status=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($arr['selector']);
+        if (empty($status)){return $arr;}
+        if (isset($lastEntry['Content']['timestamp'])){
+            $returnTime=round(time()-$lastEntry['Content']['timestamp']);
+            $lastEntry['Content']['timestamp']=$returnTime.' sec';
         }
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($defEntry,$lastEntry['Content'],__CLASS__,__FUNCTION__,$isDebugging=FALSE);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($status,$status['Content'],__CLASS__,__FUNCTION__,$isDebugging=FALSE);
         return $arr;
     }
 
@@ -388,22 +390,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             }
         }
         return $arr;
-    }
-
-    private function distributeClientEntries(array $entry)
-    {
-        $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
-        $remoteClientComps=explode('\\',__CLASS__);
-        // loop through all canvas elements with RemoteClient processor -> move entry to RemoteClient processor Selector
-        $canvasElementsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Content'=>'%'.implode('%',$remoteClientComps).'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE) as $canvasElement){
-            $target=$canvasElement['Content']['Selector'];
-            $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
-            $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
-            $target['Owner']='SYSTEM';
-            $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($expiresTimestamp));
-            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$target,TRUE,FALSE,TRUE,FALSE);
-        }
     }
 
     private function getCientId(array $entry):string|FALSE
@@ -425,32 +411,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $string.=' | ';
         $string.=(empty($selector['Name']))?'':$selector['Name'];
         return $string;
-    }
-
-    private function getDataPropertyFlatKey(string $flatContentKey,string $property='dataTypes'):string{
-        $flatContentKey=str_replace('→',self::ONEDIMSEPARATOR,$flatContentKey);
-        $flatContentKey=str_replace(' → ',self::ONEDIMSEPARATOR,$flatContentKey);
-        if (strpos($flatContentKey,'Content')===FALSE){
-            return 'Params'.self::ONEDIMSEPARATOR.$property.self::ONEDIMSEPARATOR.$flatContentKey;
-        } else {
-            return str_replace('Content','Params'.self::ONEDIMSEPARATOR.$property,$flatContentKey);
-        }
-    }
-
-    private function adjustByDataType(array $entry,bool $returnFlat=FALSE):array
-    {
-        $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry,self::ONEDIMSEPARATOR);
-        foreach($flatEntry as $flatKey=>$flatValue){
-            if (strpos($flatKey,'Content')!==0){continue;}
-            $dataTypeKey=$this->getDataPropertyFlatKey($flatKey,'dataTypes');
-            $dataType=(isset($flatEntry[$dataTypeKey]))?$flatEntry[$dataTypeKey]:'int';
-            $flatEntry[$flatKey]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($flatValue,$dataType);
-        }
-        if ($returnFlat){
-            return $flatEntry;
-        } else {
-            return $this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
-        }
     }
 
     public function getHomeAppWidget(string $name):array
