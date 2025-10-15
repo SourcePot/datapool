@@ -20,7 +20,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
     
     private $operations=['&&'=>'AND','||'=>'OR'];
 
@@ -175,7 +175,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
             '&larr;B'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;B','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
             'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            ];
+        ];
         $contentStructure['Value source']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];

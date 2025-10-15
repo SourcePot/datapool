@@ -15,9 +15,10 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     
     private $entryTable='';
-    private $entryTemplate=['Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-                            ];
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+    ];
     
     private $outboxClass='';
     
@@ -130,10 +131,11 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function outboxParams($callingElement){
         $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $contentStructure=['Outbox class'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')],
-                            'Recipient'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions],
-                            'When done'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['Keep entries','Delete sent entries']],
-                            ];
+        $contentStructure=[
+            'Outbox class'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')],
+            'Recipient'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions],
+            'When done'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['Keep entries','Delete sent entries']],
+        ];
         // get selctorB
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=['Column to delay'=>'Name'];
@@ -160,11 +162,12 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function outboxRules($callingElement){
         $msgPlaceholder='e.g. Dear Sir or Madam, the import for the attached document failed. Please capture the docuument manually.';
-        $contentStructure=['Text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'placeholder'=>$msgPlaceholder,'rows'=>4,'cols'=>20,'excontainer'=>TRUE],
-                        ' '=>['method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'],
-                        'use column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE],
-                        'Add to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Subject','options'=>['Subject'=>'Subject','Message'=>'Message']],
-                        ];
+        $contentStructure=[
+            'Text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'placeholder'=>$msgPlaceholder,'rows'=>4,'cols'=>20,'excontainer'=>TRUE],
+            ' '=>['method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'],
+            'use column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE],
+            'Add to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Subject','options'=>['Subject'=>'Subject','Message'=>'Message']],
+        ];
         $contentStructure['use column']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
@@ -181,12 +184,14 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (isset($this->oc[$outboxParams['Outbox class']])){
             // loop through source entries and parse these entries
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-            $result=['Outbox statistics'=>['Emails sent'=>['value'=>0],
-                                        'Entries removed'=>['value'=>0],
-                                        'Emails failed'=>['value'=>0],
-                                        'Entries processed'=>['value'=>0],
-                                        ]
-                    ];
+            $result=[
+                'Outbox statistics'=>[
+                    'Emails sent'=>['value'=>0],
+                    'Entries removed'=>['value'=>0],
+                    'Emails failed'=>['value'=>0],
+                    'Entries processed'=>['value'=>0],
+                ]
+            ];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read','Date',FALSE) as $entry){
                 $result=$this->processEntry($entry,$base,$callingElement,$result,$testRun);
             }
