@@ -22,33 +22,34 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
 
-    private $paper=['a4'=>'A4',
-                    'a3'=>'A3',
-                    'a5'=>'A5',
-                    'a6'=>'A6',
-                    ];
+    private $paper=[
+        'a4'=>'A4',
+        'a3'=>'A3',
+        'a5'=>'A5',
+        'a6'=>'A6',
+    ];
     
     private const CONTENT_TYPES=[
         'content'=>'Page content',
         'header'=>'Page header',
         'footer'=>'Page footer',
-        ];
+    ];
     
     private const ALIGNMENTS=[
         'L'=>'start',
         'C'=>'center',
         'R'=>'end',
         'J'=>'justify'
-        ];
+    ];
     
     private const FONT_STYLES=[
         ''=>'normal',
         'B'=>'bold',
         'I'=>'italic',
         'U'=>'underline'
-        ];
+    ];
     
     private const FONTS=[
         'Arial'=>'Arial, Helvetica, sans-serif',
@@ -56,9 +57,12 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Times'=>'"Times New Roman", Times, serif',
         'Symbol'=>'Symbol, sans-serif;',
         'ZapfDingbats'=>"Wingdings, 'Zapf Dingbats', sans-serif",
-        ];
+    ];
 
-    private $orientation=['P'=>'Portrait','L'=>'Landscape'];
+    private const ORIENTATIONS=[
+        'P'=>'Portrait',
+        'L'=>'Landscape'
+    ];
     
     private $pageSettings=[];
     
@@ -215,10 +219,10 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=[
             'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
             'Paper'=>['method'=>'select','value'=>key($this->paper),'excontainer'=>TRUE,'options'=>$this->paper],
-            'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>key($this->orientation),'options'=>$this->orientation],
+            'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>key(self::ORIENTATIONS),'options'=>self::ORIENTATIONS],
             'Top margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
             'Bottom margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
-            ];
+        ];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
@@ -267,7 +271,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'fontSize'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
             'fontStyle'=>['method'=>'select','value'=>'','options'=>self::FONT_STYLES,'excontainer'=>TRUE],
             'alignment'=>['method'=>'select','value'=>'J','options'=>self::ALIGNMENTS,'excontainer'=>TRUE],
-            ];
+        ];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -297,10 +301,12 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$settings);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=['Pdf statistics'=>['Entries'=>['value'=>0],
-                                    'Skip rows'=>['value'=>0],
-                                    ]
-                    ];
+        $result=[
+            'Pdf statistics'=>[
+                'Entries'=>['value'=>0],
+                'Skip rows'=>['value'=>0],
+            ]
+        ];
 
         if (is_file($this->sampleTargetFile)){unlink($this->sampleTargetFile);}
         // loop through entries
