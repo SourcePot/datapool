@@ -22,7 +22,7 @@
         "sourcepot/ops":"^v1.3.0",
         "sourcepot/mediaplayer":"^v4.3.0",
         "sourcepot/sms":"^v2.4.3",
-        "sourcepot/checkentries":"^v1.4.0",
+        "sourcepot/checkentries":"^v1.4.1",
         "sourcepot/statistic":"^v1.1.0",
         "sourcepot/bankholidays":"^v2.2.0",
         "sourcepot/asset":"^v2.2.6",
