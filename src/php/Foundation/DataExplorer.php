@@ -51,29 +51,31 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                 'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
                 ],
             'Widgets'=>[
-                'Processor'=>['@function'=>'processorSelector','@class'=>__CLASS__],
+                'Processor'=>['@function'=>'processorSelector','@value'=>'SourcePot\Datapool\Processing\DefaultProcessor','@class'=>__CLASS__],
                 'Enable signal'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                 'File upload'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                 'File upload extract archive'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                 'File upload extract email parts'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
                 'pdf-file parser'=>['@function'=>'select','@options'=>[],'@default'=>0],
                 'Delete selected entries'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>1],
-                ],
             ],
-        ];
+        ],
+    ];
     
     private $tags=[
         'run'=>['tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'],'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'],
         'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
         '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'],
         'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
-        'Text'=>['tag'=>'div','element-content'=>'Text','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Text box'],
-        ];
+        'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
+        '__BLACKHOLE__'=>['tag'=>'div','element-content'=>'&empty;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Black hole'],
+    ];
     
-    private const GRAPHIC_ELEMENTS=['Connectors'=>['&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'],
+    private const GRAPHIC_ELEMENTS=[
+        'Connectors'=>['&xlarr;','&xrarr;','&xharr;','&larr;','&uarr;','&rarr;','&darr;','&harr;','&varr;','&nwarr;','&nearr;','&searr;','&swarr;','&larrhk;','&rarrhk;','&#8634;','&#8635;','&duarr;','&#10140;','&#8672;','&#8673;','&#8674;','&#8675;'],
         'Symbols'=>['&VerticalSeparator;','&#8285;','&#8286;','','','&sung;','&hearts;','&diams;','&clubs;','&sharp;','&#9850;','&#9873;','&#9888;','&#9885;','&#9986;','&#9992;','&#9993;','&#9998;','&#10004;','&#x2718;','&#10010;','&#10065;','&#10070;'],
         'Math'=>['&empty;','&nabla;','&nexist;','&ni;','&isin;','&notin;','&sum;','&prod;','&coprod;','&compfn;','&radic;','&prop;','&infin;','&angrt;','&angmsd;','&cap;','&int;','&asymp;','&Lt;','&Gt;','&Ll;','&Gg;','&equiv;'],
-        ];
+    ];
 
     public function __construct(array $oc)
     {
@@ -136,9 +138,11 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private function completeDefintion():void
     {
         // add Source selector
-        $sourceOptions=[''=>'&larrhk;'];
+        $sourceOptions=[];
         $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
-        foreach($dbInfo as $Source=>$entryTemplate){$sourceOptions[$Source]=$Source;}
+        foreach($dbInfo as $Source=>$entryTemplate){
+            $sourceOptions[$Source]=$Source;
+        }
         $this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
         $this->definition['Content']['Widgets']['pdf-file parser']=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
         // add save button
@@ -154,17 +158,16 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public function unifyEntry(array $entry):array
     {
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+        $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();    
         // new entry -> create structure
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
             $entry['Content']['Style']['Text']=$entry['element-content'];
             if (mb_strpos($entry['element-content'],'&#9881;')!==FALSE){
-                $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
                 $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
-            }
-            if (mb_strpos($entry['element-content'],'&#128337;')!==FALSE){
-                $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
-                $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasTrigger';
+            } else if (mb_strpos($entry['element-content'],'&empty;')!==FALSE){
+                $entry['Content']['Selector']['__BLACKHOLE__']=TRUE;
+                $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\DefaultProcessor';
             }
         }
         // adjust style class and unify Name
@@ -280,7 +283,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'selectedCanvasElement');
         $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selectedCanvasElement);
         if ($isEditMode){
-            if ($canvasElement){
+            if ($canvasElement && $canvasElement['Content']['Style']['Text']!=='&empty;'){
                 $htmlArr['cntr'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($canvasElement);
             }
         } else {
@@ -382,7 +385,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             }
         }
         // canvas element
-        if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0 && strcmp($canvasElement['Content']['Style']['Text'],'&#128337;')!==0){
+        if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0 && strcmp($canvasElement['Content']['Style']['Text'],'&empty;')!==0){
             $elmentInfo=['tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')'];
             $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elmentInfo);
         }
@@ -409,7 +412,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $settings['Script start timestamp']=hrtime(TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $settings['callingElement']=$callingElement['Content']??[];
-        $settings['entryTemplates']['__BLACKHOLE__']=['Source'=>'blackhole','__BLACKHOLE__'=>'__BLACKHOLE__'];
+        $settings['entryTemplates']['__BLACKHOLE__']=['Source'=>'__BLACKHOLE__'];
         $entriesSelector=['Source'=>$this->oc[$callingClass]->getEntryTable(),'Name'=>$callingElement['EntryId']??''];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($entriesSelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $key=strtolower($entry['Group']);
@@ -470,7 +473,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         if (empty($EntryId)){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
                 if (empty($entry['Content']['Style']['Text'])){continue;}
-                if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0 || strcmp($entry['Content']['Style']['Text'],'&#128337;')===0){continue;}
+                if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0){
+                    continue;
+                }
                 $elements[$entry['Content']['Style']['Text']]=$entry;
             }
             ksort($elements);

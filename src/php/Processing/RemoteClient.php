@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePot\Datapool\Interfaces\HomeApp{
 
-    private const ENTRY_EXPIRATION_SEC=600;
+    private const ENTRY_EXPIRATION_SEC=172800;
     private const ONEDIMSEPARATOR='||';
 
     private $oc;
@@ -36,11 +36,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        /*
-        $testEntry='{"Source":"remoteclient","EntryId":"qhv9g85o68_lastentry","app":"","isFirst":true,"rowIndex":0,"rowCount":1,"primaryKey":"EntryId","primaryValue":"qhv9g85o68_lastentry","unlock":false,"Group":"München","Folder":"Guntherstraße 13","Name":"Wohnzimmer","Type":"000000|00|jpeg|remoteclient","Date":"2025-06-19 12:32:15","Content":{"Settings":{"mode":"sms","captureTime":600,"light":false,"alarm":false,"A":false,"B":false},"Status":{"mode":"sms","captureTime":600,"activity":1,"light":true,"alarm":false,"escalate":true,"A":false,"B":false,"timestamp":1760268638,"cpuTemperature":45.084,"Msg":""}},"Params":{"dataTypes":{"Settings":{"mode":"string","captureTime":"int","light":"bool","alarm":"bool","A":"bool","B":"bool"},"Status":{"mode":"string","captureTime":"int","activity":"int","light":"bool","alarm":"bool","escalate":"bool","A":"bool","B":"bool","timestamp":"int","cpuTemperature":"float","Msg":"string"}},"min":{"Status":{"activity":"0","light":"1","alarm":"1","escalate":"1","A":"1","B":"1","cpuTemperature":"30"}},"max":{"Status":{"activity":"20","light":"0","alarm":"0","escalate":"0","A":"0","B":"0","cpuTemperature":"100"}},"color":{"Status":{"activity":"#ff8d02","light":"blue","alarm":"red","escalate":"blue","A":"blue","B":"blue"}},"signals":{"Status":{"activity":"1","light":"1","alarm":"1","escalate":"1","cpuTemperature":"1"}},"File":{"Name":"motionA_1760268638_1.jpg","Extension":"jpeg","MIME-Type":"image\/jpeg"},"DateTime":{"File":"2025-10-12 11:31:40","EXIF":"2025:10:12 13:30:38","Original":"2025:10:12 13:30:38","Digitized":"2025:10:12 13:30:38"},"Log":{"updateEntry":{"insert":{"user":"","userEmail":"","userId":"ANONYM_$2y$10$pdc6VUu74w71njBsmbUuS.2k7SJFlTIsZDM2eyojZz6Gyk\/3EuR4G","timestamp":1750336335,"System":"2025-06-19 12:32:15","RFC2822":"Thu, 19 Jun 2025 12:32:15 +0000"},"update":{"user":"","userEmail":"","userId":"ANONYM_$2y$12$FmZ7ZqMcUI6e1RasE00OT.dw8ClFUV3TSicdrgCxUzSTkx26K6yTm","timestamp":1760268700,"System":"2025-10-12 11:31:40","RFC2822":"Sun, 12 Oct 2025 11:31:40 +0000"}}},"Camera":{"Model":"RP_ov5647","Make":"RaspberryPi","XResolution":"72","YResolution":"72","ISOSpeedRatings":"100","FNumber":"2.8984","ExposureTime":"0.006127","FocalLength":"3.5976","ShutterSpeedValue":"7.350603","ApertureValue":"3.0705","BrightnessValue":"4.16","MaxApertureValue":"3.0705","MeteringMode":"2","Flash":"0"},"Geo":[],"Address":[]},"Expires":"9999-12-30 12:12:12","Read":65532,"Write":49152,"Owner":"SYSTEM","Date (Europe\/Berlin)":"2025-06-19 14:32:15","currentUserId":"ANONYM_$2y$12$FmZ7ZqMcUI6e1RasE00OT.dw8ClFUV3TSicdrgCxUzSTkx26K6yTm","currentUser":"Anonym Anonym","nowTimeStamp":1760268700,"nowDateTimeUTC":"2025-10-12 11:31:40","nowDateUTC":"2025-10-12","nowTimeUTC":"11:31:40","+1DayFromNowUTC":"2025-10-13 11:31:40","+10DaysFromNowUTC":"2025-10-22 11:31:40","Info":"Entry updated by \"updateEntry\""}';
-        $testEntry=json_decode($testEntry,TRUE);
-        $this->updateSignalsFromEntry($testEntry);
-        */
     }
     
     public function getEntryTable():string
@@ -54,11 +49,10 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     }
 
     /**
-     * This method is the interface of this data processing class
+     * This method links the processor to the canvas element
      *
      * @param array $callingElementSelector Is the selector for the canvas element which called the method 
      * @param string $action Selects the requested process to be run  
-     *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
      public function dataProcessor(array $callingElementSelector=[],string $action='info'){
@@ -413,6 +407,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         return $string;
     }
 
+    /******************************************************************************************************************************************
+    * HomeApp Interface Implementation
+    * 
+    */
+    
     public function getHomeAppWidget(string $name):array
     {
         $appsHtml=[];
