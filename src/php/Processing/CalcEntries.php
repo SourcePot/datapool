@@ -19,7 +19,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
     
     public function __construct($oc)
     {
@@ -148,10 +148,11 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function calculationParams($callingElement)
     {
-        $contentStructure=['Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-                        'Target on success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
-                        'Target on failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
-                        ];
+        $contentStructure=[
+            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+            'Target on success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+            'Target on failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+        ];
         // get selctor
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['selector']['Content']=[];
@@ -188,7 +189,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
             'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            ];
+        ];
         $contentStructure['"A" selected by...']+=$callingElement['Content']['Selector'];
         $contentStructure['"B" selected by...']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -207,7 +208,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Value'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>current($addKeys),'addSourceValueColumn'=>FALSE,'addColumns'=>$addKeys],
             'Failure if Result...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES],
             'Compare value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            ];
+        ];
         $contentStructure['Value']+=$callingElement['Content']['Selector'];
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
@@ -229,7 +230,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
             'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
             'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            ];
+        ];
         $contentStructure['Condition']+=$callingElement['Content']['Selector'];
         $contentStructure['Use']+=$callingElement['Content']['Selector'];
         $contentStructure['Target column']+=$callingElement['Content']['Selector'];
@@ -252,8 +253,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 'Entries'=>['value'=>0],
                 'Failure'=>['value'=>0],
                 'Success'=>['value'=>0],
-                ]
-            ];
+            ]
+        ];
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if ($sourceEntry['isSkipRow']){
@@ -329,7 +330,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     'Condition'=>$value,
                     'Use value if'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST[$rule['Content']['Use value if...']],
                     'Condition met'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleResults[$conditionalvalueRuleIndex]),
-                    ];
+                ];
             }
         }
         // loop through failurerules rules
@@ -348,13 +349,15 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $ruleResults[$failureRuleIndex]=$this->oc['SourcePot\Datapool\Foundation\Computations']->isTrue($value,$rule['Content']['Compare value'],$rule['Content']['Failure if Result...']);
                 }
                 $log.='|'.$failureRuleIndex.' = '.intval($ruleResults[$failureRuleIndex]);
-                if ($ruleResults[$failureRuleIndex]){$isFailure=TRUE;}
+                if ($ruleResults[$failureRuleIndex]){
+                    $isFailure=TRUE;
+                }
                 $result['Failure rules'][$failureRuleIndex]=[
                     'Value'=>$value,
                     'Failure if Result'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES[$rule['Content']['Failure if Result...']],
                     'Compare value'=>$rule['Content']['Compare value'],
                     'Condition met'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleResults[$failureRuleIndex]),
-                    ];
+                ];
             }
         }
         // wrapping up

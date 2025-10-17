@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private const INFO='This processor forwards entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.';
+    private const INFO='This processor forwards entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules & conditions for this destination must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the "AND", “OR” for the very first rule of any destination is ignored.';
 
     private $oc;
     
