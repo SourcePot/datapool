@@ -51,11 +51,12 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 ],
             ],
         'Login'=>['@function'=>'getLoginFormHtml','@isApp'=>'&#8688;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Components\Login'],
-        'Icon etc.'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-        'My user rols'=>['@class'=>__CLASS__,'@function'=>'getUserRolesString','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ALL_REGISTERED_R','@key'=>'myRoles','@isApp'=>'My rols','@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
-        'Privileges'=>['@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'P','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Icon etc.'=>['@function'=>'entryControls','@isApp'=>'&#9752;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE],
+        'Style'=>['@class'=>'SourcePot\Datapool\Foundation\Backbone','@function'=>'styleClassSelector','@isApp'=>'&#9874;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@hideDelete'=>TRUE],
+        'My user rols'=>['@class'=>__CLASS__,'@function'=>'getUserRolesString','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ALL_REGISTERED_R','@key'=>'myRoles','@isApp'=>'&#9823;&#9817;&#9823;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
+        'Privileges'=>['@function'=>'setAccessByte','@default'=>1,'@Write'=>'ADMIN_R','@Read'=>'ADMIN_R','@key'=>'Privileges','@isApp'=>'&#9888;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
         'App credentials'=>['@function'=>'clientAppCredentialsForm','@Write'=>'ALL_CONTENTADMIN_R','@Read'=>'ALL_CONTENTADMIN_R','@key'=>'Content','@isApp'=>'&#128274;','@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Foundation\ClientAccess'],
-        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>['width'=>360,'height'=>400]],
+        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>'','@style'=>[]],
         ];
 
     private $userRoles=[

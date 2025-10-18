@@ -778,7 +778,7 @@ button.calendar-day,button.calendar-weekend-day{
     background-color:var(--bgColorA);
 }
 button.calendar-weekend-day{
-    background-color:var(--greenH);
+    background-color:var(--green);
 }
 div.calendar-selected-day{
     background-color:var(--attentionColorTransparent);
@@ -825,7 +825,7 @@ div.calendar-timeline{
 /** STATUS **/
 .status-off,input.status-off{
     color:var(--color);
-    background-color:var(--greenH);
+    background-color:var(--green);
 }
 .status-on,input.status-on{
     color:var(--bgColor);
