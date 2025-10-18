@@ -153,10 +153,6 @@ button,input[type="submit"],input[type="file"],a.btn,a.cookies,a.plot,.js-button
     min-width:2rem;
     padding:0 0.25rem;
     line-height: 1.8rem;
-    border-left:1px solid var(--bgColorA);
-    border-top:1px solid var(--bgColorA);
-    border-right:2px solid var(--colorM);
-    border-bottom:2px solid var(--colorM);
 }
 button:hover,input[type="submit"]:hover,input[type="file"]:hover,a.btn:hover,a.cookies:hover,a.plot:hover,.js-button:hover{
     cursor:pointer;
@@ -669,9 +665,10 @@ p.log{
 }
 button.canvas-std,button.canvas-red,button.canvas-green,button.canvas-processor{
     color:var(--color);
-    line-height: 1.25;
+    line-height: 1.25rem;
 }
 button.canvas-processor{
+    font-size:20px;
     color:var(--bgColor);
     background-color:var(--blueH);
 }
