@@ -51,13 +51,14 @@ final class Root{
     ];
     
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
+    private const JOB_PROCESSING_SERVER_LOAD_THRESHOLD=70;  // in percent of max. load
     public const DB_TIMEZONE='UTC';
     public const NULL_DATE='9999-12-30 12:12:12';
     public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE,'legal'=>TRUE];
-    public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
+    public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'logo.png'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
     
     // profiling settings
     public const LOG_LEVEL=['production'=>'Production','monitoring'=>'Monitoring','debugging'=>'Debugging'];
@@ -379,12 +380,13 @@ final class Root{
         } else if ($this->script==='job.php'){
             // job Processing
             $serverload=sys_getloadavg()?:[0.5,0.5,0.5];
-            if ($serverload[0]<0.7){
+            $serverload=round(100*$serverload[0]);
+            if ($serverload<self::JOB_PROCESSING_SERVER_LOAD_THRESHOLD){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
             } else {
                 $arr['page html'].='Job skipped due to high server load...';
             }
-            $arr['page html'].='<br/>Server load: '.round(100*$serverload[0]).'%';
+            $arr['page html'].="<br/>Server load: $serverload%";
         } else if ($this->script==='import.php'){
             // import Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
