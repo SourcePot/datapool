@@ -24,6 +24,8 @@ class Backbone{
     ];
 
     private $oc=NULL;
+
+    private $webPageStyleSheet;
     
     private $settings=[
         'pageTitle'=>'Datapool',
@@ -64,6 +66,8 @@ class Backbone{
 
     public function init()
     {
+        $this->styleClassSelectorCmdProcessing();
+        $this->webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
         // add placeholder
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTitle}}',$this->settings['pageTitle']);
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTimeZone}}',$this->settings['pageTimeZone']);
@@ -133,6 +137,9 @@ class Backbone{
             if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
                 continue;
             }
+            if ($fileArr['extension']==='css' && strpos($fileArr['filename'],'main')===0 && $fileArr['filename']!==($this->webPageStyleSheet?:'main')){
+                continue;
+            }
             $elArr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']];
             $srcAttr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']]['srcAttr'];
             $elArr[$srcAttr]=$fileName;
@@ -146,7 +153,7 @@ class Backbone{
         }
         $arr['toReplace']['{{head}}']=$jQueryImport.$jQueryUIImport.$arr['toReplace']['{{head}}'];
         // Leavelet plugin
-        foreach(self::EXTERNAL_HEADER_ELEMENTS as $label=>$element){
+        foreach(self::EXTERNAL_HEADER_ELEMENTS as $element){
             $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         }
         return $arr;
@@ -179,6 +186,34 @@ class Backbone{
         }
         $arr['page html']=preg_replace('/{{[a-zA-Z]+}}/','',$arr['page html']);
         return $arr;
+    }
+
+    private function styleClassSelectorCmdProcessing()
+    {
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'styleClassSelector');
+        if (isset($formData['cmd']['set'])){
+            $this->oc['SourcePot\Datapool\Cookies\Cookies']->setSettingsCookie('Web page style',$formData['val']['webPageStyleSheet']);
+        }
+    } 
+
+    public function styleClassSelector(array $arr):string
+    {
+        $html='';
+        $select=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['webPageStyleSheet'],'excontainer'=>TRUE];
+        $select['selected']=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
+        $wwwMediaFiles=scandir($GLOBALS['relDirs']['media']);
+        sort($wwwMediaFiles);
+        foreach($wwwMediaFiles as $wwwMediaFile){
+            $fileName=$GLOBALS['relDirs']['media'].'/'.$wwwMediaFile;
+            $fileArr=pathinfo($fileName);
+            if ($fileArr['extension']!=='css' || strpos($fileArr['filename'],'main')!==0){
+                continue;
+            }
+            $select['options'][$fileArr['filename']]=$wwwMediaFile;
+        }
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($select);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'submit','value'=>'Save','key'=>['set'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]);
+        return $html;
     }
 
 }

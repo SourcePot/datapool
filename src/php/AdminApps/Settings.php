@@ -13,58 +13,6 @@ namespace SourcePot\Datapool\AdminApps;
 class Settings implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
-
-    private const CSS_TEMPLATES=[
-        'Base'=>[
-            "--color"=>"#000",
-            "--colorA"=>"#444",
-            "--colorH"=>"#fff",
-            "--colorM"=>"#aaa",
-            "--bgColor"=>"#fff",
-            "--bgColorA"=>"#eee",
-            "--bgColorH"=>"#000",
-            "--bgMenu"=>"#3395",
-            "--bgDarkT"=>"#0007",
-            "--red"=>"#f99",
-            "--redH"=>"#f44",
-            "--green"=>"#afa",
-            "--greenH"=>"#4f4",
-            "--blue"=>"#ccf",
-            "--blueH"=>"#44f",
-            "--yellow"=>"#fc9",
-            "--yellowH"=>"#c83",
-            "--attentionColor"=>"rgba(255, 48, 48)",
-            "--looggerBg"=>"#444",
-            "--top-nav-height"=>"2.5rem",
-            "--bottom-nav-height"=>"27px",
-            "--textFieldMinWidth"=>"13rem",
-        ],
-        'Dark'=>[
-            "--color"=>"#fff",
-            "--colorA"=>"#ddd",
-            "--colorH"=>"#000",
-            "--colorM"=>"#aaa",
-            "--bgColor"=>"#111",
-            "--bgColorA"=>"#444",
-            "--bgColorH"=>"#fff",
-            "--bgMenu"=>"#fff4",
-            "--bgDarkT"=>"#0007",
-            "--red"=>"rgba(155, 0, 0, 1)",
-            "--redH"=>"#f44",
-            "--green"=>"#4f4",
-            "--greenH"=>"rgba(0, 134, 0, 1)",
-            "--blue"=>"#44d",
-            "--blueH"=>"#ccf",
-            "--yellow"=>"#fa4",
-            "--yellowH"=>"#fc9",
-            "--attentionColor"=>"rgba(255, 48, 48)",
-            "--looggerBg"=>"#444",
-            "--top-nav-height"=>"2.5rem",
-            "--bottom-nav-height"=>"27px",
-            "--textFieldMinWidth"=>"13rem",
-        ]
-    ];
-    
     private $oc;
     
     public  const SELECTORS=[
@@ -262,89 +210,14 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
     public function getCssVars():array
     {
         $cssVars=[];
-        $file=$GLOBALS['relDirs']['media'].'/light.css';
+        $webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
+        $file=$GLOBALS['relDirs']['media'].'/'.$webPageStyleSheet.'.css';
         $cssFileContent=file_get_contents($file);
         preg_match_all('/\s+(--[a-zA-Z\-_]+):\s*([^;]+);/u',($cssFileContent?:''),$matches);
         foreach($matches[1] as $matchIndex=>$key){
             $cssVars[$key]=$matches[2][$matchIndex];
         }
         return $cssVars;
-    }
-
-    private function setCss(array $vars, string $fontSize):string
-    {
-        $file=$GLOBALS['relDirs']['media'].'/light.css';
-        $cssFileContent=file_get_contents($file)??'';
-        // update vars
-        foreach($vars as $key=>$value){
-            $cssFileContent=preg_replace('/'.$key.':\s*[^;]+;/u',$key.':'.$value.';',$cssFileContent);
-        }
-        // update font-size
-        $fontSizePos=strpos($cssFileContent,'font-size');
-        $semicolonPos=strpos($cssFileContent,';',$fontSizePos);
-        if ($fontSizePos>0 && $semicolonPos>$fontSizePos){
-            $cssFileContent=substr($cssFileContent,0,$fontSizePos).'font-size:'.$fontSize.'px'.substr($cssFileContent,$semicolonPos);
-        }
-        // write css-file
-        if (empty($cssFileContent)){
-            return 'Failed to load css-file "'.$file.'"';
-        } else {
-            if (file_put_contents($file,$cssFileContent)===FALSE){
-                return 'Writing css-file "'.$file.'" failed';
-            } else {
-                return "\"$file\" updated.\nYou may need to clear your history and reload the page for the changes to take effect.";
-            }
-        }
-    }
-
-    private function getCssTemplateSelector(string $callingClass, string $callingFunction):string
-    {
-        $vars=$this->getCssVars();
-        $options=[];
-        $selectedRanking=[];
-        foreach(self::CSS_TEMPLATES as $templateName=>$template){
-            $options[$templateName]=$templateName;
-            $selectedRanking[$templateName]=0;
-            foreach($template as $key=>$value){
-                if (!isset($vars[$key])){continue;}
-                if ($vars[$key]==$value){
-                    $selectedRanking[$templateName]++;
-                }
-            }
-        }
-        arsort($selectedRanking);
-        reset($selectedRanking);
-        $selected=(current($selectedRanking)>0)?key($selectedRanking):FALSE;
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$selected,'key'=>['css-template'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'excontainer'=>TRUE]);
-    }
-
-    private function getFontSizeTemplateSelector(string $callingClass, string $callingFunction):string
-    {
-        $file=$GLOBALS['relDirs']['media'].'/light.css';
-        $cssFileContent=file_get_contents($file);
-        preg_match_all('/\s+font-size:\s*([0-9]{1,3})px;/',($cssFileContent?:''),$match);
-        $options=['6'=>'6px','7'=>'7px','8'=>'8px','9'=>'9px','10'=>'10px','11'=>'11px','12'=>'12px','13'=>'13px','14'=>'14px','15'=>'15px','16'=>'16px','17'=>'17px','18'=>'18px','19'=>'19px','20'=>'20px',];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$match[1][0]??FALSE,'key'=>['font-size'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'excontainer'=>TRUE]);
-    }
-
-    public function pageStyleSettingsHtml($arr):array
-    {
-        $status='';
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (isset($formData['cmd']['set'])){
-            $vars=self::CSS_TEMPLATES[$formData['val']['css-template']]??[];
-            $fontSize=$formData['val']['font-size']??'14';
-            $status=$this->setCss($vars,$fontSize);
-        }
-        //
-        $arr['html']=$arr['html']??'';
-        $matrix=[];
-        $matrix['Font-size']=['Value'=>$this->getFontSizeTemplateSelector($arr['callingClass'],$arr['callingFunction'])];
-        $matrix['CSS template']=['Value'=>$this->getCssTemplateSelector($arr['callingClass'],$arr['callingFunction'])];
-        $matrix['Status']=['Value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$status])];
-        $matrix['']=['Value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Set','key'=>['set'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']])];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Page styles','hideKeys'=>FALSE,'hideHeader'=>FALSE,'keep-element-content'=>TRUE]);
-        return $arr;
     }
 
     /**
