@@ -378,7 +378,13 @@ final class Root{
             $this->oc['SourcePot\Datapool\Foundation\User']->userStatusLog();
         } else if ($this->script==='job.php'){
             // job Processing
-            $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
+            $serverload=sys_getloadavg()?:[0.5,0.5,0.5];
+            if ($serverload[0]<0.7){
+                $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
+            } else {
+                $arr['page html'].='Job skipped due to high server load...';
+            }
+            $arr['page html'].='<br/>Server load: '.round(100*$serverload[0]).'%';
         } else if ($this->script==='import.php'){
             // import Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
@@ -494,7 +500,7 @@ final class Root{
             'Account.php'=>'702|',
             'Login.php'=>'901|',
             'Logout.php'=>'902|',
-            ];
+        ];
         $fileIndex=0;
         $objectsArr=['000|Header|'.$fileIndex=>['class','classWithNamespace','file','type']];
         // scan dirs
@@ -683,7 +689,7 @@ final class Root{
     public function file_get_contents_utf8(string $fn):string
     {
         $content=@file_get_contents($fn);
-        $content=mb_convert_encoding($content,'UTF-8',mb_detect_encoding($content,'UTF-16,UTF-8,ISO-8859-1',TRUE));
+        $content=mb_convert_encoding($content?:'','UTF-8',mb_detect_encoding($content?:'','UTF-16,UTF-8,ISO-8859-1',TRUE));
         // clean up - remove BOM
         $bom=pack('H*','EFBBBF');
         $content=preg_replace("/^$bom/",'',$content);
