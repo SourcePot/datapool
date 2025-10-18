@@ -357,6 +357,28 @@ jQuery(document).ready(function(){
 		});
 	}
 
+/** USER ACTIONS **/
+	showUserActions();
+	function showUserActions(){
+		jQuery.ajax({
+			method:"POST",
+			url:'js.php',
+			context:document.body,
+		    data:{'function':'getUserActions'},
+            dataType:"json"
+        }).done(function(data){
+			jQuery('.user-action').remove();
+			for(const [key,arr] of Object.entries(data['arr'])){
+				jQuery('[entry-id='+arr['canvas-element']+']').append('<div class="user-action">'+arr['User']+'</div>');
+			};
+        }).fail(function(data){
+			jQuery('.user-action').remove();
+			console.log(data);
+		}).always(function(){
+			
+		});
+	}
+
 /** SYMBOL LOGIN FORM **/
 	addSymbolLoginEvents();
 	function addSymbolLoginEvents(){
@@ -447,6 +469,7 @@ jQuery(document).ready(function(){
 			loadNextEntry();
 		} else if (heartbeats%25===0){
 			autoImageShuffle();
+			showUserActions();
 		}
 	})();
 	markChages();

@@ -158,7 +158,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public function unifyEntry(array $entry):array
     {
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();    
+        if (isset($this->oc[$entry['Folder']])){
+            $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
+        }
         // new entry -> create structure
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
@@ -223,9 +225,11 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $elementSelector=['Source'=>key($formData['cmd'][$cmd])];
             $elementSelector['EntryId']=key($formData['cmd'][$cmd][$elementSelector['Source']]);
             $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($elementSelector);
+            $this->addUserAction($canvasElement,$formData);
         }
         if (isset($formData['cmd']['select'])){
             $canvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$canvasElement);
+            $this->addUserAction($canvasElement,$formData);
         } else if (isset($formData['cmd']['delete'])){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($canvasElement);
             $canvasElement=[];
@@ -361,8 +365,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $btnArr['element-content']='🗑';
             $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
             //
-            $element['source']=$canvasElement['Source'];
-            $element['entry-id']=$canvasElement['EntryId'];
             $style['cursor']='pointer';
         } else {
             if (empty($canvasElement['Content']['Selector']['Source'])){
@@ -389,6 +391,8 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $elmentInfo=['tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')'];
             $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elmentInfo);
         }
+        $element['source']=$canvasElement['Source'];
+        $element['entry-id']=$canvasElement['EntryId'];
         $element['class']=$canvasElement['Content']['Style']['Style class'];
         $element['element-content']=$text;
         $element['keep-element-content']=TRUE;
@@ -632,5 +636,28 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9850;']);
         return $html;
     }
+
+    private function addUserAction($canvasElement,$formData)
+    {
+        $selectedStatusEntry=['Source'=>$this->getEntryTable(),'Group'=>'User action','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Name'=>$canvasElement['EntryId'],'Content'=>['function'=>__FUNCTION__,'action'=>key($formData['cmd'])]];
+        $selectedStatusEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selectedStatusEntry,['Group','Folder'],0);
+        $selectedStatusEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT5M');
+        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($selectedStatusEntry);
+    }
+
+    public function getUserActions($data):array
+    {
+        $userActions=[];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$this->getEntryTable(),'Group'=>'User action'],TRUE) as $userAction){
+            if ($userAction['Folder']===$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()){continue;}
+            $userActions[$userAction['Folder']]=[
+                'action'=>$userAction['Content']['action'],
+                'canvas-element'=>$userAction['Name'],
+                'User'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($userAction['Folder'],1),
+            ];
+        }
+        return $userActions;
+    }
+
 }
 ?>
