@@ -45,6 +45,8 @@ class Container{
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementStyle($_POST);
             } else if (strcmp($_POST['function'],'entryById')===0){
                 $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
+            } else if (strcmp($_POST['function'],'getUserActions')===0){
+                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getUserActions($_POST);
             } else {
                 // unknown function
             }

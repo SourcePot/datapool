@@ -23,6 +23,8 @@ class Backbone{
         'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>''],
     ];
 
+    private const DEFAULT_STYLESHEET='main';
+
     private $oc=NULL;
 
     private $webPageStyleSheet;
@@ -137,7 +139,7 @@ class Backbone{
             if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
                 continue;
             }
-            if ($fileArr['extension']==='css' && strpos($fileArr['filename'],'main')===0 && $fileArr['filename']!==($this->webPageStyleSheet?:'main')){
+            if ($fileArr['extension']==='css' && strpos($fileArr['filename'],'main')===0 && $fileArr['filename']!==($this->webPageStyleSheet?:self::DEFAULT_STYLESHEET)){
                 continue;
             }
             $elArr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']];
