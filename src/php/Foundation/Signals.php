@@ -78,7 +78,6 @@ class Signals{
     public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[]):array
     {
         $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time(),'label'=>$params['label']??'','color'=>$params['color']??''];
-        $params=array_merge(['maxSignalDepth'=>self::MAX_SIGNAL_DEPTH],$params);
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
         $signal=['Type'=>$this->entryTable.' '.$dataType,'Content'=>['signal'=>[]]];
@@ -86,7 +85,7 @@ class Signals{
         $signal=array_merge($signal,$signalSelector);
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($signal,TRUE);
         // update signal
-        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,$params['maxSignalDepth']);
+        $signal['Content']['signal']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($signal['Content']['signal'],$newContent,$params['maxSignalDepth']??self::MAX_SIGNAL_DEPTH);
         $signal['Params']['signal']=$params;
         $signal['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         $signal['Owner']='SYSTEM';
@@ -361,6 +360,7 @@ class Signals{
     public function signalPlot($signal,$metaOverwrite=[]):string
     {
         $metaOverwrite['tickLength']=($metaOverwrite['tickLength']??6)?:6;
+        $metaOverwrite=array_merge($metaOverwrite,$signal['Params']['signal']);
         $plotBaseId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId']],TRUE);
         $plot=['tag'=>'div','class'=>'signal-plot','style'=>[],'id'=>$plotBaseId.'-plot','keep-element-content'=>TRUE];
         $plot['style']['width']=$metaOverwrite['style']['width']??600;

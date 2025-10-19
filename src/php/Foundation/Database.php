@@ -96,10 +96,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             // delete expired entries
             foreach($GLOBALS['dbInfo'] as $table=>$template){
                 $startTime=hrtime(TRUE);
+                $this->resetStatistic();
                 $statistic=$this->deleteExpiredEntries($table);
                 // update deleted signal
                 $params=['yMin'=>0];
-                $params['description']='Each data point represents a deletion event for expired entries for the table provided by label';
+                $params['description']='Each data point represents a deletion event for expired entries of the table. The value represent the count of deleted entries $ the label the time consumption.';
                 $params['label']=round((hrtime(TRUE)-$startTime)/1000).' ms';
                 $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Expired entries deleted ['.$table.']',$statistic['deleted'],'int',$params);
             }
