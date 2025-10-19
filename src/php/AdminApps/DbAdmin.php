@@ -50,7 +50,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     private function dbInfo():string
     {
         $matrices=[];
-        $matrices['General']['Database name']=['value'=>$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName(),'trStyle'=>['background-color'=>'#bbf']];
+        $matrices['General']['Database name']=['value'=>$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName(),'trStyle'=>['background-color'=>'var(--blue)']];
         $sql='SELECT table_schema "Database name",SUM(data_length+index_length) "Database size" FROM information_schema.tables GROUP BY table_schema;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $dbInfo){
@@ -125,7 +125,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
             $column=$columnInfo['Field'];
             unset($columnInfo['Field']);
-            if (isset($matrices['Index'][$column])){$columnInfo['trStyle']=['background-color'=>'#bbf'];}
+            if (isset($matrices['Index'][$column])){$columnInfo['trStyle']=['background-color'=>'var(--blue)'];}
             $matrices['Columns'][$column]=$columnInfo;
         }
         $tableKey='Table "'.$table.'"';
