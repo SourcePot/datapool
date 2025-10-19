@@ -16,7 +16,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     private $dbObj;
     
-    public const TIME_BETWEEN_TABLE_OPTIMISATIONS=86400;               // Make sure this value is larger than the minimum time between Database jobs!!
+    public const MAX_TIME_BETWEEN_TABLE_OPTIMISATIONS=86400;
+    public const MIN_TIME_BETWEEN_TABLE_OPTIMISATIONS=5000;
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
@@ -67,16 +68,21 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public function job(array $vars):array
     {
         $vars['Last optimised']=$vars['Last optimised']??[];
+        $vars['Last optimised timestamp']=$vars['Last optimised timestamp']??0;
         // Last optimised: init value and remove keys without linked table
-        $toOptimize=FALSE;
         $lastOptimised=array_keys($vars['Last optimised']);
         $lastOptimised=array_fill_keys($lastOptimised,'__TODELETE__');
         foreach($GLOBALS['dbInfo'] as $table=>$template){
             $lastOptimised[$table]=$vars['Last optimised'][$table]??0;
-            if ((time()-$lastOptimised[$table])>self::TIME_BETWEEN_TABLE_OPTIMISATIONS){
+            if ((time()-$lastOptimised[$table])>self::MAX_TIME_BETWEEN_TABLE_OPTIMISATIONS){
                 $toOptimize=$table;
                 break;
             }
+        }
+        if ((time()-$vars['Last optimised timestamp'])>self::MIN_TIME_BETWEEN_TABLE_OPTIMISATIONS){
+            $toOptimize=$toOptimize??FALSE;
+        } else {
+            $toOptimize=FALSE;
         }
         // Optimise table or delete expired entries
         $startTime=hrtime(TRUE);
@@ -86,7 +92,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $stmt=$this->executeStatement($sql,[]);
             $vars['OPTIMIZE TABLE'][$toOptimize]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             $vars['action']='Check and repair table "'.$toOptimize.'"';
-            $lastOptimised[$toOptimize]=time();
+            $vars['Last optimised timestamp']=$lastOptimised[$toOptimize]=time();
             // update deleted signal
             $params=['yMin'=>0];
             $params['description']='Each data point represents a table optimisation. The data value represents the time consumption and the label the table name';
