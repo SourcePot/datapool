@@ -322,7 +322,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $html.=$this->canvasElement2html(__CLASS__,__FUNCTION__,$entry,$selectedCanvasElement);
         }
         $html='<div id="canvas">'.$html.'</div>';
-        $html='<div id="canvas-wrapper" style="width:100%;overflow:auto;">'.$html.'</div>';
+        $html='<div id="canvas-wrapper" style="width:100%;overflow-x:auto;overflow-y:hidden;">'.$html.'</div>';
         return $html;
     }
     
@@ -660,6 +660,5 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         }
         return $userActions;
     }
-
 }
 ?>
