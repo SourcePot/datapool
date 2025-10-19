@@ -16,7 +16,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     private $dbObj;
     
-    public const TIME_BETWEEN_OPTIMIZE_TABLES=36000;               // Make sure this value is larger than the minimum time between Database jobs!!
+    public const TIME_BETWEEN_TABLE_OPTIMISATIONS=86400;               // Make sure this value is larger than the minimum time between Database jobs!!
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8';
     public const MULTIBYTE_COUNT='4';
@@ -73,7 +73,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $lastOptimised=array_fill_keys($lastOptimised,'__TODELETE__');
         foreach($GLOBALS['dbInfo'] as $table=>$template){
             $lastOptimised[$table]=$vars['Last optimised'][$table]??0;
-            if ((time()-$lastOptimised[$table])>self::TIME_BETWEEN_OPTIMIZE_TABLES){
+            if ((time()-$lastOptimised[$table])>self::TIME_BETWEEN_TABLE_OPTIMISATIONS){
                 $toOptimize=$table;
                 break;
             }
