@@ -743,8 +743,8 @@ p.canvas-info{
     line-height:1rem;
 }
 .user-action{
-    font-size: 0.8rem;
-    margin-top:-25px;    
+    font-size: 0.7rem;
+    margin-top:-10px;
     margin-left:-15px;    
     padding:2px;
     background-color: var(--bgColor);
