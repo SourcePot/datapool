@@ -360,7 +360,7 @@ class Signals{
     public function signalPlot($signal,$metaOverwrite=[]):string
     {
         $metaOverwrite['tickLength']=($metaOverwrite['tickLength']??6)?:6;
-        $metaOverwrite=array_merge($metaOverwrite,$signal['Params']['signal']);
+        $metaOverwrite=array_merge($metaOverwrite,$signal['Params']['signal']??[]);
         $plotBaseId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId']],TRUE);
         $plot=['tag'=>'div','class'=>'signal-plot','style'=>[],'id'=>$plotBaseId.'-plot','keep-element-content'=>TRUE];
         $plot['style']['width']=$metaOverwrite['style']['width']??600;
