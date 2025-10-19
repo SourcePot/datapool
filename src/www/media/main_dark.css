@@ -744,10 +744,11 @@ p.canvas-info{
 }
 .user-action{
     font-size: 0.7rem;
-    margin-top:-10px;
+    margin-top:-15px;
     margin-left:-15px;    
-    padding:2px;
-    background-color: var(--bgColor);
+    padding:0 2px;
+    color: var(--bgColor);
+    background-color: var(--color);
 }
 /** CALENDAR **/
 div.calendar-sheet-wrapper{
