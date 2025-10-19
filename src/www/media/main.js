@@ -370,7 +370,7 @@ jQuery(document).ready(function(){
 			jQuery('.user-action').remove();
 			var style='';
 			for(const [key,arr] of Object.entries(data['arr'])){
-				style="color:"+arr['color']+";border-bottom:1px solid "+arr['color']+";border-left:1px solid "+arr['color']+";";
+				style="border-bottom:1px solid "+arr['color']+";border:1px solid "+arr['color']+";";
 				jQuery('[entry-id='+arr['canvas-element']+']').append('<div class="user-action" style="'+style+'">'+arr['User']+'</div>');
 			};
         }).fail(function(data){

@@ -653,7 +653,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $userActions[$userAction['Folder']]=[
                 'action'=>$userAction['Content']['action'],
                 'canvas-element'=>$userAction['Name'],
-                'color'=>($userAction['Content']['action']==='view')?'var(--greenH)':'var(--attentionColor)',
+                'color'=>($userAction['Content']['action']==='view')?'var(--green)':'var(--attentionColor)',
                 'User'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($userAction['Folder'],0),
             ];
         }
