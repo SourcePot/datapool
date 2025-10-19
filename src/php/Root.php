@@ -516,7 +516,7 @@ final class Root{
                 'Tools'=>'500|Kernal object',
                 'Processing'=>'600|Kernal object',
                 default=>'800|Application object'
-                };
+            };
             // scan files
             $subDir=$dir.$dirName.'/';
             $files=scandir($subDir);

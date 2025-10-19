@@ -66,34 +66,48 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function job(array $vars):array
     {
-        $lastRun=$vars['Last run']??0;
-        // select table
-        if (empty($vars['tables2process'])){
-            $keysArr=array_keys($GLOBALS['dbInfo']);
-            $vars['tables2process']=array_combine($keysArr,$keysArr);
+        $vars['Last optimised']=$vars['Last optimised']??[];
+        // Last optimised: init value and remove keys without linked table
+        $toOptimize=FALSE;
+        $lastOptimised=array_keys($vars['Last optimised']);
+        $lastOptimised=array_fill_keys($lastOptimised,'__TODELETE__');
+        foreach($GLOBALS['dbInfo'] as $table=>$template){
+            $lastOptimised[$table]=$vars['Last optimised'][$table]??0;
+            if ((time()-$lastOptimised[$table])>self::TIME_BETWEEN_OPTIMIZE_TABLES){
+                $toOptimize=$table;
+                break;
+            }
         }
-        $selectedKey=key($vars['tables2process']);
-        $selectedTable=$vars['tables2process'][$selectedKey];
-        $vars['tables2process'][$selectedKey]='__TODELETE__';
-        if (time()-$lastRun>self::TIME_BETWEEN_OPTIMIZE_TABLES){
-            // optimize table
-            $sql='OPTIMIZE TABLE `'.$selectedTable.'`;';
+        // Optimise table or delete expired entries
+        $startTime=hrtime(TRUE);
+        if ($toOptimize){
+            // optimise table
+            $sql='OPTIMIZE TABLE `'.$toOptimize.'`;';
             $stmt=$this->executeStatement($sql,[]);
-            $vars['OPTIMIZE TABLE'][$selectedTable]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $vars['action']='Check and repair table "'.$selectedTable.'"';
+            $vars['OPTIMIZE TABLE'][$toOptimize]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $vars['action']='Check and repair table "'.$toOptimize.'"';
+            $lastOptimised[$toOptimize]=time();
+            // update deleted signal
+            $params=['yMin'=>0];
+            $params['description']='Each data point represents a table optimisation. The data value represents the time consumption and the label the table name';
+            $params['label']=$toOptimize;
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000),'int',$params);
         } else {
             // delete expired entries
-            $selector=['Source'=>$selectedTable,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
-            $statistic=$this->deleteEntries($selector,TRUE);
-            // update deleted signal
-            $params=[];
-            $params['description']='Each data point represents a deletion event for expired entries for the table provided by label';
-            $params['label']=$selectedTable;
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted expired entries',$statistic['deleted'],'int',$params);
-            $vars['action']='Deleted expired entries of table "'.$selectedTable.'"';
+            foreach($GLOBALS['dbInfo'] as $table=>$template){
+                $startTime=hrtime(TRUE);
+                $statistic=$this->deleteExpiredEntries($table);
+                // update deleted signal
+                $params=['yMin'=>0];
+                $params['description']='Each data point represents a deletion event for expired entries for the table provided by label';
+                $params['label']=round((hrtime(TRUE)-$startTime)/1000).' ms';
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Expired entries deleted ['.$table.']',$statistic['deleted'],'int',$params);
+            }
+            $vars['action']='Deleted expired entries';
         }
         // add infos to html
         $vars['html']='<h3>'.$vars['action'].'</h3>';
+        $vars['Last optimised']=$lastOptimised;
         $vars['Last run']=time();
         return $vars;
     }
@@ -542,6 +556,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return intval($rowCount);
     }
     
+    public function deleteExpiredEntries(string $table):array
+    {
+        $selector=['Source'=>$table,'Expires<'=>date('Y-m-d H:i:s'),'unlock'=>TRUE];
+        return $this->deleteEntries($selector,TRUE);
+    }
+
     public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
         $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable()];
         if ($returnPrimaryKeyOnly){$return='EntryId';} else {$return='*';}

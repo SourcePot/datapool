@@ -745,12 +745,9 @@ p.canvas-info{
 .user-action{
     font-size: 0.8rem;
     margin-top:-25px;    
-    margin-left:-25px;    
-    padding:3px;
-    color:var(--attentionColor);
+    margin-left:-15px;    
+    padding:2px;
     background-color: var(--bgColor);
-    border-left:1px solid var(--attentionColor);
-    border-bottom:1px solid var(--attentionColor);
 }
 /** CALENDAR **/
 div.calendar-sheet-wrapper{

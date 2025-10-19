@@ -368,8 +368,10 @@ jQuery(document).ready(function(){
             dataType:"json"
         }).done(function(data){
 			jQuery('.user-action').remove();
+			var style='';
 			for(const [key,arr] of Object.entries(data['arr'])){
-				jQuery('[entry-id='+arr['canvas-element']+']').append('<div class="user-action">'+arr['User']+'</div>');
+				style="color:"+arr['color']+";border-bottom:1px solid "+arr['color']+";border-left:1px solid "+arr['color']+";";
+				jQuery('[entry-id='+arr['canvas-element']+']').append('<div class="user-action" style="'+style+'">'+arr['User']+'</div>');
 			};
         }).fail(function(data){
 			jQuery('.user-action').remove();

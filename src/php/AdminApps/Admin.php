@@ -277,8 +277,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
                 $matrix[$file]['traceAsString']=implode('<br/>',$matrix[$file]['traceAsString']);
             }
         }
-        $tableStyle=['background-color'=>'#fcc'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE,'style'=>$tableStyle]);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Exception logs','hideKeys'=>TRUE,'hideHeader'=>FALSE]);
         return $arr;
     }
     
