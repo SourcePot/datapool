@@ -97,7 +97,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $params=['yMin'=>0];
             $params['description']='Each data point represents a table optimisation. The data value represents the time consumption and the label the table name';
             $params['label']=$toOptimize;
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000),'int',$params);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000000),'int',$params);
         } else {
             // delete expired entries
             foreach($GLOBALS['dbInfo'] as $table=>$template){
@@ -107,7 +107,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 // update deleted signal
                 $params=['yMin'=>0];
                 $params['description']='Each data point represents a deletion event for expired entries of the table. The value represent the count of deleted entries $ the label the time consumption.';
-                $params['label']=round((hrtime(TRUE)-$startTime)/1000).' ms';
+                $params['label']=round((hrtime(TRUE)-$startTime)/1000000).' ms';
                 $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Expired entries deleted ['.$table.']',$statistic['deleted'],'int',$params);
             }
             $vars['action']='Deleted expired entries';
