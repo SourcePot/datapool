@@ -32,7 +32,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
     
     public $definition=[
         'Content'=>[
@@ -653,7 +653,8 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $userActions[$userAction['Folder']]=[
                 'action'=>$userAction['Content']['action'],
                 'canvas-element'=>$userAction['Name'],
-                'User'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($userAction['Folder'],1),
+                'color'=>($userAction['Content']['action']==='view')?'var(--greenH)':'var(--attentionColor)',
+                'User'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($userAction['Folder'],0),
             ];
         }
         return $userActions;

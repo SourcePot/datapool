@@ -24,7 +24,7 @@ class Menu{
         'Forum'=>['Category'=>'Forum','Emoji'=>'&#9993;','Label'=>'Forum','Class'=>'SourcePot\Datapool\Forum\Forum','Name'=>'Forum app'],
         'Apps'=>['Category'=>'Apps','Emoji'=>'&#10070;','Label'=>'Apps','Class'=>'SourcePot\Datapool\GenericApps\Multimedia','Name'=>'Multimedia app'],
         'Data'=>['Category'=>'Data','Emoji'=>'&#9783;','Label'=>'Data','Class'=>'SourcePot\Datapool\DataApps\Misc','Name'=>'Misc app'],
-        ];
+    ];
                              
     public function __construct(array $oc)
     {
