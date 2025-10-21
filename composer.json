@@ -20,7 +20,7 @@
         "directorytree/imapengine":"^v1.15.5",
         "phpmailer/phpmailer": "^6.10.0",
         "sourcepot/ops":"^v1.3.0",
-        "sourcepot/mediaplayer":"^v4.3.0",
+        "sourcepot/mediaplayer":"^v4.3.1",
         "sourcepot/sms":"^v2.4.3",
         "sourcepot/checkentries":"^v1.4.1",
         "sourcepot/statistic":"^v1.1.0",
