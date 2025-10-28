@@ -72,8 +72,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     private const PAGE_STATE_TEMPLATE=[
         'calendarDate'=>'{{YESTERDAY}}',
         'Timezone'=>'{{pageTimeZone}}',
-        'Days to show'=>10,
-        'Day width'=>400,
+        'Days to show'=>45,
+        'Day width'=>200,
         'EntryId'=>'{{EntryId}}',
         'addDate'=>'',
         'refreshInterval'=>0
@@ -854,7 +854,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     {
         $this->resetEventCache();
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder(self::PAGE_STATE_TEMPLATE);
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60];
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60,'disableAutoRefresh'=>TRUE];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);

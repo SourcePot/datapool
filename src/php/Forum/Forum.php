@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Forum;
 class Forum implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ALL_MEMBER_R';
+    private const INIT_ENTRIES_TO_SHOW_TIMESPAN=7776000; // in seconds
     
     private $oc;
     
@@ -20,7 +21,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'All members can read forum entries'],                    
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'All admins can edit forum entries'],
-        ];
+    ];
     
     public $definition=[
         'Content'=>[
@@ -32,7 +33,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         'Attachment'=>['@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE],
         'Preview'=>['@function'=>'preview','@Write'=>'ADMIN_R','@hideKeys'=>TRUE],
         '@hideHeader'=>TRUE,
-        ];
+    ];
                             
     public function __construct($oc)
     {
@@ -85,7 +86,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
             $selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Year',$formData['val']['Year']);
         }
         // get selector
-        $options=[''=>'All'];
+        $options=[''=>'Past 90 days'];
         $startYear=intval(date('Y'));
         for($year=$startYear;$year>$startYear-10;$year--){
             $options[$year]='Year '.$year;
@@ -117,7 +118,11 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     {
         $forumSelector=['Source'=>$this->entryTable,'Folder'=>'Sent'];
         $selectedYear=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,'Year','');
-        if (!empty($selectedYear)){$forumSelector['Date']=$selectedYear.'-%';}
+        if (!empty($selectedYear)){
+            $forumSelector['Date']=$selectedYear.'-%';
+        } else {
+            $forumSelector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval(time()-self::INIT_ENTRIES_TO_SHOW_TIMESPAN));;
+        }
         $html='';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'@','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum','style'=>['clear'=>'none']]);
