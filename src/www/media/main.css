@@ -419,7 +419,7 @@ meter{
 p.bg-media{
     position: absolute;
     display:none;
-    color:var(--yellow);
+    color:var(--yellowH);
     background-color:var(--bgDarkT);
     top:1rem;
     left:0.5rem;
