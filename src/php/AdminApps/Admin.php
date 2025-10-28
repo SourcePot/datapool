@@ -22,7 +22,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         'SourcePot\Datapool\GenericApps\Multimedia'=>TRUE,
         'SourcePot\Datapool\GenericApps\Feeds'=>TRUE,
         'SourcePot\Datapool\DataApps\Misc'=>TRUE
-        ];
+    ];
     private const TEMPLATE_APPS=['GenericApps'=>'SourcePot\Datapool\GenericApps\Documents','DataApps'=>'SourcePot\Datapool\DataApps\Misc'];
     
     private $oc;
