@@ -70,10 +70,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     ];
 
     private const PAGE_STATE_TEMPLATE=[
-        'calendarDate'=>'{{YESTERDAY}}',
+        'calendarDate'=>'{{TODAY}}',
         'Timezone'=>'{{pageTimeZone}}',
         'Days to show'=>45,
-        'Day width'=>200,
+        'Day width'=>340,
         'EntryId'=>'{{EntryId}}',
         'addDate'=>'',
         'refreshInterval'=>0
@@ -93,6 +93,14 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
 
     public function init()
     {
+        // add calendar placeholder
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{nowDateUTC}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{YESTERDAY}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('yesterday'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TODAY}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('today'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TOMORROW}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow'));
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE}}',\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE-SERVER}}',date_default_timezone_get());
+        //
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,self::DEFINITION_EVENT);
         // get page state
