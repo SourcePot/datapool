@@ -121,6 +121,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $html='';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($forumSelector,FALSE,'Read','Date',FALSE) as $entry){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'@','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'forum','style'=>['clear'=>'none']]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Comments for '.$entry['EntryId'],'generic',$entry,['method'=>'comments','classWithNamespace'=>'SourcePot\Datapool\Foundation\Container'],['class'=>'comment','style'=>[]]);
         }
         return $html;
     }
