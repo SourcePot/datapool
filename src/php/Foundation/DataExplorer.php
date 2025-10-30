@@ -138,7 +138,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private function completeDefintion():void
     {
         // add Source selector
-        $sourceOptions=[];
+        $sourceOptions=[''=>''];
         $dbInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate(FALSE);
         foreach($dbInfo as $Source=>$entryTemplate){
             $sourceOptions[$Source]=$Source;
@@ -158,9 +158,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public function unifyEntry(array $entry):array
     {
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
-        if (isset($this->oc[$entry['Folder']])){
-            $entry['Content']['Selector']['Source']=$this->oc[$entry['Folder']]->getEntryTable();
-        }
         // new entry -> create structure
         if (!empty($entry['element-content'])){
             $entry['Name']=$entry['element-content'];
