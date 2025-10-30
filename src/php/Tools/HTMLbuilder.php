@@ -887,7 +887,7 @@ class HTMLbuilder{
                     $matrix[$rowIndex][$contentKey]=$this->traceHtml('Not found: '.$classWithNamespace.'::'.$method.'(arr)');
                 }
             } // end of loop through content structure
-            $matrix[$rowIndex]=array_merge($matrix[$rowIndex],[' '=>'','  '=>'','   '=>'','    '=>'',]);
+            $matrix[$rowIndex]=array_merge($matrix[$rowIndex]??[],[' '=>'','  '=>'','   '=>'','    '=>'',]);
             $emptyRow+=[' '=>'','  '=>'','   '=>'','    '=>'',];
             // add buttons
             $btnArr=array_merge($arr,self::BUTTONS['save'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
