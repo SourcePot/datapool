@@ -40,8 +40,6 @@ table.ep-footer{
     clear:both;
 }
 img.ep-std,video.ep-std,object.ep-std{
-    width:480px;
-    max-width:100%;
     background:none;
     border: 1px solid #000;
 }

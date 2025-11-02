@@ -88,7 +88,10 @@ h3,caption{
     font-size:1.25rem;
 }
 object{
+    float:left;
+    clear:both;
     overflow:hidden;
+    margin:10px 0 0 5px;
 }
 ol,ul{
     margin:1rem;
@@ -183,8 +186,9 @@ p.sample{
     max-width:300px;
     overflow:auto;
 }
-div.preview,main,div,select,video,img,p{
+div.preview,main,div,select,video,object,img,p{
     float:left;
+    max-width: 100%;
 }
 div.preview,video,img{
     clear:left;
