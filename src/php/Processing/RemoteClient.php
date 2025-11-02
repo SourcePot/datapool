@@ -303,6 +303,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             if (empty($canvasElement['Content']['Selector'])){continue;}
             // save entry to CanvasElement
             $target=$canvasElement['Content']['Selector'];
+            $target['Params']['Client']['baseEntryId']=$entryIdComps[0];
             $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
             $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
             $target['Owner']='SYSTEM';
@@ -394,10 +395,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $nameComps=explode('_',$entry['Name']);
             $dateStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$nameComps[1],'','','Y-m-d H:i:s',$pageTimeZone);
             $previewArr['selector']=$entry;
-            $previewArr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'none','padding-right'=>'0.75rem'],'element-content'=>ucfirst($nameComps[0])]);
-            $previewArr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'none','padding-right'=>'0.75rem'],'element-content'=>$dateStr]);
-            $previewArr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'none'],'element-content'=>'last motion file (for capture files check CanvasElement)']);
+            $previewArr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>ucfirst($nameComps[0]).': '.$dateStr.' &rarr; '.$entry['Folder'],'keep-element-content'=>TRUE]);
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['font-weight'=>'bold'],'element-content'=>'The preview is for the last motion file. For capture files check CanvasElement.']);
         }
         return $arr;
     }
