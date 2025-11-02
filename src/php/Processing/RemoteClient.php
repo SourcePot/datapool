@@ -292,6 +292,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private function distributeClientEntries(array $entry)
     {
+        // baseEntryId -> clientParams containing that baseEntryId -> get linked CanvasElements
         $entryIdComps=explode('_',$entry['EntryId']);
         $RemoteClientParamsSelector=['Source'=>$this->getEntryTable(),'Content'=>'%'.$entryIdComps[0].'%'];
         $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
@@ -383,17 +384,14 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     public function getPreviewContainer(array $arr):array
     {
-        $paramNeedles=['%image%','%video%','%application%',];
         // generic settings
         $previewArr=$arr;
-        $previewArr['maxDim']='360px';
-        // get newst content
-        foreach($paramNeedles as $paramNeedle){
-            $previewArr['selector']['Params']=$paramNeedle;
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
-                $previewArr['selector']=$entry;
-                $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
-            }
+        $previewArr['maxDim']='320px';
+        // get newest file
+        $previewArr['selector']['Params']='%motion%';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
+            $previewArr['selector']=$entry;
+            $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
         }
         return $arr;
     }
