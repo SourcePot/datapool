@@ -46,6 +46,7 @@ class HTMLbuilder{
         'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
         'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
         'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
+        'archive'=>['key'=>['archive'],'title'=>'Sets the expiry date to latest possible','hasCover'=>FALSE,'element-content'=>'&infin;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
     ];
 
     private const APP_OPTIONS=[
@@ -450,6 +451,10 @@ class HTMLbuilder{
                 $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
                 $fileName=date('Y-m-d H_i_s').' '.$pageTitle.' '.$selector['Source'].' dump.zip';
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->downloadExportedEntries([$selector],$fileName,FALSE,10000000000);
+            } else if (isset($formData['cmd']['archive'])){
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
+                $entry['Expires']=\SourcePot\Datapool\Root::NULL_DATE;
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             } else if (isset($formData['cmd']['approve']) || isset($formData['cmd']['decline'])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $cmd=key($formData['cmd']);
@@ -736,7 +741,8 @@ class HTMLbuilder{
                 'hideDelete'=>FALSE,
                 'hideDownload'=>FALSE,
                 'hideUpload'=>FALSE,
-                'hideDelete'=>FALSE
+                'hideDelete'=>FALSE,
+                'hideArchive'=>TRUE,
             ],
         ];
         $arr=array_replace_recursive($template,$arr);
@@ -761,10 +767,15 @@ class HTMLbuilder{
         } else if ($userAction==='decline'){
             $tableStyle=array_merge($tableStyle,self::DECLINE_STYLE);
         }
-        // create buttons
+        // create buttons that are not hidden
         foreach($arr['settings'] as $key=>$value){
-            if (strpos($key,'hide')!==0){continue;}
+            if (strpos($key,'hide')!==0){
+                continue;
+            }
             $cmd=strtolower(str_replace('hide','',$key));
+            if ($cmd==='archive' && ($arr['selector']['Expires']??\SourcePot\Datapool\Root::NULL_DATE)!==\SourcePot\Datapool\Root::NULL_DATE){
+                $value=FALSE;
+            }
             if ($value===FALSE && $userAction!==$cmd){
                 $arr['excontainer']=TRUE;
                 $arr['cmd']=$cmd;
