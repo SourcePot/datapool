@@ -303,6 +303,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             if (empty($canvasElement['Content']['Selector'])){continue;}
             // save entry to CanvasElement
             $target=$canvasElement['Content']['Selector'];
+            $target['Params']['Client']['baseEntryId']=$entryIdComps[0];
             $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
             $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
             $target['Owner']='SYSTEM';
@@ -388,10 +389,15 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $previewArr=$arr;
         $previewArr['maxDim']='320px';
         // get newest file
+        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $previewArr['selector']['Params']='%motion%';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
+            $nameComps=explode('_',$entry['Name']);
+            $dateStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$nameComps[1],'','','Y-m-d H:i:s',$pageTimeZone);
             $previewArr['selector']=$entry;
+            $previewArr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>ucfirst($nameComps[0]).': '.$dateStr.' &rarr; '.$entry['Folder'],'keep-element-content'=>TRUE]);
             $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['font-weight'=>'bold'],'element-content'=>'The preview is for the last motion file. For capture files check CanvasElement.']);
         }
         return $arr;
     }

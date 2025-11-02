@@ -621,9 +621,6 @@ class HTMLbuilder{
     
     public function integerEditor(array $arr):string
     {
-        // This function provides the HTML-script for an integer editor for the provided entry argument.
-        // Typical use is for keys 'Read', 'Write' or 'Privileges'.
-        //
         $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
         $entry=$entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']??[],FALSE);
