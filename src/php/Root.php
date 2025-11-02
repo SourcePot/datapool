@@ -53,7 +53,7 @@ final class Root{
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     private const JOB_PROCESSING_SERVER_LOAD_THRESHOLD=70;  // in percent of max. load
     public const DB_TIMEZONE='UTC';
-    public const NULL_DATE='9999-12-30 12:12:12';
+    public const NULL_DATE='2999-01-01 01:00:00';
     public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
