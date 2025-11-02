@@ -172,6 +172,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $plotOptions[$signal['Name']]=$signal['Name'];
         }
         $contentStructure=[
+            'CanvasElement'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>$callingElement['EntryId'],'excontainer'=>TRUE],
             'Client'=>['method'=>'select','value'=>'','options'=>$this->getClientOptions(),'excontainer'=>TRUE],
             'Plot to show'=>['method'=>'select','value'=>key($plotOptions),'options'=>$plotOptions,'excontainer'=>TRUE],
         ];
@@ -229,7 +230,12 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     public function clientCall($clientRequest):array
     {
-        $idArr=['client_id'=>$clientRequest['client_id'],'Group'=>$clientRequest['Group'],'Folder'=>$clientRequest['Folder'],'Name'=>$clientRequest['Name']];
+        $idArr=[
+            'client_id'=>$clientRequest['client_id'],
+            'Group'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Group'],
+            'Folder'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Folder'],
+            'Name'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Name']
+        ];
         $baseEntryId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($idArr,TRUE);
         // create templates from clientRequest
         $flatEntryTemplates=[
@@ -250,7 +256,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             }
         }
         foreach($flatEntryTemplates as $entryType=>$flatEntryTemplate){
-            if (!isset($flatEntries[$entryType])){continue;}
+            if (!isset($flatEntries[$entryType])){
+                continue;
+            }
             $flatEntryTemplate['EntryId']=$flatEntryTemplate['EntryId'].'_'.strtolower($entryType);
             $flatEntry=array_merge($flatEntryTemplate,$flatEntries[$entryType]);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
@@ -279,16 +287,21 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                 $this->distributeClientEntries($entry);
             }
         }
-        return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($clientSetting,self::ONEDIMSEPARATOR);
+        return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($clientSetting??[],self::ONEDIMSEPARATOR);
     }
 
     private function distributeClientEntries(array $entry)
     {
+        // baseEntryId -> clientParams containing that baseEntryId -> get linked CanvasElements
+        $entryIdComps=explode('_',$entry['EntryId']);
+        $RemoteClientParamsSelector=['Source'=>$this->getEntryTable(),'Content'=>'%'.$entryIdComps[0].'%'];
         $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
-        $remoteClientComps=explode('\\',__CLASS__);
-        // loop through all canvas elements with RemoteClient processor -> move entry to RemoteClient processor Selector
-        $canvasElementsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Content'=>'%'.implode('%',$remoteClientComps).'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE) as $canvasElement){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($RemoteClientParamsSelector,TRUE) as $paramsEntry){
+            // clientParams -> CanvasElement
+            $canvasElementSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$paramsEntry['Content']['CanvasElement']];
+            $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElementSelector,TRUE);
+            if (empty($canvasElement['Content']['Selector'])){continue;}
+            // save entry to CanvasElement
             $target=$canvasElement['Content']['Selector'];
             $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
             $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
@@ -371,17 +384,14 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     public function getPreviewContainer(array $arr):array
     {
-        $paramNeedles=['%image%','%video%','%application%',];
         // generic settings
         $previewArr=$arr;
-        $previewArr['maxDim']='360px';
-        // get newst content
-        foreach($paramNeedles as $paramNeedle){
-            $previewArr['selector']['Params']=$paramNeedle;
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
-                $previewArr['selector']=$entry;
-                $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
-            }
+        $previewArr['maxDim']='320px';
+        // get newest file
+        $previewArr['selector']['Params']='%motion%';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
+            $previewArr['selector']=$entry;
+            $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
         }
         return $arr;
     }

@@ -311,7 +311,6 @@ class MediaTools{
         } else {
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.']);
         }
-        $arr['wrapperSettings']=['style'=>'width:95%;'];
         return $arr;
     }    
     
