@@ -74,7 +74,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     {
         $classWithNamespace=$this->selector2class($selector);
         if (method_exists($classWithNamespace,'run')){
-            if (strpos($classWithNamespace,'DataApps')!==FALSE){
+            if ($selector['Source']===$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable()){
                 $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
                 $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement',$canvasElement);
                 $selector=$canvasElement['Content']['Selector'];
