@@ -128,11 +128,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $baseEntryId=$params['Content']['Client'];
             // get client settings form
             $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_settings','disableAutoRefresh'=>TRUE];
-            $htmlSettings=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client settings '.$baseEntryId,'generic',$selector,['method'=>'getClientSettingsContainer','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
+            $htmlSettings=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client settings '.$baseEntryId,'generic',$selector,['method'=>'getClientSettingsContainer','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','padding'=>0,'border'=>'none']]);
             // get client status form
             $selector=['Source'=>$this->entryTable,'EntryId'=>$baseEntryId.'_status','disableAutoRefresh'=>FALSE];
             $callingElement['lastEntrySelector']=$selector;
-            $htmlStatus=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client status '.$baseEntryId,'generic',$selector,['method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','border'=>'none']]);
+            $htmlStatus=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Client status '.$baseEntryId,'generic',$selector,['method'=>'getClientStatusContainter','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','padding'=>0,'border'=>'none']]);
             // get plot
             $htmlPlot=$this->getClientPlot($callingElement);
             // get image shuffle
@@ -440,6 +440,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                 $lastEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElement['lastEntrySelector']);
                 if ($lastEntry){
                     $name=$this->getClientName($lastEntry);
+                    // get select button
+                    $clientParams=current($callingElement['clientparams']);
+                    $canvasElement=['app'=>$clientParams['Folder'],'Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$clientParams['Content']['CanvasElement'],'Read'=>$lastEntry['Read']];
+                    $callingElement['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(['selector'=>$canvasElement,'cmd'=>'select']);
+                    // wrapping-up
                     $appsHtml[$name]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$callingElement['html'],'icon'=>$name,'style'=>['padding'=>'1.5rem 0.5rem']]);
                 }
             }

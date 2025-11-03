@@ -68,7 +68,7 @@ span{
     text-decoration:none;
     color:inherit;
 }
-h1,h2,h3,li,ol,ul,div,p,div,fieldset,calendar-sheet-wrapper,embed,button,svg,input,textarea,select,progress,a.btn,.js-button{
+h1,h2,h3,li,ol,ul,div,p,div,fieldset,calendar-sheet-wrapper,video,img,object,embed,button,svg,input,textarea,select,progress,a.btn,.js-button{
     float:left;
     clear:both;
 }
@@ -89,7 +89,6 @@ h3,caption{
 }
 object{
     clear:both;
-    overflow:hidden;
     margin:10px 0 0 5px;
 }
 ol,ul{
@@ -185,15 +184,12 @@ p.sample{
     max-width:300px;
     overflow:auto;
 }
-div.preview,main,div,select,video,object,img,p{
-    float:left;
+video,object,embed,img{
+    background:none;
     max-width: 100%;
 }
-div.preview,video,img{
-    clear:left;
-    background:none;
-}
 div.preview{
+    clear:left;
     margin: 5px;
 }
 div.cover-wrapper{
@@ -643,13 +639,17 @@ p.log{
     border-bottom:1px solid var(--colorA);
     background-image:url("canvaslightbg.png");
 }
-.canvas-text,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
+.canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     position:absolute;
     font-size:16px;
     margin:0;
     color:var(--color);
     padding:5px;
     text-align:center;
+}
+.canvas-text-bold{
+    font-weight:bold;
+    font-size: 1.3rem;
 }
 .canvas-text-la{
     text-align: left;

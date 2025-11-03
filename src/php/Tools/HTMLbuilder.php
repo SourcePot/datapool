@@ -57,6 +57,7 @@ class HTMLbuilder{
         'SourcePot\Datapool\Tools\HTMLbuilder|deleteBtn'=>'deleteBtn()',
         'SourcePot\Datapool\Tools\HTMLbuilder|downloadBtn'=>'downloadBtn()',
         'SourcePot\Datapool\Tools\HTMLbuilder|selectBtn'=>'selectBtn()',
+        'SourcePot\Datapool\Tools\HTMLbuilder|archiveBtn'=>'archiveBtn()',
         'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
         'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
     ];
@@ -505,6 +506,13 @@ class HTMLbuilder{
     public function selectBtn(array $arr):string
     {
         $arr['cmd']='select';
+        $html=$this->btn($arr);
+        return $html;
+    }
+
+    public function archiveBtn(array $arr):string
+    {
+        $arr['cmd']='archive';
         $html=$this->btn($arr);
         return $html;
     }
