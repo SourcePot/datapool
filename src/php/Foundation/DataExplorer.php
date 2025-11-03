@@ -20,6 +20,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'canvas-green'=>'Data interface',
         'canvas-dark'=>'Other canvas',
         'canvas-text'=>'Text',
+        'canvas-text-bold'=>'Text (bold)',
         'canvas-text-la'=>'Text (left-aligned)',
         'canvas-text-ra'=>'Text (right-aligned)',
         'canvas-symbol'=>'Symbol',

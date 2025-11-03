@@ -639,13 +639,17 @@ p.log{
     border-bottom:1px solid var(--colorA);
     background-image:url("canvaslightbg.png");
 }
-.canvas-text,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
+.canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     position:absolute;
     font-size:16px;
     margin:0;
     color:var(--color);
     padding:5px;
     text-align:center;
+}
+.canvas-text-bold{
+    font-weight:bold;
+    font-size: 1.3rem;
 }
 .canvas-text-la{
     text-align: left;
