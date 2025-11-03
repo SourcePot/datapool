@@ -67,7 +67,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
         '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'],
         'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
-        'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
         '__BLACKHOLE__'=>['tag'=>'div','element-content'=>'&empty;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Black hole'],
     ];
     

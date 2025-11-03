@@ -73,7 +73,12 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     public function setPageStateBySelector(array $selector)
     {
         $classWithNamespace=$this->selector2class($selector);
-        if (method_exists($classWithNamespace,'run') && strpos($classWithNamespace,'DataApps')===FALSE){
+        if (method_exists($classWithNamespace,'run')){
+            if (strpos($classWithNamespace,'DataApps')!==FALSE){
+                $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
+                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement',$canvasElement);
+                $selector=$canvasElement['Content']['Selector'];
+            }
             $classWithNamespace=$this->oc['SourcePot\Datapool\Foundation\Menu']->selectedApp($classWithNamespace)['Class'];
             $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
             if (strpos($this->oc['SourcePot\Datapool\Root']->getScript(),'js')===FALSE){
