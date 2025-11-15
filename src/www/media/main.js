@@ -323,6 +323,10 @@ jQuery(document).ready(function(){
 /** CANVAS INTERACTIVITY **/
 	initDraggable();
 	function initDraggable(){
+		let editoBtn=jQuery('.canvas-cntr-btn').html();
+		if (editoBtn!="✖"){
+			return false;
+		}
 		jQuery("div[class^='canvas-']").each(function(containerIndex){
 			if (typeof jQuery(this).attr('entry-id')!=='undefined'){
 				jQuery(this).draggable({

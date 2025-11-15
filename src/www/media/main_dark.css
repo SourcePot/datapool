@@ -663,8 +663,11 @@ p.log{
     box-shadow:3px 3px 5px 1px var(--colorM);
 }
 .canvas-symbol{
+    color:var(--color);
+    background: none;
     font-size:30px;
     padding:0px;
+    min-width:20px;
 }
 button.canvas-std,button.canvas-red,button.canvas-green,button.canvas-processor{
     color:var(--color);
@@ -701,10 +704,6 @@ button.canvas-dark:hover{
     background-color:var(--bgColor);
     color:var(--colorA);
 }
-.canvas-symbol{
-    color:var(--color);
-    background: none;
-}
 .canvas-cntr-btn{
     color:var(--color);
     background-color:var(--bgColor);
@@ -712,14 +711,14 @@ button.canvas-dark:hover{
 .canvas-element-btn{
     position:absolute;
     padding:0;
-    right:-15px;
+    right:0px;
     font-size:0.8rem;
+    font-weight:bold;
     color:var(--attentionColor);
     background:none;
     min-width:unset;
     line-height:unset;
     border:1px solid #aaa;
-    z-index:25;
 }
 div:has( > .canvas-element-btn:hover){
     background-color:var(--blueH);
