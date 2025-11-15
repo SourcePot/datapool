@@ -26,6 +26,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'canvas-symbol'=>'Symbol',
         'canvas-processor'=>'Processor',
     ];
+    private const DYNAMIC_STYLE_TEMPLATE=[
+        'color'=>'rgb({{VALUE}},0,0)',
+    ];
     
     private $oc;
     
@@ -45,7 +48,12 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                 ],
             'Dynamic style'=>[
                 'Signal'=>['@function'=>'select','@options'=>[],'@value'=>''],
+                'Max signal value age [sec]'=>['@tag'=>'input','@type'=>'Text','@default'=>5,'@title'=>'Vlue will be set to minimum if older'],
                 'Property'=>['@function'=>'select','@options'=>['color'=>'color','background-color'=>'background-color',],'@default'=>'color'],
+                'Profile'=>['@function'=>'select','@options'=>['linear'=>'Linear','steps'=>'Steps','threshold'=>'Threshold',],'@default'=>'linear'],
+                'Profile value'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Is the threshold, if profile is Threshold. Is the amount of steps, if profile is Steps'],
+                'Min'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Leave empty, if it schould be set beased on the provoded value range'],
+                'Max'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Leave empty, if it schould be set beased on the provoded value range'],
                 ],
             'Selector'=>[
                 'Source'=>['@function'=>'select','@options'=>[]],
@@ -127,7 +135,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $selector=['Source'=>$this->entryTable,'Group'=>'Canvas elements'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $canvasElement){
             if (empty($canvasElement['Content']['Selector']['Source']) || empty($canvasElement['Content']['Widgets']['Enable signal'])){continue;}
-            $value=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
+            $newPropValue=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
             $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$value);
             $signalsUpdated[$canvasElement['EntryId']]=$canvasElement['Folder'].' → '.$canvasElement['Content']['Style']['Text'];
         }
@@ -670,7 +678,64 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
 
     public function getDynamicStyle($data)
     {
+        // get canvas-element with attached signal
+        $canvasElementSelector=['Source'=>$this->entryTable,'EntryId'=>$data['dynamic-style-id']];
+        $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElementSelector,TRUE);
+        if (!isset($canvasElement['Content']['Dynamic style'])){return [];}
+        // get signal
+        $signalSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'EntryId'=>$canvasElement['Content']['Dynamic style']['Signal']];
+        $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
+        if (empty($signal['Content']['signal'])){return [];}
+        // signal -> style
+        $signalProps=['min'=>NULL,'max'=>NULL,'last'=>NULL,'latestTimestamp'=>NULL];
+        foreach($signal['Content']['signal'] as $valueArr){
+            $value=floatval($valueArr['value']);
+            $timeStamp=intval($valueArr['timeStamp']);
+            if ($signalProps['last']===NULL){
+                $signalProps['latestTimestamp']=$timeStamp;
+                $signalProps['last']=$signalProps['min']=$signalProps['max']=$value;
+            }
+            if ($signalProps['latestTimestamp']<$timeStamp){
+                $signalProps['latestTimestamp']=$timeStamp;
+                $signalProps['last']=$value;
+            }
+            if ($signalProps['min']>$valueArr['value']){
+                $signalProps['min']=$value;
+            }
+            if ($signalProps['max']<$valueArr['value']){
+                $signalProps['max']=$value;
+            }
+        }
+        $signalProps['min']=($canvasElement['Content']['Dynamic style']['Min'])?:$signalProps['min'];
+        $signalProps['max']=($canvasElement['Content']['Dynamic style']['Max'])?:$signalProps['max'];
+        $maxAge=intval($canvasElement['Content']['Dynamic style']['Max signal value age [sec]']?:PHP_INT_MAX);
+        if ($maxAge<(time()-$signalProps['latestTimestamp'])){
+            $signalProps['last']=$signalProps['min'];
+            $signalProps['latestTimestamp']=time();
+        }
+        // calculate style property based on value and profile
+        $styleProp=['property'=>$canvasElement['Content']['Dynamic style']['Property']];
+        $range=(($signalProps['max']??0)-($signalProps['min']??0))?:1;
+        $valueMinusMin=($signalProps['last']??0)-($signalProps['min']??0);
+        $profile=$canvasElement['Content']['Dynamic style']['Profile']?:'linear';
+        if ($profile=='linear'){
+            $newPropValue=$valueMinusMin/$range;
+        } else if ($profile=='steps'){
+            $profileValue=floatval($canvasElement['Content']['Dynamic style']['Profile value']?:100);
+            $newPropValue=round($canvasElement['Content']['Dynamic style']['Profile value']*$valueMinusMin/$range)/$profileValue;
+        } else if ($profile=='threshold'){
+            $profileValue=floatval($canvasElement['Content']['Dynamic style']['Profile value']?:0);
+            $newPropValue=($valueMinusMin>$profileValue)?1:0;
+        }
+        if (strpos($canvasElement['Content']['Dynamic style']['Property'],'color')!==FALSE){
+            $styleProp['value']=str_replace('{{VALUE}}',strval($newPropValue*255),self::DYNAMIC_STYLE_TEMPLATE['color']);
+        }
 
+
+        $styleProp['debugging']=['profile'=>$profile,'range'=>$range,'valueMinusMin'=>$valueMinusMin,];
+        $styleProp['signalProps']=$signalProps;
+        
+        return $styleProp;
     }
 }
 ?>

@@ -361,19 +361,27 @@ jQuery(document).ready(function(){
 		});
 	}
 
+	let isBusyUDS=[];
 	function updateDynamicStyle(){
-		jQuery("[dynamic-style-id]").each(function(containerIndex){
+		jQuery("[dynamic-style-id]").each(function(canvasElementIndex){
 			let data={'function':'getDynamicStyle','dynamic-style-id':jQuery(this).attr("dynamic-style-id")};
+			let cnavasElement=jQuery(this);
+			let dynamicStyleId=data['dynamic-style-id'];
+			if (isBusyUDS[dynamicStyleId]==true){return false;}
+			isBusyUDS[dynamicStyleId]=true;
 			jQuery.ajax({
 				method:"POST",
 				url:'js.php',
 				context:document.body,
 				data:data,
 				dataType: "json"
-			}).done(function(img){
-				console.log(data);
+			}).done(function(data){
+				console.log(data['arr']);
+				jQuery(cnavasElement).css(data['arr']['property'],data['arr']['value']);
 			}).fail(function(data){
 				console.log(data);
+			}).always(function(data){
+				isBusyUDS[dynamicStyleId]=false;
 			});
 		});
 	}
@@ -491,7 +499,7 @@ jQuery(document).ready(function(){
 		if (heartbeats%3===0){
 			loadNextEntry();
 		}
-		if (heartbeats%9===0){
+		if (heartbeats%17===0){
 			updateDynamicStyle();
 		}
 		if (heartbeats%25===0){
