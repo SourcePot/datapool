@@ -76,7 +76,7 @@ class Misc implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Int
                     $presentArr['selector']=$arr['selector'];
                     $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
                 } else if (!empty($arr['selector']['Group'])){
-                    $settings=['orderBy'=>'Name','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
+                    $settings=['orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5,'hideUpload'=>TRUE];
                     $settings['columns']=[['Column'=>'Name','Filter'=>''],['Column'=>'Folder','Filter'=>'']];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container(__CLASS__.' entries table','entryList',$arr['selector'],$settings,[]);
                 }
