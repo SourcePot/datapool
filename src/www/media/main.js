@@ -65,9 +65,9 @@ jQuery(document).ready(function(){
 			dataType: "json"
 		}).done(function(data){
             if ('htmlSelector' in arr){
-				jQuery(arr['htmlSelector']).html(data['html']);
+				jQuery(arr['htmlSelector']).html(data['arr']);
 			} else {
-				jQuery(arr['replaceSelector']).replaceWith(data['html']);
+				jQuery(arr['replaceSelector']).replaceWith(data['arr']);
 			}
 			jQuery('[id=js-refresh]').click();
 		}).fail(function(data){
@@ -207,15 +207,15 @@ jQuery(document).ready(function(){
     }
     
 	function loadImage(index){
-        let data={'loadImage':imgs[index]};
+        let data={'function':'loadImage','selector':imgs[index]};
         jQuery.ajax({
 			method:"POST",
 			url:'js.php',
 			context:document.body,
 			data:data,
 			dataType: "json"
-		}).done(function(img){
-            addImageToOverlay(img,index);
+		}).done(function(data){
+			addImageToOverlay(data['arr'],index);
 		}).fail(function(data){
 			console.log(data);
 		});
@@ -361,6 +361,23 @@ jQuery(document).ready(function(){
 		});
 	}
 
+	function updateDynamicStyle(){
+		jQuery("[dynamic-style-id]").each(function(containerIndex){
+			let data={'function':'getDynamicStyle','dynamic-style-id':jQuery(this).attr("dynamic-style-id")};
+			jQuery.ajax({
+				method:"POST",
+				url:'js.php',
+				context:document.body,
+				data:data,
+				dataType: "json"
+			}).done(function(img){
+				console.log(data);
+			}).fail(function(data){
+				console.log(data);
+			});
+		});
+	}
+
 /** USER ACTIONS **/
 	showUserActions();
 	function showUserActions(){
@@ -473,7 +490,11 @@ jQuery(document).ready(function(){
 		heartbeats++;
 		if (heartbeats%3===0){
 			loadNextEntry();
-		} else if (heartbeats%25===0){
+		}
+		if (heartbeats%9===0){
+			updateDynamicStyle();
+		}
+		if (heartbeats%25===0){
 			autoImageShuffle();
 			showUserActions();
 		}

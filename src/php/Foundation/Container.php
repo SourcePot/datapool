@@ -12,6 +12,15 @@ namespace SourcePot\Datapool\Foundation;
 
 class Container{
 
+    private const JS_FUNCTION_WHITELIST=[
+        'loadEntry'=>'SourcePot\Datapool\Tools\HTMLbuilder',
+        'loadImage'=>'SourcePot\Datapool\Tools\MediaTools',
+        'setCanvasElementStyle'=>'SourcePot\Datapool\Foundation\DataExplorer',
+        'entryById'=>'SourcePot\Datapool\Foundation\Database',
+        'getUserActions'=>'SourcePot\Datapool\Foundation\DataExplorer',
+        'getDynamicStyle'=>'SourcePot\Datapool\Foundation\DataExplorer',    
+    ];
+    
     private const MD_TEMPLATE="[//]: # (This a Markdown document)\n\n[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n#Empty document...";
 
     private $oc;
@@ -39,19 +48,16 @@ class Container{
                 $jsAnswer['html']=$this->container('','',[],[],[],$_POST['container-id'],TRUE);
             } else if (strcmp($_POST['function'],'containerMonitor')===0){
                 $jsAnswer['arr']=['isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']];
-            } else if (strcmp($_POST['function'],'loadEntry')===0){
-                $jsAnswer['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->loadEntry($_POST);
-            } else if (strcmp($_POST['function'],'setCanvasElementStyle')===0){
-                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->setCanvasElementStyle($_POST);
-            } else if (strcmp($_POST['function'],'entryById')===0){
-                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($_POST);
-            } else if (strcmp($_POST['function'],'getUserActions')===0){
-                $jsAnswer['arr']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getUserActions($_POST);
             } else {
-                // unknown function
+                if (isset(self::JS_FUNCTION_WHITELIST[$_POST['function']])){
+                    $class=self::JS_FUNCTION_WHITELIST[$_POST['function']];
+                    $function=$_POST['function'];
+                    $jsAnswer['arr']=$this->oc[$class]->$function($_POST);
+                } else {
+                    // js requested function missing in WHITELIST
+                    $this->oc['logger']->log('error','JS requested function "{function}" is not white listed',$_POST);
+                }
             }
-        } else if (isset($_POST['loadImage'])){
-            $jsAnswer=$this->oc['SourcePot\Datapool\Tools\MediaTools']->loadImage(['selector'=>$_POST['loadImage']]);
         } else if (!empty($_FILES)){
             $tagName=key($_FILES);
             // file upload widget request processing

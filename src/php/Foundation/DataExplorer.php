@@ -43,6 +43,10 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                 'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
                 'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
                 ],
+            'Dynamic style'=>[
+                'Signal'=>['@function'=>'select','@options'=>[],'@value'=>''],
+                'Property'=>['@function'=>'select','@options'=>['color'=>'color','background-color'=>'background-color',],'@default'=>'color'],
+                ],
             'Selector'=>[
                 'Source'=>['@function'=>'select','@options'=>[]],
                 'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
@@ -146,6 +150,8 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         }
         $this->definition['Content']['Selector']['Source']['@options']=$sourceOptions;
         $this->definition['Content']['Widgets']['pdf-file parser']=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
+        // add signal options
+        $this->definition['Content']['Dynamic style']['Signal']['@options']=[''=>'-']+$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalOptions();
         // add save button
         $this->definition['save']=['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'];
         $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion(__CLASS__,$this->definition);
@@ -383,6 +389,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                 if ($rowCount===self::ROW_COUNT_LIMIT){
                     $rowCount='>'.$rowCount;
                 }
+            }
+            if (!empty($canvasElement['Content']['Dynamic style']['Signal'])){
+                $element['dynamic-style-id']=$canvasElement['EntryId'];
             }
         }
         // canvas element
@@ -657,6 +666,11 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             ];
         }
         return $userActions;
+    }
+
+    public function getDynamicStyle($data)
+    {
+
     }
 }
 ?>
