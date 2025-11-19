@@ -220,6 +220,15 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         return $cssVars;
     }
 
+    public function pageStyleSettingsHtml($arr):array
+    {
+        $arr['html']=$arr['html']??'';
+        $matrix=[];
+        $matrix['Style']=['Value'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->styleClassSelector($arr)];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Page styles','hideKeys'=>FALSE,'hideHeader'=>FALSE,'keep-element-content'=>TRUE]);
+        return $arr;
+    }
+
     /**
      *  SETTINGS geeter and setter methods
      */
