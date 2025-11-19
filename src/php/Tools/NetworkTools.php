@@ -18,7 +18,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
 
     public function __construct(array $oc)
     {
@@ -163,7 +163,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
             'Content-Length'=>mb_strlen($data,$charset),
             'Strict-Transport-Security'=>'max-age=31536000;includeSubDomains',
             'X-API'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle')
-            ];
+        ];
         $header=array_merge($headerTemplate,$header);
         foreach($header as $key=>$value){
             if (empty($key)){
@@ -202,7 +202,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
             'A'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
             'B'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
             'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-            ];
+        ];
         // get selctor
         $callingElementEntryId=$arr['selector']['EntryId'];
         $callingElement=['Folder'=>'Settings','EntryId'=>$callingElementEntryId];

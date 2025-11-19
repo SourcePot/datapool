@@ -65,9 +65,9 @@ jQuery(document).ready(function(){
 			dataType: "json"
 		}).done(function(data){
             if ('htmlSelector' in arr){
-				jQuery(arr['htmlSelector']).html(data['html']);
+				jQuery(arr['htmlSelector']).html(data['arr']);
 			} else {
-				jQuery(arr['replaceSelector']).replaceWith(data['html']);
+				jQuery(arr['replaceSelector']).replaceWith(data['arr']);
 			}
 			jQuery('[id=js-refresh]').click();
 		}).fail(function(data){
@@ -207,15 +207,15 @@ jQuery(document).ready(function(){
     }
     
 	function loadImage(index){
-        let data={'loadImage':imgs[index]};
+        let data={'function':'loadImage','selector':imgs[index]};
         jQuery.ajax({
 			method:"POST",
 			url:'js.php',
 			context:document.body,
 			data:data,
 			dataType: "json"
-		}).done(function(img){
-            addImageToOverlay(img,index);
+		}).done(function(data){
+			addImageToOverlay(data['arr'],index);
 		}).fail(function(data){
 			console.log(data);
 		});
@@ -323,6 +323,10 @@ jQuery(document).ready(function(){
 /** CANVAS INTERACTIVITY **/
 	initDraggable();
 	function initDraggable(){
+		let editoBtn=jQuery('.canvas-cntr-btn').html();
+		if (editoBtn!="✖"){
+			return false;
+		}
 		jQuery("div[class^='canvas-']").each(function(containerIndex){
 			if (typeof jQuery(this).attr('entry-id')!=='undefined'){
 				jQuery(this).draggable({
@@ -354,6 +358,31 @@ jQuery(document).ready(function(){
 					}
 				});
 			}
+		});
+	}
+
+	let isBusyUDS=[];
+	function updateDynamicStyle(){
+		jQuery("[dynamic-style-id]").each(function(canvasElementIndex){
+			let data={'function':'getDynamicStyle','dynamic-style-id':jQuery(this).attr("dynamic-style-id")};
+			let cnavasElement=jQuery(this);
+			let dynamicStyleId=data['dynamic-style-id'];
+			if (isBusyUDS[dynamicStyleId]==true){return false;}
+			isBusyUDS[dynamicStyleId]=true;
+			jQuery.ajax({
+				method:"POST",
+				url:'js.php',
+				context:document.body,
+				data:data,
+				dataType: "json"
+			}).done(function(data){
+				console.log(data['arr']);
+				jQuery(cnavasElement).css(data['arr']['property'],data['arr']['value']);
+			}).fail(function(data){
+				console.log(data);
+			}).always(function(data){
+				isBusyUDS[dynamicStyleId]=false;
+			});
 		});
 	}
 
@@ -469,7 +498,11 @@ jQuery(document).ready(function(){
 		heartbeats++;
 		if (heartbeats%3===0){
 			loadNextEntry();
-		} else if (heartbeats%25===0){
+		}
+		if (heartbeats%17===0){
+			updateDynamicStyle();
+		}
+		if (heartbeats%25===0){
 			autoImageShuffle();
 			showUserActions();
 		}

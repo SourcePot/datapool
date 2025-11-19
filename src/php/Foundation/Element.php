@@ -109,7 +109,7 @@ class Element{
         ];
     
     const SECIAL_ATTR=[
-        'function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'excontainer'=>FALSE,'container'=>FALSE,'cell'=>FALSE,
+        'function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'dynamic-style-id'=>FALSE,'excontainer'=>FALSE,'cell'=>FALSE,
         'row'=>FALSE,'source'=>FALSE,'entry-id'=>FALSE,'index'=>FALSE,'js-status'=>FALSE,
         ];
                                
