@@ -181,7 +181,6 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             // get quick links if no Folder is selected
             if (empty($selector['Folder'])){
                 $html.=$this->settingsOverviewHtml();
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Page style','generic',['Source'=>$this->getEntryTable(),'Group'=>'Styles'],['classWithNamespace'=>__CLASS__,'method'=>'pageStyleSettingsHtml'],['style'=>['width'=>'unset']]);    
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -218,15 +217,6 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             $cssVars[$key]=$matches[2][$matchIndex];
         }
         return $cssVars;
-    }
-
-    public function pageStyleSettingsHtml($arr):array
-    {
-        $arr['html']=$arr['html']??'';
-        $matrix=[];
-        $matrix['Style']=['Value'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->styleClassSelector($arr)];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Page styles','hideKeys'=>FALSE,'hideHeader'=>FALSE,'keep-element-content'=>TRUE]);
-        return $arr;
     }
 
     /**
