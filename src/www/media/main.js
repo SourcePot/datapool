@@ -376,7 +376,6 @@ jQuery(document).ready(function(){
 				data:data,
 				dataType: "json"
 			}).done(function(data){
-				console.log(data['arr']);
 				jQuery(cnavasElement).css(data['arr']['property'],data['arr']['value']);
 			}).fail(function(data){
 				console.log(data);

@@ -384,7 +384,7 @@ final class Root{
             if ($serverload<self::JOB_PROCESSING_SERVER_LOAD_THRESHOLD){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
             } else {
-                $arr['page html'].='Job skipped due to high server load...';
+                $arr['page html']='Job skipped due to high server load...';
             }
             $arr['page html'].="<br/>Server load: $serverload%";
         } else if ($this->script==='import.php'){
