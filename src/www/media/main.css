@@ -984,6 +984,9 @@ div.imageShuffleItemWrapper,div.imageShuffleItem,article.imageShuffle,.imageShuf
     padding:0;
     max-width: 95%;
 }
+div.imageShuffleItemWrapper{
+    position:relative;
+}
 div.imageShuffleItem{
     position:absolute;
     top:0;

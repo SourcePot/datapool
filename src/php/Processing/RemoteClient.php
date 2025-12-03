@@ -137,11 +137,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $htmlPlot=$this->getClientPlot($callingElement);
             // get image shuffle
             $selector=$callingElement['callingElement']['Selector'];
-            $selector['refreshInterval']=5;
-            $selector['disableAutoRefresh']=FALSE;
             $selector['orderBy']='Date';
             $selector['isAsc']=False;
-            $htmlImageShuffle=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Preview '.$baseEntryId,'generic',$selector,['method'=>'getPreviewContainer','classWithNamespace'=>__CLASS__],['style'=>['width'=>'auto','padding'=>'5px','border'=>'none']]);
+            $htmlImageShuffle=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle '.$baseEntryId,'getImageShuffle',$selector,[],['style'=>['width'=>'auto']]);
         }
         $callingElement['html']=$paramsHtml??'';
         $callingElement['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>($htmlSettings??'').($htmlStatus??''),'keep-element-content'=>TRUE]);
