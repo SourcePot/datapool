@@ -12,7 +12,6 @@ namespace SourcePot\Datapool\Tools;
 
 class LoginForms{
 
-    private const USE_RECAPTCHA=TRUE;
     private const MIN_PSW_LENGTH=6;
     
     private $oc;
@@ -107,13 +106,11 @@ class LoginForms{
     public function getLoginForm(array $arr=[]):array
     {
         $arr['result']=$this->formData();
-        if (self::USE_RECAPTCHA){$styleClass='g-recaptcha';} else {$styleClass='std';}
-        $emailLabel=['tag'=>'label','element-content'=>'Email','for'=>'login-email'];
         $email=['tag'=>'input','type'=>'email','key'=>['Email'],'id'=>'login-email','placeholder'=>'Email','style'=>['clear'=>'both','width'=>220],'filter'=>FILTER_SANITIZE_EMAIL,'required'=>TRUE,'pattern'=>"[\w-\.]+@([\w-]+\.)+[\w-]{2,6}",'callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
         $updateBtn=['tag'=>'input','type'=>'submit','key'=>['Update'],'value'=>'Update','callingClass'=>__CLASS__,'callingFunction'=>'loginForm'];
-        $loginBtn=['tag'=>'input','type'=>'submit','key'=>['Login'],'value'=>'Login','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['width'=>'45%','margin'=>0,'border-bottom'=>'3px solid #0f0','border-top'=>'3px solid #0f0']];
-        $registerBtn=['tag'=>'input','type'=>'submit','key'=>['Register'],'value'=>'Register','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['float'=>'right','width'=>'45%','margin'=>0,'border-bottom'=>'3px solid #aaa','border-top'=>'3px solid #aaa']];
-        $loginLinkBtn=['tag'=>'input','type'=>'submit','key'=>['pswRequest'],'value'=>'Get login token','class'=>$styleClass,'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['margin'=>0]];
+        $loginBtn=['tag'=>'input','type'=>'submit','key'=>['Login'],'id'=>'login-btn','value'=>'Login','class'=>'std','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['width'=>'45%','margin'=>0,'border-bottom'=>'3px solid #0f0','border-top'=>'3px solid #0f0']];
+        $registerBtn=['tag'=>'input','type'=>'submit','key'=>['Register'],'value'=>'Register','class'=>'std','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['float'=>'right','width'=>'45%','margin'=>0,'border-bottom'=>'3px solid #aaa','border-top'=>'3px solid #aaa']];
+        $loginLinkBtn=['tag'=>'input','type'=>'submit','key'=>['pswRequest'],'value'=>'Get login token','class'=>'std','callingClass'=>__CLASS__,'callingFunction'=>'loginForm','style'=>['margin'=>0]];
         if ($this->formType===1){
             $passphrase=$this->getSymbolKeypad($arr);
         } else {
@@ -124,7 +121,6 @@ class LoginForms{
             $matrix['Passphrase']['Value']=$passphrase;
             $matrix['Btns']['Value']=$updateBtn;
         } else {
-            //$matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($emailLabel);
             $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
             $matrix['Passphrase']=['Value'=>$passphrase];
             $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($loginBtn);
@@ -140,9 +136,7 @@ class LoginForms{
     
     private function getStandard(array $arr=[]):string
     {
-        //$passphraseLabel=['tag'=>'label','element-content'=>'Passphrase','for'=>'login-psw'];
-        $passphrase=['tag'=>'input','type'=>'password','key'=>['Passphrase'],'id'=>'login-psw','placeholder'=>'Passphrase','minlength'=>'6','style'=>['clear'=>'both','width'=>220],'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE];
-        //$html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphraseLabel);
+        $passphrase=['tag'=>'input','type'=>'password','key'=>['Passphrase'],'id'=>'login-psw','trigger-id'=>'login-btn','placeholder'=>'Passphrase','minlength'=>'6','style'=>['clear'=>'both','width'=>220],'callingClass'=>__CLASS__,'callingFunction'=>'loginForm','excontainer'=>TRUE];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($passphrase);
         return $html;
     }

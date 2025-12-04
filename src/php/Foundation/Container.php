@@ -774,9 +774,8 @@ class Container{
         $arr['callingFunction'].='-shuffle';
         $items=[];
         $presentArrTemplate=['callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'class'=>'imageShuffle','settings'=>['presentEntry'=>__FUNCTION__]];
-        $selector=$arr['selector']+['Params'=>'%MIME-Type%'];
         $idPrefix=__FUNCTION__.'-'.$arr['containerId'].'-';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$selector['isSystemCall']??FALSE,'Read',$selector['orderBy']??'rand()',$selector['isAsc']??FALSE,$selector['limit']??4,$selector['offset']??0) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],$arr['selector']['isSystemCall']??FALSE,'Read',$arr['selector']['orderBy']??'rand()',$arr['selector']['isAsc']??FALSE,$arr['selector']['limit']??4,$arr['selector']['offset']??0) as $entry){
             $presentArr=$presentArrTemplate;
             $presentArr['selector']=$entry;
             if (count($items)===0){$display='inherit';} else {$display='none';}
