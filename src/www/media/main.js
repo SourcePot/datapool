@@ -39,6 +39,27 @@ jQuery(document).ready(function(){
 		jQuery(this).animate({'top':height},500).delay(5000).animate({'top':0},200);
 	}
 
+    initTriggerIds();
+    function initTriggerIds(){
+        jQuery('[trigger-id]').each(function(i){
+            let btnSelector='#'+jQuery(this).attr('trigger-id');
+			if (jQuery(this).attr("type")==='text' || jQuery(this).attr("type")==='password'){
+				jQuery(this).unbind('keydown');
+                jQuery(this).on('keydown',function(e){
+                    if (e.keyCode===13){
+                        e.preventDefault();
+                        jQuery(btnSelector).click();
+                    }
+                });
+            } else {
+                jQuery(this).unbind('change');
+                jQuery(this).on('change',function(e){
+                    jQuery(btnSelector).click();
+                });
+                jQuery(btnSelector).hide();
+            }
+        });
+    }
 /** STEP-BY-STEP ENTRY PRESENTATION, used e.g. by the forum **/
 	var busyLoadingEntry=false;
 	function loadNextEntry(){
