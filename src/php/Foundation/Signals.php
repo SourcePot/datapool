@@ -307,8 +307,6 @@ class Signals{
 
     public function selector2plot(array $selector=[],array $metaOverwrite=['yMin'=>0,'caption'=>'Plots']):string|array
     {
-        //$selector['refreshInterval']=600;
-        //$selector['disableAutoRefresh']=TRUE;
         $settings=['method'=>'signalsChart','classWithNamespace'=>__CLASS__];
         $settings=array_merge($metaOverwrite,$settings);
         $selector['Source']=$selector['Source']??$this->getEntryTable();
@@ -342,8 +340,6 @@ class Signals{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
             $classStartPos=strrpos($entry['Folder'],'\\');
             $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
-            $classEndPos=mb_strpos($entry['Folder'],'::');
-            //$options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
             $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos).': '.$entry['Name'];
         }
         asort($options);
@@ -453,14 +449,13 @@ class Signals{
         $plot['element-content']=$html;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($plot);
         // generate wrapper, ticks, labels
-        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         $plot['countX']=floor($plot['style']['width']/100);
         $tick=['tag'=>'div','style'=>['height'=>$metaOverwrite['tickLength'],'width'=>0,'border'=>'1px solid #000'],'class'=>'signal-tick','element-content'=>''];
         $label=['tag'=>'p','style'=>['bottom'=>0],'class'=>'signal-label','element-content'=>'','keep-element-content'=>TRUE];
         for($tickIndexX=0;$tickIndexX<=$plot['countX'];$tickIndexX++){
             $label['style']['left']=$tick['style']['left']=round($tickIndexX*$plot['style']['width']/$plot['countX']+$plot['style']['left']);
             $timeStamp=round(($label['style']['left']+$meta['xOffset']-$plot['style']['left'])/$meta['xScaler']);
-            $dateTimeStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$timeStamp,'','',$meta['dateFormat'],$pageTimeZone);
+            $dateTimeStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$timeStamp,'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
             $label['element-content']=str_replace(' ','<br/>',$dateTimeStr);
             //
             $label['style']['left']-=30;
@@ -509,7 +504,7 @@ class Signals{
         // Timezone
         $pEl=['tag'=>'p','class'=>'info','element-content'=>'Timezone','style'=>['clear'=>'left']];
         $infoRowHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
-        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-timezone','element-content'=>$pageTimeZone,'style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
+        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-timezone','element-content'=>\SourcePot\Datapool\Root::getUserTimezone(),'style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
         $infoRowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
         $rowEl=['tag'=>'div','class'=>'info','element-content'=>$infoRowHtml,'style'=>['width'=>'100%','padding'=>'0 0 0.25rem 0'],'keep-element-content'=>TRUE];
         $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($rowEl);
