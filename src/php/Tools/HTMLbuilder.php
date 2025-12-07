@@ -1081,6 +1081,12 @@ class HTMLbuilder{
                 } else {
                     // present as div
                     $presentationValue=strip_tags((string)$presentationValue);  // prevent XSS atacks
+                    if ($key==='Date'){
+                        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
+                        $date=new \DateTime($presentationValue,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                        $date->setTimezone(new \DateTimeZone($pageTimeZone));
+                        $presentationValue=$date->format('Y-m-d H:i:s').' ('.$pageTimeZone.')';
+                    }
                     if ($showKey){
                         $key=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
                         $presentationValue='<b>'.$key.': </b>'.$presentationValue;

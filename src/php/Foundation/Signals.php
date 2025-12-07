@@ -69,7 +69,7 @@ class Signals{
             return $signalSelector;
         }
         // add EntryId only, if entry Name is complete
-        if (strpos($name,'%')===FALSE){
+        if (mb_substr($name,-1,1)!=='%'){
             $signalSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signalSelector,['Source','Group','Folder','Name'],'0','',TRUE);
         }
         return $signalSelector;
@@ -105,6 +105,26 @@ class Signals{
             }
         }
         return $signal;
+    }
+
+    public function getSignalProperties(string $callingClass,string $callingFunction,string $name):array
+    {
+        $properties=['min'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0];
+        $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
+        $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
+        foreach($signal['Content']['signal'] as $index=>$signalItem){
+            $properties['count']++;
+            $properties['sum']+=$signalItem['value'];
+            if ($properties['min']===FALSE || $properties['min']>$signalItem['value']){
+                $properties['min']=$signalItem['value'];
+            }
+            if ($properties['max']===FALSE || $properties['max']<$signalItem['value']){
+                $properties['max']=$signalItem['value'];
+            }
+        }
+        $properties['avg']=($properties['count']==0)?FALSE:($properties['sum']/$properties['count']);
+        $properties['range']=$properties['max']-$properties['min'];
+        return $properties;
     }
     
     public function removeSignalsWithoutSource(string $callingClass,string $callingFunction)
@@ -323,8 +343,8 @@ class Signals{
             $classStartPos=strrpos($entry['Folder'],'\\');
             $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
             $classEndPos=mb_strpos($entry['Folder'],'::');
-            $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
-            //$options[$entry['EntryId']]=$entry['Folder'].': '.$entry['Name'];
+            //$options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
+            $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos).': '.$entry['Name'];
         }
         asort($options);
         return $options;
@@ -433,7 +453,7 @@ class Signals{
         $plot['element-content']=$html;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($plot);
         // generate wrapper, ticks, labels
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         $plot['countX']=floor($plot['style']['width']/100);
         $tick=['tag'=>'div','style'=>['height'=>$metaOverwrite['tickLength'],'width'=>0,'border'=>'1px solid #000'],'class'=>'signal-tick','element-content'=>''];
         $label=['tag'=>'p','style'=>['bottom'=>0],'class'=>'signal-label','element-content'=>'','keep-element-content'=>TRUE];

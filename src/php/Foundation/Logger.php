@@ -156,7 +156,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getLogsHtml(array $arr):array
     {
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         $sourceTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
         $today=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
         $today=mb_substr($today,0,11);

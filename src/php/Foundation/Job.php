@@ -37,7 +37,7 @@ class Job{
     public function trigger(array $arr):array
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         // all jobs settings - remove non-existing job methods and add new job methods
         $arr['run']=(isset($arr['run']))?$arr['run']:'';
         $jobs=array('due'=>[],'undue'=>[]);
@@ -138,9 +138,23 @@ class Job{
             if ($jobEntry['isSkipRow']){continue;}
             break;
         }
+        $matrix=[];
         if (!empty($jobEntry)){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$jobEntry['Content'],'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Overview jobs','class'=>'max-content']);
+            foreach($jobEntry['Content'] as $class=>$infoArr){
+                $age=time()-$infoArr['Last run'];
+                $matrix[$age]=[
+                    'Class'=>$class,
+                    'Age [sec]'=>$age,
+                    'Last run'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.$infoArr['Last run'],'now'),
+                    'Last run time consumption [ms]'=>$infoArr['Last run time consumption [ms]'],
+                    'Min time in sec between each run [sec]'=>$infoArr['Min time in sec between each run'],
+                ];
+            }
         }
+        ksort($matrix);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Overview jobs','style'=>['clear'=>'both']]);
+        $matrix=['Values'=>$this->oc['SourcePot\Datapool\Root']->getLoadAvg()];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>FALSE,'caption'=>'Average server load','style'=>['clear'=>'both']]);
         return $arr;
     }
 

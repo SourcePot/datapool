@@ -71,8 +71,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
 
     private const PAGE_STATE_TEMPLATE=[
         'calendarDate'=>'{{TODAY}}',
-        'Timezone'=>'{{pageTimeZone}}',
-        'Days to show'=>45,
+        'Timezone'=>'{{TIMEZONE-USER}}',
+        'Days to show'=>30,
         'Day width'=>340,
         'EntryId'=>'{{EntryId}}',
         'addDate'=>'',
@@ -99,6 +99,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TODAY}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('today'));
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TOMORROW}}',$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('tomorrow'));
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE}}',\SourcePot\Datapool\Root::DB_TIMEZONE);
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE-USER}}',\SourcePot\Datapool\Root::getUserTimezone());
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE-SERVER}}',date_default_timezone_get());
         //
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
@@ -333,7 +334,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             'Hour'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$hourOptions],
             'Minute'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$minOptions],
             'Duration'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$durationOptions],
-            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'options'=>self::OPTIONS['Timezone']],
+            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>\SourcePot\Datapool\Root::getUserTimezone(),'options'=>self::OPTIONS['Timezone']],
             'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE)],
         ];
         $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
@@ -763,7 +764,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     }
 
     public function getTimeDiff($dateA,$dateB,$timezoneA=FALSE,$timezoneB=FALSE){
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         if (empty($timezoneA)){$timezoneA=$pageTimeZone;}
         if (empty($timezoneB)){$timezoneB=$pageTimeZone;}
         $timezoneA=new \DateTimezone($timezoneA);
@@ -830,7 +831,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     public function timeStamp2pageDateTime($timestamp,string $format='Y-m-d H:i:s'):string
     {
         $timestamp=intval($timestamp);
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         $dateTimeObj=new \DateTime('@'.$timestamp);
         $dateTimeObj->setTimezone(new \DateTimeZone($pageTimeZone));
         return $dateTimeObj->format($format);

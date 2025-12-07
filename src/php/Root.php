@@ -51,8 +51,8 @@ final class Root{
     ];
     
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
-    private const JOB_PROCESSING_SERVER_LOAD_THRESHOLD=70;  // in percent of max. load
     public const DB_TIMEZONE='UTC';
+    public const USER_TIMEZONE_TEMPLATE='Europe/Berlin';
     public const NULL_DATE='2999-01-01 01:00:00';
     public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
@@ -176,14 +176,15 @@ final class Root{
     public function updateCurrentUser($loginUser=[]):void
     {
         if (!empty($loginUser)){
-            // remote client | BE CAREFUL, THIE OPTION BYPASSES THE LOGIN
+            // remote client | BE CAREFUL, THIS OPTION BYPASSES THE LOGIN
             $this->currentUser=$loginUser;
+            $this->currentUser['Content']['Misc']['Timezone']=$this->currentUser['Content']['Misc']['Timezone']??self::USER_TIMEZONE_TEMPLATE;
             $_SESSION['currentUser']=$this->currentUser;
         } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             // empty session -> anonymous user
             $loginId=strval(mt_rand(1,999999999));
             $this->currentUser=['Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>$loginId,'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R'];
-            $this->currentUser['Content']=['Contact details'=>['First name'=>'Anonym','Family name'=>'Anonym'],'Address'=>[]];
+            $this->currentUser['Content']=['Contact details'=>['First name'=>'Anonym','Family name'=>'Anonym'],'Address'=>[],'Misc'=>['Timezone'=>self::USER_TIMEZONE_TEMPLATE]];
             $this->currentUser['Params']=[];
             $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.password_hash($loginId,PASSWORD_DEFAULT);;
             $_SESSION['currentUser']=$this->currentUser;
@@ -201,6 +202,11 @@ final class Root{
     public function getCurrentUserEntryId():string
     {
         return $this->currentUser['EntryId'];
+    }
+
+    public static function getUserTimezone():string
+    {
+        return $_SESSION['currentUser']['Content']['Misc']['Timezone'];
     }
 
     public function getNonce($requestNew=FALSE):string
@@ -379,14 +385,14 @@ final class Root{
             $this->oc['SourcePot\Datapool\Foundation\User']->userStatusLog();
         } else if ($this->script==='job.php'){
             // job Processing
-            $serverload=sys_getloadavg()?:[0.5,0.5,0.5];
-            $serverload=round(100*$serverload[0]);
-            if ($serverload<self::JOB_PROCESSING_SERVER_LOAD_THRESHOLD){
+            $loadAvg=$this->getLoadAvg();
+            $loadAvgThreshold=($loadAvg['avg']+$loadAvg['min'])/2;
+            if ($loadAvg['Load [%]']<$loadAvgThreshold){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
             } else {
                 $arr['page html']='Job skipped due to high server load...';
             }
-            $arr['page html'].="<br/>Server load: $serverload%";
+            $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Values'=>$loadAvg],'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>FALSE,'caption'=>'Average server load','style'=>['clear'=>'both']]);
         } else if ($this->script==='import.php'){
             // import Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
@@ -805,5 +811,36 @@ final class Root{
         }
         return $ip;
     }
+
+    public function getLoadAvg():array
+    {
+        $loadAvg=['OS'=>PHP_OS,'Load'=>0];
+        if (stripos(PHP_OS,'linux')!==FALSE){
+            if (function_exists('sys_getloadavg')){
+                $loadAvg['Load']=sys_getloadavg()[0];
+            } else {
+                $data=file_get_contents('/proc/loadavg');
+                $loadAvg['Load']=explode(' ', $data)[0];
+            }
+        } else if (stripos(PHP_OS,'win')!==FALSE){
+            exec("wmic cpu get loadpercentage /all",$execReturn);
+            foreach($execReturn as $line) {
+                if (is_numeric(trim($line))){
+                    $loadAvg['Load']=floatval(trim($line));
+                    break;
+                }
+            }
+        }
+        $loadAvg['Load [%]']=round($loadAvg['Load']*100);
+        // add measurements to signal
+        $description='Server load measurements. The signal is updated on any job call.';
+        $color=($loadAvg['Load [%]']>100)?'#a00':(($loadAvg['Load [%]']>70)?'#00a':'#0a0');
+        $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Server load [%]',$loadAvg['Load [%]'],'int',['yMin'=>0,'label'=>$loadAvg['OS'],'description'=>$description,'color'=>$color]);
+        // get signal properties
+        $properties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalProperties(__CLASS__,__FUNCTION__,'Server load [%]');
+        $loadAvg+=$properties;
+        return $loadAvg;
+    }
+
 }
 ?>

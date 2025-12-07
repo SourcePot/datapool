@@ -947,9 +947,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall];
-        if (empty($entry['EntryId'])){
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry);
-        }
         $entry=$this->updateEntry($entry,$isSystemCall,TRUE);
         $entry[__FUNCTION__]=$context;
         return $entry;

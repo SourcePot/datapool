@@ -34,7 +34,6 @@ class Backbone{
         'metaViewport'=>'width=device-width, initial-scale=1',
         'metaDescription'=>'Light weight web application',
         'metaRobots'=>'index',
-        'pageTimeZone'=>'Europe/Berlin',
         'loginForm'=>0,
         'logLevel'=>'monitoring',
         'iconFile'=>'main.ico',
@@ -72,7 +71,7 @@ class Backbone{
         $this->webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
         // add placeholder
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTitle}}',$this->settings['pageTitle']);
-        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTimeZone}}',$this->settings['pageTimeZone']);
+        $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE-USER}}',\SourcePot\Datapool\Root::getUserTimezone());
     }
     
     public function getSettings($key=FALSE)

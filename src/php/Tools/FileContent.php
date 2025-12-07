@@ -44,7 +44,7 @@ final class FileContent{
             if (is_array($entry['Date'])){
                 $this->oc['logger']->log('notice','Entry mal format: key "Date" is array for Entry Source="{Source}", Group="{Group}", Folder="{Folder}", Name="{Name}".',$entry);
             } else {
-                $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
+                $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
                 $dateWebPageTimeZone=\DateTime::createFromFormat('Y-m-d H:i:s',$entry['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
                 if ($dateWebPageTimeZone){
                     $dateWebPageTimeZone->setTimeZone(new \DateTimeZone($pageTimeZone));
