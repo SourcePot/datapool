@@ -75,9 +75,9 @@ class Signals{
         return $signalSelector;
     }
     
-    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[]):array
+    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[],$timeStamp=NULL):array
     {
-        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time(),'label'=>$params['label']??'','color'=>$params['color']??''];
+        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>$timeStamp,'label'=>$params['label']??'','color'=>$params['color']??''];
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
         $signal=['Type'=>$this->entryTable.' '.$dataType,'Content'=>['signal'=>[]]];
@@ -107,24 +107,49 @@ class Signals{
         return $signal;
     }
 
-    public function getSignalProperties(string $callingClass,string $callingFunction,string $name):array
+    public function getSignalProperties(string $callingClass,string $callingFunction,string $name,string $timespanDefinedByFormat='',string $timezone=''):array
     {
-        $properties=['min'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0];
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
+        return $this->getSignalPropertiesById($signalSelector,$timespanDefinedByFormat,$timezone);
+    }
+    public function getSignalPropertiesById(array $signalSelector,string $timespanDefinedByFormat='',string $timezone=''):array
+    {
+        $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimrstamp'=>0];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
         foreach($signal['Content']['signal'] as $index=>$signalItem){
+            if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
+                continue;
+            }
             $properties['count']++;
             $properties['sum']+=$signalItem['value'];
             if ($properties['min']===FALSE || $properties['min']>$signalItem['value']){
                 $properties['min']=$signalItem['value'];
             }
+            if (!empty($signalItem['value']) && ($properties['minExZero']===FALSE || $properties['minExZero']>$signalItem['value'])){
+                $properties['minExZero']=$signalItem['value'];
+            }
             if ($properties['max']===FALSE || $properties['max']<$signalItem['value']){
                 $properties['max']=$signalItem['value'];
             }
+            $properties['avgTimrstamp']+=$signalItem['timeStamp'];
         }
         $properties['avg']=($properties['count']==0)?FALSE:($properties['sum']/$properties['count']);
         $properties['range']=$properties['max']-$properties['min'];
+        $properties['avgTimrstamp']=round($properties['avgTimrstamp']/($properties['count']?:1));
         return $properties;
+    }
+
+    private function isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone):bool
+    {
+        if (empty($timespanDefinedByFormat) || empty($timezone)){
+            return TRUE;
+        }
+        $targetTimeZone=new \DateTimeZone($timezone);
+        $currentDateTime=new \DateTime('@'.time());
+        $currentDateTime->setTimezone($targetTimeZone);
+        $itemDateTime=new \DateTime('@'.$signalItem['timeStamp']);
+        $itemDateTime->setTimezone($targetTimeZone);
+        return ($currentDateTime->format($timespanDefinedByFormat)==$itemDateTime->format($timespanDefinedByFormat));
     }
     
     public function removeSignalsWithoutSource(string $callingClass,string $callingFunction)

@@ -802,15 +802,16 @@ class HTMLbuilder{
     public function entryListEditor(array $arr,bool $isSystemCall=TRUE):string|array
     {
         $errorMsg='Method "'.__CLASS__.' &rarr; '.__FUNCTION__.'()" called with arr-argument keys missing: ';
+        $arr['returnRow']=!empty($arr['returnRow']);
         if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
             $errorMsg.=' contentStructure, callingClass or callingFunction';
             $this->oc['logger']->log('error',$errorMsg,[]);
-            return (empty($arr['returnRow']))?$errorMsg:['error'=>$errorMsg];
+            return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
         }
         if ((empty($arr['selector']['Source']) && empty($arr['selector']['Class'])) || empty($arr['selector']['EntryId'])){
             $errorMsg.=' Source or Class or EntryId';
             $this->oc['logger']->log('error',$errorMsg,[]);
-            return (empty($arr['returnRow']))?$errorMsg:['error'=>$errorMsg];
+            return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
         }
         $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr); // <----------------- Update old EntryId
         // get base selector and storage object
@@ -822,16 +823,14 @@ class HTMLbuilder{
             $baseSelector=['Class'=>$arr['selector']['Class']];
         }
         // initialization
-        $arr['returnRow']=!empty($arr['returnRow']);
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
-        $arr['maxRowCount']=$arr['maxRowCount']?:999;
-        if ($arr['returnRow']){$arr['maxRowCount']=1;}
-        $firstEntry=$arr['selector'];
-        if ($arr['maxRowCount']>1){
-            $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
+        if ($arr['returnRow']){
+            $arr['maxRowCount']=1;
         } else {
-            $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListKeyFromEntryId($arr['selector']['EntryId']);
+            $arr['maxRowCount']=$arr['maxRowCount']?:999;
         }
+        $firstEntry=$arr['selector'];
+        $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $this->oc[$storageObj]->entryByIdCreateIfMissing($firstEntry,TRUE);
         // command processing
         $movedEntryId='';

@@ -401,6 +401,7 @@ final class Root{
                 $arr['page html']='Job skipped due to high server load...';
             }
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Values'=>$loadAvg],'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>FALSE,'caption'=>'Average server load','style'=>['clear'=>'both']]);
+            $this->oc['SourcePot\Datapool\AdminApps\Trigger']->updateDerivedSignals();
         } else if ($this->script==='import.php'){
             // import Processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);

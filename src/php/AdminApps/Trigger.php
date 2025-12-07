@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\AdminApps;
 class Trigger implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
-    private const DERIVED_SIGNAL_INDICATOR='Derived';
+    private const DERIVED_SIGNAL_INDICATOR='Derived-';
     
     private $oc;
     private $entryTable='';
@@ -105,7 +105,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (isset($formData['cmd']['new'])){
             $guideEntry=$arr['selector'];
-            $guideEntry['Folder']=trim($arr['selector']['Folder'],'% ').' '.$formData['val']['Folder'];
+            $guideEntry['Folder']=self::DERIVED_SIGNAL_INDICATOR.$formData['val']['Folder'];
             $guideEntry['Owner']=$_SESSION['currentUser']['EntryId'];
             $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($guideEntry);
         }
@@ -129,12 +129,12 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
 
     private function signalsDerived(array $selector):string
     {
-        $name=trim(str_replace(self::DERIVED_SIGNAL_INDICATOR,'',$selector['Folder']));
         $html='';
-        $selector['Name']='Params '.$name;
+        $selector['Name']=trim(str_replace(self::DERIVED_SIGNAL_INDICATOR,'',$selector['Folder']));
+        $selector['Group']='Params';
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Derived signal params','generic',$selector+['disableAutoRefresh'=>TRUE],['method'=>'derivedSignalParams','classWithNamespace'=>__CLASS__],[]);
-        $selector['Name']='Rules '.$name;
+        $selector['Group']='Rules';
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($selector);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Derived signal rules','generic',$selector+['disableAutoRefresh'=>TRUE],['method'=>'derivedSignalRules','classWithNamespace'=>__CLASS__],[]);
         return $html;
@@ -144,19 +144,22 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
     {
     // rules
         $timespanOptions=[
-            'h'=>'Hour',
-            'd'=>'Day',
-            'm'=>'Month',
+            'Y-m-d H'=>'Hour',
+            'Y-m-d'=>'Day',
+            'Y-m'=>'Month',
+            'Y'=>'Year',
         ];
         $contentStructure=[
             'Timespan'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$timespanOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$timespanOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Root::TIMEZONES,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+            'min'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            'max'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+            'description'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         ];
 		// rules list
-        $arr['selector']=$arr['selector'];
-		$arr['contentStructure']=$contentStructure;
+        $arr['contentStructure']=$contentStructure;
 		$caption='Params for '.$arr['selector']['Group'].' &rarr; '.$arr['selector']['Folder'];
-		$row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption]);
 		return $arr;
 	}
@@ -166,22 +169,75 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
 		// rules
         $signalOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getOptions(['Group'=>'signal']);
         $processingOptions=[
-            'avarage'=>'Avarage',
+            'avg'=>'Average',
             'min'=>'Min',
-            'minExclZero'=>'Min exclude zero',
-            'Max'=>'Max',
+            'minExZero'=>'Min exclude zero',
+            'max'=>'Max',
+            'range'=>'Range',
+            'sum'=>'Sum',
+            'count'=>'Sum',
         ];
         $contentStructure=[
+            'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>['+'=>'+','-'=>'-','*'=>'*'],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
             'Signal'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$signalOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
             'Processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$processingOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+            'Offset'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>0,'excontainer'=>TRUE],
+            'Scaler'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>1,'excontainer'=>TRUE],
         ];
 		// rules list
-        $arr['selector']=$arr['selector'];
-		$arr['contentStructure']=$contentStructure;
+        $arr['contentStructure']=$contentStructure;
 		$arr['caption']='Rules for '.$arr['selector']['Group'].' &rarr; '.$arr['selector']['Folder'];
 		$arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $arr;
 	}
+
+    public function updateDerivedSignals()
+    {
+        $formats=[
+            'Y-m-d H'=>'Y-m-d H:30:00',
+            'Y-m-d'=>'Y-m-d 12:30:00',
+            'Y-m'=>'Y-m-15 12:30:00',
+            'Y'=>'Y-06-15 12:30:00',
+        ];
+        $signals=[];
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'Folder'=>self::DERIVED_SIGNAL_INDICATOR.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read','Name',$isAsc=TRUE) as $derivedSignal){
+            $signals[$derivedSignal['Name']][$derivedSignal['Group']][]=$derivedSignal['Content'];
+        }
+        foreach($signals as $signalName=>$signalArr){
+            $params=current($signalArr['Params']);
+            $result=FALSE;
+            foreach($signalArr['Rules'] as $ruleIndex=>$rule){
+                $sourceSignal=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'EntryId'=>$rule['Signal']];
+                $sourceSignalProperties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPropertiesById($sourceSignal,$params['Timespan'],$params['Timezone']);
+                $signalValue=($sourceSignalProperties[$rule['Processing']]+floatval($rule['Offset']))*$rule['Scaler'];
+                if ($result===FALSE){
+                    $result=$signalValue;    
+                } else if ($rule['Operation']==='+'){
+                    $result+=$signalValue;    
+                } else if ($rule['Operation']==='-'){
+                    $result-=$signalValue;    
+                } else if ($rule['Operation']==='*'){
+                    $result=$result*$signalValue;    
+                }
+            }
+            // signal params
+            $signalParams=['description'=>$params['description']];
+            if (empty($params['min'])){
+                $signalParams['yMin']=$params['min'];
+            }
+            if (empty($params['max'])){
+                $signalParams['yMax']=$params['max'];
+            }
+            $targetTimeZone=new \DateTimeZone($params['Timezone']);
+            $nowDateTime=new \DateTime('@'.time());
+            $nowDateTime->setTimezone($targetTimeZone);
+            $dateTimeStr=$nowDateTime->format($formats[$params['Timespan']]);
+            $signalDateTime=new \DateTime($dateTimeStr,new \DateTimeZone($params['Timezone']));
+            $signalTimeStamp=$signalDateTime->getTimestamp();
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$result,'int',$signalParams,$signalTimeStamp);
+        }
+    }
 
     public function messageWidgetWrapper($arr){
         if (!isset($arr['html'])){$arr['html']='';}

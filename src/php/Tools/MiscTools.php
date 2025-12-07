@@ -416,13 +416,22 @@ final class MiscTools{
     
     public function add2history($arr,array $newElement,int $maxSize=100):array
     {
-        if (is_array($arr)){
-            array_unshift($arr,$newElement);
+        if ($newElement['timeStamp']===NULL){
+            $newElement['timeStamp']=time();
+            if (is_array($arr)){
+                array_unshift($arr,$newElement);
+            } else {
+                $arr=array($newElement);
+            }
+            while(count($arr)>$maxSize){
+                array_pop($arr);
+            }
         } else {
-            $arr=array($newElement);
-        }
-        while(count($arr)>$maxSize){
-            array_pop($arr);
+            $arr[$newElement['timeStamp']]=$newElement;
+            ksort($arr);
+            while(count($arr)>$maxSize){
+                array_shift($arr);
+            }
         }
         return $arr;
     }
