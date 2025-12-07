@@ -90,6 +90,7 @@ h3,caption{
 object{
     clear:both;
     margin:10px 0 0 5px;
+    overflow: hidden;
 }
 ol,ul{
     margin:1rem;
