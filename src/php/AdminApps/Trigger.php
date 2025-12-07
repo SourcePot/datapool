@@ -150,6 +150,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         ];
         $contentStructure=[
             'Timespan'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$timespanOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$timespanOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
         ];
 		// rules list
         $arr['selector']=$arr['selector'];

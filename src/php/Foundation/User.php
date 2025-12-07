@@ -57,7 +57,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                 ],
             'Misc'=>[
-                'Timezone'=>['@function'=>'select','@options'=>self::TIMEZONES,'@default'=>\SourcePot\Datapool\Root::USER_TIMEZONE_TEMPLATE,'@excontainer'=>TRUE],
+                'Timezone'=>['@function'=>'select','@options'=>\SourcePot\Datapool\Root::TIMEZONES,'@default'=>\SourcePot\Datapool\Root::USER_TIMEZONE_TEMPLATE,'@excontainer'=>TRUE],
                 'My reference'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Invoice processing','@excontainer'=>TRUE],
                 'My tags'=>['@tag'=>'input','@type'=>'text','@default'=>'','@placeholder'=>'e.g. Schwarzheide, London, München','@excontainer'=>TRUE],
                 'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],

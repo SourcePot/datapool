@@ -59,6 +59,14 @@ final class Root{
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE,'legal'=>TRUE];
     public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'logo.png'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
+    public const TIMEZONES=[
+        'Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
+        'America/Sao_Paulo'=>'-3 America/Sao_Paulo','America/Halifax'=>'-4 America/Halifax','America/New_York'=>'-5 America/New York','America/Mexico_City'=>'-6 America/Mexico City',
+        'America/Denver'=>'-7 America/Denver','America/Vancouver'=>'-8 America/Vancouver','America/Anchorage'=>'-9 America/Anchorage','Pacific/Honolulu'=>'-10 Pacific/Honolulu',
+        'Pacific/Midway'=>'-11 Pacific/Midway','Pacific/Kiritimati'=>'-12 Pacific/Kiritimati','Pacific/Fiji'=>'+12 Pacific/Fiji','Asia/Magadan'=>'+11 Asia/Magadan',
+        'Pacific/Guam'=>'+10 Pacific/Guam','Asia/Tokyo'=>'+9 Asia/Tokyo','Asia/Shanghai'=>'+8 Asia/Shanghai','Asia/Novosibirsk'=>'+7 Asia/Novosibirsk','Asia/Omsk'=>'+6 Asia/Omsk',
+        'Asia/Yekaterinburg'=>'+5 Asia/Yekaterinburg','Europe/Samara'=>'+4 Europe/Samara','Europe/Moscow'=>'+3 Europe/Moscow','Africa/Cairo'=>'+2 Africa/Cairo','UTC'=>'UTC'
+    ];
     
     // profiling settings
     public const LOG_LEVEL=['production'=>'Production','monitoring'=>'Monitoring','debugging'=>'Debugging'];
@@ -206,7 +214,7 @@ final class Root{
 
     public static function getUserTimezone():string
     {
-        return $_SESSION['currentUser']['Content']['Misc']['Timezone'];
+        return $_SESSION['currentUser']['Content']['Misc']['Timezone']??self::USER_TIMEZONE_TEMPLATE;
     }
 
     public function getNonce($requestNew=FALSE):string
