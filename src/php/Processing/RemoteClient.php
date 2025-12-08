@@ -13,6 +13,14 @@ namespace SourcePot\Datapool\Processing;
 class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePot\Datapool\Interfaces\HomeApp{
 
     private const ENTRY_EXPIRATION_SEC=172800;
+    private const TIMESTAMP_AGE_WARNING_THRESHOLD=30;
+    private const MODE_STYLE_ARR=[
+        'idle'=>'padding:0 0.25rem;background-color:#0f1;',
+        'video'=>'padding:0 0.25rem;background-color:#fc0;',
+        'capture'=>'padding:0 0.25rem;background-color:#fc0;',
+        'sms'=>'padding:0 0.25rem;background-color:#fcc;',
+        'alarm'=>'padding:0 0.25rem;background-color:#f00;color:#fff;'
+    ];
     private const ONEDIMSEPARATOR='||';
 
     private $oc;
@@ -372,31 +380,22 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     {
         $arr['html']='Status entry missing...';
         $status=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($arr['selector']);
-        if (empty($status)){return $arr;}
-        if (isset($lastEntry['Content']['timestamp'])){
-            $returnTime=round(time()-$lastEntry['Content']['timestamp']);
-            $lastEntry['Content']['timestamp']=$returnTime.' sec';
+        if (empty($status)){
+            return $arr;
+        }
+        if (isset($status['Content']['Status']['mode']['@value'])){
+            if (isset(self::MODE_STYLE_ARR[$status['Content']['Status']['mode']['@value']])){
+                $status['Content']['Status']['mode']['@style']=self::MODE_STYLE_ARR[$status['Content']['Status']['mode']['@value']];
+            }
+        }
+        if (isset($status['Content']['Status']['timestamp']['@value'])){
+            $returnTime=round(time()-$status['Content']['Status']['timestamp']['@value']);
+            $status['Content']['Status']['timestamp']['@value']=$returnTime.' sec';
+            if ($returnTime>self::TIMESTAMP_AGE_WARNING_THRESHOLD){
+                $status['Content']['Status']['timestamp']['@style']='padding:0 0.25rem;background-color:#fcc;';
+            }
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($status,$status['Content'],__CLASS__,__FUNCTION__,$isDebugging=FALSE);
-        return $arr;
-    }
-
-    public function getPreviewContainer(array $arr):array
-    {
-        // generic settings
-        $previewArr=$arr;
-        $previewArr['maxDim']='320px';
-        // get newest file
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
-        $previewArr['selector']['Params']='%motion%';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($previewArr['selector'],FALSE,'Read','Date',FALSE,1,FALSE) as $entry){
-            $nameComps=explode('_',$entry['Name']);
-            $dateStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$nameComps[1],'','','Y-m-d H:i:s',$pageTimeZone);
-            $previewArr['selector']=$entry;
-            $previewArr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>ucfirst($nameComps[0]).': '.$dateStr.' &rarr; '.$entry['Folder'],'keep-element-content'=>TRUE]);
-            $arr=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getPreview($previewArr);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['font-weight'=>'bold'],'element-content'=>'The preview is for the last motion file. For capture files check CanvasElement.']);
-        }
         return $arr;
     }
 

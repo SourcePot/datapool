@@ -69,15 +69,15 @@ class Signals{
             return $signalSelector;
         }
         // add EntryId only, if entry Name is complete
-        if (strpos($name,'%')===FALSE){
+        if (mb_substr($name,-1,1)!=='%'){
             $signalSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($signalSelector,['Source','Group','Folder','Name'],'0','',TRUE);
         }
         return $signalSelector;
     }
     
-    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[]):array
+    public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[],$timeStamp=NULL):array
     {
-        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>time(),'label'=>$params['label']??'','color'=>$params['color']??''];
+        $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>$timeStamp,'label'=>$params['label']??'','color'=>$params['color']??''];
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
         $signal=['Type'=>$this->entryTable.' '.$dataType,'Content'=>['signal'=>[]]];
@@ -105,6 +105,51 @@ class Signals{
             }
         }
         return $signal;
+    }
+
+    public function getSignalProperties(string $callingClass,string $callingFunction,string $name,string $timespanDefinedByFormat='',string $timezone=''):array
+    {
+        $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
+        return $this->getSignalPropertiesById($signalSelector,$timespanDefinedByFormat,$timezone);
+    }
+    public function getSignalPropertiesById(array $signalSelector,string $timespanDefinedByFormat='',string $timezone=''):array
+    {
+        $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimrstamp'=>0];
+        $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
+        foreach($signal['Content']['signal'] as $index=>$signalItem){
+            if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
+                continue;
+            }
+            $properties['count']++;
+            $properties['sum']+=$signalItem['value'];
+            if ($properties['min']===FALSE || $properties['min']>$signalItem['value']){
+                $properties['min']=$signalItem['value'];
+            }
+            if (!empty($signalItem['value']) && ($properties['minExZero']===FALSE || $properties['minExZero']>$signalItem['value'])){
+                $properties['minExZero']=$signalItem['value'];
+            }
+            if ($properties['max']===FALSE || $properties['max']<$signalItem['value']){
+                $properties['max']=$signalItem['value'];
+            }
+            $properties['avgTimrstamp']+=$signalItem['timeStamp'];
+        }
+        $properties['avg']=($properties['count']==0)?FALSE:($properties['sum']/$properties['count']);
+        $properties['range']=$properties['max']-$properties['min'];
+        $properties['avgTimrstamp']=round($properties['avgTimrstamp']/($properties['count']?:1));
+        return $properties;
+    }
+
+    private function isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone):bool
+    {
+        if (empty($timespanDefinedByFormat) || empty($timezone)){
+            return TRUE;
+        }
+        $targetTimeZone=new \DateTimeZone($timezone);
+        $currentDateTime=new \DateTime('@'.time());
+        $currentDateTime->setTimezone($targetTimeZone);
+        $itemDateTime=new \DateTime('@'.$signalItem['timeStamp']);
+        $itemDateTime->setTimezone($targetTimeZone);
+        return ($currentDateTime->format($timespanDefinedByFormat)==$itemDateTime->format($timespanDefinedByFormat));
     }
     
     public function removeSignalsWithoutSource(string $callingClass,string $callingFunction)
@@ -287,8 +332,6 @@ class Signals{
 
     public function selector2plot(array $selector=[],array $metaOverwrite=['yMin'=>0,'caption'=>'Plots']):string|array
     {
-        //$selector['refreshInterval']=600;
-        //$selector['disableAutoRefresh']=TRUE;
         $settings=['method'=>'signalsChart','classWithNamespace'=>__CLASS__];
         $settings=array_merge($metaOverwrite,$settings);
         $selector['Source']=$selector['Source']??$this->getEntryTable();
@@ -322,9 +365,7 @@ class Signals{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Name') as $entry){
             $classStartPos=strrpos($entry['Folder'],'\\');
             $classStartPos=($classStartPos===FALSE)?0:$classStartPos+1;
-            $classEndPos=mb_strpos($entry['Folder'],'::');
-            $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos,$classEndPos-$classStartPos).': '.$entry['Name'];
-            //$options[$entry['EntryId']]=$entry['Folder'].': '.$entry['Name'];
+            $options[$entry['EntryId']]=mb_substr($entry['Folder'],$classStartPos).': '.$entry['Name'];
         }
         asort($options);
         return $options;
@@ -394,6 +435,10 @@ class Signals{
             $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-','color'=>$item['color']??''];
         }
         $meta=array_merge($meta,$metaOverwrite);
+        $meta['yMin']=floatval($meta['yMin']);
+        $meta['yMax']=floatval($meta['yMax']);
+        $meta['xMin']=floatval($meta['xMin']);
+        $meta['xMax']=floatval($meta['xMax']);
         // sorting and scaling data
         ksort($data);
         $meta['xScaler']=($meta['xMax']==$meta['xMin'])?NAN:$plot['style']['width']/($meta['xMax']-$meta['xMin']);
@@ -433,14 +478,13 @@ class Signals{
         $plot['element-content']=$html;
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($plot);
         // generate wrapper, ticks, labels
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $plot['countX']=floor($plot['style']['width']/100);
         $tick=['tag'=>'div','style'=>['height'=>$metaOverwrite['tickLength'],'width'=>0,'border'=>'1px solid #000'],'class'=>'signal-tick','element-content'=>''];
         $label=['tag'=>'p','style'=>['bottom'=>0],'class'=>'signal-label','element-content'=>'','keep-element-content'=>TRUE];
         for($tickIndexX=0;$tickIndexX<=$plot['countX'];$tickIndexX++){
             $label['style']['left']=$tick['style']['left']=round($tickIndexX*$plot['style']['width']/$plot['countX']+$plot['style']['left']);
             $timeStamp=round(($label['style']['left']+$meta['xOffset']-$plot['style']['left'])/$meta['xScaler']);
-            $dateTimeStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$timeStamp,'','',$meta['dateFormat'],$pageTimeZone);
+            $dateTimeStr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$timeStamp,'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
             $label['element-content']=str_replace(' ','<br/>',$dateTimeStr);
             //
             $label['style']['left']-=30;
@@ -489,7 +533,7 @@ class Signals{
         // Timezone
         $pEl=['tag'=>'p','class'=>'info','element-content'=>'Timezone','style'=>['clear'=>'left']];
         $infoRowHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
-        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-timezone','element-content'=>$pageTimeZone,'style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
+        $pEl=['tag'=>'p','class'=>'info','id'=>$plotBaseId.'-timezone','element-content'=>\SourcePot\Datapool\Root::getUserTimezone(),'style'=>['float'=>'right','clear'=>'right','max-width'=>'130px']];
         $infoRowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($pEl);
         $rowEl=['tag'=>'div','class'=>'info','element-content'=>$infoRowHtml,'style'=>['width'=>'100%','padding'=>'0 0 0.25rem 0'],'keep-element-content'=>TRUE];
         $infoPanelHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($rowEl);

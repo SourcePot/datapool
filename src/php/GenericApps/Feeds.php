@@ -320,13 +320,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     private function getFeedDate(string $dateTimeString):array
     {
-        $pageTimeZone=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTimeZone');
         $dateTimeArr=['string'=>$dateTimeString];
         $dateTime=new \DateTime($dateTimeString);
         $dateTime->setTimeZone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         $dateTimeArr['DB_TIMEZONE']=$dateTime->format('Y-m-d H:i:s');
-        $dateTime->setTimeZone(new \DateTimeZone($pageTimeZone));
-        $dateTimeArr['PAGE_TIMEZONE']=$dateTime->format('Y-m-d H:i:s');
         return $dateTimeArr;
     }
 
@@ -385,7 +382,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     public function getHomeAppWidget(string $name):array
     {
         // get container
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>5];
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>10];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'News','keep-element-content'=>TRUE]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('News item '.__FUNCTION__,'generic',$elector,['method'=>'userItemHtml','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);

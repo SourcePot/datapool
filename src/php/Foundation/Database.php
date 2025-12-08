@@ -877,12 +877,15 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
     {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall,'noUpdateButCreateIfMissing'=>$noUpdateButCreateIfMissing,'addLog'=>$addLog];
         // only the Admin has the right to update the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
             unset($entry['Privileges']);
         }
         // test for required keys and set selector
-        if (empty($entry['Source']) || empty($entry['EntryId'])){return FALSE;}
+        if (empty($entry['Source']) || empty($entry['EntryId'])){
+            return FALSE;
+        }
         $selector=['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']];
         // replace right constants
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
@@ -919,16 +922,17 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $entry=$this->unifyEntry($entry,TRUE);
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
-            $entry['Info']='Entry updated by "'.__FUNCTION__.'"';
+            $context['Info']='Entry updated by "'.__FUNCTION__.'"';
         } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
             // existing entry -> no write access -> no update 
             $entry=$existingEntry;
-            $entry['Info']='Entry not updated by "'.__FUNCTION__.'", no write access';
+            $context['Info']='Entry not updated by "'.__FUNCTION__.'", no write access';
         } else {
             // existing entry -> noUpdateButCreateIfMissing -> no update 
             $entry=$existingEntry;
-            $entry['Info']='Entry not updated by "'.__FUNCTION__.'", no update of existing entry';
+            $context['Info']='Entry not updated by "'.__FUNCTION__.'", no update of existing entry';
         }
+        $entry[__FUNCTION__]=$context;
         return $entry;
     }
     
@@ -942,7 +946,10 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     * @return array|boolean The entry, an empty array if right are insufficient or false on error.
     */
     public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
-        return $this->updateEntry($entry,$isSystemCall,TRUE);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall];
+        $entry=$this->updateEntry($entry,$isSystemCall,TRUE);
+        $entry[__FUNCTION__]=$context;
+        return $entry;
     }
     
     /**

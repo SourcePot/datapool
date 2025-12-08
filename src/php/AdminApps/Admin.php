@@ -284,13 +284,11 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     public function getPageSettingsHtml()
     {
         $homePageContentOptions=[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'];
-        $timezones=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getAvailableTimezones();
         $contentStructure=[
             'pageTitle'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'],
             'metaViewport'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>['min-width'=>'50vw']],
             'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
             'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
-            'pageTimeZone'=>['method'=>'select','options'=>$timezones,'excontainer'=>TRUE],
             'logLevel'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::LOG_LEVEL,'excontainer'=>TRUE],
             'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
             'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],

@@ -84,7 +84,7 @@ jQuery(document).ready(function(){
                 });
             }
         });
-        jQuery(wrapper).find('[type=range],[type=checkbox]').each(function(i){
+        jQuery(wrapper).find('[type=date],[type=datetime-local],[type=range],[type=checkbox]').each(function(i){
             if (jQuery(this).attr('excontainer')===undefined){
                 jQuery(this).unbind('change');
                 jQuery(this).on('change',function(e){
