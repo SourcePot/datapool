@@ -929,7 +929,7 @@ class HTMLbuilder{
                 }
                 $matrix[$rowIndex]['   ']=$btnArr;    
             }
-            if ($currentIndex<$endIndex){
+            if ($currentIndex<$endIndex && $arr['returnRow']>1){
                 $btnArr=array_merge($arr,self::BUTTONS['moveUp'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){

@@ -435,6 +435,10 @@ class Signals{
             $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-','color'=>$item['color']??''];
         }
         $meta=array_merge($meta,$metaOverwrite);
+        $meta['yMin']=floatval($meta['yMin']);
+        $meta['yMax']=floatval($meta['yMax']);
+        $meta['xMin']=floatval($meta['xMin']);
+        $meta['xMax']=floatval($meta['xMax']);
         // sorting and scaling data
         ksort($data);
         $meta['xScaler']=($meta['xMax']==$meta['xMin'])?NAN:$plot['style']['width']/($meta['xMax']-$meta['xMin']);
