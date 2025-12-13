@@ -14,11 +14,20 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     
     private $oc;
     
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'File name regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+        'File extension regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
+        'Relevant mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
+        '..or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
+        '...or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
+        'Max file size'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
+    ];
+        
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -92,36 +101,26 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     
     public function receiverPluginHtml(array $arr):string
     {
-        // get settings html
-        $mimeOptions=[''=>'...','text/'=>'text/*','application/'=>'application/*','image/'=>'image/*','video/'=>'video/*','audio/'=>'audio/*','message/'=>'message/*','/zip'=>'*/zip*','/pdf'=>'*/pdf','/json'=>'*/json'];
-        $fileSizeOptions=[''=>'Only system limit',10240=>'10 kB',102400=>'100 kB',1048576=>'1 MB',10485760=>'10 MB',104857600=>'100 MB',209715200=>'200 MB'];
-        $contentStructure=[
-            'File name regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
-            'File extension regexp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'\w+','excontainer'=>TRUE],
-            'Relevant mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
-            '..or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
-            '...or mime-type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$mimeOptions],
-            'Max file size'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$fileSizeOptions],
-            ];
-        // get selctor
+        // get selector
         $callingElementEntryId=$arr['selector']['EntryId'];
         $callingElement=['Folder'=>'Settings','EntryId'=>$callingElementEntryId];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $mimeOptions=[''=>'...','text/'=>'text/*','application/'=>'application/*','image/'=>'image/*','video/'=>'video/*','audio/'=>'audio/*','message/'=>'message/*','/zip'=>'*/zip*','/pdf'=>'*/pdf','/json'=>'*/json'];
+        $fileSizeOptions=[''=>'Only system limit',10240=>'10 kB',102400=>'100 kB',1048576=>'1 MB',10485760=>'10 MB',104857600=>'100 MB',209715200=>'200 MB'];
+        $contentStructure['Relevant mime-type']['options']=$mimeOptions;
+        $contentStructure['..or mime-type']['options']=$mimeOptions;
+        $contentStructure['...or mime-type']['options']=$mimeOptions;
+        $contentStructure['Max file size']['options']=$fileSizeOptions;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
+        $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $arr['canvasCallingClass']=$arr['selector']['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='File upload filter';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         $html.=$this->getDirContent($callingElementEntryId);
         return $html;
