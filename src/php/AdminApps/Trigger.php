@@ -208,7 +208,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             $signals[$derivedSignal['Name']][$derivedSignal['Group']][]=$derivedSignal['Content'];
         }
         foreach($signals as $signalName=>$signalArr){
-            $params=current($signalArr['Params']);
+            $params=current($signalArr['Params']??[]);
             $result=FALSE;
             foreach($signalArr['Rules'] as $rule){
                 $sourceSignal=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'EntryId'=>$rule['Signal']];
