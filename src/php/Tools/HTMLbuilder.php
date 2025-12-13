@@ -755,7 +755,8 @@ class HTMLbuilder{
             $this->oc['logger']->log('error',$errorMsg,[]);
             return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
         }
-        $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr); // <----------------- Update old EntryId
+        // Entry list correct order <----------------------------- LEGACY
+        $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr);
         // get base selector and storage object
         if (!empty($arr['selector']['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
@@ -771,7 +772,7 @@ class HTMLbuilder{
         } else {
             $arr['maxRowCount']=$arr['maxRowCount']?:999;
         }
-        // legacy EntryId correction -> since 12/2025 entry2row() requires an ordered list EntryId
+        // legacy EntryId correction -> since 12/2025 entry2row() requires an ordered list EntryId <----------------------------- LEGACY
         $primaryKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListKeyFromEntryId($arr['selector']['EntryId']);
         $oldEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$arr['selector']['Source'],'EntryId'=>$primaryKey]);
         if ($oldEntry){
