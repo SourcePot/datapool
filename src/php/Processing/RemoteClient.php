@@ -23,7 +23,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     ];
 
     private const CONTENT_STRUCTURE_PARAMS=[
-        'CanvasElement'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>'','excontainer'=>TRUE],
+        'Client EntryId'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>'','excontainer'=>TRUE],
         'Client'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
         'Plot to show'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
     ];
@@ -186,7 +186,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         }
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
-        $contentStructure['CanvasElement']['value']=$callingElement['EntryId'];
+        $contentStructure['Client EntryId']['value']=$params['Content']['Client'];
         $contentStructure['Client']['options']=$this->getClientOptions();
         $contentStructure['Plot to show']['value']=key($plotOptions);
         $contentStructure['Plot to show']['options']=$plotOptions;
