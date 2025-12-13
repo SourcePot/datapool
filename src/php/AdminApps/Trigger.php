@@ -177,7 +177,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
             'max'=>'Max',
             'range'=>'Range',
             'sum'=>'Sum',
-            'count'=>'Sum',
+            'count'=>'Count',
         ];
         $contentStructure=[
             'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>['+'=>'+','-'=>'-','*'=>'*'],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
@@ -210,7 +210,7 @@ class Trigger implements \SourcePot\Datapool\Interfaces\App{
         foreach($signals as $signalName=>$signalArr){
             $params=current($signalArr['Params']);
             $result=FALSE;
-            foreach($signalArr['Rules'] as $ruleIndex=>$rule){
+            foreach($signalArr['Rules'] as $rule){
                 $sourceSignal=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'EntryId'=>$rule['Signal']];
                 $sourceSignalProperties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPropertiesById($sourceSignal,$params['Timespan'],$params['Timezone']);
                 $signalValue=($sourceSignalProperties[$rule['Processing']]+floatval($rule['Offset']))*$rule['Scaler'];

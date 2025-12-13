@@ -12,17 +12,39 @@ namespace SourcePot\Datapool\Processing;
 
 class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private const INFO='This processor forwards entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules & conditions for this destination must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the "AND", “OR” for the very first rule of any destination is ignored.';
-
     private $oc;
     
+    private const INFO=[
+        'Description'=>['Info'=>'This processor forwards entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules & conditions for this destination must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the "AND", “OR” for the very first rule of any destination is ignored.']
+    ];
+    
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+    ];
+
+    private const OPERATIONS=[
+        '&&'=>'AND',
+        '||'=>'OR'
+    ];
+
+    private const CONTENT_STRUCTURE_RULES=[
+        '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
+        'A&rarr;'=>['method'=>'element','tag'=>'p','element-content'=>'A&rarr;','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
+        'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
+        'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        '&larr;A|B&rarr;'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;A|B&rarr;','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
+        'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
+        'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES,'keep-element-content'=>TRUE],
+        'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
+        '&larr;B'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;B','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
+        'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+    ];
+        
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
-    
-    private $operations=['&&'=>'AND','||'=>'OR'];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -77,9 +99,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getForwardEntriesInfo($callingElement){
-        $matrix=[];
-        $matrix['Description']=[self::INFO];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
@@ -131,30 +151,17 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function forwardingParams($callingElement)
     {
-        $contentStructure=[
-            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-        ];
-        // get selctor
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
+        $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Forwarding control';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){
-            $row['trStyle']=['background-color'=>'#a00'];
-        }
-        $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
     public function getForwardEntriesSettingsHtml($arr){
@@ -164,19 +171,10 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function forwardingRules($callingElement){
-        $contentStructure=[
-            '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>$this->operations,'keep-element-content'=>TRUE],
-            'A&rarr;'=>['method'=>'element','tag'=>'p','element-content'=>'A&rarr;','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
-            'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
-            'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
-            '&larr;A|B&rarr;'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;A|B&rarr;','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
-            'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
-            'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES,'keep-element-content'=>TRUE],
-            'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
-            '&larr;B'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;B','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
-            'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-        ];
-        $contentStructure['Value source']+=$callingElement['Content']['Selector'];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;

@@ -16,6 +16,33 @@ require_once($GLOBALS['dirs']['php'].'Tools/ondemand/PdfDoc.php');
 class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
+
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Paper'=>['method'=>'select','value'=>'','excontainer'=>TRUE,'options'=>[]],
+        'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
+        'Top margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
+        'Bottom margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
+    ];
+
+    private const CONTENT_STRUCTURE_PLACEHOLDER=[
+        'source'=>['method'=>'keySelect','value'=>'Name','addSourceValueColumn'=>TRUE,'excontainer'=>TRUE],
+        'placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'{{Name}}','excontainer'=>TRUE],
+    ];
+
+    private const CONTENT_STRUCTURE_RULES=[
+        'type'=>['method'=>'select','value'=>'','options'=>self::CONTENT_TYPES,'excontainer'=>TRUE],
+        'text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'x-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE],
+        'y-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE],
+        'width [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+        'height [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+        'font'=>['method'=>'select','value'=>'','options'=>self::FONTS,'excontainer'=>TRUE],
+        'fontSize'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
+        'fontStyle'=>['method'=>'select','value'=>'','options'=>self::FONT_STYLES,'excontainer'=>TRUE],
+        'alignment'=>['method'=>'select','value'=>'J','options'=>self::ALIGNMENTS,'excontainer'=>TRUE],
+    ];
+
     private $sampleTargetFile='';
     
     private $entryTable='';
@@ -216,41 +243,31 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function pdfParams(array $callingElement):string
     {
-        $contentStructure=[
-            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            'Paper'=>['method'=>'select','value'=>key($this->paper),'excontainer'=>TRUE,'options'=>$this->paper],
-            'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>key(self::ORIENTATIONS),'options'=>self::ORIENTATIONS],
-            'Top margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
-            'Bottom margin [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>20,'excontainer'=>TRUE],
-        ];
-        // get selctor
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $contentStructure['Paper']['value']=key($this->paper);
+        $contentStructure['Paper']['options']=$this->paper;
+        $contentStructure['Orientation']['value']=key(self::ORIENTATIONS);
+        $contentStructure['Orientation']['options']=self::ORIENTATIONS;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
+        $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='PDF control';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
-        $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function pdfPlaceholder(array $callingElement):string
     {
-        $contentStructure=['source'=>['method'=>'keySelect','value'=>'Name','addSourceValueColumn'=>TRUE,'excontainer'=>TRUE],
-                        'placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'{{Name}}','excontainer'=>TRUE],
-                        ];
-        $contentStructure['source']+=$callingElement['Content']['Selector'];
-        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PLACEHOLDER;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Mapping to placeholder';
@@ -260,19 +277,11 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function pdfRules(array $callingElement):string
     {
-        $contentStructure=[
-            'type'=>['method'=>'select','value'=>'','options'=>self::CONTENT_TYPES,'excontainer'=>TRUE],
-            'text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'x-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the right edge, from the left edge otherwise','excontainer'=>TRUE],
-            'y-pos [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'title'=>'Negative values set distance in mm from the bottom edge, from the top edge otherwise','excontainer'=>TRUE],
-            'width [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>30,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
-            'height [mm]'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>10,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
-            'font'=>['method'=>'select','value'=>'','options'=>self::FONTS,'excontainer'=>TRUE],
-            'fontSize'=>['method'=>'element','tag'=>'input','type'=>'number','value'=>12,'style'=>['width'=>'50px'],'excontainer'=>TRUE],
-            'fontStyle'=>['method'=>'select','value'=>'','options'=>self::FONT_STYLES,'excontainer'=>TRUE],
-            'alignment'=>['method'=>'select','value'=>'J','options'=>self::ALIGNMENTS,'excontainer'=>TRUE],
-        ];
-        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,FALSE);
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Content rules';
@@ -311,7 +320,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (is_file($this->sampleTargetFile)){unlink($this->sampleTargetFile);}
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if (strpos($sourceEntry['Params']['File']['MIME-Type'],'image')===0){continue;}
+            if (strpos($sourceEntry['Params']['File']['MIME-Type']??'','image')===0){continue;}
             //if (time()-$settings['Script start timestamp']>30){break;}
             if ($sourceEntry['isSkipRow']){
                 $result['Pdf statistics']['Skip rows']['value']++;

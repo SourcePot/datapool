@@ -12,8 +12,6 @@ namespace SourcePot\Datapool\Processing;
 
 class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private const MAX_LIMIT=1000000;
-
     private $oc;
 
     private const CHART_OPTIONS=[
@@ -29,7 +27,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Date'=>'Date'
     ];
 
-    private const CHART_PARAMS_TEMPLATE=[
+    private const CONTENT_STRUCTURE_PARAMS=[
         'Width'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'700','excontainer'=>TRUE],
         'Height'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'300','excontainer'=>TRUE],
         'Type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'timeY','options'=>self::CHART_OPTIONS,'keep-element-content'=>TRUE],
@@ -37,7 +35,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Normalize'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[''=>'-','x'=>'X','y'=>'Y'],'keep-element-content'=>TRUE],
     ];
 
-    private const CHART_RULES_TEMPLATE=[
+    private const CONTENT_STRUCTURE_RULES=[
         'trace name'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'trace','excontainer'=>TRUE],
         'x-selector'=>['method'=>'keySelect','value'=>'Date','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
         'y-selector'=>['method'=>'keySelect','value'=>'Group','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],                
@@ -124,7 +122,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getChartEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chart settings','generic',$callingElement,['method'=>'getChartEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Chart settings '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getChartEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -137,33 +135,24 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function chartParams($callingElement){
-        $contentStructure=self::CHART_PARAMS_TEMPLATE;
-        // get selector
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
+        $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Chart control';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
-        $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function chartRules($callingElement){
-        $contentStructure=self::CHART_RULES_TEMPLATE;
-        $contentStructure['x-selector']+=$callingElement['Content']['Selector'];
-        $contentStructure['y-selector']+=$callingElement['Content']['Selector'];
-        $contentStructure['label-selector']+=$callingElement['Content']['Selector'];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;

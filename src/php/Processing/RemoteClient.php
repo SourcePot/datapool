@@ -21,6 +21,13 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         'sms'=>'padding:0 0.25rem;background-color:#fcc;',
         'alarm'=>'padding:0 0.25rem;background-color:#f00;color:#fff;'
     ];
+
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'CanvasElement'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>'','excontainer'=>TRUE],
+        'Client'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
+        'Plot to show'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
+    ];
+
     private const ONEDIMSEPARATOR='||';
 
     private $oc;
@@ -177,23 +184,16 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             if (!isset($signal['Content']['signal'])){continue;}
             $plotOptions[$signal['Name']]=$signal['Name'];
         }
-        $contentStructure=[
-            'CanvasElement'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>$callingElement['EntryId'],'excontainer'=>TRUE],
-            'Client'=>['method'=>'select','value'=>'','options'=>$this->getClientOptions(),'excontainer'=>TRUE],
-            'Plot to show'=>['method'=>'select','value'=>key($plotOptions),'options'=>$plotOptions,'excontainer'=>TRUE],
-        ];
-        // get selctor
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $contentStructure['CanvasElement']['value']=$callingElement['EntryId'];
+        $contentStructure['Client']['options']=$this->getClientOptions();
+        $contentStructure['Plot to show']['value']=key($plotOptions);
+        $contentStructure['Plot to show']['options']=$plotOptions;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']['Content']=[];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
+        $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select client';

@@ -94,14 +94,21 @@ class Signals{
         // update attached trigger
         $relevantTrigger=$this->updateTrigger($signal);
         // send through transmitter if trigger is active
+        $trigger2reset=[];
         if (!empty($relevantTrigger)){
+            // process trigger
             foreach($relevantTrigger as $entryId=>$trigger){
                 $sendOnTriggerSelector=['Source'=>$this->entryTable,'Group'=>'Transmitter','Content'=>'%'.$entryId.'%'];
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sendOnTriggerSelector,TRUE) as $sendOnTriggerEntry){
                     if (boolval($trigger['Content']['isActive'])){
-                        $this->sendTrigger($sendOnTriggerEntry,$trigger);
+                        $triggerEntryId=$this->sendTrigger($sendOnTriggerEntry,$trigger);
+                        $trigger2reset[$triggerEntryId]=$triggerEntryId;
                     }
                 }
+            }
+            // reset trigger
+            foreach($trigger2reset as $triggerEntryId){
+                $this->resetTrigger($triggerEntryId,TRUE);
             }
         }
         return $signal;
@@ -114,7 +121,7 @@ class Signals{
     }
     public function getSignalPropertiesById(array $signalSelector,string $timespanDefinedByFormat='',string $timezone=''):array
     {
-        $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimrstamp'=>0];
+        $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimestamp'=>0];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
         foreach($signal['Content']['signal'] as $index=>$signalItem){
             if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
@@ -131,11 +138,11 @@ class Signals{
             if ($properties['max']===FALSE || $properties['max']<$signalItem['value']){
                 $properties['max']=$signalItem['value'];
             }
-            $properties['avgTimrstamp']+=$signalItem['timeStamp'];
+            $properties['avgTimestamp']+=$signalItem['timeStamp'];
         }
         $properties['avg']=($properties['count']==0)?FALSE:($properties['sum']/$properties['count']);
         $properties['range']=$properties['max']-$properties['min'];
-        $properties['avgTimrstamp']=round($properties['avgTimrstamp']/($properties['count']?:1));
+        $properties['avgTimestamp']=round($properties['avgTimestamp']/($properties['count']?:1));
         return $properties;
     }
 
@@ -190,7 +197,7 @@ class Signals{
             $trigger['Read']=$signal['Read'];
             $trigger['Write']=$signal['Write'];
             $trigger['Content']['isActive']=$this->slopDetector($trigger,$signal);
-            if (!isset($trigger['Content']['trigger'])){$trigger['Content']['trigger']=[];}
+            $trigger['Content']['trigger']=$trigger['Content']['trigger']??[];
             $trigger['Content']['trigger']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->add2history($trigger['Content']['trigger'],['timeStamp'=>time(),'value'=>intval($trigger['Content']['isActive'])],20);
             $relevantTrigger[$trigger['EntryId']]=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($trigger,TRUE);
         }
@@ -276,15 +283,14 @@ class Signals{
         return $html;
     }
 
-    private function sendTrigger($sendOnTriggerEntry,array $trigger)
+    private function sendTrigger($sendOnTriggerEntry,array $trigger):string
     {
         $name=$trigger['Name'].' was triggered';
         $entry2send=$sendOnTriggerEntry;
         $entry2send['Name']='';
         $entry2send['Content']=['Subject'=>$name,'Active if'=>'Active if "'.$trigger['Content']['Active if'].'"','Threshold'=>'Threshold "'.$trigger['Content']['Threshold'].'"'];
-        $success=$this->oc[$sendOnTriggerEntry['Content']['Transmitter']]->send($sendOnTriggerEntry['Content']['Recepient'],$entry2send);
-        $this->resetTrigger($trigger['EntryId'],TRUE);
-        return $success;
+        $this->oc[$sendOnTriggerEntry['Content']['Transmitter']]->send($sendOnTriggerEntry['Content']['Recepient'],$entry2send);
+        return $trigger['EntryId'];
     }
 
     private function getTriggerRow(array $trigger=[]):array
@@ -402,6 +408,7 @@ class Signals{
     {
         $metaOverwrite['tickLength']=($metaOverwrite['tickLength']??6)?:6;
         $metaOverwrite=array_merge($metaOverwrite,$signal['Params']['signal']??[]);
+        $metaOverwrite=$this->metaArrCleanup($metaOverwrite);
         $plotBaseId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId']],TRUE);
         $plot=['tag'=>'div','class'=>'signal-plot','style'=>[],'id'=>$plotBaseId.'-plot','keep-element-content'=>TRUE];
         $plot['style']['width']=$metaOverwrite['style']['width']??600;
@@ -413,10 +420,12 @@ class Signals{
         // reorganize data & get data properties
         $data=[];
         $meta=['xScaler'=>1,'xOffset'=>0,'yScaler'=>1,'yOffset'=>0,'xMin'=>NULL,'xMax'=>NULL,'yMin'=>NULL,'yMax'=>NULL,'dateFormat'=>'Y-m-d H:i:s'];
+        $value=0;
+        $item=['timeStamp'=>$item['timeStamp']??time()];
         foreach($signal['Content']['signal'] as $item){
-            $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],$item['dataType']);
+            $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],'float');
             if (!empty($metaOverwrite['normalizer'])){
-                $normalizer=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($metaOverwrite['normalizer']['value'],$item['dataType']);
+                $normalizer=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($metaOverwrite['normalizer']['value'],'float');
                 $value=$value/$normalizer;
                 $value-=1;
             }
@@ -424,8 +433,8 @@ class Signals{
                 $value+=$data[$item['timeStamp']]['value'];
             }
             // check if inside pre-set range
-            if (isset($metaOverwrite['xMin']) && ($item['timeStamp']??0)<$metaOverwrite['xMin']){continue;}
-            if (isset($metaOverwrite['xMax']) && ($item['timeStamp']??0)>$metaOverwrite['xMax']){continue;}
+            if (isset($metaOverwrite['xMin']) && ($item['timeStamp']??0)<intval($metaOverwrite['xMin'])){continue;}
+            if (isset($metaOverwrite['xMax']) && ($item['timeStamp']??0)>intval($metaOverwrite['xMax'])){continue;}
             // update min-, max-values
             if ($meta['xMin']>$item['timeStamp'] || $meta['xMin']===NULL){$meta['xMin']=$item['timeStamp'];}
             if ($meta['xMax']<$item['timeStamp'] || $meta['xMax']===NULL){$meta['xMax']=$item['timeStamp'];}
@@ -435,14 +444,18 @@ class Signals{
             $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-','color'=>$item['color']??''];
         }
         $meta=array_merge($meta,$metaOverwrite);
-        $meta['yMin']=floatval($meta['yMin']);
-        $meta['yMax']=floatval($meta['yMax']);
-        $meta['xMin']=floatval($meta['xMin']);
-        $meta['xMax']=floatval($meta['xMax']);
         // sorting and scaling data
         ksort($data);
-        $meta['xScaler']=($meta['xMax']==$meta['xMin'])?NAN:$plot['style']['width']/($meta['xMax']-$meta['xMin']);
-        $meta['yScaler']=($meta['yMax']==$meta['yMin'])?NAN:$plot['style']['height']/($meta['yMax']-$meta['yMin']);
+        if ($meta['xMax']==$meta['xMin']){
+            $meta['xMax']=$item['timeStamp']+1;
+            $meta['xMin']=$meta['xMin']-2;
+        }
+        if ($meta['yMax']==$meta['yMin']){
+            $meta['yMax']=1.05*($value?:1);
+            $meta['yMin']=0.95*$value;
+        }
+        $meta['xScaler']=$plot['style']['width']/($meta['xMax']-$meta['xMin']);
+        $meta['yScaler']=$plot['style']['height']/($meta['yMax']-$meta['yMin']);
         $meta['xOffset']=$meta['xMin']*$meta['xScaler'];
         $meta['yOffset']=$meta['yMin']*$meta['yScaler'];
         // generate bars html
@@ -567,6 +580,16 @@ class Signals{
             return '';
         }
         
+    }
+
+    private function metaArrCleanup(array $meta):array
+    {
+        $typeKeys=['xMax'=>'int','xMin'=>'int','xOffset'=>'int','yMax'=>'float','yMin'=>'float','yOffset'=>'float','yScaler'=>'float'];
+        foreach($typeKeys as $key=>$type){
+            if (!isset($meta[$key])){continue;}
+            $meta[$key]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($meta[$key],$type);
+        }
+        return $meta;
     }
 }
 ?>
