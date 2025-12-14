@@ -67,6 +67,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
         'Content'=>[
             'EntryId'=>['@tag'=>'p','@default'=>'','@excontainer'=>TRUE],
+            'Enabled'=>['@function'=>'select','@options'=>['No','Yes'],'@value'=>0,'@excontainer'=>TRUE],
             'Email account folder'=>['@tag'=>'input','@type'=>'text','@default'=>'','placeholder'=>'e.g. Bills/Energy','title'=>'If empty, the inbox is selcted','@excontainer'=>TRUE],
             'User'=>['@tag'=>'input','@type'=>'text','@default'=>'john@doe.com','@excontainer'=>TRUE],
             'Password'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
@@ -84,6 +85,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     public $transmitterDef=[
         'Type'=>['@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'],
         'Content'=>[
+            'Enabled'=>['@function'=>'select','@options'=>['No','Yes'],'@value'=>0,'@excontainer'=>TRUE],
             'Originator'=>['@tag'=>'input','@type'=>'text','@default'=>'Datapool','@excontainer'=>TRUE],
             'SMTP server'=>['@tag'=>'input','@type'=>'text','@default'=>'smtp.strato.de','@excontainer'=>TRUE],
             'Port'=>['@function'=>'select','@options'=>self::SMTP_PORTS,'@value'=>465,'@excontainer'=>TRUE],
@@ -179,11 +181,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return ['Source'=>$this->entryTable,'Group'=>$Group];
     }
 
-    private function id2entrySelector($id):array
+    private function id2entrySelector($id,array $templateSelector=[]):array
     {
         $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
         if (isset($canvasElement['Content']['Selector'])){
+            $canvasElement['Content']['Selector']['Group']=$canvasElement['Content']['Selector']['Group']?:$templateSelector['Group'];
+            $canvasElement['Content']['Selector']['Folder']=$canvasElement['Content']['Selector']['Folder']?:$templateSelector['Folder'];
+            $canvasElement['Content']['Selector']['Name']=$canvasElement['Content']['Selector']['Name']?:$templateSelector['Name'];
             return $this->oc['SourcePot\Datapool\Tools\MiscTools']->arrRemoveEmpty($canvasElement['Content']['Selector']);
         } else {
             return [];
@@ -192,10 +197,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     private function getReceiverSetting($id)
     {
-        $id=preg_replace('/\W/','_','INBOX-'.$id);
+        $id=preg_replace('/\W/','_',$id);
         $setting=['Class'=>__CLASS__.'-rec','EntryId'=>$id];
         $setting['Content']=[
             'EntryId'=>$id,
+            'Enabled'=>0,
             'User'=>'',
             'Password'=>'',
             'IMAP server'=>'imap.strato.de',
@@ -215,6 +221,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             'Unencrypted'=>['encryption'=>NULL,'authentication'=>'plain'],
         };
         $mailboxArr=[
+            'Enabled'=>$setting['Content']['Enabled']??0,
             'port'=>$setting['Content']['Port'],
             'host'=>$setting['Content']['IMAP server'],
             'timeout'=>intval($setting['Content']['Timeout']??3),
@@ -233,25 +240,27 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private function getReceiverMeta($id):string
     {
         $mailboxArr=$this->receiverSetting2mailboxArr($id);
-        $mailbox=new Mailbox($mailboxArr);
-        $matrix=[];
         $folderName=$mailboxArr['Folder']?:'INBOX';
-        try{
-            $folders=$mailbox->folders()->get();
-            foreach($folders as $folder){
-                foreach($folder->status() as $key=>$value){
-                    $matrix[$folder->name()][$key]=$value;
+        if (empty($mailboxArr['Enabled'])){
+            $matrix=['Notice'=>['Value'=>'Check settings, this mailbox is currently disabled']];
+        } else {
+            $mailbox=new Mailbox($mailboxArr);
+            $matrix=[];
+            try{
+                $folders=$mailbox->folders()->get();
+                foreach($folders as $folder){
+                    foreach($folder->status() as $key=>$value){
+                        $matrix[$folder->name()][$key]=$value;
+                    }
+                    if (stripos($folder->name(),$folderName)!==FALSE){
+                        $matrix[$folder->name()]['trStyle']=['background-color'=>'#ccc'];
+                    }
                 }
-                if (stripos($folder->name(),$folderName)!==FALSE){
-                    $matrix[$folder->name()]['trStyle']=['background-color'=>'#ccc'];
-                }
+            } catch(\Exception $e){
+                $matrix['Error'][]=$e->getMessage();
             }
-        } catch(\Exception $e){
-            $matrix['Error'][]=$e->getMessage();
         }
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Selected folder: '.$folderName]);
-        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Account folder']);
-        return $html;
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Account folder']);
     }
 
     private function todaysEmails($id)
@@ -259,6 +268,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'messageEntries'=>0,'alerts'=>'','errors'=>''];
         // get the mailbox
         $mailboxArr=$this->receiverSetting2mailboxArr($id);
+        if (empty($mailboxArr["Enabled"])){
+            $context['notice']='Mailbox is not enabled, please check settings.';
+            return $context;
+        }
         $mailbox=new Mailbox($mailboxArr);
         if (empty($mailboxArr['Folder'])){
             $folder=$mailbox->inbox();
@@ -266,7 +279,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $folder=$mailbox->folders()->find($mailboxArr['Folder']);
         }
         //create entry template
-        $entry=$this->id2entrySelector($id);
+        $entry=$this->id2entrySelector($id,['Folder'=>$mailboxArr['Folder']?:'INBOX']);
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
         foreach($folder->messages()->since(Carbon::now()->subDays(7))->withHeaders()->withFlags()->withBody()->get() as $message){
             $id=$mailboxArr['host'].$mailboxArr['username'].$message->uid();
@@ -539,7 +552,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     }
 
     private function getTransmitterSetting($callingClass){
-        $EntryId=preg_replace('/\W/','_','OUTBOX-'.$callingClass);
+        $EntryId=preg_replace('/\W/','_',$callingClass);
         $setting=['Class'=>'!'.__CLASS__.'-tec','EntryId'=>$EntryId];
         $setting['Content']=[];
         $settings=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($setting,TRUE);

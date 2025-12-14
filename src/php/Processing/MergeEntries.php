@@ -12,24 +12,41 @@ namespace SourcePot\Datapool\Processing;
 
 class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
-    private const DESCRIPTION='This processor merges entries into one or multiple target entries. 
-                               The target entry count depends on the amount of different "Map to"-values. 
-                               When the processor run is triggered, make sure that there are no entries left in the target canvas-element from any previous run. 
-                               Otherwise a new run will be taking pre-existing values as a starting point.';
+    private const INFO_MATRIX=[
+        ''=>['Value'=>'This processor merges entries into one or multiple target entries.'],
+        'Description'=>['Value'=>'The target entry count depends on the amount of different "Map to"-values.<br/>Make sure that there are no entries left in the target canvas-element from any previous run, hen you trigger the processor.<br/>Otherwise a new run will be taking pre-existing values as a starting point.'],
+    ];
     private $oc;
 
-    private $entryTable='';
-    private $entryTemplate=[
-        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
-    
     private const OPERATIONS=[
         'number(A+B)'=>'number(A+B)','number(A-B)'=>'number(A-B)','number(A*B)'=>'number(A*B)','number(A/B)'=>'number(A/B)','number(A%B)'=>'number(A%B)',
         'money(A+B)'=>'money(A+B)','money(A-B)'=>'money(A-B)',
         'string(A B)'=>'string(A B)','string(A | B)'=>'string(A | B)','string(A, B)'=>'string(A, B)','string(A; B)'=>'string(A; B)',
         'byte(A&B)'=>'byte(A&B)','byte(A|B)'=>'byte(A|B)','byte(A^B)'=>'byte(A^B)',
-        ];
+    ];
+    
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'Map from'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
+        'Map to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>['Group'=>'Group','Folder'=>'Folder','Name'=>'Name'],],
+        'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+    ];
+        
+    private const CONTENT_STRUCTURE_RULES=[
+        'New key: Content &rarr; ...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Init value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
+        'Key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
+        'or const value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+    ];
+        
+    private $entryTable='';
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+    ];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -84,9 +101,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getMergeEntriesInfo($callingElement){
-        $matrix=[];
-        $matrix['Description']=['<p style="width:40em;">'.self::DESCRIPTION.'</p>'];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Info']);
         return $html;
     }
@@ -124,42 +139,30 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMergeEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mergeing entries params','generic',$callingElement,['method'=>'getMergeEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mergeing entries settings','generic',$callingElement,['method'=>'getMergeEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging params '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging settings '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
     
     public function getMergeEntriesParamsHtml($arr){
-        $callingElement=$arr['selector'];
-        $contentStructure=[
-            'Map from'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
-            'Map to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>['Group'=>'Group','Folder'=>'Folder','Name'=>'Name'],],
-            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-            ];
-        $contentStructure['Map from']+=$callingElement['Content']['Selector'];
-        // get selctor
-        $callingElementArr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $callingElementArr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($callingElementArr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $callingElementArr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $callingElementArr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($callingElementArr['selector'],TRUE);
-        }
-        // get HTML
-        $callingElementArr['canvasCallingClass']=$callingElement['Folder'];
-        $callingElementArr['contentStructure']=$contentStructure;
-        $callingElementArr['caption']='Merging control: Select target for merged entries';
-        $callingElementArr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($callingElementArr);
-        if (empty($callingElementArr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
-        $matrix=['Parameter'=>$row];
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$callingElementArr['caption']]);
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html'].=$this->mergingParams($arr['selector']);
         return $arr;
+    }
+    
+    public function mergingParams($callingElement){
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr['canvasCallingClass']=$callingElement['Folder'];
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Merging control: Select target for merged entries';
+        $arr['noBtns']=TRUE;
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$callingElementArr['caption']]);
     }
 
     public function getMergeEntriesSettingsHtml($arr){
@@ -169,15 +172,10 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function mergingRules($callingElement){
-        $contentStructure=[
-            'New key: Content &rarr; ...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Init value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
-            'Key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
-            'or const value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
-            ];
-        $contentStructure['Key']+=$callingElement['Content']['Selector'];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -205,7 +203,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function mergeEntries($base,$sourceEntry,$result,$testRun){
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $params=current($base['getmergeentriesparamshtml'])['Content'];
+        $params=current($base['mergingparams'])['Content'];
         $failure=FALSE;
         // get tgarget selector and existing entry
         if (isset($flatSourceEntry[$params['Map from']])){

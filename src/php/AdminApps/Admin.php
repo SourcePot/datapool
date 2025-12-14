@@ -25,6 +25,18 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     ];
     private const TEMPLATE_APPS=['GenericApps'=>'SourcePot\Datapool\GenericApps\Documents','DataApps'=>'SourcePot\Datapool\DataApps\Misc'];
     
+    private const APP_PARAMS=[
+        'pageTitle'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'],
+        'metaViewport'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>['min-width'=>'50vw']],
+        'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
+        'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
+        'logLevel'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::LOG_LEVEL,'excontainer'=>TRUE],
+        'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
+        'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
+        'homePageContent'=>['method'=>'select','options'=>[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'],'value'=>'video','excontainer'=>TRUE],
+        'Spatie path to Xpdf pdftotext executable'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>['min-width'=>'50vw']],
+    ];    
+
     private $oc;
     private $entryTable='';
     
@@ -283,25 +295,22 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     
     public function getPageSettingsHtml()
     {
-        $homePageContentOptions=[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'];
-        $contentStructure=[
-            'pageTitle'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Datapool'],
-            'metaViewport'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'width=device-width, initial-scale=1','style'=>['min-width'=>'50vw']],
-            'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
-            'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
-            'logLevel'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::LOG_LEVEL,'excontainer'=>TRUE],
-            'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
-            'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
-            'homePageContent'=>['method'=>'select','options'=>$homePageContentOptions,'value'=>'video','excontainer'=>TRUE],
-            'Spatie path to Xpdf pdftotext executable'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>['min-width'=>'50vw']],
-            ];
-        // get selector
-        $arr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'movedEntryId'=>'init'];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById(['Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init']);
-        // get HTML
-        $arr['contentStructure']=$contentStructure;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,TRUE);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->row2table($row,'Web application settings',TRUE);
+        $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryById(['Class'=>'SourcePot\Datapool\Foundation\Backbone','EntryId'=>'init']);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (isset($formData['cmd']['save'])){
+            $entry['Content']=$formData['val'];
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->updateEntry($entry);
+        }
+        // build html
+        $matrix=[];
+        foreach(self::APP_PARAMS as $key=>$arr){
+            $arr=array_merge($arr,['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$key],'value'=>$entry['Content'][$key]]);
+            $method=$arr['method'];
+            $matrix[$key]=['Value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->$method($arr)];
+        }
+        $arr=['tag'=>'button','element-content'=>'Save','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['save']];
+        $matrix['']=['Value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($arr)];
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Properties','hideKeys'=>FALSE,'hideHeader'=>TRUE]);
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
     }
 

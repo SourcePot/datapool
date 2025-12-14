@@ -341,11 +341,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger(['run'=>__CLASS__]);
         // copy feed items to canvas element
         $canvasElement=$this->id2canvasElement($id);
-        $sourceSelector=$this->receiverSelector($id);
         $targetSelector=$canvasElement['Content']['Selector'];
         $processId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($targetSelector);
         $targetSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arrRemoveEmpty($targetSelector);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($sourceSelector,TRUE,'Read','Date') as $feedItem){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$this->entryTable],TRUE,'Read','Date') as $feedItem){
             if ($this->oc['SourcePot\Datapool\Tools\MiscTools']->wasTouchedByClass($feedItem,$processId,FALSE)){
                 // feed entry was already processed
                 $context['Already processed an skipped']++;                    

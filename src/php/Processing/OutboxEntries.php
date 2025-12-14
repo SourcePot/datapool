@@ -13,7 +13,20 @@ namespace SourcePot\Datapool\Processing;
 class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
-    
+
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'Outbox class'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>[]],
+        'Recipient'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>[]],
+        'When done'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['Keep entries','Delete sent entries']],
+    ];
+        
+    private const CONTENT_STRUCTURE_RULES=[
+        'Text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'placeholder'=>'e.g. Dear Sir or Madam, the import for the attached document failed. Please capture the docuument manually.','rows'=>4,'cols'=>20,'excontainer'=>TRUE],
+        ' '=>['method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'],
+        'use column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE],
+        'Add to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Subject','options'=>['Subject'=>'Subject','Message'=>'Message']],
+    ];
+        
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
@@ -131,44 +144,26 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function outboxParams($callingElement){
         $return=['html'=>'','Parameter'=>[],'result'=>[]];
         if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
-        $contentStructure=[
-            'Outbox class'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter')],
-            'Recipient'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>$this->recipientOptions],
-            'When done'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['Keep entries','Delete sent entries']],
-        ];
-        // get selctorB
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $contentStructure['Outbox class']['options']=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
+        $contentStructure['Recipient']['options']=$this->recipientOptions;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']['Content']=['Column to delay'=>'Name'];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // load outbox class
-        if (isset($arr['selector']['Content']['Outbox class'])){$this->outboxClass=$arr['selector']['Content']['Outbox class'];}
-        // get HTML
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Forward entries from outbox';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['setRowStyle']='background-color:#a00;';}
-        $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
     private function outboxRules($callingElement){
-        $msgPlaceholder='e.g. Dear Sir or Madam, the import for the attached document failed. Please capture the docuument manually.';
-        $contentStructure=[
-            'Text'=>['method'=>'element','tag'=>'textarea','element-content'=>'','keep-element-content'=>TRUE,'placeholder'=>$msgPlaceholder,'rows'=>4,'cols'=>20,'excontainer'=>TRUE],
-            ' '=>['method'=>'element','tag'=>'p','keep-element-content'=>TRUE,'element-content'=>'OR'],
-            'use column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE],
-            'Add to'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Subject','options'=>['Subject'=>'Subject','Message'=>'Message']],
-        ];
-        $contentStructure['use column']+=$callingElement['Content']['Selector'];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;

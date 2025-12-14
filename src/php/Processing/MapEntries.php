@@ -14,17 +14,34 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
 
+    private const MAX_TEST_TIME=5000000000;   // in nanoseconds
+    private const MAX_PROC_TIME=100000000000;   // in nanoseconds
+    
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+        'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Mode'=>['method'=>'select','value'=>'entries','excontainer'=>TRUE,'options'=>['entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip']],
+        'Attached file'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
+        'Order by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE],
+        'Order'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0=>'Descending',1=>'Ascending']],
+        'No match placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE),
+    ];
+
+    private const CONTENT_STRUCTURE_RULES=[
+        'Target value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        '...value selected by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>['Linked file'=>'Linked file']],
+        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
+        'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+    ];    
+    
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
         
-    private $paramsTemplate=['Mode'=>'entries'];
-
-    private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=100000000000;   // in nanoseconds
-    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -74,7 +91,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getMapEntriesWidget($callingElement){
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping','generic',$callingElement,['method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMapEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
 
     private function getMapEntriesInfo($callingElement){
@@ -118,7 +135,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMapEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings','generic',$callingElement,['method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping entries settings '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMapEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -131,48 +148,24 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function mappingParams($callingElement){
-        $contentStructure=[
-            'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
-            'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            'Mode'=>['method'=>'select','value'=>$this->paramsTemplate['Mode'],'excontainer'=>TRUE,'options'=>['entries'=>'Entries','csv'=>'Create csv','zip'=>'Create zip']],
-            'Attached file'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
-            'Order by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Date','standardColumsOnly'=>TRUE],
-            'Order'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0=>'Descending',1=>'Ascending']],
-            'No match placeholder'=>array('method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE),
-            ];
-        $contentStructure['Order by']+=$callingElement['Content']['Selector'];
-        // get selctor
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Mapping control: Select mapping target and type';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){$row['trStyle']=['background-color'=>'#a00'];}
-        $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function mappingRules($callingElement){
-        $contentStructure=[
-            'Target value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            '...value selected by'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>['Linked file'=>'Linked file']],
-            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
-            'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
-            'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
-            ];
-        $contentStructure['...value selected by']+=$callingElement['Content']['Selector'];
-        $contentStructure['Target column']+=$callingElement['Content']['Selector'];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -186,14 +179,16 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=['Mapping statistics'=>['Entries'=>['value'=>0],
-                                        'Spreadsheet entries'=>['value'=>0],
-                                        'Files added to zip'=>['value'=>0],
-                                        'Skip rows'=>['value'=>0],
-                                        'Output format'=>['value'=>'Entries'],
-                                        'Comment'=>['value'=>''],
-                                        ]
-                    ];
+        $result=['Mapping statistics'=>
+            [
+            'Entries'=>['value'=>0],
+            'Spreadsheet entries'=>['value'=>0],
+            'Files added to zip'=>['value'=>0],
+            'Skip rows'=>['value'=>0],
+            'Output format'=>['value'=>'Entries'],
+            'Comment'=>['value'=>''],
+            ]
+        ];
         // loop through entries
         $params=current($base['mappingparams']);
         $base['Attachment name']=date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);

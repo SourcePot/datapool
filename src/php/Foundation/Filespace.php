@@ -232,7 +232,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
         //
         $entry=['rowCount'=>0,'rowIndex'=>0,'access'=>'NO ACCESS RESTRICTION'];
-        $selector['EntryId']=trim($selector['EntryId'],'%');
+        $selector['EntryId']=trim($selector['EntryId']?:'','%');
         $entry['file']=$this->selector2file($selector);
         $arr=$this->oc['SourcePot\Datapool\Root']->file2arr($entry['file']);
         $entry['rowCount']=(empty($arr))?0:1;
@@ -312,9 +312,10 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
     public function deleteEntries(array $selector,bool $isSystemCall=FALSE):array
     {
         foreach($this->entryIterator($selector,$isSystemCall) as $EntryId=>$entry){
+            if (empty($entry['file'])){continue;}
             $this->addStatistic('deleted files',intval(unlink($entry['file'])));
         }
-        return $this->getStatistic('deleted files');
+        return $this->getStatistic();
     }
 
     /**
@@ -327,6 +328,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
     public function deleteEntry(array $selector,bool $isSystemCall=FALSE):array
     {
         foreach($this->entryIterator($selector,$isSystemCall) as $EntryId=>$entry){
+            if (empty($entry['file'])){continue;}
             return $this->addStatistic('deleted files',intval(unlink($entry['file'])));
         }
         return $this->addStatistic('deleted files',0);

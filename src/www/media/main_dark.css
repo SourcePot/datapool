@@ -220,6 +220,7 @@ p.cover{
 table{
     float:left;
     clear:both;
+    border-collapse: collapse;
 }
 table.std,div.table{
     clear:none;
@@ -262,8 +263,7 @@ label{
     line-height:initial;
 }
 tr:hover{
-    color:var(--color);
-    background-color:var(--bgColorA);
+    background-color: var(--bgColorA);
 }
 th{
     color:var(--colorA);

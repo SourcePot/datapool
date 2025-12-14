@@ -12,16 +12,53 @@ namespace SourcePot\Datapool\Processing;
 
 class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
+    private $oc;
+
     private const INTERNAL_MAPPING=[
         'sectionIndex'=>'ParseEntries :: sectionIndex',
         'section'=>'ParseEntries :: section',
     ];
 
     private const SPLIT_MARKER='__SPLIT__';
+
+    private const CONTENT_STRUCTURE_PARAMS=[
+        'Source column'=>['method'=>'keySelect','value'=>'','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE],
+        'Pre-processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>[''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'],'title'=>''],
+        'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'No match placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE],
+    ];
+    
+    private const CONTENT_STRUCTURE_SECTION_RULES=[
+        'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. I\s{0,1}n\s{0,1}v\s{0,1}o\s{0,1}i\s{0,1}c\s{0,1}e\s{0,1}','excontainer'=>TRUE],
+        '...is section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['end indicator','start indicator'],'title'=>''],
+        'Section type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'singleEntry','options'=>['singleEntry'=>'Single entry','multipleEntries'=>'Multiple entries'],'title'=>''],
+        'Section name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. Invoice start','excontainer'=>TRUE],
+    ];
+    
+    private const CONTENT_STRUCTURE_RULES=[
+        'Rule relevant on section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[]],
+        'Constant or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE,'title'=>"Add your regular expression to search for matches within the 'Source column' content here. You can check your regular expressions on different web pages. Use brackets to define sub matches. 'Match index'=0 wil return the whole match,\n'Match index'=1 the first sub match defined by the first set if brakets,..."],
+        'Match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9,10]],
+        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
+        'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+        'Match required'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
+    ];
+
+    private const CONTENT_STRUCTURE_MAPPER_RULES=[
+        'Source column'=>['method'=>'keySelect','value'=>'','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE,'addColumns'=>self::INTERNAL_MAPPING],
+        '...or constant'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE],
+        'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Source value'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['any','must be set'],'keep-element-content'=>TRUE],
+        'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+    ];
     
     private $internalData=[];
-
-    private $oc;
 
     private $entryTable='';
     private $entryTemplate=[
@@ -156,44 +193,25 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function parserParams($callingElement){
-        $contentStructure=[
-            'Source column'=>['method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE],
-            'Pre-processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>[''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'],'title'=>''],
-            'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-            'No match placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE],
-            ];
-        $contentStructure['Source column']+=$callingElement['Content']['Selector'];
-        // get selector
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
+        $contentStructure['Source column']['value']=$this->paramsTemplate['Source column'];
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        $elementId=key($formData['val']);
-        if (isset($formData['cmd'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
-        // get HTML
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Parser control: Select parser target and type';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        if (empty($arr['selector']['Content'])){
-            $row['trStyle']=['background-color'=>'#a00'];
-        }
-        $matrix=['Parameter'=>$row];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
     
     private function parserSectionRules($callingElement){
-        $contentStructure=[
-            'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. I\s{0,1}n\s{0,1}v\s{0,1}o\s{0,1}i\s{0,1}c\s{0,1}e\s{0,1}','excontainer'=>TRUE],
-            '...is section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['end indicator','start indicator'],'title'=>''],
-            'Section type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'singleEntry','options'=>['singleEntry'=>'Single entry','multipleEntries'=>'Multiple entries'],'title'=>''],
-            'Section name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. Invoice start','excontainer'=>TRUE],
-            ];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_SECTION_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -203,19 +221,11 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function parserRules($callingElement){
-        // complete section selector
-        $contentStructure=[
-            'Rule relevant on section'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>$this->sectionNamesById],
-            'Constant or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE,'title'=>"Add your regular expression to search for matches within the 'Source column' content here. You can check your regular expressions on different web pages. Use brackets to define sub matches. 'Match index'=0 wil return the whole match,\n'Match index'=1 the first sub match defined by the first set if brakets,..."],
-            'Match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9,10]],
-            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
-            'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
-            'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
-            'Match required'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
-            ];
-        $contentStructure['Target column']+=$callingElement['Content']['Selector'];
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure['Rule relevant on section']['options']=$this->sectionNamesById;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -225,18 +235,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function mapperRules($callingElement){
-        $contentStructure=[
-            'Source column'=>['method'=>'keySelect','value'=>$this->paramsTemplate['Source column'],'excontainer'=>TRUE,'addSourceValueColumn'=>TRUE,'addColumns'=>self::INTERNAL_MAPPING],
-            '...or constant'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
-            'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE],
-            'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Source value'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['any','must be set'],'keep-element-content'=>TRUE],
-            'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
-            ];
-        //$contentStructure['Source column']['addColumns']
-        $contentStructure['Source column']+=$callingElement['Content']['Selector'];
-        $contentStructure['Target column']+=$callingElement['Content']['Selector'];
+        $contentStructure=self::CONTENT_STRUCTURE_MAPPER_RULES;
+        $contentStructure['Source column']['value']=$this->paramsTemplate['Source column'];
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
@@ -253,13 +255,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=[
-            'Parser statistics'=>[
-                'Entries'=>['value'=>0],
-                'Success'=>['value'=>0],
-                'Failed'=>['value'=>0],
-                'Skip rows'=>['value'=>0]
-                ]
-            ];
+        'Parser statistics'=>[
+            'Entries'=>['value'=>0],
+            'Success'=>['value'=>0],
+            'Failed'=>['value'=>0],
+            'Skip rows'=>['value'=>0]
+            ]
+        ];
         $result['Mutliple entries → one target']=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if ($sourceEntry['isSkipRow']){
@@ -281,15 +283,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $statistics+$result;
     }
     
-    /**
-    * This method parses the provided entry
-    *
-    * @param    array $base Contains all rules and parameters
-    * @param    array $sourceEntry The entry to be processed
-    * @param    array $result Contains an array of matices with results to be presented to the user, this method will add own values to the result
-    * @param    bool $testRun Processes the entry but does not move/update the entry if TRUE
-    * @return   array  Contains an array of matices with results to be presented to the user
-    */
     private function parseEntry($base,$sourceEntry,$result,$testRun):array
     {
         $params=current($base['parserparams']);

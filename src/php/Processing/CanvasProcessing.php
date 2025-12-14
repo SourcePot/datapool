@@ -18,7 +18,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
     
     public function __construct($oc){
         $this->oc=$oc;
@@ -115,7 +115,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function getCanvasProcessingSettingsHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html']=$arr['html']??'';
         $arr['html'].=$this->canvasProcessingRules($arr['selector']);
         return $arr;
     }

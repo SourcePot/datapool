@@ -181,10 +181,6 @@ class HTMLbuilder{
     
     public function select(array $arr,bool $returnArr=FALSE):string|array
     {
-        // This function returns the HTML-select-element with options based on $arr.
-        // Required keys are 'options', 'key', 'callingClass' and 'callingFunction'.
-        // Key 'label', 'selected', 'triggerId' are optional.
-        // If 'hasSelectBtn' is set, a button will be added which will be clicked if an item is selected.
         if (!isset($arr['key'])){
             throw new \ErrorException('Function '.__FUNCTION__.': Missing key-key in argument arr',0,E_ERROR,__FILE__,__LINE__);
         }
@@ -273,18 +269,6 @@ class HTMLbuilder{
         return $this->select($arr);
     }
     
-    /**
-    * The method returns an html-selector for entry keys. The entry is selected by parameter $arr. 
-    * $arr options are:
-    * 'value' or 'selected' - Is the value selecting the option
-    * 'standardColumsOnly' - If TRUE, html-selector options will only contain standard columns 
-    * 'addSourceValueColumn' - If TRUE, an option 'useValue' will is added 
-    * 'addColumns' - (array), options to be added to the html-selector 
-    * 'showSample' - If TRUE, entry sample values are added 
-    *
-    * @param array $arr Is the entry selector and options  
-    * @return array HTML-selector
-    */
     public function keySelect(array $arr,array $appendOptions=[]):string
     {
         if (empty($arr['Source'])){return '';}
@@ -360,14 +344,6 @@ class HTMLbuilder{
         return $html;
     }
     
-    /**
-    * This method returns an html-button to trigger entry processing such as download, delete, etc.
-    * The method is called with an empty $arr argument by SourcePot\Datapool\Root::run() to process the button commands before the web page is built.
-    *
-    * @param array $arr Is the control-array it must be empty to process the last user action OR
-    *                   it must contain the entry selector (key="selector") and key="cmd" which selects the button template  
-    * @return string The html-tag for the button 
-    */
     public function btn(array $arr=[]):string
     {
         // This function returns standard buttons based on argument arr.
@@ -471,12 +447,6 @@ class HTMLbuilder{
         return $html;
     }
 
-    /**
-    * This method ios a wrapper method for method btn() which returns an entry delete html-button.
-    *
-    * @param array $arr It must contain the entry selector (key="selector")  
-    * @return string The html-tag for the button 
-    */
     public function deleteBtn(array $arr):string
     {
         $arr['cmd']='delete';
@@ -484,12 +454,6 @@ class HTMLbuilder{
         return $html;
     }
     
-    /**
-    * This method is a wrapper method for method btn() which returns an entry download html-button.
-    *
-    * @param array $arr It must contain the entry selector (key="selector")  
-    * @return string The html-tag for the button 
-    */
     public function downloadBtn(array $arr):string
     {
         $arr['cmd']='download';
@@ -497,12 +461,6 @@ class HTMLbuilder{
         return $html;
     }
 
-    /**
-    * This method is a wrapper method for method btn() which returns an entry download html-button.
-    *
-    * @param array $arr It must contain the entry selector (key="selector")  
-    * @return string The html-tag for the button 
-    */
     public function selectBtn(array $arr):string
     {
         $arr['cmd']='select';
@@ -517,13 +475,6 @@ class HTMLbuilder{
         return $html;
     }
 
-    /**
-    * This method provides an asynchronous file upload widget. It interacts with fileUplaod.js. The widget will be detected based on the style class "file-upload"
-    *
-    * @param array $element Is an array containing basic elemnt settings such as style, key, callingClass, callingFunction  
-    * @param array $settings Is an array containing settings to be held as session vars such as: formProcessingClass, formProcessingFunction, formProcessingArg    
-    * @return string The html-tag for the file upload widget
-    */
     public function fileUpload(array $element, array $settings):string
     {
         if (empty($element['callingClass']) || empty($element['callingFunction'])){
@@ -692,10 +643,6 @@ class HTMLbuilder{
         return $html;
     }
     
-    /**
-    * @param array $arr Contains the relevant entry=$arr['selector'] and key, i.e. $arr[key] selects the respective access-byte, e.g. 'Read', 'Write' or 'Privileges'. 
-    * @return string This method returns html-elements, i.e. checkboxes and a safe button as user interface to set/update an access byte.
-    */
     public function setAccessByte(array $arr):string
     {
         if (!isset($arr['selector'])){
@@ -715,11 +662,6 @@ class HTMLbuilder{
         return $html;
     }
 
-    /**
-    * This method returns an html-table containing a file upload facility as well as the gerenic buttons 'remove' and 'delete'.
-    * $arr['hideDownload']=TRUE hides the downlaod-button, $arr['hideRemove']=TRUE hides the remove-button and $arr['hideDelete']=TRUE hides the delete-button. 
-    * @return string
-    */
     public function entryControls(array $arr,bool $isDebugging=FALSE):string
     {
         $tableStyle=['clear'=>'none','margin'=>'0','min-width'=>'200px'];
@@ -813,7 +755,6 @@ class HTMLbuilder{
             $this->oc['logger']->log('error',$errorMsg,[]);
             return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
         }
-        $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr); // <----------------- Update old EntryId
         // get base selector and storage object
         if (!empty($arr['selector']['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
@@ -824,13 +765,15 @@ class HTMLbuilder{
         }
         // initialization
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
+        // get the first entry
+        $firstEntry=$arr['selector'];
+        $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         if ($arr['returnRow']){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($firstEntry,['singleEntry'=>TRUE]);
             $arr['maxRowCount']=1;
         } else {
             $arr['maxRowCount']=$arr['maxRowCount']?:999;
         }
-        $firstEntry=$arr['selector'];
-        $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $this->oc[$storageObj]->entryByIdCreateIfMissing($firstEntry,TRUE);
         // command processing
         $movedEntryId='';
@@ -845,16 +788,16 @@ class HTMLbuilder{
             $entry=array_merge($arr['selector'],$selector,$formData['val'][$selector['EntryId']]);
             $this->oc[$storageObj]->updateEntry($entry,$isSystemCall);
         } else if (isset($formData['cmd']['delete'])){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['removeEntryId'=>$selector['EntryId']]);
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['removeEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['add'])){
             $endIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($selector['EntryId']);
             $newEntry=$arr['selector'];
             $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($selector['EntryId'],$endIndex+1);
             $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($newEntry);
         } else if (isset($formData['cmd']['moveUp'])){
-            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveUpEntryId'=>$selector['EntryId']]);
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['moveUpEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['moveDown'])){
-            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveDownEntryId'=>$selector['EntryId']]);
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['moveDownEntryId'=>$selector['EntryId']]);
         }
         // html creation
         $noWriteAccess=FALSE;
@@ -921,7 +864,7 @@ class HTMLbuilder{
                 $btnArr['key'][]=$entry['EntryId'];
                 $addBtn=$btnArr;
             }
-            if ($currentIndex>$startIndex){
+            if (empty($arr['returnRow'])){
                 $btnArr=array_merge($arr,self::BUTTONS['moveDown'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>'0 0 0 5px']]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){
@@ -929,7 +872,7 @@ class HTMLbuilder{
                 }
                 $matrix[$rowIndex]['   ']=$btnArr;    
             }
-            if ($currentIndex<$endIndex && $arr['returnRow']>1){
+            if (empty($arr['returnRow'])){
                 $btnArr=array_merge($arr,self::BUTTONS['moveUp'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){
@@ -1021,12 +964,6 @@ class HTMLbuilder{
         }
     }        
     
-    /**
-    * This method returns html-string or adds the html content to the 'html'-key of the parameter $presentArr.
-    * The html-string presents the selected entry based on the presentation settings.
-    * @param array Contains the entry selector. 
-    * @return array|string
-    */
     public function presentEntry(array $presentArr):array|string
     {
         $html='';

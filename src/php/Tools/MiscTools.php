@@ -13,6 +13,8 @@ namespace SourcePot\Datapool\Tools;
 final class MiscTools{
 
     private $oc=NULL;
+
+    private const SERIALIZED_INDICATOR='@@@@';
     
     public $emojis=[];
     private $emojiFile='';
@@ -527,10 +529,6 @@ final class MiscTools{
     
     public function arr2file(array $inArr,string $fileName='',bool $addDateTime=FALSE):int|bool
     {
-        /*   This function converts t$inArr to json format and saves the json data to a file. 
-        *    If the fileName argument is empty, it will be created from the name of the calling class and function.
-        *    The function returns the byte count written to the file or false in case of an error.
-        */
         if (empty($fileName)){
             $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2);
             $fileName='';
@@ -548,32 +546,23 @@ final class MiscTools{
         return file_put_contents($file,$json);
     }
         
-    /**
-    * @return string This method converts an array to the corresponding json string.
-    */
     public function arr2json(array $arr):string
     {
-        return json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_IGNORE);
+        // json encoding but serialize on failure
+        $jsonStr=json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_IGNORE);
+        return $jsonStr?:(self::SERIALIZED_INDICATOR.serialize($arr));
     }
     
-    /**
-    * @return arr This method converts a json string to the corresponding array.
-    */
     public function json2arr(string $json):array
     {
-        if (is_string($json)){
-            $arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
-            if (empty($arr)){
-                $arr=json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);
-            }
-            if (empty($arr)){
-                return [];
-            } else {
-                return $arr;
-            }
+        $json=strval($json);
+        if (strpos($json,self::SERIALIZED_INDICATOR)===0){
+            $arr=unserialize(substr($json,strlen(self::SERIALIZED_INDICATOR)));
         } else {
-            return [];
+            $arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
+            $arr=$arr?:json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);
         }
+        return $arr?:[];
     }
     
     /**
