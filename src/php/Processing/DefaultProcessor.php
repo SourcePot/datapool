@@ -209,6 +209,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
             $result['Statistics']['Entries']['value']++;
         }
+        // present result
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']);
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];

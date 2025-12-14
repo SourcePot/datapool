@@ -31,8 +31,9 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
     ];
 
-    private const INFO='This processor receives entries from a data source. You need to select the receiver through "Inbox source" first. This will load the respective receiver widget.<br/><br/>In addition this processor forwards received or uploaded entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.';
-
+    private const INFO_MATRIX=[
+        'Info'=>['Commemt'=>'This processor receives entries from a data source. You need to select the receiver through "Inbox source" first. This will load the respective receiver widget.<br/>In addition, this processor forwards received or uploaded entries to different destinations/targets based on conditions.<br/>If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.'],
+    ];
     private $inboxClass='__NOTSET__';
     
     private $entryTable='';
@@ -95,7 +96,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getInboxEntriesInfo($callingElement){
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Info'=>[self::INFO]],'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
