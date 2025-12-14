@@ -56,15 +56,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $this->oc=$oc;
     }
 
-    public function init()
-    {
-    }
-    
-    /**
-    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
-    * @param    string $vars Initial persistent data space
-    * @return   array  Array Updateed persistent data space
-    */
     public function job(array $vars):array
     {
         $vars['Last optimised']=$vars['Last optimised']??[];
@@ -169,9 +160,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $matrix;
     }
     
-    /**
-    * @return string|FALSE The method returns the database name or FALSE if connection to the database failed.
-    */
     public function getDbName():string|bool
     {
         if ($this->dbObj){
@@ -183,9 +171,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         }
     }
     
-    /**
-    * @return array|FALSE The method returns entry template for all columns of the provided database table or all columns of all tables if no table is provided or FALSE if the table does not exist.
-    */
     public function getEntryTemplate(string|bool $table=FALSE):array|bool
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'table'=>$table];
@@ -200,12 +185,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return FALSE;
     }
     
-    /**
-    * This function returns the entry template based on the root entry template.
-    * It creates all tables which do not exist.
-    *
-    * @return array The method returns the entry template array for the table.
-    */
     public function getEntryTemplateCreateTable(string $table,string $callingClass=''):array
     {
         // If template is registered already, return this template
@@ -249,12 +228,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $indices;
     }
 
-    /**
-    * The method removes old indices as well as the primary key and adds the standard indices
-    *
-    * @param array $tabel Is the database table  
-    * @return PDOstatement Is teh statement after execution of the prepared sql-statement
-    */
     public function setTableIndices(string $table)
     {
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
@@ -276,10 +249,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $this->executeStatement($sql,[]);
     }
 
-    /**
-    * This function selects the entry-specific unifyEntry() function based on $entry['Source']
-    * If the $entry-specific unifyEntry() function is found it will be used to unify the entry.
-    */
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
     {
         if (empty($entry['Source'])){
@@ -314,13 +283,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
     
-    /**
-    * The method adds entry-Type and returns the entry. Entry-Type is the second- level selector after EntryId, Name, Folder and Group.
-    * The selector is used for language-specific as well as file MIME-type specific entry handling.
-    *
-    * @param array $entry Is the orginal entry  
-    * @return array $entry Is the enriched entry
-    */
     public function addType2entry(array $entry, $lngCode=NULL):array
     {
         // recover existing type
@@ -353,11 +315,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
 
-    /**
-    * This function establishes the database connection and saves the PDO-object in dbObj.
-    * The database user credentials will be taken from 'connect.json' in the '.\setup\Database\' directory.
-    * 'connect.json' file will be created if it does not exist. Make sure database user credentials in connect.json are valid for your database.
-    */
     public function connect(string $class=__CLASS__, string $entryId='connect', bool $exitOnException=TRUE):object|bool
     {
         $dbObj=FALSE;
@@ -383,11 +340,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $dbObj;
     }
     
-    /**
-    * The method collects all relevant data of the database tables.
-    *
-    * @return array Is content of the global variable 'dbInfo'
-    */
     private function collectDatabaseInfo():array
     {
         $GLOBALS['dbInfo']=[];
@@ -442,9 +394,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     /**
     * This function creates a sql-query from a selector.
-    * For types VARCHAR and BLOB the mysql keyword LIKE is used, for all other datatypes math operators will be used.
+    * For types VARCHAR and BLOB the mysql keyword LIKE will be used, for all other datatypes math operators will be used.
     * If no operator is provided the '=' operator will be applied. Use '!' operator for 'NOT EQUAL'.
-    * Operator need to be added to the end of the column name with the selector,
+    * The operator needs to be added at the end of the column name within the selector,
     * e.g. column name 'Date>=' means Dates larger than or equal to the value provided in the selctor array will be returned.
     * If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
     * e.g. 'Date|[]|Start' -> refers to column 'Date'.
@@ -684,21 +636,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $result;
     }
     
-    /**
-    * The method creates an array containing an EntryId-list as SQL-suffix of the entries selected by the method parameters.
-    *
-    * @param array $selector Is the selector  
-    * @param bool $isSystemCall If true read and write access is granted  
-    * @param string $rightType Sets the relevant right-type for the creation of the EntryId-list
-    * @param string|bool $orderBy Selects the column the EntryId-list will be ordered by
-    * @param bool $isAsc Selects order direction for the EntryId-list
-    * @param int|bool|string $limit Limits the size of the Entry-list
-    * @param int|bool|string $offset Set the start of the Entry-list
-    * @param array $selectExprArr Sets the select column of the database table (is irrelevant in this context)
-    * @param bool $removeGuideEntries If true Guide-entries will be removed from the Entry-list
-    *
-    * @return array Array containing the EntryId-list as SQL-suiffix
-    */
     private function selector2idGroups(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeFile=TRUE):array
     {
         $groupIdIndex=0;
@@ -721,13 +658,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return 'WHERE `'.'EntryId'.'` IN('.implode(',',$ids).')';
     }
 
-    /**
-    * This method deletes the selected entries including linked files 
-    * and returns the count of deleted entries or false on error.
-    *
-    * @param array $selector Is the selector to select the entries to be deleted  
-    * @return int|boolean The count of deleted entries or false on failure
-    */
     public function deleteEntries(array $selector,bool $isSystemCall=FALSE):array
     {
         // check for lock
@@ -748,12 +678,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $this->addStatistic('deleted',$rowCount);
     }
     
-    /**
-    * This method deletes files and updates the statistics.
-    *
-    * @param array $selector Is the selector to select the entries to be deleted  
-    * @return int|boolean The count of deleted entries or false on failure
-    */
     public function removeFile(string $file):bool
     {
         if (is_file($file)){
@@ -763,13 +687,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $removed??FALSE;
     }
 
-    /**
-    * This method inserts the provided entry into the selected database table.
-    * Default values are added if any entry property is missing.
-    *
-    * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
-    * @return array|boolean The method returns the inserted entry or false
-    */
     public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
@@ -807,25 +724,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
 
-    /**
-    * The method selects entries based on the selector and updates these entries based on the provided entry.
-    * The method employs a two step approach: 
-    * 1. Creation of an EntryId-list based on the provided selector and parameters, read access is required
-    * 2. Update based on the EntryId-list, write access is required
-    *
-    * @param array $selector Is the selector  
-    * @param array $entry Is the template used for the entry update  
-    * @param bool $isSystemCall If true read and write access is granted  
-    * @param string $rightType Sets the relevant right-type for the creation of the EntryId-list
-    * @param string|bool $orderBy Selects the column, the EntryId-list will be ordered by
-    * @param bool $isAsc Selects order direction for the EntryId-list
-    * @param int|bool $limit Limits the size of the Entry-list
-    * @param int|bool $offset Set the start of the Entry-list
-    * @param array $selectExprArr Sets the select column of the database table (is irrelevant in this context)
-    * @param bool $removeGuideEntries If true Guide-entries will be removed from the Entry-list
-    *
-    * @return int|boolean The updated entry count or false on failure
-    */
     public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=FALSE,$isDebugging=FALSE):int
     {
         // only the Admin has the right to change data in the Privileges column
@@ -865,16 +763,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $this->getStatistic('updated');
     }
     
-    /**
-    * The method updates an existing entry (based on the columns provided) OR inserts an entry that does not exist. .
-    * Default values are added if any entry property is missing.
-    * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
-    * @param boolean $isSystemCall The value is provided to access control to establish read/write access within the method 
-    * @param boolean $noUpdateButCreateIfMissing If true, an existing entry won't be updated
-    * @param boolean $addLog If true, an entry update will be documented in the entry processing log
-    *
-    * @return array|boolean The inserted, updated or created entry, an empty array if access rights were insufficient or false on error.
-    */
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall,'noUpdateButCreateIfMissing'=>$noUpdateButCreateIfMissing,'addLog'=>$addLog];
@@ -936,15 +824,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
     
-    /**
-    * The method returns an entry selected by entry['Source'] and entry['EntryId'].
-    * If the entry does not exist it will be created. An existing entry will not be updated.
-    *
-    * @param array $entry Is entry array, entry['Source'] and entry['EntryId'] must not be empty  
-    * @param boolean $isSystemCall The value is provided to access control to establish read/write access within the method 
-    *
-    * @return array|boolean The entry, an empty array if right are insufficient or false on error.
-    */
     public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall];
         $entry=$this->updateEntry($entry,$isSystemCall,TRUE);
@@ -952,15 +831,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
     
-    /**
-    * The method returns the first entry that matches the selector or FALSE, if no match is found.
-    *
-    * @param array $selector Is the selector.  
-    * @param boolean $isSystemCall The value is provided to access control. 
-    * @param boolean $returnMetaOnNoMatch If true and EntryId is provided, meta data is return on no match instead of false. 
-    *
-    * @return array|boolean The entry, an empty array or false if no entry was found.
-    */
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
     {
         if (empty($selector['Source'])){return FALSE;}
@@ -974,18 +844,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return FALSE;
     }
         
-    /**
-    * The method moves or copies an entry to the target selected by argument targetSelector
-    *
-    * @param array $sourceEntry Is the source entry.  
-    * @param array $targetSelector Is the tsrget selector.  
-    * @param boolean $isSystemCall The value is provided to access control. 
-    * @param boolean $isTestRun If true, the source entry will not be copied or moved. 
-    * @param boolean $keepSource If true, the entry will be copied, not moved. 
-    * @param boolean $updateSourceFirst If true, the source entry will be updated before further processing. 
-    *
-    * @return array The target entry.
-    */
     public function moveEntryOverwriteTarget($sourceEntry,$targetSelector,$isSystemCall=TRUE,$isTestRun=FALSE,$keepSource=FALSE,$updateSourceFirst=FALSE):array
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'sourceUpdatedFirst'=>FALSE,'sourceTargetEntryIdMatch'=>FALSE,'copyAttachedFile'=>FALSE,'movedAttachedFile'=>FALSE,'attachedFileProcessed'=>FALSE,'noWriteAccess'=>FALSE];
@@ -1100,70 +958,80 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     {
         return explode('___',$primaryKeyValue);    
     }
-    
-    public function rebuildOrderedList(array $selector,array $cmd=[]):string
+
+    public function buildOrderedList(array $selector, array $cmd=[]):string
     {
-        $targetIndex=0;
-        $targetEntryId='';
-        $notices=[];
-        $cmd=array_merge(['newOlKey'=>'','removeEntryId'=>'SKIP','moveUpEntryId'=>'!!SKIP!!','moveDownEntryId'=>'!!SKIP!!'],$cmd);
         if (!empty($selector['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
-        } else {
+        } else if (!empty($selector['Class'])){
             $storageObj='SourcePot\Datapool\Foundation\Filespace';
+        } else {
+            return '';
         }
-        // get all items of the list
-        $lastEntryId='SKIP';
-        $currentIndex=-1;
-        $items=[];
         $olKey=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
-        $olSelector=['Source'=>$selector['Source'],'EntryId'=>'%'.$olKey];
-        foreach($this->entryIterator($olSelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-            $targetFile='';
-            if (is_file($sourceFile) && !empty($selector['Source'])){
-                $fileName=basename($sourceFile);
-                $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$fileName;
-                if (!$this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$targetFile)){
-                    $notices[]="Problem copy ordered list source file \"$sourceFile\"";
-                    $targetFile='';
-                }
+        $entrySelector=['Source'=>$selector['Source']??FALSE,'Class'=>$selector['Class']??FALSE,'EntryId'=>'%'.$olKey];
+        // create backup of existing ordered list entries including attached files
+        // process cmd = 'removeEntryId' | 'singleEntry'
+        // index of backupEntries = {2,4,6,8,10,...}, removeEntryId[6] will result in backupEntries = {2,4,8,10,...}
+        $backupIndex=0;
+        $backupEntries=[];
+        $$backupOlKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+        $backupSelector=['Source'=>$selector['Source']??FALSE,'Class'=>$selector['Class']??FALSE,'EntryId'=>'%'.$$backupOlKey];
+        foreach($this->oc[$storageObj]->entryIterator($entrySelector,TRUE,'Read','EntryId',TRUE) as $entry){
+            $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            $backupIndex++;
+            $backupEntryId=$this->addOrderedListIndexToEntryId($$backupOlKey,$backupIndex);
+            $backupSelector=array_merge($entrySelector,['EntryId'=>$backupEntryId]);
+            $backupFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($backupSelector);
+            if (($cmd['removeEntryId']??'')===$entry['EntryId']){continue;}
+            // create backup entry with attached file
+            if (is_file($entryFile)){
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($entryFile,$backupFile);
             }
-            // check if item should be removed
-            if ($cmd['removeEntryId']===$entry['EntryId']){
-                $notices[]='Removed item "'.$this->getOrderedListIndexFromEntryId($entry['EntryId']).'"';
+            $cmdStr=(($cmd['moveUpEntryId']??'')===$entry['EntryId'])?'moveUpEntryId':((($cmd['moveDownEntryId']??'')===$entry['EntryId'])?'moveDownEntryId':'');
+            $backupEntry=array_merge($entry,['EntryId'=>$backupEntryId,'backupFile'=>$backupFile,'originalEntryId'=>$entry['EntryId'],'olKey'=>$olKey,'cmd'=>$cmdStr]);
+            $backupEntries[$backupIndex*2]=$this->oc[$storageObj]->insertEntry($backupEntry,TRUE);
+        }
+        $this->oc[$storageObj]->deleteEntries($entrySelector,TRUE);
+        // process cmd ob backed-up list = 'singleEntry' | 'moveUpEntryId' | 'moveDownEntryId'
+        // index of backupEntries = {2,4,6,8,10,...}, moveUpEntryId[4] will result in backupEntries = {2,7,6,8,10,...}
+        if (!empty($cmd['singleEntry']) && !empty($backupEntries)){$backupEntries=[2=>array_pop($backupEntries)];}
+        $backupEntriesCount=count($backupEntries);
+        foreach($backupEntries as $sourceIndex=>$backupEntry){
+            $backupEntries[$sourceIndex]['isAffectedEntry']=FALSE;
+            if ($backupEntry['cmd']==='moveUpEntryId'){
+                $targetIndex=$sourceIndex+3;
+                $targetIndex=($targetIndex>(($backupEntriesCount+1)*2))?1:$targetIndex;
+            } else if ($backupEntry['cmd']==='moveDownEntryId'){
+                $targetIndex=$sourceIndex-3;
+                $targetIndex=($targetIndex<0)?(($backupEntriesCount*2)+2):$targetIndex;
             } else {
-                $items[]=['entry'=>$entry,'file'=>$targetFile];
-                $currentIndex++;
+                continue;
             }
-            // move entry up or down
-            if ($cmd['moveUpEntryId']===$lastEntryId || $cmd['moveDownEntryId']===$entry['EntryId']){
-                $currentItem=$items[$currentIndex];
-                $items[$currentIndex]=$items[$currentIndex-1];
-                $items[$currentIndex-1]=$currentItem;
-                $targetIndex=($cmd['moveUpEntryId']===$lastEntryId)?($currentIndex):(($cmd['moveDownEntryId']===$entry['EntryId'])?($currentIndex-1):$currentIndex);
-            }
-            // delete exsisting entry
-            $lastEntryId=$entry['EntryId'];
-            $this->oc[$storageObj]->deleteEntries($entry);
+            $backupEntries[$targetIndex]=$backupEntries[$sourceIndex];
+            $backupEntries[$targetIndex]['isAffectedEntry']=TRUE;
+            unset($backupEntries[$sourceIndex]);
+            break;
         }
-        // rebuild list
-        if (empty($cmd['newOlKey'])){$cmd['newOlKey']=$olKey;}
-        $mapping=[];
-        foreach($items as $index=>$item){
-            $newListIndex=$index+1;
-            $mapping[]=$this->getOrderedListIndexFromEntryId($item['entry']['EntryId']).' &rarr; '.$newListIndex;
-            $item['entry']['EntryId']=$this->addOrderedListIndexToEntryId($cmd['newOlKey'],$newListIndex);
-            if (is_file($item['file'])){
-                $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($item['entry']);
-                if (empty($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($sourceFile,$item['file']))){
-                    $notices[]='Problem copy ordered list target file "'.$item['file'].'"';
-                }
+        ksort($backupEntries);
+        // create updated ordered list from backupEntries including files
+        $entryIndex=0;
+        foreach($backupEntries as $backupEntry){
+            $entryIndex++;
+            $entryId=$this->addOrderedListIndexToEntryId($olKey,$entryIndex);
+            $entrySelector=array_merge($entrySelector,['EntryId'=>$entryId]);
+            $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
+            if (is_file($backupEntry['backupFile'])){
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($backupEntry['backupFile'],$entryFile);
             }
-            if ($targetIndex===$index){$targetEntryId=$item['entry']['EntryId'];}
-            $this->oc[$storageObj]->insertEntry($item['entry'],TRUE);
+            $entry=array_merge($backupEntry,['EntryId'=>$entryId]);
+            if ($backupEntry['isAffectedEntry']){
+                $affectedEntryId=$entryId;
+            }
+            $entry=$this->oc[$storageObj]->insertEntry($entry,FALSE);
         }
-        return $targetEntryId;
+        $this->oc[$storageObj]->deleteEntries($backupSelector,TRUE);
+        return $affectedEntryId??'';
     }
 
 }

@@ -755,8 +755,6 @@ class HTMLbuilder{
             $this->oc['logger']->log('error',$errorMsg,[]);
             return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
         }
-        // Entry list correct order <----------------------------- LEGACY
-        $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateEntryListEditorEntries($arr);
         // get base selector and storage object
         if (!empty($arr['selector']['Source'])){
             $storageObj='SourcePot\Datapool\Foundation\Database';
@@ -767,25 +765,15 @@ class HTMLbuilder{
         }
         // initialization
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
+        // get the first entry
+        $firstEntry=$arr['selector'];
+        $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         if ($arr['returnRow']){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($firstEntry,['singleEntry'=>TRUE]);
             $arr['maxRowCount']=1;
         } else {
             $arr['maxRowCount']=$arr['maxRowCount']?:999;
         }
-        // legacy EntryId correction -> since 12/2025 entry2row() requires an ordered list EntryId <----------------------------- LEGACY
-        $primaryKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListKeyFromEntryId($arr['selector']['EntryId']);
-        $oldEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$arr['selector']['Source'],'EntryId'=>$primaryKey]);
-        if ($oldEntry){
-            $arr['selector']=$oldEntry;
-            $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
-            $newEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-            if ($this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries(['Source'=>$oldEntry['Source'],'EntryId'=>$oldEntry['EntryId']],TRUE)>0){
-                $this->oc['logger']->log('notice','Method entry2row() legacy correction done. EntryId updated to ordered list EntryId "{EntryId}" in table "{Source}"',$arr['selector']);
-            }
-        }
-        // get the first entry
-        $firstEntry=$arr['selector'];
-        $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $this->oc[$storageObj]->entryByIdCreateIfMissing($firstEntry,TRUE);
         // command processing
         $movedEntryId='';
@@ -800,16 +788,16 @@ class HTMLbuilder{
             $entry=array_merge($arr['selector'],$selector,$formData['val'][$selector['EntryId']]);
             $this->oc[$storageObj]->updateEntry($entry,$isSystemCall);
         } else if (isset($formData['cmd']['delete'])){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['removeEntryId'=>$selector['EntryId']]);
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['removeEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['add'])){
             $endIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($selector['EntryId']);
             $newEntry=$arr['selector'];
             $newEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($selector['EntryId'],$endIndex+1);
             $this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($newEntry);
         } else if (isset($formData['cmd']['moveUp'])){
-            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveUpEntryId'=>$selector['EntryId']]);
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['moveUpEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['moveDown'])){
-            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($selector,['moveDownEntryId'=>$selector['EntryId']]);
+            $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['moveDownEntryId'=>$selector['EntryId']]);
         }
         // html creation
         $noWriteAccess=FALSE;
@@ -876,7 +864,7 @@ class HTMLbuilder{
                 $btnArr['key'][]=$entry['EntryId'];
                 $addBtn=$btnArr;
             }
-            if ($currentIndex>$startIndex){
+            if (empty($arr['returnRow'])){
                 $btnArr=array_merge($arr,self::BUTTONS['moveDown'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>'0 0 0 5px']]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){
@@ -884,7 +872,7 @@ class HTMLbuilder{
                 }
                 $matrix[$rowIndex]['   ']=$btnArr;    
             }
-            if ($currentIndex<$endIndex && $arr['returnRow']>1){
+            if (empty($arr['returnRow'])){
                 $btnArr=array_merge($arr,self::BUTTONS['moveUp'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
                 if (strcmp($entry['EntryId'],$movedEntryId)===0){

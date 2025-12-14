@@ -14,7 +14,7 @@ namespace SourcePot\Datapool\Foundation;
 class Legacy{
     private $oc;
     
-    private const TIMELIMIT_SEC=550;
+    private const TIMELIMIT_SEC=200;
     private const FILESPACE2IMPORT='/var/www/vhosts/la-isla.org/httpdocs/la-isla/_filespace';    // directory location of the filespace to import
     private $sourceDB=FALSE;    // The sourceDb setting are stored at ./setup/Legacy/sourceDb.json
     
@@ -234,42 +234,6 @@ class Legacy{
             $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'Source'=>$selector['Source']);
             $this->oc['logger']->log('notice','{class} &rarr; {function}() definition missing for source table {Source}',$context);
         }
-    }
-
-    public function updateEntryListEditorEntries($arr)
-    {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__);
-        if (!empty($arr['selector']['Source'])){
-            $currentListSelector=array('Source'=>$arr['selector']['Source']);
-        } else if (!empty($arr['selector']['Class'])){
-            $currentListSelector=array('Class'=>$arr['selector']['Class']);
-        } else {
-            return FALSE;
-        }
-        // get current ordered list entry example from selector
-        $currentListSelector['Group']=(empty($arr['selector']['Group']))?FALSE:$arr['selector']['Group'];
-        $currentListSelector['Folder']=(empty($arr['selector']['Folder']))?FALSE:$arr['selector']['Folder'];
-        $currentListSelector['Name']=(empty($arr['selector']['Name']))?FALSE:$arr['selector']['Name'];
-        $currentListEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($currentListSelector,TRUE);
-        // check for key mismatch
-        if (empty($currentListEntry['EntryId']) || empty($arr['selector']['EntryId'])){return $arr;}
-        $oldKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListKeyFromEntryId($currentListEntry['EntryId']);
-        $newKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListKeyFromEntryId($arr['selector']['EntryId']);
-        if ($oldKey===$newKey){return $arr;}
-        // correct key mismatch
-        $rebuildSelector=array('EntryId'=>$oldKey);
-        if (!empty($currentListEntry['Source'])){
-            $rebuildSelector['Source']=$currentListEntry['Source'];
-        } else if (!empty($currentListEntry['Class'])){
-            $rebuildSelector['Class']=$currentListEntry['Class'];
-        } else {
-            return FALSE;
-        }
-        $this->oc['SourcePot\Datapool\Foundation\Database']->rebuildOrderedList($rebuildSelector,array('newOlKey'=>$newKey));
-        $context['oldKey']=$oldKey;
-        $context['newKey']=$newKey;
-        $this->oc['logger']->log('notice','{class} &rarr; {function}() changed ordered list keys: "{oldKey} &rarr; {newKey}"',$context);
-        return TRUE;
     }
     
 }
