@@ -202,10 +202,6 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function mergeEntries($base,$sourceEntry,$result,$testRun){
-
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['base'=>$base]);
-
-
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         $params=current($base['mergingparams'])['Content'];
         $failure=FALSE;
