@@ -149,9 +149,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         }
     }
     
-    public function statistic2matrix():array
+    public function statistic2matrix(array $matrix=[]):array
     {
-        $matrix=[];
         if (isset($_SESSION[__CLASS__]['Statistic'])){
             foreach($_SESSION[__CLASS__]['Statistic'] as $key=>$value){
                 $matrix[$key]=['Value'=>$value];
