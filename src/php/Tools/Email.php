@@ -268,6 +268,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'messageEntries'=>0,'alerts'=>'','errors'=>''];
         // get the mailbox
         $mailboxArr=$this->receiverSetting2mailboxArr($id);
+        if (empty($mailboxArr["Enabled"])){
+            $context['notice']='Mailbox is not enabled, please check settings.';
+            return $context;
+        }
         $mailbox=new Mailbox($mailboxArr);
         if (empty($mailboxArr['Folder'])){
             $folder=$mailbox->inbox();
