@@ -181,7 +181,8 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
 
-    /*  Loop through entries and process entries based on processor parameters, rules
+    /******************************************************************************************************************************************
+    *   Loop through entries and process entries based on processor parameters, rules
     *   The processor runs on all entries selected be the Canvas element (callingElement)
     */
 
