@@ -12,10 +12,10 @@ namespace SourcePot\Datapool\Processing;
 
 class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
-    private const DESCRIPTION='This processor merges entries into one or multiple target entries. 
-                               The target entry count depends on the amount of different "Map to"-values. 
-                               When the processor run is triggered, make sure that there are no entries left in the target canvas-element from any previous run. 
-                               Otherwise a new run will be taking pre-existing values as a starting point.';
+    private const INFO_MATRIX=[
+        ''=>['Value'=>'This processor merges entries into one or multiple target entries.'],
+        'Description'=>['Value'=>'The target entry count depends on the amount of different "Map to"-values.<br/>Make sure that there are no entries left in the target canvas-element from any previous run, hen you trigger the processor.<br/>Otherwise a new run will be taking pre-existing values as a starting point.'],
+    ];
     private $oc;
 
     private const OPERATIONS=[
@@ -101,9 +101,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getMergeEntriesInfo($callingElement){
-        $matrix=[];
-        $matrix['Description']=['<p style="width:40em;">'.self::DESCRIPTION.'</p>'];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Info']);
         return $html;
     }
@@ -141,26 +139,30 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function getMergeEntriesSettings($callingElement){
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mergeing entries params','generic',$callingElement,['method'=>'getMergeEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mergeing entries settings','generic',$callingElement,['method'=>'getMergeEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging params '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging settings '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
     
     public function getMergeEntriesParamsHtml($arr){
-        $callingElement=$arr['selector'];
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html'].=$this->mergingParams($arr['selector']);
+        return $arr;
+    }
+    
+    public function mergingParams($callingElement){
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $callingElementArr['canvasCallingClass']=$callingElement['Folder'];
-        $callingElementArr['contentStructure']=$contentStructure;
-        $callingElementArr['caption']='Merging control: Select target for merged entries';
-        $callingElementArr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($callingElementArr);
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$callingElementArr['caption']]);
-        return $arr;
+        $arr['canvasCallingClass']=$callingElement['Folder'];
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Merging control: Select target for merged entries';
+        $arr['noBtns']=TRUE;
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$callingElementArr['caption']]);
     }
 
     public function getMergeEntriesSettingsHtml($arr){
@@ -200,8 +202,12 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     public function mergeEntries($base,$sourceEntry,$result,$testRun){
+
+        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['base'=>$base]);
+
+
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $params=current($base['getmergeentriesparamshtml'])['Content'];
+        $params=current($base['mergingparams'])['Content'];
         $failure=FALSE;
         // get tgarget selector and existing entry
         if (isset($flatSourceEntry[$params['Map from']])){
