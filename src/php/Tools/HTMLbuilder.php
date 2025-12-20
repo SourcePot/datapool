@@ -765,6 +765,7 @@ class HTMLbuilder{
         }
         // initialization
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
+        $arr['caption'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'span','element-content'=>' ('.$arr['selector']['EntryId'].')','style'=>['font-size'=>'0.6rem']]);
         // get the first entry
         $firstEntry=$arr['selector'];
         $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);

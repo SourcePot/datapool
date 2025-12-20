@@ -35,11 +35,6 @@ class Container{
         $this->oc=$oc;
     }
 
-    /**
-    * This method is called by client side javascript. 
-    * @param array  $arr    Is provided by the Root-class, here typically an epmty array 
-    * @return array Returns the $arr argument potentially with the added key['page html'] equals the json-encoded processing result. For security reasons only a suset of methods can be invoked. 
-    */
     public function jsCall(array $arr):array
     {
         $jsAnswer=[];
@@ -285,12 +280,6 @@ class Container{
         return $returnEntry;
     }
     
-    /**
-    * This standard entry editor returns an array containing the editors html form under key 'html'
-    * @param array arr Is an array containing the entry to be edited under key 'selector' and settings under key 'settings', e.g. arr['settings']['hideEntryControls']=TRUE, 
-    *
-    * @return array An array containing the editor html form under key 'html'
-    */
     public function entryEditor(array $arr,bool $isDebugging=FALSE):array
     {
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
@@ -351,7 +340,7 @@ class Container{
                 $key=array_pop($selectorKeyComps);
                 $btnArrKey=implode($S,$selectorKeyComps);
                 $element=['tag'=>'button','element-content'=>$key.' &rarr;','key'=>['setSelectorKey',$btnArrKey],'keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
-                $element['style']=['font-size'=>'0.9em','border'=>'none','border-bottom'=>'1px solid #aaa'];
+                $element['style']=['font-size'=>'0.9rem','line-height'=>'1.5rem'];
                 $navHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element).$navHtml;
             }
             // create table matrix
@@ -417,7 +406,7 @@ class Container{
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['selector']['Name']]);
             if ($level==0 && empty($arr['settings']['hideEntryControls'])){
                 $arr['hideKeys']=TRUE;
-                $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($arr);
+                $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$arr['selector']]);
             }
         }
         if ($isDebugging){
@@ -438,7 +427,7 @@ class Container{
             'isAsc'=>TRUE,
             'limit'=>10,
             'offset'=>FALSE
-            ];
+        ];
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=(isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]))?$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]:$arr['settings'];
         // get settings
@@ -709,12 +698,6 @@ class Container{
         return $arr;
     }
     
-    /**
-    * This method adds an html-form to the parameter arr['html'].
-    * Through the form a transmitter can be selected and the selected entry can be sent through this transmitter.
-    * @param array  $arr    Contains the entry selector of the entry to be sent and settings 
-    * @return array
-    */
     public function sendEntry(array $arr):array
     {
         if (!isset($arr['html'])){$arr['html']='';}
@@ -763,11 +746,6 @@ class Container{
         return $arr;
     }    
 
-    /**
-    * This method add an html-string to the parameter $arr['html'] which contains an image presentation of entries selected by the parameter arr['selector'].
-    * @param array  $arr    Contains the entry selector and settings 
-    * @return array
-    */
     public function getImageShuffle(array $arr):array
     {
         $arr['html']=$arr['html']??'';
