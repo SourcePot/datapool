@@ -58,10 +58,11 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,['EntryId'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__,['Group'=>FALSE,'Folder'=>FALSE]);
             $html='';
-            if (empty($selector['Group'])){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','keep-element-content'=>TRUE,'element-content'=>'Please select or create a Group...']);
-            } else if (empty($selector['Folder'])){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','keep-element-content'=>TRUE,'element-content'=>'Please select or create a Folder...']);
+            if (empty($selector['Group']) || empty($selector['Folder'])){
+                $folder=__CLASS__;
+                $folder.=(empty($selector['Group']))?'%':('::'.$selector['Group']);
+                $signalsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'Group'=>'signal','Folder'=>$folder];
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot($signalsSelector);
             } else {
                 $html.=$this->signalsDerived($selector);
             }
