@@ -42,7 +42,7 @@ class Element{
             'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
             'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,'nonce'=>FALSE,
             'data-value'=>FALSE,'data-timestamp'=>FALSE,'data-label'=>FALSE,
-            ],
+        ],
         // Table
         'table'=>[],
         'caption'=>[],
@@ -106,18 +106,18 @@ class Element{
         'clipPath'=>[],
         'use'=>[],
         'defs'=>[],
-        ];
+    ];
     
     const SECIAL_ATTR=[
         'function'=>FALSE,'method'=>FALSE,'target'=>FALSE,'trigger-id'=>FALSE,'container-id'=>FALSE,'dynamic-style-id'=>FALSE,'excontainer'=>FALSE,'cell'=>FALSE,
         'row'=>FALSE,'source'=>FALSE,'entry-id'=>FALSE,'index'=>FALSE,'js-status'=>FALSE,
-        ];
+    ];
                                
     const COPY2SESSION=[
         'element-content'=>FALSE,'value'=>FALSE,'tag'=>TRUE,'type'=>'','key'=>FALSE,'id'=>FALSE,'name'=>FALSE,'selector'=>FALSE,'app'=>FALSE,
         'formProcessingClass'=>FALSE,'formProcessingFunction'=>FALSE,'formProcessingArg'=>FALSE,
         'callingClass'=>FALSE,'callingFunction'=>FALSE,'filter'=>FILTER_DEFAULT,'Read'=>FALSE,'Write'=>FALSE,'Owner'=>FALSE,
-        ];
+    ];
 
     public function __construct(array $oc)
     {
@@ -152,7 +152,6 @@ class Element{
         if (isset(self::DEF[$arr['tag']])){
             if (isset($arr['element-content'])){
                 $arr['element-content']=strval($arr['element-content']);
-                
             } else if (($arr['type']?:'')==='date'){
                 $arr['value']=substr($arr['value']??'',0,10);
             }
@@ -277,7 +276,9 @@ class Element{
     {
         if (isset($arr['element-content'])){
             $arr['element-content']=strval($arr['element-content']);
-            if (empty($arr['keep-element-content'])){$arr['element-content']=htmlentities($arr['element-content']);}
+            if (empty($arr['keep-element-content'])){
+                $arr['element-content']=htmlentities($arr['element-content']);
+            }
             $html='<'.$elementArr['tag'].' '.implode(' ',$elementArr['attr']).'>'.$arr['element-content'].'</'.$elementArr['tag'].'>';
         } else {
             $html='<'.$elementArr['tag'].' '.implode(' ',$elementArr['attr']).'/>';
@@ -393,7 +394,7 @@ class Element{
             6=>'Missing a temporary folder',
             7=>'Failed to write file to disk.',
             8=>'A PHP extension stopped the file upload.',
-            ];
+        ];
         $code=intval($code);
         if (isset($codeArr[$code])){return $codeArr[$code];} else {return '';}
     }

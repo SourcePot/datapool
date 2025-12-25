@@ -935,7 +935,7 @@ class HTMLbuilder{
         } else if (strlen(strip_tags($html))==strlen($html)){
             $arr['tag']='p';
             $arr['class']='td-content-wrapper';
-            $arr['keep-element-content']=TRUE;
+            $arr['keep-element-content']=FALSE;
             $arr['element-content']=$html;
         } else {
             $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();

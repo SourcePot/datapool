@@ -89,10 +89,10 @@ class Definitions{
                 $defaultArr[$defaultKey]=$definitionValue;
             } else if (mb_strpos($definitionKey,'@type')!==FALSE && strcmp($definitionValue,'btn')===0){
                 $defaultKey=str_replace($flatArrayKeySeparator.'@type','',$definitionKey);
-                $defaultArrKeys2remove[$defaultKey]=FALSE;    // to remove if default value is empty
+                $defaultArrKeys2remove[$defaultKey]=FALSE;    // to remove, if default value is empty
             } else if (mb_strpos($definitionKey,'@type')!==FALSE && strcmp($definitionValue,'method')===0){
                 $defaultKey=str_replace($flatArrayKeySeparator.'@type','',$definitionKey);
-                $defaultArrKeys2remove[$defaultKey]=TRUE;    // to remove if default value is empty
+                $defaultArrKeys2remove[$defaultKey]=TRUE;    // to remove, if default value is empty
             }
         }
         foreach($defaultArrKeys2remove as $toRemoveKey=>$onlyIfEmpty){
@@ -124,14 +124,14 @@ class Definitions{
         if (empty($definition)){
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write')){
                 if (strlen($value)>20){
-                    $element=array('tag'=>'textarea','keep-element-content'=>TRUE,'element-content'=>$value,'key'=>$selectorKeyComps);
+                    $element=['tag'=>'textarea','keep-element-content'=>TRUE,'element-content'=>$value,'key'=>$selectorKeyComps];
                 } else {
-                    $element=array('tag'=>'input','type'=>'text','value'=>$value,'key'=>$selectorKeyComps);
+                    $element=['tag'=>'input','type'=>'text','value'=>$value,'keep-element-content'=>TRUE,'key'=>$selectorKeyComps];
                 }
             } else if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Read')){
-                $element=array('tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE);
+                $element=['tag'=>'p','element-content'=>$value,'keep-element-content'=>FALSE];
             } else {
-                $element=array('tag'=>'p','element-content'=>'access denied','keep-element-content'=>TRUE);
+                $element=['tag'=>'p','element-content'=>'access denied','keep-element-content'=>FALSE];
             }
         } else {
             $flatDefinition=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($definition['Content']);
@@ -210,7 +210,7 @@ class Definitions{
             $keyArr=$keyComps;
             $key=array_pop($keyComps);
             if (empty($keyComps)){$caption=$key;} else {$caption=implode(' &rarr; ',$keyComps);}
-            if (!isset($settings[$caption])){$settings[$caption]=[];}
+            $settings[$caption]=$settings[$caption]??[];
             if (isset($defArr['tag']) || isset($defArr['function'])){
                 $defArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($defArr);
                 $defArr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry);
@@ -346,6 +346,7 @@ class Definitions{
                 } else if (strcmp($element['type'],'file')!==0){
                     $element['value']=$outputStr;
                 }
+                $element['keep-element-content']=TRUE;
             } else if (strcmp($element['tag'],'meter')===0){
                 $element['value']=$outputStr;
                 $element['title']=$outputStr;
@@ -354,7 +355,7 @@ class Definitions{
             }
         } else {
             // read access
-            if (!isset($element['tag'])){$element['tag']='p';}
+            $element['tag']=$element['tag']??'p';
             if (strcmp($element['tag'],'input')===0){
                 $element['disabled']=TRUE;
                 $element['value']=$outputStr;

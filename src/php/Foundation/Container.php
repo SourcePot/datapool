@@ -371,7 +371,6 @@ class Container{
                     $valueHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                 } else {
                     // non-array value
-                    if (is_string($value)){$value=htmlentities($value);}
                     $element=$this->oc['SourcePot\Datapool\Foundation\Definitions']->selectorKey2element($arr['selector'],$flatKey,$value,$arr['callingClass'],$arr['callingFunction']);
                     if (empty($element)){
                         $valueHtml='';
@@ -528,7 +527,6 @@ class Container{
                         $subMatix=[];
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (is_object($value)){$value='{object}';}
-                            if (is_string($value)){$value=htmlentities($value);}
                             if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
                                 // $flatColumnKey === column selection -> standard entry presentation
                                 $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
