@@ -27,7 +27,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         '||'=>'OR'
     ];
 
-    private const CONTENT_STRUCTURE_RULES=[
+    public const CONTENT_STRUCTURE_RULES=[
         '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
         'A&rarr;'=>['method'=>'element','tag'=>'p','element-content'=>'A&rarr;','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
         'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
@@ -172,7 +172,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function forwardingRules($callingElement){
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_RULES;
-        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement??[]);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['canvasCallingClass']=$callingElement['Folder'];
@@ -212,8 +212,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function forwardEntry($base,$sourceEntry,$result,$testRun){
         $params=current($base['forwardingparams'])['Content']??[];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        $forwardTo=[];
-        $equations=[];
+        $equations=$forwardTo=[];
         foreach($base['forwardingrules'] as $ruleId=>$rule){
             $forwardOnSuccess=$rule['Content']['Forward on success'];
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleId)[0];

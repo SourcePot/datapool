@@ -662,7 +662,7 @@ class HTMLbuilder{
         return $html;
     }
 
-    public function entryControls(array $arr,bool $isDebugging=FALSE):string
+    public function entryControls(array $arr):string
     {
         $tableStyle=['clear'=>'none','margin'=>'0','min-width'=>'200px'];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']??[],FALSE);
@@ -743,51 +743,34 @@ class HTMLbuilder{
 
     public function entryListEditor(array $arr,bool $isSystemCall=TRUE):string|array
     {
-        $errorMsg='Method "'.__CLASS__.' &rarr; '.__FUNCTION__.'()" called with arr-argument keys missing: ';
         $arr['returnRow']=!empty($arr['returnRow']);
-        if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction'])){
-            $errorMsg.=' contentStructure, callingClass or callingFunction';
-            $this->oc['logger']->log('error',$errorMsg,[]);
-            return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
-        }
-        if ((empty($arr['selector']['Source']) && empty($arr['selector']['Class'])) || empty($arr['selector']['EntryId'])){
-            $errorMsg.=' Source or Class or EntryId';
-            $this->oc['logger']->log('error',$errorMsg,[]);
-            return (!$arr['returnRow'])?$errorMsg:['error'=>$errorMsg];
-        }
-        // get base selector and storage object
-        if (!empty($arr['selector']['Source'])){
-            $storageObj='SourcePot\Datapool\Foundation\Database';
-            $baseSelector=['Source'=>$arr['selector']['Source']];
-        } else {
-            $storageObj='SourcePot\Datapool\Foundation\Filespace';
-            $baseSelector=['Class'=>$arr['selector']['Class']];
+        if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction']) || empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){
+            $this->oc['logger']->log('error','Method {class} &rarr; {fcuntion}}()" called with one of the following being empty: contentStructure, callingClass="{callingClass}", callingFunction="{callingFunction}", arr[selector][Source]="{Source}" and/or arr[selector][EntryId]="{EntryId}"',['class'=>__CLASS__,'function'=>__FUNCTION__,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'Source'=>$arr['selector']['Source'],'EntryId'=>$arr['selector']['EntryId'],]);
+            return ['error'=>'Empty argument detected, chack log'];
         }
         // initialization
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
         $arr['caption'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'span','element-content'=>' ('.$arr['selector']['EntryId'].')','style'=>['font-size'=>'0.6rem']]);
-        // get the first entry
-        $firstEntry=$arr['selector'];
-        $firstEntry['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
-        if ($arr['returnRow']){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($firstEntry,['singleEntry'=>TRUE]);
-            $arr['maxRowCount']=1;
-        } else {
-            $arr['maxRowCount']=$arr['maxRowCount']?:999;
-        }
-        $this->oc[$storageObj]->entryByIdCreateIfMissing($firstEntry,TRUE);
+        $arr['maxRowCount']=($arr['returnRow'])?1:($arr['maxRowCount']?:999);
+        $this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($arr['selector'],['singleEntry'=>$arr['returnRow']]);
         // command processing
         $movedEntryId='';
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (isset($formData['cmd']['reloadBtnArr'])){
             // form reload
         } else if (!empty($formData['cmd'])){
-            $selector=$baseSelector;
+            $selector=['Source'=>$arr['selector']['Source']];
             $selector['EntryId']=key(current($formData['cmd']));
         }
         if (isset($formData['cmd']['save'])){
             $entry=array_merge($arr['selector'],$selector,$formData['val'][$selector['EntryId']]);
-            $this->oc[$storageObj]->updateEntry($entry,$isSystemCall);
+            $files=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($formData['files'][$selector['EntryId']]??[]);
+            $files=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($files);
+            if ($files['error']===0 && $files['size']>0){
+                $entry=$this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($files,$entry);
+            } else {
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall);
+            }
         } else if (isset($formData['cmd']['delete'])){
             $movedEntryId=$this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($selector,['removeEntryId'=>$selector['EntryId']]);
         } else if (isset($formData['cmd']['add'])){
@@ -803,10 +786,10 @@ class HTMLbuilder{
         // html creation
         $noWriteAccess=FALSE;
         $matrix=$csvMatrix=$emptyRow=[];
-        $startIndex=$endIndex=1;
-        $selector=$baseSelector;
+        $endIndex=1;
+        $selector=['Source'=>$arr['selector']['Source']];
         $selector['EntryId']='%'.$arr['selector']['EntryId'];
-        foreach($this->oc[$storageObj]->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','EntryId',TRUE) as $entry){
             $noWriteAccess=empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write'));
             $endIndex=$entry['rowCount'];
             $entryIdComps=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($entry['EntryId']);
@@ -834,6 +817,7 @@ class HTMLbuilder{
                     if (isset($arr['canvasCallingClass'])){
                         $elementArr['canvasCallingClass']=$arr['canvasCallingClass'];
                     }
+                    $elementArr['selector']=$entry;
                     $matrix[$rowIndex][$contentKey]=$this->oc[$classWithNamespace]->$method($elementArr);
                     if (isset($elementArr['type']) && isset($elementArr['value'])){
                         if (strcmp($elementArr['type'],'hidden')===0){
