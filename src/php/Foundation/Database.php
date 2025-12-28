@@ -874,7 +874,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 $context['fileError']=FALSE;
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
-                if (is_file($sourceFile) && !$isTestRun && !isset($targetEntry['__BLACKHOLE__'])){
+                if (is_file($sourceFile) && !$isTestRun && empty($targetEntry['__BLACKHOLE__'])){
                     try{
                         $this->oc['SourcePot\Datapool\Foundation\Filespace']->addStatistic('inserted files',intval(copy($sourceFile,$targetFile)));
                     } catch(\Exception $e){
@@ -890,7 +890,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                     $context['action']=($keepSource)?'to copy':'to move';
                     $this->oc['logger']->log('notice','Failed {action} file "{sourceFile}" with "{fileError}". The entry "{Name}" was not updated.',$context);     
                 } else {
-                    if (isset($targetEntry['__BLACKHOLE__'])){
+                    if (!empty($targetEntry['__BLACKHOLE__'])){
                         // black hole -> target won't be created
                         $this->addStatistic('black hole',1);
                     } else {

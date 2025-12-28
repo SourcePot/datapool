@@ -574,7 +574,7 @@ class HTMLbuilder{
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tagArr);
             }
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE]);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['padding'=>'10px 15px 0 0']]);
         return $arr;
     }
     

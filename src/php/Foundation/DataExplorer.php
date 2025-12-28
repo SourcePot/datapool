@@ -180,8 +180,8 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             if (mb_strpos($entry['element-content'],'&#9881;')!==FALSE){
                 $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\CanvasProcessing';
             } else if (mb_strpos($entry['element-content'],'&empty;')!==FALSE){
-                $entry['Content']['Selector']['__BLACKHOLE__']=TRUE;
-                $entry['Content']['Widgets']['Processor']='SourcePot\Datapool\Processing\DefaultProcessor';
+                $entry['Content']['Selector']=['__BLACKHOLE__'=>TRUE,'Source'=>$this->entryTable,'Group'=>'__BLACKHOLE__'];
+                $entry['Content']['Widgets']['Processor']='';
             }
         }
         // adjust style class and unify Name
@@ -537,6 +537,16 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         return $html;
     }
 
+    public function finalizeContentStructure(array $contentStructure,array $callingElement):array
+    {
+        $keysRequireSelector=['keySelect'=>TRUE];
+        foreach($contentStructure as $key=>$tagArr){
+            if ($keysRequireSelector[$tagArr['method']??'']??FALSE){
+                $contentStructure[$key]+=$callingElement['Content']['Selector'];
+            }
+        }
+        return $contentStructure;
+    }
 
     /**
     * Update canvas element properties with $arr values, i.e. style including position.
