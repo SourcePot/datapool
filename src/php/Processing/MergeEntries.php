@@ -12,12 +12,13 @@ namespace SourcePot\Datapool\Processing;
 
 class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
+    private $oc;
+
     private const INFO_MATRIX=[
         ''=>['Value'=>'This processor merges entries into one or multiple target entries.'],
         'Description'=>['Value'=>'The target entry count depends on the amount of different "Map to"-values.<br/>Make sure that there are no entries left in the target canvas-element from any previous run, hen you trigger the processor.<br/>Otherwise a new run will be taking pre-existing values as a starting point.'],
     ];
-    private $oc;
-
+    
     private const OPERATIONS=[
         'number(A+B)'=>'number(A+B)','number(A-B)'=>'number(A-B)','number(A*B)'=>'number(A*B)','number(A/B)'=>'number(A/B)','number(A%B)'=>'number(A%B)',
         'money(A+B)'=>'money(A+B)','money(A-B)'=>'money(A-B)',
@@ -34,12 +35,12 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     ];
         
     private const CONTENT_STRUCTURE_RULES=[
-        'New key: Content &rarr; ...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-        'Init value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-        'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
+        'Init value'=>['method'=>'element','tag'=>'input','type'=>'text','title'=>'Will only be used if there is no entry in the target canvas element with the target-key "Content → ..."','excontainer'=>TRUE],
         'Key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
         'or const value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>self::OPERATIONS,'keep-element-content'=>TRUE],
         'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'New key: Content &rarr; ...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
     ];
         
     private $entryTable='';
@@ -157,12 +158,11 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Merging control: Select target for merged entries';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$callingElementArr['caption']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
     public function getMergeEntriesSettingsHtml($arr){
@@ -177,7 +177,6 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);

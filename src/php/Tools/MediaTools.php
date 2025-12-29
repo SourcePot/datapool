@@ -27,10 +27,6 @@ class MediaTools{
         $this->oc=$oc;
     }
 
-    public function init()
-    {
-    }
-
     public function getPreview(array $arr):array
     {
         $arr['html']=$arr['html']??'';

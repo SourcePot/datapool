@@ -128,7 +128,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     * @param    string $vars Initial persistent data space
     * @return   array  Array Updateed persistent data space
     */
-    public function job(array $vars):array
+    public function job(array $vars=[]):array
     {
         // loop through all canvas elements, create signals if signal creation is enabled for the respective canvas element
         $signalsUpdated=[];
@@ -136,7 +136,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $canvasElement){
             if (empty($canvasElement['Content']['Selector']['Source']) || empty($canvasElement['Content']['Widgets']['Enable signal'])){continue;}
             $newPropValue=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($canvasElement['Content']['Selector'],TRUE);
-            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$value);
+            $signal=$this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal($canvasElement['Folder'],'DataExplorer',$canvasElement['Content']['Style']['Text'],$newPropValue);
             $signalsUpdated[$canvasElement['EntryId']]=$canvasElement['Folder'].' → '.$canvasElement['Content']['Style']['Text'];
         }
         $vars['Signals updated']=implode('<br/>',$signalsUpdated);
@@ -465,7 +465,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Group','Folder','Name'],0);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_R','ALL_CONTENTADMIN_R');
         $entry['Content']=[];
-        $arr=['callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry];
+        $arr=['callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'selector'=>$entry,'canvasCallingClass'=>$callingElement['Folder']];
         return $arr;
     }
     

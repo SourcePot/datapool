@@ -26,6 +26,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         'Client EntryId'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>'','excontainer'=>TRUE],
         'Client'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
         'Plot to show'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
+        '2nd Plot to show'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
     ];
 
     private const ONEDIMSEPARATOR='||';
@@ -188,12 +189,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
         $contentStructure['Client EntryId']['value']=$params['Content']['Client'];
         $contentStructure['Client']['options']=$this->getClientOptions();
-        $contentStructure['Plot to show']['value']=key($plotOptions);
         $contentStructure['Plot to show']['options']=$plotOptions;
+        $contentStructure['2nd Plot to show']['options']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalOptions();
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select client';
         $arr['noBtns']=TRUE;
@@ -342,7 +342,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     public function getClientPlot(array $callingElement):string
     {
         $params=current($callingElement['clientparams']??[]);
-        return $this->oc['SourcePot\Datapool\Foundation\Signals']->signal2plot(__CLASS__,$params['Content']['Client']??'__NOTHING_HERE__',$params['Content']['Plot to show']??'%');
+        $html=$this->oc['SourcePot\Datapool\Foundation\Signals']->signal2plot(__CLASS__,$params['Content']['Client']??'__NOTHING_HERE__',$params['Content']['Plot to show']??'%');
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot(['EntryId'=>$params['Content']['2nd Plot to show']??'__NOTHING_HERE__'],['caption'=>'']);
+        return $html;
     }
 
     private function getClientOptions():array

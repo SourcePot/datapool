@@ -226,7 +226,7 @@ class Computations{
                 'excelDateExchageRates'=>$this->oc['SourcePot\Datapool\Foundation\Money']->excelDate2exchageRates($value),
                 'shortHash'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($value,TRUE),
                 'hash'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($value,False),
-                'codepfad'=>$this->convert2codepfad($value),
+                'codepfad'=>$this->convert2codepfadArr($value),
                 'unycom'=>$this->convert2unycom($value),
                 'unycomFamily'=>$this->convert2unycomByKey($value,'Family'),
                 'unycomCountry'=>$this->convert2unycomByKey($value,'Country'),
@@ -309,24 +309,20 @@ class Computations{
         return $value;
     }
     
-    public function convert2codepfad($value):array
+    public function convert2codepfadArr($value):array
     {
         $codepfade=explode(';',strval($value));
-        $arr=[];
+        $arr=[0=>['FhI'=>'','FhI Teil'=>'','OE'=>'','Codepfad all'=>''],];
         foreach($codepfade as $codePfadIndex=>$codepfad){
             $codepfadComps=explode('\\',$codepfad);
-            if ($codePfadIndex===0){
-                if (isset($codepfadComps[0])){$arr['FhI']=$codepfadComps[0];}
-                if (isset($codepfadComps[1])){$arr['FhI Teil']=$codepfadComps[1];}
-                if (isset($codepfadComps[2])){$arr['Codepfad 3']=$codepfadComps[2];}
-                $arr['Codepfad all']=implode('|',$codepfadComps);
-            } else {
-                if (isset($codepfadComps[0])){$arr[$codePfadIndex]['FhI']=$codepfadComps[0];}
-                if (isset($codepfadComps[1])){$arr[$codePfadIndex]['FhI Teil']=$codepfadComps[1];}
-                if (isset($codepfadComps[2])){$arr[$codePfadIndex]['Codepfad 3']=$codepfadComps[2];}
-                $arr[$codePfadIndex]['Codepfad all']=implode('|',$codepfadComps);
-            }
+            $arr[$codePfadIndex]=[
+                'FhI'=>(intval($codepfadComps[0])>0)?intval($codepfadComps[0]):'',
+                'FhI Teil'=>(intval($codepfadComps[1])>0)?intval($codepfadComps[1]):'',
+                'OE'=>(intval($codepfadComps[2])>0)?intval($codepfadComps[2]):'',
+                'Codepfad all'=>implode('|',$codepfadComps),
+            ];
         }
+        //var_dump(['value'=>$value,'arr'=>$arr]);
         return $arr;
     }
     
@@ -426,6 +422,8 @@ class Computations{
             return boolval($valueA&$valueB);
         } else if ($condition==='||'){
             return boolval($valueA|$valueB);
+        } else if ($condition==='xor'){
+            return boolval($valueA xor $valueB);
         } else if ($condition==='^'){
             return boolval($valueA^$valueB);
         } else if ($condition==='~'){
