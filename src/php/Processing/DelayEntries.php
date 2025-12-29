@@ -169,9 +169,8 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // check condition and loop through source entries for processing
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=$this->checkCondition($base,$callingElement,[],$testRun);
-        //
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
+        $result=$this->checkCondition($base,$callingElement,['Statistics'=>['Moved entries'=>['Value'=>0]]],$testRun);
+        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']??[]);
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
         return $result;
@@ -218,7 +217,7 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if ($conditionsMet){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Forward to canvas element']],TRUE,$testRun,$params['Content']['Keep source entries']);
-                $result['Delaying statistics']['Moved entries']['value']++;
+                $result['Statistics']['Moved entries']['Value']++;
             }
         }
         return $result;
