@@ -139,7 +139,6 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Chart control';
         $arr['noBtns']=TRUE;
@@ -153,7 +152,6 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Plot rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
@@ -167,7 +165,7 @@ class ChartEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=['chartrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $params=current($base['chartparams'])['Content'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['OrderBy'],TRUE) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['OrderBy']??'Date',TRUE) as $entry){
             $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
             foreach($base['chartrules'] as $ruleId=>$rule){
                 // create signal

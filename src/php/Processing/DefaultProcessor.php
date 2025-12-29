@@ -159,7 +159,6 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Processor control';
         $arr['noBtns']=TRUE;
@@ -174,14 +173,14 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Processor rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
 
-    /*  Loop through entries and process entries based on processor parameters, rules
+    /******************************************************************************************************************************************
+    *   Loop through entries and process entries based on processor parameters, rules
     *   The processor runs on all entries selected be the Canvas element (callingElement)
     */
 
@@ -208,6 +207,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
             $result['Statistics']['Entries']['value']++;
         }
+        // present result
         $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']);
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
         $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];

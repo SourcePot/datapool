@@ -27,10 +27,6 @@ class MediaTools{
         $this->oc=$oc;
     }
 
-    public function init()
-    {
-    }
-
     public function getPreview(array $arr):array
     {
         $arr['html']=$arr['html']??'';
@@ -358,7 +354,11 @@ class MediaTools{
             } else if (mb_strpos($imgPropArr['fileType'],'/bmp')!==FALSE){
                 $orgImage=imagecreatefromwbmp($imgPropArr['sourceFile']);
             } else if (mb_strpos($imgPropArr['fileType'],'/webp')!==FALSE){
-                $orgImage=imagecreatefromwebp($imgPropArr['sourceFile']);
+                if (method_exists('\\','imagecreatefromwebp')){
+                    $orgImage=\imagecreatefromwebp($imgPropArr['sourceFile']);
+                } else {
+                    return 'Can\'t process webp-image, method imagecreatefromwebp() does not exist....';
+                }
             } else if (mb_strpos($imgPropArr['fileType'],'/jpg')!==FALSE){
                 $orgImage=imagecreatefromjpeg($imgPropArr['sourceFile']);
             } else if (mb_strpos($imgPropArr['fileType'],'/jpeg')!==FALSE){

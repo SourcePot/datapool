@@ -139,6 +139,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     private function getParams(string $id):array
     {
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,'receiverPluginHtml',['Folder'=>'Settings','EntryId'=>$id],TRUE);
+        $arr['selector']['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Database']->addOrderedListIndexToEntryId($arr['selector']['EntryId'],1);
         $paramsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector'],TRUE);
         if (isset($paramsEntry['Content'])){return $paramsEntry['Content'];} else {return [];}
     }

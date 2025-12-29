@@ -47,10 +47,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 'Town'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
                 'Zip'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
                 'Country'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
-                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save','@isApp'=>'&#127758;'],
+                'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                 ],
             ],
-        'Misc'=>['@function'=>'entryControls','@isApp'=>'&#128736;','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Manage attachment, delete entry,...'=>['@function'=>'entryControls','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
         'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
         'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
     ];
@@ -286,6 +286,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     
     public function getSerialEventsFrom($arr=[]):array
     {
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        $open=!empty($formData['cmd']);
         $monthOptions=$weekOptions=$monthdayOptions=$hourOptions=$minOptions=[''=>''];
         $weekdayOptions=[''=>'','1'=>'Monday','2'=>'Tuesday','3'=>'Wednesday','4'=>'Thursday','5'=>'Friday','6'=>'Saturday','7'=>'Sunday'];
         $weekdayOptions=[''=>'','1'=>'Monday','2'=>'Tuesday','3'=>'Wednesday','4'=>'Thursday','5'=>'Friday','6'=>'Saturday','7'=>'Sunday'];
@@ -316,8 +318,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'owner'=>$currentUserId];
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Serial events definition';
+        $arr['caption']='Serial events definition <span style="font-size:0.7rem">{'.$arr['selector']['EntryId'].'}</span>';
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        $app=['icon'=>'Your serial events','title'=>'Here you can define your serial events such as birthdays...','html'=>$arr['html'],'open'=>$open];
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($app);
         return $arr;
     }
     

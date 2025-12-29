@@ -824,9 +824,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     }
     
     public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall];
-        $entry=$this->updateEntry($entry,$isSystemCall,TRUE);
-        $entry[__FUNCTION__]=$context;
+        $entry[__FUNCTION__]=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall];
+        if (empty($entry['EntryId'])){
+            $entry[__FUNCTION__]['notice']='EntryId empty';
+        } else {
+            $entry=$this->updateEntry($entry,$isSystemCall,TRUE);
+        }
         return $entry;
     }
     
@@ -871,7 +874,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 $context['fileError']=FALSE;
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($sourceEntry);
                 $targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($targetEntry);
-                if (is_file($sourceFile) && !$isTestRun && !isset($targetEntry['__BLACKHOLE__'])){
+                if (is_file($sourceFile) && !$isTestRun && empty($targetEntry['__BLACKHOLE__'])){
                     try{
                         $this->oc['SourcePot\Datapool\Foundation\Filespace']->addStatistic('inserted files',intval(copy($sourceFile,$targetFile)));
                     } catch(\Exception $e){
@@ -887,7 +890,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                     $context['action']=($keepSource)?'to copy':'to move';
                     $this->oc['logger']->log('notice','Failed {action} file "{sourceFile}" with "{fileError}". The entry "{Name}" was not updated.',$context);     
                 } else {
-                    if (isset($targetEntry['__BLACKHOLE__'])){
+                    if (!empty($targetEntry['__BLACKHOLE__'])){
                         // black hole -> target won't be created
                         $this->addStatistic('black hole',1);
                     } else {
@@ -960,38 +963,34 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function buildOrderedList(array $selector, array $cmd=[]):string
     {
-        if (!empty($selector['Source'])){
-            $storageObj='SourcePot\Datapool\Foundation\Database';
-        } else if (!empty($selector['Class'])){
-            $storageObj='SourcePot\Datapool\Foundation\Filespace';
-        } else {
-            return '';
-        }
         $olKey=$this->getOrderedListKeyFromEntryId($selector['EntryId']);
-        $entrySelector=['Source'=>$selector['Source']??FALSE,'Class'=>$selector['Class']??FALSE,'EntryId'=>'%'.$olKey];
+        $entrySelector=['Source'=>$selector['Source'],'EntryId'=>'%'.$olKey];
         // create backup of existing ordered list entries including attached files
         // process cmd = 'removeEntryId' | 'singleEntry'
         // index of backupEntries = {2,4,6,8,10,...}, removeEntryId[6] will result in backupEntries = {2,4,8,10,...}
         $backupIndex=0;
         $backupEntries=[];
-        $$backupOlKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
-        $backupSelector=['Source'=>$selector['Source']??FALSE,'Class'=>$selector['Class']??FALSE,'EntryId'=>'%'.$$backupOlKey];
-        foreach($this->oc[$storageObj]->entryIterator($entrySelector,TRUE,'Read','EntryId',TRUE) as $entry){
-            $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+        $backupOlKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getEntryId();
+        foreach($this->entryIterator($entrySelector,TRUE,'Read','EntryId',TRUE) as $entry){
             $backupIndex++;
-            $backupEntryId=$this->addOrderedListIndexToEntryId($$backupOlKey,$backupIndex);
-            $backupSelector=array_merge($entrySelector,['EntryId'=>$backupEntryId]);
-            $backupFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($backupSelector);
+            $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+            $backupEntryId=$this->addOrderedListIndexToEntryId($backupOlKey,$backupIndex);
+            $backupFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file(['Source'=>$selector['Source'],'EntryId'=>$backupEntryId]);
             if (($cmd['removeEntryId']??'')===$entry['EntryId']){continue;}
             // create backup entry with attached file
             if (is_file($entryFile)){
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($entryFile,$backupFile);
+                unlink($entryFile);
             }
             $cmdStr=(($cmd['moveUpEntryId']??'')===$entry['EntryId'])?'moveUpEntryId':((($cmd['moveDownEntryId']??'')===$entry['EntryId'])?'moveDownEntryId':'');
-            $backupEntry=array_merge($entry,['EntryId'=>$backupEntryId,'backupFile'=>$backupFile,'originalEntryId'=>$entry['EntryId'],'olKey'=>$olKey,'cmd'=>$cmdStr]);
-            $backupEntries[$backupIndex*2]=$this->oc[$storageObj]->insertEntry($backupEntry,TRUE);
+            $backupEntries[$backupIndex*2]=array_merge($entry,['EntryId'=>$backupEntryId,'backupFile'=>$backupFile,'originalEntryId'=>$entry['EntryId'],'olKey'=>$olKey,'cmd'=>$cmdStr]);
         }
-        $this->oc[$storageObj]->deleteEntries($entrySelector,TRUE);
+        $this->deleteEntries($entrySelector,TRUE);
+        if (empty($backupEntries)){
+            $backupEntryId=$this->addOrderedListIndexToEntryId($backupOlKey,1);
+            $cmdStr=(($cmd['moveUpEntryId']??'')===$entry['EntryId'])?'moveUpEntryId':((($cmd['moveDownEntryId']??'')===$entry['EntryId'])?'moveDownEntryId':'');
+            $backupEntries[2]=array_merge($selector,['EntryId'=>$backupEntryId,'backupFile'=>'','originalEntryId'=>$selector['EntryId'],'olKey'=>$olKey,'cmd'=>$cmdStr]);
+        }
         // process cmd ob backed-up list = 'singleEntry' | 'moveUpEntryId' | 'moveDownEntryId'
         // index of backupEntries = {2,4,6,8,10,...}, moveUpEntryId[4] will result in backupEntries = {2,7,6,8,10,...}
         if (!empty($cmd['singleEntry']) && !empty($backupEntries)){$backupEntries=[2=>array_pop($backupEntries)];}
@@ -1020,16 +1019,16 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $entryId=$this->addOrderedListIndexToEntryId($olKey,$entryIndex);
             $entrySelector=array_merge($entrySelector,['EntryId'=>$entryId]);
             $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
-            if (is_file($backupEntry['backupFile'])){
+            if (is_file($backupEntry['backupFile']??'')){
                 $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($backupEntry['backupFile'],$entryFile);
+                unlink($backupEntry['backupFile']);
             }
             $entry=array_merge($backupEntry,['EntryId'=>$entryId]);
             if ($backupEntry['isAffectedEntry']){
                 $affectedEntryId=$entryId;
             }
-            $entry=$this->oc[$storageObj]->insertEntry($entry,FALSE);
+            $entry=$this->updateEntry($entry,FALSE);
         }
-        $this->oc[$storageObj]->deleteEntries($backupSelector,TRUE);
         return $affectedEntryId??'';
     }
 

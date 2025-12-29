@@ -17,22 +17,10 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private const CONTENT_STRUCTURE_PARAMS=[
         'Inbox source'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>[]],   
     ];
-    
-    private const CONTENT_STRUCTURE_RULES=[
-        '...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'&&','options'=>['&&'=>'AND','||'=>'OR'],'keep-element-content'=>TRUE],
-        'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
-        '| '=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-        'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
-        'OR'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-        'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
-        ' |'=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-        'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES,'keep-element-content'=>TRUE],
-        'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
-        'Forward on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+
+    private const INFO_MATRIX=[
+        'Info'=>['Commemt'=>'This processor receives entries from a data source. You need to select the receiver through "Inbox source" first. This will load the respective receiver widget.<br/>In addition, this processor forwards received or uploaded entries to different destinations/targets based on conditions.<br/>If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.'],
     ];
-
-    private const INFO='This processor receives entries from a data source. You need to select the receiver through "Inbox source" first. This will load the respective receiver widget.<br/><br/>In addition this processor forwards received or uploaded entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the operation for the first rule of each destination is ignored.';
-
     private $inboxClass='__NOTSET__';
     
     private $entryTable='';
@@ -95,7 +83,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getInboxEntriesInfo($callingElement){
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Info'=>[self::INFO]],'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
@@ -170,7 +158,6 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Forward entries from inbox';
         $arr['noBtns']=TRUE;
@@ -180,11 +167,10 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function forwardingRules($callingElement){
         // build content structure
-        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=\SourcePot\Datapool\Processing\ForwardEntries::CONTENT_STRUCTURE_RULES;
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
-        $arr['canvasCallingClass']=$callingElement['Folder'];
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Forwarding rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
@@ -213,7 +199,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 'Itmes not forwarded'=>['value'=>0],
                 ],
             'Forwarded'=>[],
-            ];
+        ];
         // receive entries
         if ($testRun==2 || $testRun==0){
             $inboxParams=current($base['inboxparams'])['Content'];

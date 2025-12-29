@@ -479,7 +479,7 @@ class Signals{
             $bar['style']['left']=round($timeStamp*$meta['xScaler']-$meta['xOffset']-intdiv($bar['style']['width'],2));
             $bar['data-value']=$item['value'];
             $bar['data-timestamp']=$item['timeStamp'];
-            $bar['data-label']=preg_replace('[^A-ZÄÜÖa-zäüö0-9\-\_@ \\//]','',$item['label']);
+            $bar['data-label']=preg_replace('[^A-ZÄÜÖa-zäüö0-9\-\_@ \\//]','',strval($item['label']));
             //
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($bar);
         }
