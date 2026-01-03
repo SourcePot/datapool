@@ -28,7 +28,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     private $pageState=[];
     
     private const DEFINITION_EVENT=[
-        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''],
+        'Map'=>['@class'=>'SourcePot\Datapool\Tools\GeoTools','@function'=>'getMapHtml','@default'=>''],
         'Content'=>[
             'Event'=>[
                 'Description'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
@@ -50,9 +50,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                 ],
             ],
-        'Manage attachment, delete entry,...'=>['@function'=>'entryControls','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-        'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-        'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Manage attachment, delete entry,...'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'entryControls','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE],
+        'Read'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
+        'Write'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
+        'Access info'=>['@class'=>'SourcePot\Datapool\Foundation\Access','@function'=>'accessInfoHtml','@isApp'=>'I','@hideCaption'=>TRUE],
     ];
 
     private const OPTIONS=[
@@ -69,7 +70,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         'Day width'=>200,
         'EntryId'=>'{{EntryId}}',
         'addDate'=>'',
-        'refreshInterval'=>0
+        'refreshInterval'=>0,
+        'disableAutoRefresh'=>TRUE,
     ];
 
     public function __construct($oc)
@@ -852,7 +854,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     {
         $this->resetEventCache();
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder(self::PAGE_STATE_TEMPLATE);
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60,'disableAutoRefresh'=>TRUE];
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60,'disableAutoRefresh'=>FALSE];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
@@ -866,5 +868,4 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     }
     
 }
-?>
 ?>

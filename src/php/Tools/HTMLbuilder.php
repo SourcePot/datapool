@@ -60,6 +60,7 @@ class HTMLbuilder{
         'SourcePot\Datapool\Tools\HTMLbuilder|archiveBtn'=>'archiveBtn()',
         'SourcePot\Datapool\Tools\MediaTools|getPreview'=>'getPreview()',
         'SourcePot\Datapool\Foundation\User|ownerAbstract'=>'ownerAbstract()',
+        'SourcePot\Datapool\Foundation\Access|accessInfoHtml'=>'accessInfoHtml()',
     ];
         
     private $keyCache=[];

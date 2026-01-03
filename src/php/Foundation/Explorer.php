@@ -525,19 +525,7 @@ class Explorer{
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
         if (empty($selector['EntryId'])){return ['html'=>''];}
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
-        // create html
-        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $owner=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($entry['Owner'],1);
-        $readAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Read');
-        $writeAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write');
-        $userRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$user],'Privileges');
-        $readRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Read');
-        $writeRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Write');
-        $matrix=[];
-        $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
-        $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Access infos']);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Access']->accessInfoHtml(['selector'=>$selector]);
         $arr=['html'=>$html,'icon'=>'i','title'=>'Info','class'=>'explorer'];
         return $arr;
     }
