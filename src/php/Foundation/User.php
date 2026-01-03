@@ -230,7 +230,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (!isset($user['Content'])){
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,($template<4)?TRUE:FALSE);
             if (empty($user)){
-                return '';
+                return 'unknown';
             }
         }
         $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;

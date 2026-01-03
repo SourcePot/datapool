@@ -340,11 +340,14 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         }
         if (!empty($emptyEvent) && empty($this->pageState['addDate'])){
             $arr['html'].=$this->getEventsOverview($arr);
-        } else if(mb_strpos(strval($event['EntryId']),'___')!==FALSE){
+        } else if (strpos($event['EntryId']?:'','___')!==FALSE){
             // serial event selected
-            if (isset($event['Content']['File content'])){unset($event['Content']['File content']);}
+            if (isset($event['Content']['File content'])){
+                unset($event['Content']['File content']);
+            }
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($event['Content']);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>TRUE,'hideHeader'=>TRUE]);
+            $matrix[]=[0=>'Owner','Value'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($event['Owner'])];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>FALSE,'hideHeader'=>FALSE]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$event]);
         } else {
             // stanrad event selected
@@ -480,7 +483,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $selector=$this->pageState;
             $selector['EntryId']=key($formData['cmd']['EntryId']);
             $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',$selector['EntryId']);
-            if (mb_strpos($selector['EntryId'],'___')===FALSE){
+            if (strpos($selector['EntryId']?:'','___')===FALSE){
                 $event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $this->pageState['Calendar date']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Calendar date',$event['Start']);
                 $this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
@@ -561,13 +564,16 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $calendarTimezone=new \DateTimeZone($this->pageState['Timezone']);
         $dbTimezone=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
         $selectedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($this->pageState);
-        if (!empty($selectedEntry['Start'])){
+        if (!empty($selectedEntry['Start']) && strpos($selectedEntry['EntryId']?:'','___')===FALSE){
+            // use entry Start date
             $calendarDateTime=new \DateTime($selectedEntry['Start'],$dbTimezone);    
         } else if (!empty($this->pageState['Calendar date'])){
+            // use Calendar date 
             $calendarDate=$this->stdReplacements($this->pageState['Calendar date']);
             $calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);
         } else {
-            return strtotime(date('Y-m-d 00:00:00'));
+            // use today
+           return strtotime(date('Y-m-d 00:00:00'));
         }
         $date=$calendarDateTime->format('Y-m-d 00:00:00');
         $calendarDateTime=new \DateTime($date,$calendarTimezone);
@@ -860,4 +866,5 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     }
     
 }
+?>
 ?>
