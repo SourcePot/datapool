@@ -249,6 +249,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         ];
         $flatEntries=[];
         foreach($clientRequest as $flatKey=>$value){
+            if ($value==='__TODELETE__' || $value===''){continue;}
             $keyComps=explode(self::ONEDIMSEPARATOR,$flatKey);
             $entryType=array_shift($keyComps);
             $flatKey=implode(self::ONEDIMSEPARATOR,$keyComps);

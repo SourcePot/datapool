@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Processing;
 
 class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
+    private $oc;
+    
     private const CONTENT_STRUCTURE_PARAMS=[
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
         'Forward to canvas element'=>['method'=>'canvasElementSelect','addColumns'=>[''=>'...'],'excontainer'=>TRUE],
@@ -23,8 +25,6 @@ class DelayEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Trigger'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>'','options'=>[]],
     ];
 
-    private $oc;
-    
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],

@@ -246,6 +246,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 $entry['Read']=$entry['Content']['Visibility'];
             }
         }
+        $entry['Owner']=$entry['Owner']??$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
+        if (strpos($entry['EntryId'],'EID')===0){
+            $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',$entry['EntryId']);
+        }
         return $entry;
     }
     
@@ -316,9 +320,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE)],
         ];
         $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-        $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'owner'=>$currentUserId];
+        $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'Owner'=>$currentUserId];
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Serial events definition <span style="font-size:0.7rem">{'.$arr['selector']['EntryId'].'}</span>';
+        $arr['caption']='Serial events definition';
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         $app=['icon'=>'Your serial events','title'=>'Here you can define your serial events such as birthdays...','html'=>$arr['html'],'open'=>$open];
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($app);
@@ -343,8 +347,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>TRUE,'hideHeader'=>TRUE]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$event]);
         } else {
+            // stanrad event selected
             $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
-            $event['owner']=(empty($event['owner']))?$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId():$event['owner'];
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
             $this->resetEventCache();
         }
