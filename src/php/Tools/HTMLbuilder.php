@@ -125,7 +125,7 @@ class HTMLbuilder{
                 $tableArr['class']=$arr['class'];
                 $tbodyArr['class']=$arr['class'];
             }
-            if (!empty($arr['caption'])){
+            if (!empty($arr['caption']) && empty($arr['hideCaption'])){
                 $captionArr=['tag'=>'caption','keep-element-content'=>TRUE,'element-content'=>$arr['caption']];
                 if (isset($arr['class'])){$captionArr['class']=$arr['class'];}
                 $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($captionArr);

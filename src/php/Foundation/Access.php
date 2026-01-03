@@ -265,7 +265,7 @@ class Access{
         $matrix=[];
         $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
         $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
-        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Access infos']);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'hideCaption'=>$arr['hideCaption']??FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']??'Access infos']);
     }
 
 }

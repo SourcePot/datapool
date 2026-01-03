@@ -53,7 +53,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         'Manage attachment, delete entry,...'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'entryControls','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE],
         'Read'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
         'Write'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
-        'Access info'=>['@class'=>'SourcePot\Datapool\Foundation\Access','@function'=>'accessInfoHtml','@isApp'=>'I','@hideCaption'=>TRUE],
+        'Access info'=>['@class'=>'SourcePot\Datapool\Foundation\Access','@function'=>'accessInfoHtml','@isApp'=>'I','@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
     ];
 
     private const OPTIONS=[
