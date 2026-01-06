@@ -23,7 +23,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     ];
 
     private const CONTENT_STRUCTURE_PARAMS=[
-        'Client EntryId'=>['method'=>'element','tag'=>'input','type'=>'hidden','value'=>'','excontainer'=>TRUE],
+        'Client EntryId'=>['method'=>'element','tag'=>'p','element-content'=>'','excontainer'=>TRUE],
         'Client'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
         'Plot to show'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
         '2nd Plot to show'=>['method'=>'select','value'=>'','options'=>[],'excontainer'=>TRUE],
@@ -187,7 +187,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         }
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
-        $contentStructure['Client EntryId']['value']=$params['Content']['Client'];
+        $contentStructure['Client EntryId']['element-content']=$params['Content']['Client'];
         $contentStructure['Client']['options']=$this->getClientOptions();
         $contentStructure['Plot to show']['options']=$plotOptions;
         $contentStructure['2nd Plot to show']['options']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalOptions();
@@ -303,14 +303,14 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
         $RemoteClientParamsSelector=['Source'=>$this->getEntryTable(),'Content'=>'%'.$entryIdComps[0].'%'];
         $expiresTimestamp=time()+intval($flatEntry['lifetime']??self::ENTRY_EXPIRATION_SEC);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($RemoteClientParamsSelector,TRUE) as $paramsEntry){
-            // clientParams -> CanvasElement
-            $canvasElementSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$paramsEntry['Content']['CanvasElement']];
+            // Name of params entry is EntryId of CanvasElement | clientParams -> CanvasElement
+            $canvasElementSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$paramsEntry['Name']];
             $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElementSelector,TRUE);
             if (empty($canvasElement['Content']['Selector'])){continue;}
-            // save entry to CanvasElement
+            // save entry to CanvasElement selector
             $target=$canvasElement['Content']['Selector'];
             $target['Params']['Client']['baseEntryId']=$entryIdComps[0];
-            $target['Name']=(isset($entry['Params']['File']['Name']))?$entry['Params']['File']['Name']:time();
+            $target['Name']=$entry['Params']['File']['Name']?:time();
             $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
             $target['Owner']='SYSTEM';
             $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($expiresTimestamp));
@@ -441,7 +441,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                     $name=$this->getClientName($lastEntry);
                     // get select button
                     $clientParams=current($callingElement['clientparams']);
-                    $canvasElement=['app'=>$clientParams['Folder'],'Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$clientParams['Content']['CanvasElement'],'Read'=>$lastEntry['Read']];
+                    $canvasElement=['app'=>$clientParams['Folder'],'Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$clientParams['Name'],'Read'=>$lastEntry['Read']];
                     $callingElement['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(['selector'=>$canvasElement,'cmd'=>'select']);
                     // wrapping-up
                     $appsHtml[$name]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$callingElement['html'],'icon'=>$name,'style'=>['padding'=>'1.5rem 0.5rem']]);
