@@ -579,7 +579,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function textSplit(string $text,string $regEx,bool $splitBeforeMatch=TRUE,bool $returnAllComps=FALSE):array
     {
         $text=preg_replace('/('.$regEx.')/u',($splitBeforeMatch)?(self::SPLIT_MARKER.'${1}'):('${1}'.self::SPLIT_MARKER),$text);
-        $textComps=explode(self::SPLIT_MARKER,$text);
+        $textComps=explode(self::SPLIT_MARKER,$text??'');
         if (count($textComps)<2){return [$text];}
         if ($returnAllComps){return $textComps;}
         if ($splitBeforeMatch){
@@ -609,6 +609,5 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun,$keepSource);
         return $entry;
     }
-
 }
 ?>
