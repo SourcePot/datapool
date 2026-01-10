@@ -14,6 +14,14 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
     private $oc;
 
     private const APP_ACCESS='ADMIN_R';
+
+    private const BASE_DATETIME=[
+        'Y-m-d H:i'=>'Y-m-d H:i:00',
+        'Y-m-d H'=>'Y-m-d H:30:00',
+        'Y-m-d'=>'Y-m-d 12:30:00',
+        'Y-m'=>'Y-m-15 12:30:00',
+        'Y'=>'Y-06-15 12:30:00',
+    ];    
     
     private $entryTable='';
     private $entryTemplate=[
@@ -136,28 +144,39 @@ private function signalsDerived(array $selector):string
 		return $arr;
 	}
 
-    public function updateDerivedSignals()
+
+
+    public function signal2derivedSignal(array $signal):void
     {
-        $formats=[
-            'Y-m-d H:i'=>'Y-m-d H:i:00',
-            'Y-m-d H'=>'Y-m-d H:30:00',
-            'Y-m-d'=>'Y-m-d 12:30:00',
-            'Y-m'=>'Y-m-15 12:30:00',
-            'Y'=>'Y-06-15 12:30:00',
-        ];
-        $signals=[];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$this->entryTable],TRUE,'Read','Name',$isAsc=TRUE) as $derivedSignal){
-            $signalId=$derivedSignal['Group'].'|'.$derivedSignal['Folder'];
-            $signals[$signalId][$derivedSignal['Name']][]=$derivedSignal['Content']+['Group'=>$derivedSignal['Group'],'Folder'=>$derivedSignal['Folder']];
+        // get relevant derived signals
+        $relevantDerivedSignalsSelector=[];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$this->entryTable,'Content'=>'%'.($signal['EntryId']?:'__NOTHING_HERE__').'%'],TRUE,'Read') as $relevantDerivedSignalRule){
+            $derivedSignalId=md5($relevantDerivedSignalRule['Group'].'|'.$relevantDerivedSignalRule['Folder']);
+            if (isset($relevantDerivedSignals[$derivedSignalId])){
+                continue;
+            }
+            $relevantDerivedSignalsSelector[$derivedSignalId]=['Source'=>$this->entryTable,'Group'=>$relevantDerivedSignalRule['Group'],'Folder'=>$relevantDerivedSignalRule['Folder']];
         }
-        foreach($signals as $signalId=>$signalArr){
-            $params=current($signalArr['Params']??[]);
-            $result=FALSE;
-            foreach($signalArr['Rules'] as $rule){
-                $sourceSignal=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'EntryId'=>$rule['Signal']];
-                $sourceSignalProperties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPropertiesById($sourceSignal,$params['Timespan'],$params['Timezone']);
+        $derivedSignals=[];
+        foreach($relevantDerivedSignalsSelector as $index=>$relevantDerivedSignalsSelector){
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($relevantDerivedSignalsSelector,TRUE,'Read','EntryId',TRUE) as $derivedSignalParamRule){
+                $derivedSignals[$index][$derivedSignalParamRule['Name']][$derivedSignalParamRule['EntryId']]=$derivedSignalParamRule['Content'];
+                $derivedSignals[$index][$derivedSignalParamRule['Name']][$derivedSignalParamRule['EntryId']]['Group']=$derivedSignalParamRule['Group'];
+                $derivedSignals[$index][$derivedSignalParamRule['Name']][$derivedSignalParamRule['EntryId']]['Folder']=$derivedSignalParamRule['Folder'];
+                if (!empty($derivedSignalParamRule['Content']['Signal'])){
+                    $derivedSignals[$index][$derivedSignalParamRule['Name']][$derivedSignalParamRule['EntryId']]['Signal']=['Source'=>$signal['Source'],'EntryId'=>$derivedSignalParamRule['Content']['Signal']];
+                }
+            }
+        }
+        // process derived signals
+        foreach($derivedSignals as $index=>$derivedSignal){
+            $params=current($derivedSignal['Params']);
+            $result=NULL;
+            foreach($derivedSignal['Rules'] as $ruleId=>$rule){
+                if (empty($rule['Signal'])){continue;}
+                $sourceSignalProperties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPropertiesById($rule['Signal'],$params['Timespan'],$params['Timezone']);
                 $signalValue=($sourceSignalProperties[$rule['Processing']]+floatval($rule['Offset']))*$rule['Scaler'];
-                if ($result===FALSE){
+                if ($result===NULL){
                     $result=$signalValue;    
                 } else if ($rule['Operation']==='+'){
                     $result+=$signalValue;    
@@ -169,21 +188,17 @@ private function signalsDerived(array $selector):string
             }
             // signal params
             $signalParams=['description'=>$params['description']];
-            if (empty($params['min'])){
-                $signalParams['yMin']=$params['min'];
-            }
-            if (empty($params['max'])){
-                $signalParams['yMax']=$params['max'];
-            }
+            $signalParams['yMin']=$params['min']??NULL;
+            $signalParams['yMax']=$params['max']??NULL;
             $targetTimeZone=new \DateTimeZone($params['Timezone']);
             $nowDateTime=new \DateTime('@'.time());
             $nowDateTime->setTimezone($targetTimeZone);
-            $dateTimeStr=$nowDateTime->format($formats[$params['Timespan']]);
+            $dateTimeStr=$nowDateTime->format(self::BASE_DATETIME[$params['Timespan']]);
             $signalDateTime=new \DateTime($dateTimeStr,new \DateTimeZone($params['Timezone']));
             $signalTimeStamp=$signalDateTime->getTimestamp();
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$params['Group'],$params['Folder'],$result,'float',$signalParams,$signalTimeStamp);
         }
-    }    
+    }
 
 }
 ?>
