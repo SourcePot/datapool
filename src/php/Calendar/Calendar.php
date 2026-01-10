@@ -28,7 +28,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     private $pageState=[];
     
     private const DEFINITION_EVENT=[
-        'Map'=>['@function'=>'getMapHtml','@class'=>'SourcePot\Datapool\Tools\GeoTools','@default'=>''],
+        'Map'=>['@class'=>'SourcePot\Datapool\Tools\GeoTools','@function'=>'getMapHtml','@default'=>''],
         'Content'=>[
             'Event'=>[
                 'Description'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
@@ -50,9 +50,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 'Save'=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
                 ],
             ],
-        'Manage attachment, delete entry,...'=>['@function'=>'entryControls','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-        'Read'=>['@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
-        'Write'=>['@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE,'@class'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
+        'Manage attachment, delete entry,...'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'entryControls','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>FALSE],
+        'Read'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'integerEditor','@default'=>'ALL_MEMBER_R','@key'=>'Read','@isApp'=>'R','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
+        'Write'=>['@class'=>'SourcePot\Datapool\Tools\HTMLbuilder','@function'=>'integerEditor','@default'=>'ALL_CONTENTADMIN_R','@key'=>'Write','@isApp'=>'W','@hideHeader'=>TRUE,'@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
+        'Access info'=>['@class'=>'SourcePot\Datapool\Foundation\Access','@function'=>'accessInfoHtml','@isApp'=>'I','@hideKeys'=>TRUE,'@hideCaption'=>TRUE],
     ];
 
     private const OPTIONS=[
@@ -69,7 +70,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         'Day width'=>200,
         'EntryId'=>'{{EntryId}}',
         'addDate'=>'',
-        'refreshInterval'=>0
+        'refreshInterval'=>0,
+        'disableAutoRefresh'=>TRUE,
     ];
 
     public function __construct($oc)
@@ -246,6 +248,10 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                 $entry['Read']=$entry['Content']['Visibility'];
             }
         }
+        $entry['Owner']=$entry['Owner']??$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
+        if (strpos($entry['EntryId'],'EID')===0){
+            $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',$entry['EntryId']);
+        }
         return $entry;
     }
     
@@ -316,9 +322,9 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             'Visibility'=>['method'=>'select','excontainer'=>TRUE,'value'=>32768,'options'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE)],
         ];
         $currentUserId=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
-        $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'owner'=>$currentUserId];
+        $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Serial events','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'EntryId'=>$currentUserId,'Owner'=>$currentUserId];
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Serial events definition <span style="font-size:0.7rem">{'.$arr['selector']['EntryId'].'}</span>';
+        $arr['caption']='Serial events definition';
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         $app=['icon'=>'Your serial events','title'=>'Here you can define your serial events such as birthdays...','html'=>$arr['html'],'open'=>$open];
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($app);
@@ -336,15 +342,18 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         }
         if (!empty($emptyEvent) && empty($this->pageState['addDate'])){
             $arr['html'].=$this->getEventsOverview($arr);
-        } else if(mb_strpos(strval($event['EntryId']),'___')!==FALSE){
+        } else if (strpos($event['EntryId']?:'','___')!==FALSE){
             // serial event selected
-            if (isset($event['Content']['File content'])){unset($event['Content']['File content']);}
+            if (isset($event['Content']['File content'])){
+                unset($event['Content']['File content']);
+            }
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($event['Content']);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>TRUE,'hideHeader'=>TRUE]);
+            $matrix[]=[0=>'Owner','Value'=>$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($event['Owner'])];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>FALSE,'hideHeader'=>FALSE]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$event]);
         } else {
+            // stanrad event selected
             $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
-            $event['owner']=(empty($event['owner']))?$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId():$event['owner'];
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
             $this->resetEventCache();
         }
@@ -476,7 +485,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $selector=$this->pageState;
             $selector['EntryId']=key($formData['cmd']['EntryId']);
             $this->pageState['EntryId']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'EntryId',$selector['EntryId']);
-            if (mb_strpos($selector['EntryId'],'___')===FALSE){
+            if (strpos($selector['EntryId']?:'','___')===FALSE){
                 $event=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector);
                 $this->pageState['Calendar date']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'Calendar date',$event['Start']);
                 $this->pageState['addDate']=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'addDate','');
@@ -557,13 +566,16 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $calendarTimezone=new \DateTimeZone($this->pageState['Timezone']);
         $dbTimezone=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
         $selectedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($this->pageState);
-        if (!empty($selectedEntry['Start'])){
+        if (!empty($selectedEntry['Start']) && strpos($selectedEntry['EntryId']?:'','___')===FALSE){
+            // use entry Start date
             $calendarDateTime=new \DateTime($selectedEntry['Start'],$dbTimezone);    
         } else if (!empty($this->pageState['Calendar date'])){
+            // use Calendar date 
             $calendarDate=$this->stdReplacements($this->pageState['Calendar date']);
             $calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);
         } else {
-            return strtotime(date('Y-m-d 00:00:00'));
+            // use today
+           return strtotime(date('Y-m-d 00:00:00'));
         }
         $date=$calendarDateTime->format('Y-m-d 00:00:00');
         $calendarDateTime=new \DateTime($date,$calendarTimezone);
@@ -842,7 +854,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     {
         $this->resetEventCache();
         $this->pageState=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder(self::PAGE_STATE_TEMPLATE);
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60,'disableAutoRefresh'=>TRUE];
+        $elector=['Source'=>$this->entryTable,'refreshInterval'=>60,'disableAutoRefresh'=>FALSE];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Calendar preview','keep-element-content'=>TRUE]);
         $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Calendar sheet '.__FUNCTION__,'generic',$elector,['method'=>'getCalendarSheet','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);

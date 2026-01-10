@@ -19,27 +19,27 @@ class Explorer{
         'Source'=>[
             'addTitle'=>'Add new Group',
             'editTitle'=>'Edit selected Source',
-            ],
+        ],
         'Group'=>[
             'addTitle'=>'Add new Folder',
             'editTitle'=>'Edit selected Group',
-            ],
+        ],
         'Folder'=>[
             'addTitle'=>'Add new Entry/Entries',
             'editTitle'=>'Edit selected Folder',
-            ],
+        ],
         'EntryId'=>[
             'addTitle'=>'Update Entry',
             'editTitle'=>'Edit selected Entry',
-            ],
-        ];
+        ],
+    ];
                                  
     private const SELECTOR_TEMPLATE=[
         'Source'=>FALSE,
         'Group'=>FALSE,
         'Folder'=>FALSE,
         'EntryId'=>FALSE
-        ];
+    ];
     private const IS_VISIBLE_TEMPLATE=[
         'Source'=>FALSE,
         'Group'=>TRUE,
@@ -53,33 +53,33 @@ class Explorer{
         'accessInfo'=>TRUE,
         'setRightsEntry'=>TRUE,
         'comments'=>TRUE,
-        ];
+    ];
     private const SETTINGS_TEMPLATE=[
         'Source'=>[
             'orderBy'=>'Source',
             'isAsc'=>FALSE,
             'limit'=>FALSE,
             'offset'=>FALSE
-            ],
+        ],
         'Group'=>[
             'orderBy'=>'Group',
             'isAsc'=>FALSE,
             'limit'=>FALSE,
             'offset'=>FALSE
-            ],
+        ],
         'Folder'=>[
             'orderBy'=>'Folder',
             'isAsc'=>FALSE,
             'limit'=>FALSE,
             'offset'=>FALSE
-            ],
+        ],
         'EntryId'=>[
             'orderBy'=>'Name',
             'isAsc'=>FALSE,
             'limit'=>FALSE,
             'offset'=>FALSE
-            ]
-        ];
+        ]
+    ];
 
     private const SPECIFIC_SETTINGS_TEMPLATE=[
         'docs'=>[
@@ -114,7 +114,7 @@ class Explorer{
 
     public function unifyEntry(array $entry):array
     {
-        // This function makes class specific corrections before the entry is inserted or updated.
+        // class specific entry adjustments before an entry is inserted or updated.
         return $entry;
     }
 
@@ -294,7 +294,6 @@ class Explorer{
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         // process selectors
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
-        //$guideEntry=$this->selector2guideEntry($selector);
         $guideEntry=$this->getGuideEntry($selector);
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getSelectors');
         if (isset($formData['cmd']['select'])){
@@ -306,8 +305,7 @@ class Explorer{
                     if ($newSelector[$column]!=$selector[$column]){$resetFromHere=TRUE;}
                 }
             }
-            $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE]);
-            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
+            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE]);
         }
         $selector=$this->addGuideEntry2selector($selector,$guideEntry);
         // add entry app
@@ -315,20 +313,18 @@ class Explorer{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addEntry');
         if (isset($formData['cmd']['add']) && !empty($formData['val'][$formData['cmd']['add']])){
             $selector=array_merge($selector,$formData['val']);
-            $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
             $guideEntry=$this->getGuideEntry($selector);
         } else if (isset($formData['cmd']['add entry'])){
             $entry=$selector;
             $entry['Name']=$formData['val']['add entry'];
             $selector=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($entry);
-            $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$selector);
         } else if (isset($formData['cmd']['add files'])){
             if ($formData['hasValidFiles']){
-                foreach($formData['files']['add files_'] as $fileIndex=>$fileArr){
+                foreach($formData['files']['add files_'] as $fileArr){
                     if ($fileArr['error']){continue;}
                     $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileUpload2entry($fileArr,$selector);
                 }
-            }        
+            }
         } else if (isset($formData['cmd']['update file'])){
             if ($formData['hasValidFiles']){
                 foreach($formData['files']['update file_'] as $fileIndex=>$fileArr){
@@ -341,25 +337,25 @@ class Explorer{
         // editEntry
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'editEntry');
         if (isset($formData['cmd']['edit'])){
+            $existingEntriesSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
             $newSelector=array_merge($selector,$formData['val']);
             $newSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($newSelector);
             // update guide entries and all other entries
-            $this->updateGuideEntries($selector,$newSelector);
-            $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
+            $newSelector=$this->updateGuideEntries($selector,$newSelector);
             $newSelector=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($newSelector);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($selector,$newSelector);
-            // set new page state to new selector
-            $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$newSelector);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($existingEntriesSelector,$newSelector);
+            // update selector
+            $selector=$newSelector;
         }
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->formData2statisticlog($formData);
+        $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
+        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($callingClass,$pageStateSelector);
         return $selector;
     }
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
-        if (empty($this->isVisible[__FUNCTION__])){
-            return ['html'=>''];
-        }
+        if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $access=TRUE;
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
@@ -391,9 +387,7 @@ class Explorer{
             }
             $headlineHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$headline]);
             $arr['html']=$headlineHtml.$contentHtml;
-            if (empty($access)){
-                $arr['html']='';
-            }
+            if (empty($access)){$arr['html']='';}
         }
         return $arr;
     }
@@ -525,19 +519,7 @@ class Explorer{
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
         if (empty($selector['EntryId'])){return ['html'=>''];}
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);
-        // create html
-        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $owner=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($entry['Owner'],1);
-        $readAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Read');
-        $writeAccess=$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write');
-        $userRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$user],'Privileges');
-        $readRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Read');
-        $writeRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Write');
-        $matrix=[];
-        $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
-        $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Access infos']);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Access']->accessInfoHtml(['selector'=>$selector]);
         $arr=['html'=>$html,'icon'=>'i','title'=>'Info','class'=>'explorer'];
         return $arr;
     }

@@ -111,6 +111,7 @@ class Signals{
                 $this->resetTrigger($triggerEntryId,TRUE);
             }
         }
+        $this->oc['SourcePot\Datapool\AdminApps\DerivedSignals']->signal2derivedSignal($signal);
         return $signal;
     }
 
@@ -392,10 +393,11 @@ class Signals{
         $index=0;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],$isSystemCall,'Read',$arr['selector']['orderBy']??FALSE,$arr['selector']['isAsc']??TRUE,$arr['selector']['limit']??FALSE,$arr['selector']['offset']??FALSE) as $signal){
             if (!isset($signal['Content']['signal'])){continue;}
+            $signalParms=array_merge($signal['Params']['signal'],$arr['settings']);
             $style=($index===0)?['margin-top'=>0]:[];
             $elArr=['tag'=>'p','class'=>'signal-chart','keep-element-content'=>TRUE,'element-content'=>$signal['Folder'].' &rarr; '.$signal['Name'],'style'=>$style];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr);
-            $html.=$this->signalPlot($signal,$arr['settings']);
+            $html.=$this->signalPlot($signal,$signalParms);
             $index++;
         }
         $elArr=['tag'=>'div','class'=>'signal-chart','style'=>$arr['selector']['style']??[],'keep-element-content'=>TRUE,'element-content'=>$html];
