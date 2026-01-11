@@ -181,11 +181,12 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
         if ($noAdminAccountFound){
-            $admin=['Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
-                    'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
-                    'Password'=>$this->initPsw(),
-                    'Owner'=>'SYSTEM'
-                    ];
+            $admin=[
+                'Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
+                'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
+                'Password'=>$this->initPsw(),
+                'Owner'=>'SYSTEM'
+            ];
             $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
             $admin['Content']['Contact details']['First name']='Admin';

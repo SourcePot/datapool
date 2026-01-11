@@ -19,6 +19,10 @@ use Monolog\Handler\StreamHandler;
 
 final class Root{
 
+    private const TRUSTWORTHY_STYLESRC_URLS='https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css';
+    private const TRUSTWORTHY_IMGSRC_URLS='https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/';
+    private const TRUSTWORTHY_FRAMESRC_URLS='https://www.openstreetmap.org/';
+
     // header & session cockie
     private const SESSION_COCKIE=[
         'cookie_lifetime'=>43200,
@@ -31,7 +35,7 @@ final class Root{
         'Cache-Control: max-age=2',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/ data:; frame-src 'self' https://www.openstreetmap.org/",
+        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' ".self::TRUSTWORTHY_IMGSRC_URLS." data: blob:; frame-src 'self' ".self::TRUSTWORTHY_FRAMESRC_URLS."; style-src-elem 'self' 'nonce-{{nonce}}' ".self::TRUSTWORTHY_STYLESRC_URLS.";  ",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"

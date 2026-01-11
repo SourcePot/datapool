@@ -20,7 +20,9 @@ class Backbone{
 
     private const EXTERNAL_HEADER_ELEMENTS=[
         'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>''],
+        'pannellum css'=>['tag'=>'link','rel'=>'stylesheet','href'=>"https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css",'crossorigin'=>''],
         'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>''],
+        'pannellum js'=>['tag'=>'script','src'=>'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js','element-content'=>'','crossorigin'=>''],
     ];
 
     private const DEFAULT_STYLESHEET='main';
@@ -42,7 +44,7 @@ class Backbone{
         'charset'=>'utf-8',
         'emailWebmaster'=>'admin@datapool.info',
         'path to Xpdf pdftotext executable'=>'',
-        ];
+    ];
     
     public function __construct(array $oc)
     {
@@ -98,7 +100,7 @@ class Backbone{
             '{{firstMenuBarExt}}'=>'',
             '{{secondMenuBar}}'=>'',
             '{{explorer}}'=>'',
-            ];
+        ];
         $arr['page html']='';
         $arr['page html'].="<!DOCTYPE html>".PHP_EOL;
         $arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$lngCode.'">'.PHP_EOL;

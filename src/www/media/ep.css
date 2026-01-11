@@ -29,7 +29,6 @@ img.ep-std,video.ep-std,.ep-message
 button.ep-std{
     clear:none;
     margin:5px;
-    padding:0.25rem;
 }
 table.ep-std,table.ep-h1,table.ep-h2,table.ep-footer{
     max-width:100%;
