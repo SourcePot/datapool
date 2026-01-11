@@ -53,7 +53,7 @@ class MediaTools{
         // create preview based on 'MIME-Type'
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0 && !empty($arr['selector']['Params']['GPano'])){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0 && (!empty($arr['selector']['Params']['GPano'] && empty($arr['containerId'])))){
             $arr=$this->getPhotoShere($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
