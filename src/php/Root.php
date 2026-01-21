@@ -19,10 +19,6 @@ use Monolog\Handler\StreamHandler;
 
 final class Root{
 
-    private const TRUSTWORTHY_STYLESRC_URLS='https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css';
-    private const TRUSTWORTHY_IMGSRC_URLS='https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/images/';
-    private const TRUSTWORTHY_FRAMESRC_URLS='https://www.openstreetmap.org/';
-
     // header & session cockie
     private const SESSION_COCKIE=[
         'cookie_lifetime'=>43200,
@@ -30,12 +26,13 @@ final class Root{
         'cookie_secure'=>TRUE,
         'cookie_httponly'=>TRUE,
     ];
+
     private const HTTP_HEADER=[
         'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
         'Cache-Control: max-age=2',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}'; style-src-attr 'unsafe-inline';img-src 'self' ".self::TRUSTWORTHY_IMGSRC_URLS." data: blob:; frame-src 'self' ".self::TRUSTWORTHY_FRAMESRC_URLS."; style-src-elem 'self' 'nonce-{{nonce}}' ".self::TRUSTWORTHY_STYLESRC_URLS.";  ",
+        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}' {{script-src}}; style-src-attr 'unsafe-inline';img-src 'self' {{img-src}} data: blob:; frame-src 'self' {{frame-src}}; style-src-elem 'self' 'nonce-{{nonce}}' {{style-src-elem}};  ",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
@@ -444,9 +441,14 @@ final class Root{
 
     public function sendHeader()
     {
-        $nonce=$this->getNonce(FALSE);
+        $replacements=['{{nonce}}'=>$this->getNonce(FALSE)];
+        foreach(['img-src','frame-src','style-src-elem','script-src'] as $needle){
+            $replacements['{{'.$needle.'}}']=implode(' ',(\SourcePot\Datapool\Foundation\Backbone::EXTERNAL_SOURCES[$needle]??[]));
+        }
         foreach(self::HTTP_HEADER as $headerLine){
-            $headerLine=str_replace('{{nonce}}',$nonce,$headerLine);
+            foreach($replacements as $needle=>$replacement){
+                $headerLine=str_replace($needle,$replacement,$headerLine);
+            }
             header($headerLine);
         }
     }
@@ -630,15 +632,11 @@ final class Root{
             // create non-exsisting dirs
             if (!is_dir($GLOBALS['dirs'][$label])){
                 mkdir($GLOBALS['dirs'][$label],$def['permissions'],TRUE);
-                
             }
             // create www-index.php files
             if (!empty($def['createIndexFile'])){
                 // create index.php content
                 $indexFileContent='<?php'.PHP_EOL;
-                foreach(self::HTTP_HEADER as $headerLine){
-                    $indexFileContent.="header(\"$headerLine\");".PHP_EOL;
-                }
                 $indexFileContent.="echo '<p>FORBIDDEN :)<p>';".PHP_EOL;
                 $indexFileContent.='?>';
                 // save index.php
@@ -688,7 +686,7 @@ final class Root{
     
     public function getBackupPageContent($msg='But some improvements might take a while.'):string
     {
-        foreach(self::HTTP_HEADER as $headerLine){header($headerLine);}
+        $this->sendHeader();
         $builderProgressHtml='<li>'.implode('</li><li>',$this->builderProgress).'</li>';
         $builderProgressHtml='<ol style="position:absolute;bottom:0;font-size:0.6rem;">'.$builderProgressHtml.'</ol>';
         $html='<!DOCTYPE html>';
