@@ -260,7 +260,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         //delete source entries
         $params=current($base['mappingparams']);
         if (($base['csvRequested'] || $base['zipRequested']) && empty($params['Content']['Keep source entries'])){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector'],TRUE);
         }
         // multiple hits statistics
         foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->getMultipleHitsStatistic() as $hitsArr){
