@@ -301,7 +301,6 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function runPdfEntries(array $callingElement,bool $testRun=FALSE):array
     {
-        
         $settings=['pdfparams'=>[],'pdfplaceholder'=>[],'pdfrules'=>[]];
         $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$settings);
         // loop through source entries and parse these entries
@@ -312,15 +311,23 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 'Skip rows'=>['value'=>0],
             ]
         ];
-
-        if (is_file($this->sampleTargetFile)){unlink($this->sampleTargetFile);}
+        if (is_file($this->sampleTargetFile)){
+            unlink($this->sampleTargetFile);
+        }
         // loop through entries
+        $maxProcTime=(current($settings['pdfparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
+        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if (strpos($sourceEntry['Params']['File']['MIME-Type']??'','image')===0){continue;}
             //if (time()-$settings['Script start timestamp']>30){break;}
             if ($sourceEntry['isSkipRow']){
                 $result['Pdf statistics']['Skip rows']['value']++;
                 continue;
+            }
+            $expiredTime=hrtime(TRUE)-$settings['Script start timestamp'];
+            if ($expiredTime>$timeLimit && $timeLimit>0){
+                $result['Pdf statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+                break;
             }
             $result=$this->pdfEntry($settings,$sourceEntry,$result,$testRun,$callingElement);
         }

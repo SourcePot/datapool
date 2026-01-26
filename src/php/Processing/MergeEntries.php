@@ -190,8 +190,14 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $result=['Merged'=>[],];
         // loop through entries
-        $selector=$callingElement['Content']['Selector'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $sourceEntry){
+        $maxProcTime=(current($base['mergingparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
+        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
+            if ($expiredTime>$timeLimit && $timeLimit>0){
+                $result['Merged']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+                break;
+            }
             $result=$this->mergeEntries($base,$sourceEntry,$result,$testRun);
         }
         $result['Statistics']=array_merge($this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix(),$result['Statistics']??[]);

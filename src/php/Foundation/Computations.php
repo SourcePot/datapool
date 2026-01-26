@@ -56,10 +56,18 @@ class Computations{
         'int(A+B+...)'=>'int(A+B+...)',
         'float(A+B+...)'=>'float(A+B+...)',
         'average(A,B,...)'=>'average(A,B,...)',
-        'string(A B)'=>'string(A B)',
+        'string(AB)'=>'string(AB)',
         'string(A|B)'=>'string(A|B)',
+        'string(A_B)'=>'string(A|B)',
+        'string(A-B)'=>'string(A|B)',
+        'string(A.B)'=>'string(A|B)',
+        'string(A:B)'=>'string(A|B)',
+        'string(A::B)'=>'string(A|B)',
+        'string(A/B)'=>'string(A; B)',
+        'string(A\B)'=>'string(A; B)',
+        'string(A B)'=>'string(A B)',
         'string(A, B)'=>'string(A, B)',
-        'string(A; B)'=>'string(A; B)'
+        'string(A; B)'=>'string(A; B)',
     ];
 
     private const RELEVANT_DATATYPE_KEY=['System short','Reference','Amount',];

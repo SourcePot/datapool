@@ -259,10 +259,17 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             ]
         ];
         $result['Mutliple entries → one target']=[];
+        $maxProcTime=(current($base['parserparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
+        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if ($sourceEntry['isSkipRow']){
                 $result['Parser statistics']['Skip rows']['value']++;
                 continue;
+            }
+            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
+            if ($expiredTime>$timeLimit && $timeLimit>0){
+                $result['Parser statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+                break;
             }
             $result['Parser statistics']['Entries']['value']++;
             $result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
@@ -609,5 +616,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun,$keepSource);
         return $entry;
     }
+
 }
 ?>

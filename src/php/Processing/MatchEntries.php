@@ -15,9 +15,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private const MAX_TABLE_LENGTH=50;
-    private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=100000000000;   // in nanoseconds
-
+    
     private const CONTENT_STRUCTURE_PARAMS=[
         'Column to match'=>['method'=>'keySelect','value'=>'Name','standardColumsOnly'=>FALSE,'excontainer'=>TRUE],
         'Match with'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
@@ -170,16 +168,19 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 'Matched'=>['value'=>0],
                 'Failed'=>['value'=>0],
                 'Skip rows'=>['value'=>0],
-                ],
+            ],
             'Matches'=>[],
         ];
         $isComplete=FALSE;
-        $selector=$callingElement['Content']['Selector'];
-        $timeLimit=$testRun?self::MAX_TEST_TIME:self::MAX_PROC_TIME;
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
+        $maxProcTime=(current($base['matchingparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
+        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
             $isComplete=($entry['isLast'])?TRUE:$isComplete;
             $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit){break;}
+            if ($expiredTime>$timeLimit && $timeLimit>0){
+                $result['Matching']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+                break;
+            }
             if ($entry['isSkipRow']){
                 $result['Matching']['Skip rows']['value']++;
                 continue;
