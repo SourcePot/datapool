@@ -262,10 +262,17 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             ]
         ];
         // loop through entries
+        $maxProcTime=(current($base['calculationparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
+        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             if ($sourceEntry['isSkipRow']){
                 $result['Calculate statistics']['Skip rows']['value']++;
                 continue;
+            }
+            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
+            if ($expiredTime>$timeLimit && $timeLimit>0){
+                $result['Calculate statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+                break;
             }
             $result=$this->calcEntry($base,$sourceEntry,$result,$testRun);
         }

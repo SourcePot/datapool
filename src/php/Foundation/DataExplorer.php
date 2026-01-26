@@ -12,8 +12,13 @@ namespace SourcePot\Datapool\Foundation;
 
 class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
 
+    public const MAX_TEST_TIME=5000000000;   // in nanoseconds
+    public const MAX_PROC_TIME=100000000000;   // in nanoseconds
+
     private const ROW_COUNT_LIMIT=FALSE;
+
     private const SIGNAL_EXPIRY_THRESHOLD='-P10D';  // Negative DateTimeIntervall string, e.g. '-P1D' for 1 day
+    
     private const STYLE_CLASSES=[
         'canvas-std'=>'Standard',
         'canvas-red'=>'Error',
@@ -48,9 +53,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                 ],
             'Dynamic style'=>[
                 'Signal'=>['@function'=>'select','@options'=>[],'@value'=>''],
-                'Max signal value age [sec]'=>['@tag'=>'input','@type'=>'Text','@default'=>5,'@title'=>'Vlue will be set to minimum if older'],
+                'Max signal value age [sec]'=>['@tag'=>'input','@type'=>'Text','@default'=>60,'@title'=>'If last signal value is older, the value will be set to minimum. The value must be larger than a transmission delay.'],
                 'Property'=>['@function'=>'select','@options'=>['color'=>'color','background-color'=>'background-color',],'@default'=>'color'],
-                'Profile'=>['@function'=>'select','@options'=>['linear'=>'Linear','steps'=>'Steps','threshold'=>'Threshold',],'@default'=>'linear'],
+                'Profile'=>['@function'=>'select','@options'=>['linear'=>'Linear','steps'=>'Steps','threshold'=>'Threshold',],'@default'=>'threshold'],
                 'Profile value'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Is the threshold, if profile is Threshold. Is the amount of steps, if profile is Steps'],
                 'Min'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Leave empty, if it schould be set beased on the provoded value range'],
                 'Max'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Leave empty, if it schould be set beased on the provoded value range'],
@@ -740,7 +745,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         if (strpos($canvasElement['Content']['Dynamic style']['Property'],'color')!==FALSE){
             $styleProp['value']=str_replace('{{VALUE}}',strval($newPropValue*255),self::DYNAMIC_STYLE_TEMPLATE['color']);
         }
-
 
         $styleProp['debugging']=['profile'=>$profile,'range'=>$range,'valueMinusMin'=>$valueMinusMin,];
         $styleProp['signalProps']=$signalProps;

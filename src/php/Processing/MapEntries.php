@@ -14,9 +14,6 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
 
-    private const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    private const MAX_PROC_TIME=100000000000;   // in nanoseconds
-    
     private const CONTENT_STRUCTURE_PARAMS=[
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
         'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
@@ -198,7 +195,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $zip= new \ZipArchive;
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
-        $timeLimit=$testRun?self::MAX_TEST_TIME:(($base['csvRequested'] || $params['Content']['Keep source entries']>0)?0:self::MAX_PROC_TIME);
+        $maxProcTime=(($base['csvRequested'] || $params['Content']['Keep source entries']>0)?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME);
+        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
             $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
             if ($expiredTime>$timeLimit && $timeLimit>0){
@@ -260,7 +258,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         //delete source entries
         $params=current($base['mappingparams']);
         if (($base['csvRequested'] || $base['zipRequested']) && empty($params['Content']['Keep source entries'])){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($callingElement['Content']['Selector'],TRUE);
         }
         // multiple hits statistics
         foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->getMultipleHitsStatistic() as $hitsArr){

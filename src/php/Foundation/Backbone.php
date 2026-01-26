@@ -11,20 +11,59 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Foundation;
 
 class Backbone{
-    
+
+    public const EXTERNAL_SOURCES=[
+        // Content-Security-Policy
+        'img-src'=>[
+            'https://tile.openstreetmap.org',
+            'https://unpkg.com/leaflet@1.9.4/dist/images/',
+        ],
+        'frame-src'=>[
+            'https://www.openstreetmap.org/',
+        ],
+        'style-src-elem'=>[
+            'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css',
+        ],
+        'script-src'=>[
+        
+        ],
+        // Header files
+        'leaflet css'=>[
+            'tag'=>'link',
+            'rel'=>'stylesheet',
+            'href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+            'integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=',
+            'crossorigin'=>''
+        ],
+        'leaflet js'=>[
+            'tag'=>'script',
+            'src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+            'integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=',
+            'element-content'=>'',
+            'crossorigin'=>''
+        ],
+        'pannellum css'=>[
+            'tag'=>'link',
+            'rel'=>'stylesheet',
+            'href'=>"https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css",
+            'crossorigin'=>''
+        ],
+        'pannellum js'=>[
+            'tag'=>'script',
+            'src'=>'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js',
+            'element-content'=>'',
+            'crossorigin'=>''
+        ],
+    ];
+
+    private const DEFAULT_STYLESHEET='main';
+
     private const HEADER_FILES_TEMPLATES=[
         'ico'=>['tag'=>'link','rel'=>'shortcut icon','srcAttr'=>'href'],
         'css'=>['tag'=>'link','type'=>'text/css','rel'=>'stylesheet','srcAttr'=>'href'],
         'js'=>['tag'=>'script','element-content'=>'','srcAttr'=>'src'],
     ];
-
-    private const EXTERNAL_HEADER_ELEMENTS=[
-        'leaflet css'=>['tag'=>'link','rel'=>'stylesheet','href'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','integrity'=>'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','crossorigin'=>''],
-        'leaflet js'=>['tag'=>'script','src'=>'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','integrity'=>'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','element-content'=>'','crossorigin'=>''],
-    ];
-
-    private const DEFAULT_STYLESHEET='main';
-
+    
     private $oc=NULL;
 
     private $webPageStyleSheet;
@@ -42,7 +81,7 @@ class Backbone{
         'charset'=>'utf-8',
         'emailWebmaster'=>'admin@datapool.info',
         'path to Xpdf pdftotext executable'=>'',
-        ];
+    ];
     
     public function __construct(array $oc)
     {
@@ -98,7 +137,7 @@ class Backbone{
             '{{firstMenuBarExt}}'=>'',
             '{{secondMenuBar}}'=>'',
             '{{explorer}}'=>'',
-            ];
+        ];
         $arr['page html']='';
         $arr['page html'].="<!DOCTYPE html>".PHP_EOL;
         $arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$lngCode.'">'.PHP_EOL;
@@ -153,8 +192,12 @@ class Backbone{
             }
         }
         $arr['toReplace']['{{head}}']=$jQueryImport.$jQueryUIImport.$arr['toReplace']['{{head}}'];
-        // Leavelet plugin
-        foreach(self::EXTERNAL_HEADER_ELEMENTS as $element){
+        // External libraries
+        foreach(self::EXTERNAL_SOURCES as $element){
+            $fileInfo=pathinfo($element['href']??$element['src']??'');
+            if ($fileInfo['extension']!=='css' && $fileInfo['extension']!=='js'){
+                continue;
+            }
             $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         }
         return $arr;

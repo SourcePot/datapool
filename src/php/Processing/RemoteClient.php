@@ -444,7 +444,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                     $canvasElement=['app'=>$clientParams['Folder'],'Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$clientParams['Name'],'Read'=>$lastEntry['Read']];
                     $callingElement['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn(['selector'=>$canvasElement,'cmd'=>'select']);
                     // wrapping-up
-                    $appsHtml[$name]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$callingElement['html'],'icon'=>$name,'style'=>['padding'=>'1.5rem 0.5rem']]);
+                    $appsHtml[$name]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$callingElement['html'],'icon'=>$name,'style'=>['clear'=>'both','padding'=>'1.5rem 0.5rem']]);
                 }
             }
         }

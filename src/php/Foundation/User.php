@@ -27,7 +27,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'First name'=>['@tag'=>'input','@type'=>'text','@placeholder'=>'First name','@excontainer'=>TRUE],
                 'Middle name'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
                 'Family name'=>['@tag'=>'input','@type'=>'text','@placeholder'=>'Family name','@excontainer'=>TRUE],
-                'Gender'=>['@function'=>'select','@options'=>['male'=>'male','female'=>'female','divers'=>'divers'],'@default'=>'male','@excontainer'=>TRUE],
+                'Gender'=>['@function'=>'select','@options'=>[''=>'','male'=>'male','female'=>'female','divers'=>'divers'],'@default'=>'','@excontainer'=>TRUE],
                 'Language'=>['@function'=>'select','@options'=>['en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'],'@default'=>'en','@excontainer'=>TRUE],
                 'Email'=>['@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'','@placeholder'=>'e.g. info@company.com','@excontainer'=>TRUE],
                 'Phone'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 89 1234567','@excontainer'=>TRUE],
@@ -181,11 +181,12 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
         if ($noAdminAccountFound){
-            $admin=['Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
-                    'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
-                    'Password'=>$this->initPsw(),
-                    'Owner'=>'SYSTEM'
-                    ];
+            $admin=[
+                'Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
+                'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
+                'Password'=>$this->initPsw(),
+                'Owner'=>'SYSTEM'
+            ];
             $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
             $admin['Content']['Contact details']['First name']='Admin';

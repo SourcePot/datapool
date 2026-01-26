@@ -53,6 +53,8 @@ class MediaTools{
         // create preview based on 'MIME-Type'
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0 && (!empty($arr['selector']['Params']['GPano'] && empty($arr['containerId'])))){
+            $arr=$this->getPhotoShere($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
             // add wrapper div
@@ -305,7 +307,20 @@ class MediaTools{
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.']);
         }
         return $arr;
-    }    
+    }
+
+    private function getPhotoShere($arr):array
+    {
+        $id=md5($arr['selector']['EntryId']);
+        $panorama=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
+        $photoSpereContainerPlaceholder=['tag'=>'p','element-content'=>'Photo Sphere Placeholder...','style'=>['font-size'=>'1.4rem','width'=>'98%','text-align'=>'center']];
+        $photoSpereContainerPlaceholder=$this->oc['SourcePot\Datapool\Foundation\Element']->element($photoSpereContainerPlaceholder);
+        $photoSpereContainer=['tag'=>'div','class'=>'photo-sphere','id'=>$id,'element-content'=>$photoSpereContainerPlaceholder,'keep-element-content'=>TRUE,'style'=>['width'=>'98%','height'=>'70vh','max-height'=>'500px']];
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($photoSpereContainer);
+        $pannellumViewerScript='pannellum.viewer(\''.$id.'\',{"type":"equirectangular","panorama":"'.$panorama.'"});';
+        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'script','element-content'=>$pannellumViewerScript,'keep-element-content'=>TRUE]);
+        return $arr;
+    }
     
     private function getImage(array $arr):string|array
     {

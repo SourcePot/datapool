@@ -88,7 +88,8 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
             $presentArr['selector']=$chat;
             $entryContentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             $entryHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryContentHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper']);
+            $style=((time()-intval($chat['Name']))<86400)?['border-left'=>'1vw solid var(--green)']:['border-left'=>'1vw solid var(--bgColor)'];
+            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper','style'=>$style]);
         }
         if (!isset($chat)){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>'Nothing here yet...']);
