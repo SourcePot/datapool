@@ -209,7 +209,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $bestMatchCanvasElement=current($this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements(__CLASS__,$params['Content']['Match with']));
         $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
         // get best match
-        $needle=$flatEntry[$params['Content']['Column to match']];
+        $needle=$flatEntry[$params['Content']['Column to match']]??'__NO_VALUE__';
         $bestMatch=$this->oc['SourcePot\Datapool\Foundation\Computations']->matchEntry($needle,$base['entryTemplates'][$params['Content']['Match with']],$params['Content']['Match with column'],$params['Content']['Match type'],TRUE);
         // process best match
         $probability=round(100*$bestMatch['Content']['match']['probability']);
