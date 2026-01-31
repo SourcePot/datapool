@@ -166,7 +166,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
-            if ($caption==='Parser statistics'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
@@ -249,41 +248,22 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=['parserparams'=>[],'parsersectionrules'=>[],'parserrules'=>[],'mapperrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=[
-        'Parser statistics'=>[
-            'Entries'=>['value'=>0],
-            'Success'=>['value'=>0],
-            'Failed'=>['value'=>0],
-            'Skip rows'=>['value'=>0]
-            ]
-        ];
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['parserparams'])['Content']['Keep source entries']??FALSE);
         $result['Mutliple entries → one target']=[];
-        $maxProcTime=(current($base['parserparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
-        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if ($sourceEntry['isSkipRow']){
-                $result['Parser statistics']['Skip rows']['value']++;
-                continue;
-            }
-            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Parser statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
             }
-            $result['Parser statistics']['Entries']['value']++;
-            $result=$this->parseEntry($base,$sourceEntry,$result,$testRun);
         }
         // multiple hits statistics
         foreach($this->oc['SourcePot\Datapool\Tools\MiscTools']->getMultipleHitsStatistic() as $hitsArr){
             if ($hitsArr['Hits']<2){continue;}
             $result['Hits >1 with same EntryId'][$hitsArr['Name']]=['Hits'=>$hitsArr['Hits'],'Comment'=>$hitsArr['Comment']];    
         }
-        // add general statistics
-        $statistics=['Statistics'=>$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix()];
-        $statistics['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $statistics['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        return $statistics+$result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     private function parseEntry($base,$sourceEntry,$result,$testRun):array
@@ -358,7 +338,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // finalize single entry
             $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$mappingEntry,$singleEntry],$testRun);
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
-            $result['Parser statistics']['Success']['value']++;
+            $result['Statistics']['Entries moved (success)']['Value']++;
         } else {
             // parse multiple entries sections
             foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
@@ -378,9 +358,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     if (isset($parserResult['result'][$sectionId]) && (!isset($result[$sectionKey]) || mt_rand(0,100)>70)){
                         $result[$sectionKey]=$parserResult['result'][$sectionId];
                     }
-                    $result['Parser statistics']['Success']['value']++;
                     $isLastSection=(count($sectionArr)-1)===$sectionIndex;
                     $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$mappingEntry,$singleEntry,$multipleEntry],$testRun,!$isLastSection);
+                    $result['Statistics']['Entries moved (success)']['Value']++;
                     $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
                 }
             }
@@ -395,7 +375,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function finalizeFailedEntry($result,$sourceEntry,$base,$params,$testRun):array
     {
-        $result['Parser statistics']['Failed']['value']++;
+        $result['Statistics']['Entries moved (failure)']['Value']++;
         $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($failedEntry,'failed');
         if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){

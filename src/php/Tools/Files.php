@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Tools;
 
-class Files implements \SourcePot\Datapool\Interfaces\Receiver{
+class Files implements \SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\Transmitter{
     
     private $oc;
     
@@ -198,6 +198,37 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver{
     {
         $canvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$id];
         return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
+    }
+
+    /******************************************************************************************************************************************
+    * TRANSMITTER: Email transmitter 
+    */
+    public function send(string $recipient,array $entry):int
+    {
+        $fileName=$entry['Content']['Subject']??$entry['Name']??'file_name_missing';
+        $fileExtension=$entry['Params']['File']['Extension']??'file';
+        $targetFile=$GLOBALS['dirs']['ftp'].$fileName.'.'.$fileExtension;
+        $attachment=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+        if (is_file($attachment)){
+            return $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($attachment,$targetFile,0774)['inserted files'];
+        } else {
+            $fileContent=((empty($entry['Content']))?$entry:$entry['Content'])?:[];
+            $fileContent=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($$fileContent);
+            return intval(file_put_contents($targetFile,$fileContent));
+        }        
+    }
+    
+    public function transmitterPluginHtml(array $arr):string
+    {
+        $pluginHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Target directory']);
+        $pluginHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$GLOBALS['dirs']['ftp']]);
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Transmitter','html'=>$pluginHtml]);
+    }
+
+    public function getRelevantFlatUserContentKey():string
+    {
+        $flatUserContentKey='Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Email';
+        return $flatUserContentKey;
     }
 
 }

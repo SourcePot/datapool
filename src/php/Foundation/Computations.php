@@ -26,7 +26,7 @@ class Computations{
         'unycomRegion'=>'&rarr; UNYCOM region','unycomRef'=>'&rarr; UNYCOM reference','unycomRefNoWhitspaces'=>'&rarr; UNYCOM reference no \s',
         'userIdNameComma'=>'UserId &rarr; Name, First name','userIdName'=>'UserId &rarr; First name Name','useridemail'=>'UserId &rarr; email',
         'userIdPhone'=>'UserId &rarr; phone','userIdMobile'=>'UserId &rarr; mobile',
-        ];
+    ];
     
     public const CONDITION_TYPES=[
         'empty'=>'empty(A)','!empty'=>'!empty(A)','strpos'=>'A contains B','!strpos'=>'A does not contain B',
@@ -34,20 +34,20 @@ class Computations{
         '&&'=>'A AND B','||'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
         'containsRegexMatch'=>'A contains RegEx(B)','!containsRegexMatch'=>'A !contains RegEx(B)',
         'TRUE'=>'always TRUE','FALSE'=>'always FALSE',
-        ];
+    ];
     
     public const COMPARE_TYPES_CONST=[
         '>0'=>'> 0','==0'=>'== 0','!=0'=>'!= 0','<0'=>'< 0',
         '==INF'=>'== &infin;','!=INF'=>'!= &infin;',
         '==-INF'=>'== -&infin;','!=-INF'=>'!= -&infin;',
         '==±INF'=>'== &plusmn;&infin;','!=±INF'=>'!= &plusmn;&infin;',
-        ];
+    ];
     
     public const OPERATIONS=[
         '+'=>'A + B','-'=>'A - B','*'=>'A * B','/'=>'A / B','pow'=>'pow(A,B)','%'=>'A modulus B',
         '|'=>'A | B','&'=>'A & B',
         'regexMatch'=>'f(A,RegEx(B))',
-        ];
+    ];
     
     public const COMBINE_OPTIONS=[
         ''=>'{...}',

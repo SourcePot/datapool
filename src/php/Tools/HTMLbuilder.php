@@ -114,7 +114,8 @@ class HTMLbuilder{
     {
         $html='';
         $styles=['trStyle'=>[]];
-        if (!empty($arr['matrix'])){
+        $isValidTable=!empty(current($arr['matrix'])) && (is_array(current($arr['matrix']))?(is_array(current($arr['matrix']))?TRUE:FALSE):FALSE);
+        if ($isValidTable){
             $indexArr=['x'=>0,'y'=>0];
             $tableArr=['tag'=>'table','keep-element-content'=>TRUE,'element-content'=>''];
             if (isset($arr['id'])){$tableArr['id']=$arr['id'];}
@@ -122,8 +123,7 @@ class HTMLbuilder{
             if (isset($arr['title'])){$tableArr['title']=$arr['title'];}
             $tbodyArr=['tag'=>'tbody','keep-element-content'=>TRUE];
             if (isset($arr['class'])){
-                $tableArr['class']=$arr['class'];
-                $tbodyArr['class']=$arr['class'];
+                $tableArr['class']=$tbodyArr['class']=$arr['class'];
             }
             if (!empty($arr['caption']) && empty($arr['hideCaption'])){
                 $captionArr=['tag'=>'caption','keep-element-content'=>TRUE,'element-content'=>$arr['caption']];

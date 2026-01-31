@@ -95,7 +95,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
     private function getInfo($callingElement):string
     {
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Help']);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?','open'=>TRUE]);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?','open'=>FALSE]);
         return $html;
     }
 
@@ -122,6 +122,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
+            $appArr['open']=$caption==='Statistics';
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
@@ -188,34 +189,22 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
         // initialize statistic and result array
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=[
-            'Statistics'=>[
-                'Entries'=>['value'=>0],
-                'Skip rows'=>['value'=>1],
-            ],
-            'Entry count'=>[
-                'Moved to'=>['Success'=>0,'Failure'=>0],
-            ]
-        ];
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if ($sourceEntry['isSkipRow']){
-                $result['Statistics']['Skip rows']['value']++;
-                continue;
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
+                break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
             }
-            $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
-            $result['Statistics']['Entries']['value']++;
         }
-        // present result
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']);
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
 
     private function processEntry(array $base,array $sourceEntry,array $result,bool $testRun):array
     {
+        sleep(1); // simulate processing time
         // recover basic context data
         $callingElementContent=$base['callingElement']; // Canvas element content
         $processorParams=current($base['processorparamshtml'])['Content']; // Processor params are linked to the key with the name = lower case method name there rules are defined
@@ -251,14 +240,13 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $success=(mt_rand(0,1)>0)?TRUE:FALSE;
         if ($success){
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorSuccess,TRUE,$testRun,!empty($processorParams['Keep source entries']));
-            $result['Entry count']['Moved to']['Success']++;
+            $result['Statistics']['Entries moved (success)']['Value']++;
         } else {
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
-            $result['Entry count']['Moved to']['Failure']++;
+            $result['Statistics']['Entries moved (failure)']['Value']++;
         }
 
         return $result;
     }
-
 }
 ?>

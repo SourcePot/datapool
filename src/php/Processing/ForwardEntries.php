@@ -14,6 +14,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
     
+    private const MAX_RESULT_TABLE_ROW_COUNT=20;
+    
     private const INFO=[
         'Description'=>['Info'=>'This processor forwards entries to different destinations/targets based on conditions. If there are multiple rules for a forwarding destination, all rules & conditions for this destination must be met for the entry to be forwarded. Rules are linked by logical "AND" or “OR” (column "..."), whereby the "AND", “OR” for the very first rule of any destination is ignored.']
     ];
@@ -110,9 +112,9 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['run'])){
-            $result=$this->runForwardEntries($arr['selector'],0);
+            $result=$this->runForwardEntries($arr['selector'],FALSE);
         } else if (isset($formData['cmd']['test'])){
-            $result=$this->runForwardEntries($arr['selector'],1);
+            $result=$this->runForwardEntries($arr['selector'],TRUE);
         }
         // build html
         $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
@@ -195,22 +197,18 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=['Forwarded'=>[],];
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['forwardingparams'])['Content']['Keep source entries']??FALSE);
+        $result['Forwarded']=[];
         // loop through entries
-        $maxProcTime=(current($base['forwardingparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
-        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Forwarded']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->forwardEntry($base,$sourceEntry,$result,$testRun);
             }
-            $result=$this->forwardEntry($base,$sourceEntry,$result,$testRun);
         }
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     public function forwardEntry($base,$sourceEntry,$result,$testRun){
@@ -249,20 +247,30 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $targetName=array_search($forwardOnSuccess,$base['targets']);
         }
-        $wasForwarded=FALSE;
+        $success=$wasForwarded=FALSE;
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
             $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,['style'=>['min-width'=>'unset','padding'=>'0']]);
             $targetResultElement=$this->oc['SourcePot\Datapool\Foundation\Element']->element($targetResultElement);
-            $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
-            $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             if ($conditionMet){
+                $success=TRUE;
                 $wasForwarded=!$testRun;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE);
+            }
+            $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
+            if (count($result['Forwarded'])<self::MAX_RESULT_TABLE_ROW_COUNT){
+                $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
+            } else {
+                $result['Forwarded']['...'][$targetName]='...';
             }
         }
         if ($wasForwarded && !boolval($params['Keep source entries']??0)){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
+        }
+        if ($success){
+            $result['Statistics']['Entries moved (success)']['Value']++;
+        } else {
+            $result['Statistics']['Entries moved (failure)']['Value']++;
         }
         return $result;
     }

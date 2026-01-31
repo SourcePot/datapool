@@ -186,24 +186,17 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function runMergeEntries($callingElement,$testRun=1){
         $base=['mergingparams'=>[],'mergingrules'=>[],'processId'=>$callingElement['EntryId']];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
-        // loop through source entries and parse these entries
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=['Merged'=>[],];
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['mergingparams'])['Content']['Keep source entries']??FALSE);
         // loop through entries
-        $maxProcTime=(current($base['mergingparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
-        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Merged']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->mergeEntries($base,$sourceEntry,$result,$testRun);
             }
-            $result=$this->mergeEntries($base,$sourceEntry,$result,$testRun);
         }
-        $result['Statistics']=array_merge($this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix(),$result['Statistics']??[]);
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     public function mergeEntries($base,$sourceEntry,$result,$testRun){

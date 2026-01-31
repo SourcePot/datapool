@@ -161,47 +161,17 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=['matchingparams'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=[
-            'Matching'=>[
-                'Entries'=>['value'=>0],
-                'Matched'=>['value'=>0],
-                'Failed'=>['value'=>0],
-                'Skip rows'=>['value'=>0],
-            ],
-            'Matches'=>[],
-        ];
-        $isComplete=FALSE;
-        $maxProcTime=(current($base['matchingparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
-        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['matchingparams'])['Content']['Keep source entries']??FALSE);
+        $result['Matches']=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $entry){
-            $isComplete=($entry['isLast'])?TRUE:$isComplete;
-            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Matching']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$entry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
-            }
-            if ($entry['isSkipRow']){
-                $result['Matching']['Skip rows']['value']++;
-                continue;
-            }
-            $result['Matching']['Entries']['value']++;
-            $result=$this->matchEntry($base,$entry,$result,$testRun);
-        }
-        if (!$isComplete){
-            foreach($result['Matching'] as $key=>$valueArr){
-                $result['Matching'][$key]['comment']='incomplete'.($testRun?' testrun only':', max. processing time reached');
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->matchEntry($base,$entry,$result,$testRun);
             }
         }
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        if ($result['Statistics']['Time consumption [msec]']['Value']==0){
-            $result['Statistics']['Entries per sec']=['Value'=>'NaN'];
-        } else {
-            $result['Statistics']['Entries per sec']=['Value'=>round(1000*$result['Matching']['Entries']['value']/$result['Statistics']['Time consumption [msec]']['Value'],2)];
-        }
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     private function matchEntry($base,$entry,$result,$testRun){
@@ -224,11 +194,9 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!empty($params['Content']['Combine content'])){
                 $entry['Content']=array_merge($entry['Content'],$bestMatch['Content']);
             }
-            $result['Matching']['Matched']['value']++;
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun,$params['Content']['Keep source entries']);
-            } else {
-                $result['Matching']['Kept entry']['value']++;
+                $result['Statistics']['Entries moved (success)']['Value']++;
             }    
             if (count($result['Matches'])<self::MAX_TABLE_LENGTH){
                 $flatBestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($bestMatch);
@@ -238,11 +206,9 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         } else {
             // failed match
-            $result['Matching']['Failed']['value']++;
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun,$params['Content']['Keep source entries']);
-            } else {
-                $result['Matching']['Kept entry']['value']++;
+                $result['Statistics']['Entries moved (failure)']['Value']++;
             }
             if (count($result['Matches'])<self::MAX_TABLE_LENGTH){
                 $flatBestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($bestMatch);
