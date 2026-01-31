@@ -62,7 +62,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         imagefill($im,0,0,$bgColor);
         imagestring($im,4,0,2,$email,$fColor);
         imagepng($im,$GLOBALS['dirs']['assets'].'email.png');
-        imagedestroy($im);
+        $im=NULL;
     }
 
     public function run(array|bool $arr=TRUE):array{
@@ -335,7 +335,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             if (strcmp($file,'.')===0 || strcmp($file,'..')===0){
                 continue;
             }
-            if ((count($files)-1)<self::MAX_FTP_FILES_TO_SHOW){
+            if ((count($matrix)-1)<self::MAX_FTP_FILES_TO_SHOW){
                 $dleArr=['tag'=>'button','key'=>['delete',$file],'element-content'=>'&coprod;','hasCover'=>TRUE,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE];
                 $delHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($dleArr);
                 $matrix[]=['value'=>$file,'cmd'=>$delHtml];
