@@ -172,39 +172,32 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function runMapEntries($callingElement,$testRun=FALSE){
         $base=['mappingparams'=>[],'mappingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
-        // loop through source entries and parse these entries
-        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=['Mapping statistics'=>
-            [
-            'Entries'=>['value'=>0],
-            'Spreadsheet entries'=>['value'=>0],
-            'Files added to zip'=>['value'=>0],
-            'Skip rows'=>['value'=>0],
-            'Output format'=>['value'=>'Entries'],
-            'Comment'=>['value'=>''],
-            ]
-        ];
-        // loop through entries
         $params=current($base['mappingparams']);
         $base['Attachment name']=date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);
         $base['zipRequested']=strcmp($params['Content']['Mode'],'zip')===0;
         $base['csvRequested']=strcmp($params['Content']['Mode'],'csv')===0 || strcmp($params['Content']['Mode'],'zip')===0;
+        $disableMaxExecutionTimeLimit=(current($base['mappingparams'])['Content']['Keep source entries']??FALSE || $base['zipRequested'] || $base['csvRequested']);
+        // loop through source entries and parse these entries
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,$disableMaxExecutionTimeLimit);
+        $result['Mapping statistics']=[
+            'Entries'=>['value'=>0],
+            'Spreadsheet entries'=>['value'=>0],
+            'Files added to zip'=>['value'=>0],
+            'Output format'=>['value'=>'Entries'],
+            'Comment'=>['value'=>''],
+        ];
+        // loop through entries
         if ($base['zipRequested']){
             $zipName=date('Y-m-d His').' '.__FUNCTION__.'.zip';
             $zipFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir().$zipName;
             $zip= new \ZipArchive;
             $zip->open($zipFile,\ZipArchive::CREATE);
         }
-        $maxProcTime=(($base['csvRequested'] || $params['Content']['Keep source entries']>0)?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME);
-        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE,'Read',$params['Content']['Order by'],boolval($params['Content']['Order'])) as $sourceEntry){
-            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Mapping statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
-            }
-            if ($sourceEntry['isSkipRow']){
-                $result['Mapping statistics']['Skip rows']['value']++;
+            } else if ($result['cntr']['isSkipRow']){
                 continue;
             }
             if ($base['zipRequested']){
@@ -269,10 +262,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if (isset($result['targetEntry'])){
             unset($result['targetEntry']);
         }
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     private function mapEntry($base,$sourceEntry,$result,$testRun){

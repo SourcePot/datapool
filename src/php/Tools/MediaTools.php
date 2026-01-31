@@ -453,8 +453,8 @@ class MediaTools{
         if (empty($arr['encodeBase64'])){
             imagejpeg($newImage,$arr['targetFile'],$imgPropArr['quality']);
             chmod($arr['targetFile'],0774);
-            imagedestroy($orgImage);
-            @imagedestroy($newImage);
+            $orgImage=NULL;
+            $newImage=NULL;
             if (empty($arr['returnImgFileOnly'])){
                 $imageTagArr['src']=$arr['src'];
                 $dims=getimagesize($arr['targetFile']);

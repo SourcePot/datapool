@@ -148,7 +148,6 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
-            if ($caption==='Calculate statistics'){$appArr['open']=TRUE;}
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         }
         $arr['wrapperSettings']=['style'=>['width'=>'fit-content']];
@@ -254,32 +253,17 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=[
-            'Calculate statistics'=>[
-                'Entries'=>['value'=>0],
-                'Failure'=>['value'=>0],
-                'Success'=>['value'=>0],
-            ]
-        ];
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['calculationparams'])['Content']['Keep source entries']??FALSE);
         // loop through entries
-        $maxProcTime=(current($base['calculationparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
-        $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if ($sourceEntry['isSkipRow']){
-                $result['Calculate statistics']['Skip rows']['value']++;
-                continue;
-            }
-            $expiredTime=hrtime(TRUE)-$base['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Calculate statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->calcEntry($base,$sourceEntry,$result,$testRun);
             }
-            $result=$this->calcEntry($base,$sourceEntry,$result,$testRun);
         }
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$base['Script start timestamp'])/1000000)];
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     private function calcEntry(array $base,array $sourceEntry,array $result,bool $testRun)
@@ -380,15 +364,14 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             ksort($value);
             $sourceEntry[$key]=implode('|',$value);
         }
-        $result['Calculate statistics']['Entries']['value']++;
         if ($isFailure){
-            $result['Calculate statistics']['Failure']['value']++;
+            $result['Statistics']['Entries moved (failure)']['Value']++;
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on failure']],TRUE,$testRun,$params['Content']['Keep source entries']??FALSE);
             if (!isset($result['Sample result (failure)']) || mt_rand(0,100)>90){
                 $result['Sample result (failure)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);
             }    
         } else {
-            $result['Calculate statistics']['Success']['value']++;
+            $result['Statistics']['Entries moved (success)']['Value']++;
             $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Content']['Target on success']],TRUE,$testRun,$params['Content']['Keep source entries']??FALSE);
             if (!isset($result['Sample result (success)']) || mt_rand(0,100)>90){
                 $result['Sample result (success)']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceEntry);

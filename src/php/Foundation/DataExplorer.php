@@ -12,8 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
 
-    public const MAX_TEST_TIME=5000000000;   // in nanoseconds
-    public const MAX_PROC_TIME=100000000000;   // in nanoseconds
+    public const MAX_TEST_TIME=3000000000;   // in nanoseconds
+    public const MAX_PROC_TIME=60000000000;   // in nanoseconds
 
     private const ROW_COUNT_LIMIT=FALSE;
 
@@ -83,10 +83,10 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private $tags=[
         'run'=>['tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff;','background-color'=>'#0a0'],'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'],
         'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','color'=>'#fff','background-color'=>'#a00'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
-        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing'],
+        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing','Content'=>['Selector'=>['Source'=>'logger']]],
         'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
         'ABCD'=>['tag'=>'button','element-content'=>'ABCD','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
-        '__BLACKHOLE__'=>['tag'=>'div','element-content'=>'&empty;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Black hole'],
+        '__BLACKHOLE__'=>['tag'=>'div','element-content'=>'&empty;','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Black hole'],
     ];
     
     private const GRAPHIC_ELEMENTS=[
@@ -434,7 +434,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function callingElement2settings(string $callingClass,string $callingFunction,array $callingElement,array $settings=[]):array
     {
-        $settings['Script start timestamp']=hrtime(TRUE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
         $settings['callingElement']=$callingElement['Content']??[];
         $settings['entryTemplates']['__BLACKHOLE__']=['Source'=>'__BLACKHOLE__'];
@@ -751,5 +750,64 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         
         return $styleProp;
     }
+
+    public function initProcessorResult(string $callingClass, bool|int $isTestRun=FALSE, $keepSourceEntries=0):array
+    {
+        $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
+        $maxProcTime=($isTestRun===TRUE)?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
+        $maxProcTimeDisabled=(intval($keepSourceEntries)===1 && $isTestRun!==TRUE);
+        $runType=($isTestRun===FALSE)?'NORMAL RUN':(($isTestRun===TRUE)?'TEST RUN':'PROCESSOR SPECIFIC RUN');
+        $result=[
+            'cntr'=>[
+                'scriptStartTimestamp'=>hrtime(TRUE),
+                'maxExecutionTimeSec'=>$maxProcTimeDisabled?0:$maxProcTime,
+                'timeLimitReached'=>FALSE,
+                'incompleteRun'=>FALSE,
+                'isSkipRow'=>FALSE,
+            ],
+            'Statistics'=>[
+                'Processing time [sec]'=>['Value'=>0],
+                'Processor'=>['Value'=>$callingClass],
+                'Type'=>['Value'=>$runType],
+                'Info'=>['Value'=>$maxProcTimeDisabled?['Execution time limit disabled (check "Keep source entries" setting)']:[]],
+                'Entries touched'=>['Value'=>0],
+                'Entries moved (success)'=>['Value'=>0],
+                'Entries moved (failure)'=>['Value'=>0],
+                'Entries skipped (skip rows)'=>['Value'=>0],
+            ],
+        ];
+        return $result;
+    }
+
+    public function updateProcessorResult(array $result, array $entry):array
+    {
+        $result['Statistics']['Entries touched']['Value']++;
+        $result['cntr']['timeLimitReached']=($result['cntr']['maxExecutionTimeSec']>0 && (hrtime(TRUE)-$result['cntr']['scriptStartTimestamp'])>$result['cntr']['maxExecutionTimeSec']);
+        $result['cntr']['isSkipRow']=boolval($entry['isSkipRow']);
+        if ($result['cntr']['timeLimitReached']){
+            if (($entry['rowCount']-$result['Statistics']['Entries touched']['Value'])>0){
+                $result['Statistics']['Info']['Value'][]='Imcomplete run ('.round($result['Statistics']['Entries touched']['Value']/$entry['rowCount']*100,2).'% processed)';
+                $result['cntr']['incompleteRun']=TRUE;
+            }
+            $result['Statistics']['Info']['Value'][]='Time limit reached';
+        }
+        if ($result['cntr']['isSkipRow']){
+            $result['Statistics']['Entries skipped (skip rows)']['Value']++;
+        }
+        return $result;
+    }
+
+    public function finalizeProcessorResult(array $result):array
+    {
+        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']);
+        $processingTimeSec=(hrtime(TRUE)-$result['cntr']['scriptStartTimestamp'])/1e+9;
+        $result['Statistics']['Processing time [sec]']['Value']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($processingTimeSec,3);
+        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
+        $entriesPerSec=$result['Statistics']['Entries touched']['Value']/$result['Statistics']['Processing time [sec]']['Value'];
+        $result['Statistics']['Info']['Value'][]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($entriesPerSec,1).' entries per sec';
+        $result['Statistics']['Info']['Value']=implode('<br/>',$result['Statistics']['Info']['Value']);
+        return $result;
+    }
+    
 }
 ?>

@@ -10,27 +10,24 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Processing;
 
-class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
+class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
     
     private const INFO_MATRIX=[
-        'Caption'=>['Comment'=>'DefaultProcessor class your template processor'],
-        'Description'=>['Comment'=>'Thie default processor can be used as template for your own processor class.<br/>Typically a processor requires parameters and processing rules.'],
+        'Caption'=>['Comment'=>'CleanupProcessor class'],
+        'Description'=>['Comment'=>'Thie processor empties canvas elements based on rules on forwards it\'s entries to the next canvas element.'],
     ];
 
     private const CONTENT_STRUCTURE_PARAMS=[
         // add content structure of parameters here...
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
-        'Method "select"'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[1=>'1st value',2=>'2nd value',3=>'3rd value',]],
-        'Method "canvasElementSelect" success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],    
-        'Method "canvasElementSelect" failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],    
+        'Target'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],    
     ];
         
     private const CONTENT_STRUCTURE_RULES=[
         // add content structure of rules here...
-        'Method "keySelect"'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>[]],
-        'Tag "input" type "text" for new key value'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'Enter your new value here','excontainer'=>TRUE],
+        'Canvas element to empty'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],    
     ];
     
     private $entryTable='';
@@ -161,7 +158,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Processor control';
+        $arr['caption']='Clean-up processor parameter';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
@@ -175,7 +172,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Processor rules';
+        $arr['caption']='Clean-up processor rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
@@ -190,6 +187,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
         // initialize statistic and result array
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
+        $result['Clean-up']=[];
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
@@ -204,48 +202,27 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function processEntry(array $base,array $sourceEntry,array $result,bool $testRun):array
     {
-        sleep(1); // simulate processing time
         // recover basic context data
         $callingElementContent=$base['callingElement']; // Canvas element content
         $processorParams=current($base['processorparamshtml'])['Content']; // Processor params are linked to the key with the name = lower case method name there rules are defined
         $processorRules=$base['processorruleshtml']; // Processor rules are linked to the key with the name = lower case method name there rules are defined
-        
         // recover the entry selector defined by the selected Canves element Selector
-        $targetSelectorEntryIdSuccess=$processorParams['Method "canvasElementSelect" success'];
-        $targetSelectorEntryIdFailure=$processorParams['Method "canvasElementSelect" failure'];
-        $targetSelectorSuccess=$base['entryTemplates'][$targetSelectorEntryIdSuccess]??[];
-        $targetSelectorFailure=$base['entryTemplates'][$targetSelectorEntryIdFailure]??[];
-        
-        // document the reovered data
-        $toSafeInDebuggingDir=[
-            'callingElementContent'=>$callingElementContent,
-            'processorParams'=>$processorParams,
-            'processorRules'=>$processorRules,
-            'targetSelectorSuccess'=>$targetSelectorSuccess,
-            'targetSelectorFailure'=>$targetSelectorFailure,
-        ];
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($toSafeInDebuggingDir);
-
-        // process entry based on processorRules and e.g. processorParams
-        $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
+        $targetSelectorEntryId=$processorParams['Target'];
+        $targetSelector=$base['entryTemplates'][$targetSelectorEntryId]??[];
+        // process rules
         foreach($processorRules as $ruleEntryId=>$rule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
-            $ruleContent=$rule['Content'];
-            // processing, e.g. upadte source entry[key] with new value based on rule
-            $flatSourceEntry[$ruleContent['Method "keySelect"']]=$ruleContent['Tag "input" type "text" for new key value'];
+            $canvasElementIdForCleanUp=$rule['Content']['Canvas element to empty'];
+            $canvasElementToCleanup=current($this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements(__CLASS__,$canvasElementIdForCleanUp));
+            $selectorToCleanup=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($canvasElementIdForCleanUp);
+            if (!$testRun){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selectorToCleanup,TRUE);
+            }
+            $result['Clean-up'][$ruleKey]=['Operation'=>$testRun?'Clean-up test':'Emptied','Canvas element'=>$canvasElementToCleanup['Content']['Style']['Text']];
         }
-        $processedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
-        
-        // move processed entries
-        $success=(mt_rand(0,1)>0)?TRUE:FALSE;
-        if ($success){
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorSuccess,TRUE,$testRun,!empty($processorParams['Keep source entries']));
-            $result['Statistics']['Entries moved (success)']['Value']++;
-        } else {
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
-            $result['Statistics']['Entries moved (failure)']['Value']++;
-        }
-
+        // move entry
+        $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelector,TRUE,$testRun,!empty($processorParams['Keep source entries']));
+        $result['Statistics']['Entries moved (success)']['Value']++;
         return $result;
     }
 }
