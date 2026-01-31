@@ -840,7 +840,7 @@ class HTMLbuilder{
             $btnArr=array_merge($arr,self::BUTTONS['save'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
             $btnArr['key'][]=$entry['EntryId'];
             $matrix[$rowIndex][' ']=$btnArr;
-            if ($entry['rowCount']>1){
+            if (!$arr['returnRow']){
                 $btnArr=array_merge($arr,self::BUTTONS['delete'],['excontainer'=>FALSE,'tdStyle'=>['padding'=>0]]);
                 $btnArr['key'][]=$entry['EntryId'];
                 $matrix[$rowIndex]['  ']=$btnArr;
