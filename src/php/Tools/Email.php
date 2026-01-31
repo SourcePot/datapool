@@ -518,11 +518,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     public function transmitterPluginHtml(array $arr):string
     {
-        $arr['html']=(isset($arr['html']))?$arr['html']:'';
+        $html='';
         $availableRecipients=$this->oc['SourcePot\Datapool\Foundation\User']->getUserOptions([],$this->getRelevantFlatUserContentKey());
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $settingsHtml=$this->getTransmitterSettingsWidgetHtml(['callingClass'=>__CLASS__]);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Email Settings','html'=>$settingsHtml]);
+            $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Email Settings','html'=>$settingsHtml]);
         }
         // Send message
         $entry=['recipient'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Source'=>$this->getEntryTable(),'Group'=>'Test','Folder'=>'Test','Name'=>'Testmail','Content'=>['Subject'=>'Testmail','Message'=>'Ich bin ein Test']];
@@ -540,9 +540,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $emailMatrix['Message']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'textarea','element-content'=>$entry['Content']['Message'],'key'=>['Content','Message'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         $emailMatrix['']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','type'=>'submit','element-content'=>'Send','key'=>['send'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         $emailHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$emailMatrix,'caption'=>'Email test','keep-element-content'=>TRUE,'hideHeader'=>TRUE]);
-        //
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Create Email','html'=>$emailHtml]);
-        return $arr['html'];
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Create Email','html'=>$emailHtml]);
+        return $html;
     }
     
     public function getRelevantFlatUserContentKey():string
