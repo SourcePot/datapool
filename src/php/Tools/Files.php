@@ -205,7 +205,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapo
     */
     public function send(string $recipient,array $entry):int
     {
-        $fileName=$entry['Content']['Subject']??$entry['Name']??'file_name_missing';
+        $fileName=trim($entry['Content']['Subject']??$entry['Name']??'file_name_missing');
         $fileExtension=$entry['Params']['File']['Extension']??'file';
         $targetFile=$GLOBALS['dirs']['ftp'].$fileName.'.'.$fileExtension;
         $attachment=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
@@ -220,7 +220,7 @@ class Files implements \SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapo
     
     public function transmitterPluginHtml(array $arr):string
     {
-        $pluginHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Target directory']);
+        $pluginHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Target: FTP directory']);
         $pluginHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$GLOBALS['dirs']['ftp']]);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['icon'=>'Transmitter','html'=>$pluginHtml]);
     }

@@ -17,6 +17,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     private const APP_ACCESS_REGEX="/private const APP_ACCESS='([^´;]+)'/";
     private const APP_DEF_REGEX="/return\s\['Category'=>'([^']+)','Emoji'=>'([^']+)','Label'=>'([^']+)','Read'=>([A-Z_\']+|self::APP_ACCESS),'Class'=>/";
     private const APP_NAMESPACE_CLASSNAME="/namespace\s([^\s]+)\s*;\s+class\s([^\s]+)/";
+    private const MAX_FTP_FILES_TO_SHOW=10;
     private const CORE_APPS=[
         'SourcePot\Datapool\GenericApps\Documents'=>TRUE,
         'SourcePot\Datapool\GenericApps\Multimedia'=>TRUE,
@@ -327,19 +328,23 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
             $file=key($formData['cmd']['delete']);
             unlink($GLOBALS['dirs']['ftp'].$file);
         }
+        $files=scandir($GLOBALS['dirs']['ftp']);
         $matrix=[];
         $matrix[]=['value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['upload']],[]),'cmd'=>''];
-        // file list
-        $files=scandir($GLOBALS['dirs']['ftp']);
         foreach($files as $file){
-            if (strcmp($file,'.')===0 || strcmp($file,'..')===0){continue;}
-            $dleArr=['tag'=>'button','key'=>['delete',$file],'element-content'=>'&coprod;','hasCover'=>TRUE,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE];
-            $delHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($dleArr);
-            $matrix[]=['value'=>$file,'cmd'=>$delHtml];
-        }        
+            if (strcmp($file,'.')===0 || strcmp($file,'..')===0){
+                continue;
+            }
+            if ((count($files)-1)<self::MAX_FTP_FILES_TO_SHOW){
+                $dleArr=['tag'=>'button','key'=>['delete',$file],'element-content'=>'&coprod;','hasCover'=>TRUE,'keep-element-content'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>FALSE];
+                $delHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($dleArr);
+                $matrix[]=['value'=>$file,'cmd'=>$delHtml];
+            } else {
+                $matrix['']=['value'=>'...','cmd'=>'...'];
+            }
+        }
         // compile html
-        $arr['html']=$arr['html']??'';
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'Add files to FTP folder','hideKeys'=>FALSE,'hideHeader'=>TRUE]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'FTP folder ('.(count($files)-2).')','hideKeys'=>TRUE,'hideHeader'=>TRUE]);
         return $arr;
     }
 }

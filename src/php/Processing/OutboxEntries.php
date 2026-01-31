@@ -182,9 +182,9 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->getBaseArr($callingElement);
         $outboxParams=current($base['outboxparams']);
         $outboxParams=$outboxParams['Content'];
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,$outboxParams['Content']['When done']??FALSE);
         if (isset($this->oc[$outboxParams['Outbox class']])){
             // loop through source entries and parse these entries
-            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,$outboxParams['Content']['When done']??FALSE);
             $result['Outbox statistics']=[
                 'Entry sent'=>['Value'=>0],
                 'Entry failed'=>['Value'=>0],
