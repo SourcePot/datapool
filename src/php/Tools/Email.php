@@ -61,9 +61,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    ];
 
-    public $receiverDef=[
+    private const RECEIVER_DEF=[
         'Type'=>['@tag'=>'p','@default'=>'settings receiver','@Read'=>'NO_R'],
         'Content'=>[
             'EntryId'=>['@tag'=>'p','@default'=>'','@excontainer'=>TRUE],
@@ -82,7 +82,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             ],
         ];
 
-    public $transmitterDef=[
+    private const TRANSMITTER_DEF=[
         'Type'=>['@tag'=>'p','@default'=>'settings transmitter','@Read'=>'NO_R'],
         'Content'=>[
             'Enabled'=>['@function'=>'select','@options'=>['No','Yes'],'@value'=>0,'@excontainer'=>TRUE],
@@ -111,8 +111,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',$this->receiverDef);
-        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',$this->transmitterDef);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-rec',self::RECEIVER_DEF);
+        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__.'-tec',self::TRANSMITTER_DEF);
     }
 
     public function getEntryTable():string
@@ -429,6 +429,10 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $this->oc['logger']->log('notice','Failed to send email: recipient email address is empty',[]);    
         } else {
             $smtpSettings=$this->getTransmitterSetting(__CLASS__)['Content'];
+            if (empty($smtpSettings['Enabled'])){
+                $this->oc['logger']->log('notice','Failed to send email: SMTP transmitter is disabled',[]);    
+                return $sentEntriesCount;
+            }
             $entry['Content']['Subject']=$entry['Content']['Subject']??$entry['Name']??'Entry Name missing...';
             $entry['Content']['To']=$flatRecipient[$flatUserContentKey];
             $entry['Content']['ToName']=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($recipient,1);
