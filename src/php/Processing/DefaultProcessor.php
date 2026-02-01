@@ -216,7 +216,7 @@ class DefaultProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $targetSelectorSuccess=$base['entryTemplates'][$targetSelectorEntryIdSuccess]??[];
         $targetSelectorFailure=$base['entryTemplates'][$targetSelectorEntryIdFailure]??[];
         
-        // document the reovered data
+        // DEBUGGING ONLY - document the recovered data
         $toSafeInDebuggingDir=[
             'callingElementContent'=>$callingElementContent,
             'processorParams'=>$processorParams,
