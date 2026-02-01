@@ -42,7 +42,7 @@ Data apps use the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer
 
 The DataExplorer has two modes: **view** and **edit** The figure below shows how to togle between **view** and **edit** mode. In edit mode each canvas element can be dragged, selected or deleted. To change canvas element properties the canvas element needs to be selected by clicking on the diamond shaped red button of the respective canvas element.
 
-![Canvas element properties](/assets/img/DataExplorer.png "Canvas element properties")
+![Data explorer](/assets/img/DataExplorer.png "Data explorer")
 
 ## Content management
 
@@ -57,7 +57,7 @@ The database table entries contain of the following fields (cells);
 
 Multiple entries are presented either as tiles or a table (with one ro per entry). The presentation of a selected entry can be configured as required.
 
-![Canvas element properties](/assets/img/Multimedia.png "Canvas element properties")
+![CMultimedia app](/assets/img/Multimedia.png "Multimedia app")
 
 # Get Started
 You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a wide range of systems such as Linux, UNIX, MS Windows. 
@@ -108,10 +108,7 @@ sudo apt-get install php-curl
 5. Update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
 >[!IMPORTANT]
->Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited. 
-
-### Example installation using `Composer` and setting up your first user account on a notebook computer running MS Windows, XAMPP server and MariaDB:
-https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
+>Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited.
 
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
