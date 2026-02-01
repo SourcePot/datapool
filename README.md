@@ -108,10 +108,7 @@ sudo apt-get install php-curl
 5. Update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
 
 >[!IMPORTANT]
->Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited. 
-
-### Example installation using `Composer` and setting up your first user account on a notebook computer running MS Windows, XAMPP server and MariaDB:
-https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
+>Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited.
 
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
