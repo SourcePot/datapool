@@ -136,7 +136,7 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function getOutboxEntriesSettingsHtml($arr){
         $baseArr=$this->getBaseArr($arr['selector']);
-        $this->outboxClass=current($baseArr['outboxparams'])['Content']['Outbox class']??'';
+        $this->outboxClass=current($baseArr['outboxparams']??[])['Content']['Outbox class']??'';
         $arr['callingClass']=$arr['selector']['Folder'];
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->outboxParams($arr['selector']);
