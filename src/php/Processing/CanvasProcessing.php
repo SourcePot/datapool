@@ -145,7 +145,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
             $result=$this->runCanvasProcessing($canvasElement,$isTestRun);
             break;
         }
-        return $result;
+        return $result??['Notice'=>'No canvas processing element found for '.$class];
     }
     
     public function runCanvasProcessing($callingElement,$isTestRun=TRUE):array
