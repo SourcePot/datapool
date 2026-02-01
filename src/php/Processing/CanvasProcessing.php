@@ -137,7 +137,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     
     public function runCanvasProcessingOnClass($class,$isTestRun=FALSE):array
     {
-        $canvasElements=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($class);
+        $canvasElements=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($class,'',FALSE);
         foreach($canvasElements as $canvasElement){
             if (($canvasElement['Content']['Widgets']['Processor']??'')!==__CLASS__){
                 continue;

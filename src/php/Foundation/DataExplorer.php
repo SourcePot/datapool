@@ -494,13 +494,13 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     * @param string    $EntryId         If empty all relevant canvas elements will be returned, else the selected canvas element 
     * @return array    Canvas elements
     */
-    public function getCanvasElements(string $callingClass, string $EntryId=''):array
+    public function getCanvasElements(string $callingClass, string $EntryId='',bool $skipCanvasProcessingElements=TRUE):array
     {
         $elements=[];
         if (empty($EntryId)){
             $selector=$this->canvasSelector($callingClass);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
-                if ($callingClass!=='SourcePot\Datapool\Processing\CanvasProcessing' && $entry['Content']['Style']['Text']==='&#9881;'){
+                if ($skipCanvasProcessingElements && $callingClass!=='SourcePot\Datapool\Processing\CanvasProcessing' && $entry['Content']['Style']['Text']==='&#9881;'){
                     continue;
                 }
                 $elements[$entry['Content']['Style']['Text']]=$entry;
