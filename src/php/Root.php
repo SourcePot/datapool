@@ -399,7 +399,7 @@ final class Root{
             if ($loadAvg['Load [%]']<$loadAvgThreshold){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
             } else {
-                $arr['page html']='Job skipped due to high server load...';
+                $arr['page html']='Job skipped due to high server load (threshold='.round($loadAvgThreshold).')...';
             }
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Values'=>$loadAvg],'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>FALSE,'caption'=>'Average server load','style'=>['clear'=>'both']]);
         } else if ($this->script==='import.php'){
