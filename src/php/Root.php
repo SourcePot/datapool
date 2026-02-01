@@ -59,6 +59,7 @@ final class Root{
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
     public const USE_LANGUAGE_IN_TYPE=['docs'=>TRUE,'home'=>TRUE,'legal'=>TRUE];
+    private const JOB_AVERAGE_LOAD_THRESHOLD_MULTIPLIER=1.2;
     public const ASSETS_WHITELIST=['email.png'=>TRUE,'home.mp4'=>TRUE,'logo.jpg'=>TRUE,'logo.png'=>TRUE,'dateType_example.png'=>TRUE,'login.jpg'=>TRUE,'Example_data_flow.png'=>TRUE];
     public const TIMEZONES=[
         'Europe/Berlin'=>'+1 Europe/Berlin','Europe/London'=>'0 Europe/London','Atlantic/Azores'=>'-1 Atlantic/Azores','Atlantic/South_Georgia'=>'-2 Atlantic/South_Georgia',
@@ -395,7 +396,7 @@ final class Root{
         } else if ($this->script==='job.php'){
             // job Processing
             $loadAvg=$this->getLoadAvg();
-            $loadAvgThreshold=($loadAvg['avg']+$loadAvg['min'])/2;
+            $loadAvgThreshold=self::JOB_AVERAGE_LOAD_THRESHOLD_MULTIPLIER*$loadAvg['avg'];
             if ($loadAvg['Load [%]']<$loadAvgThreshold){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
             } else {
