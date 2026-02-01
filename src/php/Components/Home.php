@@ -21,7 +21,15 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
     private $hasHomeWidgetApp=FALSE;
     private $backgroundMediaInfo='';
 
-    public const WIDGET_SETTINGS_SELECTOR=['app'=>'SourcePot\Datapool\AdminApps\Settings','Source'=>'settings','Group'=>'Home page','Folder'=>'Widgets','Name'=>'Home page'];
+    public const WIDGET_SETTINGS_SELECTOR=[
+        'app'=>'SourcePot\Datapool\AdminApps\Settings',
+        'Source'=>'settings',
+        'Group'=>'Home page',
+        'Folder'=>'Widgets',
+        'Name'=>'Home page',
+        'refreshInterval'=>FALSE,
+        'disableAutoRefresh'=>TRUE,    
+    ];
     
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],

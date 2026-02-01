@@ -493,8 +493,8 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public function getCanvasElements(string $callingClass, string $EntryId=''):array
     {
         $elements=[];
-        $selector=$this->canvasSelector($callingClass);
         if (empty($EntryId)){
+            $selector=$this->canvasSelector($callingClass);
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
                 if (empty($entry['Content']['Style']['Text'])){continue;}
                 if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0){
@@ -504,8 +504,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             }
             ksort($elements);
         } else {
-            $selector['EntryId']=$EntryId;
-            if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector)){
+            if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$EntryId])){
                 $elements[$EntryId]=$entry; 
             }
         }
@@ -519,11 +518,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function entryId2selector(string $entryId):array
     {
-        $selector=['Source'=>$this->entryTable,'EntryId'=>$entryId];
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
-        if (isset($entry['Content']['Selector'])){
-            $selector=[];
-            foreach($entry['Content']['Selector'] as $key=>$value){
+        $canvasElement=current($this->getCanvasElements('',$entryId));
+        if (isset($canvasElement['Content']['Selector'])){
+            foreach($canvasElement['Content']['Selector'] as $key=>$value){
                 if (empty($value)){continue;}
                 $selector[$key]=$value;
             }

@@ -20,7 +20,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'selector'=>[
                 'app'=>__CLASS__,
                 'Source'=>'logger',
-                'Group'=>'error'
+                'Group'=>'error',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'containerType'=>'entryList',
             'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
@@ -29,7 +31,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         'Logger'=>[
             'selector'=>[
                 'app'=>__CLASS__,
-                'Source'=>'logger'
+                'Source'=>'logger',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'containerType'=>'entryList',
             'settings'=>['hideUpload'=>TRUE,'orderBy'=>'Date','isAsc'=>FALSE,'columns'=>[['Column'=>'Date','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Content'.\SourcePot\Datapool\Root::ONEDIMSEPARATOR.'msg','Filter'=>'']]],
@@ -47,6 +51,8 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                 'Source'=>'settings',
                 'Group'=>'Job processing',
                 'Folder'=>'All jobs',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'text'=>'Use &#9998; to edit the selected Entry...',
             'containerType'=>'generic',
@@ -58,7 +64,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
                 'app'=>__CLASS__,
                 'Source'=>'settings',
                 'Group'=>'Job processing',
-                'Folder'=>'All jobs'
+                'Folder'=>'All jobs',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'containerType'=>'generic',
             'settings'=>['classWithNamespace'=>'SourcePot\Datapool\Foundation\Job','method'=>'getJobOverview'],
@@ -68,7 +76,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'selector'=>[
                 'app'=>__CLASS__,
                 'Source'=>'settings',
-                'Group'=>'Presentation'
+                'Group'=>'Presentation',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'containerType'=>'generic',
             'settings'=>['method'=>'getPresentationSettingHtml','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'],
@@ -78,7 +88,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'selector'=>[
                 'app'=>__CLASS__,
                 'Source'=>'settings',
-                'Group'=>'Feeds'
+                'Group'=>'Feeds',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'containerType'=>'generic',
             'settings'=>['method'=>'feedsUrlsWidget','classWithNamespace'=>'SourcePot\Datapool\GenericApps\Feeds'],
@@ -88,7 +100,9 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'selector'=>[
                 'app'=>__CLASS__,
                 'Source'=>'remoteclient',
-                'EntryId'=>'%_definition'
+                'EntryId'=>'%_definition',
+                'refreshInterval'=>FALSE,
+                'disableAutoRefresh'=>TRUE,
             ],
             'containerType'=>'entryList',
             'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'EntryId','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>''],]],
@@ -138,11 +152,11 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__,['addEntry'=>FALSE,'editEntry'=>TRUE,'settingsEntry'=>FALSE,'setRightsEntry'=>FALSE]);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
-            // get settings container beased on selector
+            // get settings container based on selector
             foreach(self::SELECTORS as $selectorName=>$containerDef){
                 $match=TRUE;
                 foreach($containerDef['selector'] as $column=>$value){
-                    if ($column==='app'){
+                    if ($column==='app' || $column==='refreshInterval' || $column==='disableAutoRefresh'){
                         continue;
                     }
                     if (empty($selector[$column])){
