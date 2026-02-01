@@ -35,7 +35,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Value source'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','standardColumsOnly'=>FALSE,'addSourceValueColumn'=>TRUE],
         'Value data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
         '&larr;A|B&rarr;'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;A|B&rarr;','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
-        'Regular expression'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'e.g. \d+','excontainer'=>TRUE],
         'compare'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES,'keep-element-content'=>TRUE],
         'with'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'invoice','excontainer'=>TRUE],
         '&larr;B'=>['method'=>'element','tag'=>'p','element-content'=>'&larr;B','keep-element-content'=>TRUE,'style'=>['white-space'=>'nowrap'],'excontainer'=>TRUE],
