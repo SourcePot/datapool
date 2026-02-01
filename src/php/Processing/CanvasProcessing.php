@@ -53,7 +53,8 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info'):array|string|bool
+    {
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -68,18 +69,20 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         }
     }
 
-    private function getCanvasProcessingWidget($callingElement){
+    private function getCanvasProcessingWidget($callingElement):string
+    {
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Canvas processing','generic',$callingElement,['method'=>'getCanvasProcessingWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
-    private function getCanvasProcessingInfo($callingElement){
+    private function getCanvasProcessingInfo($callingElement):string{
         $matrix=[];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
 
-    public function getCanvasProcessingWidgetHtml($arr){
+    public function getCanvasProcessingWidgetHtml($arr):array
+    {
         $arr['html']=$arr['html']??'';
         // command processing
         $result=[];
@@ -111,21 +114,23 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getCanvasProcessingSettings($callingElement){
-        $html='';
+    private function getCanvasProcessingSettings($callingElement):string
+    {
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CanvasProcessing entries settings','generic',$callingElement,['method'=>'getCanvasProcessingSettingsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CanvasProcessing entries settings','generic',$callingElement,['method'=>'getCanvasProcessingSettingsHtml','classWithNamespace'=>__CLASS__],[]);
         }
-        return $html;
+        return $html??'';
     }
     
-    public function getCanvasProcessingSettingsHtml($arr){
+    public function getCanvasProcessingSettingsHtml($arr):array
+    {
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->canvasProcessingRules($arr['selector']);
         return $arr;
     }
     
-    private function canvasProcessingRules($callingElement){
+    private function canvasProcessingRules($callingElement):string
+    {
         $contentStructure=['Process'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],];
         if (!isset($callingElement['Content']['Selector']['Source'])){return '';}
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
