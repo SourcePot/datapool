@@ -760,7 +760,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $result=[
             'cntr'=>[
                 'scriptStartTimestamp'=>hrtime(TRUE),
-                'maxExecutionTimeSec'=>$maxProcTimeDisabled?0:$maxProcTime,
+                'maxExecutionTime'=>$maxProcTimeDisabled?0:$maxProcTime,
                 'timeLimitReached'=>FALSE,
                 'incompleteRun'=>FALSE,
                 'isSkipRow'=>FALSE,
@@ -782,7 +782,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public function updateProcessorResult(array $result, array $entry):array
     {
         $result['Statistics']['Entries touched']['Value']++;
-        $result['cntr']['timeLimitReached']=($result['cntr']['maxExecutionTimeSec']>0 && (hrtime(TRUE)-$result['cntr']['scriptStartTimestamp'])>$result['cntr']['maxExecutionTimeSec']);
+        $result['cntr']['timeLimitReached']=($result['cntr']['maxExecutionTime']>0 && (hrtime(TRUE)-$result['cntr']['scriptStartTimestamp'])>$result['cntr']['maxExecutionTime']);
         $result['cntr']['isSkipRow']=boolval($entry['isSkipRow']);
         if ($result['cntr']['timeLimitReached']){
             if (($entry['rowCount']-$result['Statistics']['Entries touched']['Value'])>0){
