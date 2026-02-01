@@ -33,9 +33,6 @@ The two typical use cases are process-driven data processing and a content manag
 - Processes can be easily designed and adopted via a graphical user interface
 - Processes can easily be exported or imported to other systems running Datapool
 
-![Graphical process designer](/assets/img/Example_data_flow.png "Graphical process designer")
-
-## Data category Apps, e.g. Invoices
 Data apps use the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a blank canvas to create data crunching processes graphically. This is done by adding canvas elements and by configuring their properties. A canvas element is a view of a database table. The database table view applies a selector `Content → Selector` (see the figure below). Features can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and/or a processor. There is a set of basic processors to e.g. *match*, *map* or *forward* entries. There are also a basic processors to create pdf-documents, to send emails or SMS.
 
 ![Canvas element properties](/assets/img/CanvasElementProperties.png "Canvas element properties")
