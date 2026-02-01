@@ -173,7 +173,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=['mappingparams'=>[],'mappingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $params=current($base['mappingparams']);
-        $base['Attachment name']=date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]);
+        $base['Attachment name']=trim(date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]??[]));
         $base['zipRequested']=strcmp($params['Content']['Mode'],'zip')===0;
         $base['csvRequested']=strcmp($params['Content']['Mode'],'csv')===0 || strcmp($params['Content']['Mode'],'zip')===0;
         $disableMaxExecutionTimeLimit=(current($base['mappingparams'])['Content']['Keep source entries']??FALSE || $base['zipRequested'] || $base['csvRequested']);
