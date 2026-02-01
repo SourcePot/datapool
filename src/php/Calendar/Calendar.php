@@ -754,7 +754,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         return (($eventA['x0']>$eventB['x0'] && $eventA['x0']<=$eventB['x1']) || ($eventA['x1']>$eventB['x0'] && $eventA['x1']<=$eventB['x1']) || ($eventA['x0']<$eventB['x0'] && $eventA['x1']>=$eventB['x1']));
     }
 
-    public function getTimeDiff($dateA,$dateB,$timezoneA=FALSE,$timezoneB=FALSE){
+    public function getTimeDiff($dateA,$dateB,$timezoneA=FALSE,$timezoneB=FALSE):string
+    {
         $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         if (empty($timezoneA)){$timezoneA=$pageTimeZone;}
         if (empty($timezoneB)){$timezoneB=$pageTimeZone;}
@@ -762,31 +763,25 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $timezoneB=new \DateTimezone($timezoneB);
         $dateA=new \DateTime($dateA,$timezoneA);
         $dateB=new \DateTime($dateB,$timezoneB);
-        $interval=$dateA->diff($dateB);
-        $str='';
-        $nonZeroDetected=FALSE;
-        $template=['years'=>'y','months'=>'m','days'=>'d','hours'=>'h','minutes'=>'i'];
-        foreach($template as $label=>$index){
-            $value=$interval->format('%'.$index);
-            if (intval($value)===1){$label=rtrim($label,'s');}
-            if (intval($value)===0 && $nonZeroDetected===FALSE){continue;} else {$nonZeroDetected=TRUE;}
-            $str.=$value.'&nbsp;'.$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng($label).',&nbsp;';
-        }
-        return trim($str,',&nbsp;');
+        $timeDiffSeconds=$dateA->getTimestamp()-$dateB->getTimestamp();
+        return $this->sec2str($timeDiffSeconds);
     }
 
-    public function sec2str(int $seconds):string
+    public function sec2str(int $seconds,int $maxCompCount=2):string
     {
         $template=['day'=>86400,'hour'=>3600,'min'=>60,'sec'=>1];
-        $result='';
+        $result=[];
         foreach($template as $key=>$duration){
             $value=intval(floor($seconds/$duration));
             if ($value>1){$key.='s';}
             $seconds-=$value*$duration;
             if ($value===0){continue;}
-            $result.=$value.$key.', ';
+            $result[]=$value.' '.$key;
         }
-        return trim($result,', ');
+        while(count($result)>$maxCompCount){
+            array_pop($result);
+        }
+        return implode(', ',$result);
     }
 
     public function str2date(string $str):array
