@@ -94,6 +94,10 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         } else if (isset($formData['cmd']['reset'])){
             $result=$this->runCanvasProcessing($arr['selector'],2);
         }
+        // get gurrent state
+        $stateEntrySelector=$this->getCanvasProcessingStateSelector($arr['selector']);
+        $state=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($stateEntrySelector,TRUE);
+        $step=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps(key($state['Content']?:['0001___Done'=>'All done']))[0];
         // build html
         $btnArr=['tag'=>'input','type'=>'submit','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $matrix=[];
@@ -106,6 +110,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Reset';
         $btnArr['key']=['reset'];
         $matrix['Commands']['Reset']=$btnArr;
+        $matrix['Commands']['State']='Current key: <b>'.$step.'</b>';
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'CanvasProcessing widget']);
         foreach($result as $caption=>$matrix){
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
@@ -158,8 +163,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$isTestRun);
         // get rules, i.e. canvas elements to process
         $rules2process=[];
-        $stateSelector=['Source'=>$this->getEntryTable(),'Group'=>'canvasProcessingState','Folder'=>'Rules to process','Name'=>$callingElement['EntryId']];
-        $stateSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($stateSelector,['Source','Group','Folder','Name'],'0','',FALSE);
+        $stateSelector=$this->getCanvasProcessingStateSelector($callingElement);
         $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($stateSelector,TRUE);
         if ($isTestRun===2){
             $settings['Content']=NULL;
@@ -204,6 +208,12 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         $settings['Content']=$rules2process;
         $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($settings,TRUE);
         return $result;
+    }
+
+    private function getCanvasProcessingStateSelector($callingElement):array|bool
+    {
+        $stateSelector=['Source'=>$this->getEntryTable(),'Group'=>'canvasProcessingState','Folder'=>'Rules to process','Name'=>$callingElement['EntryId']];
+        return $this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($stateSelector,['Source','Group','Folder','Name'],'0','',FALSE);
     }
 }
 ?>
