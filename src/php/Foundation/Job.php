@@ -145,7 +145,7 @@ class Job{
                 $matrix[$age]=[
                     'Class'=>$class,
                     'Age [sec]'=>$age,
-                    'Last run'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.$infoArr['Last run'],'now'),
+                    'Last run'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('now','@'.$infoArr['Last run']),
                     'Last run time consumption [ms]'=>$infoArr['Last run time consumption [ms]'],
                     'Min time in sec between each run [sec]'=>$infoArr['Min time in sec between each run'],
                 ];
