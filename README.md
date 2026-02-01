@@ -48,7 +48,7 @@ In general all data and files are stored as entries. An entry consists of a data
 The database table entries contain of the following fields (cells);
 1. Selector fields: EntryId, Group, Folder, Type and Name, 
 2. A content data field: Content,
-3. A meta data field (Params),
+3. A meta data field: Params,
 4. Access control fields: Owner, Write, Read, Privileges and 
 5. Various control data fields: Date, Expires, etc.
 
