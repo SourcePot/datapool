@@ -3,10 +3,10 @@
 Datapool is a versatile modular web application.
 
 ## Advantages of a web application in contrast to a desktop application
-- Runs on a wide range of devices. The web browser is the runtime environment.
-- The user interface is always up-to-date thanks to the use of HTML as the living standard and modern web browsers. Reduced use of JavaScript. 
-- Simple interaction with other web services.
-- Established infrastructures available for data backup.
+- Runs on a wide range of devices, the web browser is the runtime environment
+- The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of JavaScript) and modern web browsers
+- Simple interaction with other web services
+- Established infrastructures available for data backup
 
 ## Basic features
 - Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
@@ -20,12 +20,44 @@ Datapool is a versatile modular web application.
 - Interfaces: for adding your apps, receivers, transmitters (e.g. https://github.com/SourcePot/sms), processors etc.
 - Comprehensive logger
 
-## Use cases
+# Use cases
 The two typical use cases are process-driven data processing and a content management system. The functionality of complex spreadsheets can alternatively be easily implemented as a process data flow. Easily accessible intermediate results help to maintain an overview and to find and fix problems.
 
-### Sample start page:
-
 ![Home app](/assets/img/datapool.png "Home app")
+
+## Process-driven data processing - DataExplorer
+- Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
+- External devices can provide data or files through a client interface
+- The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
+- Data processing can be controlled manually or by trigger derived from values or calendar events
+- Processes can be easily designed and adopted via a graphical user interface
+- Processes can easily be exported or imported to other systems running Datapool
+
+![Graphical process designer](/assets/img/Example_data_flow.png "Graphical process designer")
+
+## Data category Apps, e.g. Invoices
+Data apps use the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a blank canvas to create data crunching processes graphically. This is done by adding canvas elements and by configuring their properties. A canvas element is a view of a database table. The database table view applies a selector `Content → Selector` (see the figure below). Features can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and/or a processor. There is a set of basic processors to e.g. *match*, *map* or *forward* entries. There are also a basic processors to create pdf-documents, to send emails or SMS.
+
+![Canvas element properties](/assets/img/CanvasElementProperties.png "Canvas element properties")
+
+The DataExplorer has two modes: **view** and **edit** The figure below shows how to togle between **view** and **edit** mode. In edit mode each canvas element can be dragged, selected or deleted. To change canvas element properties the canvas element needs to be selected by clicking on the diamond shaped red button of the respective canvas element.
+
+![Canvas element properties](/assets/img/DataExplorer.png "Canvas element properties")
+
+## Content management
+
+In general all data and files are stored as entries. An entry consists of a databease table entry and, in some cases, of a linked file stored in a designated filespace on the server. 
+
+The database table entries contain of the following fields (cells);
+1. Selector fields: EntryId, Group, Folder, Type and Name, 
+2. A content data field: Content,
+3. A meta data field (Params),
+4. Access control fields: Owner, Write, Read, Privileges and 
+5. Various control data fields: Date, Expires, etc.
+
+Multiple entries are presented either as tiles or a table (with one ro per entry). The presentation of a selected entry can be configured as required.
+
+![Canvas element properties](/assets/img/Multimedia.png "Canvas element properties")
 
 # Get Started
 You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a wide range of systems such as Linux, UNIX, MS Windows. 
@@ -66,10 +98,7 @@ sudo apt-get install php-curl
 ## Connecting the web application with the database
 1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
-3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser.
-
->[!NOTE]
->If errors occur when you first access the website, this may be due to insufficient access rights. Access rights may need to be adjusted for folders and files newly created during installation and initial access.
+3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
@@ -80,6 +109,9 @@ sudo apt-get install php-curl
 
 >[!IMPORTANT]
 >Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited. 
+
+### Example installation using `Composer` and setting up your first user account on a notebook computer running MS Windows, XAMPP server and MariaDB:
+https://github.com/SourcePot/datapool/assets/115737488/10464f44-4518-45e0-8654-0bc19e9b1bb0
 
 ## Initial adjustments
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
@@ -120,23 +152,3 @@ The following flowchart shows the sequence of object instantiations, method call
 Any class which implements the `SourcePot\Datapool\Interfaces\App` interface must provide a run method. The run method defines the app specific menu item, the app visibility and the method adds the app specific web page content. The following figure shows the run method of the calendar app `SourcePot\Datapool\GenericApps\Calendar→run()`. 
 
 ![Run method if an app where content is added](/assets/img/run_method.png "Run method if an app where content is added")
-
-## DataExplorer features
-- Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
-- External devices can provide data or files through a client interface
-- The result of the processing can be spreadsheet-files, zip-files, emails or SMS-messages
-- Data processing can be controlled manually or by trigger derived from values or calendar events
-- Processes can be easily designed and adopted via a graphical user interface
-- Processes can easily be exported or imported to other systems running Datapool
-
-![Graphical process designer](/assets/img/Example_data_flow.png "Graphical process designer")
-
-## Data category Apps, e.g. Invoices
-Data apps use the DataExplorer class `SourcePot\Datapool\Foundation\DataExplorer`. The data explorer provides a blank canvas to create data crunching processes graphically. This is done by adding canvas elements and by configuring their properties. A canvas element is a view of a database table. The database table view applies a selector `Content → Selector` (see the figure below). Features can be added to the canvas element such as *File upload* (e.g. for invoice documents, email etc.), pdf-parser and/or a processor. There is a set of basic processors to e.g. *match*, *map* or *forward* entries. There are also a basic processors to create pdf-documents, to send emails or SMS.
-
-![Canvas element properties](/assets/img/CanvasElementProperties.png "Canvas element properties")
-
-The DataExplorer has two modes: **view** and **edit** The figure below shows how to togle between **view** and **edit** mode. In edit mode each canvas element can be dragged, selected or deleted. To change canvas element properties the canvas element needs to be selected by clicking on the diamond shaped red button of the respective canvas element.
-
-![Canvas element properties](/assets/img/DataExplorer.png "Canvas element properties")
-
