@@ -135,46 +135,49 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
     
-    public function runCanvasProcessingOnClass($class,$isTestRun=FALSE){
-        $result=[];
-        $canvasElementsSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'Group'=>'Canvas elements','Folder'=>$class];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($canvasElementsSelector,TRUE,'Read','EntryId',TRUE) as $canvasElement){
-            // continue if Processor is not CanvasProcessing class
-            if (empty($canvasElement['Content']['Widgets']['Processor'])){continue;}
-            if (mb_strpos($canvasElement['Content']['Widgets']['Processor'],'SourcePot\Datapool\Processing\CanvasProcessing')===FALSE){continue;}
-            // canvas processing class found -> run processor
+    public function runCanvasProcessingOnClass($class,$isTestRun=FALSE):array
+    {
+        $canvasElements=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($class);
+        foreach($canvasElements as $canvasElement){
+            if (($canvasElement['Content']['Widgets']['Processor']??'')!==__CLASS__){
+                continue;
+            }
             $result=$this->runCanvasProcessing($canvasElement,$isTestRun);
             break;
         }
         return $result;
     }
     
-    public function runCanvasProcessing($callingElement,$isTestRun=TRUE){
-        $settingsKey=__CLASS__.'|'.$callingElement['Folder'];
-        // reset staeps to process
+    public function runCanvasProcessing($callingElement,$isTestRun=TRUE):array
+    {
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$isTestRun);
+        // get rules, i.e. canvas elements to process
+        $rules2process=[];
+        $stateSelector=['Source'=>$this->getEntryTable(),'Group'=>'canvasProcessingState','Folder'=>'Rules to process','Name'=>$callingElement['EntryId']];
+        $stateSelector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($stateSelector,['Source','Group','Folder','Name'],'0','',FALSE);
+        $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($stateSelector,TRUE);
         if ($isTestRun===2){
-            $canvasElements2process=NULL;
-            $this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',[],$settingsKey,TRUE);
-            return ['Results'=>['Step count'=>['Value'=>0],'Info'=>['Value'=>'Canvas processing reset...'],]];
+            $settings['Content']=NULL;
+            $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($settings,TRUE);
+            $result['Statistics']['Info']['Value']='Canvas element stack emptied';
+            return $result;
         }
-        // get steps to process
-        $canvasElements2process=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getSetting('Job processing','Var space',[],$settingsKey,TRUE);
-        if (empty($canvasElements2process)){
-            $base=['canvasprocessingrules'=>[]];
-            $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
-            $canvasElements2process=$this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$base['canvasprocessingrules'],$settingsKey,TRUE);
-        }
-        if (empty($canvasElements2process)){
-            return ['Results'=>['Step count'=>['Value'=>count($canvasElements2process)],'Error'=>['Value'=>'No canvas processing rules found...'],]];
+        if (empty($settings['Content'])){
+            $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,['canvasprocessingrules'=>[]]);
+            foreach($base['canvasprocessingrules'] as $ruleEntryId=>$rule){
+                $rules2process[$ruleEntryId]=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$rule['Content']['Process']];
+            }
+            ksort($rules2process);
+            $settings=array_merge($stateSelector,['Content'=>$rules2process,'Read'=>'ALL_DATA_R','Write'=>'ALL_CONTENTADMIN_R','Owner'=>'SYSTEM']);
+            $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($settings,TRUE);
+        } else {
+            $rules2process=$settings['Content'];
         }
         // process canvas element
-        $infoMsg=['Test run'];
-        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$isTestRun);
-        foreach($canvasElements2process as $entryId=>$canvasElement2process){
-            if (!isset($canvasElement2process['Content']['Process'])){continue;}
-            $step=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId(strval($entryId));
-            $canvasElement=['Source'=>'dataexplorer','EntryId'=>$canvasElement2process['Content']['Process']];            
-            $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement,TRUE);
+        $infoMsg=[];
+        foreach($rules2process as $ruleId=>$canvasElement2process){
+            $step=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId(strval($ruleId));
+            $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElement2process,TRUE);
             $processor=$canvasElement['Content']['Widgets']['Processor'];
             if (isset($this->oc[$processor])){
                 $result=$this->oc[$processor]->dataProcessor($canvasElement,$isTestRun?'test':'run');
@@ -182,19 +185,20 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
                     $infoMsg[]='Incomplete run (this step will be processed again)...';
                 } else {
                     $infoMsg[]='Completed...';
-                    $canvasElements2process[$entryId]=NULL;
+                    $rules2process[$ruleId]=NULL;
                 }
             } else {
                 $infoMsg[]='Processor missing...';
-                $canvasElements2process[$entryId]=NULL;
+                $rules2process[$ruleId]=NULL;
             }
             $infoMsg[]='<b/>step '.$step.'</b>, canvas element <b>'.$canvasElement['Content']['Style']['Text'].'</b>';
             $result['Statistics']['-----------------------------------']['Value']='--------------------------------------------';
             $result['Statistics']['Canvas Processing']['Value']=implode('<br/>',$infoMsg);
             break;
         }
-        $this->oc['SourcePot\Datapool\AdminApps\Settings']->setSetting('Job processing','Var space',$canvasElements2process,$settingsKey,TRUE);
-        return $result??[];
+        $settings['Content']=$rules2process;
+        $settings=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($settings,TRUE);
+        return $result;
     }
 }
 ?>
