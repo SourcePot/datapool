@@ -114,6 +114,13 @@ After you have set up your admin account you should login and update the webmast
 
 PEAR may be required for processing office documents such as emails. If the upload of emails fails, the php script might have failed to include PEAR. The exception **"Failed opening required 'PEAR.php' (include_path='/var/www/vhosts/...** indicates a faulty dicetory setting for PEAR. Check if PEAR is installed and the location of the PEAR directory is set correctly on the server. If PEAR is installed, you can check the directory as follows:
 
+If PEAR is not currently installed, it can be installed on a Linux system using the following command:
+```
+sudo apt-get install php-pear
+sudo /etc/init.d/apache2 restart
+```
+
+The following command returns the PEAR directory:
 ```
 pear config-get php_dir
 > /usr/share/php
