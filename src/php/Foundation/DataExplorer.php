@@ -507,7 +507,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             }
             ksort($elements);
         } else {
-            if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$EntryId])){
+            if ($entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$EntryId],TRUE)){
                 $elements[$EntryId]=$entry; 
             }
         }
