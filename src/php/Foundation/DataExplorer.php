@@ -499,11 +499,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $elements=[];
         if (empty($EntryId)){
             $selector=$this->canvasSelector($callingClass);
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
-                if (empty($entry['Content']['Style']['Text'])){continue;}
-                if (strcmp($entry['Content']['Style']['Text'],'&#9881;')===0){
-                    continue;
-                }
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
                 $elements[$entry['Content']['Style']['Text']]=$entry;
             }
             ksort($elements);
