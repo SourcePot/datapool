@@ -293,7 +293,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if ($base['csvRequested'] || $base['zipRequested']){
             // add entry to csv
             $sourceEntry['Params']=NULL;
-            $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]);
+            $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]??[]);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,['Name'],'0','',FALSE);
             if (!$testRun){
                 $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
