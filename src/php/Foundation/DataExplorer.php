@@ -34,6 +34,10 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private const DYNAMIC_STYLE_TEMPLATE=[
         'color'=>'rgb({{VALUE}},0,0)',
     ];
+
+    private const SELECTED_CANVAS_ELEMENT_STYLE=[
+        'box-shadow'=>'3px 3px 5px 5px var(--attentionColor)',
+    ];
     
     private $oc;
     
@@ -358,7 +362,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $style=['left'=>$canvasElement['Content']['Style']['left'],'top'=>$canvasElement['Content']['Style']['top']];
         if (!empty($selectedCanvasElement['EntryId'])){
             if (strcmp($selectedCanvasElement['EntryId'],$canvasElement['EntryId'])===0){
-                $style['box-shadow']='3px 3px 5px 1px #f009';
+                $style=array_merge($style,self::SELECTED_CANVAS_ELEMENT_STYLE);
             }
         }
         $text=$canvasElement['Content']['Style']['Text'];
