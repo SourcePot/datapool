@@ -347,14 +347,14 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $context['messages']++;
         // html and/or text message
         $rawEmail=$message->__toString();
+        $htmlContent=$message->html();
         $entry=$this->header2entry($entry,substr($rawEmail,0,strpos($rawEmail,"\r\n\r\n")));
         $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
-        $entry['Content']['Message']=$message->text()?:strip_tags($htmlContent??'');
+        $entry['Content']['Message']=$message->text()?:($htmlContent??'');
         $entry['Content']['File content']=$message->text();
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
-        $htmlContent=$message->html();
         if (empty($htmlContent)){
             $entry['Name']=$nameBase.') [text/plain]';
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
