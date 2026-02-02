@@ -36,7 +36,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     ];
 
     private const SELECTED_CANVAS_ELEMENT_STYLE=[
-        'box-shadow'=>'0px 0px 12px 12px var(--blue)',
+        'box-shadow'=>'0px 0px 20px 20px var(--blue)',
     ];
     
     private $oc;
