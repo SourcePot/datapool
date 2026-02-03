@@ -30,7 +30,7 @@ class Access{
         'ALL_REGISTERED_R'=>65534,
         'ALL_MEMBER_R'=>65532,
         'ALL_R'=>65535
-        ];
+    ];
         
     public function __construct($oc)
     {
@@ -94,7 +94,9 @@ class Access{
     {
         if (!isset($entry[$type])){return $entry;}
         if (is_array($entry[$type])){return $entry;}
-        if (isset($this->access[$entry[$type]])){$entry[$type]=$this->access[$entry[$type]];}
+        if (isset($this->access[$entry[$type]])){
+            $entry[$type]=$this->access[$entry[$type]];
+        }
         return $entry;
     }
 
