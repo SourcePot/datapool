@@ -714,13 +714,18 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed to scan for pdf-attachments: {msg}',$context);
             }    
         } else if (stripos(strval($entry['Params']['File']['Extension']),'csv')!==FALSE){
-                $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();
-                $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
-                $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
+            $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();
+            $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
+            $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'xls')!==FALSE){
-                $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($file,$entry['Params']['File']['Extension'])->current();
-                $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\XLStools';
-                $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
+            $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($file,$entry['Params']['File']['Extension'])->current();
+            $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\XLStools';
+            $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
+        } else if (stripos(strval($entry['Params']['File']['Extension']),'txt')!==FALSE){
+            $entry['Content']['File content']=file_get_contents($file);
+        } else if (stripos(strval($entry['Params']['File']['Extension']),'json')!==FALSE){
+            $fileContent=file_get_contents($file)?:'{}';
+            $entry['Content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($fileContent);
         }
         // add file to entry
         if (empty($entry['EntryId'])){
