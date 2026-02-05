@@ -21,8 +21,43 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
         'Y-m-d'=>'Y-m-d 12:30:00',
         'Y-m'=>'Y-m-15 12:30:00',
         'Y'=>'Y-06-15 12:30:00',
-    ];    
+    ];
+
+    private const TIMESPAN_OPTIONS=[
+        'Y-m-d H:i'=>'Minute',
+        'Y-m-d H'=>'Hour',
+        'Y-m-d'=>'Day',
+        'Y-m'=>'Month',
+        'Y'=>'Year',
+    ];
     
+    private const PROCESSING_OPTIONS=[
+        'avg'=>'Average',
+        'min'=>'Min',
+        'minExZero'=>'Min exclude zero',
+        'max'=>'Max',
+        'range'=>'Range',
+        'sum'=>'Sum',
+        'count'=>'Count',
+    ];
+
+    private const CONTENTSTRUCTURE_PARAMS=[
+        'Timespan'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>self::TIMESPAN_OPTIONS,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Root::TIMEZONES,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'yMin'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'yMax'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'float','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'description'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+    ];
+		
+    private const CONTENTSTRUCTURE_RULES=[
+        'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>['+'=>'+','-'=>'-','*'=>'*'],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Signal'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>self::PROCESSING_OPTIONS,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Offset'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>0,'excontainer'=>TRUE],
+        'Scaler'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>1,'excontainer'=>TRUE],
+    ];	
+
     private $entryTable='';
     private $entryTemplate=[
         'Expires'=>['type'=>'DATETIME','value'=>\SourcePot\Datapool\Root::NULL_DATE,'Description'=>'If the current date is later than the Expires-date the entry will be deleted. On insert-entry the init-value is used only if the Owner is not anonymous, set to 10mins otherwise.'],
@@ -94,23 +129,7 @@ private function signalsDerived(array $selector):string
 
     public function derivedSignalParams($arr):array
     {
-    // rules
-        $timespanOptions=[
-            'Y-m-d H:i'=>'Minute',
-            'Y-m-d H'=>'Hour',
-            'Y-m-d'=>'Day',
-            'Y-m'=>'Month',
-            'Y'=>'Year',
-        ];
-        $contentStructure=[
-            'Timespan'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$timespanOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Root::TIMEZONES,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'min'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'max'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'description'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-        ];
-		// rules list
-        $arr['contentStructure']=$contentStructure;
+        $arr['contentStructure']=self::CONTENTSTRUCTURE_PARAMS;
 		$caption='Params for '.$arr['selector']['Group'].' &rarr; '.$arr['selector']['Folder'];
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption]);
@@ -119,32 +138,13 @@ private function signalsDerived(array $selector):string
     
     public function derivedSignalRules($arr):array
     {
-		// rules
-        $signalOptions=$this->oc['SourcePot\Datapool\Foundation\Signals']->getOptions(['Group'=>'signal']);
-        $processingOptions=[
-            'avg'=>'Average',
-            'min'=>'Min',
-            'minExZero'=>'Min exclude zero',
-            'max'=>'Max',
-            'range'=>'Range',
-            'sum'=>'Sum',
-            'count'=>'Count',
-        ];
-        $contentStructure=[
-            'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>['+'=>'+','-'=>'-','*'=>'*'],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'Signal'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$signalOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'Processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$processingOptions,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-            'Offset'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>0,'excontainer'=>TRUE],
-            'Scaler'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>1,'excontainer'=>TRUE],
-        ];
-		// rules list
+		$contentStructure=self::CONTENTSTRUCTURE_RULES;
+        $contentStructure['Signal']['options']=$this->oc['SourcePot\Datapool\Foundation\Signals']->getOptions(['Group'=>'signal']);
         $arr['contentStructure']=$contentStructure;
 		$arr['caption']='Rules for '.$arr['selector']['Group'].' &rarr; '.$arr['selector']['Folder'];
 		$arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
 		return $arr;
 	}
-
-
 
     public function signal2derivedSignal(array $signal):void
     {
@@ -187,16 +187,15 @@ private function signalsDerived(array $selector):string
                 }
             }
             // signal params
-            $signalParams=['description'=>$params['description']];
-            $signalParams['yMin']=$params['min']??NULL;
-            $signalParams['yMax']=$params['max']??NULL;
+            $params['yMin']=(empty(strval($params['yMin'])))?NULL:$params['yMin'];
+            $params['yMax']=(empty(strval($params['yMax'])))?NULL:$params['yMax'];
             $targetTimeZone=new \DateTimeZone($params['Timezone']);
             $nowDateTime=new \DateTime('@'.time());
             $nowDateTime->setTimezone($targetTimeZone);
             $dateTimeStr=$nowDateTime->format(self::BASE_DATETIME[$params['Timespan']]);
             $signalDateTime=new \DateTime($dateTimeStr,new \DateTimeZone($params['Timezone']));
             $signalTimeStamp=$signalDateTime->getTimestamp();
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$params['Group'],$params['Folder'],$result,'float',$signalParams,$signalTimeStamp);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$params['Group'],$params['Folder'],$result,$params['Data type']??'float',$params,$signalTimeStamp);
         }
     }
 
