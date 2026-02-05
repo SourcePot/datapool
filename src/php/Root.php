@@ -397,7 +397,7 @@ final class Root{
             // job Processing
             $loadAvg=$this->getLoadAvg();
             $loadAvgThreshold=self::JOB_AVERAGE_LOAD_THRESHOLD_MULTIPLIER*$loadAvg['avg'];
-            if ($loadAvg['Load [%]']<$loadAvgThreshold){
+            if ($loadAvg['Load [%]']<$loadAvgThreshold || $loadAvg['Load [%]']===0){
                 $arr=$this->oc['SourcePot\Datapool\Foundation\Job']->trigger($arr);
             } else {
                 $arr['page html']='Job skipped due to high server load (threshold='.round($loadAvgThreshold).')...';
@@ -827,19 +827,29 @@ final class Root{
     {
         $loadAvg=['OS'=>PHP_OS,'Load'=>0];
         if (stripos(PHP_OS,'linux')!==FALSE){
+            // Linux OS
             if (function_exists('sys_getloadavg')){
                 $loadAvg['Load']=sys_getloadavg()[0];
             } else {
                 $data=file_get_contents('/proc/loadavg');
-                $loadAvg['Load']=explode(' ', $data)[0];
+                $loadAvg['Load']=explode(' ',$data?:0)[0];
             }
         } else if (stripos(PHP_OS,'win')!==FALSE){
+            // Windows OS
             exec("wmic cpu get loadpercentage /all",$execReturn);
             foreach($execReturn as $line) {
                 if (is_numeric(trim($line))){
                     $loadAvg['Load']=floatval(trim($line));
                     break;
                 }
+            }
+        } else {
+            // other OS (e.g. MacOS)
+            if (function_exists('sys_getloadavg')){
+                $loadAvg['Load']=sys_getloadavg()[0];
+            } else {
+                $data=file_get_contents('/proc/loadavg');
+                $loadAvg['Load']=explode(' ',$data?:0)[0];
             }
         }
         $loadAvg['Load [%]']=round($loadAvg['Load']*100);

@@ -154,15 +154,19 @@ class Access{
         return $emailId;
     }
 
-    public function loginId($email,$password){
+    public function loginId($email,$password):string
+    {
         $emailId=$this->emailId($email);
         $userPass=$password.$emailId;
         $loginId=password_hash($userPass,PASSWORD_DEFAULT);
         return $loginId;
     }
     
-    public function verfiyPassword($email,$password,$loginId){
-        if (empty($email) || empty($password) || empty($loginId)){return FALSE;}
+    public function verfiyPassword($email,$password,$loginId):bool
+    {
+        if (empty($email) || empty($password) || empty($loginId)){
+            return FALSE;
+        }
         $emailId=$this->emailId($email);
         $userPass=$password.$emailId;
         if (password_verify($userPass,$loginId)===TRUE){
@@ -173,7 +177,8 @@ class Access{
         }
     }
     
-    private function rehashPswIfNeeded($user,$userPass,$loginId){
+    private function rehashPswIfNeeded($user,$userPass,$loginId):bool
+    {
         if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
             $user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
@@ -184,31 +189,38 @@ class Access{
         }
     }
 
-    public function isAdmin($user=FALSE){
+    public function isAdmin($user=FALSE):bool
+    {
         return $this->hasRights($user,'ADMIN_R');
     }
     
-    public function isContentAdmin($user=FALSE){
+    public function isContentAdmin($user=FALSE):bool
+    {
         return $this->hasRights($user,'ALL_CONTENTADMIN_R');
     }
     
-    public function isMember($user=FALSE){
+    public function isMember($user=FALSE):bool
+    {
         return $this->hasRights($user,'ALL_MEMBER_R');
     }
     
-    public function isPublic($user=FALSE){
+    public function isPublic($user=FALSE):bool
+    {
         return $this->hasRights($user,'PUBLIC_R');
     }
     
-    public function isRegistered($user=FALSE){
+    public function isRegistered($user=FALSE):bool
+    {
         return $this->hasRights($user,'REGISTERED_R');
     }
     
-    public function hasRights($user=FALSE,string $right='ADMIN_R')
+    public function hasRights($user=FALSE,string $right='ADMIN_R'):bool
     {
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-            if (empty($user)){return FALSE;}
+            if (empty($user)){
+                return FALSE;
+            }
         }
         if (($user['Privileges'] & $this->access[$right])>0){
             return TRUE;
@@ -217,11 +229,13 @@ class Access{
         }    
     }
 
-    public function hasAccess($user=FALSE,int $right=32768)
+    public function hasAccess($user=FALSE,int $right=32768):bool
     {
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-            if (empty($user)){return FALSE;}
+            if (empty($user)){
+                return FALSE;
+            }
         }
         if (($user['Privileges'] & $right)>0){
             return TRUE;
