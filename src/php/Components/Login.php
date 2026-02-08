@@ -122,16 +122,20 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginSuccess($user,$email)
     {
         $this->resetSession();
-        // return to login page
         if ($this->oc['SourcePot\Datapool\Components\TwoFactorAuthentication']->isTwoFactorAuthenticationRequired($user)){
-            $user['Privileges']=2;
+            // Two-factor authentication (2FA)
+            $user['Privileges']=1;
+            $this->oc['SourcePot\Datapool\Components\TwoFactorAuthentication']->successfulUserLogin($user);
             $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
             $_SESSION['page state']['selectedApp']['Login']['Class']='SourcePot\Datapool\Components\TwoFactorAuthentication';
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
+            exit;
         } else {
+            // Standard login
             $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
             $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Home']));
+            exit;
         }
     }
 
@@ -143,6 +147,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         // return to login page
         sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
+        exit;
     }
 
     private function registerRequest($arr)
