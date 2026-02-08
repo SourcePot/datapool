@@ -550,7 +550,7 @@ class Container{
                             $matrix[$rowIndex]['trStyle']=['background-color'=>'#e4e2ff'];
                         }
                         // fine filter rows
-                        if (stripos($flatEntry[$cntrArr['Column']],$cntrArr['Filter']?:$flatEntry[$cntrArr['Column']])===FALSE){
+                        if (stripos($flatEntry[$cntrArr['Column']]??'',$cntrArr['Filter']?:$flatEntry[$cntrArr['Column']]??'')===FALSE){
                             unset($matrix[$rowIndex]);
                             $rowCount--;
                             continue 2;
