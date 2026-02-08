@@ -55,9 +55,9 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     public function sendTwoFactorAuthenticationRequest($user,string $transmitter):int
     {
-        $pageStateArr=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState(__CLASS__,[$user['EntryId']=>mt_rand(100000,999999)]);
+        $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$user['EntryId'],mt_rand(100000,999999));
         $subject='Login Authentication PIN';
-        $message='Your authentication PIN is: '.$pageStateArr[$user['EntryId']];
+        $message='Your authentication PIN is: '.$code;
         return $this->oc[$transmitter]->send($user['EntryId'],['Content'=>['Subject'=>$subject,'Message'=>$message,]]);
     }
 
@@ -73,17 +73,15 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     public function getTwoFactorAuthenticationForm(array $arr):array
     {
-        $codeSent=FALSE;
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $transmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
         $settings=['transmitter'=>$transmitter['SourcePot\Datapool\Tools\Email']??current($transmitter),'code'=>''];
+        // processing from
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
-        if (!empty($formData['val'])){
-            $settings=$formData['val'];
-        }
+        if (!empty($formData['val'])){$settings=$formData['val'];}
         if (isset($formData['cmd']['Login'])){
-            $pageStateArr=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-            if (intval($settings['code'])===intval($pageStateArr[$user['EntryId']]??0)){
+            $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,$user['EntryId']);
+            if (intval($settings['code'])===intval($code??0)){
                 $userToLogin=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
                 $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($userToLogin);
                 $this->oc['logger']->log('info','2FA login for "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
@@ -99,13 +97,14 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
             $codeSent=boolval($success);
             $transmitterFailed=!boolval($success);;
         }
+        // compile html
         $selectorArr=['options'=>$transmitter,'key'=>['transmitter'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'value'=>$settings['transmitter'],'excontainer'=>TRUE];
         $matrix=[];
         $matrix['Transmitter']=['Value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectorArr)];
         if (!empty($transmitterFailed)){
             $matrix['Code']=['Value'=>['tag'=>'h3','element-content'=>'Transmitter failed']];
             $matrix['Request']=['Value'=>['tag'=>'button','element-content'=>'Request code','key'=>['Request'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
-        } else if ($codeSent){
+        } else if (!empty($codeSent)){
             $matrix['Code']=['Value'=>['tag'=>'input','type'=>'text','key'=>['code'],'placeholder'=>'123456','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
             $matrix['Login']=['Value'=>['tag'=>'button','element-content'=>'Login','key'=>['Login'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         } else {
