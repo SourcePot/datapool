@@ -345,7 +345,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
                 $file=$this->selector2file($entry);
                 if (!is_file($file)){continue;}
-                $zip->addFile($file,str_replace('_', '-',basename($entry['Params']['File']['Name'])));
+                $zip->addFile($file,str_replace('_', '-',basename($entry['Params']['File']['Name']??'filename_unset_'.hrtime(TRUE))));
             }
             $zip->close();
             $entry=['Params'=>['File'=>['Extension'=>'zip','Name'=>$zipName]]];
@@ -913,4 +913,3 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
     }
     
 }
-?>
