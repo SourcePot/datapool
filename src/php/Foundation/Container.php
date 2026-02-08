@@ -549,6 +549,12 @@ class Container{
                         if ($entry['Source']===$pageStateSelector['Source'] && $entry['EntryId']===(isset($pageStateSelector['EntryId'])?$pageStateSelector['EntryId']:'')){
                             $matrix[$rowIndex]['trStyle']=['background-color'=>'#e4e2ff'];
                         }
+                        // fine filter rows
+                        if (stripos($flatEntry[$cntrArr['Column']],$cntrArr['Filter']?:$flatEntry[$cntrArr['Column']])===FALSE){
+                            unset($matrix[$rowIndex]);
+                            $rowCount--;
+                            continue 2;
+                        }
                     }
                 } // end of loop through columns
             } // end of loop through entries
