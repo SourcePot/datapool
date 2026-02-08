@@ -547,7 +547,7 @@ class Container{
                         $class=$this->oc['SourcePot\Datapool\Root']->source2class($arr['selector']['Source']);
                         $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($arr['selector']['app']??$class);
                         if ($entry['Source']===$pageStateSelector['Source'] && $entry['EntryId']===(isset($pageStateSelector['EntryId'])?$pageStateSelector['EntryId']:'')){
-                            $matrix[$rowIndex]['trStyle']=['background-color'=>'#e4e2ff'];
+                            $matrix[$rowIndex]['trStyle']=['background-color'=>'var(--bgMenu)'];
                         }
                         // fine filter rows
                         if (stripos($flatEntry[$cntrArr['Column']]??'',$cntrArr['Filter']?:$flatEntry[$cntrArr['Column']]??'')===FALSE){

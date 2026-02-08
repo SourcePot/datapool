@@ -12,7 +12,9 @@ namespace SourcePot\Datapool\Components;
 
 class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
-    private const APP_ACCESS='REGISTERED_R';
+    private const APP_ACCESS='PUBLIC_R';
+
+    private const MAX_LOGIN_AGE=60;
 
     private $oc;
 
@@ -28,8 +30,7 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     public function init()
     {
-        $accessRequirement=$this->oc['SourcePot\Datapool\Foundation\Access']->accessString2int(self::APP_ACCESS);
-        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess(FALSE,$accessRequirement)){
+        if (!$this->validUserLogin()){
             $_SESSION['page state']['selectedApp']['Login']['Class']='SourcePot\Datapool\Components\Login';
         }
     }
@@ -53,14 +54,53 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
         return $this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess($user,$twoFactorAuthenticationBitMask);
     }
 
-    public function sendTwoFactorAuthenticationRequest($user,string $transmitter):int
+    /******************************************************************************************************************************************
+    *   User login status
+    */
+    
+    private function successUserLoginKey($user):string
     {
-        $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$user['EntryId'],mt_rand(100000,999999));
+        return 'login_'.$user['EntryId'];
+    }
+
+    public function successfulUserLogin($user)
+    {
+        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$this->successUserLoginKey($user),time());
+    }
+
+    public function resetUserLogin($user)
+    {
+        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$this->successUserLoginKey($user),0);
+    }
+
+    private function validUserLogin():bool
+    {
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $loginTimestamp=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,$this->successUserLoginKey($user));
+        return (time()-$loginTimestamp?:0)<self::MAX_LOGIN_AGE;
+    }
+
+    /******************************************************************************************************************************************
+    *   Generate login token: code
+    */
+    
+    private function getUserCodeKey($user):string
+    {
+        return 'code_'.$user['EntryId'];
+    }
+
+    private function sendTwoFactorAuthenticationRequest($user,string $transmitter):int
+    {
+        $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$this->getUserCodeKey($user),mt_rand(100000,999999));
         $subject='Login Authentication PIN';
         $message='Your authentication PIN is: '.$code;
         return $this->oc[$transmitter]->send($user['EntryId'],['Content'=>['Subject'=>$subject,'Message'=>$message,]]);
     }
 
+    /******************************************************************************************************************************************
+    *   HTML-Form creation
+    */
+    
     private function getTwoFactorAuthenticationHtml():string
     {
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -80,15 +120,16 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (!empty($formData['val'])){$settings=$formData['val'];}
         if (isset($formData['cmd']['Login'])){
-            $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,$user['EntryId']);
-            if (intval($settings['code'])===intval($code??0)){
+            $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,$this->getUserCodeKey($user));
+            if (intval($settings['code'])===intval($code??0) && $this->validUserLogin()){
                 $userToLogin=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
                 $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($userToLogin);
                 $this->oc['logger']->log('info','2FA login for "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                 header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Home']));
                 exit;
             } else {
-                $this->oc['logger']->log('notice','2FA login for "{email}" at "{dateTime}" failed.',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
+                $this->resetUserLogin($user);
+                $this->oc['logger']->log('notice','Failed 2FA login for "{email}" at "{dateTime}".',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                 header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Logout']));
                 exit;
             }
@@ -105,8 +146,9 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
             $matrix['Code']=['Value'=>['tag'=>'h3','element-content'=>'Transmitter failed']];
             $matrix['Request']=['Value'=>['tag'=>'button','element-content'=>'Request code','key'=>['Request'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         } else if (!empty($codeSent)){
-            $matrix['Code']=['Value'=>['tag'=>'input','type'=>'text','key'=>['code'],'placeholder'=>'123456','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
-            $matrix['Login']=['Value'=>['tag'=>'button','element-content'=>'Login','key'=>['Login'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
+            $btnId=md5(strval(hrtime(TRUE)));
+            $matrix['Code']=['Value'=>['tag'=>'input','type'=>'text','key'=>['code'],'placeholder'=>'123456','trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
+            $matrix['Login']=['Value'=>['tag'=>'button','element-content'=>'Login','key'=>['Login'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         } else {
             $matrix['Request']=['Value'=>['tag'=>'button','element-content'=>'Request code','key'=>['Request'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         }
