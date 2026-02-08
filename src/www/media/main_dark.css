@@ -91,6 +91,8 @@ object{
     clear:both;
     margin:10px 0 0 5px;
     overflow: hidden;
+    color:var(--colorH);
+    background-color: var(--bgColorH);
 }
 ol,ul{
     margin:1rem;
@@ -184,10 +186,6 @@ p.sample{
     max-height:300px;
     max-width:300px;
     overflow:auto;
-}
-video,object,embed,img{
-    background:none;
-    max-width: 100%;
 }
 div.preview{
     clear:left;

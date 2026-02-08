@@ -14,11 +14,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $oc;
 
-    private const INTERNAL_MAPPING=[
-        'sectionIndex'=>'ParseEntries :: sectionIndex',
-        'section'=>'ParseEntries :: section',
-    ];
-
     private const SPLIT_MARKER='__SPLIT__';
 
     private const CONTENT_STRUCTURE_PARAMS=[
@@ -49,7 +44,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     ];
 
     private const CONTENT_STRUCTURE_MAPPER_RULES=[
-        'Source column'=>['method'=>'keySelect','value'=>'','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE,'addColumns'=>self::INTERNAL_MAPPING],
+        'Source column'=>['method'=>'keySelect','value'=>'','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE,'addColumns'=>[]],
         '...or constant'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
         'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','standardColumsOnly'=>TRUE],
@@ -58,8 +53,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
     ];
     
-    private $internalData=[];
-
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
@@ -123,21 +116,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
     private function getParseEntriesInfo($callingElement){
-        //$regExpTester=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->copy2clipboard(htmlentities('https://regexr.com/'));
-        $matrix=[];
-        $matrix['Parser control: Select parser target and type']['Description']='This control panel sets the fundermental parameters.<br/>"Source column" should contain the text to be parsed.<br/>"Target on success" is the Select-Element an entry should be moved to on success and<br/>"Target on failure" the Select-element used for entries that fail.';
-        $matrix['Provide rules to divide the text into sections']['Description']='This control panel sets rules to divide the text into sections.<br/>The first section is called "START", all following sections are named by "Section name".<br/>The text section boundery is controlled by the "Regular expression".';
-        $matrix['Parser rules: Parse selected entry and copy result to target entry']['Description']='This control panel sets the parser rules. The rules are processed as an ordered list.<br/>Rules are applied to the text section selected by "Rule relevant on section, the "Regular expression" is used to extract releavnt values.<br/>You can use brackets to ecxtract the full match "Match index"=0 or parts of match selected by "Match index">0.<br/>Alternatively to the regular expression you can proviede "Constant or..." as value.<br/>Use "Target data type" to convert the extracted value and "Target column", "Target key" to map the value to the entry.<br/>"Allow multiple hits" will create an array, "Combine on update" combines multiple hits in a new value.';
-        $matrix['Mapper rules: map directly to the target entry']['Description']='This control panel allows for the definition of direct mapping from the source entry to the target entry.';
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'','class'=>'max-content']);
-        $html.='<h2 class="std">Setting-up the parser, first steps:</h2><ol>';
-        $html.='<li>Add two Select-elements to the canvas, one for successfiully parsed entries and another for failed entries</li>';
-        $html.='<li>Add the two Select-elements to "Parser control: Select parser target and type"</li>';
-        $html.='<li>Upload a valid test document, this will enable the selection of the relevant "Source column"</li>';
-        $html.='<li>Set the "Source column", for text from a pdf-file the source column is "Content → File content"</li>';
+        $html='<h2 class="std">Setting-up the parser - first steps:</h2><ol>';
+        $html.='<li>Make sure you have two additional Canvas-Elements, one for successfiully parsed entries and another for failed entries</li>';
+        $html.='<li>Upload a valid test document, this will enable the selection of the relevant <b>Source column</b></li>';
+        $html.='<li>at <b>Parser control: Select parser target and type</b> select the <b>Source column</b> which contains the text to parse</li>';
         $html.='<li>Check the content of the source column, e.g. "Content → File content", copy & paste the text into a regular expression tester such as <a href="https://regexr.com/" target="_blank" class="textlink">'.htmlentities('https://regexr.com/').'</a></li>';
         $html.='<li>Find regular expression for all the values you need to extract. If a value type exsists multiple times such as dates, divide the txet into sections</li>';
-        $html.='<li>After the value extraction works fine with the test document, run a test with multiple real world documents. Improve the configuration if needed.</li>';
+        $html.='<li>After the value extraction works alright with the test document, run a test with multiple real world documents. Improve the configuration if needed.</li>';
         $html.='</ol>';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
@@ -173,7 +158,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
 
     private function getParseEntriesSettings($callingElement){
-        // compile html
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Parsing entries settings','generic',$callingElement,['method'=>'getParseEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
@@ -185,8 +169,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $this->sectionNamesById=$this->sectionNamesById($arr['selector']);
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->parserParams($arr['selector']);
-        $arr['html'].=$this->parserSectionRules($arr['selector']);
         $arr['html'].=$this->mapperRules($arr['selector']);
+        $arr['html'].=$this->parserSectionRules($arr['selector']);
         $arr['html'].=$this->parserRules($arr['selector']);
         return $arr;
     }
@@ -293,29 +277,27 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Mapping']=$mappingResult['result'];
         if ($mappingResult['failed']){
             // mapper failed
+            $singleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]);
             return $this->finalizeFailedEntry($result,$sourceEntry,$base,$params,$testRun);
         }
-        $mappingEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]);
         // content found, get sections
         $sections=$this->sections($base,$fullText);
         if (!isset($result['Sections singleEntry']) || mt_rand(1,100)>95){
             foreach($sections['singleEntry'] as $sectionId=>$section){
                 $result['Sections singleEntry'][$this->sectionNamesById[$sectionId]]=['value'=>htmlspecialchars($section??'')];
             }
-            foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
-                foreach($sectionArr as $sectionIndex=>$section)
-                $result['Sections multipleEntries "'.$this->sectionNamesById[$sectionId].'"'][$sectionIndex]=['value'=>htmlspecialchars($section??'')];
+            foreach($sections['multipleEntries'] as $newEntryIndex=>$newEntrySections){
+                foreach($newEntrySections as $sectionId=>$section){
+                    $result['Sections multipleEntries"'][$newEntryIndex.' | '.$this->sectionNamesById[$sectionId]]=['value'=>htmlspecialchars($section??'')];
+                }
             }
         }
         // parse single entry sections
         $parserFailed=FALSE;
         $resultArr=[];
         foreach($sections['singleEntry']??[] as $sectionId=>$section){
-            $this->internalData['[[sectionIndex]]']=0;
-            $this->internalData['[[section]]']=$section;
             $parserResult=$this->processParsing($base,$sectionId,$section??'');
             if (isset($parserResult['result'][$sectionId])){
-                $sectionName=$this->sectionNamesById[$sectionId];
                 $resultArr=array_replace_recursive($resultArr,$parserResult['result'][$sectionId]);
             }
             $parserFailed=($parserResult['failed'])?TRUE:$parserFailed;
@@ -333,36 +315,47 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Parser singleEntry sections <b>success</b>']=$resultArr;
             }
         }
-        $singleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]);
         if (empty($sections['multipleEntries'])){
             // finalize single entry
-            $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$mappingEntry,$singleEntry],$testRun);
+            $singleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]);
+            $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$singleEntry],$testRun);
+            if (empty($testRun)){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($goodEntry);
+            }        
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
             $result['Statistics']['Entries moved (success)']['Value']++;
         } else {
             // parse multiple entries sections
-            foreach($sections['multipleEntries'] as $sectionId=>$sectionArr){
-                foreach($sectionArr as $sectionIndex=>$section){
-                    $this->internalData['[[sectionIndex]]']=$sectionIndex;
-                    $this->internalData['[[section]]']=$section;
+            $combineCacheBackup=$this->oc['SourcePot\Datapool\Foundation\Computations']->getCombineCache();
+            foreach($sections['multipleEntries'] as $entryIndex=>$newEntrySections){
+                $parsingFailed=FALSE;
+                $entryParserResult=[];
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->setCombineCache($combineCacheBackup);
+                foreach($newEntrySections as $sectionId=>$section){
                     $parserResult=$this->processParsing($base,$sectionId,$section);
+                    foreach($parserResult['result'][$sectionId] as $parserResultArr){
+                        $key=$entryIndex.'-'.count($entryParserResult);
+                        $entryParserResult[$key]=$parserResultArr;
+                    }
                     // check if parser failed
                     if ($parserResult['failed']){
                         $result=$this->finalizeFailedEntry($result,$sourceEntry,$base,$params,$testRun);
-                        continue;
+                        $parsingFailed=TRUE;
+                        break;
                     }
-                    $multipleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]); 
-                    // create result entry
-                    $sectionName=$this->sectionNamesById[$sectionId];
-                    $sectionKey='Parser multipleEntries section '.$sectionName;
-                    if (isset($parserResult['result'][$sectionId]) && (!isset($result[$sectionKey]) || mt_rand(0,100)>70)){
-                        $result[$sectionKey]=$parserResult['result'][$sectionId];
-                    }
-                    $isLastSection=(count($sectionArr)-1)===$sectionIndex;
-                    $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$mappingEntry,$singleEntry,$multipleEntry],$testRun,!$isLastSection);
-                    $result['Statistics']['Entries moved (success)']['Value']++;
-                    $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
                 }
+                $subKey=$parsingFailed?'(failed)':'(success)';
+                $result['Parser multipleEntries section '.$subKey]=array_merge($result['Parser multipleEntries section '.$subKey]??[],$entryParserResult);
+                $multipleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]); 
+                if ($parsingFailed){continue;}
+                // create result entry
+                $isLastSection=(count($newEntrySections)-1)===$entryIndex;
+                $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$multipleEntry],$testRun,!$isLastSection);
+                if (empty($testRun)){
+                    $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($goodEntry);
+                }            
+                $result['Statistics']['Entries moved (success)']['Value']++;
+                $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
             }
         }
         // sample result
@@ -395,7 +388,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // check if rule is relevant
             if (!isset($rule['Content']['Target data type'])){continue;}
             if ($rule['Content']['Rule relevant on section']!==$sectionId){continue;}
-            $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
+            $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleEntryId)[0];
+            $result[$rowKey]['Parser rule']=$rowKey;
             $result[$rowKey]['Text']='';
             $result[$rowKey]['Match']='';
             $result[$rowKey]['Key']=$rule['Content']['Target column'];
@@ -416,14 +410,14 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $noMtachPlaceholder=(strpos($rule['Content']['Target data type'],'string')===FALSE)?'':($params['No match placeholder']??'');
                 $matches[$ruleMatchIndex][0]=$matches[$ruleMatchIndex][0]??$noMtachPlaceholder;
                 foreach($matches[$ruleMatchIndex] as $hitIndex=>$matchText){
-                    $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
+                    $result[$rowKey]['Key']=$rule['Content']['Target column'].' | '.$rule['Content']['Target key'];
                     $result[$rowKey]['Match text'].=(empty($result[$rowKey]['Match text']))?$matchText:(' | '.$matchText);
                     $matchText=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($matchText,$rule['Content']['Target data type']);
                     $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText);
                 }
             } else if (!empty($section)){
                 $result[$rowKey]['Text']='<b>const:</b> "'.$rule['Content']['Constant or...'].'"';
-                $result[$rowKey]['Key'].=' | '.$rule['Content']['Target key'];
+                $result[$rowKey]['Key']=$rule['Content']['Target column'].' | '.$rule['Content']['Target key'];
                 $result[$rowKey]['Match text'].=$rule['Content']['Constant or...'];
                 $constant=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($rule['Content']['Constant or...'],$rule['Content']['Target data type']);
                 $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$constant);
@@ -438,7 +432,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function processMapping($base,$entry):array
     {
-        $targetEntry=$result=[];
+        $result=[];
         $mappingFailed=FALSE;
         foreach($base['mapperrules'] as $ruleEntryId=>$rule){
             if (!isset($rule['Content']['Source column']) || !isset($rule['Content']['...or constant'])){continue;}
@@ -448,14 +442,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 // direct mapping
                 $isset=isset($entry[$rule['Content']['Source column']]);
                 $matchText=$entry[$rule['Content']['Source column']]??'';
-                // internal mapping
-                foreach(self::INTERNAL_MAPPING as $internalMappingKey=>$internalMappingLabel){
-                    if ($rule['Content']['Source column']!==$internalMappingKey){continue;}
-                    $matchText='[['.$internalMappingKey.']]';
-                    $rule['Content']['Target data type']='string';
-                    $isset=TRUE;
-                    break;    
-                }
             } else {
                 // map constant
                 $isset=TRUE;
@@ -467,14 +453,13 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 'Source column or constant'=>$matchText,
                 'Must be set'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($rule['Content']['Source value']??FALSE),
                 'Rule failed'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($ruleFailed),
-                ];
+            ];
             // add entry
             if ($ruleFailed){
                 $mappingFailed=TRUE;
             } else {
                 $matchText=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($matchText,$rule['Content']['Target data type']);
                 $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine']??'',$rule['Content']['Target column'],$rule['Content']['Target key'],$matchText);
-                $debugArr[]=['Target column'=>$rule['Content']['Target column'],'matchText'=>$matchText,'targetEntry'=>$targetEntry];
             }
         }
         return ['result'=>$result,'failed'=>$mappingFailed];
@@ -488,93 +473,111 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!isset($entry['Content']['Section name'])){continue;}
             $sectionsById[$entry['EntryId']]=$entry['Content']['Section name'];
         }
-        foreach(self::INTERNAL_MAPPING as $internalMappingLabel){
-            $sectionsById[$internalMappingLabel]=$internalMappingLabel;
-        }
-        $sectionsById['FULL']='Complete text';
+        $sectionsById['FULL']='Single entry full text';
+        $sectionsById['NEW ENTRY FULL']='New entry full text';
+        $sectionsById['NEW ENTRY INDEX']='New entry index';
         return $sectionsById;
     }
 
     private function sections(array $base,string $fullText):array
     {
-        $sections=['singleEntry'=>[],'multipleEntries'=>[]];
-        $splitParams=[];
+        // get split params
+        $sinleEntrySplitParams=$multipleEntrySplitParams=$multipleEntriesSignleEntrySplitParams=[];
         foreach($base['parsersectionrules'] as $ruleId=>$rule){
             if (!isset($rule['Content']['Section type']) || !isset($rule['Content']['Regular expression'])){
                 continue;
             }
-            $splitParams[$rule['Content']['Section type']][$ruleId]=[
-                'ruleId'=>$ruleId,
-                'regEx'=>$rule['Content']['Regular expression'],
-                'isSectionStartIndicator'=>boolval($rule['Content']['...is section']),
-            ];
+            if ($rule['Content']['Section type']==='singleEntry' && empty($multipleEntrySplitParams)){
+                $sinleEntrySplitParams[$ruleId]=[
+                    'ruleId'=>$ruleId,
+                    'regEx'=>$rule['Content']['Regular expression'],
+                    'isSectionStartIndicator'=>boolval($rule['Content']['...is section']),
+                ];
+            } else if ($rule['Content']['Section type']==='multipleEntries'){
+                $multipleEntrySplitParams[$ruleId]=[
+                    'ruleId'=>$ruleId,
+                    'regEx'=>$rule['Content']['Regular expression'],
+                    'isSectionStartIndicator'=>boolval($rule['Content']['...is section']),
+                ];
+            } else if ($rule['Content']['Section type']==='singleEntry' && !empty($multipleEntrySplitParams)){
+                $multipleEntriesSignleEntrySplitParams[$ruleId]=[
+                    'ruleId'=>$ruleId,
+                    'regEx'=>$rule['Content']['Regular expression'],
+                    'isSectionStartIndicator'=>boolval($rule['Content']['...is section']),
+                ];
+            }
         }
-        $sections['singleEntry']=$this->singleEntrySplit($splitParams['singleEntry']??[],$fullText);
+        // split into sections - full text single entry sections
+        $sections=[];
+        $sections['singleEntry']=$this->singleEntrySplit($sinleEntrySplitParams,$fullText);
         $sections['singleEntry']['FULL']=$fullText;
-        $sections['multipleEntries']=$this->multiEntriesSplit($splitParams['multipleEntries']??[],$fullText);
-        foreach(self::INTERNAL_MAPPING as $internalMappingKey=>$internalMappingLabel){
-            $sections['singleEntry'][$internalMappingLabel]='[['.$internalMappingKey.']]';
+        // split into sections - full text multiple entry sections
+        $multipleEntriesSections=$this->multiEntriesSplit($multipleEntrySplitParams,$fullText);
+        foreach($multipleEntriesSections as $index=>$multipleEntriesSection){
+            $sections['multipleEntries'][$index]['NEW ENTRY INDEX']=strval($index);
+            $sections['multipleEntries'][$index]['NEW ENTRY FULL']=$multipleEntriesSection;
+            $sections['multipleEntries'][$index]+=$this->singleEntrySplit($multipleEntriesSignleEntrySplitParams,$sections['multipleEntries'][$index]['NEW ENTRY FULL']);
         }
         return $sections;
     }
-
+    
     private function singleEntrySplit(array $splitParams,string $text):array
     {
         $sections=[];
         foreach($splitParams as $ruleId=>$splitParam){
-            $textComps=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],TRUE);
-            if (count($textComps)<2){continue;}
-            $sections[$ruleId]=array_shift($textComps);
-            $text=implode('',$textComps);
+            $splitResult=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator']);
+            if ($splitParam['isSectionStartIndicator']){
+                $sections[$ruleId]=$splitResult['textComps'][0]??'';
+                //array_unshift($splitResult['textComps'],$splitResult['residue']);
+            } else {
+                $sections[$ruleId]=array_shift($splitResult['textComps'])??'';
+                $splitResult['textComps'][]=$splitResult['residue'];
+            }
+            $text=implode('',$splitResult['textComps']);
         }
         return $sections;
     }
 
     private function multiEntriesSplit(array $splitParams,string $text):array
-    {
-        $sections=[];
-        if (empty($splitParams) || empty($text)){
-            return $sections;
-        }
-        $multiEntryKeys=count($splitParams);
-        // first level split
-        $texts=[$text];
-        if (count($splitParams)>1){
-            $splitParam=array_shift($splitParams);
-            $text=array_shift($texts);
-            $texts=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],FALSE);
-        }
-        // second level split
-        $splitParam=array_shift($splitParams);
-        foreach($texts as $text){
-            $textComps=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],TRUE);
-            if ($splitParam['isSectionStartIndicator']){
-                $startText=array_shift($textComps);
+    {   
+        $isFirst=TRUE;
+        while($splitParam=array_shift($splitParams)){
+            $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($splitParam['ruleId']);
+            if ($isFirst){
+                $splitResult=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator']);
+                $firstLevelSections=$splitResult['textComps'];
+                $isFirst=FALSE;    
             } else {
-                $endText=array_pop($textComps);
-            }
-            foreach($textComps as $textComp){
-                $sections[$splitParam['ruleId']][]=trim(trim($startText??'').'|'.$textComp.'|'.trim($endText??''),'| ');
+                $tmpSections=$sections??$firstLevelSections;
+                $sections=[];
+                foreach($tmpSections as $index=>$section){
+                    $splitResult=$this->textSplit($section,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],$splitResult['residue']??'');
+                    if (empty($splitResult['textComps'])){
+                        $sections[]=$tmpSections[$index];
+                    } else {
+                        foreach($splitResult['textComps'] as $textComp){
+                            $textComp=($splitParam['isSectionStartIndicator'])?($splitResult['residue'].' |'.$ruleIndex.'| '.$textComp):$textComp;
+                            $textComp=(!$splitParam['isSectionStartIndicator'])?($textComp.' |'.$ruleIndex.'| '.$splitResult['residue']):$textComp;
+                            $sections[]=$textComp;
+                        }
+                    }
+                }
             }
         }
-        if (array_shift($splitParams)){
-            $this->oc['logger']->log('notice','A maximum of 2 "Multiple entries" rules is supported. You have "{multiEntryKeys}" rules defined.',['multiEntryKeys'=>$multiEntryKeys]);
-        }
-        return $sections;
+        return $sections??[];
     }
 
-    private function textSplit(string $text,string $regEx,bool $splitBeforeMatch=TRUE,bool $returnAllComps=FALSE):array
+    private function textSplit(string $text,string $regEx,bool $splitBeforeMatch=TRUE):array
     {
+        $result=['textComps'=>[],'residue'=>''];
         $text=preg_replace('/('.$regEx.')/u',($splitBeforeMatch)?(self::SPLIT_MARKER.'${1}'):('${1}'.self::SPLIT_MARKER),$text);
-        $textComps=explode(self::SPLIT_MARKER,$text??'');
-        if (count($textComps)<2){return [$text];}
-        if ($returnAllComps){return $textComps;}
+        $result['textComps']=explode(self::SPLIT_MARKER,$text??'');
         if ($splitBeforeMatch){
-            array_shift($textComps);
+            $result['residue']=array_shift($result['textComps']);
         } else {
-            array_pop($textComps);
+            $result['residue']=array_pop($result['textComps']);
         }
-        return $textComps;
+        return $result;
     }
 
     private function finalizeEntry(array $base,array $flatSourceEntry,array $targetEntries,bool $testRun,bool $keepSource=FALSE):array
@@ -583,12 +586,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($targetEntries as $targetEntry){
             $flatTargetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);
             $flatEntry=array_merge($flatEntry??$flatSourceEntry,$flatTargetEntry);
-        }
-        // placeholder replacements by internal data 
-        foreach($flatEntry as $flatKey=>$flatValue){
-            if (!is_string($flatValue)){continue;}
-            if (strpos($flatValue,'[[')===FALSE || strpos($flatValue,']]')===FALSE){continue;}
-            $flatEntry[$flatKey]=strtr($flatValue,$this->internalData);
         }
         // move entry
         $params=current($base['parserparams']);

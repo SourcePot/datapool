@@ -136,6 +136,16 @@ class Computations{
         }
     }
 
+    public function getCombineCache():array
+    {
+        return $this->combineCache;
+    }
+
+    public function setCombineCache(array $combineCache):void
+    {
+        $this->combineCache=$combineCache;
+    }
+
     public function combineAll(array $flatEntry):array
     {
         //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($this->combineCache,'combineCache.json');
