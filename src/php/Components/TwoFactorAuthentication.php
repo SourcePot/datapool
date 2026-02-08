@@ -68,6 +68,11 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
         $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$this->successUserLoginKey($user),time());
     }
 
+    public function resetUserLogin($user)
+    {
+        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,$this->successUserLoginKey($user),0);
+    }
+
     private function validUserLogin():bool
     {
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -123,6 +128,7 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
                 header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Home']));
                 exit;
             } else {
+                $this->resetUserLogin($user);
                 $this->oc['logger']->log('notice','Failed 2FA login for "{email}" at "{dateTime}".',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                 header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Logout']));
                 exit;
