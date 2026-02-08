@@ -105,8 +105,9 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
             $matrix['Code']=['Value'=>['tag'=>'h3','element-content'=>'Transmitter failed']];
             $matrix['Request']=['Value'=>['tag'=>'button','element-content'=>'Request code','key'=>['Request'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         } else if (!empty($codeSent)){
-            $matrix['Code']=['Value'=>['tag'=>'input','type'=>'text','key'=>['code'],'placeholder'=>'123456','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
-            $matrix['Login']=['Value'=>['tag'=>'button','element-content'=>'Login','key'=>['Login'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
+            $btnId=md5(strval(hrtime(TRUE)));
+            $matrix['Code']=['Value'=>['tag'=>'input','type'=>'text','key'=>['code'],'placeholder'=>'123456','trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
+            $matrix['Login']=['Value'=>['tag'=>'button','element-content'=>'Login','key'=>['Login'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         } else {
             $matrix['Request']=['Value'=>['tag'=>'button','element-content'=>'Request code','key'=>['Request'],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'excontainer'=>TRUE]];
         }
