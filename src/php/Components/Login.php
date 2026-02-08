@@ -50,7 +50,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'%registered as new user%'],TRUE);
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'New registration',$loginCount,'int',['description'=>$description]); 
             // compile page
-            $bgStyle=array('background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')');
+            $bgStyle=['background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')'];
             $arr['toReplace']['{{bottomArticle}}']='';
             $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','style'=>$bgStyle,'element-content'=>' ']).PHP_EOL;
             $arr['toReplace']['{{content}}']=$this->getLoginFormHtml([]);
@@ -77,11 +77,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginRequest(array $arr)
     {
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
-            $this->oc['logger']->log('notice','Login failed, password and/or email were empty',array('lifetime'=>'P30D'));    
+            $this->oc['logger']->log('notice','Login failed, password and/or email were empty',['lifetime'=>'P30D']);    
             return 'Password and/or email password were empty';
         }
         // standard user login
-        $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
+        $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email'])];
         $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
         if (empty($user)){return 'Please register';}
         // login check
@@ -89,10 +89,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $this->loginSuccess($user,$arr['Email']);
         } else {
             // has one-time login
-            $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($arr['Email']));
+            $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($arr['Email'])];
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
             if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
-                $this->oc['logger']->log('info','One-time login "{email}" at "{dateTime}" was successful.',array('lifetime'=>'P30D','email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')));    
+                $this->oc['logger']->log('info','One-time login "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                 // delete temporary user, switch back to original user and login
                 $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($user,TRUE);
                 $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
@@ -107,7 +107,6 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     
     private function resetSession()
     {
-        //$_SESSION=array('page state'=>$_SESSION['page state']); // reset session | keep page state
         $_SESSION=[]; // reset session
         session_regenerate_id(TRUE);
     }
@@ -115,10 +114,17 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private function loginSuccess($user,$email)
     {
         $this->resetSession();
-        $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
-        $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
         // return to login page
-        header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(array('category'=>'Home')));
+        if ($this->oc['SourcePot\Datapool\Components\TwoFactorAuthentication']->isTwoFactorAuthenticationRequired($user)){
+            $user['Privileges']=2;
+            $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
+            $_SESSION['page state']['selectedApp']['Login']['Class']='SourcePot\Datapool\Components\TwoFactorAuthentication';
+            header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
+        } else {
+            $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($user);
+            $this->oc['logger']->log('info','Login for "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
+            header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Home']));
+        }
     }
 
     private function loginFailed($user,$email)
@@ -139,7 +145,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $err='Password and/or email password were empty';
         } else {
             $user['Source']=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
-            $user['Params']['User registration']=array('Email'=>$arr['Email'],'Date'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime());
+            $user['Params']['User registration']=['Email'=>$arr['Email'],'Date'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime()];
             $user['Email']=$arr['Email'];
             $user['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']);
             $existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
@@ -154,7 +160,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $this->oc['logger']->log('info','You have been registered as new user "{email}" at "{dateTime}".',['lifetime'=>'P30D','email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Admin']));
         } else {
-            $this->oc['logger']->log('notice',$err,array('lifetime'=>'P30D','email'=>$arr['Email']));    
+            $this->oc['logger']->log('notice',$err,['lifetime'=>'P30D','email'=>$arr['Email']]);    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
         }
         return $err;
@@ -162,9 +168,10 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
 
     private function updateRequest($arr)
     {
-        $user=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
-                    'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
-                    );
+        $user=[
+            'Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
+            'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']),
+        ];
         $existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
         if ($existingUser){
             if (strlen($arr['Passphrase'])<self::MIN_PASSPHRASDE_LENGTH){
@@ -187,7 +194,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             return 'Failed: invalid email address';
         }
         // check if user exists
-        $selector=array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email']));
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email'])];
         $existingUser=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
         if (empty($existingUser)){
             $this->oc['logger']->log('warning','Login-link request for an unknown email.',['lifetime'=>'P30D']);    

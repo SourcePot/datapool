@@ -515,14 +515,15 @@ final class Root{
             'Database.php'=>'305|',
             'Definitions.php'=>'306|',
             'Dictionary.php'=>'308|',
-            'User.php'=>'309|',
-            'HTMLbuilder.php'=>'310|',
-            'Logging.php'=>'311|',
-            'Logger.php'=>'312|',
+            'User.php'=>'310|',
+            'HTMLbuilder.php'=>'311|',
+            'Logging.php'=>'312|',
+            'Logger.php'=>'313|',
             'Home.php'=>'701|',
             'Account.php'=>'702|',
             'Login.php'=>'901|',
-            'Logout.php'=>'902|',
+            'TwoFactorAuthentication.php'=>'902|',
+            'Logout.php'=>'903|',
         ];
         $fileIndex=0;
         $objectsArr=['000|Header|'.$fileIndex=>['class','classWithNamespace','file','type']];

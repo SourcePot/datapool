@@ -76,7 +76,7 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         if (method_exists($classWithNamespace,'run')){
             if ($selector['Source']===$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable()){
                 $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($selector,TRUE);
-                $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement',$canvasElement);
+                $this->setPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement',$canvasElement);
                 $selector=$canvasElement['Content']['Selector'];
             }
             $classWithNamespace=$this->oc['SourcePot\Datapool\Foundation\Menu']->selectedApp($classWithNamespace)['Class'];
@@ -86,10 +86,10 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
                 header('Location: '.$url);
             }
         }
-        return $this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageState($classWithNamespace,$selector);
+        return $this->setPageState($classWithNamespace,$selector);
     }
     
-    public function setPageState(string $callingClass,$state)
+    public function setPageState(string $callingClass,array $state):array
     {
         $_SESSION['page state']['selected'][$callingClass]=$state;
         $_SESSION['page state']['selected'][$callingClass]['app']=$callingClass;
