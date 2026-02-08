@@ -142,7 +142,11 @@ class Menu{
     private function secondMenuBar(array $arr, array $availableCategories):array
     {
         $html='';
-        foreach($availableCategories as $categoryDef){
+        foreach($availableCategories as $category=>$categoryDef){
+            if (empty($categoryDef)){
+                $this->oc['logger']->log('error','Definition for menu item category "{category}" missing',['category'=>$category]);    
+                continue;
+            }
             $html.=$this->def2div($categoryDef);
         }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'ul','element-content'=>$html,'class'=>'menu','keep-element-content'=>TRUE]);
