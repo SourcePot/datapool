@@ -35,7 +35,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         } else {
             // update signals - 2FA failed login
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'Failed 2FA login%'],TRUE);
-            $description='Failed 2FA login count within a time span defined by: '.\SourcePot\Datapool\Foundation\Logger::LOG_LEVEL_CONFIG['info']['lifetime'];
+            $description='Failed 2FA login count within a time span defined by: '.\SourcePot\Datapool\Foundation\Logger::LOG_LEVEL_CONFIG['notice']['lifetime'];
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Failed 2FA login',$loginCount,'int',['description'=>$description]);
             // update signals - 2FA login
             $loginCount=$this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount(['Source'=>'logger','Name'=>'2FA login for%'],TRUE);
