@@ -13,8 +13,10 @@ namespace SourcePot\Datapool\Components;
 class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     private const APP_ACCESS='PUBLIC_R';
-
     private const MAX_LOGIN_AGE=60;
+    private const TRANSMITTER_BLACKLIST=[
+        'SourcePot\Datapool\Tools\Files'=>'Files',
+    ];
 
     private $oc;
 
@@ -102,6 +104,17 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
     *   HTML-Form creation
     */
     
+    private function availableTransmitter():array
+    {
+        $availableTransmitter=[];
+        $transmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
+        foreach($transmitter as $transmitterClass=>$transmitterName){
+            if (isset(self::TRANSMITTER_BLACKLIST[$transmitterClass])){continue;}
+            $availableTransmitter[$transmitterClass]=$transmitterName;
+        }
+        return $availableTransmitter;
+    }
+    
     private function getTwoFactorAuthenticationHtml():string
     {
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -115,7 +128,7 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
     public function getTwoFactorAuthenticationForm(array $arr):array
     {
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $transmitter=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Transmitter');
+        $transmitter=$this->availableTransmitter();
         $settings=['transmitter'=>$transmitter['SourcePot\Datapool\Tools\Email']??current($transmitter),'code'=>''];
         // processing from
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
