@@ -34,6 +34,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         'logLevel'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::LOG_LEVEL,'excontainer'=>TRUE],
         'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
         'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
+        'Two-factor authentication'=>['method'=>'select','options'=>[0=>'Off',65532=>'All member',49152=>'All admins & content admins'],'excontainer'=>TRUE],
         'homePageContent'=>['method'=>'select','options'=>[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'],'value'=>'video','excontainer'=>TRUE],
         'Spatie path to Xpdf pdftotext executable'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>['min-width'=>'50vw']],
     ];    
