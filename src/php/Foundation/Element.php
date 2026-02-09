@@ -152,7 +152,7 @@ class Element{
         if (isset(self::DEF[$arr['tag']])){
             if (isset($arr['element-content'])){
                 $arr['element-content']=strval($arr['element-content']);
-            } else if (($arr['type']?:'')==='date'){
+            } else if (($arr['type']??'')==='date'){
                 $arr['value']=substr($arr['value']??'',0,10);
             }
             $def=array_merge(self::DEF[''],self::DEF[$arr['tag']],self::SECIAL_ATTR);

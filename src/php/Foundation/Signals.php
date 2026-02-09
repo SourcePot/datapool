@@ -77,6 +77,7 @@ class Signals{
     
     public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[],$timeStamp=NULL):array
     {
+        $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($value,$dataType);
         $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>$timeStamp,'label'=>$params['label']??'','color'=>$params['color']??''];
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
@@ -384,7 +385,7 @@ class Signals{
 
     public function signalsChart($arr,$isSystemCall=TRUE):array
     {
-        $elArr=['tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$arr['settings']['caption']];
+        $elArr=['tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$arr['settings']['caption']??''];
         if (empty($arr['settings']['caption'])){
             $html='';
         } else {

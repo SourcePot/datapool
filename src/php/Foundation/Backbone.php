@@ -195,7 +195,7 @@ class Backbone{
         // External libraries
         foreach(self::EXTERNAL_SOURCES as $element){
             $fileInfo=pathinfo($element['href']??$element['src']??'');
-            if ($fileInfo['extension']!=='css' && $fileInfo['extension']!=='js'){
+            if (($fileInfo['extension']??'')!=='css' && ($fileInfo['extension']??'')!=='js'){
                 continue;
             }
             $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
