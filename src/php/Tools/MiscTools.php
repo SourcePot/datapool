@@ -416,26 +416,23 @@ final class MiscTools{
         }   
     }
     
-    public function add2history($arr,array $newElement,int $maxSize=100):array
+    public function add2history($history,array $newElement,int $maxSize=100):array
     {
         if ($newElement['timeStamp']===NULL){
+            //history is array of type [0=>[], 1=>[], 2=>[], 3=>[], 4=>[], ...]
             $newElement['timeStamp']=time();
-            if (is_array($arr)){
-                array_unshift($arr,$newElement);
-            } else {
-                $arr=array($newElement);
-            }
-            while(count($arr)>$maxSize){
-                array_pop($arr);
-            }
+            $history=$history??[];
+            $history[]=$newElement;
         } else {
-            $arr[$newElement['timeStamp']]=$newElement;
-            ksort($arr);
-            while(count($arr)>$maxSize){
-                array_shift($arr);
-            }
+            //history is array of type [1770670446=>[], 1770670456=>[], 1770670466=>[], 1770670476=>[], 1770670486=>[], ...]
+            $history[$newElement['timeStamp']]=$newElement;
         }
-        return $arr;
+        ksort($history);
+        reset($history);
+        while(count($history)>$maxSize){
+            unset($history[key($history)]);
+        }
+        return $history;
     }
 
     /**

@@ -136,18 +136,21 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
         if (isset($formData['cmd']['Login'])){
             $code=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey(__CLASS__,$this->getUserCodeKey($user));
             if (intval($settings['code'])===intval($code??0) && $this->validUserLogin()){
+                // user login and correct code provided
                 $userToLogin=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
                 $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($userToLogin);
                 $this->oc['logger']->log('info','2FA login for "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                 header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Home']));
                 exit;
             } else {
+                // code failed - reset login
                 $this->resetUserLogin($user);
                 $this->oc['logger']->log('notice','Failed 2FA login for "{email}" at "{dateTime}".',['lifetime'=>'P30D','email'=>$user['Params']['User registration']['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                 header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Logout']));
                 exit;
             }
         } else if (isset($formData['cmd']['Request'])){
+            // request code
             $success=$this->sendTwoFactorAuthenticationRequest($user,$settings['transmitter']);
             $codeSent=boolval($success);
             $transmitterFailed=!boolval($success);;

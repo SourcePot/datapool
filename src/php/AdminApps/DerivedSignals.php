@@ -148,7 +148,7 @@ private function signalsDerived(array $selector):string
 
     public function signal2derivedSignal(array $signal):void
     {
-        // get relevant derived signals
+        // get derived signals linked to the original signal
         $relevantDerivedSignalsSelector=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$this->entryTable,'Content'=>'%'.($signal['EntryId']?:'__NOTHING_HERE__').'%'],TRUE,'Read') as $relevantDerivedSignalRule){
             $derivedSignalId=md5($relevantDerivedSignalRule['Group'].'|'.$relevantDerivedSignalRule['Folder']);
@@ -157,6 +157,7 @@ private function signalsDerived(array $selector):string
             }
             $relevantDerivedSignalsSelector[$derivedSignalId]=['Source'=>$this->entryTable,'Group'=>$relevantDerivedSignalRule['Group'],'Folder'=>$relevantDerivedSignalRule['Folder']];
         }
+        // aquire derived signal configurations
         $derivedSignals=[];
         foreach($relevantDerivedSignalsSelector as $index=>$relevantDerivedSignalsSelector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($relevantDerivedSignalsSelector,TRUE,'Read','EntryId',TRUE) as $derivedSignalParamRule){
@@ -168,7 +169,7 @@ private function signalsDerived(array $selector):string
                 }
             }
         }
-        // process derived signals
+        // process derived signal configuration
         foreach($derivedSignals as $index=>$derivedSignal){
             $params=current($derivedSignal['Params']);
             $result=NULL;
