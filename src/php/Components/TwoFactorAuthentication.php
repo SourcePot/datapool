@@ -30,6 +30,7 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     public function init()
     {
+        // switch to Login page if there is no valkid login
         if (!$this->validUserLogin()){
             $_SESSION['page state']['selectedApp']['Login']['Class']='SourcePot\Datapool\Components\Login';
         }
