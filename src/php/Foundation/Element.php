@@ -30,7 +30,7 @@ class Element{
         'h2'=>'element-content',
         'h3'=>'element-content',
         'option'=>'element-content',
-        ];
+    ];
     
     const DEF=[
         // Generic

@@ -119,7 +119,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                 $this->tags[$htmlEntity]=['tag'=>'div','element-content'=>$htmlEntity,'keep-element-content'=>TRUE,'class'=>'canvas-symbol','showEditMode'=>TRUE,'type'=>$category,'Read'=>'ALL_CONTENTADMIN_R'];
             }
         }
-        $this->completeDefintion();
     }
     
     public function getEntryTable():string
@@ -181,6 +180,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function unifyEntry(array $entry):array
     {
+        $this->completeDefintion();
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         // new entry -> create structure
         if (!empty($entry['element-content'])){
