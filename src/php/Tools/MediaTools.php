@@ -53,7 +53,7 @@ class MediaTools{
         // create preview based on 'MIME-Type'
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';
-        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0 && (!empty($arr['selector']['Params']['GPano'] && empty($arr['containerId'])))){
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0 && (!empty($arr['selector']['Params']['GPano']) && empty($arr['containerId']))){
             $arr=$this->getPhotoShere($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $imageHtml=$this->getImage($arr);
@@ -292,8 +292,8 @@ class MediaTools{
     {
         $arr['html']=$arr['html']??'';
         $arr['settings']['style']=$arr['settings']['style']??[];
-        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']?:$arr['settings']['style']['max-height']?:'60vh';
-        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']?:$arr['settings']['style']['max-width']?:'90vh';
+        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-height']??'60vh';
+        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-width']??'90vh';
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             $objArr=$arr;
             $objArr['tag']='object';

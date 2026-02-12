@@ -245,7 +245,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                     'Date'=>$this->getFeedDate($feed['date']??'now')['DB_TIMEZONE'],
                     'URL'=>$context['url'],
                     'Description'=>$feed['description']??$feed['title']??'Description missing',
-                    'Feed link'=>$feed['link'],
+                    'Feed link'=>$feed['link']??'',
                     ],
                 'Feed item'=>[],
             ],

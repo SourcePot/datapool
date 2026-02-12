@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\Components;
 class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     private const APP_ACCESS='PUBLIC_R';
-    private const MAX_LOGIN_AGE=60;
+    private const MAX_LOGIN_AGE=120;
     private const TRANSMITTER_BLACKLIST=[
         'SourcePot\Datapool\Tools\Files'=>'Files',
     ];
@@ -32,10 +32,7 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
 
     public function init()
     {
-        // switch to Login page if there is no valkid login
-        if (!$this->validUserLogin()){
-            $_SESSION['page state']['selectedApp']['Login']['Class']='SourcePot\Datapool\Components\Login';
-        }
+    
     }
 
     public function run(array|bool $arr=TRUE):array
@@ -43,6 +40,13 @@ class TwoFactorAuthentication implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return ['Category'=>'Login','Emoji'=>'&#8614;','Label'=>'2FA','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
+            // switch to Login page if there is no valkid login
+            if (!$this->validUserLogin()){
+                $_SESSION['page state']['selectedApp']['Login']['Class']='SourcePot\Datapool\Components\Login';
+                header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
+                exit;
+            }
+            // page creation
             $bgStyle=['background-image'=>'url(\''.$GLOBALS['relDirs']['assets'].'/login.jpg\')'];
             $arr['toReplace']['{{bottomArticle}}']='';
             $arr['toReplace']['{{bgMedia}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','class'=>'bg-media','style'=>$bgStyle,'element-content'=>' ']).PHP_EOL;

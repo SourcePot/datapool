@@ -77,6 +77,7 @@ class Signals{
     
     public function updateSignal(string $callingClass,string $callingFunction,string $name,$value,$dataType='int',array $params=[],$timeStamp=NULL):array
     {
+        $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($value,$dataType);
         $newContent=['value'=>$value,'dataType'=>$dataType,'timeStamp'=>$timeStamp,'label'=>$params['label']??'','color'=>$params['color']??''];
         // create entry template or get existing entry
         $signalSelector=$this->getSignalSelector($callingClass,$callingFunction,$name);
@@ -207,12 +208,13 @@ class Signals{
     
     private function slopDetector(array $trigger,array $signal):bool
     {
-        $arr=[];
-        foreach($signal['Content']['signal'] as $index=>$signalArr){
-            if (strcmp($signalArr['dataType'],'int')===0 || strcmp($signalArr['dataType'],'bool')===0){
-                $arr['values'][$index]=intval($signalArr['value']);
-            } else if (strcmp($signalArr['dataType'],'float')===0){
-                $arr['values'][$index]=floatval($signalArr['value']);    
+        foreach([0,1,2] as $index){
+            $tmpArr=array_pop($signal['Content']['signal']);
+            if (empty($tmpArr)){continue;}
+            if (strcmp($tmpArr['dataType'],'float')===0){
+                $arr['values'][$index]=floatval($tmpArr['value']);    
+            } else {
+                $arr['values'][$index]=intval($tmpArr['value']);
             }
         }
         if (!isset($arr['values'][0]) || !isset($arr['values'][1])){
@@ -274,7 +276,7 @@ class Signals{
             'Transmitter'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Transmitter'],'options'=>$availableTransmitter],
             'Recepient'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Recepient'],'options'=>$availableRecipients],
             'Trigger'=>['method'=>'select','excontainer'=>TRUE,'value'=>$settings['Trigger'],'options'=>$triggerOptions],
-            ];
+        ];
         $arr=['callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
         $arr['selector']=['Source'=>$this->entryTable,'Group'=>'Transmitter','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),'Name'=>'Message on trigger'];
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
@@ -384,7 +386,7 @@ class Signals{
 
     public function signalsChart($arr,$isSystemCall=TRUE):array
     {
-        $elArr=['tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$arr['settings']['caption']];
+        $elArr=['tag'=>'h1','keep-element-content'=>TRUE,'element-content'=>$arr['settings']['caption']??''];
         if (empty($arr['settings']['caption'])){
             $html='';
         } else {
