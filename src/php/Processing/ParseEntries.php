@@ -21,6 +21,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Pre-processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>[''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'],'title'=>''],
         'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Attached file on success'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
         'No match placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'e.g. {missing}','excontainer'=>TRUE],
     ];
     
@@ -319,7 +320,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             // finalize single entry
             $singleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]);
             $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$singleEntry],$testRun);
-            if (empty($testRun)){
+            if (empty($testRun) && !empty($params['Attached file on success'])){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($goodEntry);
             }        
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($goodEntry,'success');
@@ -351,7 +352,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 // create result entry
                 $isLastSection=(count($newEntrySections)-1)===$entryIndex;
                 $goodEntry=$this->finalizeEntry($base,$flatSourceEntry,[$multipleEntry],$testRun,!$isLastSection);
-                if (empty($testRun)){
+                if (empty($testRun) && !empty($params['Attached file on success'])){
                     $this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($goodEntry);
                 }            
                 $result['Statistics']['Entries moved (success)']['Value']++;
