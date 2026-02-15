@@ -427,10 +427,14 @@ final class MiscTools{
             //history is array of type [1770670446=>[], 1770670456=>[], 1770670466=>[], 1770670476=>[], 1770670486=>[], ...]
             $history[$newElement['timeStamp']]=$newElement;
         }
-        ksort($history);
-        reset($history);
-        while(count($history)>$maxSize){
-            unset($history[key($history)]);
+        $count=count($history);
+        foreach($history as $index=>$element){
+            if ($count>$maxSize){
+                $history[$index]=NULL;
+            } else {
+                break;
+            }
+            $count--;
         }
         return $history;
     }
