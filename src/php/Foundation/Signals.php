@@ -23,13 +23,14 @@ class Signals{
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
     ];
     
-    private const ACTIVE_IF=['stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable range)',
-        'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (trigger above th.)',    
-        'up'=>'&#9601;&#9601;&#9601;&#9585;&#9620; (rel. step up)',
-        'max'=>'&#9601;&#9601;&#9585;&#9586;&#9601; (peak)',
-        'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip)',
-        'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down)',
-        'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (trigger below th.)',    
+    private const ACTIVE_IF=[
+        'stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable within range defined by th.)',
+        'above'=>'&#9601;&#9601; &#10514; &#9620;&#9620; (from below to equal or above th.)',    
+        'up'=>'&#9601;&#9601;&#9601;&#9585;&#9620; (rel. step up with amplitude >=th.)',
+        'max'=>'&#9601;&#9601;&#9585;&#9586;&#9601; (peak with amplitude >=th.)',
+        'min'=>'&#9620;&#9620;&#9586;&#9585;&#9620; (dip with amplitude >=th.)',
+        'down'=>'&#9620;&#9620;&#9620;&#9586;&#9601; (rel. step down with amplitude >=th.)',
+        'below'=>'&#9620;&#9620; &#10515; &#9601;&#9601; (from abaove to equal or below th.)',    
     ];
 
     public function __construct(array $oc)
@@ -223,13 +224,13 @@ class Signals{
             $threshold=intval($trigger['Content']['Threshold']);
             $condtionMet=match($trigger['Content']['Active if']){
                 'stable'=>abs($arr['values'][0]-$arr['values'][1])<=$threshold && abs($arr['values'][1]-$arr['values'][2])<=$threshold,
-                'above'=>$arr['values'][0]>=$threshold,
+                'above'=>$arr['values'][1]<$threshold && $arr['values'][0]>=$threshold,
                 'up'=>($arr['values'][0]-$arr['values'][1])>=$threshold,
                 'down'=>($arr['values'][1]-$arr['values'][0])>=$threshold,
                 'min'=>($arr['values'][0]-$arr['values'][1])>=$threshold && ($arr['values'][2]-$arr['values'][1])>=$threshold,
                 'max'=>($arr['values'][1]-$arr['values'][0])>=$threshold && ($arr['values'][1]-$arr['values'][2])>=$threshold,
-                'below'=>$arr['values'][0]<=$threshold,
-                };
+                'below'=>$arr['values'][1]>$threshold && $arr['values'][0]<=$threshold,
+            };
         }    
         return ($condtionMet)?$condtionMet:((isset($trigger['Content']['isActive']))?$trigger['Content']['isActive']:FALSE);
     }
