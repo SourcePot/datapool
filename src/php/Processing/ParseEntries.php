@@ -546,10 +546,10 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($splitParam['ruleId']);
             if ($isFirst){
                 $splitResult=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator']);
-                $firstLevelSections=$splitResult['textComps'];
+                $sections=$splitResult['textComps'];
                 $isFirst=FALSE;    
             } else {
-                $tmpSections=$sections??$firstLevelSections;
+                $tmpSections=$sections;
                 $sections=[];
                 foreach($tmpSections as $index=>$section){
                     $splitResult=$this->textSplit($section,$splitParam['regEx'],$splitParam['isSectionStartIndicator'],$splitResult['residue']??'');
