@@ -188,6 +188,7 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         // initialize statistic and result array
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
         $result['Clean-up']=[];
+        $result=$this->cleanUp($base,[],$result,$testRun);
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
             $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
@@ -200,16 +201,9 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
 
-    private function processEntry(array $base,array $sourceEntry,array $result,bool $testRun):array
+    private function cleanUp(array $base,array $sourceEntry,array $result,bool $testRun):array
     {
-        // recover basic context data
-        $callingElementContent=$base['callingElement']; // Canvas element content
-        $processorParams=current($base['processorparamshtml'])['Content']; // Processor params are linked to the key with the name = lower case method name there rules are defined
         $processorRules=$base['processorruleshtml']; // Processor rules are linked to the key with the name = lower case method name there rules are defined
-        // recover the entry selector defined by the selected Canves element Selector
-        $targetSelectorEntryId=$processorParams['Target'];
-        $targetSelector=$base['entryTemplates'][$targetSelectorEntryId]??[];
-        // process rules
         foreach($processorRules as $ruleEntryId=>$rule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
             $canvasElementIdForCleanUp=$rule['Content']['Canvas element to empty'];
@@ -220,6 +214,15 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $result['Clean-up'][$ruleKey]=['Operation'=>$testRun?'Clean-up test':'Emptied','Canvas element'=>$canvasElementToCleanup['Content']['Style']['Text']];
         }
+        return $result;
+    }
+
+    private function processEntry(array $base,array $sourceEntry,array $result,bool $testRun):array
+    {
+        // recover basic context data
+        $processorParams=current($base['processorparamshtml'])['Content']; // Processor params are linked to the key with the name = lower case method name there rules are defined
+        $targetSelectorEntryId=$processorParams['Target'];
+        $targetSelector=$base['entryTemplates'][$targetSelectorEntryId]??[];
         // move entry
         $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelector,TRUE,$testRun,!empty($processorParams['Keep source entries']));
         $result['Statistics']['Entries moved (success)']['Value']++;
