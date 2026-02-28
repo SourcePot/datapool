@@ -115,17 +115,14 @@ class MediaTools{
         if (empty($arr['selector']['Name'])){
             $text='?';
         } else {
-            $text=preg_replace('/[^A-Z]/','',$arr['selector']['Name']);
-            $text=substr($text,0,2);
-            $text=(empty($text))?'?':$text;
-            $text=strtr($text,['WC'=>'CW','wc'=>'cw']);
+            $text=substr($arr['selector']['Name']?:$arr['selector']['Folder']?:$arr['selector']['Group'],0,7)?:'?';
         }
         // add content: text, image
         if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
             $iconSrc=$this->getImage($arr);
         } else {
-            $iconArr=['tag'=>'p','element-content'=>$text,'class'=>'icon','style'=>['font-size'=>$fontSize,'width'=>$arr['maxDim'],'line-height'=>$arr['maxDim']]];
+            $iconArr=['tag'=>'p','element-content'=>$text,'keep-element-content'=>TRUE,'class'=>'icon','style'=>['font-size'=>$fontSize,'width'=>$arr['maxDim'],'line-height'=>$arr['maxDim']]];
             $iconHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($iconArr);
         }
         // add wrapper div
