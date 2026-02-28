@@ -15,17 +15,40 @@ class CSVtools{
     private $oc;
     
     private $csvTimestamp=FALSE;
+
+    public const CSV_SELECTOR=[
+        'input'=>['Source'=>'settings','Group'=>__CLASS__,'Folder'=>'csv-settings','Name'=>'input'],
+        'output'=>['Source'=>'settings','Group'=>__CLASS__,'Folder'=>'csv-settings','Name'=>'output'],
+    ];
+
+    public const CSV_CONTAINER_SETTINGS=[
+        'method'=>'csvOutputSettingsWidget',
+        'classWithNamespace'=>__CLASS__,
+    ];
     
-    private $csvAlias=[1=>['chr'=>';','label'=>';','validSeparator'=>TRUE,'validEnclosure'=>FALSE,'validLineSeparator'=>FALSE,'validEscape'=>FALSE],
-                        2=>['chr'=>',','label'=>',','validSeparator'=>TRUE,'validEnclosure'=>FALSE,'validLineSeparator'=>FALSE,'validEscape'=>FALSE],
-                        3=>['chr'=>"\t",'label'=>'Tabulator','validSeparator'=>TRUE,'validEnclosure'=>FALSE,'validLineSeparator'=>FALSE,'validEscape'=>FALSE],
-                        4=>['chr'=>'"','label'=>'"','validSeparator'=>FALSE,'validEnclosure'=>TRUE,'validLineSeparator'=>FALSE,'validEscape'=>FALSE],
-                        5=>['chr'=>"'",'label'=>"'",'validSeparator'=>FALSE,'validEnclosure'=>TRUE,'validLineSeparator'=>FALSE,'validEscape'=>FALSE],
-                        6=>['chr'=>"\\",'label'=>"Backslash",'validSeparator'=>FALSE,'validEnclosure'=>FALSE,'validLineSeparator'=>FALSE,'validEscape'=>TRUE],
-                        7=>['chr'=>"\n",'label'=>"Newline",'validSeparator'=>FALSE,'validEnclosure'=>FALSE,'validLineSeparator'=>TRUE,'validEscape'=>FALSE],
-                        8=>['chr'=>"\r",'label'=>"Carriage return",'validSeparator'=>FALSE,'validEnclosure'=>FALSE,'validLineSeparator'=>TRUE,'validEscape'=>FALSE],
-                        ];
-    private $csvSettings=['offset'=>0,'limit'=>5,'enclosure'=>4,'separator'=>1,'escape'=>6,'lineSeparator'=>7,'noEnclosureOutput'=>TRUE,'mode'=>0];
+    private const SETTINGS_OPTIONS=[
+        'limit'=>[5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',250=>'250',500=>'500',1000=>'1000',2500=>'2500',],
+        'separator'=>[','=>'Comma',';'=>'Semicolon',"\t"=>'Tabulator',],
+        'enclosure'=>['"'=>'"',"'"=>"'",''=>'None'],
+        'escape'=>[''=>'None','\\'=>'\\',],
+        'lineSeparator'=>['CRLF'=>'Carriage return & line feed','LF'=>'Line feed','CR'=>'Carriage return',],
+    ];
+
+    private const SETTINGS_HIDE=[
+        'offset'=>['input'=>FALSE,'output'=>TRUE,'editor'=>FALSE],
+        'limit'=>['input'=>FALSE,'output'=>TRUE,'editor'=>FALSE],
+        'enclosure'=>['input'=>FALSE,'output'=>FALSE,'editor'=>FALSE],
+        'separator'=>['input'=>FALSE,'output'=>FALSE,'editor'=>FALSE],
+        'escape'=>['input'=>FALSE,'output'=>FALSE,'editor'=>FALSE],
+        'lineSeparator'=>['input'=>FALSE,'output'=>FALSE,'editor'=>FALSE],
+        'mode'=>['input'=>TRUE,'output'=>TRUE,'editor'=>FALSE],    
+    ];
+    
+    private const ALIAS=[
+        'LF'=>"\n",
+        'CR'=>"\r",
+        'CRLF'=>"\n\r",
+    ];
     
     public function __construct(array $oc)
     {
@@ -43,13 +66,35 @@ class CSVtools{
         $this->entry2csv();
     }
     
+    private function csvSettingSelector(bool $csvOutput=FALSE):array
+    {
+        $setting=self::CSV_SELECTOR[$csvOutput?'output':'input'];
+        return $this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($setting,['Source','Group','Folder','Name'],'0','',FALSE);
+    }
+
+    public function getSetting(bool $csvOutput=FALSE):array
+    {
+        $csvSetting=$this->csvSettingSelector($csvOutput);
+        foreach(self::SETTINGS_OPTIONS as $key=>$options){
+            $csvSetting['Content'][$key]=key($options);
+        }
+        return $this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($csvSetting,TRUE)['Content'];
+    }
+    
+    public function setSetting(array $setting,bool $csvOutput=FALSE):array
+    {
+        $csvSetting=$this->csvSettingSelector($csvOutput);
+        $csvSetting['Content']=$setting;
+        return $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($csvSetting,TRUE)['Content'];
+    }
+    
     public function isCSV(array $selector):bool
     {
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
         if (!is_file($file)){return FALSE;}
         if (mb_strpos(mime_content_type($file),'text/')!==0){return FALSE;}
         foreach($this->csvIterator($selector) as $rowIndex=>$rowArr){
-            if (count($rowArr)>1){
+            if (count($rowArr??[])>1){
                 //change file content encoding to utf-8 if encoding is different from utf-8
                 $csvContent=file_get_contents($file);
                 $sourceEncoding=mb_detect_encoding($csvContent,["ASCII","ISO-8859-1","JIS","ISO-2022-JP","UTF-7","UTF-8",],TRUE);
@@ -65,51 +110,31 @@ class CSVtools{
         return FALSE;
     }
     
-    public function alias($index=FALSE,$validate='separator')
+    private function detectCsvSetting(string $fileName):array
     {
-        // This method returns an alias based on the provided $index.
-        // If $index is FALSE, an array of options is returned based on the labels in $csvAlias.
-        // The options are filtered by the $validate argument.
-        // If $index is >0 the alias char is returned if $validate is empty or label if $validate is not empty.
-        if ($index===FALSE){
-            $result=[];
-            foreach($this->csvAlias as $index=>$aliasArr){
-                $validatorKey='valid'.ucfirst($validate);
-                if (empty($aliasArr[$validatorKey])){continue;}
-                $result[$index]=$aliasArr['label'];
-            }
-            return $result;
+        $setting=$this->getSetting(FALSE);
+        $csvFileContent=@file_get_contents($fileName);
+        // divide into entries
+        if (strlen($csvFileContent)>20000){
+            $csvFileContent=substr($csvFileContent,0,20000);
+            $entries=explode(self::ALIAS[$setting['lineSeparator']]??"\n",$csvFileContent);
+            array_pop($entries);
         } else {
-            if (empty($validate)){
-                return $this->csvAlias[$index]['chr'];    
-            } else {
-                return $this->csvAlias[$index]['label'];
+            $entries=explode(self::ALIAS[$setting['lineSeparator']]??"\n",$csvFileContent);
+        }
+        $maxCount=0;
+        $header=array_shift($entries);
+        $headerChrCount=count_chars($header,0);
+        foreach(self::SETTINGS_OPTIONS['separator'] as $chr=>$desc){
+            if ($headerChrCount[ord($chr)]>$maxCount){
+                $maxCount=$headerChrCount[ord($chr)];
+                $setting['separator']=$chr;
             }
         }
+        return $setting;
     }
-    
-    public function getSettings():array
-    {
-        return $this->csvSettings;
-    }
-    
-    public function setSetting(array $setting):array
-    {
-        $this->csvSettings=array_merge($this->csvSettings,$setting);
-        return $this->csvSettings;
-    }
-    
-    private function csvSetting():array
-    {
-        $csvSettings=[];
-        foreach($this->csvSettings as $settingKey=>$settingValueIndex){
-            if (!isset($this->csvAlias[$settingValueIndex])){continue;}
-            $csvSettings[$settingKey]=$this->csvAlias[$settingValueIndex]['chr'];
-        }
-        return $csvSettings;
-    }
-    
-    public function csvIterator(array|string $selector):\Generator
+
+    public function csvIterator(array|string $selector,array $csvSetting=[]):\Generator
     {
         if (is_array($selector)){
             $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
@@ -117,16 +142,28 @@ class CSVtools{
             $csvFile=$selector;
         }
         if (is_file($csvFile)){
-            $csvSettings=$this->csvSetting();
+            if (empty($csvSetting)){
+                $csvSetting=$this->detectCsvSetting($csvFile);
+            }
             $csv=new \SplFileObject($csvFile);
-            $csv->setCsvControl($csvSettings['separator'],$csvSettings['enclosure'],$csvSettings['escape']);
+            $csv->setCsvControl($csvSetting['separator']??',',$csvSetting['enclosure']?:'"',$csvSetting['escape']??'');
             $keys=[];
             $rowIndex=0;
             while($csv->valid()){
                 $csvArr=$csv->fgetcsv();
-                $result=[];
                 foreach($csvArr as $columnIndex=>$cellValue){
                     if (isset($keys[$columnIndex])){
+                        if ($cellValue==='TRUE'){
+                            $cellValue=TRUE;
+                        } else if ($cellValue==='FALSE'){
+                            $cellValue=FALSE;
+                        } else if ($cellValue==='NAN'){
+                            $cellValue=NAN;
+                        } else if ($cellValue==='INF'){
+                            $cellValue=INF;
+                        } else if ($cellValue==='NULL'){
+                            $cellValue=NULL;
+                        }
                         $result[$keys[$columnIndex]]=$cellValue;
                     } else {
                         $keys[$columnIndex]=$cellValue;
@@ -145,15 +182,12 @@ class CSVtools{
     
     public function entry2csv(array $entry=[]):array|bool
     {
-        // When called with an object this method adds the object to a session var space for later
-        // csv-file creation. When the class is created the session var space will be written to respective csv-file-objects
+        // When called with an object this method adds the object to the session var space for later csv-file creation.
+        // Later when the class is created, the session var space will be written to respective csv-file-objects
         // csv-file name = $entry['Name'], if $entry['EntryId'] is not set it will be created from $entry['Name']
-        //$_SESSION['csvVarSpace']=[];
         if (empty($entry) && isset($_SESSION['csvVarSpace'])){
             $statistics=['csv entries'=>0,'row count'=>0,'header'=>''];
-            $csvSetting=$this->csvSetting();
-            if (!empty($csvSetting['noEnclosureOutput'])){$csvSetting['enclosure']='';}
-            $prodessedEntries=0;
+            $csvSetting=$this->getSetting(TRUE);
             foreach($_SESSION['csvVarSpace'] as $EntryId=>$csvDefArr){
                 // reset csv var-space
                 unset($_SESSION['csvVarSpace'][$EntryId]);
@@ -171,7 +205,6 @@ class CSVtools{
                 }
                 // save csv content
                 $statistics['csv entries']++;
-                //$targetFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
                 $entry['fileContent']=trim($csvContent);
                 if (empty($entry['Params']['File']['Name'])){
                     $entry['fileName']=str_replace('.csv','',$entry['Name']).'.csv';
@@ -209,128 +242,100 @@ class CSVtools{
     private function getCsvRow(array $row,array $csvSetting):array
     {
         $result=['header'=>'','line'=>''];
-        $valueStr='';
+        $values=$columns=[];
         foreach($row as $column=>$value){
-            $result['header'].=$csvSetting['enclosure'].$column.$csvSetting['enclosure'].$csvSetting['separator'];
-            if (is_bool($value)){
-                if ($value){$value='TRUE';} else {$value='FALSE';}
-                $result['line'].=$csvSetting['enclosure'].$value.$csvSetting['enclosure'].$csvSetting['separator'];
-            } else if (is_numeric($value)){
-                $result['line'].=$csvSetting['enclosure'].$value.$csvSetting['enclosure'].$csvSetting['separator'];
+            $columns[]=$csvSetting['enclosure'].$column.$csvSetting['enclosure'];
+            if ($value===TRUE){
+                $value='TRUE';
+            } else if ($value===FALSE){
+                $value='FALSE';
+            } else if ($value===NAN){
+                $value='NAN';
+            } else if ($value===INF){
+                $value='INF';
+            } else if ($value===NULL){
+                $value='NULL';
+            }
+            if (empty($csvSetting['enclosure']) || (strpos($value,$csvSetting['enclosure'])===FALSE && strpos($value,$csvSetting['separator'])===FALSE && strpos($value,$csvSetting['lineSeparator'])===FALSE)){
+                $values[]=$value;
             } else {
-                $result['line'].=$csvSetting['enclosure'].$value.$csvSetting['enclosure'].$csvSetting['separator'];
+                $value=(empty($csvSetting['enclosure']))?$value:str_replace($csvSetting['enclosure'],$csvSetting['enclosure'].$csvSetting['enclosure'],$value);
+                $values[]=$csvSetting['enclosure'].$value.$csvSetting['enclosure'];
             }
         }
-        $result['header']=trim($result['header'],$csvSetting['separator']);
-        $result['line']=trim($result['line'],$csvSetting['separator']);
-        $result['header'].=$csvSetting['lineSeparator'];
-        $result['line'].=$csvSetting['lineSeparator'];
+        $result['header']=implode($csvSetting['separator'],$columns);
+        $result['line']=implode($csvSetting['separator'],$values);
+        $result['header'].=self::ALIAS[$csvSetting['lineSeparator']]??"\n";
+        $result['line'].=self::ALIAS[$csvSetting['lineSeparator']]??"\n";
         return $result;
     }
     
-    public function csvEditor(array $arr,bool $isDebugging=FALSE):array
+    public function csvView(array $arr):array
     {
-        if (!isset($arr['html'])){$arr['html']='';}
-        if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
-        $settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
-        $debugArr=['arr in'=>$arr,'settings in'=>$settings,'valuesToUpdate'=>[]];
+        // check for attached file & get csv entry
         $attachedFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
         if (!is_file($attachedFile)){return $arr;}
         $csvEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-        // get settings
-        foreach($this->getSettings() as $settingKey=>$settingValue){
-            if (!isset($settings[$settingKey])){$settings[$settingKey]=$settingValue;}
-        }
-        // form processing
-        $valuesToUpdate=[];
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if (!empty($formData['cmd']) && isset($formData['val']['settings'])){
-            // csv settings
-            $settings=array_replace_recursive($settings,$formData['val']['settings']);
-            $this->setSetting($settings);
-            // csv valus
-            if (isset($formData['val']['values'])){
-                $valuesToUpdate=$formData['val']['values'];
-                unset($valuesToUpdate['settings']);
-            }
-        }
-        // create sample
-        $columns=[];
-        $rowCount=0;
-        $rowLimitCount=0;
-        $matrix=[];
-        foreach($this->csvIterator($arr['selector']) as $rowIndex=>$rowArr){
+        // settings form
+        $cntrArr=$this->csvOutputSettingsWidget(['selector'=>$this->csvSettingSelector(FALSE),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'mode'=>'editor']);
+        $setting=$this->getSetting();
+        // compile html
+        $matrix=$columns=[];
+        $rowCount=$rowLimitCount=0;
+        foreach($this->csvIterator($arr['selector'],$setting) as $rowIndex=>$rowArr){
             $csvEntry['Content']=$rowArr;
-            if ($rowLimitCount<$settings['limit'] && $rowIndex>=$settings['offset']){
+            if ($rowLimitCount<$setting['limit'] && $rowIndex>=$setting['offset']){
                 foreach($rowArr as $column=>$cellValue){
                     $columns['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).$column]=$column;
-                    if (empty($settings['mode'])){
-                        // show cell values
-                        $valArr=$cellValue;
-                    } else {
-                        // edit cell values
-                        if (isset($valuesToUpdate[$rowIndex][$column])){$cellValue=$valuesToUpdate[$rowIndex][$column];}
-                        $valArr=['tag'=>'input','type'=>'text','key'=>['values',$rowIndex,$column],'value'=>$cellValue,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'keep-element-content'=>TRUE];
-                    }
+                    $valArr=$cellValue;
                     $csvEntry['Content'][$column]=$cellValue;
                     $matrix[$rowIndex][$column]=$valArr;
                 }
                 $rowLimitCount++;
             }
-            if (!empty($valuesToUpdate)){
-                $debugArr['valuesToUpdate'][]=$csvEntry;
-                $this->entry2csv($csvEntry);
-            }
             $rowCount++;
         }
-        if (!empty($debugArr['valuesToUpdate'])){$this->entry2csv();}
-        $options=$this->alias(FALSE,'label');
-        $caption='CSV sample:';
-        $caption.=' "'.$csvEntry['Name'].'" ';
-        $caption.=' ('.$rowCount.')';
-        $sampleHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
-        // create control
-        $selectArr=['key'=>['settings','limit'],'value'=>$settings['limit'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'keep-element-content'=>TRUE];
-        $selectArr['options']=[5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',250=>'250',500=>'500'];
-        $limitSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $selectArr['key']=['settings','enclosure'];
-        $selectArr['value']=$settings['enclosure'];
-        $selectArr['options']=$this->alias(FALSE,'enclosure');
-        $enclosureSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $selectArr['key']=['settings','separator'];
-        $selectArr['value']=$settings['separator'];
-        $selectArr['options']=$this->alias(FALSE,'separator');
-        $separatorSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $selectArr['key']=['settings','lineSeparator'];
-        $selectArr['value']=$settings['lineSeparator'];
-        $selectArr['options']=$this->alias(FALSE,'lineSeparator');
-        $lineSeparatorSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $selectArr['key']=['settings','mode'];
-        $selectArr['value']=$settings['mode'];
-        $selectArr['options']=['Show','Edit'];
-        $modeSelector=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr);
-        $matrix=[];
-        $matrix['Cntr']['Offset']=['tag'=>'input','type'=>'range','min'=>0,'max'=>($rowCount>$settings['limit'])?$rowCount-$settings['limit']:0,'value'=>$settings['offset'],'key'=>['settings','offset'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
-        $matrix['Cntr']['Limit']=$limitSelector;
-        if (empty($settings['mode'])){
-            $matrix['Cntr']['Separator']=$separatorSelector;
-            $matrix['Cntr']['Enclosure']=$enclosureSelector;
-            $matrix['Cntr']['Line separator']=$lineSeparatorSelector;
-        }
-        $matrix['Cntr']['Mode']=$modeSelector;
-        $caption='CSV control';
-        $cntrHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
-        //
-        $arr['html'].=$cntrHtml;
-        $arr['html'].=$sampleHtml;
-        if ($isDebugging){
-            $debugArr['arr out']=$arr;
-            $debugArr['settings out']=$settings;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
+        $arr['html']=$cntrArr['html'];
+        $caption='CSV sample: "'.$csvEntry['Name'].'" ('.$rowCount.')';
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
         return $arr;
     }
     
+    public function csvOutputSettingsWidget(array $arr):array
+    {
+        // init setting
+        $setting=$arr['selector'];
+        $setting=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($setting,['Source','Group','Folder','Name'],'0','',FALSE);
+        foreach(self::SETTINGS_OPTIONS as $key=>$options){
+            $setting['Content'][$key]=key($options);
+        }
+        $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($setting,TRUE);
+        // command processing
+        $arr['formData']=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        if (!empty($arr['formData']['val']['setting'])){
+            $setting['Content']=$arr['formData']['val']['setting'];
+            $setting=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($setting,TRUE);
+        }
+        // compile html
+        $matrix=[];
+        $selectArr=['key'=>['setting'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'keep-element-content'=>TRUE];
+        foreach(self::SETTINGS_OPTIONS as $key=>$options){
+            if (!empty(self::SETTINGS_HIDE[$key][$arr['mode']??$arr['selector']['Name']])){continue;}
+            $selectArr['key'][1]=$key;
+            $selectArr['options']=$options;
+            $selectArr['value']=$setting['Content'][$key]??current($options);
+            $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr)];
+        }
+        $caption='CSV '.$arr['selector']['Name'];
+        if ($arr['selector']['Name']==='input'){
+            $caption.=' base settings. The "separator" will be detected when a file is processed.';
+        } else {
+            $caption.=' settings';
+        }
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);    
+        return $arr;
+    }
+
     public function matrix2csvDownload(array $matrix):string
     {
         // write/update file

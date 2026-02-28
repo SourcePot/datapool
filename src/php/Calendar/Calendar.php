@@ -794,7 +794,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     public function timestamp2date($timestamp):array
     {
         $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
-        $dateTimeParserObj->setInitDateTime('2999-12-31 12:00:00');
+        $dateTimeParserObj->setInitDateTime(\SourcePot\Datapool\Root::NULL_DATE);
         $dateTimeParserObj->setFromTimestamp($timestamp,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         return $dateTimeParserObj->getArray();
     }
@@ -802,7 +802,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
     public function excel2date($excel):array
     {
         $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
-        $dateTimeParserObj->setInitDateTime('2999-12-31 12:00:00');
+        $dateTimeParserObj->setInitDateTime(\SourcePot\Datapool\Root::NULL_DATE);
         $dateTimeParserObj->setFromExcelTimestamp($excel,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
         return $dateTimeParserObj->getArray();
     }

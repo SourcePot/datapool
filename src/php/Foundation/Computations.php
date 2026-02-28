@@ -47,6 +47,9 @@ class Computations{
         '+'=>'A + B','-'=>'A - B','*'=>'A * B','/'=>'A / B','pow'=>'pow(A,B)','%'=>'A modulus B',
         '|'=>'A | B','&'=>'A & B',
         'regexMatch'=>'f(A,RegEx(B))',
+        'addDateIntervalStr'=>'A + dateTimeIntervalString(B) &#9755; e.g. "B"="1day, 10hours"','addDateInterval'=>'A + dateTimeInterval(B) &#9755; e.g. "B"=P2Y4DT6H for 2 years, 4 days, 6hours',
+        'subDateIntervalStr'=>'A - dateTimeIntervalString(B) &#9755; e.g. "B"="1day, 10hours"','subDateInterval'=>'A - dateTimeInterval(B) &#9755; e.g. "B"=P2Y4DT6H for 2 years, 4 days, 6hours',
+        'setTimezone'=>'A&rarr;setTimezone(B) &#9755; set "A" to timezone "B", return "A\' {Y-m-d H:i:s}" in system timezone','changeTimezone'=>'A&rarr;changeTimezone(B) &#9755; "A" from system timezone, return "A\' {Y-m-d H:i:s}" in target timezone "B"',
     ];
     
     public const COMBINE_OPTIONS=[
@@ -70,6 +73,44 @@ class Computations{
         'string(A; B)'=>'string(A; B)',
     ];
 
+    private const DATEINTERVAL_CLEANUP=[
+        'Jahre'=>'years',
+        'jahre'=>'years',
+        'Jahr'=>'year',
+        'jahr'=>'year',
+        'Monate'=>'months',
+        'monate'=>'months',
+        'Monat'=>'month',
+        'monat'=>'month',
+        'Wochen'=>'weeks',
+        'wochen'=>'weeks',
+        'Woche'=>'week',
+        'woche'=>'week',
+        'Tage'=>'days',
+        'tage'=>'days',
+        'Tag'=>'day',
+        'tag'=>'day',
+        'Stunden'=>'hours',
+        'stunden'=>'hours',
+        'Stunde'=>'hour',
+        'stunde'=>'hour',
+        'Minuten'=>'minutes',
+        'minuten'=>'minutes',
+        'Minute'=>'minute',
+        'minute'=>'minute',
+        'Sekunden'=>'seconds',
+        'sekunden'=>'seconds',
+        'Sekunde'=>'second',
+        'sekunde'=>'second',
+        ';'=>'+',','=>'+','/'=>'+','\\'=>'+','|'=>'+',
+    ];
+
+    private const TIMEZONE_CLEANUP=[
+        'Europa'=>'Europe',
+        'Amerika'=>'America',
+        '\\'=>'/',', '=>'/',','=>'/','; '=>'/',';'=>'/','|'=>'/','. '=>'_','.'=>'_',' '=>'_',
+    ];
+    
     private const RELEVANT_DATATYPE_KEY=['System short','Reference','Amount',];
 
     private const ARR_COLUMNS=['Content'=>TRUE,'PARAMS'=>TRUE,];
@@ -487,6 +528,46 @@ class Computations{
             } else if ($operation==='regexMatch'){
                 preg_match('/'.$valueBstr.'/',$valueAstr,$match);
                 $result=$match[0]??NULL;
+            } else if ($operation==='addDateIntervalStr' || $operation==='addDateInterval' || $operation==='subDateIntervalStr' || $operation==='subDateInterval'){
+                $dateArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($valueAstr);
+                $dateTimeObj= new \DateTime($dateArr['RFC2822']);
+                try{
+                    if ($operation==='addDateIntervalStr'){
+                        $valueBstr=strtr($valueBstr,self::DATEINTERVAL_CLEANUP);
+                        $dateTimeObj->add(\DateInterval::createFromDateString($valueBstr));
+                    } else if ($operation==='addDateInterval'){
+                        $dateTimeObj->add(new \DateInterval($valueBstr));
+                    } else if ($operation==='subDateIntervalStr'){
+                        $valueBstr=strtr($valueBstr,self::DATEINTERVAL_CLEANUP);
+                        $dateTimeObj->sub(\DateInterval::createFromDateString($valueBstr));
+                    } else if ($operation==='subDateInterval'){
+                        $dateTimeObj->sub(new \DateInterval($valueBstr));
+                    }
+                    $dateTimeObj->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                    $result=$dateTimeObj->format('Y-m-d H:i:s');
+                } catch(\Exception $e){
+                    $result=$e->getMessage();
+                }
+            } else if ($operation==='changeTimezone'){
+                $valueBstr=strtr($valueBstr,self::TIMEZONE_CLEANUP);
+                $dateArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($valueAstr);
+                try{
+                    $dateTimeObj= new \DateTime($dateArr['RFC2822']);
+                    $dateTimeObj->setTimezone(new \DateTimeZone($valueBstr));
+                    $result=$dateTimeObj->format('Y-m-d H:i:s');
+                } catch(\Exception $e){
+                    $result=$e->getMessage();
+                }
+            } else if ($operation==='setTimezone'){
+                $valueBstr=strtr($valueBstr,self::TIMEZONE_CLEANUP);
+                $dateArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($valueAstr);
+                try{
+                    $dateTimeObj= new \DateTime($dateArr['System'],new \DateTimeZone($valueBstr));
+                    $dateTimeObj->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                    $result=$dateTimeObj->format('Y-m-d H:i:s');
+                } catch(\Exception $e){
+                    $result=$e->getMessage();
+                }
             }
         }
         $result=($result===NULL)?'NULL':$result;

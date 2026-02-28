@@ -25,6 +25,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
         'Target on success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
         'Target on failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+        'System timezone (is used unless otherwise specified)'=>['method'=>'element','tag'=>'p','element-content'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'excontainer'=>TRUE],
     ];
         
     private const CONTENT_STRUCTURE_RULES=[
@@ -41,13 +42,13 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const CONTENT_STRUCTURE_FAILURE_RULES=[
         'Value'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'','addSourceValueColumn'=>FALSE,'addColumns'=>[]],
-        'Failure if Result...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES],
+        'Failure if Result...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES],
         'Compare value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
     ];
         
     private const CONTENT_STRUCTURE_CONDITIONAL_RULES=[
         'Condition'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'','addSourceValueColumn'=>FALSE,'addColumns'=>[]],
-        'Use value if...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST],
+        'Use value if...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'==','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST],
         ''=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
         'Use'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>[]],
         'Value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
