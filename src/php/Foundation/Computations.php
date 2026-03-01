@@ -402,7 +402,7 @@ class Computations{
     * Comparisons and Operations
     */
 
-    private function value2numeric($value):float|int|null
+    public function value2numeric($value):float|int|null
     {
         $value=($value==='INF')?(INF):(($value==='-INF')?(-INF):$value);
         $value=($value==='NAN')?NAN:$value;

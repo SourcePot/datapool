@@ -124,7 +124,7 @@ class CSVtools{
         }
         $maxCount=0;
         $header=array_shift($entries);
-        $headerChrCount=count_chars($header,0);
+        $headerChrCount=count_chars($header??'',0);
         foreach(self::SETTINGS_OPTIONS['separator'] as $chr=>$desc){
             if ($headerChrCount[ord($chr)]>$maxCount){
                 $maxCount=$headerChrCount[ord($chr)];

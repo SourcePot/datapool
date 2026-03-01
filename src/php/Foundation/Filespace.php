@@ -657,21 +657,28 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
    
     private function archive2files(string $file,array $entry,bool $createOnlyIfMissing,bool $isSystemCall):array
     {
-        $zipStatistic=['errors'=>[],'files'=>[]];
+        $zipStatistic=['errors'=>[],'files'=>[],'folder'=>[]];
         // extract zip archive to a temporary dir
         $zip=new \ZipArchive;
         if ($zip->open($file)===TRUE){
             $i=0;
             $this->oc['logger']->log('info','Processing zip-archive with "{numFiles}" files',['numFiles'=>$zip->count()]);    
             while($fileName=$zip->getNameIndex($i)){
-                $entry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$fileName);
-                $entry['fileContent']=$zip->getFromIndex($i);
-                if (!empty($entry['fileContent'])){
-                    $zipStatistic['files'][$i]=$entry['fileName'];
-                    $entry['Name']=$entry['fileName'];
-                    $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-                    $newEntry=$entry;
-                    $this->fileContent2entry($newEntry);
+                $folder=trim($fileName,'/');
+                if (strlen($folder)<strlen($fileName)){
+                    // is folder
+                    $zipStatistic['folder'][$i]=$folder;
+                } else {
+                    // is file
+                    $entry['fileName']=preg_replace('/[^a-zäüößA-ZÄÜÖ0-9\.]+/','_',$fileName);
+                    $entry['fileContent']=$zip->getFromIndex($i);
+                    if (!empty($entry['fileContent'])){
+                        $zipStatistic['files'][$i]=$entry['fileName'];
+                        $entry['Name']=$entry['fileName'];
+                        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+                        $newEntry=$entry;
+                        $this->fileContent2entry($newEntry);
+                    }
                 }
                 $i++;
             }
@@ -714,7 +721,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed to scan for pdf-attachments: {msg}',$context);
             }    
         } else if (stripos(strval($entry['Params']['File']['Extension']),'csv')!==FALSE){
-            $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file,$entry['Params']['File']['Extension'])->current();
+            $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file)->current();
             $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
             $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'xls')!==FALSE){
