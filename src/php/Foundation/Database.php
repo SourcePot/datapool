@@ -212,8 +212,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             }
             // set standard indices
             $this->setTableIndices($table);
-        } else {
-            $this->updateCollation($entryTemplate,$table);
         }
         return $GLOBALS['dbInfo'][$table]=$entryTemplate;
     }
@@ -227,9 +225,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $indices??[];
     }
     
-    public function updateCollation(array $entryTemplate, string $table):array
+    public function updateCollation(string $table)
     {
-        $udatedTables=[];
         $updateSql='';
         $stmt=$this->executeStatement("SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE '".$table."';",[]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
@@ -237,14 +234,15 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             if ($row['COLLATION_NAME']===self::TABLE_COLLATION || $row['COLLATION_NAME']===NULL){continue;}
             $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
             $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CONVERT TO CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
-            $udatedTables[$row['TABLE_NAME']]=$row['TABLE_NAME'];
         }
-        if (!empty($updateSql)){
+        if (empty($updateSql)){
+            $this->oc['logger']->log('info','Table "{table}" CHARACTER_SET and TABLE_COLLATION is already up-to-date',['table'=>$table]);
+        } else {
             $stmt=$this->executeStatement($updateSql,[]);
             $result=$stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $this->oc['logger']->log('notice','Updated CHARACTER_SET and TABLE_COLLATION of tables "{tables}"',['tables'=>implode(', ',$udatedTables)]);
+            $this->oc['logger']->log('notice','Updated CHARACTER_SET and TABLE_COLLATION of table "{table}"',['table'=>$table]);
         }
-        return $udatedTables;
+        return $result??FALSE;
     }
 
     public function setTableIndices(string $table)

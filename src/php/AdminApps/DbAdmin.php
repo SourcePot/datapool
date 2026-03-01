@@ -163,7 +163,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
 
     private function addTableCmds(array $matrix,array $selector):array
     {
-        $btns=['INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
+        $btns=['Update'=>'Update character set & collation','INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
         $btnArr=['tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         foreach($btns as $sqlCmd=>$key){
             $btnArr['element-content']=$key;
@@ -195,6 +195,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             $sql='TRUNCATE TABLE '.$context['table'].';';
             $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
             $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
+        } else if (isset($formData['cmd']['Update'])){
+            $context['table']=key($formData['cmd']['Update']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateCollation($context['table']);
         }
     }
 }
