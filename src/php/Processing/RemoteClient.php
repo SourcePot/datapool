@@ -15,11 +15,11 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     private const ENTRY_EXPIRATION_SEC=172800;
     private const TIMESTAMP_AGE_WARNING_THRESHOLD=30;
     private const MODE_STYLE_ARR=[
-        'idle'=>'padding:0 0.25rem;background-color:#0f1;',
-        'video'=>'padding:0 0.25rem;background-color:#fc0;',
-        'capture'=>'padding:0 0.25rem;background-color:#fc0;',
-        'sms'=>'padding:0 0.25rem;background-color:#fcc;',
-        'alarm'=>'padding:0 0.25rem;background-color:#f00;color:#fff;'
+        'idle'=>'padding:0 0.25rem;border:3px solid var(--green);',
+        'video'=>'padding:0 0.25rem;border:3px solid var(--yellow);',
+        'capture'=>'padding:0 0.25rem;border:3px solid var(--yellow);',
+        'sms'=>'padding:0 0.25rem;border:3px solid var(--red);',
+        'alarm'=>'padding:0 0.25rem;border:3px solid var(--attentionColor);',
     ];
 
     private const CONTENT_STRUCTURE_PARAMS=[
