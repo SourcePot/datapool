@@ -111,7 +111,8 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     {
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
-        $matrices=['Columns'=>[]];
+        $tableKey='Table "'.$table.'"';
+        $matrices=[$tableKey=>[],'Columns'=>[],'Index'=>[]];
         $sql='SHOW INDEX FROM `'.$table.'`;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
@@ -128,7 +129,14 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             if (isset($matrices['Index'][$column])){$columnInfo['trStyle']=['background-color'=>'var(--blue)'];}
             $matrices['Columns'][$column]=$columnInfo;
         }
-        $tableKey='Table "'.$table.'"';
+        $sql="SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE '".$table."';";
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
+        while($columnInfo=$stmt->fetch(\PDO::FETCH_ASSOC)){
+            if ($table!==$columnInfo['TABLE_NAME']){continue;}
+            $column=$columnInfo['COLUMN_NAME'];
+            unset($columnInfo['TABLE_NAME']);
+            $matrices['Charset, Collation'][$column]=$columnInfo;
+        }
         $sql="SELECT TABLE_NAME,TABLE_COLLATION,ENGINE,TABLE_ROWS,DATA_LENGTH,INDEX_LENGTH,AUTO_INCREMENT,CREATE_TIME,UPDATE_TIME FROM INFORMATION_SCHEMA.TABLES;";
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $tableInfo){

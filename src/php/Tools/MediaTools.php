@@ -49,7 +49,7 @@ class MediaTools{
                 $arr['settings']['style']['max-height']=intval(trim($styleArr['max-height'],'px%'))-40;
             }
         }
-        $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['width']));
+        $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['maxDim']));
         // create preview based on 'MIME-Type'
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';

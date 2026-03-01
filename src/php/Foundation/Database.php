@@ -19,8 +19,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public const MAX_TIME_BETWEEN_TABLE_OPTIMISATIONS=86400;
     public const MIN_TIME_BETWEEN_TABLE_OPTIMISATIONS=5000;
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
-    public const CHARACTER_SET='utf8';
-    public const MULTIBYTE_COUNT='4';
+    public const CHARACTER_SET='utf8mb4';
+    public const TABLE_COLLATION='utf8mb4_unicode_ci';
     public const MAX_IDLIST_COUNT=2000;
     
     private $rootEntryTemplate=[
@@ -205,26 +205,46 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 $columnsDefSql.="`".$column."` ".$colTemplate['type'];
             }
             // create table
-            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=".self::CHARACTER_SET." COLLATE ".self::CHARACTER_SET."_unicode_ci;";
+            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";";
             $this->executeStatement($sql,[]);
             if (isset($this->oc['logger'])){
                 $this->oc['logger']->log('notice','Created missing database table "{table}"',['table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__]);
             }
             // set standard indices
             $this->setTableIndices($table);
+        } else {
+            $this->updateCollation($entryTemplate,$table);
         }
         return $GLOBALS['dbInfo'][$table]=$entryTemplate;
     }
     
     public function getTableIndices(string $table):array
     {
-        $indices=[];
-        $sql="SHOW INDEXES FROM `".$table."`;";
-        $stmt=$this->executeStatement($sql,[]);
+        $stmt=$this->executeStatement("SHOW INDEXES FROM `".$table."`;",[]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
             $indices[$row["Key_name"]]=$row;
         }
-        return $indices;
+        return $indices??[];
+    }
+    
+    public function updateCollation(array $entryTemplate, string $table):array
+    {
+        $udatedTables=[];
+        $updateSql='';
+        $stmt=$this->executeStatement("SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE '".$table."';",[]);
+        while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
+            if ($table!==$row['TABLE_NAME']){continue;}
+            if ($row['COLLATION_NAME']===self::TABLE_COLLATION || $row['COLLATION_NAME']===NULL){continue;}
+            $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
+            $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CONVERT TO CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
+            $udatedTables[$row['TABLE_NAME']]=$row['TABLE_NAME'];
+        }
+        if (!empty($updateSql)){
+            $stmt=$this->executeStatement($updateSql,[]);
+            $result=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $this->oc['logger']->log('notice','Updated CHARACTER_SET and TABLE_COLLATION of tables "{tables}"',['tables'=>implode(', ',$udatedTables)]);
+        }
+        return $udatedTables;
     }
 
     public function setTableIndices(string $table)
@@ -325,7 +345,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         try{
             $dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
             $dbObj->exec("SET CHARACTER SET '".self::CHARACTER_SET."'");
-            $dbObj->exec("SET NAMES ".self::CHARACTER_SET.'mb'.self::MULTIBYTE_COUNT);
+            $dbObj->exec("SET NAMES ".self::CHARACTER_SET);
         } catch (\Exception $e){
             if ($exitOnException){
                 $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($access);
@@ -706,8 +726,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $values='';
         $inputs=[];
         foreach ($entry as $column => $value){
-            if (!isset($entryTemplate[$column])){continue;}
-            if (strcmp($column,'Source')===0){continue;}
+            if (!isset($entryTemplate[$column]) || strcmp($column,'Source')===0){continue;}
             $sqlPlaceholder=':'.$column;
             $columns.='`'.$column.'`,';
             $values.=$sqlPlaceholder.',';
@@ -743,9 +762,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $inputs=[];
         $valueSql='';
         foreach($entry as $column=>$value){
-            if (!isset($entryTemplate[$column])){continue;}
-            if ($value===FALSE){continue;}
-            if (strcmp($column,'Source')===0){continue;}
+            if (!isset($entryTemplate[$column]) || $value===FALSE || strcmp($column,'Source')===0){continue;}
             $sqlPlaceholder=':'.$column;
             $valueSql.="`".$column."`=".$sqlPlaceholder.",";
             if (is_array($value)){

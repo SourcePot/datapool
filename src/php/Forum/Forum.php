@@ -26,8 +26,8 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     public $definition=[
         'Content'=>[
             'Message'=>[
-                '@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'50','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@hideKeys'=>TRUE
-                ],
+                '@tag'=>'textarea','@placeholder'=>'e.g. This was a great day 😁','@rows'=>'10','@cols'=>'60','@cols'=>'50','@minlength'=>'1','@default'=>'','@filter'=>FILTER_DEFAULT,'@id'=>'newforumentry','@hideKeys'=>TRUE,'@style'=>['font-size'=>'1.2rem'],
+            ],
             '@hideCaption'=>FALSE,
         ],
         'Attachment'=>['@tag'=>'input','@type'=>'file','@default'=>'','@hideKeys'=>TRUE],
@@ -97,7 +97,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
     
     private function newEntryHtml()
     {
-        $draftSelector=['Source'=>$this->entryTable,'Folder'=>'Draft','Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId(),];
+        $draftSelector=['Source'=>$this->entryTable,'Folder'=>'Draft','Owner'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()];
         $draftSelector=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($draftSelector);
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($draftSelector) as $entry){
             if ($entry['isSkipRow']){continue;}
@@ -138,7 +138,7 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $forumEntry['Group']=$user['Privileges'];
         $forumEntry['Folder']='Sent';
         $forumEntry['Date']=(empty($forumEntry['Date']))?($this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime()):$forumEntry['Date'];
-        $forumEntry['Name']=(empty($forumEntry['Content']['Message']))?'':mb_substr($forumEntry['Content']['Message'],0,30);
+        $forumEntry['Name']=(empty($forumEntry['Content']['Message']))?'&#9998;':substr($forumEntry['Content']['Message'],0,30);
         return $forumEntry;
     }
     
