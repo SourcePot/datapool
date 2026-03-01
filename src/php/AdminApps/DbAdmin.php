@@ -111,7 +111,8 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     {
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
-        $matrices=['Columns'=>[]];
+        $tableKey='Table "'.$table.'"';
+        $matrices=[$tableKey=>[],'Columns'=>[],'Index'=>[]];
         $sql='SHOW INDEX FROM `'.$table.'`;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $columnInfo){
@@ -128,7 +129,14 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             if (isset($matrices['Index'][$column])){$columnInfo['trStyle']=['background-color'=>'var(--blue)'];}
             $matrices['Columns'][$column]=$columnInfo;
         }
-        $tableKey='Table "'.$table.'"';
+        $sql="SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE '".$table."';";
+        $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
+        while($columnInfo=$stmt->fetch(\PDO::FETCH_ASSOC)){
+            if ($table!==$columnInfo['TABLE_NAME']){continue;}
+            $column=$columnInfo['COLUMN_NAME'];
+            unset($columnInfo['TABLE_NAME']);
+            $matrices['Charset, Collation'][$column]=$columnInfo;
+        }
         $sql="SELECT TABLE_NAME,TABLE_COLLATION,ENGINE,TABLE_ROWS,DATA_LENGTH,INDEX_LENGTH,AUTO_INCREMENT,CREATE_TIME,UPDATE_TIME FROM INFORMATION_SCHEMA.TABLES;";
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $tableInfo){
@@ -155,9 +163,10 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
 
     private function addTableCmds(array $matrix,array $selector):array
     {
-        $btns=['INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
-        $btnArr=['tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $btns=['ALTERTABLE'=>'Update character set & collation','INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
+        $btnArr=['tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>FALSE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         foreach($btns as $sqlCmd=>$key){
+            $btnArr['hasCover']=$sqlCmd==='TRUNCATE' || $sqlCmd==='DROP';
             $btnArr['element-content']=$key;
             $btnArr['key']=[$sqlCmd,$selector['Source']];
             $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr)];
@@ -171,6 +180,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
         if (isset($formData['cmd']['INDICES'])){
             $context['table']=key($formData['cmd']['INDICES']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->dropTableIndices($context['table']);
             $this->oc['SourcePot\Datapool\Foundation\Database']->setTableIndices($context['table']);
             $this->oc['logger']->log('notice','User "{currentUser}" set standard inices for table "{table}".',$context);
         } else if (isset($formData['cmd']['DROP'])){
@@ -187,6 +197,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             $sql='TRUNCATE TABLE '.$context['table'].';';
             $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
             $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
+        } else if (isset($formData['cmd']['ALTERTABLE'])){
+            $context['table']=key($formData['cmd']['ALTERTABLE']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateCollation($context['table']);
         }
     }
 }

@@ -25,6 +25,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
         'Target on success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
         'Target on failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+        'System timezone (is used unless otherwise specified)'=>['method'=>'element','tag'=>'p','element-content'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'excontainer'=>TRUE],
     ];
         
     private const CONTENT_STRUCTURE_RULES=[
@@ -41,13 +42,13 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const CONTENT_STRUCTURE_FAILURE_RULES=[
         'Value'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'','addSourceValueColumn'=>FALSE,'addColumns'=>[]],
-        'Failure if Result...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripos','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES],
+        'Failure if Result...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'strpos','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES],
         'Compare value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
     ];
         
     private const CONTENT_STRUCTURE_CONDITIONAL_RULES=[
         'Condition'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'','addSourceValueColumn'=>FALSE,'addColumns'=>[]],
-        'Use value if...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'eq','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST],
+        'Use value if...'=>['method'=>'select','excontainer'=>TRUE,'value'=>'==0','keep-element-content'=>TRUE,'options'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST],
         ''=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
         'Use'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>[]],
         'Value'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
@@ -277,7 +278,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($base['calculationrules']??[] as $ruleEntryId=>$rule){
             $calculationRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Calculation rule');
             // get A and B
-            $result['Calc rule'][$calculationRuleIndex]=['A'=>0,'Operation'=>'','B'=>0,'Result'=>''];
+            $result['Calculation rules'][$calculationRuleIndex]=['A'=>0,'Operation'=>'','B'=>0,'Result'=>''];
             foreach(['A','B'] as $index){
                 $key=$rule['Content']['"'.$index.'" selected by...']??'';
                 $debugArr[]=['ruleEntryId'=>$calculationRuleIndex,'key'=>$key];
@@ -290,12 +291,12 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 } else {
                     $value[$index]=$rule['Content']['Default value "'.$index.'"'];
                 }
-                $result['Calc rule'][$calculationRuleIndex][$index]=$value[$index];
+                $result['Calculation rules'][$calculationRuleIndex][$index]=$value[$index];
             }
             $ruleResults[$calculationRuleIndex]=$this->oc['SourcePot\Datapool\Foundation\Computations']->operation($value['A'],$value['B'],$rule['Content']['Operation']);
             $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$ruleResults[$calculationRuleIndex],$rule['Content']['Target data type']);
-            $result['Calc rule'][$calculationRuleIndex]['Operation']=$rule['Content']['Operation'];
-            $result['Calc rule'][$calculationRuleIndex]['Result']=$ruleResults[$calculationRuleIndex];
+            $result['Calculation rules'][$calculationRuleIndex]['Operation']=$rule['Content']['Operation'];
+            $result['Calculation rules'][$calculationRuleIndex]['Result']=$ruleResults[$calculationRuleIndex];
         }
         // loop through conditional value rules
         foreach($base['conditionalvaluerules']??[] as $ruleEntryId=>$rule){
@@ -393,7 +394,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $entry;
     }
     
-    private function ruleId2ruleIndex($ruleId,$ruleType='Calc rule')
+    private function ruleId2ruleIndex($ruleId,$ruleType='Calculation rules')
     {
         $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId);
         $ruleIndex=$ruleType.' '.$ruleIndex;

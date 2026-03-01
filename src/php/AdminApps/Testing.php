@@ -51,7 +51,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             return ['Category'=>'Admin','Emoji'=>'==','Label'=>'Testing','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
             $html='';
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',[],['method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__],['style'=>['background-color'=>'#c9ffc9']]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Test configuration setting','generic',[],['method'=>'getTestSettingsHtml','classWithNamespace'=>__CLASS__],['style'=>['background-color'=>'var(--green)']]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Testing result','generic',[],['method'=>'getTestHtml','classWithNamespace'=>__CLASS__],[]);
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -59,9 +59,11 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     }
 
     public function getTestSettingsHtml($arr){
-        $arr['html']='';
         $arr=$this->testParams($arr);
+        $html=$arr['html'];
         $arr=$this->testArgs($arr);
+        $html.=$arr['html'];
+        $arr['html']=$html;
         return $arr;
     }
     
@@ -87,52 +89,44 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     }
 
     private function testParams($arr){
-        // get entry
-        $arr=$this->finalizeSelector($arr,__FUNCTION__,'settings');
-		$arr['selector']['Content']=[];
-        $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($arr['selector'],TRUE);
-        // form processing
-        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        $elementId=key($formData['val']);
-        if (isset($formData['val'][$elementId])){
-            $arr['selector']['Content']=$formData['val'][$elementId]['Content'];
-            $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
-        }
+        $arr=$this->finalizeSelector($arr,__FUNCTION__,'');
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$arr['selector'],[]);
+        $params=current($base['testparams']??[])['Content']??[];
         // get options
-        $methods=[];
         $classes=array_keys($this->oc);
         $classes=array_combine($classes,$classes);
         ksort($classes);
-        if (!empty($arr['selector']['Content']['class'])){
-            if (class_exists($arr['selector']['Content']['class'])){
-                $methods=get_class_methods($arr['selector']['Content']['class']);
+        if (!empty($params['class'])){
+            if (class_exists($params['class'])){
+                $methods=get_class_methods($params['class']);
                 $methods=array_combine($methods,$methods);
                 ksort($methods);
             }
         }
         $contentStructure=[
             'class'=>['method'=>'select','value'=>'','options'=>$classes,'excontainer'=>TRUE],
-            'method'=>['method'=>'select','value'=>'','options'=>$methods,'excontainer'=>TRUE],
+            'method'=>['method'=>'select','value'=>'','options'=>$methods??[],'excontainer'=>TRUE],
         ];
-        // get HTML
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$arr['selector']);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$arr['selector'],TRUE);
         $arr['contentStructure']=$contentStructure;
         $arr['caption']='Select method to test';
         $arr['noBtns']=TRUE;
-        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr,FALSE,TRUE);
-        if (empty($arr['selector']['Content'])){
-            $row['trStyle']=['background-color'=>'#a00'];
-        }
-        $matrix=['Parameter'=>$row];
-        $arr[__FUNCTION__]=$arr['selector']['Content'];
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
+        $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
+        $arr[__FUNCTION__]=$params;
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
         return $arr;
     }
 
     private function testArgs($arr){
         // get method properties
-        if (empty($arr['testParams']['class']) || empty($arr['testParams']['method'])){return $arr;}
+        if (empty($arr['testParams']['class']) || empty($arr['testParams']['method']) || !method_exists($arr['testParams']['class'],$arr['testParams']['method'])){
+            $arr['html']='';
+            return $arr;
+        }
         $testingParamsId=$this->getParamsId($arr['testParams']['class'],$arr['testParams']['method']);
-        if (!method_exists($arr['testParams']['class'],$arr['testParams']['method'])){return $arr;}
+        $arr=$this->finalizeSelector($arr,__FUNCTION__,$testingParamsId);
         // get content structure from args
         $contentStructure=[];
         $f=new \ReflectionMethod($arr['testParams']['class'],$arr['testParams']['method']);
@@ -154,10 +148,10 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
             $contentStructure[$param->name.' type ']=['method'=>'select','value'=>$dataType,'options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE,'excontainer'=>TRUE];
         }
         //
-        $arr=$this->finalizeSelector(['html'=>$arr['html']],__FUNCTION__,$testingParamsId);
-        $arr['callingClass']=__CLASS__;
-		$arr['callingFunction']=__FUNCTION__;
-		$arr['contentStructure']=$contentStructure;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$arr['selector']);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$arr['selector'],TRUE);
+        $arr['contentStructure']=$contentStructure;
 		$arr['caption']='Method arguments for testing';
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $arr;
@@ -197,21 +191,16 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     
     private function runTest(array $arr,int $outputFormat=0):array
     {
-        $results=[];
         // load configuration
-        $args=[];
-        $config=[];
-        // get params
-        $params=$this->finalizeSelector([],'testParams','settings');
-        $params=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($params['selector'],TRUE);
-        $config['params']=$params['Content'];
-        // get args
+        $arr=$this->finalizeSelector($arr,'testParams','');
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,'testParams',$arr['selector'],[]);
+        $config=['params'=>current($base['testparams'])['Content']];
         $testingParamsId=$this->getParamsId($config['params']['class'],$config['params']['method']);
-        $tests=$this->finalizeSelector([],'testArgs',$testingParamsId);
-        $tests=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($tests['selector'],['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE]);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tests,TRUE,'Read','EntryId',TRUE) as $argsEntry){
-            $testIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($argsEntry['EntryId']);
-            $config['tests'][$testIndex]=[];
+        $arr=$this->finalizeSelector($arr,'testArgs',$testingParamsId);
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,'testArgs',$arr['selector'],[]);
+        // get tests
+        foreach($base['testargs'] as $argEntryId=>$argsEntry){
+            $testIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($argEntryId);
             while ($argsEntry['Content']){
                 $argName=key($argsEntry['Content']);
                 $argValue=array_shift($argsEntry['Content']);
@@ -219,12 +208,18 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
                 $config['tests'][$testIndex][$argName]=['name'=>$argName,'value'=>$argValue,'type'=>$argType];
             }
         }
-        // testing
-        $results['Result']=[];
-        foreach($config['tests'] as $testIndex=>$args){
-            $valueArr=$this->testArgs2valueArr($args);
-            $context=$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($this->oc[$config['params']['class']],$config['params']['method'],$valueArr);
-            $results=$this->addContext2results($results,$config,$testIndex,$context,$outputFormat);
+        // run tests
+        $results=[];
+        if (empty($config['tests'])){
+            $config['tests'][0]=[];
+            $context=$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($this->oc[$config['params']['class']],$config['params']['method'],[]);
+            $results=$this->addContext2results($results,$config,0,$context,$outputFormat);
+        } else {
+            foreach($config['tests'] as $testIndex=>$args){
+                $valueArr=$this->testArgs2valueArr($args);
+                $context=$this->oc['SourcePot\Datapool\Foundation\Logger']->methodTest($this->oc[$config['params']['class']],$config['params']['method'],$valueArr);
+                $results=$this->addContext2results($results,$config,$testIndex,$context,$outputFormat);
+            }
         }
         return $results;
     }

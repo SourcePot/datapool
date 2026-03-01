@@ -49,7 +49,7 @@ class MediaTools{
                 $arr['settings']['style']['max-height']=intval(trim($styleArr['max-height'],'px%'))-40;
             }
         }
-        $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['width']));
+        $isSmallPreview=(!empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['max-width']) || !empty($arr['settings']['style']['maxDim']));
         // create preview based on 'MIME-Type'
         if (!isset($arr['selector']['Params']['TmpFile']['MIME-Type'])){
             $arr['html']='';
@@ -73,7 +73,7 @@ class MediaTools{
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'class'=>'matrix']);
         } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector']) && !$isSmallPreview){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],['method'=>'csvEditor','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'],[]);
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],['method'=>'csvView','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'],[]);
         } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'class'=>'matrix']);
@@ -97,8 +97,10 @@ class MediaTools{
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>['clear'=>'both']]);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && empty($arr['selector']['Params']['Email'])){
+            $arr=$this->getObj($arr,TRUE);
         } else {
-            $arr=$this->getObj($arr);
+            $arr=$this->getObj($arr,FALSE);
         }
         return $arr;
     }
@@ -115,17 +117,14 @@ class MediaTools{
         if (empty($arr['selector']['Name'])){
             $text='?';
         } else {
-            $text=preg_replace('/[^A-Z]/','',$arr['selector']['Name']);
-            $text=substr($text,0,2);
-            $text=(empty($text))?'?':$text;
-            $text=strtr($text,['WC'=>'CW','wc'=>'cw']);
+            $text=substr($arr['selector']['Name']?:$arr['selector']['Folder']?:$arr['selector']['Group'],0,7)?:'?';
         }
         // add content: text, image
         if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
             $iconSrc=$this->getImage($arr);
         } else {
-            $iconArr=['tag'=>'p','element-content'=>$text,'class'=>'icon','style'=>['font-size'=>$fontSize,'width'=>$arr['maxDim'],'line-height'=>$arr['maxDim']]];
+            $iconArr=['tag'=>'p','element-content'=>$text,'keep-element-content'=>TRUE,'class'=>'icon','style'=>['font-size'=>$fontSize,'width'=>$arr['maxDim'],'line-height'=>$arr['maxDim']]];
             $iconHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($iconArr);
         }
         // add wrapper div
@@ -287,14 +286,21 @@ class MediaTools{
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
         return $arr;
     }
-    
-    private function getObj(array $arr):array
+
+    private function getObj(array $arr, bool $sanitize=FALSE):array
     {
         $arr['html']=$arr['html']??'';
         $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-height']??'60vh';
         $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-width']??'90vh';
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
+            if ($sanitize){
+                $content=htmlentities(file_get_contents($arr['selector']['Params']['TmpFile']['Source']));
+                $content=str_replace("\n",'</br>',$content);
+                $content=str_replace(' ','&nbsp',$content);
+                file_put_contents($arr['selector']['Params']['TmpFile']['Source'],$content);
+            }
+            //
             $objArr=$arr;
             $objArr['tag']='object';
             $objArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);

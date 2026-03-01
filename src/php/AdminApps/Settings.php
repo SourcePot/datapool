@@ -107,7 +107,19 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'containerType'=>'entryList',
             'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'EntryId','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>''],]],
             'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected'
-        ]
+        ],
+        'CSV output settings'=>[
+            'selector'=>\SourcePot\Datapool\Tools\CSVtools::CSV_SELECTOR['output'],
+            'settings'=>\SourcePot\Datapool\Tools\CSVtools::CSV_CONTAINER_SETTINGS,
+            'containerType'=>'generic',
+            'description'=>'These are the settings used for csv-files created by this web application',
+        ],
+        'CSV input settings'=>[
+            'selector'=>\SourcePot\Datapool\Tools\CSVtools::CSV_SELECTOR['input'],
+            'settings'=>\SourcePot\Datapool\Tools\CSVtools::CSV_CONTAINER_SETTINGS,
+            'containerType'=>'generic',
+            'description'=>'These are the settings used for csv-files created by this web application',
+        ],
     ];
 
     private $entryTable='';
@@ -115,7 +127,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
-        ];
+    ];
     
     public function __construct($oc)
     {

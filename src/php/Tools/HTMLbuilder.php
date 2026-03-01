@@ -19,8 +19,8 @@ class HTMLbuilder{
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
 
-    private const APPROVE_STYLE=['border'=>'2px solid #0f0'];
-    private const DECLINE_STYLE=['border'=>'2px solid #f00'];
+    private const APPROVE_STYLE=['border'=>'2px solid var(--green)'];
+    private const DECLINE_STYLE=['border'=>'2px solid var(--redH)'];
 
     private const SET_ACCESS_BYTE_INFO="Security relevant setting!\nNew Priviledges will become active at the next user login.";
 
@@ -44,8 +44,8 @@ class HTMLbuilder{
         'delete'=>['key'=>['delete'],'title'=>'Delete entry','hasCover'=>TRUE,'element-content'=>'&coprod;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
         'remove'=>['key'=>['remove'],'title'=>'Remove attched file only','hasCover'=>TRUE,'element-content'=>'&xcup;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','requiresFile'=>TRUE,'style'=>[],'excontainer'=>FALSE],
         'delete all'=>['key'=>['delete all'],'title'=>'Delete all selected entries','hasCover'=>TRUE,'element-content'=>'Delete all selected','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'style'=>[],'excontainer'=>FALSE],
-        'moveUp'=>['key'=>['moveUp'],'title'=>'Moves the entry up','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
-        'moveDown'=>['key'=>['moveDown'],'title'=>'Moves the entry down','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
+        'moveUp'=>['key'=>['moveUp'],'title'=>'Move entry down','hasCover'=>FALSE,'element-content'=>'&#9660;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
+        'moveDown'=>['key'=>['moveDown'],'title'=>'Move entry up','hasCover'=>FALSE,'element-content'=>'&#9650;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>['margin'=>0]],
         'archive'=>['key'=>['archive'],'title'=>'Sets the expiry date to latest possible','hasCover'=>FALSE,'element-content'=>'&infin;','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>'Write','style'=>[],'excontainer'=>FALSE],
     ];
 
@@ -238,7 +238,7 @@ class HTMLbuilder{
                 $optionCount++;
                 if ($optionCount>=self::MAX_SELECT_OPTION_COUNT){
                     $this->oc['logger']->log('notice','Html selector reached option limit. Not all options are shown.',[]);
-                    $noticeOption=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'option','value'=>'','element-content'=>'Cut off: option limit '.self::MAX_SELECT_OPTION_COUNT.' reached!','style'=>['border-bottom'=>'#a00','color'=>'#f00','font-weight'=>'bold'],'title'=>'LIMIT REACHED']);
+                    $noticeOption=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'option','value'=>'','element-content'=>'Cut off: option limit '.self::MAX_SELECT_OPTION_COUNT.' reached!','style'=>['border-bottom'=>'var(--red)','color'=>'var(--redH)','font-weight'=>'bold'],'title'=>'LIMIT REACHED']);
                     $toReplace['{{options}}']=$noticeOption.$toReplace['{{options}}'];
                     break;
                 }            
@@ -525,9 +525,7 @@ class HTMLbuilder{
 
     public function app(array $arr):string
     {
-        if (empty($arr['html'])){
-            return '';
-        }
+        if (empty($arr['html'])){return '';}
         $arr['icon']=$arr['icon']??'?';
         $arr['style']=$arr['style']??[];
         $arr['class']=$arr['class']??'app';
@@ -656,7 +654,7 @@ class HTMLbuilder{
         } else {
             $editorHtml=$this->integerEditor($arr);
             if ($arr['key']==='Privileges' && !empty($editorHtml)){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'both','color'=>'#f00'],'keep-element-content'=>TRUE,'element-content'=>self::SET_ACCESS_BYTE_INFO]);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'both','color'=>'var(--redH)'],'keep-element-content'=>TRUE,'element-content'=>self::SET_ACCESS_BYTE_INFO]);
             }
             $html.=$editorHtml;
         }
@@ -747,7 +745,7 @@ class HTMLbuilder{
         $arr['returnRow']=!empty($arr['returnRow']);
         if (!isset($arr['contentStructure']) || empty($arr['callingClass']) || empty($arr['callingFunction']) || empty($arr['selector']['Source']) || empty($arr['selector']['EntryId'])){
             $this->oc['logger']->log('error','Method {class} &rarr; {fcuntion}}()" called with one of the following being empty: contentStructure, callingClass="{callingClass}", callingFunction="{callingFunction}", arr[selector][Source]="{Source}" and/or arr[selector][EntryId]="{EntryId}"',['class'=>__CLASS__,'function'=>__FUNCTION__,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'Source'=>$arr['selector']['Source'],'EntryId'=>$arr['selector']['EntryId'],]);
-            return ['error'=>'Empty argument detected, chack log'];
+            return ['error'=>'Empty argument detected, check log'];
         }
         // initialization
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
@@ -870,7 +868,7 @@ class HTMLbuilder{
                 $matrix[$rowIndex]['   ']=$matrix[$rowIndex]['    ']='';
             }
             if (empty($entry['Content'])){
-                $matrix[$rowIndex]['trStyle']['background-color']=$this->cssVars['--attentionColorTransparent']??'#faa';
+                $matrix[$rowIndex]['trStyle']['background-color']=$this->cssVars['--attentionColorTransparent']??'var(--blue)';
             }
         } // end of loop through list entries
         $matrix['']=array_merge($emptyRow,[' '=>$addBtn,'    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);

@@ -19,14 +19,14 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public const MAX_TIME_BETWEEN_TABLE_OPTIMISATIONS=86400;
     public const MIN_TIME_BETWEEN_TABLE_OPTIMISATIONS=5000;
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
-    public const CHARACTER_SET='utf8';
-    public const MULTIBYTE_COUNT='4';
+    public const CHARACTER_SET='utf8mb4';
+    public const TABLE_COLLATION='utf8mb4_unicode_ci';
     public const MAX_IDLIST_COUNT=2000;
     
     private $rootEntryTemplate=[
-        'EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
-        'Group'=>['type'=>'VARCHAR(255)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'First level ordering criterion'],
-        'Folder'=>['type'=>'VARCHAR(255)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Second level ordering criterion'],
+        'EntryId'=>['type'=>'VARCHAR(1024)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
+        'Group'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'First level ordering criterion'],
+        'Folder'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Second level ordering criterion'],
         'Name'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Third level ordering criterion'],
         'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
         'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
@@ -205,7 +205,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 $columnsDefSql.="`".$column."` ".$colTemplate['type'];
             }
             // create table
-            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=".self::CHARACTER_SET." COLLATE ".self::CHARACTER_SET."_unicode_ci;";
+            $sql="CREATE TABLE `".$table."` (".$columnsDefSql.") DEFAULT CHARSET=".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";";
             $this->executeStatement($sql,[]);
             if (isset($this->oc['logger'])){
                 $this->oc['logger']->log('notice','Created missing database table "{table}"',['table'=>$table,'function'=>__FUNCTION__,'class'=>__CLASS__]);
@@ -218,19 +218,49 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getTableIndices(string $table):array
     {
-        $indices=[];
-        $sql="SHOW INDEXES FROM `".$table."`;";
-        $stmt=$this->executeStatement($sql,[]);
+        $stmt=$this->executeStatement("SHOW INDEXES FROM `".$table."`;",[]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
             $indices[$row["Key_name"]]=$row;
         }
-        return $indices;
+        return $indices??[];
+    }
+    
+    public function updateCollation(string $table)
+    {
+        $updateSql='';
+        $stmt=$this->executeStatement("SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE '".$table."';",[]);
+        while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
+            if ($table!==$row['TABLE_NAME']){continue;}
+            if ($row['COLLATION_NAME']===self::TABLE_COLLATION || $row['COLLATION_NAME']===NULL){continue;}
+            $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
+            $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CONVERT TO CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
+        }
+        if (empty($updateSql)){
+            $this->oc['logger']->log('info','Table "{table}" CHARACTER_SET and TABLE_COLLATION is already up-to-date',['table'=>$table]);
+        } else {
+            $this->dropTableIndices($table);
+            $stmt=$this->executeStatement($updateSql,[]);
+            $result=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $this->oc['logger']->log('notice','Updated CHARACTER_SET and TABLE_COLLATION of table "{table}"',['table'=>$table]);
+            $this->setTableIndices($table);
+        }
+        return $result??FALSE;
     }
 
     public function setTableIndices(string $table)
     {
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
-        // drop all existing indices
+        $sql="";
+        $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`(40));";
+        $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(30),`Group`(30),`Folder`(30),`Name`(30));";
+        $this->oc['logger']->log('notice','Added index to database table "{table}"',$context);
+        $this->executeStatement($sql,[]);
+        return $this->executeStatement($sql,[]);
+    }
+
+    public function dropTableIndices(string $table)
+    {
+        $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
         $sql="";
         $indices=$this->getTableIndices($table);
         foreach($indices as $keyName=>$indexArr){
@@ -240,12 +270,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty($sql)){$this->executeStatement($sql,[]);}
         $context['dropped']=trim($context['dropped'],'| ');
         $this->oc['logger']->log('notice','Existing indices "{dropped}" of database table "{table}" dropped',$context);
-        // set new indices
-        $sql="";
-        $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`);";
-        $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(40),`Group`(30),`Folder`(30),`Name`(40));";
-        $this->oc['logger']->log('notice','Added index to database table "{table}"',$context);
-        return $this->executeStatement($sql,[]);
     }
 
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
@@ -325,7 +349,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         try{
             $dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
             $dbObj->exec("SET CHARACTER SET '".self::CHARACTER_SET."'");
-            $dbObj->exec("SET NAMES ".self::CHARACTER_SET.'mb'.self::MULTIBYTE_COUNT);
+            $dbObj->exec("SET NAMES ".self::CHARACTER_SET);
         } catch (\Exception $e){
             if ($exitOnException){
                 $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($access);
@@ -706,8 +730,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $values='';
         $inputs=[];
         foreach ($entry as $column => $value){
-            if (!isset($entryTemplate[$column])){continue;}
-            if (strcmp($column,'Source')===0){continue;}
+            if (!isset($entryTemplate[$column]) || strcmp($column,'Source')===0){continue;}
             $sqlPlaceholder=':'.$column;
             $columns.='`'.$column.'`,';
             $values.=$sqlPlaceholder.',';
@@ -743,9 +766,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $inputs=[];
         $valueSql='';
         foreach($entry as $column=>$value){
-            if (!isset($entryTemplate[$column])){continue;}
-            if ($value===FALSE){continue;}
-            if (strcmp($column,'Source')===0){continue;}
+            if (!isset($entryTemplate[$column]) || $value===FALSE || strcmp($column,'Source')===0){continue;}
             $sqlPlaceholder=':'.$column;
             $valueSql.="`".$column."`=".$sqlPlaceholder.",";
             if (is_array($value)){
