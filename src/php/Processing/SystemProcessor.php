@@ -10,49 +10,87 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Processing;
 
-class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
-
+class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
+    
     private $oc;
-
-    private const OPS_READER_CORE_PATH='/var/www/www-workspace/wallenhauer/OPS-Reader-dev_datapool/Core/';
-
+    
     private const INFO_MATRIX=[
-        'Caption'=>['Comment'=>'Open Patent Service ListMatacher Wrapper'],
-        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class. The canvas-element must contain well formated '],
+        'Caption'=>['Comment'=>'External program execution'],
+        'Description'=>['Comment'=>'This prozessors allows for the execution of exernal programms on the system.'],
     ];
 
-    private const CREDENTIALS_DEF=[
-        'Content'=>[
-            'app_name'=>['@tag'=>'input','@type'=>'text','@default'=>'Datapool','@excontainer'=>TRUE],
-            'consumer_key'=>['@tag'=>'input','@type'=>'text','@default'=>'...','@excontainer'=>TRUE],
-            'consumer_secret_key'=>['@tag'=>'input','@type'=>'password','@default'=>'','@excontainer'=>TRUE],
-            ''=>['@tag'=>'button','@value'=>'save','@element-content'=>'Save','@default'=>'save'],
+    private const SYSTEM_INFO=[
+        'CYGWIN_NT-5.1'=>[
+
+        ],
+        'Darwin'=>[
+
+        ],
+        'FreeBSD'=>[
+
+        ],
+        'HP-UX'=>[
+
+        ],
+        'IRIX64'=>[
+
+        ],
+        'Linux'=>[
+            'uname -a'=>'System',
+            'whoami'=>'Current User',
+            'pwd'=>'Current directory',
+        ],
+        'NetBSD'=>[
+
+        ],
+        'OpenBSD'=>[
+
+        ],
+        'SunOS'=>[
+
+        ],
+        'Unix'=>[
+            'uname -a'=>'System',
+            'whoami'=>'Current User',
+            'pwd'=>'Current directory',
+        ],
+        'WIN32'=>[
+            'systeminfo'=>'System',
+            'whoami'=>'Current User',
+            'cd'=>'Current directory',
+        ],
+        'WINNT'=>[
+            'systeminfo'=>'System',
+            'whoami'=>'Current User',
+            'cd'=>'Current directory',
+        ],
+        'Windows'=>[
+            'systeminfo'=>'System',
+            'whoami'=>'Current User',
+            'cd'=>'Current directory',
         ],
     ];
 
     private const CONTENT_STRUCTURE_PARAMS=[
         // add content structure of parameters here...
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
-        'Royalty list'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-        'Royalty list key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','addSourceValueColumn'=>FALSE,'addColumns'=>[]],
-        'Target (success)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
-        'Target (failure)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+        'Method "select"'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[1=>'1st value',2=>'2nd value',3=>'3rd value',]],
+        'Target on success'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],    
+        'Target on failure'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],    
     ];
-
+        
     private const CONTENT_STRUCTURE_RULES=[
         // add content structure of rules here...
-        'Entry key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name',],
-        'RegExp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'.+','excontainer'=>TRUE],
-        'RegExp match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9],'keep-element-content'=>TRUE],
-        'Glue'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','excontainer'=>TRUE],
+        'Method "keySelect"'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>[]],
+        'Tag "input" type "text" for new key value'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'Enter your new value here','excontainer'=>TRUE],
     ];
-
+    
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
-
+    
     public function __construct($oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
@@ -67,14 +105,13 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     public function init()
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
-        $this->oc['SourcePot\Datapool\Foundation\Definitions']->addDefintion('!'.__CLASS__,self::CREDENTIALS_DEF);
     }
 
     public function getEntryTable():string
     {
         return $this->entryTable;
     }
-
+    
     public function getEntryTemplate(){
         return $this->entryTemplate;
     }
@@ -82,8 +119,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     /**
      * This method is links the processor with the canvaselement
      *
-     * @param array $callingElementSelector Is the selector for the canvas element which called the method
-     * @param string $action Selects the requested process to be run
+     * @param array $callingElementSelector Is the selector for the canvas element which called the method 
+     * @param string $action Selects the requested process to be run  
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
      public function dataProcessor(array $callingElementSelector=[],string $action='info')
@@ -104,7 +141,17 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getWidget($callingElement)
     {
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('OPSListMatcher '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getWidgetHtml','classWithNamespace'=>__CLASS__],[]);
+        // check system
+        $matrix=[];
+        foreach(self::SYSTEM_INFO[PHP_OS]??[] as $cmd=>$key){
+            $output=NULL;
+            exec($cmd,$output);
+            $matrix[$key]=['Output'=>implode('</br>',$output)];
+        }
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'System','style'=>['width'=>'95vw','color'=>'var(--colorM)','background-color'=>'var(--color)',]]);
+        // provide widget
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('System processor '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getWidgetHtml','classWithNamespace'=>__CLASS__],[]);
+        return $html;
     }
 
     private function getInfo($callingElement):string
@@ -133,8 +180,13 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
+
+        // ===================================== REMOVE WHEN ALL IS FINISHED ================================
         $arr['html']='<h1 style="width:100vw;">JUST FOR TESTING - THIS PROZESSOR IS UNDER CONSTRUCTION</h1>';
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'OPS ListMatcher Processor']);
+        // ===================================== REMOVE WHEN ALL IS FINISHED ================================
+        
+        
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'System Processor']);
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
@@ -147,11 +199,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getSettings($callingElement):string
     {
-        // credentials from
-        $credentials=$this->getCredentials($callingElement);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($credentials,FALSE);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'OPS Credentials','open'=>FALSE]);
-        // paremeters and rules
+        $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Processor parameters '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'processorParams','classWithNamespace'=>__CLASS__],[]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Processor rules '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'processorRules','classWithNamespace'=>__CLASS__],[]);
@@ -163,19 +211,17 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $callingElement=$arr['selector'];
         $arr['html']=$this->processorParamsHtml($callingElement);
-        // get credentials widget
-
         return $arr;
     }
-
+    
     public function processorRules($arr)
     {
         $callingElement=$arr['selector'];
         $arr['html']=$this->processorRulesHtml($callingElement);
         return $arr;
     }
-
-    private function processorParamsHtml($callingElement):string
+    
+    private function processorParamsHtml($callingElement)
     {
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
@@ -188,7 +234,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
-
+    
     private function processorRulesHtml(array $callingElement):string
     {
         // build content structure
@@ -212,31 +258,13 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
         // initialize statistic and result array
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
-        // load and create ListMatcher
-        $royalty_list=[];
-        foreach(['ListMatcher.php','OpsInterface.php','OpsReader.php'] as $class){
-            require_once(self::OPS_READER_CORE_PATH.$class);
-        }
-        try{
-            $royalty_list=$this->getRoyaltyList($callingElement);
-            foreach(array_rand($royalty_list,10) as $key){
-                $result['Royalty list sample'][$key]=['value'=>$royalty_list[$key]];
-            }
-            $credentials=$this->getCredentials($callingElement);
-            //$this->listMatcherObj=new \Core\ListMatcher($royalty_list,#[\SensitiveParameter] array $credentials['Content']);
-            $result['OPS-Reader ListMatcher']['errors']=['value'=>'UNDER CONSTRUCTION'];
-        } catch(\Exception $e){
-            $result['OPS-Reader ListMatcher']['errors']=['value'=>$e->getMessage()];
-        }
-        if (empty($result['OPS-Reader ListMatcher error'])){
-            // loop through entries
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-                $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
-                if ($result['cntr']['timeLimitReached']){
-                    break;
-                } else if (!$result['cntr']['isSkipRow']){
-                    $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
-                }
+        // loop through entries
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
+                break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
             }
         }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
@@ -249,19 +277,19 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $processorRules=$base['processorruleshtml'];
         
         // recover the entry selector defined by the selected Canves element Selector
-        $targetSelectorSuccess=$base['entryTemplates'][$processorParams['Target (success)']]??[];
-        $targetSelectorFailure=$base['entryTemplates'][$processorParams['Target (failure)']]??[];
-
+        $targetSelectorSuccess=$base['entryTemplates'][$processorParams['Target on success']]??[];
+        $targetSelectorFailure=$base['entryTemplates'][$processorParams['Target on failure']]??[];
+        
         // process entry based on processorRules and e.g. processorParams
-        $opsMatchValue='';
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($processorRules as $ruleEntryId=>$rule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
-            preg_match('/'.$rule['Content']['RegExp'].'/',$flatSourceEntry[$processorParams['Entry key']],$match);
-            $opsMatchValue.=$match[$processorParams['RegExp match index']].$processorParams['Glue'];
+            $ruleContent=$rule['Content'];
+            // processing, e.g. upadte source entry[key] with new value based on rule
+            $flatSourceEntry[$ruleContent['Method "keySelect"']]=$ruleContent['Tag "input" type "text" for new key value'];
         }
         $processedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
-
+        
         // move processed entries
         $success=(mt_rand(0,1)>0)?TRUE:FALSE;
         if ($success){
@@ -274,26 +302,5 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
         return $result;
     }
-
-    private function getCredentials($callingElement):array
-    {
-        $credentials=['Class'=>__CLASS__,'EntryId'=>$callingElement['EntryId'],'Name'=>'&#8688;'];
-        $credentials['Content']=['app_name'=>'Datapool','consumer_key'=>'','consumer_secret_key'=>'',];
-        $credentials=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($credentials,TRUE);
-        return $credentials;
-    }
-    
-    private function getRoyaltyList($callingElement):array
-    {
-        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
-        $params=current($base['processorparamshtml'])['Content'];
-        $oyaltyList=[];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($base['entryTemplates'][$params['Royalty list']],TRUE) as $royaltyEntry){
-            $flatRoyaltyEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($royaltyEntry);
-            $oyaltyList[$royaltyEntry['EntryId']]=$flatRoyaltyEntry[$params['Royalty list key']]??('Key "'.$params['Royalty list key'].'" not present');
-        }
-        return $oyaltyList??[];
-    }
-
 }
 ?>
