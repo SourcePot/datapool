@@ -163,9 +163,10 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
 
     private function addTableCmds(array $matrix,array $selector):array
     {
-        $btns=['Update'=>'Update character set & collation','INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
-        $btnArr=['tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+        $btns=['ALTERTABLE'=>'Update character set & collation','INDICES'=>'Set standard indices','TRUNCATE'=>'Empty table','DROP'=>'Drop table'];
+        $btnArr=['tag'=>'button','element-content'=>'','keep-element-content'=>TRUE,'hasCover'=>FALSE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         foreach($btns as $sqlCmd=>$key){
+            $btnArr['hasCover']=$sqlCmd==='TRUNCATE' || $sqlCmd==='DROP';
             $btnArr['element-content']=$key;
             $btnArr['key']=[$sqlCmd,$selector['Source']];
             $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr)];
@@ -179,6 +180,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
         if (isset($formData['cmd']['INDICES'])){
             $context['table']=key($formData['cmd']['INDICES']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->dropTableIndices($context['table']);
             $this->oc['SourcePot\Datapool\Foundation\Database']->setTableIndices($context['table']);
             $this->oc['logger']->log('notice','User "{currentUser}" set standard inices for table "{table}".',$context);
         } else if (isset($formData['cmd']['DROP'])){
@@ -195,8 +197,8 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             $sql='TRUNCATE TABLE '.$context['table'].';';
             $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
             $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
-        } else if (isset($formData['cmd']['Update'])){
-            $context['table']=key($formData['cmd']['Update']);
+        } else if (isset($formData['cmd']['ALTERTABLE'])){
+            $context['table']=key($formData['cmd']['ALTERTABLE']);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateCollation($context['table']);
         }
     }

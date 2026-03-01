@@ -24,9 +24,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public const MAX_IDLIST_COUNT=2000;
     
     private $rootEntryTemplate=[
-        'EntryId'=>['type'=>'VARCHAR(255)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
-        'Group'=>['type'=>'VARCHAR(255)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'First level ordering criterion'],
-        'Folder'=>['type'=>'VARCHAR(255)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Second level ordering criterion'],
+        'EntryId'=>['type'=>'VARCHAR(1024)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
+        'Group'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'First level ordering criterion'],
+        'Folder'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Second level ordering criterion'],
         'Name'=>['type'=>'VARCHAR(1024)','value'=>\SourcePot\Datapool\Root::GUIDEINDICATOR,'Description'=>'Third level ordering criterion'],
         'Type'=>['type'=>'VARCHAR(240)','value'=>'000000|en|000|{{Source}}','Description'=>'This is the data-type of Content'],
         'Date'=>['type'=>'DATETIME','value'=>'{{nowDateUTC}}','Description'=>'This is the entry date and time'],
@@ -238,9 +238,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (empty($updateSql)){
             $this->oc['logger']->log('info','Table "{table}" CHARACTER_SET and TABLE_COLLATION is already up-to-date',['table'=>$table]);
         } else {
+            $this->dropTableIndices($table);
             $stmt=$this->executeStatement($updateSql,[]);
             $result=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             $this->oc['logger']->log('notice','Updated CHARACTER_SET and TABLE_COLLATION of table "{table}"',['table'=>$table]);
+            $this->setTableIndices($table);
         }
         return $result??FALSE;
     }
@@ -248,7 +250,17 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public function setTableIndices(string $table)
     {
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
-        // drop all existing indices
+        $sql="";
+        $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`(40));";
+        $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(30),`Group`(30),`Folder`(30),`Name`(30));";
+        $this->oc['logger']->log('notice','Added index to database table "{table}"',$context);
+        $this->executeStatement($sql,[]);
+        return $this->executeStatement($sql,[]);
+    }
+
+    public function dropTableIndices(string $table)
+    {
+        $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
         $sql="";
         $indices=$this->getTableIndices($table);
         foreach($indices as $keyName=>$indexArr){
@@ -258,12 +270,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty($sql)){$this->executeStatement($sql,[]);}
         $context['dropped']=trim($context['dropped'],'| ');
         $this->oc['logger']->log('notice','Existing indices "{dropped}" of database table "{table}" dropped',$context);
-        // set new indices
-        $sql="";
-        $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`);";
-        $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(40),`Group`(30),`Folder`(30),`Name`(40));";
-        $this->oc['logger']->log('notice','Added index to database table "{table}"',$context);
-        return $this->executeStatement($sql,[]);
     }
 
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
