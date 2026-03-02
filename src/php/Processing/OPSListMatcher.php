@@ -34,24 +34,32 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // add content structure of parameters here...
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
         'Royalty list'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-        'Royalty list key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','addSourceValueColumn'=>FALSE,'addColumns'=>[]],
         'Target (success)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
         'Target (failure)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
     ];
 
-    private const CONTENT_STRUCTURE_RULES=[
+    private const CONTENT_ROYALTYLIST_RULES=[
         // add content structure of rules here...
         'Entry key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name',],
-        'RegExp'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'.+','excontainer'=>TRUE],
+        'RegExp match'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'.+','excontainer'=>TRUE],
         'RegExp match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9],'keep-element-content'=>TRUE],
+        'Delete by RegExp match'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','excontainer'=>TRUE],
         'Glue'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','excontainer'=>TRUE],
     ];
 
-    private $entryTable='';
-    private $entryTemplate=[
-        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+    private const CONTENT_STRUCTURE_RULES=[
+        // add content structure of rules here...
+        'Key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Countrycode','options'=>['Countrycode'=>'Countrycode','Applicationnumber'=>'Applicationnumber','Issuenumber'=>'Issuenumber','Publicationnumber'=>'Publicationnumber',]],
+        'Entry key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name',],
+        'RegExp match'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'.+','excontainer'=>TRUE],
+        'RegExp match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9],'keep-element-content'=>TRUE],
+        'Delete by RegExp match'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','excontainer'=>TRUE],
     ];
+
+    private $listMatcherObj=NULL;
+
+    private $entryTable='';
+    private $entryTemplate=[];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -133,7 +141,11 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
+        
+        // ===================================== REMOVE WHEN ALL IS FINISHED ================================
         $arr['html']='<h1 style="width:100vw;">JUST FOR TESTING - THIS PROZESSOR IS UNDER CONSTRUCTION</h1>';
+        // ===================================== REMOVE WHEN ALL IS FINISHED ================================
+        
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'OPS ListMatcher Processor']);
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
@@ -154,6 +166,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // paremeters and rules
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Processor parameters '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'processorParams','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Royalty list rules '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'royaltyListRules','classWithNamespace'=>__CLASS__],[]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Processor rules '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'processorRules','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
@@ -165,6 +178,13 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['html']=$this->processorParamsHtml($callingElement);
         // get credentials widget
 
+        return $arr;
+    }
+
+    public function royaltyListRules($arr)
+    {
+        $callingElement=$arr['selector'];
+        $arr['html']=$this->royaltyListRulesHtml($callingElement);
         return $arr;
     }
 
@@ -189,6 +209,19 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
+    private function royaltyListRulesHtml(array $callingElement):string
+    {
+        // build content structure
+        $contentStructure=self::CONTENT_ROYALTYLIST_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Royalty list rules';
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        return $html;
+    }
+    
     private function processorRulesHtml(array $callingElement):string
     {
         // build content structure
@@ -197,7 +230,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Processor rules';
+        $arr['caption']='Patent case rules';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
@@ -219,12 +252,10 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         }
         try{
             $royalty_list=$this->getRoyaltyList($callingElement);
-            foreach(array_rand($royalty_list,10) as $key){
-                $result['Royalty list sample'][$key]=['value'=>$royalty_list[$key]];
-            }
+            $result['Royalty list']=$royalty_list['debug'];
+            unset($royalty_list['debug']);
             $credentials=$this->getCredentials($callingElement);
-            //$this->listMatcherObj=new \Core\ListMatcher($royalty_list,#[\SensitiveParameter] array $credentials['Content']);
-            $result['OPS-Reader ListMatcher']['errors']=['value'=>'UNDER CONSTRUCTION'];
+            $this->listMatcherObj=new \Core\ListMatcher($royalty_list,$credentials['Content']);
         } catch(\Exception $e){
             $result['OPS-Reader ListMatcher']['errors']=['value'=>$e->getMessage()];
         }
@@ -253,16 +284,26 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $targetSelectorFailure=$base['entryTemplates'][$processorParams['Target (failure)']]??[];
 
         // process entry based on processorRules and e.g. processorParams
-        $opsMatchValue='';
+        $ip_number=['EntryId'=>$sourceEntry['EntryId']];
+        $result['Patent/Application no.']=$result['Patent/Application no.']??[];
+        $count=count($result['Patent/Application no.']);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($processorRules as $ruleEntryId=>$rule){
-            $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
-            preg_match('/'.$rule['Content']['RegExp'].'/',$flatSourceEntry[$processorParams['Entry key']],$match);
-            $opsMatchValue.=$match[$processorParams['RegExp match index']].$processorParams['Glue'];
+            $key=$rule['Content']['Key'];
+            $ruleValueIn=$flatSourceEntry[$rule['Content']['Entry key']]??'';
+            $result['Patent/Application no.'][$count][$key.' &rarr; ']=$ruleValueIn;
+            preg_match('/'.($rule['Content']['RegExp match']??'__NOT_PROVIDED__').'/',$ruleValueIn,$match);
+            $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??'__NOT_PROVIDED__').'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
+            $result['Patent/Application no.'][$count][$key]=$ruleValueOut;
+            $ip_number[$key]=$ruleValueOut;
+        }
+        // match
+        foreach($this->listMatcherObj->matchUnycomEntry($ip_number,$format='docdb') as $royaltyListMatch){
+
         }
         $processedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
-
         // move processed entries
+        /*
         $success=(mt_rand(0,1)>0)?TRUE:FALSE;
         if ($success){
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorSuccess,TRUE,$testRun,!empty($processorParams['Keep source entries']));
@@ -271,7 +312,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
         }
-
+        */
         return $result;
     }
 
@@ -287,12 +328,26 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
         $params=current($base['processorparamshtml'])['Content'];
-        $oyaltyList=[];
+        $processorRules=$base['royaltylistruleshtml'];
+        $royaltyList=['debug'=>[]];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($base['entryTemplates'][$params['Royalty list']],TRUE) as $royaltyEntry){
             $flatRoyaltyEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($royaltyEntry);
-            $oyaltyList[$royaltyEntry['EntryId']]=$flatRoyaltyEntry[$params['Royalty list key']]??('Key "'.$params['Royalty list key'].'" not present');
+            $royaltyListValue='';
+            $royaltyList['debug']=$royaltyList['debug']??[];
+            $count=count($royaltyList['debug']);
+            foreach($processorRules as $ruleEntryId=>$rule){
+                $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleEntryId)[0];
+                $ruleValueIn=$flatRoyaltyEntry[$rule['Content']['Entry key']]??'';
+                $royaltyList['debug'][$count][$ruleKey]=$ruleValueIn;
+                preg_match('/'.($rule['Content']['RegExp match']??'__NOT_PROVIDED__').'/',$ruleValueIn,$match);
+                $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??'__NOT_PROVIDED__').'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
+                $royaltyList['debug'][$count][$ruleKey].=' &rarr; '.$ruleValueOut;
+                $royaltyListValue.=$ruleValueOut;
+            }
+            $royaltyListValue=trim($royaltyListValue,$rule['Content']['Glue']??'');
+            $royaltyList[$royaltyEntry['EntryId']]=$royaltyList['debug'][$count]['Result']=$royaltyListValue;
         }
-        return $oyaltyList??[];
+        return $royaltyList;
     }
 
 }
