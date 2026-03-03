@@ -64,8 +64,7 @@ class HTMLbuilder{
     ];
         
     private $keyCache=[];
-    private $cssVars=[];
-
+    
     public function __construct(array $oc)
     {
         $this->oc=$oc;
@@ -74,7 +73,6 @@ class HTMLbuilder{
     Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
-        $this->cssVars=$this->oc['SourcePot\Datapool\AdminApps\Settings']->getCssVars();
     }
     
     public function getBtns(array $arr):array
@@ -868,7 +866,7 @@ class HTMLbuilder{
                 $matrix[$rowIndex]['   ']=$matrix[$rowIndex]['    ']='';
             }
             if (empty($entry['Content'])){
-                $matrix[$rowIndex]['trStyle']['background-color']=$this->cssVars['--attentionColorTransparent']??'var(--blue)';
+                $matrix[$rowIndex]['trStyle']['background-color']='var(--blue)';
             }
         } // end of loop through list entries
         $matrix['']=array_merge($emptyRow,[' '=>$addBtn,'    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);
