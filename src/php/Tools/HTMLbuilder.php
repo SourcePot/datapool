@@ -965,7 +965,7 @@ class HTMLbuilder{
                 continue;
             }
             $presentArr['style']=$presentArr['settings']['style']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->style2arr($setting['Content']['Style']??'');
-            $presentArr['class']=$setting['Content']['Style class'];
+            $presentArr['class']=$setting['Content']['Style class']?:FALSE;
             $cntrArr=explode('|',$setting['Content']['Entry key']);
             if (count($cntrArr)===1){
                 // Simple value or array presentation
@@ -1077,7 +1077,7 @@ class HTMLbuilder{
         $contentStructure=[
             'Entry key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Name','options'=>$entryKeyOptions,'keep-element-content'=>TRUE],
             'Key filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-            'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'ep-std','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
+            'Style class'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>$styleClassOptions,'keep-element-content'=>TRUE],
             'Style'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
             'Show key'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
         ];
@@ -1095,7 +1095,7 @@ class HTMLbuilder{
         $entryPresentationCss=$GLOBALS['dirs']['media'].'/ep.css';
         $entryPresentationCss=file_get_contents($entryPresentationCss);
         preg_match_all('/(\.)([a-z0-9\-]+)([\{\,\:]+)/',$entryPresentationCss,$matches);
-        $options=[];
+        $options=[''=>'-'];
         foreach($matches[2] as $class){
             $options[$class]=$class;
         }
