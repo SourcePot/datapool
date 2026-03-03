@@ -15,6 +15,16 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private const OPS_READER_CORE_PATH='/var/www/www-workspace/wallenhauer/OPS-Reader-dev_datapool/Core/';
+    private const OPS_READER_CORE_REQUIRED_FILES=[
+        'ListMatcher.php',
+        'OpsInterface.php',
+        'OpsReader.php',
+        'data/ListMatcher/ListMatcherInput.php',
+        'data/ListMatcher/ListMatcherOutput.php',
+        'data/Ops/OpsNumberSearchOutput.php',
+        'Response.php',
+        'enums/FailedFamilySearchKeys.php',
+    ];
 
     private const INFO_MATRIX=[
         'Caption'=>['Comment'=>'Open Patent Service ListMatacher Wrapper'],
@@ -49,7 +59,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const CONTENT_STRUCTURE_RULES=[
         // add content structure of rules here...
-        'Key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Countrycode','options'=>['Countrycode'=>'Countrycode','Applicationnumber'=>'Applicationnumber','Issuenumber'=>'Issuenumber','Publicationnumber'=>'Publicationnumber',]],
+        'Key'=>['method'=>'select','excontainer'=>TRUE,'value'=>'Countrycode','options'=>['Countrycode'=>'Countrycode','Family'=>'Family','Applicationnumber'=>'Applicationnumber','Issuenumber'=>'Issuenumber','Publicationnumber'=>'Publicationnumber',]],
         'Entry key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name',],
         'RegExp match'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'.+','excontainer'=>TRUE],
         'RegExp match index'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>[0,1,2,3,4,5,6,7,8,9],'keep-element-content'=>TRUE],
@@ -141,11 +151,6 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        
-        // ===================================== REMOVE WHEN ALL IS FINISHED ================================
-        $arr['html']='<h1 style="width:100vw;">JUST FOR TESTING - THIS PROZESSOR IS UNDER CONSTRUCTION</h1>';
-        // ===================================== REMOVE WHEN ALL IS FINISHED ================================
-        
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'OPS ListMatcher Processor']);
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
@@ -247,7 +252,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
         // load and create ListMatcher
         $royalty_list=[];
-        foreach(['ListMatcher.php','OpsInterface.php','OpsReader.php'] as $class){
+        foreach(self::OPS_READER_CORE_REQUIRED_FILES as $class){
             require_once(self::OPS_READER_CORE_PATH.$class);
         }
         try{
@@ -298,21 +303,28 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $ip_number[$key]=$ruleValueOut;
         }
         // match
-        foreach($this->listMatcherObj->matchUnycomEntry($ip_number,$format='docdb') as $royaltyListMatch){
-
+        $contentKey=array_pop(explode('\\',__CLASS__));
+        $matchSuccess=FALSE;
+        $royaltyListSelector=$base['entryTemplates'][$processorParams['Royalty list']];
+        $ListMatcherInput=new \Core\data\ListMatcher\ListMatcherInput($ip_number['EntryId']??'',$ip_number['Family']??'',$ip_number['Countrycode']??'',$ip_number['Applicationnumber']??'',$ip_number['Publicationnumber']??'',$ip_number['Issuenumber']??'');
+        $matches=$this->listMatcherObj->matchUnycomEntry($ListMatcherInput,$format='docdb');
+        foreach($matches??[] as $royaltyListMatch){
+            $result['Patent/Application no.'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($royaltyListMatch->matchSuccess);
+            if ($royaltyListMatch->matchSuccess){
+                $royaltyListSelector['EntryId']=$royaltyListMatch->entryIdRoyaltyEntry;
+                $sourceEntry['Content'][$contentKey][]=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($royaltyListSelector,TRUE)['Content'];
+                $matchSuccess=TRUE;
+            }
         }
-        $processedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
         // move processed entries
-        /*
-        $success=(mt_rand(0,1)>0)?TRUE:FALSE;
-        if ($success){
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorSuccess,TRUE,$testRun,!empty($processorParams['Keep source entries']));
+        if ($matchSuccess){
+            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorSuccess,TRUE,$testRun,!empty($processorParams['Keep source entries']));
             $result['Statistics']['Entries moved (success)']['Value']++;
         } else {
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($processedSourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
+            $sourceEntry['Content'][$contentKey][0]=FALSE;
+            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
         }
-        */
         return $result;
     }
 

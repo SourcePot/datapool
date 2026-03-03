@@ -232,22 +232,6 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
 
-    public function getCssVars():array
-    {
-        $cssVars=[];
-        $webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
-        if (empty($webPageStyleSheet)){
-            return $cssVars; 
-        }
-        $file=$GLOBALS['relDirs']['media'].'/'.$webPageStyleSheet.'.css';
-        $cssFileContent=file_get_contents($file);
-        preg_match_all('/\s+(--[a-zA-Z\-_]+):\s*([^;]+);/u',($cssFileContent?:''),$matches);
-        foreach($matches[1] as $matchIndex=>$key){
-            $cssVars[$key]=$matches[2][$matchIndex];
-        }
-        return $cssVars;
-    }
-
     /**
      *  SETTINGS geeter and setter methods
      */

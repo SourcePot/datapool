@@ -885,8 +885,11 @@ a.emoji{
     padding:1rem;
     width:max-content;
     color:var(--bgColor);
-    background-color:var(--bgMenu);
+    background-color:var(--bgDarkT);
     border: 1px solid var(--colorM);
+}
+caption.login{
+    color:var(--color);
 }
 tr.login:hover{
     color:var(--bgColor);
