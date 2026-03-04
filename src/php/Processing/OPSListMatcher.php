@@ -44,6 +44,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // add content structure of parameters here...
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
         'Royalty list'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Royalty list ip number &rarr; target entry Name'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
         'Target (success)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
         'Target (failure)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
     ];
@@ -70,6 +71,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $entryTable='';
     private $entryTemplate=[];
+
+    private $royaltyList=[];
 
     public function __construct($oc){
         $this->oc=$oc;
@@ -222,7 +225,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Royalty list rules';
+        $arr['caption']='Royalty list rules: creates an ip number used for the match';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
@@ -235,7 +238,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Patent case rules';
+        $arr['caption']='Patent case rules: mapping patent case fields to ListMatcher fields';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
         return $html;
     }
@@ -259,6 +262,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $royalty_list=$this->getRoyaltyList($callingElement);
             $result['Royalty list']=$royalty_list['debug'];
             unset($royalty_list['debug']);
+            $this->royaltyList=$royalty_list;
             $credentials=$this->getCredentials($callingElement);
             $this->listMatcherObj=new \Core\ListMatcher($royalty_list,$credentials['Content']);
         } catch(\Exception $e){
@@ -297,8 +301,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $key=$rule['Content']['Key'];
             $ruleValueIn=$flatSourceEntry[$rule['Content']['Entry key']]??'';
             $result['Patent/Application no.'][$count][$key.' &rarr; ']=$ruleValueIn;
-            preg_match('/'.($rule['Content']['RegExp match']??'__NOT_PROVIDED__').'/',$ruleValueIn,$match);
-            $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??'__NOT_PROVIDED__').'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
+            preg_match('/'.($rule['Content']['RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/',$ruleValueIn,$match);
+            $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
             $result['Patent/Application no.'][$count][$key]=$ruleValueOut;
             $ip_number[$key]=$ruleValueOut;
         }
@@ -310,21 +314,32 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $matches=$this->listMatcherObj->matchUnycomEntry($ListMatcherInput,$format='docdb');
         foreach($matches??[] as $royaltyListMatch){
             $result['Patent/Application no.'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($royaltyListMatch->matchSuccess);
+            $royaltyListSelector['EntryId']=$royaltyListMatch->entryIdRoyaltyEntry;
+            $matchedRoyaltyListEntryContent=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($royaltyListSelector,TRUE)['Content'];
+            $matchedRoyaltyListEntryContent['Match']=$royaltyListMatch->to_array();
             if ($royaltyListMatch->matchSuccess){
-                $royaltyListSelector['EntryId']=$royaltyListMatch->entryIdRoyaltyEntry;
-                $sourceEntry['Content'][$contentKey][]=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($royaltyListSelector,TRUE)['Content'];
                 $matchSuccess=TRUE;
+                if (empty($processorParams['Royalty list ip number &rarr; target entry Name'])){
+                    $sourceEntry['Content'][$contentKey][]=$matchedRoyaltyListEntryContent;
+                } else {
+                    $sourceEntry['Name']=$this->royaltyList[$royaltyListSelector['EntryId']];
+                    $sourceEntry['Content'][$contentKey]=$matchedRoyaltyListEntryContent;
+                }
+                $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorSuccess,TRUE,$testRun,TRUE);
+                $result['Statistics']['Entries moved (success)']['Value']++;
             }
         }
         // move processed entries
         if ($matchSuccess){
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorSuccess,TRUE,$testRun,!empty($processorParams['Keep source entries']));
-            $result['Statistics']['Entries moved (success)']['Value']++;
+            if (empty($testRun)){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries(['Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']],TRUE);
+            }
         } else {
             $sourceEntry['Content'][$contentKey][0]=FALSE;
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
         }
+
         return $result;
     }
 
@@ -351,8 +366,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
                 $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleEntryId)[0];
                 $ruleValueIn=$flatRoyaltyEntry[$rule['Content']['Entry key']]??'';
                 $royaltyList['debug'][$count][$ruleKey]=$ruleValueIn;
-                preg_match('/'.($rule['Content']['RegExp match']??'__NOT_PROVIDED__').'/',$ruleValueIn,$match);
-                $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??'__NOT_PROVIDED__').'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
+                preg_match('/'.($rule['Content']['RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/',$ruleValueIn,$match);
+                $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
                 $royaltyList['debug'][$count][$ruleKey].=' &rarr; '.$ruleValueOut;
                 $royaltyListValue.=$ruleValueOut;
             }
