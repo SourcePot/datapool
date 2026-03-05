@@ -219,6 +219,12 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function royaltyListRulesHtml(array $callingElement):string
     {
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
+        $royaltyListCanvasElement=['EntryId'=>current($base['processorparamshtml'])['Content']['Royalty list']??'','Source'=>'dataexplorer'];
+        $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($royaltyListCanvasElement,TRUE);
+        if (empty($callingElement)){
+            return '';
+        }
         // build content structure
         $contentStructure=self::CONTENT_ROYALTYLIST_RULES;
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
@@ -255,27 +261,37 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
         // load and create ListMatcher
         $royalty_list=[];
+        $failedToLoadRequiredFiles=FALSE;
         foreach(self::OPS_READER_CORE_REQUIRED_FILES as $class){
-            require_once(self::OPS_READER_CORE_PATH.$class);
+            $required=self::OPS_READER_CORE_PATH.$class;
+            if (!is_file($required)){
+                $failedToLoadRequiredFiles=TRUE;
+                break;
+            }
+            require_once($required);
         }
-        try{
-            $royalty_list=$this->getRoyaltyList($callingElement);
-            $result['Royalty list']=$royalty_list['debug'];
-            unset($royalty_list['debug']);
-            $this->royaltyList=$royalty_list;
-            $credentials=$this->getCredentials($callingElement);
-            $this->listMatcherObj=new \Core\ListMatcher($royalty_list,$credentials['Content']);
-        } catch(\Exception $e){
-            $result['OPS-Reader ListMatcher']['errors']=['value'=>$e->getMessage()];
-        }
-        if (empty($result['OPS-Reader ListMatcher error'])){
-            // loop through entries
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-                $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
-                if ($result['cntr']['timeLimitReached']){
-                    break;
-                } else if (!$result['cntr']['isSkipRow']){
-                    $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
+        if ($failedToLoadRequiredFiles){
+            $result['OPS-Reader ListMatcher']['Error']=['value'=>'ListMatcher not found at "'.self::OPS_READER_CORE_PATH.'".</br>Please check the source code of class "'.__CLASS__.'".</br>Set the const OPS_READER_CORE_PATH to a valid path.'];
+        } else {
+            try{
+                $royalty_list=$this->getRoyaltyList($callingElement);
+                $result['Royalty list']=$royalty_list['debug'];
+                unset($royalty_list['debug']);
+                $this->royaltyList=$royalty_list;
+                $credentials=$this->getCredentials($callingElement);
+                $this->listMatcherObj=new \Core\ListMatcher($royalty_list,$credentials['Content']);
+            } catch(\Exception $e){
+                $result['OPS-Reader ListMatcher']['Error']=['value'=>$e->getMessage()];
+            }
+            if (empty($result['OPS-Reader ListMatcher error'])){
+                // loop through entries
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
+                    $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+                    if ($result['cntr']['timeLimitReached']){
+                        break;
+                    } else if (!$result['cntr']['isSkipRow']){
+                        $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
+                    }
                 }
             }
         }
