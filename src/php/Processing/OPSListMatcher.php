@@ -370,8 +370,10 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     private function getRoyaltyList($callingElement):array
     {
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
-        $params=current($base['processorparamshtml'])['Content'];
-        $processorRules=$base['royaltylistruleshtml'];
+        $params=current($base['processorparamshtml'])['Content']??[];
+        $royaltyListCanvasElement=['EntryId'=>current($base['processorparamshtml'])['Content']['Royalty list']??'','Source'=>'dataexplorer'];
+        $royaltyListBase=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$royaltyListCanvasElement,[]);
+        $processorRules=$royaltyListBase['royaltylistruleshtml']??[];
         $royaltyList=['debug'=>[]];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($base['entryTemplates'][$params['Royalty list']],TRUE) as $royaltyEntry){
             $flatRoyaltyEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($royaltyEntry);
