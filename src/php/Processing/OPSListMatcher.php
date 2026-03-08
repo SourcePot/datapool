@@ -42,10 +42,10 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const CONTENT_STRUCTURE_PARAMS=[
         // add content structure of parameters here...
-        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
+        'Keep failed cases'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
         'Cases to match'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
-        'Target (success)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
-        'Target (failure)'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+        'Target matched list entries'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
+        'Target cases without match'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
     ];
 
     private const CONTENT_STRUCTURE_LIST_RULES=[
@@ -252,9 +252,9 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     {
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
         // initialize statistic and result array
-        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep source entries']??FALSE);
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep failed cases']??FALSE);
         // load and create ListMatcher
-        $royalty_list=[];
+        $list=[];
         $failedToLoadRequiredFiles=FALSE;
         foreach(self::OPS_READER_CORE_REQUIRED_FILES as $class){
             $required=self::OPS_READER_CORE_PATH.$class;
@@ -268,24 +268,24 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $result['OPS-Reader ListMatcher']['Error']=['value'=>'ListMatcher not found at "'.self::OPS_READER_CORE_PATH.'".</br>Please check the source code of class "'.__CLASS__.'".</br>Set the const OPS_READER_CORE_PATH to a valid path.'];
         } else {
             try{
-                $royalty_list=$this->getList($callingElement);
-                $result['List']=$royalty_list['debug'];
-                unset($royalty_list['debug']);
-                $this->list=$royalty_list;
+                $list=$this->getList($callingElement);
+                $result['List']=$list['debug'];
+                unset($list['debug']);
+                $this->list=$list;
                 $credentials=$this->getCredentials($callingElement);
-                $this->listMatcherObj=new \Core\ListMatcher($royalty_list,$credentials['Content']);
+                $this->listMatcherObj=new \Core\ListMatcher($list,$credentials['Content']);
             } catch(\Exception $e){
                 $result['OPS-Reader ListMatcher']['Error']=['value'=>$e->getMessage()];
             }
             if (empty($result['OPS-Reader ListMatcher error'])){
                 // loop through entries
                 $casesSelector=$this->getCasesSelector($callingElement);
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($casesSelector,TRUE) as $sourceEntry){
-                    $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($casesSelector,TRUE) as $caseEntry){
+                    $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$caseEntry);
                     if ($result['cntr']['timeLimitReached']){
                         break;
                     } else if (!$result['cntr']['isSkipRow']){
-                        $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
+                        $result=$this->processEntry($base,$caseEntry,$result,$testRun,$callingElement);
                     }
                 }
             }
@@ -293,60 +293,47 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
 
-    private function processEntry(array $base,array $sourceEntry,array $result,bool $testRun):array
+    private function processEntry(array $base,array $caseEntry,array $result,bool $testRun,array $callingElement):array
     {
         // recover basic context data
         $processorParams=current($base['processorparamshtml'])['Content'];
-        $casesRules=$base['casesruleshtml'];
         // recover the entry selector defined by the selected Canves element Selector
-        $targetSelectorSuccess=$base['entryTemplates'][$processorParams['Target (success)']]??[];
-        $targetSelectorFailure=$base['entryTemplates'][$processorParams['Target (failure)']]??[];
-        // process entry based on casesRules and e.g. processorParams
-        $ip_number=['EntryId'=>$sourceEntry['EntryId']];
-        $result['Patent/Application no.']=$result['Patent/Application no.']??[];
-        $count=count($result['Patent/Application no.']);
-        $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
-        foreach($casesRules as $ruleEntryId=>$rule){
+        $targetSelectorSuccess=$base['entryTemplates'][$processorParams['Target matched list entries']]??[];
+        $targetSelectorFailure=$base['entryTemplates'][$processorParams['Target cases without match']]??[];
+        // get case keys based casesRules for list match
+        $case=['EntryId'=>$caseEntry['EntryId'],'Family'=>'','Countrycode'=>'','Applicationnumber'=>'','Publicationnumber'=>'','Issuenumber'=>'',];
+        $result['List matcher']=$result['List matcher']??[];
+        $count=count($result['List matcher']);
+        $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($caseEntry);
+        foreach($base['casesruleshtml'] as $ruleEntryId=>$rule){
             $key=$rule['Content']['Key'];
             $ruleValueIn=$flatSourceEntry[$rule['Content']['Entry key']]??'';
-            $result['Patent/Application no.'][$count][$key.' &rarr; ']=$ruleValueIn;
+            $result['List matcher'][$count][$key.' &rarr; ']=$ruleValueIn;
             preg_match('/'.($rule['Content']['RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/',$ruleValueIn,$match);
             $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
-            $result['Patent/Application no.'][$count][$key]=$ruleValueOut;
-            $ip_number[$key]=$ruleValueOut;
+            $result['List matcher'][$count][$key]=$ruleValueOut;
+            $case[$key]=$ruleValueOut;
         }
-        // match
-        $contentKey=array_pop(explode('\\',__CLASS__));
         $matchSuccess=FALSE;
-        $listSelector=$base['entryTemplates'][$processorParams['Royalty list']];
-        $ListMatcherInput=new \Core\data\ListMatcher\ListMatcherInput($ip_number['EntryId']??'',$ip_number['Family']??'',$ip_number['Countrycode']??'',$ip_number['Applicationnumber']??'',$ip_number['Publicationnumber']??'',$ip_number['Issuenumber']??'');
+        // OPS List Matcher
+        $listSelector=$callingElement['Content']['Selector'];
+        $ListMatcherInput=new \Core\data\ListMatcher\ListMatcherInput($case['EntryId'],$case['Family'],$case['Countrycode'],$case['Applicationnumber'],$case['Publicationnumber'],$case['Issuenumber']);
         $matches=$this->listMatcherObj->matchUnycomEntry($ListMatcherInput,$format='docdb');
         foreach($matches??[] as $listMatch){
-            $result['Patent/Application no.'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($listMatch->matchSuccess);
+            if (!$listMatch->matchSuccess){continue;}
+            $matchSuccess=TRUE;
+            $result['List matcher'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($listMatch->matchSuccess);
             $listSelector['EntryId']=$listMatch->entryIdRoyaltyEntry;
-            $matchedRoyaltyListEntryContent=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($listSelector,TRUE)['Content'];
-            $matchedRoyaltyListEntryContent['Match']=$listMatch->to_array();
-            if ($listMatch->matchSuccess){
-                $matchSuccess=TRUE;
-                if (empty($processorParams['Royalty list ip number &rarr; target entry Name'])){
-                    $sourceEntry['Content'][$contentKey][]=$matchedRoyaltyListEntryContent;
-                } else {
-                    $sourceEntry['Name']=$this->list[$listSelector['EntryId']];
-                    $sourceEntry['Content'][$contentKey]=$matchedRoyaltyListEntryContent;
-                }
-                $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorSuccess,TRUE,$testRun,TRUE);
-                $result['Statistics']['Entries moved (success)']['Value']++;
-                break;
-            }
+            $listEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($listSelector,TRUE);
+            $listEntry['Content']['Match']=$listMatch->to_array();
+            $listEntry['Content']['Matched case']=$caseEntry['Content'];
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,TRUE);
+            $result['Statistics']['Entries moved (success)']['Value']++;
+            break;
         }
         // move processed entries
-        if ($matchSuccess){
-            if (empty($testRun)){
-                $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries(['Source'=>$sourceEntry['Source'],'EntryId'=>$sourceEntry['EntryId']],TRUE);
-            }
-        } else {
-            $sourceEntry['Content'][$contentKey][0]=FALSE;
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep source entries']));
+        if (!$matchSuccess){
+            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($caseEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep failed cases']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
         }
 
