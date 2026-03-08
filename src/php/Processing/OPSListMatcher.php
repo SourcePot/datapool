@@ -323,6 +323,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             if (!$listMatch->matchSuccess){continue;}
             $matchSuccess=TRUE;
             $result['List matcher'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($listMatch->matchSuccess);
+            $result['List matcher'][$count]['List number']=$this->list[$listMatch->entryIdRoyaltyEntry];
+            $result['List matcher'][$count]['Errors']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($listMatch->errors),['element-content'=>implode('</br>',$listMatch->errors)?:'None']);
             $listSelector['EntryId']=$listMatch->entryIdRoyaltyEntry;
             $listEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($listSelector,TRUE);
             $listEntry['Content']['Match']=$listMatch->to_array();
