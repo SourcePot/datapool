@@ -285,7 +285,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
                     if ($result['cntr']['timeLimitReached']){
                         break;
                     } else if (!$result['cntr']['isSkipRow']){
-                        $result=$this->processEntry($base,$caseEntry,$result,$testRun,$callingElement);
+                        $result=$this->processCase($base,$caseEntry,$result,$testRun,$callingElement);
                     }
                 }
             }
@@ -293,7 +293,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
 
-    private function processEntry(array $base,array $caseEntry,array $result,bool $testRun,array $callingElement):array
+    private function processCase(array $base,array $caseEntry,array $result,bool $testRun,array $callingElement):array
     {
         // recover basic context data
         $processorParams=current($base['processorparamshtml'])['Content'];
@@ -327,7 +327,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $listEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($listSelector,TRUE);
             $listEntry['Content']['Match']=$listMatch->to_array();
             $listEntry['Content']['Matched case']=$caseEntry['Content'];
-            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,TRUE);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,FALSE);
             $result['Statistics']['Entries moved (success)']['Value']++;
             break;
         }
