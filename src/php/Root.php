@@ -54,7 +54,7 @@ final class Root{
     // database time zone setting should preferably be UTC as Unix timestamps are UTC based
     public const DB_TIMEZONE='UTC';
     public const USER_TIMEZONE_TEMPLATE='Europe/Berlin';
-    public const NULL_DATE='2999-01-01 01:00:00';
+    public const NULL_DATE='2999-01-01 00:00:00';
     public const NULL_STRING='__MISSING__';
     public const ONEDIMSEPARATOR='|[]|';
     public const GUIDEINDICATOR='!GUIDE';
@@ -827,36 +827,26 @@ final class Root{
     public function getLoadAvg():array
     {
         $loadAvg=['OS'=>PHP_OS,'Load'=>0];
-        if (stripos(PHP_OS,'linux')!==FALSE){
-            // Linux OS
-            if (function_exists('sys_getloadavg')){
-                $loadAvg['Load']=sys_getloadavg()[0];
-            } else {
-                $data=file_get_contents('/proc/loadavg');
-                $loadAvg['Load']=explode(' ',$data?:0)[0];
-            }
-        } else if (stripos(PHP_OS,'win')!==FALSE){
+        if (function_exists('sys_getloadavg')){
+            // Linux OS, MacOS, etc.
+            $loadAvg['Load']=sys_getloadavg()[0];
+        } else if (is_file('/proc/loadavg')){
+            $data=file_get_contents('/proc/loadavg');
+            $loadAvg['Load']=explode(' ',$data?:0)[0];
+        } else {
             // Windows OS
             exec("wmic cpu get loadpercentage /all",$execReturn);
-            foreach($execReturn as $line) {
+            foreach($execReturn??[] as $line) {
                 if (is_numeric(trim($line))){
                     $loadAvg['Load']=floatval(trim($line));
                     break;
                 }
             }
-        } else {
-            // other OS (e.g. MacOS)
-            if (function_exists('sys_getloadavg')){
-                $loadAvg['Load']=sys_getloadavg()[0];
-            } else {
-                $data=file_get_contents('/proc/loadavg');
-                $loadAvg['Load']=explode(' ',$data?:0)[0];
-            }
         }
         $loadAvg['Load [%]']=round($loadAvg['Load']*100);
         // add measurements to signal
         $description='Server load measurements. The signal is updated on any job call.';
-        $color=($loadAvg['Load [%]']>100)?'#a00':(($loadAvg['Load [%]']>70)?'#00a':'#0a0');
+        $color=($loadAvg['Load [%]']>100)?'var(--red)':(($loadAvg['Load [%]']>70)?'var(--blue)':'var(--green)');
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Server load [%]',$loadAvg['Load [%]'],'int',['yMin'=>0,'label'=>$loadAvg['OS'],'description'=>$description,'color'=>$color]);
         // get signal properties
         $properties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalProperties(__CLASS__,__FUNCTION__,'Server load [%]');
