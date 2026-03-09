@@ -185,7 +185,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $this->oc['logger']->log('notice',$err,['lifetime'=>'P30D','email'=>$arr['Email']]);    
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
         }
-        return $err;
+        exit;
     }
 
     /******************************************************************************************************************************************

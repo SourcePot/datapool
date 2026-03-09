@@ -470,12 +470,12 @@ class Signals{
         foreach($data as $timeStamp=>$item){
             $barHeight=$this->value2pixel($item['value']+$meta['yMin']-$barBase,$meta,TRUE);
             $barBottom=$this->value2pixel($barBase,$meta,TRUE);
-            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['background-color'=>($item['color']?:'#10a').'4','border-top'=>'1px solid '.($item['color']?:'#10a')],'keep-element-content'=>TRUE,'element-content'=>''];
+            $bar=['tag'=>'div','class'=>'signal-bar','style'=>['opacity'=>0.6,'background-color'=>($item['color']?:'var(--blueH)')],'keep-element-content'=>TRUE,'element-content'=>''];
             if ($barHeight<0){
                 $barBottom=$barBottom+$barHeight;
                 $barHeight=-$barHeight;
-                $bar['style']['background-color']='#f004';
-                $bar['style']['border-bottom']='1px solid #f00';
+                $bar['style']['background-color']='var(--attentionColorTransparent)';
+                $bar['style']['border-bottom']='1px solid var(--attentionColor)';
             }
             $bar['id']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$signal['EntryId'],$timeStamp],TRUE);
             $bar['style']['bottom']=$barBottom;
