@@ -148,7 +148,7 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
             exec($cmd,$output);
             $matrix[$key]=['Output'=>implode('</br>',$output)];
         }
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'System','style'=>['width'=>'95vw','color'=>'var(--colorM)','background-color'=>'var(--color)',]]);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'System','style'=>['width'=>'95vw','color'=>'#eee','background-color'=>'#000',]]);
         // provide widget
         $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('System processor '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getWidgetHtml','classWithNamespace'=>__CLASS__],[]);
         return $html;
