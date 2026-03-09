@@ -85,7 +85,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         'Type'=>'array',
         'Read'=>'ALL_R',
         'Write'=>'ADMIN_R',
-        ];
+    ];
     
     public function __construct(array $oc)
     {
@@ -99,7 +99,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->userRoles();
@@ -173,7 +173,8 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $entry;
     }
     
-    private function initPsw(){
+    private function initPsw():string
+    {
         return trim(base64_encode(random_bytes(16)),'=');
     }
     
@@ -205,20 +206,9 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return FALSE;
     }
     
-    public function newlyRegisteredUserLogin(array $user):array
-    {
-        $user['Owner']=$user['EntryId'];
-        $user['LoginId']=$user['LoginId'];
-        $user['Privileges']='REGISTERED_R';
-        $user=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($user);
-        $this->loginUser($user);
-        return $user;
-    }
-    
     public function userAbstract(array|string $arr=[],int $template=0):string
     {
-        // This method returns formated html text from an entry based on predefined templates.
-        //     
+        // recover user
         if (empty($arr)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         } else if (!is_array($arr)){
@@ -231,9 +221,11 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (!isset($user['Content'])){
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,($template<4)?TRUE:FALSE);
             if (empty($user)){
-                return 'unknown';
+                return '&#9823;';
             }
         }
+        $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
+        // template selection
         $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         if ($template===0){
             $abtract='{{Content'.$S.'Contact details'.$S.'First name}}';
@@ -255,9 +247,11 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $abtract='{{Content'.$S.'Contact details'.$S.'Phone}}';
         } else if ($template===9){
             $abtract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
+        } else if ($template===10){
+            $abtract='{{ICON}}';
         }
-        $user['ICON']=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
-        $abtract=trim($this->template2string($abtract,$user,['class'=>'user-abstract']),' ,;.|');
+        // compile html
+        $abtract=$this->template2string($abtract,$user,['class'=>'user-abstract']);
         if (!empty($arr['wrapResult'])){
             $wrapper=$arr['wrapResult'];
             $wrapper['element-content']=$abtract;
@@ -269,17 +263,21 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private function template2string(string $template='Hello {{key}}...',array $arr=['key'=>'world']):string
     {
+        // add content
         $flatArr=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr);
         foreach($flatArr as $flatArrKey=>$flatArrValue){
             $template=str_replace('{{'.$flatArrKey.'}}',(string)$flatArrValue,$template);
         }
+        // clean-up
+        $template=preg_replace('/{{[^}]+}}/u','',$template);
+        $template=trim($template,' ,;.|');
         return $template;
     }
 
     public function ownerAbstract(array $arr):string
     {
-        $template=(isset($arr['selector']['template']))?$arr['selector']['template']:2;
-        $html=$this->userAbstract($arr['selector']['Owner']??'MISSING',$template);
+        $template=$arr['selector']['template']??2;
+        $html=$this->userAbstract($arr['selector']['Owner']??\SourcePot\Datapool\Root::NULL_STRING,$template);
         $arr['tag']='div';
         $arr['element-content']=$html;
         $arr['keep-element-content']=TRUE;
@@ -299,7 +297,17 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $arr;
     }
 
-    public function loginUser(array $user)
+    public function newlyRegisteredUserLogin(array $user):array
+    {
+        $user['Owner']=$user['EntryId'];
+        $user['LoginId']=$user['LoginId'];
+        $user['Privileges']='REGISTERED_R';
+        $user=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($user);
+        $this->loginUser($user);
+        return $user;
+    }
+    
+    public function loginUser(array $user):void
     {
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser($user);
         $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',['userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
@@ -310,8 +318,14 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $selector['Source']=$this->entryTable;
         $options=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
-            if ((intval($_SESSION['currentUser']['Privileges']) & intval($user['Privileges']))===0){continue;}    // return only users with matching Privileges
-            if (!isset($user['Content']['Contact details'])){continue;} // remove non-user entries
+            // return only users with matching Privileges
+            if ((intval($_SESSION['currentUser']['Privileges']) & intval($user['Privileges']))===0){
+                continue;
+            }
+            // remove non-user entries
+            if (!isset($user['Content']['Contact details'])){
+                continue;
+            }
             $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'];
             if (!empty($flatContactDetailsKey)){
                 $flatUser=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($user);
@@ -347,7 +361,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $arr['html']=$arr['html']??'';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$arr['selector']['Source'],'EntryId'=>'online_%'],TRUE,'Read','Expires',FALSE) as $onlineUser){
-            $backgronudColor=(time()-$onlineUser['Content']['timestamp']<60)?'#0f0':((time()-$onlineUser['Content']['timestamp']<3660)?'#cc7':'#999');
+            $backgronudColor=(time()-$onlineUser['Content']['timestamp']<60)?'var(--greenH)':((time()-$onlineUser['Content']['timestamp']<3660)?'var(--yellowH)':'var(--bgColorA)');
             $timeDiff=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.time(),'@'.$onlineUser['Content']['timestamp']);
             // get user
             $userEntryId=str_replace('online_','',$onlineUser['EntryId']);
@@ -369,9 +383,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $style=['border-left'=>'1vw solid '.$backgronudColor];
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$userHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper','style'=>$style]);
         }
-        if (empty($arr['html'])){
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'No active user detected...']);
-        }
+        $arr['html']=$arr['html']?:$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'No active user detected...']);
         return $arr;
     }
 
@@ -386,8 +398,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     public function getHomeAppInfo():string
     {
-        $info='This widget displays a list of currently <b>logged-in users</b> and <b>resently logged-in users</b>.';
-        return $info;
+        return 'This widget displays a list of currently <b>logged-in users</b> and <b>resently logged-in users</b>.';
     }
     
 }
