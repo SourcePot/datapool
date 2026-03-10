@@ -799,7 +799,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
 
     public function finalizeProcessorResult(array $result):array
     {
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']);
+        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix($result['Statistics']??[]);
         $processingTimeSec=(hrtime(TRUE)-$result['cntr']['scriptStartTimestamp'])/1e+9;
         $result['Statistics']['Processing time [sec]']['Value']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($processingTimeSec,3);
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];

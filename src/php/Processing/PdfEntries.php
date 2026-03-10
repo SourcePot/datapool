@@ -18,6 +18,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private const CONTENT_STRUCTURE_PARAMS=[
+        'Logo source'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Paper'=>['method'=>'select','value'=>'','excontainer'=>TRUE,'options'=>[]],
         'Orientation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
@@ -27,7 +28,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const CONTENT_STRUCTURE_PLACEHOLDER=[
         'source'=>['method'=>'keySelect','value'=>'Name','addSourceValueColumn'=>TRUE,'excontainer'=>TRUE],
-        'placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'{{Name}}','excontainer'=>TRUE],
+        'placeholder'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'[[Name]]','excontainer'=>TRUE],
     ];
 
     private const CONTENT_STRUCTURE_RULES=[
@@ -153,7 +154,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getPdfEntriesInfo(array $callingElement):string
     {
-        $matrix=['Please note:'=>['Placeholder'=>'If the selection defined by the canvas element contains an entry with an attached jpeg- or png-image, this image is the available as logo.<br/>The placeholder [[logo]] should only be used on its own, not within a continuous text.']];
+        $matrix=['Please note:'=>['Placeholder'=>'To add a logo, select a cnavs-element with an image entry present (.png or .jpeg). The placeholder [[logo]] should only be used on its own, not within a continuous text.']];
         $matrix['Logo']=['Placeholder'=>'[[logo]]'];
         $matrix['Page number']=['Placeholder'=>'[[pageNumber]]'];
         $matrix['Page count']=['Placeholder'=>'[[pageCount]]'];
@@ -164,30 +165,21 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getLogo(array $callingElement):string|bool
     {
-        $logoFile=FALSE;
-        $selector=$callingElement['Content']['Selector'];
-        $selector['Params']='%image\\/%';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $entry){
-            if (empty($entry['Params']['File'])){continue;}
-            $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-            if (strpos($entry['Params']['File']['MIME-Type'],'image')!==0 || !is_file($file)){continue;}
-            if (strpos($entry['Params']['File']['MIME-Type'],'jpeg')!==FALSE || strpos($entry['Params']['File']['MIME-Type'],'png')!==FALSE){
-                $logoFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$entry['EntryId'].'.'.$entry['Params']['File']['Extension'];
-                if (is_file($logoFile)){
-                    // logo file already present
-                    break;
-                } else {
-                    // loge file needs to be copied to the private tmp-dir
-                    if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$logoFile)){
-                        $this->oc['logger']->log('info','Function {class} &rarr; {function}() copied logo-file "{name}" to the private temp dir.',['class'=>__CLASS__,'function'=>__FUNCTION__,'name'=>$entry['Params']['File']['Name']]);         
-                        break;
-                    } else {
-                        $this->oc['logger']->log('warning','Function {class} &rarr; {function}() failed  to copy logo-file to the private temp dir.',['class'=>__CLASS__,'function'=>__FUNCTION__]);         
-                    }
-                }
-            }
+        $params=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
+        $params=current($params['pdfparams'])['Content'];
+        $logoCanvasElement=['Source'=>$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getEntryTable(),'EntryId'=>$params['Logo source']];
+        $logoCanvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($logoCanvasElement,TRUE);
+        $logoEntrySelector=$logoCanvasElement['Content']['Selector'];
+        $logoEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($logoEntrySelector,TRUE);
+        $entryFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($logoEntry?:[]);
+        if (!is_file($entryFile)){return FALSE;}
+        if (strpos($logoEntry['Params']['File']['MIME-Type']??'','jpeg')!==FALSE || strpos($logoEntry['Params']['File']['MIME-Type']??'','png')!==FALSE){
+            $logoFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir().$logoEntry['EntryId'].'.'.$logoEntry['Params']['File']['Extension'];
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($entryFile,$logoFile);
+            return $logoFile;
+        } else {
+            return FALSE;
         }
-        return $logoFile;
     }
        
     public function getPdfEntriesWidgetHtml(array $arr):array
@@ -210,7 +202,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mapping widget']);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'PDF widget']);
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
@@ -305,12 +297,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $settings=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$settings);
         // loop through source entries and parse these entries
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=[
-            'Pdf statistics'=>[
-                'Entries'=>['value'=>0],
-                'Skip rows'=>['value'=>0],
-            ]
-        ];
+        $result=[];
         if (is_file($this->sampleTargetFile)){
             unlink($this->sampleTargetFile);
         }
@@ -318,23 +305,14 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $maxProcTime=(current($settings['pdfparams'])['Content']['Keep source entries'])?0:\SourcePot\Datapool\Foundation\DataExplorer::MAX_PROC_TIME;
         $timeLimit=$testRun?\SourcePot\Datapool\Foundation\DataExplorer::MAX_TEST_TIME:$maxProcTime;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-            if (strpos($sourceEntry['Params']['File']['MIME-Type']??'','image')===0){continue;}
-            //if (time()-$settings['Script start timestamp']>30){break;}
-            if ($sourceEntry['isSkipRow']){
-                $result['Pdf statistics']['Skip rows']['value']++;
-                continue;
-            }
-            $expiredTime=hrtime(TRUE)-$settings['Script start timestamp'];
-            if ($expiredTime>$timeLimit && $timeLimit>0){
-                $result['Pdf statistics']['Comment']['value']='Incomplete run due to reaching the maximum processing time';
+            $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$sourceEntry);
+            if ($result['cntr']['timeLimitReached']){
                 break;
+            } else if (!$result['cntr']['isSkipRow']){
+                $result=$this->pdfEntry($settings,$sourceEntry,$result,$testRun,$callingElement);
             }
-            $result=$this->pdfEntry($settings,$sourceEntry,$result,$testRun,$callingElement);
         }
-        $result['Statistics']=$this->oc['SourcePot\Datapool\Foundation\Database']->statistic2matrix();
-        $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $result['Statistics']['Time consumption [msec]']=['Value'=>round((hrtime(TRUE)-$settings['Script start timestamp'])/1000000)];
-        return $result;
+        return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
     private function pdfEntry(array $settings,array $sourceEntry,array $result,bool $testRun,$callingElement):array
@@ -351,17 +329,16 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $pageContent=['header'=>[],'content'=>[],'footer'=>[]];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($settings['pdfrules'] as $ruleId=>$rule){
-            if ($settings['pdfrules'][$ruleId]['Content']['text']==='[[logo]]'){
-                $settings['pdfrules'][$ruleId]['Content']['[[logo]]']=$this->getLogo($callingElement);
+            if ($rule['Content']['text']==='[[logo]]'){
+                $rule['Content']['[[logo]]']=$this->getLogo($callingElement);
             } else {
                 foreach($settings['pdfplaceholder'] as $placeholderId=>$placeholder){
                     $placeholderKey=$placeholder['Content']['source'];
                     $placeholderNeedle=$placeholder['Content']['placeholder'];
-                    if (!isset($flatSourceEntry[$placeholderKey])){continue;}
-                    $settings['pdfrules'][$ruleId]['Content']['text']=str_replace($placeholderNeedle,strval($flatSourceEntry[$placeholderKey]),$settings['pdfrules'][$ruleId]['Content']['text']);
+                    $rule['Content']['text']=str_replace($placeholderNeedle,strval($flatSourceEntry[$placeholderKey]??''),$rule['Content']['text']);
                 }
             }
-            $pageContent[$settings['pdfrules'][$ruleId]['Content']['type']][$ruleId]=$settings['pdfrules'][$ruleId]['Content'];
+            $pageContent[$rule['Content']['type']][$ruleId]=$rule['Content'];
         }
         // create pdf
         $pdf= new \SourcePot\Datapool\Tools\PdfDoc($params['Content']['Orientation'],'mm',$params['Content']['Paper']);
@@ -374,7 +351,9 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $pdf->AddPage();
         foreach($pageContent['content'] as $ruleId=>$rule){
             if ($rule['text']==='[[logo]]'){
-                if ($rule['[[logo]]']){$pdf->Image($rule['[[logo]]'],$rule['x-pos [mm]'],$rule['y-pos [mm]'],$rule['width [mm]'],$rule['height [mm]']);}
+                if (!empty($rule['[[logo]]'])){
+                    $pdf->Image($rule['[[logo]]'],$rule['x-pos [mm]'],$rule['y-pos [mm]'],$rule['width [mm]'],$rule['height [mm]']);
+                }
             } else {
                 $pdf->SetFont($rule['font'],$rule['fontStyle'],$rule['fontSize']);
                 $pdf->SetXY($rule['x-pos [mm]'],$rule['y-pos [mm]']);
