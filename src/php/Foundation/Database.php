@@ -939,8 +939,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     {
         if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
             $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-            $removed=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file);
-            if (isset($entry['Params']['File']) && $removed){
+            if ($this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file)){
                 $entry['Params']['File']=NULL;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
                 return TRUE;
