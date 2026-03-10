@@ -28,7 +28,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const INFO_MATRIX=[
         'Caption'=>['Comment'=>'Open Patent Service ListMatacher Wrapper'],
-        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class. The canvas-element must contain well formated '],
+        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class. The list entries are matched with patent cases if they belong to the same patent family. The Open Patent Service patent family definition is employed.'],
     ];
 
     private const CREDENTIALS_DEF=[
@@ -320,6 +320,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $ListMatcherInput=new \Core\data\ListMatcher\ListMatcherInput($case['EntryId'],$case['Family'],$case['Countrycode'],$case['Applicationnumber'],$case['Publicationnumber'],$case['Issuenumber']);
         $matches=$this->listMatcherObj->matchUnycomEntry($ListMatcherInput,$format='docdb');
         foreach($matches??[] as $listMatch){
+            if ($listMatch->opsFailure){break;}
             if (!$listMatch->matchSuccess){continue;}
             $matchSuccess=TRUE;
             $result['List matcher'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($listMatch->matchSuccess);
@@ -331,14 +332,12 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $listEntry['Content']['Matched case']=$caseEntry['Content'];
             $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,FALSE);
             $result['Statistics']['Entries moved (success)']['Value']++;
-            break;
         }
         // move processed entries
-        if (!$matchSuccess){
+        if (!$matchSuccess && !$listMatch->opsFailure??FALSE){
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($caseEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep failed cases']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
         }
-
         return $result;
     }
 
