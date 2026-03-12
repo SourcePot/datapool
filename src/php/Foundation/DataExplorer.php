@@ -29,7 +29,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'canvas-text-la'=>'Text (left-aligned)',
         'canvas-text-ra'=>'Text (right-aligned)',
         'canvas-symbol'=>'Symbol',
-        'canvas-processor'=>'Processor',
+        'canvas-special'=>'Special function',
     ];
     private const DYNAMIC_STYLE_TEMPLATE=[
         'color'=>'rgb({{VALUE}},0,0)',
@@ -87,10 +87,10 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     private $tags=[
         'run'=>['tag'=>'button','element-content'=>'&#10006;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','background-color'=>'var(--greenH)'],'showEditMode'=>TRUE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Close canvas editor'],
         'edit'=>['tag'=>'button','element-content'=>'&#9998;','keep-element-content'=>TRUE,'style'=>['font-size'=>'24px','background-color'=>'var(--red)'],'showEditMode'=>FALSE,'type'=>'Control','Read'=>'ALL_CONTENTADMIN_R','title'=>'Edit canvas'],
-        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-processor','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing','Content'=>['Selector'=>['Source'=>'logger']]],
+        '&#9881;'=>['tag'=>'button','element-content'=>'&#9881;','keep-element-content'=>TRUE,'class'=>'canvas-special','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Step processing','Content'=>['Selector'=>['Source'=>'logger']]],
         'Select'=>['tag'=>'button','element-content'=>'Select','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
         'ABCD'=>['tag'=>'button','element-content'=>'ABCD','keep-element-content'=>TRUE,'class'=>'canvas-text','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Database view'],
-        '__BLACKHOLE__'=>['tag'=>'div','element-content'=>'&empty;','keep-element-content'=>TRUE,'class'=>'canvas-std','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Black hole'],
+        '__BLACKHOLE__'=>['tag'=>'div','element-content'=>'&empty;','keep-element-content'=>TRUE,'class'=>'canvas-special','showEditMode'=>TRUE,'type'=>'Elements','Read'=>'ALL_CONTENTADMIN_R','title'=>'Black hole'],
     ];
     
     private const GRAPHIC_ELEMENTS=[
