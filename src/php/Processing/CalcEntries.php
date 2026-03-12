@@ -289,7 +289,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 } else {
                     $value[$index]=$rule['Content']['Default value "'.$index.'"'];
                 }
-                $result['Calculation rules'][$calculationRuleIndex][$index]=$value[$index];
+                $result['Calculation rules'][$calculationRuleIndex][$index]='"'.$value[$index].'"';
             }
             $ruleResults[$calculationRuleIndex]=$this->oc['SourcePot\Datapool\Foundation\Computations']->operation($value['A'],$value['B'],$rule['Content']['Operation']);
             $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$ruleResults[$calculationRuleIndex],$rule['Content']['Target data type']);
