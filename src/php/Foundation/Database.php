@@ -265,11 +265,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $indices=$this->getTableIndices($table);
         foreach($indices as $keyName=>$indexArr){
             $context['dropped']=$keyName.' | ';
-            $sql.="ALTER TABLE `".$table."` DROP INDEX `".$keyName."`;"; 
+            $sql.="ALTER TABLE `".$table."` DROP INDEX `".$keyName."`;";
         }
+        $sql.="ALTER TABLE `".$table."` DROP PRIMARY KEY;";
         if (!empty($sql)){$this->executeStatement($sql,[]);}
         $context['dropped']=trim($context['dropped'],'| ');
-        $this->oc['logger']->log('notice','Existing indices "{dropped}" of database table "{table}" dropped',$context);
+        $this->oc['logger']->log('notice','Existing indices "{dropped}" and "primary key" of database table "{table}" dropped',$context);
     }
 
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
