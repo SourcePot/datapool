@@ -35,7 +35,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         '"B" selected by...'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE,'addColumns'=>[]],
         'Default value "B"'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         ''=>['method'=>'element','tag'=>'p','element-content'=>'&rarr;','keep-element-content'=>TRUE,'style'=>'font-size:20px;','excontainer'=>TRUE],
-        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'keep','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
         'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','standardColumsOnly'=>TRUE],
         'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
     ];
@@ -58,11 +58,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     ];
     
     private $entryTable='';
-    private $entryTemplate=[
-        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-    ];
+    private $entryTemplate=[];
     
+    private $operations=\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES+\SourcePot\Datapool\Foundation\Computations::OPERATIONS+\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS;
+
     public function __construct($oc)
     {
         $this->oc=$oc;
@@ -202,9 +201,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_RULES;
         $addKeys=(isset($this->ruleOptions[mb_strtolower(__FUNCTION__)]))?$this->ruleOptions[mb_strtolower(__FUNCTION__)]:[];
-        $operations=\SourcePot\Datapool\Foundation\Computations::CONDITION_TYPES+\SourcePot\Datapool\Foundation\Computations::OPERATIONS;
         $contentStructure['"A" selected by...']['addColumns']=$addKeys;
-        $contentStructure['Operation']['options']=$operations;
+        $contentStructure['Operation']['options']=$this->operations;
         $contentStructure['"B" selected by...']['addColumns']=$addKeys;
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
         // get calling element and add content structure
@@ -295,8 +293,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $ruleResults[$calculationRuleIndex]=$this->oc['SourcePot\Datapool\Foundation\Computations']->operation($value['A'],$value['B'],$rule['Content']['Operation']);
             $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$ruleResults[$calculationRuleIndex],$rule['Content']['Target data type']);
-            $result['Calculation rules'][$calculationRuleIndex]['Operation']=$rule['Content']['Operation'];
-            $result['Calculation rules'][$calculationRuleIndex]['Result']=$ruleResults[$calculationRuleIndex];
+            $result['Calculation rules'][$calculationRuleIndex]['Operation']=$this->operations[$rule['Content']['Operation']];
+            $result['Calculation rules'][$calculationRuleIndex]['Result']=(is_array($ruleResults[$calculationRuleIndex]))?json_encode($ruleResults[$calculationRuleIndex]):$ruleResults[$calculationRuleIndex];
         }
         // loop through conditional value rules
         foreach($base['conditionalvaluerules']??[] as $ruleEntryId=>$rule){
