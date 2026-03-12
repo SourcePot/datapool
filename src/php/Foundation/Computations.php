@@ -18,7 +18,7 @@ class Computations{
     private const COMPARE_EQUAL_PRECISION=5;
     
     public const DATA_TYPES=[
-        'string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+        'keep'=>'Keep as is','string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
         'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
         'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
         'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
@@ -29,11 +29,11 @@ class Computations{
     ];
     
     public const CONDITION_TYPES=[
-        'empty'=>'empty(A)','!empty'=>'!empty(A)','strpos'=>'A contains B','!strpos'=>'A does not contain B',
         '>'=>'A > B','=='=>'A == B','!='=>'A != B','<'=>'A < B',
         '&&'=>'A AND B','||'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
-        'containsRegexMatch'=>'A contains RegEx(B)','!containsRegexMatch'=>'A !contains RegEx(B)',
         'TRUE'=>'always TRUE','FALSE'=>'always FALSE',
+        'empty'=>'empty(A)','!empty'=>'!empty(A)','strpos'=>'A contains B','!strpos'=>'A does not contain B',
+        'containsRegexMatch'=>'A contains RegEx(B)','!containsRegexMatch'=>'A !contains RegEx(B)',
     ];
     
     public const COMPARE_TYPES_CONST=[
@@ -44,11 +44,13 @@ class Computations{
     ];
     
     public const OPERATIONS=[
+        'regexMatch'=>'f(A,RegEx(B))',
         '+'=>'A + B','-'=>'A - B','*'=>'A * B','/'=>'A / B','pow'=>'pow(A,B)','%'=>'A modulus B',
         '|'=>'A | B','&'=>'A & B',
-        'regexMatch'=>'f(A,RegEx(B))',
         'addDateIntervalStr'=>'A + dateTimeIntervalString(B) &#9755; e.g. "B"="1day, 10hours"','addDateInterval'=>'A + dateTimeInterval(B) &#9755; e.g. "B"=P2Y4DT6H for 2 years, 4 days, 6hours',
         'subDateIntervalStr'=>'A - dateTimeIntervalString(B) &#9755; e.g. "B"="1day, 10hours"','subDateInterval'=>'A - dateTimeInterval(B) &#9755; e.g. "B"=P2Y4DT6H for 2 years, 4 days, 6hours',
+        'addYearsToDate'=>'date(A) + B years','addMonthsToDate'=>'date(A) + B months','addDaysToDate'=>'date(A) + B days',
+        'subYearsFromDate'=>'date(A) - B years','subMonthsFromDate'=>'date(A) - B months','subDaysFromDate'=>'date(A) - B days',
         'setTimezone'=>'A&rarr;setTimezone(B) &#9755; set "A" to timezone "B", return "A\' {Y-m-d H:i:s}" in system timezone','changeTimezone'=>'A&rarr;changeTimezone(B) &#9755; "A" from system timezone, return "A\' {Y-m-d H:i:s}" in target timezone "B"',
     ];
     
@@ -56,9 +58,9 @@ class Computations{
         ''=>'{...}',
         'lastHit'=>'Last hit',
         'firstHit'=>'First hit',
-        'int(A+B+...)'=>'int(A+B+...)',
-        'float(A+B+...)'=>'float(A+B+...)',
-        'average(A,B,...)'=>'average(A,B,...)',
+        'int(A)+int(B)+...'=>'int(A) + int(B) + ...',
+        'float(A)+float(B)+...'=>'float(A) + float(B) + ...',
+        'average(A,B,...)'=>'average(A, B, ...)',
         'string(AB)'=>'string(AB)',
         'string(A|B)'=>'string(A|B)',
         'string(A_B)'=>'string(A_B)',
@@ -156,7 +158,7 @@ class Computations{
             $value=floatval($value);
         } else if (stripos($combineOperation,'int')!==FALSE || stripos($combineOperation,'byte')!==FALSE){
             $value=$this->arr2value($value);
-            $value=intval($value);
+            $value=intval(round($value));
         } else if (stripos($combineOperation,'string')!==FALSE){
             $value=$this->arr2value($value);
             $value=strval($value);
@@ -230,7 +232,7 @@ class Computations{
             $result=implode($glue,$arr);
         } else if (strpos($operation,'+')!==FALSE){
             $result=array_sum($arr);
-        } else if ($operation==='average'){
+        } else if (strpos($operation,'average')!==FALSE){
             $result=array_sum($arr)/count($arr);
         } else if ($operation==='lastHit' || $operation==='firstHit'){
             if ($operation==='lastHit'){end($arr);} else {reset($arr);}
@@ -267,6 +269,7 @@ class Computations{
             $newValue=$value;
         } else {
             $newValue=match($dataType){
+                'keep'=>$value,
                 'string'=>$this->str2str($value),
                 'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
                 'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),
@@ -501,6 +504,16 @@ class Computations{
             $valueB=$this->value2numeric($valueB);
             if ($valueA===NAN || $valueB===NAN){
                 $result=NAN;
+            } else if (isset(self::COMBINE_OPTIONS[$operation])){
+                if (strpos($operation,'average')===FALSE && strpos($operation,'float')===FALSE && strpos($operation,'int')===FALSE){
+                    $result=$this->arrOperation(['A'=>$valueAstr,'B'=>$valueBstr],$operation,FALSE);
+                } else {
+                    if (strpos($operation,'int')!==FALSE){
+                        $valueA=intval(round($valueA));
+                        $valueB=intval(round($valueB));
+                    }
+                    $result=$this->arrOperation(['A'=>$valueA,'B'=>$valueB],$operation,FALSE);
+                }
             } else if ($operation==='-'){
                 $result=$valueA-$valueB;
             } else if ($operation==='+'){
@@ -542,6 +555,23 @@ class Computations{
                         $dateTimeObj->sub(\DateInterval::createFromDateString($valueBstr));
                     } else if ($operation==='subDateInterval'){
                         $dateTimeObj->sub(new \DateInterval($valueBstr));
+                    }
+                    $dateTimeObj->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                    $result=$dateTimeObj->format('Y-m-d H:i:s');
+                } catch(\Exception $e){
+                    $result=$e->getMessage();
+                }
+            } else if ($operation==='addYearsToDate' || $operation==='addMonthsToDate' || $operation==='addDaysToDate' ||
+                       $operation==='subYearsFromDate' || $operation==='subMonthsFromDate' || $operation==='subDaysFromDate'){
+                $dateArr=$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($valueAstr);
+                $dateTimeObj= new \DateTime($dateArr['RFC2822']);
+                $intervalType=preg_replace('/(add)|(sub)|(ToDate)|(FromDate)|/','',$operation);
+                $valueBstr=preg_replace('/[^0-9]+/','',$valueBstr).' '.strtolower($intervalType);
+                try{ 
+                    if (strpos($operation,'add')===FALSE){
+                        $dateTimeObj->sub(\DateInterval::createFromDateString($valueBstr));
+                    } else {
+                        $dateTimeObj->add(\DateInterval::createFromDateString($valueBstr));
                     }
                     $dateTimeObj->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
                     $result=$dateTimeObj->format('Y-m-d H:i:s');
