@@ -256,6 +256,7 @@ class CSVtools{
             } else if ($value===NULL){
                 $value='NULL';
             }
+            $value=strval($value);
             if (empty($csvSetting['enclosure']) || (strpos($value,$csvSetting['enclosure'])===FALSE && strpos($value,$csvSetting['separator'])===FALSE && strpos($value,$csvSetting['lineSeparator'])===FALSE)){
                 $values[]=$value;
             } else {
