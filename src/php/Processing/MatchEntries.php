@@ -28,6 +28,15 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
     ];
 
+    private const CONTENT_STRUCTURE_RULES=[
+        'On...'=>['method'=>'select','value'=>0,'options'=>['no match','match'],'excontainer'=>TRUE],
+        'Map value or...'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        '...value selected by'=>['method'=>'keySelect','value'=>'useValue','addSourceValueColumn'=>TRUE,'excontainer'=>TRUE],
+        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Content','standardColumsOnly'=>TRUE],
+        'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+    ];
+
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
@@ -126,6 +135,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Matching entries settings','generic',$callingElement,['method'=>'getMatchEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Conditional mapping settings','generic',$callingElement,['method'=>'getConditionalMappingRulesHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -157,6 +167,23 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
+    public function getConditionalMappingRulesHtml($arr){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html'].=$this->conditionalMappingRules($arr['selector']);
+        return $arr;
+    }
+    
+    private function conditionalMappingRules($callingElement){
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_RULES;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Map on match rules';
+        return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+    }
+    
     public function runMatchEntries($callingElement,$testRun=TRUE){
         $base=['matchingparams'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
@@ -189,13 +216,24 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $flatMatchKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($params['Content']['Match with column']);
             $bestMatchKey.='<br/>'.$bestMatchCanvasElement['Content']['Style']['Text'].'['.$flatMatchKey.']';
         }
+        $mappingSample=(mt_rand(0,100)>70) or (empty($result['No match mapping (sample)']) and empty($result['On match mapping (sample)']));
         if (intval($params['Content']['Match probability'])<$probability){
             // successful match
             if (!empty($params['Content']['Combine content'])){
                 $entry['Content']=array_merge($entry['Content'],$bestMatch['Content']);
             }
             if (isset($base['entryTemplates'][$params['Content']['Match success']])){
+                $flatBestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($bestMatch);
+                $entry=$this->mapArr($base,$entry,TRUE);
+                if ($mappingSample){
+                    $result['On match mapping (sample)']=$entry['__MAP_ARR__'];
+                    unset($entry['__MAP_ARR__']);
+                }
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match success']],TRUE,$testRun,$params['Content']['Keep source entries']);
+                if ($mappingSample){
+                    $matchEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($entry??[]);
+                    $result['Sample result <b>Match</b>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($matchEntry);
+                }
                 $result['Statistics']['Entries moved (success)']['Value']++;
             }    
             if (count($result['Matches'])<self::MAX_TABLE_LENGTH){
@@ -207,17 +245,54 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         } else {
             // failed match
             if (isset($base['entryTemplates'][$params['Content']['Match failure']])){
+                $entry=$this->mapArr($base,$entry,FALSE);
+                if ($mappingSample){
+                    $result['No match mapping (sample)']=$entry['__MAP_ARR__'];
+                    unset($entry['__MAP_ARR__']);
+                }
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$base['entryTemplates'][$params['Content']['Match failure']],TRUE,$testRun,$params['Content']['Keep source entries']);
+                if ($mappingSample){
+                    $noMatchEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($entry??[]);
+                    $result['Sample result <b>No match</b>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($noMatchEntry);
+                }
                 $result['Statistics']['Entries moved (failure)']['Value']++;
             }
             if (count($result['Matches'])<self::MAX_TABLE_LENGTH){
                 $flatBestMatch=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($bestMatch);
                 if (isset($flatBestMatch[$params['Content']['Match with column']])){
                     $result['Matches'][$needle]=[$bestMatchKey=>$flatBestMatch[$params['Content']['Match with column']],'Match [%]'=>$probability,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
+                } else {
+                    $result['Matches'][$needle]=[$bestMatchKey=>'','Match [%]'=>0,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
                 }
             }
         }
         return $result;
     }
+
+    private function mapArr($base,$entry,$isMatch):array
+    {
+        $mapResult=[];
+        $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
+        $mappingRulse=$base['conditionalmappingrules']??[];
+        foreach($mappingRulse as $ruleId=>$rule){
+            $rowKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleId)[0];
+            $mapResult[$rowKey]=['Source key'=>'','Value'=>'','Data type'=>'','Target key'=>'','Result'=>''];
+            if (boolval($rule['Content']['On...']) xor $isMatch){continue;}
+            if (empty($rule['Content']['Map value or...'])){
+                $sourceKey=$rule['Content']['...value selected by'];
+                $value=$flatEntry[$rule['Content']['...value selected by']]??'';
+            } else {
+                $sourceKey='CONST';
+                $value=$rule['Content']['Map value or...'];
+            }
+            $convertedValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($value,$rule['Content']['Target data type']);
+            $flatEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$convertedValue;
+            $mapResult[$rowKey]=['Source key'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($sourceKey),'Value'=>$value,'Data type'=>$rule['Content']['Target data type'],'Target key'=>$rule['Content']['Target column'].' &rarr; '.$rule['Content']['Target key'],'Result'=>$convertedValue];
+        }
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry);
+        $entry['__MAP_ARR__']=$mapResult;
+        return $entry;
+    }
+
 }
 ?>

@@ -158,7 +158,7 @@ class Computations{
             $value=floatval($value);
         } else if (stripos($combineOperation,'int')!==FALSE || stripos($combineOperation,'byte')!==FALSE){
             $value=$this->arr2value($value);
-            $value=intval(round($value));
+            $value=intval(round(floatval($value)));
         } else if (stripos($combineOperation,'string')!==FALSE){
             $value=$this->arr2value($value);
             $value=strval($value);
