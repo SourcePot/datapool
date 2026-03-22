@@ -147,7 +147,7 @@ class CSVtools{
             }
             $csv=new \SplFileObject($csvFile);
             $csv->setCsvControl($csvSetting['separator']??',',$csvSetting['enclosure']?:'"',$csvSetting['escape']??'');
-            $keys=[];
+            $keys=$result=[];
             $rowIndex=0;
             while($csv->valid()){
                 $csvArr=$csv->fgetcsv();

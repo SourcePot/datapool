@@ -268,6 +268,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $flatEntryTemplate['EntryId']=$flatEntryTemplate['EntryId'].'_'.strtolower($entryType);
             $flatEntry=array_merge($flatEntryTemplate,$flatEntries[$entryType]);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
+            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$entry['Content']['Status']['timestamp']['@value']??time());
             if ($entryType==='Settings'){
                 // create settings entry
                 $settingsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
@@ -311,7 +312,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $target=$canvasElement['Content']['Selector'];
             $target['Params']['Client']['baseEntryId']=$entryIdComps[0];
             $target['Name']=$entry['Params']['File']['Name']?:time();
-            $target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime();
+            //$target['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$timestamp);
             $target['Owner']='SYSTEM';
             $target['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval($expiresTimestamp));
             $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($entry,$target,TRUE,FALSE,TRUE,FALSE);
@@ -394,7 +395,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $returnTime=round(time()-$status['Content']['Status']['timestamp']['@value']);
             $status['Content']['Status']['timestamp']['@value']=$returnTime.' sec';
             if ($returnTime>self::TIMESTAMP_AGE_WARNING_THRESHOLD){
-                $status['Content']['Status']['timestamp']['@style']='padding:0 0.25rem;background-color:#fcc;';
+                $status['Content']['Status']['timestamp']['@style']='border:2px solid var(--redH);';
             }
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2html($status,$status['Content'],__CLASS__,__FUNCTION__,$isDebugging=FALSE);
