@@ -63,6 +63,7 @@ class CSVtools{
 
     public function init()
     {
+        ini_set('auto_detect_line_endings',TRUE);
         $this->entry2csv();
     }
     
