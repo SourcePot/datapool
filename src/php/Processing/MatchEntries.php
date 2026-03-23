@@ -218,7 +218,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $entry['Params']['Processed'][__CLASS__]=$probability;
         $bestMatchKey='Best match';
         if ($bestMatchCanvasElement){
-            $flatMatchKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($params['Content']['Match with column']);
+            $flatMatchKey=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($params['Content']['Match with column']??'');
             $bestMatchKey.='<br/>'.$bestMatchCanvasElement['Content']['Style']['Text'].'['.$flatMatchKey.']';
         }
         if (intval($params['Content']['Match probability'])<$probability){
@@ -294,7 +294,7 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $resultValue=$convertedValue;
             }
-            $mapResult[$rowKey]=['Source key'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($sourceKey),'Value'=>$value,'Data type'=>$rule['Content']['Target data type'],'Target key'=>$rule['Content']['Target column'].' &rarr; '.$rule['Content']['Target key'],'Result'=>$resultValue];
+            $mapResult[$rowKey]=['Source key'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($sourceKey??''),'Value'=>$value,'Data type'=>$rule['Content']['Target data type'],'Target key'=>$rule['Content']['Target column'].' &rarr; '.$rule['Content']['Target key'],'Result'=>$resultValue];
         }
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry);
         $entry['__MAP_ARR__']=$mapResult;
