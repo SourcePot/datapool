@@ -21,3 +21,5 @@
 # ignore all data apps except Misc
 /src/php/DataApps/*
 !/src/php/DataApps/Misc.php
+# ignore all data apps except Misc
+/src/www/media/main.ico
