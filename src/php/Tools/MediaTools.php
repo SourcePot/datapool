@@ -72,11 +72,8 @@ class MediaTools{
             $json=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($json,\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'class'=>'matrix']);
-        } else if ($this->oc['SourcePot\Datapool\Tools\CSVtools']->isCSV($arr['selector']) && !$isSmallPreview){
-            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CSV editor','generic',$arr['selector'],['method'=>'csvView','classWithNamespace'=>'SourcePot\Datapool\Tools\CSVtools'],[]);
-        } else if (!empty($arr['selector']['Params']['File']['Spreadsheet'])){
-            $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($arr['selector']['Params']['File']['Spreadsheet'],\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$isSmallPreview);
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'class'=>'matrix']);
+        } else if (isset($arr['selector']['Params']['File']['SpreadsheetIteratorClass'])){
+            $arr=$this->getSpreadsheet($arr,$isSmallPreview);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
             $matrix=[];
             $zip=new \ZipArchive;
@@ -252,6 +249,26 @@ class MediaTools{
         }
     }
     
+    private function getSpreadsheet(array $arr,bool $isSmallPreview=FALSE):array
+    {
+        $arr['settings']['style']=$arr['settings']['style']??[];
+        $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
+        $caption=$arr['selector']['Params']['File']['Name'];
+        $matrix=[];
+        $iteratorClass=$arr['selector']['Params']['File']['SpreadsheetIteratorClass'];
+        $iteratorMethod=$arr['selector']['Params']['File']['SpreadsheetIteratorMethod'];
+        foreach($this->oc[$iteratorClass]->$iteratorMethod($arr['selector']) as $index=>$data){
+            if ($isSmallPreview && $index>5){
+                $caption='';
+                break;
+            }
+            $matrix[$index]=$data;
+        }
+        $spreadsheet=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'caption'=>$caption]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$spreadsheet,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
+        return $arr;
+    }
+
     private function getMarkdown(array $arr):array
     {
         $arr['settings']['style']=$arr['settings']['style']??[];
