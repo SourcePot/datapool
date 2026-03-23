@@ -674,6 +674,7 @@ button.canvas-processor{
     font-size:20px;
     color:var(--bgColor);
     background-color:var(--blueH);
+    min-width:unset;
 }
 button.canvas-std{
     background-color:var(--bgColor);
