@@ -656,7 +656,9 @@ p.log{
 .canvas-text-ra{
     text-align: right;
 }
-.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
+button.canvas-std,button.canvas-red,button.canvas-green,.canvas-dark,button.canvas-processor{
+    color:var(--color);
+    line-height: 1.25rem;
     min-width:140px;
     border:1px solid var(--colorM);
     box-shadow:3px 3px 5px 1px var(--colorM);
@@ -667,10 +669,6 @@ p.log{
     font-size:30px;
     padding:0px;
     min-width:20px;
-}
-button.canvas-std,button.canvas-red,button.canvas-green,button.canvas-processor{
-    color:var(--color);
-    line-height: 1.25rem;
 }
 button.canvas-processor{
     font-size:20px;
