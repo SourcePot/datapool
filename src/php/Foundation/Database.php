@@ -254,7 +254,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(30),`Group`(30),`Folder`(30),`Name`(30)); ";
         $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`(40)); ";
         $this->oc['logger']->log('notice','Added index to database table "{table}" and "primary key"',$context);
-        $this->executeStatement($sql,[]);
         return $this->executeStatement($sql,[]);
     }
 
@@ -262,7 +261,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     {
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
         $sql="";
-        $sql.="ALTER TABLE `".$table."` DROP PRIMARY KEY; ";
         $indices=$this->getTableIndices($table);
         foreach($indices as $keyName=>$indexArr){
             $context['dropped']=$keyName.' | ';
