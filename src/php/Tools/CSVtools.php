@@ -271,37 +271,6 @@ class CSVtools{
         return $result;
     }
     
-    public function csvView(array $arr):array
-    {
-        // check for attached file & get csv entry
-        $attachedFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($arr['selector']);
-        if (!is_file($attachedFile)){return $arr;}
-        $csvEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
-        // settings form
-        $cntrArr=$this->csvOutputSettingsWidget(['selector'=>$this->csvSettingSelector(FALSE),'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'mode'=>'editor']);
-        $setting=$this->getSetting();
-        // compile html
-        $matrix=$columns=[];
-        $rowCount=$rowLimitCount=0;
-        foreach($this->csvIterator($arr['selector'],$setting) as $rowIndex=>$rowArr){
-            $csvEntry['Content']=$rowArr;
-            if ($rowLimitCount<$setting['limit'] && $rowIndex>=$setting['offset']){
-                foreach($rowArr as $column=>$cellValue){
-                    $columns['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).$column]=$column;
-                    $valArr=$cellValue;
-                    $csvEntry['Content'][$column]=$cellValue;
-                    $matrix[$rowIndex][$column]=$valArr;
-                }
-                $rowLimitCount++;
-            }
-            $rowCount++;
-        }
-        $arr['html']=$cntrArr['html'];
-        $caption='CSV sample: "'.$csvEntry['Name'].'" ('.$rowCount.')';
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
-        return $arr;
-    }
-    
     public function csvOutputSettingsWidget(array $arr):array
     {
         // init setting
