@@ -293,7 +293,7 @@ article{
 article.multimedia{
     max-width:300px;
     height:280px;
-    margin:5px;
+    margin:5px 5rem 5rem 5px;
     border:1px solid var(--colorM);
     box-shadow:5px 5px 15px var(--bgColorA);
 }
