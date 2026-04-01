@@ -75,23 +75,7 @@ class MediaTools{
         } else if (isset($arr['selector']['Params']['File']['SpreadsheetIteratorClass'])){
             $arr=$this->getSpreadsheet($arr,$isSmallPreview);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'application/zip')===0){
-            $matrix=[];
-            $zip=new \ZipArchive;
-            if ($zip->open($arr['selector']['Params']['TmpFile']['Source'])===TRUE){
-                $zipFileCount=$zip->numFiles;
-                for( $i=0;$i<$zip->numFiles;$i++){ 
-                    $stat=$zip->statIndex($i);
-                    if (!$isSmallPreview || $i<3){
-                        $matrix[]=['File'=>basename($stat['name'])];
-                    } else if ($i>=3){
-                        $matrix['']=['File'=>'...'];
-                        break;
-                    }
-                }
-                $zip->close();
-                $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','style'=>['clear'=>'both'],'element-content'=>'Zip-archive: '.$zipFileCount.' files']);
-            }
-            $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'caption'=>$arr['selector']['Name'],'class'=>'','keep-element-content'=>TRUE,'style'=>['clear'=>'both']]);
+            $arr=$this->getArchive($arr,$isSmallPreview);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && empty($arr['selector']['Params']['Email'])){
@@ -249,22 +233,45 @@ class MediaTools{
         }
     }
     
+    private function getArchive(array $arr,bool $isSmallPreview=FALSE):array
+    {
+        $arr['settings']['style']=$arr['settings']['style']??[];
+        $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
+        $matrix=[];
+        $zip=new \ZipArchive;
+        if ($zip->open($arr['selector']['Params']['TmpFile']['Source'])===TRUE){
+            $zipFileCount=$zip->numFiles;
+            for( $i=0;$i<$zip->numFiles;$i++){ 
+                $stat=$zip->statIndex($i);
+                if (!$isSmallPreview || $i<3){
+                    $matrix[$i+1]=['File'=>basename($stat['name'])];
+                } else if ($i>=4){
+                    $matrix['']=['File'=>'...'];
+                    break;
+                }
+            }
+            $zip->close();
+        }
+        $caption=$arr['selector']['Name'].' ('.($zipFileCount??0).' files)';
+        $archivePreview=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>False,'hideKeys'=>FALSE,'caption'=>$caption,'keep-element-content'=>TRUE,'style'=>['clear'=>'both','font-size'=>($isSmallPreview?'0.6rem':'1rem')]]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$archivePreview,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
+        return $arr;
+    }
+
     private function getSpreadsheet(array $arr,bool $isSmallPreview=FALSE):array
     {
         $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
-        $caption=$arr['selector']['Params']['File']['Name'];
+        $rowCount=0;
         $matrix=[];
         $iteratorClass=$arr['selector']['Params']['File']['SpreadsheetIteratorClass'];
         $iteratorMethod=$arr['selector']['Params']['File']['SpreadsheetIteratorMethod'];
         foreach($this->oc[$iteratorClass]->$iteratorMethod($arr['selector']) as $index=>$data){
-            if ($isSmallPreview && $index>5){
-                $caption='';
-                break;
-            }
-            $matrix[$index]=$data;
+            if (!$isSmallPreview || $index<5){$matrix[$index]=$data;}
+            $rowCount++;
         }
-        $spreadsheet=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'caption'=>$caption]);
+        $caption=$arr['selector']['Name'].' ('.$rowCount.' rows)';
+        $spreadsheet=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'caption'=>$caption,'style'=>['clear'=>'both','font-size'=>($isSmallPreview?'0.6rem':'1rem')]]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$spreadsheet,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
         return $arr;
     }

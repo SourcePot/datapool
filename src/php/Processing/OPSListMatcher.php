@@ -22,6 +22,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         'data/ListMatcher/ListMatcherInput.php',
         'data/ListMatcher/ListMatcherOutput.php',
         'data/Ops/OpsNumberSearchOutput.php',
+        'data/Ops/OpsFamilySearchOutput.php',
         'Response.php',
         'enums/FailedFamilySearchKeys.php',
     ];

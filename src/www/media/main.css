@@ -641,10 +641,20 @@ p.log{
 .canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
     position:absolute;
     font-size:16px;
-    margin:0;
-    color:var(--color);
-    padding:5px;
     text-align:center;
+    margin:0;
+    padding:5px;
+    line-height: 1.25rem;
+    color:var(--color);
+    min-width:140px;
+    border:1px solid var(--colorM);
+    box-shadow:3px 3px 5px 1px var(--colorM);
+}
+.canvas-text{
+    font-weight:normal;
+    line-height:unset;
+    border:none;
+    box-shadow:none;
 }
 .canvas-text-bold{
     font-weight:bold;
@@ -656,21 +666,17 @@ p.log{
 .canvas-text-ra{
     text-align: right;
 }
-button.canvas-std,button.canvas-red,button.canvas-green,.canvas-dark,button.canvas-processor{
-    color:var(--color);
-    line-height: 1.25rem;
-    min-width:140px;
-    border:1px solid var(--colorM);
-    box-shadow:3px 3px 5px 1px var(--colorM);
-}
 .canvas-symbol{
     color:var(--color);
     background: none;
     font-size:30px;
     padding:0px;
     min-width:20px;
+    line-height:unset;
+    border:none;
+    box-shadow:none;
 }
-button.canvas-processor{
+.canvas-processor{
     font-size:20px;
     color:var(--bgColor);
     background-color:var(--blueH);
