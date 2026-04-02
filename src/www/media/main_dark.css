@@ -667,7 +667,7 @@ p.log{
     text-align: right;
 }
 .canvas-symbol{
-    color:var(--color);
+    color:var(--colorM);
     background: none;
     font-size:30px;
     padding:0px;
