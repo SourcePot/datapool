@@ -5,7 +5,7 @@
     --color:#000;
     --colorA:#444;
     --colorH:#fff;
-    --colorM:#aaa;
+    --colorM:#999;
     /** background color **/
     --bgColor:#fff;
     --bgColorA:#eee;
@@ -667,7 +667,7 @@ p.log{
     text-align: right;
 }
 .canvas-symbol{
-    color:var(--color);
+    color:var(--colorM);
     background: none;
     font-size:30px;
     padding:0px;
