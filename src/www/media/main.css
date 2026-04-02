@@ -686,7 +686,7 @@ button.canvas-std{
     background-color:var(--bgColor);
 }
 button.canvas-std:hover{
-    background-color:var(--bgColorA);
+    background-color:var(--bgColorH);
 }
 button.canvas-red{
     background-color:var(--red);
