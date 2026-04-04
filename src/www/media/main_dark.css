@@ -650,7 +650,7 @@ p.log{
     border:1px solid var(--colorM);
     box-shadow:3px 3px 5px 1px var(--colorM);
 }
-.canvas-text{
+.canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra{
     font-weight:normal;
     line-height:unset;
     border:none;
