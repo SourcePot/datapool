@@ -292,7 +292,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
                 }
                 // get remaining list entries
                 foreach($this->listMatcherObj->getRemainingRoyaltyList()??[] as $listEntryId=>$listEntryValue){
-                    $result['Remaining list entries'][$listEntryId]=['value'=>$listEntryValue];
+                    $result['Remaining list entries'][]=['List EntryId'=>$listEntryId,'List entry value'=>$listEntryValue];
                 }
             }
         }
@@ -320,6 +320,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $result['List matcher'][$index][$key]=$ruleValueOut;
             $case[$key]=$ruleValueOut;
         }
+        $result['List matcher'][$index]['trStyle']=['background-color'=>'var(--bgColorA)'];
         $matchSuccess=FALSE;
         // OPS List Matcher
         $listSelector=$callingElement['Content']['Selector'];
@@ -345,6 +346,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $index++;
             $result['List matcher'][$index]=$result['List matcher'][$index-1];
             $result['List matcher'][$index]['Match']=$result['List matcher'][$index]['List number']=$result['List matcher'][$index]['Errors']=NULL;
+            $result['List matcher'][$index]['trStyle']=NULL;
         }
         // move completely processed entries
         if (!$matchSuccess && !$listMatch->opsFailure??FALSE){
@@ -354,6 +356,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             // move failed case entry
             $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($caseEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep failed cases']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
+        } else {
+            unset($result['List matcher'][$index]);
         }
         return $result;
     }
