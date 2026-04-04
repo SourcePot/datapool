@@ -30,7 +30,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const INFO_MATRIX=[
         'Caption'=>['Comment'=>'Open Patent Service ListMatacher Wrapper'],
-        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class. The list entries are matched with patent cases if they belong to the same patent family. The Open Patent Service patent family definition is employed.'],
+        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class.<br/>The ListMatcher Core must be present in a directory at the document root called "<i>'.self::OPS_READER_CORE_PATH.'</i>".<br/>The list entries are compared with the cases and identified as matches if they belong to the same patent family.<br/>The European Patent Office\'s definition of a patent family is used.'],
     ];
 
     private const CREDENTIALS_DEF=[
