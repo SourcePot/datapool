@@ -157,7 +157,10 @@ class HTMLbuilder{
                     if (is_array($cell)){
                         $tdArr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
                     } else {
-                        if (empty($arr['keep-element-content'])){$cell=htmlspecialchars(strval($cell),ENT_QUOTES,'UTF-8');}
+                        $cell=str_replace("\n",'</br>',strval($cell));
+                        if (empty($arr['keep-element-content'])){
+                            $cell=htmlspecialchars($cell,ENT_QUOTES,'UTF-8');
+                        }
                         $tdArr['element-content']=$cell;
                     }
                     $trHeaderArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($thArr);

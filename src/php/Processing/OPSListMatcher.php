@@ -29,8 +29,8 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
     ];
 
     private const INFO_MATRIX=[
-        'Caption'=>['Comment'=>'Open Patent Service ListMatacher Wrapper'],
-        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class.<br/>The ListMatcher Core must be present in a directory at the document root called "<i>'.self::OPS_READER_CORE_PATH.'</i>".<br/>The list entries are compared with the cases and identified as matches if they belong to the same patent family.<br/>The European Patent Office\'s definition of a patent family is used.'],
+        'Caption'=>['Comment'=>'<b>Open Patent Service ListMatacher Wrapper</b>'],
+        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class.<br/>The ListMatcher Core must be present in the directory at the document root called "<i>'.self::OPS_READER_CORE_PATH.'</i>".<br/>The list entries are compared with the cases and identified as matches if they belong to the same patent family.<br/>The European Patent Office\'s definition of a patent family is used.'],
     ];
 
     private const CREDENTIALS_DEF=[
@@ -131,7 +131,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getInfo($callingElement):string
     {
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Help']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Help']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?','open'=>FALSE]);
         return $html;
     }

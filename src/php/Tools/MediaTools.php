@@ -320,8 +320,6 @@ class MediaTools{
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             if ($sanitize){
                 $content=htmlentities(file_get_contents($arr['selector']['Params']['TmpFile']['Source']));
-                $content=str_replace("\n",'</br>',$content);
-                $content=str_replace(' ','&nbsp',$content);
                 file_put_contents($arr['selector']['Params']['TmpFile']['Source'],$content);
             }
             //

@@ -61,6 +61,8 @@ final class FileContent{
         $entry['nowTimeUTC']=date('H:i:s');
         $entry['+1DayFromNowUTC']=date('Y-m-d H:i:s',86400+time());
         $entry['+10DaysFromNowUTC']=date('Y-m-d H:i:s',864000+time());
+        $entry['attachedFile']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
+                
         if (!empty($entry['Content']['File content'])){
             $entry=$this->addCosts($entry,$entry['Content']['File content']);
             $entry=$this->addUnycom($entry,$entry['Content']['File content']);
