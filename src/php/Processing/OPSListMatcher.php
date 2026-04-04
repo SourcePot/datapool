@@ -14,13 +14,14 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $oc;
 
-    private const OPS_READER_CORE_PATH='/var/www/www-workspace/wallenhauer/OPS-Reader-dev_datapool/Core/';
+    private const OPS_READER_CORE_PATH='../../OPS-Reader-dev_datapool/Core/';
     private const OPS_READER_CORE_REQUIRED_FILES=[
         'ListMatcher.php',
         'OpsInterface.php',
         'OpsReader.php',
         'data/ListMatcher/ListMatcherInput.php',
         'data/ListMatcher/ListMatcherOutput.php',
+        'data/ListMatcher/ListMatcherErrors.php',
         'data/Ops/OpsNumberSearchOutput.php',
         'data/Ops/OpsFamilySearchOutput.php',
         'Response.php',
@@ -278,7 +279,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             } catch(\Exception $e){
                 $result['OPS-Reader ListMatcher']['Error']=['value'=>$e->getMessage()];
             }
-            if (empty($result['OPS-Reader ListMatcher error'])){
+            if (empty($result['OPS-Reader ListMatcher']['Error'])){
                 // loop through entries
                 $casesSelector=$this->getCasesSelector($callingElement);
                 foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($casesSelector,TRUE) as $caseEntry){
@@ -288,6 +289,10 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
                     } else if (!$result['cntr']['isSkipRow']){
                         $result=$this->processCase($base,$caseEntry,$result,$testRun,$callingElement);
                     }
+                }
+                // get remaining list entries
+                foreach($this->listMatcherObj->getRemainingRoyaltyList()??[] as $listEntryId=>$listEntryValue){
+                    $result['Remaining list entries'][$listEntryId]=['value'=>$listEntryValue];
                 }
             }
         }
@@ -304,15 +309,15 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // get case keys based casesRules for list match
         $case=['EntryId'=>$caseEntry['EntryId'],'Family'=>'','Countrycode'=>'','Applicationnumber'=>'','Publicationnumber'=>'','Issuenumber'=>'',];
         $result['List matcher']=$result['List matcher']??[];
-        $count=count($result['List matcher']);
+        $index=count($result['List matcher']);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($caseEntry);
         foreach($base['casesruleshtml'] as $ruleEntryId=>$rule){
             $key=$rule['Content']['Key'];
             $ruleValueIn=$flatSourceEntry[$rule['Content']['Entry key']]??'';
-            $result['List matcher'][$count][$key.' &rarr; ']=$ruleValueIn;
+            $result['List matcher'][$index][$key.' &rarr; ']=$ruleValueIn;
             preg_match('/'.($rule['Content']['RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/',$ruleValueIn,$match);
             $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
-            $result['List matcher'][$count][$key]=$ruleValueOut;
+            $result['List matcher'][$index][$key]=$ruleValueOut;
             $case[$key]=$ruleValueOut;
         }
         $matchSuccess=FALSE;
@@ -323,20 +328,31 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($matches??[] as $listMatch){
             if ($listMatch->opsFailure){break;}
             if (!$listMatch->matchSuccess){continue;}
+            // match successful, compile documentation
             $matchSuccess=TRUE;
-            $result['List matcher'][$count]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($listMatch->matchSuccess);
-            $result['List matcher'][$count]['List number']=$this->list[$listMatch->entryIdRoyaltyEntry];
-            $result['List matcher'][$count]['Errors']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($listMatch->errors),['element-content'=>implode('</br>',$listMatch->errors)?:'None']);
+            $errorsMatrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($listMatch->errors??[]);
+            $result['List matcher'][$index]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE);
+            $result['List matcher'][$index]['List number']=$this->list[$listMatch->entryIdRoyaltyEntry];
+            $result['List matcher'][$index]['Errors']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$errorsMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'style'=>['border'=>'none']]);
+            // match successful, move list entry
             $listSelector['EntryId']=$listMatch->entryIdRoyaltyEntry;
             $listEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($listSelector,TRUE);
             $listEntry['Content']['Match']=$listMatch->to_array();
             $listEntry['Content']['Matched case']=$caseEntry['Content'];
             $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,FALSE);
             $result['Statistics']['Entries moved (success)']['Value']++;
+            // look for further matches, increase index & reset documentation
+            $index++;
+            $result['List matcher'][$index]=$result['List matcher'][$index-1];
+            $result['List matcher'][$index]['Match']=$result['List matcher'][$index]['List number']=$result['List matcher'][$index]['Errors']=NULL;
         }
-        // move processed entries
+        // move completely processed entries
         if (!$matchSuccess && !$listMatch->opsFailure??FALSE){
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($caseEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep failed cases']));
+            $result['List matcher'][$index]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE);
+            $result['List matcher'][$index]['List number']='';
+            $result['List matcher'][$index]['Errors']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$errorsMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
+            // move failed case entry
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($caseEntry,$targetSelectorFailure,TRUE,$testRun,!empty($processorParams['Keep failed cases']));
             $result['Statistics']['Entries moved (failure)']['Value']++;
         }
         return $result;
@@ -358,18 +374,18 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $flatListEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($listEntry);
             $listValue='';
             $list['debug']=$list['debug']??[];
-            $count=count($list['debug']);
+            $index=count($list['debug']);
             foreach($listRules as $ruleId=>$rule){
                 $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleId)[0];
                 $ruleValueIn=$flatListEntry[$rule['Content']['Entry key']]??'';
-                $list['debug'][$count][$ruleKey]=$ruleValueIn;
+                $list['debug'][$index][$ruleKey]=$ruleValueIn;
                 preg_match('/'.($rule['Content']['RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/',$ruleValueIn,$match);
                 $ruleValueOut=preg_replace('/'.($rule['Content']['Delete by RegExp match']??\SourcePot\Datapool\Root::NULL_STRING).'/','',$match[$rule['Content']['RegExp match index']]??'').($rule['Content']['Glue']??'');
-                $list['debug'][$count][$ruleKey].=' &rarr; '.$ruleValueOut;
+                $list['debug'][$index][$ruleKey].=' &rarr; '.$ruleValueOut;
                 $listValue.=$ruleValueOut;
             }
             $listValue=trim($listValue,$rule['Content']['Glue']??'');
-            $list[$flatListEntry['EntryId']]=$list['debug'][$count]['Result']=$listValue;
+            $list[$flatListEntry['EntryId']]=$list['debug'][$index]['Result']=$listValue;
         }
         return $list;
     }
