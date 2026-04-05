@@ -61,6 +61,11 @@ class Computations{
         'int(A)+int(B)+...'=>'int(A) + int(B) + ...',
         'float(A)+float(B)+...'=>'float(A) + float(B) + ...',
         'average(A,B,...)'=>'average(A, B, ...)',
+        'count(A,B,...)'=>'count(A, B, ...)',
+        'range(A,B,...)'=>'range(A, B, ...)',
+        'population_standard_deviation(A,B,...)'=>'population_standard_deviation(A, B, ...)',
+        'min(A,B,...)'=>'min(A, B, ...)',
+        'max(A,B,...)'=>'max(A, B, ...)',
         'string(AB)'=>'string(AB)',
         'string(A|B)'=>'string(A|B)',
         'string(A_B)'=>'string(A_B)',
@@ -153,6 +158,22 @@ class Computations{
         $cachId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($cacheIdStr,TRUE);
         $this->combineCache[$cachId]['__COLUMN__']=$column;
         $this->combineCache[$cachId]['__OPERATION__']=$combineOperation;
+        $value=$this->adjustDatatypeBasedOnOperation($value,$combineOperation);
+        if (!empty(self::ARR_COLUMNS[$column])){
+            // array columns
+            $index=count($this->combineCache[$cachId]['__VALUES__'][$key]??[]);
+            $this->combineCache[$cachId]['__VALUES__'][$key][$index]=$value;
+        } else {
+            // non-array columns
+            if (!isset($this->combineCache[$cachId]['__VALUES__'][$key])){
+                // only safe the first value at a specific key
+                $this->combineCache[$cachId]['__VALUES__'][$key]=$value;
+            }
+        }
+    }
+
+    public function adjustDatatypeBasedOnOperation($value,string $combineOperation)
+    {
         if (stripos($combineOperation,'float')!==FALSE){
             $value=$this->arr2value($value);
             $value=floatval($value);
@@ -165,18 +186,11 @@ class Computations{
         } else if (stripos($combineOperation,'bool')!==FALSE){
             $value=$this->arr2value($value);
             $value=!empty($value);
+        } else{
+            $value=$this->arr2value($value);
+            $value=$this->value2numeric($value);
         }
-        if (!empty(self::ARR_COLUMNS[$column])){
-            // array columns
-            $index=count($this->combineCache[$cachId]['__VALUES__'][$key]??[]);
-            $this->combineCache[$cachId]['__VALUES__'][$key][$index]=$value;
-        } else {
-            // non-array columns
-            if (!isset($this->combineCache[$cachId]['__VALUES__'][$key])){
-                // only safe the first value at a specific key
-                $this->combineCache[$cachId]['__VALUES__'][$key]=$value;
-            }
-        }
+        return $value;
     }
 
     public function getCombineCache():array
@@ -191,12 +205,10 @@ class Computations{
 
     public function combineAll(array $flatEntry):array
     {
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($this->combineCache,'combineCache.json');
         foreach($this->combineCache as $fcacheId=>$cache){
             $flatEntry=$this->combine($flatEntry,$cache);
         }
         $this->combineCache=[];
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($flatEntry,'flatEntry.json');
         return $flatEntry;
     }
 
@@ -211,12 +223,15 @@ class Computations{
             $flatEntry[$cache['__COLUMN__']]=$this->arrOperation($arr,$cache['__OPERATION__'],TRUE);
         } else {
             // array columns
+            if (!is_array($flatEntry[$cache['__COLUMN__']])){
+                $flatEntry[$cache['__COLUMN__']]=[];
+            }
             foreach($cache['__VALUES__'] as $key=>$value){
                 if (empty($cache['__OPERATION__'])){
-                    // Operation ''=>'{...}'
+                    // Operation: ''=>'{...}'
                     $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],FALSE);
                 } else {
-                    // Operation not ''=>'{...}'
+                    // Operation not: ''=>'{...}'
                     $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],TRUE);
                 }
             }
@@ -227,13 +242,41 @@ class Computations{
     private function arrOperation(array $arr,$operation,$forceScalar=FALSE)
     {
         ksort($arr);
+        // calculations
+        $min=$max=NULL;
+        $sum=$numberCount=0;
+        foreach($arr as $value){
+            if (!is_float($value) && !is_int($value)){continue;}
+            $sum+=$value;
+            $numberCount++;
+            if ($min===NULL || $value<($min??$value)){$min=$value;}
+            if ($max===NULL || $value>($max??$value)){$max=$value;}
+        }
+        $avg=($numberCount!==0)?($sum/$numberCount):NULL;
+        $population_standard_deviation=0;
+        foreach($arr as $value){
+            if (!is_float($value) && !is_int($value)){continue;}
+            $population_standard_deviation+=pow($value-$avg,2);
+        }
+        $population_standard_deviation=($numberCount!==0)?(sqrt($population_standard_deviation/($numberCount))):NULL;
+        // map result
         if (strpos($operation,'string')!==FALSE){
             $glue=trim($operation,'string()AB.');
             $result=implode($glue,$arr);
         } else if (strpos($operation,'+')!==FALSE){
-            $result=array_sum($arr);
+            $result=$sum;
         } else if (strpos($operation,'average')!==FALSE){
-            $result=array_sum($arr)/count($arr);
+            $result=$avg;
+        } else if (strpos($operation,'count')!==FALSE){
+            $result=count($arr);
+        } else if (strpos($operation,'range')!==FALSE){
+            $result=$max-$min;
+        } else if (strpos($operation,'population_standard_deviation')!==FALSE){
+            $result=$population_standard_deviation;
+        } else if (strpos($operation,'min')!==FALSE){
+            $result=$min;
+        } else if (strpos($operation,'max')!==FALSE){
+            $result=$max;
         } else if ($operation==='lastHit' || $operation==='firstHit'){
             if ($operation==='lastHit'){end($arr);} else {reset($arr);}
             $result[key($arr)]=current($arr);
