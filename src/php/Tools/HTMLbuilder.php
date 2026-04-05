@@ -300,8 +300,15 @@ class HTMLbuilder{
             if (!empty($arr['standardColumsOnly']) && !isset($stdKeys[$key])){continue;}
             if ($key==$arr['value'] && !empty($arr['showSample'])){$sampleValue=(is_array($value))?'':strval($value);}
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
+            $keyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$key);
+            while(count($keyComps)>1 && !empty($arr['addParentKeys'])){
+                array_pop($keyComps);
+                $key=implode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$keyComps);
+                $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
+            }    
         }
         $arr['options']+=$appendOptions;
+        ksort($arr['options']);
         $html=$this->select($arr);
         if (!empty($sampleValue)){
             if (strlen($sampleValue)>40){$sampleValue=substr($sampleValue,0,37).'...';}
