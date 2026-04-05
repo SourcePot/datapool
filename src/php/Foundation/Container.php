@@ -454,7 +454,7 @@ class Container{
             $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$settings;
         }
         // add column button
-        $element=['tag'=>'button','element-content'=>'➕','key'=>['addColumn'],'value'=>'add','title'=>'Add column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+        $element=['tag'=>'button','element-content'=>'+','key'=>['addColumn'],'value'=>'add','title'=>'Add column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
         $addColoumnBtn=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         $settings['columns'][]=['Column'=>$addColoumnBtn,'Filter'=>FALSE];
         // get selector

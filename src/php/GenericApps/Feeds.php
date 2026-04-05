@@ -297,7 +297,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $context['itemCount'];
     }
 
-    private function mapArray(array $in, array $mapping):array
+    private function mapArray(array $in, $mapping):array
     {
         $flatIn=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($in);
         $leafesIn=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatIn);
@@ -309,9 +309,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $key='url';
                 $value=$match[1];
             }
+            $mapping=(is_array($mapping))?$mapping:[strval($mapping)];
             foreach($mapping as $fromKey=>$toKey){
                 if (strpos($key,$fromKey)===FALSE){continue;}
-                $out[$toKey]=strip_tags((string)$value);
+                $out[$toKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags((string)$value);
                 break;
             }
         }

@@ -15,6 +15,7 @@ final class MiscTools{
     private $oc=NULL;
 
     private const SERIALIZED_INDICATOR='@@@@';
+    private const REGEX_TAG='/<[\/]{0,1}(([a-zA-Z]+)|(!--)|(![)|(![a-zA-Z]+))([^>]*)(--)*>/u';
     
     public $emojis=[];
     private $emojiFile='';
@@ -154,9 +155,18 @@ final class MiscTools{
     
     public function containsTags(string $str):bool
     {
-        if (strlen($str)===strlen(strip_tags($str))){return FALSE;} else {return TRUE;}
+        return boolval(preg_match(self::REGEX_TAG,$str));
     }
     
+    public function stripTags($xml):string
+    {
+        $string=preg_replace(self::REGEX_TAG,' ',strval($xml??''));
+        $string=strtr($string,['&nbsp;'=>' ','<br>'=>"\n",'</br>'=>"\n",'<br/>'=>"\n",]);
+        $string=preg_replace('/\s+/u',' ',$string);
+        $string=htmlspecialchars_decode($string);
+        return $string;
+    }
+
     public function str2bool($str):bool
     {
         if (is_bool($str)){

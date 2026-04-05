@@ -916,7 +916,7 @@ class HTMLbuilder{
     {
         if (!is_string($html) || empty($html)){
             return $html;
-        } else if (strlen(strip_tags($html))==strlen($html)){
+        } else if (!$this->oc['SourcePot\Datapool\Tools\MiscTools']->containsTags($html)){
             $arr['tag']='p';
             $arr['class']='td-content-wrapper';
             $arr['keep-element-content']=FALSE;
