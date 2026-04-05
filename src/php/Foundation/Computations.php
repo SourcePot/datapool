@@ -12,9 +12,6 @@ namespace SourcePot\Datapool\Foundation;
 
 class Computations{
     
-    //public const UNYCOM_REGEX='/([0-9]{4})([XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,4})([0-9 ]{0,3})/u';
-    public const UNYCOM_REGEX='/([0-9]{4})([ ]{0,1}[XPEFMR]{1,2})([0-9]{5})([A-Z ]{0,5})([0-9]{0,2})\s/u';
-
     private const COMPARE_EQUAL_PRECISION=5;
     
     public const DATA_TYPES=[
@@ -63,7 +60,7 @@ class Computations{
         'average(A,B,...)'=>'average(A, B, ...)',
         'count(A,B,...)'=>'count(A, B, ...)',
         'range(A,B,...)'=>'range(A, B, ...)',
-        'population_standard_deviation(A,B,...)'=>'population_standard_deviation(A, B, ...)',
+        'population_standard_deviation(A,B,...)'=>'population σ(A, B, ...)',
         'min(A,B,...)'=>'min(A, B, ...)',
         'max(A,B,...)'=>'max(A, B, ...)',
         'string(AB)'=>'string(AB)',
