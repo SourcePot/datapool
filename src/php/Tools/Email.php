@@ -308,7 +308,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry=$this->header2entry($entry,$message->properties()->transport_message_headers??'');
         $entry['Content']['Subject']=$message->properties['subject']??'{Missing subject}';
         $entry['Content']['File content']=$message->getBody();
-        $entry['Content']['Message']=strip_tags($entry['Content']['File content']);
+        $entry['Content']['Message']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['File content']);
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html message
         $context['messageEntries']++;
@@ -351,7 +351,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry=$this->header2entry($entry,substr($rawEmail,0,strpos($rawEmail,"\r\n\r\n")));
         $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
         $entry['Content']['Message']=$message->text()?:($htmlContent??'');
-        $entry['Content']['File content']=$message->text();
+        $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
@@ -498,13 +498,13 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                     $text=htmlspecialchars_decode($section)."\n\r";
                     $html.='<h1>'.$section.'</h1>';
                 }
-                $text=strip_tags(htmlspecialchars_decode($content))."\n\r";
+                $text=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($content)."\n\r";
                 $html.='<div class="content">'.$content.'<div>';
             }
             $html=str_replace('{{html}}',$html,self::HTML_TEMPLATE);
             $html=str_replace('{{title}}','',$html);
             $mail->msgHTML($html);
-            $mail->AltBody=strip_tags($text);
+            $mail->AltBody=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($text);
             // add attachment
             if (isset($entry['file'])){
                 $mail->addAttachment($entry['file']);

@@ -454,7 +454,7 @@ class Container{
             $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$settings;
         }
         // add column button
-        $element=['tag'=>'button','element-content'=>'➕','key'=>['addColumn'],'value'=>'add','title'=>'Add column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+        $element=['tag'=>'button','element-content'=>'+','key'=>['addColumn'],'value'=>'add','title'=>'Add column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
         $addColoumnBtn=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
         $settings['columns'][]=['Column'=>$addColoumnBtn,'Filter'=>FALSE];
         // get selector
@@ -472,14 +472,10 @@ class Container{
             // create html
             $filterKey='Filter';
             $matrix=[];
-            $columnOptions=[];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],[],TRUE,FALSE) as $entry){
                 $rowIndex=$entry['rowIndex']+intval($settings['offset'])+1;
                 $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry);
                 // setting up
-                if (empty($columnOptions)){
-                    $columnOptions=$this->getKeySelector($flatEntry);
-                }
                 foreach($settings['columns'] as $columnIndex=>$cntrArr){
                     $column=explode($S,$cntrArr['Column']);
                     $column=array_shift($column);
@@ -508,7 +504,8 @@ class Container{
                         $element=['tag'=>'button','element-content'=>'&#9660;','key'=>['desc',$column],'value'=>$columnIndex,'style'=>['padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'],'title'=>'Order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']];
                         $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         // column selector
-                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$columnOptions,'value'=>$cntrArr['Column'],'keep-element-content'=>TRUE,'key'=>['columns',$columnIndex,'Column'],'title'=>'Select column or field','style'=>[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+                        $keySelectArr=$flatEntry+['value'=>$cntrArr['Column'],'addParentKeys'=>TRUE,'keep-element-content'=>TRUE,'key'=>['columns',$columnIndex,'Column'],'title'=>'Select column or field','style'=>[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
+                        $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->keySelect($keySelectArr);
                         // remove column button
                         if ($columnIndex>0){
                             $element=['tag'=>'button','element-content'=>'&xcup;','keep-element-content'=>TRUE,'key'=>['removeColumn',$columnIndex],'value'=>'remove','hasCover'=>TRUE,'style'=>[],'title'=>'Remove column','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
@@ -580,43 +577,6 @@ class Container{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $arr;        
-    }
-
-    private function getKeySelector(array $flatEntry):array{
-        $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
-        // options for complete match
-        $upperOrderKeys=[];
-        $keyMatchOptions=[];
-        foreach($flatEntry as $flatColumnKey=>$value){
-            if (strpos($flatColumnKey,$S)!==FALSE){
-                $flatKeyComps=explode($S,$flatColumnKey);
-                $dimensions=count($flatKeyComps);
-                $upperOrderKey='';
-                for($dim=0;$dim<$dimensions;$dim++){
-                    $upperOrderKey=(empty($upperOrderKey))?$flatKeyComps[$dim]:($upperOrderKey.=$S.$flatKeyComps[$dim]);
-                    if (!isset($upperOrderKeys[$upperOrderKey])){
-                        $upperOrderKeys[$upperOrderKey]=['count'=>0,'dim'=>$dim];
-                    }
-                    $upperOrderKeys[$upperOrderKey]['count']++;
-                }
-                
-            }
-            $keyMatchOptions[$flatColumnKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatColumnKey);
-        }
-        // options for sub key matches
-        $subKeyOptions=[];
-        foreach($upperOrderKeys as $upperOrderKey=>$keyCount){
-            if ($keyCount>1){
-                $subKeyOptions[$upperOrderKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($upperOrderKey);
-            }
-        }
-        // options for special value presentation
-        $presentationOptions=['Read rights'=>'Read rights','Write rights'=>'Write rights'];
-        if (isset($flatEntry['Privileges'])){$presentationOptions['Privileges column']='Privileges column';}
-        // combine options
-        $columnOptions=$presentationOptions+$subKeyOptions+$keyMatchOptions;
-        ksort($columnOptions);
-        return $columnOptions;
     }
     
     private function getOffsetSelector(array $arr,array $settings,int $rowCount):string
