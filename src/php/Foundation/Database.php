@@ -934,17 +934,16 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $targetEntry;
     }
 
-    public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):bool
+    public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):array
     {
         if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
             $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
             if ($this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file)){
                 $entry['Params']['File']=NULL;
-                $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-                return TRUE;
+                return $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
             }
         }
-        return FALSE;
+        return $entry;
     }
     
     public function addOrderedListIndexToEntryId(string $primaryKeyValue,int $index):string
