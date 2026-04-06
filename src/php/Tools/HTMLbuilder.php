@@ -923,12 +923,8 @@ class HTMLbuilder{
     {
         if (!is_string($html) || empty($html)){
             return $html;
-        } else if (!$this->oc['SourcePot\Datapool\Tools\MiscTools']->containsTags($html)){
-            $arr['tag']='p';
-            $arr['class']='td-content-wrapper';
-            $arr['keep-element-content']=FALSE;
-            $arr['element-content']=$html;
-        } else {
+        } else if ($this->oc['SourcePot\Datapool\Tools\MiscTools']->containsTags($html)){
+            /*
             $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
             $htmlFile=$tmpDir.md5($html).'.html';
             file_put_contents($htmlFile,$html);
@@ -937,6 +933,16 @@ class HTMLbuilder{
             $arr['allowfullscreen']=TRUE;
             $arr['element-content']=' ';
             $arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'].'/',$htmlFile);
+            */
+            $arr['tag']='p';
+            $arr['class']='td-content-wrapper';
+            $arr['keep-element-content']=TRUE;
+            $arr['element-content']=htmlspecialchars($html);
+        } else {
+            $arr['tag']='p';
+            $arr['class']='td-content-wrapper';
+            $arr['keep-element-content']=FALSE;
+            $arr['element-content']=$html;
         }
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
     }

@@ -92,7 +92,7 @@ object{
     margin:10px 0 0 5px;
     overflow: hidden;
     color:var(--colorH);
-    background-color: var(--bgColorH);
+    background-color: var(--bgColor);
 }
 ol,ul{
     margin:1rem;
@@ -261,6 +261,7 @@ label{
     line-height:initial;
 }
 tr:hover{
+    color: var(--color);
     background-color: var(--bgColorA);
 }
 th{

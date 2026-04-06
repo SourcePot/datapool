@@ -120,7 +120,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Mergeing']);
+        $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Merge entries']);
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
@@ -227,7 +227,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($targetEntry);
             $result['Statistics']['Entries moved (success)']['Value']++;
             if (count($result)<20){
-                $result['Target entry '.$entryName]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+                $result['Target entry "'.$entryName.'"']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
         }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
