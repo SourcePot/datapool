@@ -272,7 +272,7 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
         $arr['contentStructure']=$contentStructure;
-        $arr['caption']='Parameter';
+        $arr['caption']='Configuration parameters';
         $arr['noBtns']=TRUE;
         $row=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entry2row($arr);
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
@@ -337,6 +337,10 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
             } else if (!$result['cntr']['isSkipRow']){
                 $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
             }
+        }
+        // get placholder
+        foreach($this->placeholder as $placeholderKey=>$placeholderValue){
+            $result['Placeholder'][$placeholderKey]=['value'=>$placeholderValue];
         }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
@@ -419,10 +423,6 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
                 $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($targetEntry??[]);
                 $result['Sample result <b>failed</b>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
-        }
-        // get placholder
-        foreach($this->placeholder as $placeholderKey=>$placeholderValue){
-            $result['Placeholder'][$placeholderKey]=['value'=>$placeholderValue];
         }
         return $result;
     }
