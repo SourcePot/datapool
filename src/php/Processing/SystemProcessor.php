@@ -15,8 +15,8 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
     
     private const INFO_MATRIX=[
-        'Caption'=>['Comment'=>'External program execution'],
-        'Description'=>['Comment'=>'This prozessors allows for the execution of exernal programms on the system.'],
+        'Caption'=>['Comment'=>'<b>External program execution</b>'],
+        'Description'=>['Comment'=>'This prozessor allows command rule based execution of exernal programs on the system.<br/>Each command rule is a string and may contain placeholders. The command will be executed for each entry and the result can be mapped to the target entry.<br/>If any command rule fails, the taget entry will be moved to the "Target on failure" selector. If all command rules succeed, the target entry will be moved to the "Target on failure" canvas element.'],
     ];
 
     private const SYSTEM_INFO=[
@@ -189,7 +189,7 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getInfo($callingElement):string
     {
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Help']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Help']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?','open'=>FALSE]);
         return $html;
     }

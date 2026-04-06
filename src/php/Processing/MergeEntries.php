@@ -15,12 +15,12 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $oc;
 
     private const INFO_MATRIX=[
-        ''=>['Value'=>'This processor merges entries into one or multiple target entries.'],
-        'Description'=>['Value'=>'The target entry count depends on the amount of different "Map to"-values.<br/>Make sure that there are no entries left in the target canvas-element from any previous run, hen you trigger the processor.<br/>Otherwise a new run will be taking pre-existing values as a starting point.'],
+        'Headline'=>['Value'=>'<b>This processor merges entries into one or multiple target entries.</b>'],
+        'Description'=>['Value'=>'The target entry count depends on the entry[Name] count, i.e. the value "Assign this to the target entry[Name]" should be selected accordingly.<br/>All results mapped to "Target Column &rarr; Target key" and calculated based on the "Intra entry merging rules" will only be present in the final target entry,<br/>if "Target Column &rarr; Target key" is mapped to "Inter entry merging rules" &#8680; "Target Column &rarr; Target key".'],
     ];
     
     private const CONTENT_STRUCTURE_PARAMS=[
-        'Map this to target entry[Name]'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','addParentKeys'=>FALSE,'addColumns'=>[]],
+        'Assign this to the target entry[Name]'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','addParentKeys'=>FALSE,'addColumns'=>[]],
         'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
     ];
@@ -96,7 +96,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     }
     
      private function getMergeEntriesInfo($callingElement){
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Info']);
         return $html;
     }
@@ -256,7 +256,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // create target entry, process inter entries merge rules
         $params=current($base['mergingparams'])['Content'];
         $targetEntry=$sourceEntry;
-        $targetEntry['Name']=$flatSourceEntry[$params['Map this to target entry[Name]']];
+        $targetEntry['Name']=$flatSourceEntry[$params['Assign this to the target entry[Name]']];
         $targetEntry['Content']=$targetEntry['Params']=[];
         $flatTargetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);    
         foreach($base['merginginterentryrules']??[] as $interEntryRuleId=>$interEntryRule){

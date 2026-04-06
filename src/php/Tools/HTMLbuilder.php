@@ -159,7 +159,7 @@ class HTMLbuilder{
                     } else {
                         $cell=str_replace("\n",'</br>',strval($cell));
                         if (empty($arr['keep-element-content'])){
-                            $cell=htmlspecialchars($cell,ENT_QUOTES,'UTF-8');
+                            $cell=htmlspecialchars_decode($cell,ENT_QUOTES);
                         }
                         $tdArr['element-content']=$cell;
                     }
