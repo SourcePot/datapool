@@ -338,6 +338,10 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
                 $result=$this->processEntry($base,$sourceEntry,$result,$testRun);
             }
         }
+        // get placholder
+        foreach($this->placeholder as $placeholderKey=>$placeholderValue){
+            $result['Placeholder'][$placeholderKey]=['value'=>$placeholderValue];
+        }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
 
@@ -419,10 +423,6 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
                 $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2entry($targetEntry??[]);
                 $result['Sample result <b>failed</b>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
-        }
-        // get placholder
-        foreach($this->placeholder as $placeholderKey=>$placeholderValue){
-            $result['Placeholder'][$placeholderKey]=['value'=>$placeholderValue];
         }
         return $result;
     }
