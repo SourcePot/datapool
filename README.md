@@ -56,6 +56,14 @@ Multiple entries are presented either as tiles or a table (with one ro per entry
 
 ![CMultimedia app](/assets/img/Multimedia.png "Multimedia app")
 
+## External data processing or presentation, e.g. Feeds, Emails, APIs
+
+A RSS feed reader is one of the standard GenericApps of Datapool. Feed sources can be managed under "*Admin → Settings: Source = settings, Group = Feeds*".
+
+![Data explorer](/assets/img/NewsFeed.png "RSS feed reader")
+
+Access to other external data sources such as APIs, remote clients etc. can be added through specific processor classes (implement the Processor-Interface) or receiver classes (implement the Receiver-Interface). Examples for such data sources are RaspberryPis communicating through the *SourcePot\Datapool\Processing\RemoteClient*-class, Emails handled by the *SourcePot\Datapool\Tools\Email-class* or the Open Patent Service connected through the *SourcePot\OPS\ops*-class, 
+
 # Get Started
 You need to host the web application through a web server or local host (e.g. your personal computer). The server can be set up on a wide range of systems such as Linux, UNIX, MS Windows. 
 
