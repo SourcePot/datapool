@@ -112,7 +112,7 @@ class HTMLbuilder{
     {
         $html='';
         $styles=['trStyle'=>[]];
-        $isValidTable=!empty(current($arr['matrix'])) && (is_array(current($arr['matrix']))?(is_array(current($arr['matrix']))?TRUE:FALSE):FALSE);
+        $isValidTable=!empty(current($arr['matrix']??[])) && (is_array(current($arr['matrix']??[]))?(is_array(current($arr['matrix']??[]))?TRUE:FALSE):FALSE);
         if ($isValidTable){
             $indexArr=['x'=>0,'y'=>0];
             $tableArr=['tag'=>'table','keep-element-content'=>TRUE,'element-content'=>''];
