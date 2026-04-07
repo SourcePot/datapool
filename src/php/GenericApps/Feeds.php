@@ -205,7 +205,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     private function storeFeed(array $feed, array $header):int
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$this->currentUrlEntryContent['URL'],'itemCount'=>0];
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$this->currentUrlEntryContent['URL'],'itemCount'=>0,'errors'=>[]];
         // get feed items
         if (isset($feed['channel']['item'])){
             $hasChannelKey=TRUE;
@@ -255,6 +255,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entries=[];
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         foreach($items as $item){
+            if (!is_array($item)){
+                $context['errors'][]='Parsing item failed, item is not an array';
+                break;
+            }
             $item=$this->mapArray($item,self::ITEM_MAPPING);
             if (isset($item['link'])){
                 $link=$item['link'];
@@ -277,7 +281,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 parse_str($urlComps['query']??'',$queryArr);
                 $fileNameComps=pathinfo($urlComps['path']);
                 $entry['Params']['Feed item']['Item media query']=$queryArr;
-                $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']);
+                $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']??'Entry Name missing');
                 // store media file
                 $tmpFile=$tmpDir.$fileName.'.'.$fileNameComps['extension'];
                 $fileContent=file_get_contents($src);
@@ -293,6 +297,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
             }
             $context['itemCount']++;
+        }
+        if (!empty($context['errors'])){
+            $context['errors']=implode(', ',$context['errors']);
+            $this->oc['logger']->log('error','Function "{class} &rarr; {function}()" feed processing for "{url}" finished with errors: {errors}.',$context);
         }
         return $context['itemCount'];
     }
