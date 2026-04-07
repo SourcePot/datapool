@@ -545,14 +545,14 @@ class Computations{
             if ($valueA===NAN || $valueB===NAN){
                 $result=NAN;
             } else if (isset(self::COMBINE_OPTIONS[$operation])){
-                if (strpos($operation,'average')===FALSE && strpos($operation,'float')===FALSE && strpos($operation,'int')===FALSE){
+                if (strpos($operation??'','average')===FALSE && strpos($operation??'','float')===FALSE && strpos($operation??'','int')===FALSE){
                     $result=$this->arrOperation(['A'=>$valueAstr,'B'=>$valueBstr],$operation,FALSE);
                 } else {
                     if (strpos($operation,'int')!==FALSE){
                         $valueA=intval(round($valueA));
                         $valueB=intval(round($valueB));
                     }
-                    $result=$this->arrOperation(['A'=>$valueA,'B'=>$valueB],$operation,FALSE);
+                    $result=$this->arrOperation(['A'=>$valueA,'B'=>$valueB],$operation??'',FALSE);
                 }
             } else if ($operation==='-'){
                 $result=$valueA-$valueB;
