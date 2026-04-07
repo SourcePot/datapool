@@ -50,6 +50,10 @@ class Computations{
         'subYearsFromDate'=>'date(A) - B years','subMonthsFromDate'=>'date(A) - B months','subDaysFromDate'=>'date(A) - B days',
         'setTimezone'=>'A&rarr;setTimezone(B) &#9755; set "A" to timezone "B", return "A\' {Y-m-d H:i:s}" in system timezone','changeTimezone'=>'A&rarr;changeTimezone(B) &#9755; "A" from system timezone, return "A\' {Y-m-d H:i:s}" in target timezone "B"',
     ];
+
+    private const NUMERIC_OPERATION_NEEDLES=[
+        'int','float','average','range','population_standard_deviation','min','max',
+    ];
     
     public const COMBINE_OPTIONS=[
         ''=>'{...}',
@@ -462,6 +466,16 @@ class Computations{
         return $value;
     }
 
+    public function isNumericOperation($operation):bool
+    {
+        foreach(self::NUMERIC_OPERATION_NEEDLES as $needle){
+            if (strpos($operation,$needle)!==FALSE){
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+
     public function isTrueConst($value,$condition):bool|NULL
     {
         // value conditioning
@@ -536,6 +550,7 @@ class Computations{
 
     public function operation($valueA,$valueB,$operation)
     {
+        if (empty($operation)){return NULL;}
         $result=$this->isTrue($valueA,$valueB,$operation);
         if ($result===NULL){
             $valueAstr=strval($valueA);
@@ -545,14 +560,14 @@ class Computations{
             if ($valueA===NAN || $valueB===NAN){
                 $result=NAN;
             } else if (isset(self::COMBINE_OPTIONS[$operation])){
-                if (strpos($operation??'','average')===FALSE && strpos($operation??'','float')===FALSE && strpos($operation??'','int')===FALSE){
-                    $result=$this->arrOperation(['A'=>$valueAstr,'B'=>$valueBstr],$operation,FALSE);
-                } else {
+                if ($this->isNumericOperation($operation)){
                     if (strpos($operation,'int')!==FALSE){
                         $valueA=intval(round($valueA));
                         $valueB=intval(round($valueB));
                     }
-                    $result=$this->arrOperation(['A'=>$valueA,'B'=>$valueB],$operation??'',FALSE);
+                    $result=$this->arrOperation(['A'=>$valueA,'B'=>$valueB],$operation,FALSE);
+                } else {
+                    $result=$this->arrOperation(['A'=>$valueAstr,'B'=>$valueBstr],$operation,FALSE);
                 }
             } else if ($operation==='-'){
                 $result=$valueA-$valueB;
