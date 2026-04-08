@@ -52,7 +52,7 @@ class Computations{
     ];
 
     private const NUMERIC_OPERATION_NEEDLES=[
-        'int','float','average','range','population_standard_deviation','min','max',
+        'int(','float(','average(','range(','population_standard_deviation(','min(','max(',
     ];
     
     public const COMBINE_OPTIONS=[
@@ -454,8 +454,8 @@ class Computations{
         $value=($value==='INF')?(INF):(($value==='-INF')?(-INF):$value);
         $value=($value==='NAN')?NAN:$value;
         $value=($value==='NULL')?NULL:$value;
-        $value=($value===TRUE || $value==='TRUE')?1:$value;
-        $value=($value===FALSE || $value==='FALSE')?0:$value;
+        $value=($value===TRUE || strtolower(strval($value))==='true')?1:$value;
+        $value=($value===FALSE || strtolower(strval($value))==='false')?0:$value;
         if (is_string($value)){
             if (strpos($value,'.')===FALSE && strpos($value,',')===FALSE && stripos($value,'e')===FALSE){
                 $value=intval($value);
@@ -555,43 +555,43 @@ class Computations{
         if ($result===NULL){
             $valueAstr=strval($valueA);
             $valueBstr=strval($valueB);
-            $valueA=$this->value2numeric($valueA);
-            $valueB=$this->value2numeric($valueB);
+            $valueAnum=$this->value2numeric($valueA);
+            $valueBnum=$this->value2numeric($valueB);
             if ($valueA===NAN || $valueB===NAN){
                 $result=NAN;
             } else if (isset(self::COMBINE_OPTIONS[$operation])){
                 if ($this->isNumericOperation($operation)){
                     if (strpos($operation,'int')!==FALSE){
-                        $valueA=intval(round($valueA));
-                        $valueB=intval(round($valueB));
+                        $valueAnum=intval(round($valueAnum));
+                        $valueBnum=intval(round($valueBnum));
                     }
-                    $result=$this->arrOperation(['A'=>$valueA,'B'=>$valueB],$operation,FALSE);
+                    $result=$this->arrOperation(['A'=>$valueAnum,'B'=>$valueBnum],$operation,FALSE);
                 } else {
                     $result=$this->arrOperation(['A'=>$valueAstr,'B'=>$valueBstr],$operation,FALSE);
                 }
             } else if ($operation==='-'){
-                $result=$valueA-$valueB;
+                $result=$valueAnum-$valueBnum;
             } else if ($operation==='+'){
-                $result=$valueA+$valueB;
+                $result=$valueAnum+$valueBnum;
             } else if ($operation==='*'){
-                $result=$valueA*$valueB;
+                $result=$valueAnum*$valueBnum;
             } else if ($operation==='pow'){
-                $result=pow($valueA,$valueB);
+                $result=pow($valueAnum,$valueBnum);
             } else if ($operation==='|'){
-                $result=intval($valueA)|intval($valueB);
+                $result=intval($valueAnum)|intval($valueBnum);
             } else if ($operation==='&'){
-                $result=intval($valueA)&intval($valueB);
+                $result=intval($valueAnum)&intval($valueBnum);
             } else if ($operation==='/'){
-                if ($valueB==0){
-                    $result=($valueA<0)?(-INF):INF; // avoid division by zero
+                if ($valueBnum==0){
+                    $result=($valueAnum<0)?(-INF):INF; // avoid division by zero
                 } else {
-                    $result=$valueA/$valueB;
+                    $result=$valueAnum/$valueBnum;
                 }
             } else if ($operation==='%'){
-                if ($valueB==0){
-                    $result=($valueA<0)?(-INF):INF; // avoid division by zero
+                if ($valueBnum==0){
+                    $result=($valueAnum<0)?(-INF):INF; // avoid division by zero
                 } else {
-                    $result=$valueA%$valueB;
+                    $result=$valueAnum%$valueBnum;
                 }
             } else if ($operation==='regexMatch'){
                 preg_match('/'.$valueBstr.'/',$valueAstr,$match);
