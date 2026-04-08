@@ -319,7 +319,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             }
             $mapping=(is_array($mapping))?$mapping:[strval($mapping)];
             foreach($mapping as $fromKey=>$toKey){
-                if (strpos($key,$fromKey)===FALSE){continue;}
+                if (strpos(strval($key),$fromKey)===FALSE){continue;}
                 $out[$toKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags((string)$value);
                 break;
             }
