@@ -14,18 +14,8 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private const SAMPLE_LENGTH=30;
 
-    private const MAX_HEIGHT_RESULTS='60vh';
+    private const MAX_HEIGHT_RESULTS='55vh';
     
-    private const QUERY_SELECTORS=[
-        ['app'=>'SourcePot\Datapool\GenericApps\Feeds','Source'=>'feeds','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Name'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-        ['app'=>'SourcePot\Datapool\GenericApps\Multimedia','Source'=>'multimedia','Params'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-        ['app'=>'ourcePot\Datapool\GenericApps\Documents','Source'=>'documents','Folder'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>5],
-        ['app'=>'SourcePot\Datapool\Forum\Forum','Source'=>'forum','Content'=>'%{{query}}%','orderBy'=>'Date','isAsc'=>FALSE,'limit'=>10],
-        ['app'=>'SourcePot\Datapool\Calendar\Calendar','Source'=>'calendar','Content'=>'%{{query}}%','Start>'=>'{{calendarStartDateTime}}','orderBy'=>'Start','isAsc'=>TRUE,'limit'=>4],
-    ];
     private $oc;
     
     private $entryTable='';
@@ -91,28 +81,23 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     private function getSerachResultHtml(string $query):array
     {
-        // if calendar entry add Start requirement
-        $nowDateTime=new \DateTime('now');
-        $nowDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-        $calendarStartDateTime=$nowDateTime->format('Y-m-d H:i:s');
         $arr=['Query'=>$query,'html'=>'','Names'=>[],'Hits'=>[]];
         if (empty($query)){
             return $arr;
         }
-        // loop through query selectors
         $query=preg_replace('/\s+/','%',trim($query));
-        $selectors=$this->oc['SourcePot\Datapool\Tools\MiscTools']->generic_strtr(self::QUERY_SELECTORS,['{{query}}'=>$query,'{{calendarStartDateTime}}'=>$calendarStartDateTime]);
-        foreach($selectors as $selector){
-            $queryColumn=$this->selector2queryColumn($selector,$query);
-            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$selector['orderBy'],$selector['isAsc'],$selector['limit'],0) as $entry){
+        $currentUserContent=$this->oc['SourcePot\Datapool\Root']->getCurrentUser()['Content']??[];
+        foreach($currentUserContent['My search interests']??[] as $class2query){
+            $entries=$this->oc[$class2query]->query($query,$limit=10,$tags=[],$language='');
+            foreach($entries as $entry){
                 if (isset($arr['Hits'][$entry['EntryId']])){
                     if ($arr['Hits'][$entry['EntryId']]===$entry['Source']){continue;}
                 }
-                $headline=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($entry).': '.$this->getQuerySampleText($entry,$queryColumn,$query);
+                $headline=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->selector2string($entry).': '.$entry['sample']??'';
                 $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>$headline,'keep-element-content'=>TRUE,]);  
                 $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'&#10227;','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'home','style'=>['clear'=>'both','width'=>'99vw']]);
                 $arr['Names'][$entry['EntryId']]=$entry['Name'];
-                $arr['Hits'][$entry['EntryId']]=$entry['Source'];
+                $arr['Hits'][$entry['EntryId']]=$entry['Source'];    
             }
         }
         if (empty($arr['html'])){
@@ -124,19 +109,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $arr;
     }
 
-    private function selector2queryColumn(array $selector,string $query):string|bool
-    {
-        $queryColumn=FALSE;
-        foreach($selector as $column=>$value){
-            if (mb_strpos($value,$query)!==FALSE){
-                $queryColumn=$column;
-                break;
-            }
-        }
-        return $queryColumn;
-    }
-
-    private function getQuerySampleText(array $entry,string|bool $column,string $query):string
+    public function getQuerySampleText(array $entry,string|bool $column,string $query):string
     {
         if (empty($column)){return '';}
         $halfSmapleLength=intval(self::SAMPLE_LENGTH/2);
@@ -164,6 +137,6 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $info='This widget provides a <b>query text field</b>. Queries can be entered and will be used to search certain database tables.<br/>The results will be presented below the query field.';
         return $info;
     }
-    
+
 }
 ?>
