@@ -41,6 +41,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'EN - Movies Music, Musik'=>'EN - Movies Music',
         'EN - Art'=>'EN - Art',
         'EN - Nature'=>'EN - Nature',
+        'EN - Culinary'=>'EN - Culinary',
         // Spanish
         'ES - Noticias'=>'ES - Noticias',
         'ES - Política'=>'ES - Política',
