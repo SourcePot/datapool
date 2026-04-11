@@ -669,6 +669,40 @@ class HTMLbuilder{
         return $html;
     }
 
+    public function selectClassesImplementingInterface(array $arr):string
+    {
+        if (empty($arr['selector']) || empty($arr['interface'])){
+            return 'Selector or interface arg empty...';
+        }
+        $key=array_pop($arr['key']);
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        $saveRequest=isset($formData['cmd'][$key]['save']);
+        $html='<fieldset>';
+        $html.='<legend>'.'"'.$arr['interface'].'"'.'</legend>';
+        foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces($arr['interface']) as $class){
+            if ($saveRequest){
+                if (empty($formData['val']['Content'][$key][$class])){
+                    $arr['selector']['Content'][$key][$class]=NULL;
+                } else {
+                    $arr['selector']['Content'][$key][$class]=$class;
+                }
+            }
+            $checked=!empty($arr['selector']['Content'][$key][$class]);
+            $id=md5($arr['callingClass'].$arr['callingFunction'].$class);
+            $htmlClass=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>['Content',$key,$class],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'title'=>'','excontainer'=>TRUE]);
+            $htmlClass.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>$class]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$htmlClass,'keep-element-content'=>TRUE,'class'=>'fieldset']);
+        }
+        if (!empty($arr['element-content'])){
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$arr['element-content'],'keep-element-content'=>TRUE,'style'=>['font-weight'=>'bold','margin'=>'0.5rem','color'=>'var(--redH)']]);
+        }
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','key'=>[$key,'save'],'element-content'=>'Save','style'=>['margin'=>'0','width'=>'100%'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+        $html.='</fieldset>';
+        if ($saveRequest){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($arr['selector'],TRUE);
+        }
+        return $html;
+    }
     public function entryControls(array $arr):string
     {
         $tableStyle=['clear'=>'none','margin'=>'0','min-width'=>'200px'];
@@ -921,25 +955,14 @@ class HTMLbuilder{
     
     public function value2tableCellContent($html,array $arr=[])
     {
+        $arr['tag']='p';
         if (!is_string($html) || empty($html)){
             return $html;
         } else if ($this->oc['SourcePot\Datapool\Tools\MiscTools']->containsTags($html)){
-            /*
-            $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
-            $htmlFile=$tmpDir.md5($html).'.html';
-            file_put_contents($htmlFile,$html);
-            $arr['tag']='embed';
-            $arr['type']='text/html';
-            $arr['allowfullscreen']=TRUE;
-            $arr['element-content']=' ';
-            $arr['src']=str_replace($GLOBALS['dirs']['tmp'],$GLOBALS['relDirs']['tmp'].'/',$htmlFile);
-            */
-            $arr['tag']='p';
             $arr['class']='td-content-wrapper';
             $arr['keep-element-content']=TRUE;
             $arr['element-content']=htmlspecialchars($html);
         } else {
-            $arr['tag']='p';
             $arr['class']='td-content-wrapper';
             $arr['keep-element-content']=FALSE;
             $arr['element-content']=$html;
@@ -1115,5 +1138,6 @@ class HTMLbuilder{
         }
         return $options;
     }
+
 }
 ?>
