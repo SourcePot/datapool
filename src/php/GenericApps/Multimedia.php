@@ -135,28 +135,28 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
         $index=0;
         $entries=[];
         $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$limit) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',FALSE,$limit) as $entry){
             $entries[$index]=$entry;
             $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
             $index++;
         }
         if ($index>self::HAYSTACK_RESULT_LIMIT){return $entries;}
         $selector=['Source'=>$this->entryTable,'Name'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Name',TRUE,$limit) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',TRUE,$limit) as $entry){
             $entries[$index]=$entry;
             $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Name',$query);
             $index++;
         }
         if ($index>self::HAYSTACK_RESULT_LIMIT){return $entries;}
         $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Folder',TRUE,$limit) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',TRUE,$limit) as $entry){
             $entries[$index]=$entry;
             $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Folder',$query);
             $index++;
         }
         if ($index>self::HAYSTACK_RESULT_LIMIT){return $entries;}
         $selector=['Source'=>$this->entryTable,'Params'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Params',TRUE,$limit) as $entry){
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',TRUE,$limit) as $entry){
             $entries[$index]=$entry;
             $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Params',$query);
             $index++;

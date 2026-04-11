@@ -68,12 +68,11 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         }
         $serachResult['Query']=$serachResult['Query']??'';
         $serachResult['html']=$serachResult['html']??'';
-        
         // compile html - add query div
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>['border'=>'2px solid var(--colorM)']]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Search','key'=>['search'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
-        $arr['html']=$this->searchBaseHtml($html);
+        $html=$this->searchBaseHtml($html);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'min-content','display'=>'inline-block','border'=>'1px solid var(--blueH)','padding'=>'1rem 1rem 0 1rem','border-radius'=>'5px','background-color'=>'var(--bgColorA)']]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'1rem 0','width'=>'inherit']]);
         // compile html - add result div
@@ -133,16 +132,18 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $currentUserContent=$this->oc['SourcePot\Datapool\Root']->getCurrentUser()['Content']??[];
         foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Haystack') as $class){
             $classComps=explode('\\',$class); 
-            $arr=['value'=>!empty($currentUserContent['My search interests'][$class]),'element'=>['element-content'=>array_pop($classComps),'style'=>['font-size'=>'0.8rem','margin'=>'0.25rem 0']],'key'=>['searchIn',array_pop($classComps)],'callingClass'=>__CLASS__,'callingFunction'=>'searchBaseHtml','type'=>'checkbox','excontainer'=>FALSE];
-            $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
+            $arr=['value'=>!empty($currentUserContent['My search interests'][$class]),'element'=>['element-content'=>array_pop($classComps),'style'=>['font-size'=>'0.8rem']],'key'=>['searchIn',array_pop($classComps)],'callingClass'=>__CLASS__,'callingFunction'=>'searchBaseHtml','type'=>'checkbox','excontainer'=>FALSE];
             if ($arr['value']){
                 $noneSelected=FALSE;
+            } else {
+                $arr['element']['style']['background-color']='var(--bgColorA)';
             }
+            $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
         }
         if ($noneSelected){
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'No App selected: go to your "Admin → Account → 🔍" to configure Apps you want to search in future.','style'=>['color'=>'var(--attentionColor)'],'keep-element-content'=>FALSE]);
         } else {
-            $html=$preceedingHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
+            $html=$preceedingHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','display'=>'inline-block','width'=>'max-content','padding'=>'0.25rem 0 0 0']]);
         }
         return $html;
     }
