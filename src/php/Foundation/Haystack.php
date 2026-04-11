@@ -68,12 +68,11 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         }
         $serachResult['Query']=$serachResult['Query']??'';
         $serachResult['html']=$serachResult['html']??'';
-        
         // compile html - add query div
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>['border'=>'2px solid var(--colorM)']]);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Search','key'=>['search'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
-        $arr['html']=$this->searchBaseHtml($html);
+        $html=$this->searchBaseHtml($html);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'min-content','display'=>'inline-block','border'=>'1px solid var(--blueH)','padding'=>'1rem','border-radius'=>'5px','background-color'=>'var(--bgColorA)']]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'none','width'=>'max-content','margin'=>'0 auto']]);
         $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'style'=>['float'=>'left','clear'=>'both','padding'=>'1rem 0','width'=>'inherit']]);
         // compile html - add result div
