@@ -133,10 +133,12 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         foreach($this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Haystack') as $class){
             $classComps=explode('\\',$class); 
             $arr=['value'=>!empty($currentUserContent['My search interests'][$class]),'element'=>['element-content'=>array_pop($classComps),'style'=>['font-size'=>'0.8rem']],'key'=>['searchIn',array_pop($classComps)],'callingClass'=>__CLASS__,'callingFunction'=>'searchBaseHtml','type'=>'checkbox','excontainer'=>FALSE];
-            $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
             if ($arr['value']){
                 $noneSelected=FALSE;
+            } else {
+                $arr['element']['style']['background-color']='var(--bgColorA)';
             }
+            $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
         }
         if ($noneSelected){
             $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'No App selected: go to your "Admin → Account → 🔍" to configure Apps you want to search in future.','style'=>['color'=>'var(--attentionColor)'],'keep-element-content'=>FALSE]);
