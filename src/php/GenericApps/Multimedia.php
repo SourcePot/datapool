@@ -154,6 +154,13 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
             $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Folder',$query);
             $index++;
         }
+        if ($index>self::HAYSTACK_RESULT_LIMIT){return $entries;}
+        $selector=['Source'=>$this->entryTable,'Params'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Params',TRUE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Params',$query);
+            $index++;
+        }
         return $entries;
     }
 

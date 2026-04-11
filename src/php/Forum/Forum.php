@@ -156,6 +156,12 @@ class Forum implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\In
             $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
             $index++;
         }
+        $selector=['Source'=>$this->entryTable,'Params'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Params',TRUE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Params',$query);
+            $index++;
+        }
         return $entries;
     }
 }
