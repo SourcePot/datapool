@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Calendar;
 
-class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp{
+class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp,\SourcePot\Datapool\Interfaces\Haystack{
     
     private const APP_ACCESS='ALL_MEMBER_R';
     
@@ -861,6 +861,25 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $info='This widget presents todays <b>calendar sheet</b>.';
         return $info;
     }
-    
+
+    /******************************************************************************************************************************************
+    * Haystack interface
+    */
+
+    public function query(string $query, int $limit=10, array $tags=[], string $language=''):array
+    {
+        $nowDateTime=new \DateTime('now');
+        $nowDateTime->setTimezone(new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+        $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%','Start>'=>$nowDateTime->format('Y-m-d H:i:s')];
+        $index=0;
+        $entries=[];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Start',TRUE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
+            $index++;
+        }
+        return $entries;
+    }
+
 }
 ?>

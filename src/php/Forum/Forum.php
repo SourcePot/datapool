@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Forum;
 
-class Forum implements \SourcePot\Datapool\Interfaces\App{
+class Forum implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Haystack{
     
     private const APP_ACCESS='ALL_MEMBER_R';
     private const INIT_ENTRIES_TO_SHOW_TIMESPAN=7776000; // in seconds
@@ -141,6 +141,22 @@ class Forum implements \SourcePot\Datapool\Interfaces\App{
         $forumEntry['Name']=(empty($forumEntry['Content']['Message']))?'&#9998;':substr($forumEntry['Content']['Message'],0,30);
         return $forumEntry;
     }
-    
+
+    /******************************************************************************************************************************************
+    * Haystack interface
+    */
+
+    public function query(string $query, int $limit=10, array $tags=[], string $language=''):array
+    {
+        $index=0;
+        $entries=[];
+        $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
+            $index++;
+        }
+        return $entries;
+    }
 }
 ?>

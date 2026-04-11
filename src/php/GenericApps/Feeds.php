@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
+class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp,\SourcePot\Datapool\Interfaces\Haystack{
     
     private const APP_ACCESS='ALL_MEMBER_R';
 
@@ -41,6 +41,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'EN - Movies Music, Musik'=>'EN - Movies Music',
         'EN - Art'=>'EN - Art',
         'EN - Nature'=>'EN - Nature',
+        'EN - Culinary'=>'EN - Culinary',
         // Spanish
         'ES - Noticias'=>'ES - Noticias',
         'ES - Política'=>'ES - Política',
@@ -319,7 +320,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             }
             $mapping=(is_array($mapping))?$mapping:[strval($mapping)];
             foreach($mapping as $fromKey=>$toKey){
-                if (strpos($key,$fromKey)===FALSE){continue;}
+                if (strpos(strval($key),$fromKey)===FALSE){continue;}
                 $out[$toKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags((string)$value);
                 break;
             }
@@ -444,6 +445,23 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$this->getUserSpecificItem()];
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
         return $arr;
+    }
+    
+    /******************************************************************************************************************************************
+    * Haystack interface
+    */
+
+    public function query(string $query, int $limit=10, array $tags=[], string $language=''):array
+    {
+        $query=['Content'=>'%'.$query.'%'];
+        if (!empty($language)){
+            $query['Folder']=strtoupper($language).' - %';
+        }
+        $entries=[];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($query,FALSE,'Read','Date',FALSE,$limit) as $entry){
+            $entries[]=$entry;
+        }
+        return $entries;
     }
 
 }

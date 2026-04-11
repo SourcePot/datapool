@@ -164,7 +164,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         if (!is_file($objectListFile)){return 'Please reload to create a new object list.';}
         foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
             if (!isset($row['type'])){continue;}
-            $matrix[$row['class']]=$row;
+            $matrix[$row['classWithNamespace']]=$row;
         }
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'caption'=>'','hideKeys'=>TRUE,'hideHeader'=>FALSE]);
     }
