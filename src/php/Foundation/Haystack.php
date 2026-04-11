@@ -136,7 +136,8 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
             if ($arr['value']){
                 $noneSelected=FALSE;
             } else {
-                $arr['element']['style']['background-color']='var(--bgColorA)';
+                $arr['element']['style']['background-color']='var(--bgColor)';
+                $arr['element']['style']['color']='var(--bgDarkT)';
             }
             $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
         }
