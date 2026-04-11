@@ -14,6 +14,8 @@ class Documents implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapoo
     
     private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px'];
 
+    private const HAYSTACK_RESULT_LIMIT=30;
+
     private $oc;
     
     private $entryTable='';
