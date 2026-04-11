@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\GenericApps;
 
-class Documents implements \SourcePot\Datapool\Interfaces\App{
+class Documents implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\Haystack{
     
     private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px'];
 
@@ -90,6 +90,36 @@ class Documents implements \SourcePot\Datapool\Interfaces\App{
             return $arr;
         }
     }
-        
+
+    /******************************************************************************************************************************************
+    * Haystack interface
+    */
+
+    public function query(string $query, int $limit=10, array $tags=[], string $language=''):array
+    {
+        $index=0;
+        $entries=[];
+        $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
+            $index++;
+        }
+        if ($index>self::HAYSTACK_RESULT_LIMIT){return $entries;}
+        $selector=['Source'=>$this->entryTable,'Name'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Name',TRUE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Name',$query);
+            $index++;
+        }
+        if ($index>self::HAYSTACK_RESULT_LIMIT){return $entries;}
+        $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Folder',TRUE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Folder',$query);
+            $index++;
+        }
+        return $entries;
+    }
 }
 ?>
