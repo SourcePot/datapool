@@ -461,7 +461,8 @@ final class Root{
         } else if (isset($this->implementedInterfaces[$interface])){
             return $this->implementedInterfaces[$interface];
         } else {
-            throw new \ErrorException('Function '.__FUNCTION__.': Argument interface = "'.$interface.'" is invalid.',0,E_ERROR,__FILE__,__LINE__);
+            $this->oc['logger']->log('warning','Interface {interface} not found',['interface'=>$interface]);
+            return [];
         }
     }
 
@@ -587,6 +588,8 @@ final class Root{
                         require_once $objDef['file'];
                         if (strcmp($objDef['type'],'Kernal object')===0 || strcmp($objDef['type'],'Application object')===0){
                             $this->oc[$classWithNamespace]=new $classWithNamespace($this->oc);
+                        } else {
+                            // interfaces will be registered when the object collection is completed
                         }
                     } else {
                         $objListNeedsToBeRebuild=TRUE;
