@@ -528,13 +528,19 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($splitParams as $ruleId=>$splitParam){
             $splitResult=$this->textSplit($text,$splitParam['regEx'],$splitParam['isSectionStartIndicator']);
             if ($splitParam['isSectionStartIndicator']){
-                $sections[$ruleId]=$splitResult['textComps'][0]??'';
-                //array_unshift($splitResult['textComps'],$splitResult['residue']);
+                $text=$sections[$ruleId]=implode('',$splitResult['textComps']);
+                $text=preg_replace('/('.$splitParam['regEx'].')/u','',$text,1);
+                // remove overlapping part of previous section        
+                if (isset($sections[$prevRuleId??'__NOTSET__']) && !empty($sections[$ruleId])){
+                    $sections[$prevRuleId]=explode($sections[$ruleId],$sections[$prevRuleId]);
+                    $sections[$prevRuleId]=array_shift($sections[$prevRuleId]);
+                }
             } else {
                 $sections[$ruleId]=array_shift($splitResult['textComps'])??'';
                 $splitResult['textComps'][]=$splitResult['residue'];
+                $text=implode('',$splitResult['textComps']);
             }
-            $text=implode('',$splitResult['textComps']);
+            $prevRuleId=$ruleId;
         }
         return $sections;
     }
