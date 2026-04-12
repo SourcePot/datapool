@@ -175,14 +175,17 @@ class Computations{
 
     public function adjustDatatypeBasedOnOperation($value,string $combineOperation)
     {
-        $value=$this->arr2value($value);
         if (stripos($combineOperation,'float')!==FALSE){
+            $value=$this->arr2value($value);
             $value=floatval($value);
         } else if (stripos($combineOperation,'int')!==FALSE || stripos($combineOperation,'byte')!==FALSE){
+            $value=$this->arr2value($value);
             $value=intval(round(floatval($value)));
         } else if (stripos($combineOperation,'string')!==FALSE){
+            $value=$this->arr2value($value);
             $value=strval($value);
         } else if (stripos($combineOperation,'bool')!==FALSE){
+            $value=$this->arr2value($value);
             $value=!empty($value);
         }
         return $value;
