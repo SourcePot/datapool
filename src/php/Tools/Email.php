@@ -352,6 +352,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
         $entry['Content']['Message']=$message->text()?:($htmlContent??'');
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
+        $id=$id?:$entry['message-id']?:'';
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
@@ -378,7 +379,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $entry['Params']['File']['MIME-Type']=$attachment->contentType();
             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
             $context['messageEntries']++;
-        }      
+        }
         return $context;
     }
 
@@ -401,7 +402,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $subKey=$match[1]??'root';
                 $value=$match[2]??$value;
                 $entry['Params']['Email'][$key][$subKey]=$value;
-
+                if (stripos($key,'message-id')!==FALSE && stripos($subKey,'root')!==FALSE){
+                    $entry['message-id']=$value;
+                }
             }            
         }
         // add date
