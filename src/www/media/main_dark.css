@@ -638,7 +638,7 @@ p.log{
     border-bottom:1px solid var(--colorA);
     background-image:url("canvaslightbg.png");
 }
-.canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark{
+.canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra,.canvas-symbol,.canvas-processor,.canvas-std,.canvas-red,.canvas-green,.canvas-dark,.canvas-special{
     position:absolute;
     font-size:16px;
     text-align:center;
@@ -649,6 +649,11 @@ p.log{
     min-width:140px;
     border:1px solid var(--colorM);
     box-shadow:3px 3px 5px 1px var(--colorM);
+}
+.canvas-special{
+    min-width: unset;
+    color: var(--color);
+    background-color: var(--blue);
 }
 .canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra{
     font-weight:normal;
