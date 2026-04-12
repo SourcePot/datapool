@@ -261,7 +261,7 @@ class MediaTools{
     private function getSpreadsheet(array $arr,bool $isSmallPreview=FALSE):array
     {
         $arr['settings']['style']=$arr['settings']['style']??[];
-        $arr['settings']['style']=array_merge(['overflow'=>'hidden'],$arr['settings']['style']);
+        $arr['settings']['style']=array_merge(['overflow'=>'auto'],$arr['settings']['style']);
         $rowCount=0;
         $matrix=[];
         $iteratorClass=$arr['selector']['Params']['File']['SpreadsheetIteratorClass'];
