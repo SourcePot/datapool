@@ -652,8 +652,8 @@ p.log{
 }
 .canvas-special{
     min-width: unset;
-    color: var(--colorH);
-    background-color: var(--blueH);
+    color: var(--color);
+    background-color: var(--blue);
 }
 .canvas-text,.canvas-text-bold,.canvas-text-la,.canvas-text-ra{
     font-weight:normal;
