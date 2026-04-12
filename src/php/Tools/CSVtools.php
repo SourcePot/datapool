@@ -135,7 +135,7 @@ class CSVtools{
         return $setting;
     }
 
-    public function csvIterator(array|string $selector,array $csvSetting=[]):\Generator
+    public function csvIterator(array|string $selector,string $reader='csv',array $csvSetting=[]):\Generator
     {
         if (is_array($selector)){
             $csvFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
