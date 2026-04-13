@@ -24,7 +24,20 @@ class HTMLbuilder{
 
     private const SET_ACCESS_BYTE_INFO="Security relevant setting!\nNew Priviledges will become active at the next user login.";
 
-    private const PRESENTATION_SETTINGS_INFO="<b>SECURITY ADVICE:</b>\nIf a \"Key filter\" leads to multiple entries with sub-keys \"tag\" and \"element-content\" set, an html-element will bey created from all sub-keys.\nThere is no filtering applied. Ensure the values are trustworthy to prevent XSS attacks.\n\n<b>Example:</b>\n\"Entry key\" = 'Params'\n\"Key filter\" = 'Item link'\n...will create a html button, if the respective feed item entry created by class Feeds contains a link. This is safe as long as the class Feeds is safe and trustworthy.";
+    private const PRESENTATION_SETTINGS_INFO=[
+        'SECURITY ADVICE'=>[
+            'If a "Key filter" leads to multiple entries with sub-keys "tag" and "element-content" set, an html-element will bey created from all sub-keys.',
+            'There is no filtering applied. Ensure the values are trustworthy to prevent XSS attacks.',
+        ],
+        'Styling'=>[
+            'You can apply a style in the field "Style" such as "width:90vw;height:60vh;max-height:60vh;".',
+            'Use e.g. <b>"maxDim:470;"</b> to set the pixel limit of an image to less or equal 470px. In contrast to "max-width" "maxDim" reduces the image size.',
+        ],
+        'Example'=>[
+            '<b>Entry key</b> = "Params" and <b>Key filter</b> = "Item link"',
+            '...will create a html button, if the respective feed item entry created by class Feeds contains a link. This is safe as long as the class Feeds is safe and trustworthy.'
+        ]
+    ];
     
     private const BUTTONS=[
         'test'=>['key'=>['test'],'title'=>'Test run','hasCover'=>FALSE,'element-content'=>'Test','keep-element-content'=>TRUE,'tag'=>'button','requiredRight'=>FALSE,'requiresFile'=>FALSE,'excontainer'=>FALSE],
@@ -103,6 +116,20 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash);
     }
     
+    public function arr2text(array $arr):string
+    {
+        $html='';
+        foreach($arr as $h2=>$pArr){
+            $html.=(empty($h2))?'':$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>$h2,'keep-element-content'=>TRUE]);
+            if (!is_array($pArr)){$pArr=[$pArr];}
+            foreach($pArr as $h3=>$p){
+                $html.=(is_string($h3))?$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$h3,'keep-element-content'=>TRUE]):'';
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$p,'keep-element-content'=>TRUE,'style'=>['padding'=>'0 5px']]);
+            }
+        }
+        return $html;
+    }
+
     public function element(array $arr):string
     {
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
@@ -1123,7 +1150,7 @@ class HTMLbuilder{
         $arr['selector']['Name']='Setting';
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>self::PRESENTATION_SETTINGS_INFO,'keep-element-content'=>TRUE,'style'=>['font-size'=>'1.25rem','margin'=>'5px']]);
+        $arr['html'].=$this->arr2text(self::PRESENTATION_SETTINGS_INFO);
         return $arr;
     }
     
