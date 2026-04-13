@@ -16,9 +16,9 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $ruleOptions=[];
 
     private const INFO_MATRIX=[
-        '"&infin;" (infinite): '=>['Comment'=>'Within entries <b style="font-size:1.5rem;">&infin;</b> is represented as string "INF" or "-INF". Only for comarisons or operations it is mapped to INF or -INF.'],
-        'Division by zero: '=>['Comment'=>'To avoid division by zero errors and to allow comparisions, x/0 will return INF or -INF, if x<0'],
-        'Not a number (NAN) and NULL: '=>['Comment'=>'As with INF, NAN and NULL are stored in Entries as string "NAN", "NULL" and only mapped to PHP constants during comparisons and computations.'],
+        'Within entries <b style="font-size:1.5rem;">&infin;</b> is represented as string "INF" or "-INF". Only for comarisons or operations it is mapped to INF or -INF.',
+        'To avoid division by zero errors and to allow comparisions, x/0 will return INF or -INF, if x<0',
+        'As with INF, NAN and NULL are stored in Entries as string "NAN", "NULL" and only mapped to PHP constants during comparisons and computations.',
     ];
 
     private const CONTENT_STRUCTURE_PARAMS=[
@@ -119,7 +119,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
     private function getCalcEntriesInfo($callingElement):string
     {
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Info']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->arr2html(self::INFO_MATRIX,'std');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'!']);
         return $html;
     }

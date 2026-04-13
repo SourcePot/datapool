@@ -116,15 +116,14 @@ class HTMLbuilder{
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($toHash);
     }
     
-    public function arr2text(array $arr):string
+    public function arr2html(array $arr, string $class='md'):string
     {
         $html='';
         foreach($arr as $h2=>$pArr){
-            $html.=(empty($h2))?'':$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>$h2,'keep-element-content'=>TRUE]);
-            if (!is_array($pArr)){$pArr=[$pArr];}
-            foreach($pArr as $h3=>$p){
-                $html.=(is_string($h3))?$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$h3,'keep-element-content'=>TRUE]):'';
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$p,'keep-element-content'=>TRUE,'style'=>['padding'=>'0 5px']]);
+            $html.=(empty($h2) || (is_int($h2)))?'':$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>(is_array($pArr))?'h2':'h3','element-content'=>$h2,'keep-element-content'=>TRUE,'class'=>$class]);
+            foreach((is_array($pArr))?$pArr:[$pArr] as $h3=>$p){
+                $html.=(empty($h3) || is_int($h3))?'':$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$h3,'keep-element-content'=>TRUE,'class'=>$class]);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$p,'keep-element-content'=>TRUE,'class'=>$class]);
             }
         }
         return $html;
@@ -1150,7 +1149,7 @@ class HTMLbuilder{
         $arr['selector']['Name']='Setting';
         $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($arr['selector'],['Source','Group','Folder','Name'],'0','',FALSE);
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
-        $arr['html'].=$this->arr2text(self::PRESENTATION_SETTINGS_INFO);
+        $arr['html'].=$this->arr2html(self::PRESENTATION_SETTINGS_INFO);
         return $arr;
     }
     
