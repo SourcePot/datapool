@@ -314,9 +314,6 @@ class MediaTools{
     private function getObj(array $arr, bool $sanitize=FALSE):array
     {
         $arr['html']=$arr['html']??'';
-        $arr['settings']['style']=$arr['settings']['style']??[];
-        $arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-height']??'60vh';
-        $arr['settings']['style']['max-width']=$arr['settings']['style']['maxDim']??$arr['settings']['style']['max-width']??'90vh';
         if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
             if ($sanitize){
                 $content=htmlentities(file_get_contents($arr['selector']['Params']['TmpFile']['Source']));
@@ -327,7 +324,7 @@ class MediaTools{
             $objArr['tag']='object';
             $objArr['data']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $objArr['type']=$arr['selector']['Params']['File']['MIME-Type']??$arr['selector']['Params']['TmpFile']['MIME-Type'];
-            $objArr['style']=$objArr['settings']['style'];
+            $objArr['style']=$objArr['settings']['style']??[];
             $objArr['element-content']='<a href="'.$objArr['data'].'" style="float:left;clear:both;padding:2rem;" target="_blank">File <b>'.($arr['selector']['Params']['File']['Name']??'').'</b> can\'t be presented, click here to download...</a>';
             $objArr['keep-element-content']=TRUE;
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($objArr);
