@@ -141,7 +141,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
             $html.=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
         }
         if ($noneSelected){
-            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'No App selected: go to your "Admin → Account → 🔍" to configure Apps you want to search in future.','style'=>['color'=>'var(--attentionColor)'],'keep-element-content'=>FALSE]);
+            $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>'No App selected: go to your "Admin → Account → 🔍" to configure Apps you want to search in future.','style'=>['color'=>'var(--attentionColor)','width'=>'max-content'],'keep-element-content'=>FALSE]);
         } else {
             $html=$preceedingHtml.$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$html,'keep-element-content'=>TRUE,'style'=>['float'=>'none','display'=>'inline-block','width'=>'max-content','border-top'=>'1px solid var(--bgDarkT)','padding'=>'0.5rem 0 0 0','margin'=>'0.5rem 0 0 0']]);
         }
