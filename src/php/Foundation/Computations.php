@@ -526,9 +526,9 @@ class Computations{
         if ($condition==='>'){
             return $valueA>$valueB;
         } else if ($condition==='=='){
-            return round($valueA,self::COMPARE_EQUAL_PRECISION)==round($valueB,self::COMPARE_EQUAL_PRECISION);
+            return round(floatval($valueA),self::COMPARE_EQUAL_PRECISION)==round($valueB,self::COMPARE_EQUAL_PRECISION);
         } else if ($condition==='!='){
-            return round($valueA,self::COMPARE_EQUAL_PRECISION)!=round($valueB,self::COMPARE_EQUAL_PRECISION);
+            return round(floatval($valueA),self::COMPARE_EQUAL_PRECISION)!=round($valueB,self::COMPARE_EQUAL_PRECISION);
         } else if ($condition==='<'){
             return $valueA<$valueB;
         } else if ($condition==='&&'){
