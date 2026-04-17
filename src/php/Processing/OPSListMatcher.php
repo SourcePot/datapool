@@ -327,7 +327,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
                 foreach($this->listMatcherObj->getRemainingRoyaltyList()??[] as $listEntryId=>$listEntryValue){
                     // manual match
                     foreach($base['manualmatchruleshtml']??[] as $ruleEntryId=>$rule){
-                        if (stripos($listEntryValue,$rule['Content']['List entry'])===FALSE){continue;}
+                        if (stripos($listEntryValue,$rule['Content']['List entry']??'__MISSING__')===FALSE){continue;}
                         $manualMatch=$rule['Content']['Family ref.'];
                         break;
                     }
