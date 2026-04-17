@@ -357,7 +357,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
                 $family=$flatCase[$rule['Content']['Entry key for Family value']];
                 $result['Manual match'][$index]=['Case'=>$case['Name'],'Familiy'=>$family,'Provided ip number'=>$rule['Content']['ip number'],'=?= List ip number'=>$listEntryValue,'Familiy'=>$family,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
                 // try to match
-                if (stripos($listEntryValue,$rule['Content']['ip number'])===FALSE){
+                if (stripos($listEntryValue,$rule['Content']['ip number']??'__MISSING__')===FALSE){
                     if (count($result['Manual match'])>15){
                         unset($result['Manual match'][$index]);
                         $overflow=TRUE;
