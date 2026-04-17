@@ -174,8 +174,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $params=current($base['mappingparams']);
         $base['Attachment name']=trim(date('Y-m-d His').' '.implode('-',$base['entryTemplates'][$params['Content']['Target']]??[]));
-        $base['zipRequested']=strcmp($params['Content']['Mode']??'','zip')===0;
-        $base['csvRequested']=strcmp($params['Content']['Mode']??'','csv')===0 || strcmp($params['Content']['Mode'],'zip')===0;
+        $base['zipRequested']=strcmp($params['Content']['Mode']??'__MISSING__','zip')===0;
+        $base['csvRequested']=strcmp($params['Content']['Mode']??'__MISSING__','csv')===0 || strcmp($params['Content']['Mode']??'__MISSING__','zip')===0;
         $disableMaxExecutionTimeLimit=(current($base['mappingparams'])['Content']['Keep source entries']??FALSE || $base['zipRequested'] || $base['csvRequested']);
         // loop through source entries and parse these entries
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,$disableMaxExecutionTimeLimit);
@@ -270,7 +270,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $targetEntry=[];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         foreach($base['mappingrules'] as $ruleIndex=>$rule){
-            if (strcmp($rule['Content']['...value selected by'],'useValue')===0){
+            if (strcmp($rule['Content']['...value selected by']??'__MISSING__','useValue')===0){
                 $targetValue=$rule['Content']['Target value or...'];
             } else {
                 if (isset($flatSourceEntry[$rule['Content']['...value selected by']])){

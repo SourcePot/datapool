@@ -533,7 +533,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
         $sqlArr['sql']='SELECT COUNT(*) FROM (SELECT `EntryId` FROM `'.$selector['Source'].'`'.$sqlArr['sql'].') AS a;';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
-        $rowCount=current($stmt->fetch());
+        $rowCount=current($stmt->fetch()?:[]);
         return intval($rowCount);
     }
     
