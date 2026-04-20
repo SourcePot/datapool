@@ -183,7 +183,6 @@ class HTMLbuilder{
                     if (is_array($cell)){
                         $tdArr['element-content']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($cell);
                     } else {
-                        $cell=str_replace("\n",'</br>',strval($cell));
                         if (empty($arr['keep-element-content'])){
                             $cell=htmlspecialchars_decode($cell,ENT_QUOTES);
                         }
