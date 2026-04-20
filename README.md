@@ -2,6 +2,10 @@
 
 Datapool is a versatile modular web application.
 
+### Quick start - first installation
+
+`composer create-project --no-dev sourcepot/datapool {add your target directory here}`
+
 ## Advantages of a web application in contrast to a desktop application
 - Runs on a wide range of devices, the web browser is the runtime environment
 - The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of JavaScript) and modern web browsers
@@ -82,7 +86,7 @@ Personally, I use Composer to install the web application with all its dependenc
 I tend to install the web application on my personal computer first. This serves as my local backup and can be used for final tests. In a later step, I copy the whole Datapool directory, with the exception of the `../src/setup/` and `../src/filespace/` directories, with all it's files to the web server using FTP (FileZilla).
 
 ## Installing the web application
-1. Choose your target directory on your web server or your computer and run Composer `composer create-project sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
+1. Choose your target directory on your web server or your computer and run Composer `composer create-project --no-dev sourcepot/datapool {add your target directory here}`. This will create, among other things, the `../src/www/`-subdirectory, which is the www-root and should be accessible through the network, i.e. by a client web browser. If you use XAMPP, locate the XAMPP directory, e.g. `.../xampp/htdocs/`. Your web applications' directories and files should be located there after successfully running Composer with this target directory.
 2. Create a database and a corresponding database user. Set the database collation to **utf8mb4_unicode_ci**.
 
 >[!NOTE]
