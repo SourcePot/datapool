@@ -2,10 +2,6 @@
 
 Datapool is a versatile modular web application.
 
-### Quick start - first installation
-
-`composer create-project --no-dev sourcepot/datapool {add your target directory here}`
-
 ## Advantages of a web application in contrast to a desktop application
 - Runs on a wide range of devices, the web browser is the runtime environment
 - The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of JavaScript) and modern web browsers

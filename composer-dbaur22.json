@@ -28,6 +28,22 @@
         "sourcepot/asset":"^v2.3.0",
         "sourcepot/match":"^v1.6.4"
     },
+        "require-dev": {
+      "dbaur22/ops-reader": "*",
+      "dbaur22/patent-list-matcher": "*"
+   },
+   "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/DBaur22/OPS-Reader"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/DBaur22/patent-list-matcher"
+    }
+   ],
+   "minimum-stability": "dev",
+   "prefer-stable": true,
     "autoload":{
         "psr-4":{
             "SourcePot\\Datapool\\":"src\\php"
