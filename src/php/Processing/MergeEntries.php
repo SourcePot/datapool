@@ -222,7 +222,6 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $targetSelector=$base['entryTemplates'][$params['Target']]??[];
         foreach($this->caches as $folder=>$flatSourceEntry){
             $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($flatSourceEntry,$folder);
-            $flatSourceEntry=$this->toDataType($flatSourceEntry,$base['merginginterentryrules']??[]);
             $updatedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($updatedSourceEntry,$targetSelector,TRUE,$testRun,!empty($params['Keep source entries']));
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($targetEntry);
@@ -263,21 +262,14 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $column=$interEntryRule['Content']['Target column'];
             $key=$interEntryRule['Content']['Target key'];
             $value=$flatSourceEntry[$interEntryRule['Content']['Select value by key to be merged']];
+            $dataType=$interEntryRule['Content']['To data type'];
             if (!empty($column)){
-                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($combineOperation,$column,$key,$value,$sourceEntry['Folder']);
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($combineOperation,$column,$key,$value,$sourceEntry['Folder'],$dataType);
             }
         }
         $this->caches[$sourceEntry['Folder']]=$flatSourceEntry;
         return $result;
     }
 
-    private function toDataType(array $flatEntry, array $rules):array
-    {
-        foreach($rules??[] as $ruleId=>$rule){
-            $value=$flatSourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]??$flatSourceEntry[$rule['Content']['Target column']].\SourcePot\Datapool\Root::ONEDIMSEPARATOR.[$rule['Content']['Target key']]??'';
-            $flatSourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($value,$rule['Content']['To data type']);
-        }
-        return $flatEntry;
-    }
 }
 ?>

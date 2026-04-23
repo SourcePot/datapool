@@ -152,7 +152,7 @@ class Computations{
     * Array operations
     */
 
-    public function add2combineCache(string $combineOperation,string $column,string $key,$value, string $groupingColumnValue='')
+    public function add2combineCache(string $combineOperation,string $column,string $key,$value, string $groupingColumnValue='',string $dataType='')
     {
         $cacheIdStr=$combineOperation.$column.$groupingColumnValue;
         $cacheIdStr.=(empty(self::ARR_COLUMNS[$column]))?'':$key;
@@ -160,6 +160,7 @@ class Computations{
         $this->combineCache[$cachId]['__COLUMN__']=$column;
         $this->combineCache[$cachId]['__OPERATION__']=$combineOperation;
         $this->combineCache[$cachId]['__GROUPING_COLUMN__']=$groupingColumnValue;
+        $this->combineCache[$cachId]['__DATATYPE__']=$dataType;
         $value=$this->adjustDatatypeBasedOnOperation($value,$combineOperation);
         if (!empty(self::ARR_COLUMNS[$column])){
             // array columns
