@@ -152,13 +152,14 @@ class Computations{
     * Array operations
     */
 
-    public function add2combineCache(string $combineOperation,string $column,string $key,$value)
+    public function add2combineCache(string $combineOperation,string $column,string $key,$value, string $groupingColumnValue='')
     {
-        $cacheIdStr=$combineOperation.$column;
+        $cacheIdStr=$combineOperation.$column.$groupingColumnValue;
         $cacheIdStr.=(empty(self::ARR_COLUMNS[$column]))?'':$key;
         $cachId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($cacheIdStr,TRUE);
         $this->combineCache[$cachId]['__COLUMN__']=$column;
         $this->combineCache[$cachId]['__OPERATION__']=$combineOperation;
+        $this->combineCache[$cachId]['__GROUPING_COLUMN__']=$groupingColumnValue;
         $value=$this->adjustDatatypeBasedOnOperation($value,$combineOperation);
         if (!empty(self::ARR_COLUMNS[$column])){
             // array columns
@@ -201,12 +202,13 @@ class Computations{
         $this->combineCache=$combineCache;
     }
 
-    public function combineAll(array $flatEntry):array
+    public function combineAll(array $flatEntry, string $groupingColumnValue=''):array
     {
         foreach($this->combineCache as $fcacheId=>$cache){
+            if ($groupingColumnValue!==$cache['__GROUPING_COLUMN__']){continue;}
             $flatEntry=$this->combine($flatEntry,$cache);
+            $this->combineCache[$fcacheId]=[];
         }
-        $this->combineCache=[];
         return $flatEntry;
     }
 
@@ -218,7 +220,7 @@ class Computations{
             foreach($cache['__VALUES__'] as $key=>$value){
                 $arr[$key]=$value=$this->arr2value($value);
             }
-            $flatEntry[$cache['__COLUMN__']]=$this->arrOperation($arr,$cache['__OPERATION__'],TRUE);
+            $flatEntry[$cache['__COLUMN__']]=$this->arrOperation($arr,$cache['__OPERATION__'],TRUE,$cache['__DATATYPE__']??'');
         } else {
             // array columns
             if (!is_array($flatEntry[$cache['__COLUMN__']])){
@@ -227,17 +229,17 @@ class Computations{
             foreach($cache['__VALUES__'] as $key=>$value){
                 if (empty($cache['__OPERATION__'])){
                     // Operation: ''=>'{...}'
-                    $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],FALSE);
+                    $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],FALSE,$cache['__DATATYPE__']??'');
                 } else {
                     // Operation not: ''=>'{...}'
-                    $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],TRUE);
+                    $flatEntry[$cache['__COLUMN__']][$key]=$this->arrOperation($value,$cache['__OPERATION__'],TRUE,$cache['__DATATYPE__']??'');
                 }
             }
         }
         return $flatEntry;
     }
 
-    private function arrOperation(array $arr,$operation,$forceScalar=FALSE)
+    private function arrOperation(array $arr,$operation,$forceScalar=FALSE,string $dataType='')
     {
         ksort($arr);
         // calculations
@@ -282,6 +284,9 @@ class Computations{
             $result=$arr;
         }
         $result=(is_array($result) && $forceScalar)?($this->arr2value($result)):$result;
+        if (!empty($dataType)){
+            $result=$this->convert($result,$dataType);
+        }
         return $result;
     }
 

@@ -20,7 +20,8 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     ];
     
     private const CONTENT_STRUCTURE_PARAMS=[
-        'Assign this to the target entry[Name]'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Name','addParentKeys'=>FALSE,'addColumns'=>[]],
+        'New entry name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'New entry name','excontainer'=>TRUE],
+        'Grouping column'=>['method'=>'element','tag'=>'p','element-content'=>'Folder','excontainer'=>TRUE],
         'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
     ];
@@ -30,6 +31,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Content','standardColumsOnly'=>TRUE,'addColumns'=>['Write to file'=>'Write to file']],
         'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+        'To data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
     ];
     
     private const CONTENT_STRUCTURE_INTER_ENTRY_RULES=[
@@ -37,6 +39,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Content','standardColumsOnly'=>TRUE,'addColumns'=>['Write to file'=>'Write to file']],
         'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
+        'To data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
     ];
         
     private $entryTable='';
@@ -217,17 +220,15 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // finalize computations, save target entry and present result
         $params=current($base['mergingparams'])['Content'];
         $targetSelector=$base['entryTemplates'][$params['Target']]??[];
-        foreach($this->caches as $entryName=>$cacheRules){
-            $flatSourceEntry=current($cacheRules)['Flat target entry'];
-            foreach($cacheRules as $cache){    
-                $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combine($flatSourceEntry,$cache);
-            }
-            $sourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
-            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$targetSelector,TRUE,$testRun,!empty($params['Keep source entries']));
+        foreach($this->caches as $folder=>$flatSourceEntry){
+            $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($flatSourceEntry,$folder);
+            $flatSourceEntry=$this->toDataType($flatSourceEntry,$base['merginginterentryrules']??[]);
+            $updatedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
+            $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($updatedSourceEntry,$targetSelector,TRUE,$testRun,!empty($params['Keep source entries']));
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($targetEntry);
             $result['Statistics']['Entries moved (success)']['Value']++;
             if (count($result)<20){
-                $result['Target entry "'.$entryName.'"']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+                $result['Target entry "'.$folder.'"']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
         }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
@@ -236,41 +237,47 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     public function mergeEntries($base,$sourceEntry,$result,$testRun){
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         // enrich source entry, process intra entry merge rules
-        $takeSample=mt_rand(1,100)>70;
+        $cacheArr=[];
         foreach($base['mergingintraentryrules']??[] as $intraEntryRuleId=>$intraEntryRule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($intraEntryRuleId)[0];
             $keyNeedle=$intraEntryRule['Content']['Select value by key to be merged']??'__MISSING_KEY__';
             $combineOperation=$intraEntryRule['Content']['Combine']??key(\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS);
-            $cacheArr=['__COLUMN__'=>$intraEntryRule['Content']['Target column'],'__OPERATION__'=>$combineOperation,'__VALUES__'=>[]];
+            $toDataType=$intraEntryRule['Content']['To data type']??'string';
+            $cacheId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$intraEntryRule['Content']['Target column'],$combineOperation],TRUE);
+            $cacheArr[$cacheId]=['__COLUMN__'=>$intraEntryRule['Content']['Target column'],'__OPERATION__'=>$combineOperation,'__VALUES__'=>[],'__DATATYPE__'=>$toDataType];
             foreach($flatSourceEntry as $key=>$value){
                 if (strpos($key,$keyNeedle)===FALSE){continue;}
-                $cacheArr['__VALUES__'][$intraEntryRule['Content']['Target key']][]=$this->oc['SourcePot\Datapool\Foundation\Computations']->adjustDatatypeBasedOnOperation($value,$combineOperation);
+                $cacheArr[$cacheId]['__VALUES__'][$intraEntryRule['Content']['Target key']][]=$this->oc['SourcePot\Datapool\Foundation\Computations']->adjustDatatypeBasedOnOperation($value,$combineOperation);
             }
-            $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combine($flatSourceEntry,$cacheArr);
-            $mergedValue=$flatSourceEntry[$intraEntryRule['Content']['Target column']][$intraEntryRule['Content']['Target key']]??'?';
-            if (!isset($result['Intra entry merge sample']) || $takeSample){
-                $result['Intra entry merge sample'][$ruleKey]=['Key'=>$intraEntryRule['Content']['Target column'].' &rarr; '.$intraEntryRule['Content']['Target key'],'Value'=>$mergedValue];
-            }
+        }
+        foreach($cacheArr as $cacheId=>$cache){
+            $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combine($flatSourceEntry,$cache);
         }
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($flatSourceEntry);
         // create target entry, process inter entries merge rules
         $params=current($base['mergingparams'])['Content'];
-        $targetEntry=$sourceEntry;
-        $targetEntry['Name']=$flatSourceEntry[$params['Assign this to the target entry[Name]']];
-        $targetEntry['Content']=$targetEntry['Params']=[];
-        $flatTargetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($targetEntry);    
+        $sourceEntry['Name']=$params['New entry name'];
         foreach($base['merginginterentryrules']??[] as $interEntryRuleId=>$interEntryRule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($interEntryRuleId)[0];
             $combineOperation=$interEntryRule['Content']['Combine']??key(\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS);
             $column=$interEntryRule['Content']['Target column'];
             $key=$interEntryRule['Content']['Target key'];
             $value=$flatSourceEntry[$interEntryRule['Content']['Select value by key to be merged']];
-            if (!isset($this->caches[$flatTargetEntry['Name']][$ruleKey])){
-                $this->caches[$flatTargetEntry['Name']][$ruleKey]=['__COLUMN__'=>$column,'__OPERATION__'=>$combineOperation,'__VALUES__'=>[],'Flat target entry'=>$flatTargetEntry];
+            if (!empty($column)){
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($combineOperation,$column,$key,$value,$sourceEntry['Folder']);
             }
-            $this->caches[$flatTargetEntry['Name']][$ruleKey]['__VALUES__'][$key][]=$this->oc['SourcePot\Datapool\Foundation\Computations']->adjustDatatypeBasedOnOperation($value,$combineOperation);
         }
+        $this->caches[$sourceEntry['Folder']]=$flatSourceEntry;
         return $result;
+    }
+
+    private function toDataType(array $flatEntry, array $rules):array
+    {
+        foreach($rules??[] as $ruleId=>$rule){
+            $value=$flatSourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]??$flatSourceEntry[$rule['Content']['Target column']].\SourcePot\Datapool\Root::ONEDIMSEPARATOR.[$rule['Content']['Target key']]??'';
+            $flatSourceEntry[$rule['Content']['Target column']][$rule['Content']['Target key']]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($value,$rule['Content']['To data type']);
+        }
+        return $flatEntry;
     }
 }
 ?>
