@@ -418,6 +418,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $result['List matcher'][$index]['Errors']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$errorsMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'style'=>['border'=>'none']]);
             // match successful, move list entry
             $listEntry=$this->getListEntry($callingElement,$listMatch->entryIdRoyaltyEntry);
+            $listEntry['Folder']=$caseEntry['Folder'];
             $listEntry['Content']['Match']=$listMatch->to_array();
             $listEntry['Content']['Matched case']=$caseEntry['Content'];
             $listEntry['Content']['Match type']='OPS match';
