@@ -470,6 +470,7 @@ class Container{
         if ($rowCount<=$settings['offset']){$settings['offset']=0;}
         if (!empty($rowCount)){
             // create html
+            $entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($selector['Source']);
             $filterKey='Filter';
             $matrix=[];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$settings['isSystemCall'],'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],$settings['offset'],[],TRUE,FALSE) as $entry){
@@ -491,18 +492,20 @@ class Container{
                         $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls($cntrArr);
                     } else {
                         $matrix[$filterKey][$columnIndex]='';
-                        // filter text field
-                        if ($filterSkipped && !empty($cntrArr['Filter'])){$style=['color'=>'#fff','background-color'=>'#a00'];} else {$style=[];}
-                        $filterTextField=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','title'=>'Filter list','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>['columns',$columnIndex,'Filter'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
-                        // "order by"-buttons
-                        if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=['color'=>'#fff','background-color'=>'#a00'];} else {$styleBtnSetting=[];}
-                        if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=[];}
-                        $element=['tag'=>'button','element-content'=>'&#9650;','key'=>['asc',$column],'value'=>$columnIndex,'style'=>['padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'],'title'=>'Order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']];
-                        $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
-                        $matrix[$filterKey][$columnIndex].=$filterTextField;
-                        if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=[];}
-                        $element=['tag'=>'button','element-content'=>'&#9660;','key'=>['desc',$column],'value'=>$columnIndex,'style'=>['padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'],'title'=>'Order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']];
-                        $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                        // filter text field and orderBy
+                        if (isset($entryTemplate[$column])){
+                            if ($filterSkipped && !empty($cntrArr['Filter'])){$style=['color'=>'#fff','background-color'=>'#a00'];} else {$style=[];}
+                            $filterTextField=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','title'=>'Filter list','style'=>$style,'value'=>$cntrArr['Filter'],'key'=>['columns',$columnIndex,'Filter'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
+                            // "order by"-buttons
+                            if (strcmp(strval($settings['orderBy']),$column)===0){$styleBtnSetting=['color'=>'#fff','background-color'=>'#a00'];} else {$styleBtnSetting=[];}
+                            if ($settings['isAsc']){$style=$styleBtnSetting;} else {$style=[];}
+                            $element=['tag'=>'button','element-content'=>'&#9650;','key'=>['asc',$column],'value'=>$columnIndex,'style'=>['padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'],'title'=>'Order ascending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']];
+                            $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                            $matrix[$filterKey][$columnIndex].=$filterTextField;
+                            if (!$settings['isAsc']){$style=$styleBtnSetting;} else {$style=[];}
+                            $element=['tag'=>'button','element-content'=>'&#9660;','key'=>['desc',$column],'value'=>$columnIndex,'style'=>['padding'=>'0','line-height'=>'1em','font-size'=>'1.5em'],'title'=>'Order descending','keep-element-content'=>TRUE,'callingClass'=>$arr['callingClass'],'style'=>$style,'callingFunction'=>$arr['callingFunction']];
+                            $matrix[$filterKey][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                        }
                         // column selector
                         $keySelectArr=$flatEntry+['value'=>$cntrArr['Column'],'addParentKeys'=>TRUE,'keep-element-content'=>TRUE,'key'=>['columns',$columnIndex,'Column'],'title'=>'Select column or field','style'=>[],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->keySelect($keySelectArr);
