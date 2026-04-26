@@ -77,8 +77,11 @@ class Computations{
         'string(A/B)'=>'string(A/B)',
         'string(A\B)'=>'string(A\B)',
         'string(A B)'=>'string(A B)',
+        'string(A | B)'=>'string(A | B)',
+        'string(A: B)'=>'string(A: B)',
         'string(A, B)'=>'string(A, B)',
         'string(A; B)'=>'string(A; B)',
+        'string(A</br>B)'=>'string(A</br>B)',
     ];
 
     private const DATEINTERVAL_CLEANUP=[

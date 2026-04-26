@@ -243,7 +243,9 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $combineOperation=$intraEntryRule['Content']['Combine']??key(\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS);
             $toDataType=$intraEntryRule['Content']['To data type']??'string';
             $cacheId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash([$intraEntryRule['Content']['Target column'],$combineOperation],TRUE);
-            $cacheArr[$cacheId]=['__COLUMN__'=>$intraEntryRule['Content']['Target column'],'__OPERATION__'=>$combineOperation,'__VALUES__'=>[],'__DATATYPE__'=>$toDataType];
+            $cacheArr[$cacheId]['__COLUMN__']=$intraEntryRule['Content']['Target column'];
+            $cacheArr[$cacheId]['__OPERATION__']=$combineOperation;
+            $cacheArr[$cacheId]['__DATATYPE__']=$toDataType;
             foreach($flatSourceEntry as $key=>$value){
                 if (strpos($key,$keyNeedle)===FALSE){continue;}
                 $cacheArr[$cacheId]['__VALUES__'][$intraEntryRule['Content']['Target key']][]=$this->oc['SourcePot\Datapool\Foundation\Computations']->adjustDatatypeBasedOnOperation($value,$combineOperation);
