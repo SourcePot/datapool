@@ -138,8 +138,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging params '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging intra entry'.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeIntraEntryRulesHtml','classWithNamespace'=>__CLASS__],[]);
-            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging inter entries'.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeInterEntriesRulesHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging rules'.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeRulesHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -150,14 +149,9 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
     
-    public function getMergeIntraEntryRulesHtml($arr){
+    public function getMergeRulesHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->mergingIntraEntryRules($arr['selector']);
-        return $arr;
-    }
-    
-    public function getMergeInterEntriesRulesHtml($arr){
-        if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->mergingInterEntryRules($arr['selector']);
         return $arr;
     }
