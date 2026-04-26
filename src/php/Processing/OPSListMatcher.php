@@ -14,23 +14,9 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $oc;
 
-    private const OPS_READER_CORE_PATH='../../OPS-Reader-dev_datapool/Core/';
-    private const OPS_READER_CORE_REQUIRED_FILES=[
-        'ListMatcher.php',
-        'OpsInterface.php',
-        'OpsReader.php',
-        'data/ListMatcher/ListMatcherInput.php',
-        'data/ListMatcher/ListMatcherOutput.php',
-        'data/ListMatcher/ListMatcherErrors.php',
-        'data/Ops/OpsNumberSearchOutput.php',
-        'data/Ops/OpsFamilySearchOutput.php',
-        'Response.php',
-        'enums/FailedFamilySearchKeys.php',
-    ];
-
     private const INFO_MATRIX=[
         'Caption'=>['Comment'=>'<b>Open Patent Service ListMatacher Wrapper</b>'],
-        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class.<br/>The ListMatcher Core must be present in the directory at the document root called "<i>'.self::OPS_READER_CORE_PATH.'</i>".<br/>The list entries are compared with the cases and identified as matches if they belong to the same patent family.<br/>The European Patent Office\'s definition of a patent family is used.'],
+        'Description'=>['Comment'=>'This processor is a wrapper for the DBaur22/OPS-Reader ListMatcher class.<br/>You must have installed dependancies with composer-dbaur22.json successfully in order to use the DBaur22/OPS-Reader ListMatcher.<br/>The list entries are compared with the cases and identified as matches if they belong to the same patent family.<br/>The European Patent Office\'s definition of a patent family is used.'],
     ];
 
     private const CREDENTIALS_DEF=[
@@ -290,50 +276,37 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['processorparamshtml'])['Content']['Keep failed cases']??FALSE);
         // load and create ListMatcher
         $result=$this->manualMatch($base,$result,$testRun,$callingElement);
-        $failedToLoadRequiredFiles=FALSE;
-        foreach(self::OPS_READER_CORE_REQUIRED_FILES as $class){
-            $required=self::OPS_READER_CORE_PATH.$class;
-            if (!is_file($required)){
-                $failedToLoadRequiredFiles=TRUE;
-                break;
-            }
-            require_once($required);
-        }
-        if ($failedToLoadRequiredFiles){
-            $result['OPS-Reader ListMatcher']['Error']=['value'=>'ListMatcher not found at "'.self::OPS_READER_CORE_PATH.'".</br>Please check the source code of class "'.__CLASS__.'".</br>Set the const OPS_READER_CORE_PATH to a valid path.'];
+        if (class_exists('\ListMatcher\ListMatcher',TRUE)){
+            $list=$this->getList($callingElement);
+            $result['List']=$list['tmp'];
+            unset($list['tmp']);
+            $this->list=$list;
+            $credentials=$this->getCredentials($callingElement);
+            $this->listMatcherObj=new \ListMatcher\ListMatcher($list,$credentials['Content']??[]);
         } else {
-            try{
-                $list=$this->getList($callingElement);
-                $result['List']=$list['tmp'];
-                unset($list['tmp']);
-                $this->list=$list;
-                $credentials=$this->getCredentials($callingElement);
-                $this->listMatcherObj=new \Core\ListMatcher($list,$credentials['Content']??[]);
-            } catch(\Exception $e){
-                $result['OPS-Reader ListMatcher']['Error']=['value'=>$e->getMessage()];
+            $result['ERROR OPS-Reader ListMatcher']['Error']=['value'=>'Class "\ListMatcher\ListMatcher" missing. You need to install/update with "composer-dbaur22.json"?'];
+        }
+        if (empty($result['ERROR OPS-Reader ListMatcher']['Error'])){
+            // loop through entries
+            $casesSelector=$this->getCasesSelector($callingElement);
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($casesSelector,TRUE) as $caseEntry){
+                $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$caseEntry);
+                if ($result['cntr']['timeLimitReached']){
+                    break;
+                } else if (!$result['cntr']['isSkipRow']){
+                    $result=$this->processCase($base,$caseEntry,$result,$testRun,$callingElement);
+                }
             }
-            if (empty($result['OPS-Reader ListMatcher']['Error'])){
-                // loop through entries
-                $casesSelector=$this->getCasesSelector($callingElement);
-                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($casesSelector,TRUE) as $caseEntry){
-                    $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->updateProcessorResult($result,$caseEntry);
-                    if ($result['cntr']['timeLimitReached']){
-                        break;
-                    } else if (!$result['cntr']['isSkipRow']){
-                        $result=$this->processCase($base,$caseEntry,$result,$testRun,$callingElement);
-                    }
+            // get remaining list entries
+            foreach($this->listMatcherObj->getRemainingRoyaltyList()??[] as $listEntryId=>$listEntryValue){
+                // manual match
+                foreach($base['manualmatchruleshtml']??[] as $ruleEntryId=>$rule){
+                    if (stripos($listEntryValue,$rule['Content']['List entry']??'__MISSING__')===FALSE){continue;}
+                    $manualMatch=$rule['Content']['Family ref.'];
+                    break;
                 }
-                // get remaining list entries
-                foreach($this->listMatcherObj->getRemainingRoyaltyList()??[] as $listEntryId=>$listEntryValue){
-                    // manual match
-                    foreach($base['manualmatchruleshtml']??[] as $ruleEntryId=>$rule){
-                        if (stripos($listEntryValue,$rule['Content']['List entry']??'__MISSING__')===FALSE){continue;}
-                        $manualMatch=$rule['Content']['Family ref.'];
-                        break;
-                    }
-                    $result['Remaining list entries'][$listEntryId]=['List EntryId'=>$listEntryId,'List entry value'=>$listEntryValue];   
-                }
-            }        
+                $result['Remaining list entries'][$listEntryId]=['List EntryId'=>$listEntryId,'List entry value'=>$listEntryValue];   
+            }
         }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
@@ -405,7 +378,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $result['List matcher'][$index]['trStyle']=['background-color'=>'var(--bgColorA)'];
         $matchSuccess=FALSE;
         // OPS List Matcher
-        $ListMatcherInput=new \Core\data\ListMatcher\ListMatcherInput($case['EntryId'],$case['Family'],$case['Countrycode'],$case['Applicationnumber'],$case['Publicationnumber'],$case['Issuenumber']);
+        $ListMatcherInput=new \ListMatcher\Data\ListMatcherInput($case['EntryId'],$case['Family'],$case['Countrycode'],$case['Applicationnumber'],$case['Publicationnumber'],$case['Issuenumber']);
         $matches=$this->listMatcherObj->matchUnycomEntry($ListMatcherInput,$format='docdb');
         foreach($matches??[] as $listMatch){
             if ($listMatch->opsFailure){break;}
