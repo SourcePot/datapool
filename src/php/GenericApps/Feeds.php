@@ -178,28 +178,32 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     }
 
-    private function loadFeed($urlEntry)
+    private function loadFeed(array $urlEntry)
     {
-        $context=array('class'=>__CLASS__,'function'=>__FUNCTION__,'url'=>$urlEntry['Content']['URL']);
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__]+$urlEntry['Content'];
         if (empty($urlEntry['Content']['URL'])){
             $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed because the url is empty.',$context);
         } else {
-            try{
-                $client = new \GuzzleHttp\Client();
-                $request = new \GuzzleHttp\Psr7\Request('GET',$urlEntry['Content']['URL']);
-                // Send an asynchronous request.
-                $promise = $client->sendAsync($request)->then(function($response){
-                    $body=((string)$response->getBody());
-                    $feed=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($body);
-                    if ($feed){
-                        $header=$response->getHeaders();
-                        $this->storeFeed($feed,$header);
-                    }
-                });
-                $promise->wait();
-            } catch (\Exception $e){
-                $context['msg']=$e->getMessage();
-                $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed for "{url}" with "{msg}".',$context);
+            $client = new \GuzzleHttp\Client();
+            try {
+                $response=$client->request('GET',$urlEntry['Content']['URL'],['connect_timeout' => 10]);
+                $body=((string)$response->getBody());
+                $feed=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($body);
+                if ($feed){
+                    $header=$response->getHeaders();
+                    $this->storeFeed($feed,$header);
+                }
+            } catch (\GuzzleHttp\Exception\RequestException $e) {
+                if ($e->hasResponse()) {
+                    // Handle HTTP errors
+                    $response = $e->getResponse();
+                    $context['status_code'] = $response->getStatusCode();
+                    $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with HTTP error {status_code}.',$context);
+                } else {
+                    // Handle other request errors
+                    $context['msg'] = $e->getMessage();
+                    $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed with request error: {msg}.',$context);
+                }
             }
         }
     }
@@ -453,13 +457,16 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     public function query(string $query, int $limit=10, array $tags=[], string $language=''):array
     {
-        $query=['Content'=>'%'.$query.'%'];
+        $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%'];
         if (!empty($language)){
-            $query['Folder']=strtoupper($language).' - %';
+            $selector['Folder']=strtoupper($language).' - %';
         }
+        $index=0;
         $entries=[];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($query,FALSE,'Read','Date',FALSE,$limit) as $entry){
-            $entries[]=$entry;
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE,$limit) as $entry){
+            $entries[$index]=$entry;
+            $entries[$index]['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
+            $index++;
         }
         return $entries;
     }
