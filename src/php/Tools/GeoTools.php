@@ -252,7 +252,7 @@ class GeoTools{
         $arr['keep-element-content']=$arr['keep-element-content']??TRUE;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
         $matrix=[['value'=>$html]];
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Map']);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'style'=>['clear'=>'both'],'caption'=>'Map']);
         return $html;
     }
     

@@ -292,8 +292,6 @@ article{
     border-bottom:1px solid var(--bgColorA);
 }
 article.multimedia{
-    max-width:300px;
-    height:280px;
     margin:5px 5rem 5rem 5px;
     border:1px solid var(--colorM);
     box-shadow:5px 5px 15px var(--bgColorA);
@@ -988,33 +986,6 @@ div.widget{
 .widget-entry-content-wrapper{
     clear:none;
     width:70vw;
-}
-/** image shuffle**/
-div.imageShuffleItemWrapper,div.imageShuffleItem,article.imageShuffle,.imageShuffleBtnWrapper{
-    margin:0;
-    padding:0;
-    max-width: 95%;
-}
-div.imageShuffleItemWrapper{
-    position:relative;
-}
-div.imageShuffleItem{
-    position:absolute;
-    top:0;
-    bottom:0;
-    height:100%;
-    width:100%;
-}
-article.imageShuffle{
-    max-width: 100%;
-    max-height: 100%;
-    border: none;
-}
-.imageShuffleBtnWrapper{
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
 }
 /** signal chart, plot**/
 p.signal-chart{

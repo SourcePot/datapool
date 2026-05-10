@@ -48,14 +48,15 @@ class ExifTools{
     
     private function addCamera(array $entry):array
     {
-        $defs=['Model'=>'Model','Make'=>'Make',
-                'XResolution'=>'XResolution','YResolution'=>'YResolution','Compression'=>'Compression',
-                'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
-                'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue',
-                'ApertureValue'=>'ApertureValue','BrightnessValue'=>'BrightnessValue','ExposureBiasValue'=>'ExposureBiasValue',
-                'MaxApertureValue'=>'MaxApertureValue','SubjectDistance'=>'SubjectDistance','SubjectDistanceRange'=>'SubjectDistanceRange',
-                'MeteringMode'=>'MeteringMode','Flash'=>'Flash','FocalLengthIn35mmFilm'=>'FocalLengthIn35mmFilm',
-                ];
+        $defs=[
+            'Model'=>'Model','Make'=>'Make',
+            'XResolution'=>'XResolution','YResolution'=>'YResolution','Compression'=>'Compression',
+            'ISOSpeedRatings'=>'ISOSpeedRatings','FNumber'=>'FNumber','ExposureTime'=>'ExposureTime',
+            'FocalLength'=>'FocalLength','DigitalZoomRatio'=>'DigitalZoomRatio','ShutterSpeedValue'=>'ShutterSpeedValue',
+            'ApertureValue'=>'ApertureValue','BrightnessValue'=>'BrightnessValue','ExposureBiasValue'=>'ExposureBiasValue',
+            'MaxApertureValue'=>'MaxApertureValue','SubjectDistance'=>'SubjectDistance','SubjectDistanceRange'=>'SubjectDistanceRange',
+            'MeteringMode'=>'MeteringMode','Flash'=>'Flash','FocalLengthIn35mmFilm'=>'FocalLengthIn35mmFilm',
+        ];
         $entry['Params']['Camera']=[];
         foreach($defs as $targetKey=>$sourceKey){
             if (!isset($entry['exif'][$sourceKey])){continue;}

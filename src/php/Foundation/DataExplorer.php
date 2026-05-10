@@ -39,6 +39,13 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'box-shadow'=>'0px 0px 10px 10px var(--blue)',
     ];
     
+    private const DYNAMIC_STYLE_PROFILES=[
+        'absolute>'=>'x > a',
+        'absolute<'=>'x < a',
+        'average>'=>'x > average(x) + a',
+        'average<'=>'x < average(x) - a',
+    ];
+    
     private $oc;
     
     private $entryTable='';
@@ -50,28 +57,27 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     public $definition=[
         'Content'=>[
             'Style'=>[
-                'Text'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
+                'Text'=>['@tag'=>'input','@type'=>'text','@default'=>''],
                 'Style class'=>['@function'=>'select','@options'=>self::STYLE_CLASSES,'@default'=>'canvas-std'],
-                'top'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
-                'left'=>['@tag'=>'input','@type'=>'Text','@default'=>'0px'],
-                ],
+                'top'=>['@tag'=>'input','@type'=>'text','@default'=>'0px'],
+                'left'=>['@tag'=>'input','@type'=>'text','@default'=>'0px'],
+            ],
             'Dynamic style'=>[
                 'Signal'=>['@function'=>'select','@options'=>[],'@value'=>''],
-                'Max signal value age [sec]'=>['@tag'=>'input','@type'=>'Text','@default'=>60,'@title'=>'If last signal value is older, the value will be set to minimum. The value must be larger than a transmission delay.'],
-                'Property'=>['@function'=>'select','@options'=>['color'=>'color','background-color'=>'background-color',],'@default'=>'color'],
-                'Profile'=>['@function'=>'select','@options'=>['linear'=>'Linear','steps'=>'Steps','threshold'=>'Threshold',],'@default'=>'threshold'],
-                'Profile value'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Is the threshold, if profile is Threshold. Is the amount of steps, if profile is Steps'],
-                'Min'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Leave empty, if it schould be set beased on the provoded value range'],
-                'Max'=>['@tag'=>'input','@type'=>'Text','@default'=>'','@title'=>'Leave empty, if it schould be set beased on the provoded value range'],
-                ],
+                'Max age of <b>x</b> [sec],</br><b>x</b> is the latest signal value'=>['@tag'=>'input','@type'=>'number','@default'=>60,'@title'=>'If last signal value is older, the value will be set to minimum. The value must be larger than a transmission delay.'],
+                'Active, if <b>x</b> is not too old and...'=>['@function'=>'select','@options'=>self::DYNAMIC_STYLE_PROFILES,'@default'=>'absolute>'],
+                'Value <b>a</b>'=>['@tag'=>'input','@type'=>'text','@default'=>1,'@title'=>'The value of a'],
+                'Active style property'=>['@tag'=>'input','@type'=>'text','@default'=>'color','@placeholder'=>'color','@title'=>''],
+                'Active style value'=>['@tag'=>'input','@type'=>'text','@default'=>'#f00','@placeholder'=>'#f00','@title'=>''],
+            ],
             'Selector'=>[
                 'Source'=>['@function'=>'select','@options'=>[]],
-                'Group'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                'Folder'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                'Name'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                'EntryId'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                'Type'=>['@tag'=>'input','@type'=>'Text','@default'=>''],
-                ],
+                'Group'=>['@tag'=>'input','@type'=>'text','@default'=>''],
+                'Folder'=>['@tag'=>'input','@type'=>'text','@default'=>''],
+                'Name'=>['@tag'=>'input','@type'=>'text','@default'=>''],
+                'EntryId'=>['@tag'=>'input','@type'=>'text','@default'=>''],
+                'Type'=>['@tag'=>'input','@type'=>'text','@default'=>''],
+            ],
             'Widgets'=>[
                 'Processor'=>['@function'=>'processorSelector','@value'=>'SourcePot\Datapool\Processing\DefaultProcessor','@class'=>__CLASS__],
                 'Enable signal'=>['@function'=>'select','@options'=>['No','Yes'],'@default'=>0],
@@ -696,59 +702,26 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $canvasElementSelector=['Source'=>$this->entryTable,'EntryId'=>$data['dynamic-style-id']];
         $canvasElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($canvasElementSelector,TRUE);
         if (!isset($canvasElement['Content']['Dynamic style'])){return [];}
-        // get signal
+        // get signal properties
         $signalSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Signals']->getEntryTable(),'EntryId'=>$canvasElement['Content']['Dynamic style']['Signal']];
-        $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
-        if (empty($signal['Content']['signal'])){return [];}
-        // signal -> style
-        $signalProps=['min'=>NULL,'max'=>NULL,'last'=>NULL,'latestTimestamp'=>NULL];
-        foreach($signal['Content']['signal'] as $valueArr){
-            $value=floatval($valueArr['value']);
-            $timeStamp=intval($valueArr['timeStamp']);
-            if ($signalProps['last']===NULL){
-                $signalProps['latestTimestamp']=$timeStamp;
-                $signalProps['last']=$signalProps['min']=$signalProps['max']=$value;
-            }
-            if ($signalProps['latestTimestamp']<$timeStamp){
-                $signalProps['latestTimestamp']=$timeStamp;
-                $signalProps['last']=$value;
-            }
-            if ($signalProps['min']>$valueArr['value']){
-                $signalProps['min']=$value;
-            }
-            if ($signalProps['max']<$valueArr['value']){
-                $signalProps['max']=$value;
-            }
+        $signalProperties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPropertiesById($signalSelector);
+        // get style from properties and canvas element settings
+        $isActive=FALSE;
+        $profile=$canvasElement['Content']['Dynamic style']['Active, if <b>x</b> is not too old and...']??'';
+        $maxAge=intval($canvasElement['Content']['Dynamic style']['Max age of <b>x</b> [sec],</br><b>x</b> is the latest signal value']??0);
+        $a=floatval($canvasElement['Content']['Dynamic style']['Value <b>a</b>']??0);
+        if ($maxAge<$signalProperties['lastValueAge'] || !isset($signalProperties['lastValue'])){
+            // is not active
+        } else if ($profile=='absolute>'){
+            $isActive=($signalProperties['lastValue']>$a);
+        } else if ($profile=='absolute<'){
+            $isActive=($signalProperties['lastValue']<$a);
+        } else if ($profile=='average>'){
+            $isActive=($signalProperties['lastValue']>$signalProperties['avg']+$a);
+        } else if ($profile=='average<'){
+            $isActive=($signalProperties['lastValue']<$signalProperties['avg']-$a);
         }
-        $signalProps['min']=($canvasElement['Content']['Dynamic style']['Min'])?:$signalProps['min'];
-        $signalProps['max']=($canvasElement['Content']['Dynamic style']['Max'])?:$signalProps['max'];
-        $maxAge=intval($canvasElement['Content']['Dynamic style']['Max signal value age [sec]']?:PHP_INT_MAX);
-        if ($maxAge<(time()-$signalProps['latestTimestamp'])){
-            $signalProps['last']=$signalProps['min'];
-            $signalProps['latestTimestamp']=time();
-        }
-        // calculate style property based on value and profile
-        $styleProp=['property'=>$canvasElement['Content']['Dynamic style']['Property']];
-        $range=(($signalProps['max']??0)-($signalProps['min']??0))?:1;
-        $valueMinusMin=($signalProps['last']??0)-($signalProps['min']??0);
-        $profile=$canvasElement['Content']['Dynamic style']['Profile']?:'linear';
-        if ($profile=='linear'){
-            $newPropValue=$valueMinusMin/$range;
-        } else if ($profile=='steps'){
-            $profileValue=floatval($canvasElement['Content']['Dynamic style']['Profile value']?:100);
-            $newPropValue=round($canvasElement['Content']['Dynamic style']['Profile value']*$valueMinusMin/$range)/$profileValue;
-        } else if ($profile=='threshold'){
-            $profileValue=floatval($canvasElement['Content']['Dynamic style']['Profile value']?:0);
-            $newPropValue=($valueMinusMin>$profileValue)?1:0;
-        }
-        if (strpos($canvasElement['Content']['Dynamic style']['Property'],'color')!==FALSE){
-            $styleProp['value']=str_replace('{{VALUE}}',strval($newPropValue*255),self::DYNAMIC_STYLE_TEMPLATE['color']);
-        }
-
-        $styleProp['debugging']=['profile'=>$profile,'range'=>$range,'valueMinusMin'=>$valueMinusMin,];
-        $styleProp['signalProps']=$signalProps;
-        
-        return $styleProp;
+        return ($isActive)?['property'=>$canvasElement['Content']['Dynamic style']['Active style property']??'border','value'=>$canvasElement['Content']['Dynamic style']['Active style value']??'2px dotted #f0f']:[];
     }
 
     public function initProcessorResult(string $callingClass, bool|int $isTestRun=FALSE, $keepSourceEntries=0):array
