@@ -60,7 +60,40 @@ jQuery(document).ready(function(){
             }
         });
     }
-/** STEP-BY-STEP ENTRY PRESENTATION, used e.g. by the forum **/
+
+/** Geolocation **/
+	const options = {
+		maximumAge: 300000,
+		timeout: 15000, //Longer timeout for low accuracy
+		enableHighAccuracy: true // for faster, less accurate result
+	};
+
+	function success(pos) {
+		const crd = pos.coords;
+		jQuery.ajax({
+			method:"POST",
+			url:'js.php',
+			context:document.body,
+			data:{'function':'updateUserLocationHook','Geo':{'lat':crd.latitude,'lon':pos.coords.longitude,'accuracy':pos.coords.accuracy}},
+			dataType: "json"
+		}).done(function(data){
+            console.log(data);
+		}).fail(function(data){
+			console.log(data);
+		}).always(function(){
+			busyLoadingEntry=false;
+		});
+	}
+
+	function error(err) {
+		console.warn(`ERROR(${err.code}): ${err.message}`);
+	}
+
+	if (jQuery('#user-location-hook').length>0){
+		navigator.geolocation.getCurrentPosition(success, error, options);
+	}
+	
+/** STEP-BY-STEP ENTRY PRESENTATION (loadEntry), used e.g. by the forum **/
 	var busyLoadingEntry=false,mediaElements2process=[],mediaElements=[];
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]:visible').first();
