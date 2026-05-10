@@ -107,7 +107,9 @@ class MediaTools{
         // add content: text, image
         if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'image')===0){
             $arr['returnImgFileOnly']=TRUE;
-            $iconSrc=$this->getImage($arr);
+            $imgArr=$arr;
+            $imgArr['maxDim']=$arr['maxDim']*4;
+            $iconSrc=$this->getImage($imgArr);
         } else {
             $iconArr=['tag'=>'p','element-content'=>$text,'keep-element-content'=>TRUE,'class'=>'icon','style'=>['font-size'=>$fontSize,'width'=>$arr['maxDim'],'line-height'=>$arr['maxDim']]];
             $iconHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($iconArr);
