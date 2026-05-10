@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class Container{
 
+    private const IMAGE_SHUFFLE_TILE_STYLE=['position'=>'absolute','top'=>0,'width'=>400,'height'=>400,'padding'=>0,'margin'=>0,'border'=>0,'overflow'=>'hidden'];
+
     private const JS_FUNCTION_WHITELIST=[
         'loadEntry'=>'SourcePot\Datapool\Tools\HTMLbuilder',
         'loadImage'=>'SourcePot\Datapool\Tools\MediaTools',
@@ -715,30 +717,13 @@ class Container{
 
     public function getImageShuffle(array $arr):array
     {
-        $arr['html']=$arr['html']??'';
-        $arr['callingFunction'].='-shuffle';
-        $items=[];
-        $presentArrTemplate=['callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'class'=>'imageShuffle','settings'=>['presentEntry'=>__FUNCTION__]];
-        $idPrefix=__FUNCTION__.'-'.$arr['containerId'].'-';
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],$arr['selector']['isSystemCall']??FALSE,'Read',$arr['selector']['orderBy']??'rand()',$arr['selector']['isAsc']??FALSE,$arr['selector']['limit']??4,$arr['selector']['offset']??0) as $entry){
-            $presentArr=$presentArrTemplate;
-            $presentArr['selector']=$entry;
-            if (count($items)===0){$display='inherit';} else {$display='none';}
-            $item=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->loadEntry($presentArr);
-            $items[]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$item,'keep-element-content'=>TRUE,'id'=>$idPrefix.count($items),'class'=>'imageShuffleItem','style'=>['display'=>$display],'function'=>__FUNCTION__]); 
+        $arr['html']='';
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read',$arr['settings']['orderBy']??'Date',$arr['settings']['isAsc']??FALSE,$arr['settings']['limit']??4,) as $entry){
+            $style=self::IMAGE_SHUFFLE_TILE_STYLE;
+            $style['z-index']=(empty($arr['html']))?10:5;
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'Loading...','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>$style]);
         }
-        $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>implode('',$items),'keep-element-content'=>TRUE,'class'=>'imageShuffleItemWrapper','style'=>['width'=>$arr['settings']['style']['width']??320,'height'=>$arr['settings']['style']['height']??400]]);
-        // get << and >> button
-        if (!empty($entry['rowCount'])){
-            // button div
-            $btnHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>'&#10094;&#10094;','keep-element-content'=>TRUE,'id'=>$idPrefix.'prev','class'=>'js-button','style'=>['clear'=>'left','min-width'=>'8em','padding'=>'3px 0']]);
-            $btnHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>'&#10095;&#10095;','keep-element-content'=>TRUE,'id'=>$idPrefix.'next','class'=>'js-button','style'=>['float'=>'right','min-width'=>'8em','padding'=>'3px 0']]);
-            $btnWrapper=['tag'=>'div','element-content'=>$btnHtml,'keep-element-content'=>TRUE,'id'=>$idPrefix.'btnWrapper','class'=>'imageShuffleBtnWrapper'];
-            if ($arr['settings']['autoShuffle']??TRUE){
-                $btnWrapper['style']['display']='none';
-            }
-            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnWrapper);
-        }   
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$arr['html'],'keep-element-content'=>TRUE,'class'=>'mediashuffle','style'=>['position'=>'relative','width'=>self::IMAGE_SHUFFLE_TILE_STYLE['width'],'height'=>self::IMAGE_SHUFFLE_TILE_STYLE['height']+50]]);
         return $arr;
     }
     

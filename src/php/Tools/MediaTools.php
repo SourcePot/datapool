@@ -78,6 +78,10 @@ class MediaTools{
             $arr=$this->getArchive($arr,$isSmallPreview);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && $arr['selector']['Params']['TmpFile']['Extension']==='md'){
             $arr=$this->getMarkdown($arr);
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'audio/')===0 && empty($arr['selector']['Params']['Email'])){
+            $arr=$this->getVideoAudio($arr);
+        } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'video/')===0 && empty($arr['selector']['Params']['Email'])){
+            $arr=$this->getVideoAudio($arr);
         } else if (mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'text/')===0 && empty($arr['selector']['Params']['Email'])){
             $arr=$this->getObj($arr,TRUE);
         } else {
@@ -308,6 +312,25 @@ class MediaTools{
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->btn($btnArr);
         $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$contentHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
+        return $arr;
+    }
+
+    private function getVideoAudio(array $arr):array
+    {
+        $arr['html']='';
+        $tag=(mb_strpos($arr['selector']['Params']['TmpFile']['MIME-Type'],'video')===0)?'video':'audio';
+        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
+            if (!empty($arr['settings']['style']['maxDim'])){
+                $arr['settings']['style']['max-width']=$arr['settings']['style']['max-height']=$arr['settings']['style']['maxDim'];
+                unset($arr['settings']['style']['maxDim']);
+            }
+            $src=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
+            $mediaArr=['tag'=>$tag,'src'=>$src,'type'=>$arr['selector']['Params']['File']['MIME-Type']??$arr['selector']['Params']['TmpFile']['MIME-Type'],'controls'=>TRUE,'keep-element-content'=>TRUE,'id'=>'video-'.mt_rand(1000,9999),'style'=>$arr['settings']['style']??[]];
+            $mediaArr['element-content']='Cant play '.$mediaArr['type'];
+            $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($mediaArr);
+        } else {
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'Sorry, file '.($arr['Params']['TmpFile']['Name']??'').' could not be copied into the presentation folder.']);
+        }
         return $arr;
     }
 

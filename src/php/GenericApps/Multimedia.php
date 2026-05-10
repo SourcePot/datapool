@@ -63,29 +63,32 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-            if (empty($selector['Group']) || empty($selector['Folder'])){
-                $wrapperSetting=['style'=>['padding'=>'10px','clear'=>'both','border'=>'none','width'=>'auto','margin'=>'2.5rem 5px','border'=>'1px dotted #999;']];
-                $setting=['style'=>['width'=>500,'height'=>400,'background-color'=>'#fff'],'autoShuffle'=>TRUE,'getImageShuffle'=>'multimedia'];
-                $hash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE);
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry shuffle '.$hash,'getImageShuffle',$selector,$setting,$wrapperSetting);
-                if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector)){
-                    $html.=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
-                } else {
-                    $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'No entries yet...']);
+            if (empty($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector))){
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'No entries yet...']);
+            } else if (empty($selector['Group']) || empty($selector['Folder']) || empty($selector['Name'])){
+                $settings=[
+                    'orderBy'=>'Date',
+                    'isAsc'=>TRUE,
+                    'limit'=>FALSE,
+                    'hideUpload'=>TRUE,
+                    'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'File','Filter'=>'']]
+                ];
+                if (empty($selector['EntryId'])){
+                    $captionHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'The following entries are a random sample only...','keep-element-content'=>TRUE,]);
+                    $mapHtml=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+                    $settings['orderBy']='rand()';
+                    $settings['limit']=(empty($selector['Folder']))?4:FALSE;
                 }
-                $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'article','element-content'=>$html,'keep-element-content'=>TRUE]);
-            } else if (empty($selector['EntryId'])){
                 $presentation=$this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($selector,'widget');
                 if ($presentation=='entryList'){
-                    $settings=['hideUpload'=>TRUE,'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'File','Filter'=>'']]];
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entries','entryList',$selector,$settings,[]);    
-                } else if ($presentation=='entryByEntry'){
-                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
+                } else {
+                    $html.=(empty($settings['limit']))?'':$captionHtml;
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],) as $entry){
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>self::TILE_STYLE]);
                     }
-                } else {
-                    $html.='Selected widget = '.$presentation.' is not implemented';
                 }
+                $html.=$mapHtml??'';
             } else {
                 $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
                 $presentArr['selector']=$selector;

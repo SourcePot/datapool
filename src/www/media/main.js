@@ -61,17 +61,22 @@ jQuery(document).ready(function(){
         });
     }
 /** STEP-BY-STEP ENTRY PRESENTATION, used e.g. by the forum **/
-	var busyLoadingEntry=false;
+	var busyLoadingEntry=false,mediaElements2process=[],mediaElements=[];
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]:visible').first();
 		if (busyLoadingEntry===false){
-			let arr={'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id')},
-					 'settings':{'presentEntry':jQuery(obj).attr('class')},
-					 'style':jQuery(obj).attr('style'),'class':jQuery(obj).attr('class'),
-					 'function':jQuery(obj).attr('function'),
-					 'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
-					};
-			if (arr['selector']['EntryId']!==undefined){
+			let arr={
+				'selector':{'Source':jQuery(obj).attr('source'),'EntryId':jQuery(obj).attr('entry-id')},
+				'settings':{'presentEntry':jQuery(obj).attr('class')},
+				'style':jQuery(obj).attr('style'),'class':jQuery(obj).attr('class'),
+				'function':jQuery(obj).attr('function'),
+				'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
+			};
+			if (arr['selector']['EntryId']==undefined){
+				if (mediaElements2process.length>0){
+					addEvents2media();
+				}
+			} else {
 				loadNextSelectedView(arr);
 			}
 		}
@@ -91,10 +96,55 @@ jQuery(document).ready(function(){
 				jQuery(arr['replaceSelector']).replaceWith(data['arr']);
 			}
 			jQuery('[id=js-refresh]').click();
+			if (jQuery(data['arr']).find('video','audio').length>0){
+				mediaId=jQuery(data['arr']).find('video','audio').attr('id');
+				jQuery('#'+mediaId).get(0).pause();
+				mediaElements2process.push(mediaId);
+			}
 		}).fail(function(data){
 			console.log(data);
 		}).always(function(){
 			busyLoadingEntry=false;
+		});
+	}
+
+	const playMedia=function(mediaId){
+		for(const mediaElement of mediaElements){
+			if (mediaElement==mediaId){
+				document.getElementById(mediaElement).play();
+			} else {
+				document.getElementById(mediaElement).pause();
+			}
+		}
+	}
+	
+	const addEvents2media=function(){
+		while(mediaElements2process.length>0){
+			mediaId=mediaElements2process.pop();
+			mediaElements.push(mediaId);
+			jQuery('#'+mediaId).on('play',function(event){
+				playMedia(jQuery(this).attr('id'));
+			});
+		}
+	}
+
+/** Image shuffle **/
+	function nextMediaShuffleItem(){
+		jQuery('div[class=mediashuffle]').each(function(shuffleIndex){
+			var lastElemetWasVisible=false,noneUpdated=true,shuffle=jQuery(this);
+			jQuery(shuffle).children('article').each(function(entryIndex){
+				if (lastElemetWasVisible){
+					jQuery(this).css('z-index',10);
+					lastElemetWasVisible=false;
+					noneUpdated=false;
+				} else {
+					lastElemetWasVisible=(parseInt(jQuery(this).css('z-index'))>5);
+					jQuery(this).css('z-index',5);
+				}
+			});		
+			if (noneUpdated){
+				jQuery(shuffle).children('article').eq(0).css('z-index',10);
+			}
 		});
 	}
 
@@ -143,23 +193,25 @@ jQuery(document).ready(function(){
         var location=[51.505,0];
         map.setView(location,4);
         const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-                        maxZoom: 19,
-                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        }).addTo(map);
+				maxZoom: 19,
+				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+			}).addTo(map);
         var selectBtns={};
         for (const [key,value] of Object.entries(mapEntries)){
             if (typeof value['Params']['Geo']!=='undefined'){
 				let lat=parseFloat(value['Params']['Geo']['lat']);
 				let lon=parseFloat(value['Params']['Geo']['lon']);
 				if (isNaN(lat) || isNaN(lon)){continue;}
-				var selectId=jQuery('button[entry-id='+value['EntryId']+']:contains("✦")').first().attr('id');
-                var marker=L.marker([lat,lon]).addTo(map);
+				var marker=L.marker([lat,lon]).addTo(map);
                 var tooltip=L.tooltip().setLatLng([lat,lon]).setContent(value['Folder']+'<br/>'+value['Name']).addTo(map);
-                selectBtns[jQuery(marker).attr('_leaflet_id')]=selectId;
-                marker.on('click',function(e){
-                    var selectBtnSelector='#'+selectBtns[jQuery(this).attr('_leaflet_id')];
-                    console.log(value);
-					jQuery(selectBtnSelector).click();
+                selectBtns[jQuery(marker).attr('_leaflet_id')]=value['EntryId'];
+				marker.on('click',function(e){
+                    var selectBtnEntryId=selectBtns[jQuery(this).attr('_leaflet_id')];
+					for (const buttonObj of jQuery('button[entry-id="'+selectBtnEntryId+'"]')){
+						if (buttonObj.innerHTML === "✦"){
+							jQuery(buttonObj).click();
+						}
+					}
                 });
             }
         }
@@ -272,58 +324,14 @@ jQuery(document).ready(function(){
 		if (e.key=="ArrowLeft"){
 			if (jQuery('#overlay').is(":visible")){
 				jQuery('#prev-img-btn').click();
-			} else {
-				jQuery("[id^='getImageShuffle']").filter("[id$='-next']").click();
 			}
 		} else if (e.key=="ArrowRight"){
 			if (jQuery('#overlay').is(":visible")){
 				jQuery('#next-img-btn').click();
-			} else {
-				jQuery("[id^='getImageShuffle']").filter("[id$='-prev']").click();
 			}
 		}
 	});
-/** Entry presentation & preview **/
-	var entryShuffleEntries={};
-	initShuffleEntriesMap();
-	function initShuffleEntriesMap(){
-		jQuery("div.preview").each(function(entryIndex){
-			var id='#'+jQuery(this).attr('id'),zIndex=parseInt(jQuery(this).css('z-index'));
-			var containerId=id.split('-').pop();
-			if (containerId in entryShuffleEntries===false){entryShuffleEntries[containerId]= new Map();}
-			entryShuffleEntries[containerId].set(id,zIndex);
-			if (zIndex>1){presentEntry(containerId,id);}
-		});
-	}
-/** Preview shuffle **/
-	function showNextImageShuffleItem(containerId,fwrd){
-		let state={'min':0,'max':0,'current':0};
-		jQuery('div.imageShuffleItem[id*='+containerId+']').each(function(index){
-			let idComps=jQuery(this).attr('id').split('-');
-			state['max']=parseInt(idComps.pop());
-			if (jQuery(this).is(":visible")){
-				state['current']=state['max'];
-				jQuery(this).fadeOut(700);
-			}
-		});
-		if (fwrd){
-			if (state['current']==state['max']){state['current']=state['min'];} else {state['current']++;}
-		} else {
-			if (state['current']==state['min']){state['current']=state['max'];} else {state['current']--;}
-		}
-		let showIdSelector='#getImageShuffle-'+containerId+'-'+state['current'];
-		jQuery(showIdSelector).fadeIn(700);
-	}
-	function autoImageShuffle(){
-		jQuery('div.imageShuffleBtnWrapper').each(function(index){
-			if (jQuery(this).is(":visible")===false){
-				let idComps=jQuery(this).attr('id').split('-');
-				let idSelector='#'+idComps[0]+'-'+idComps[1]+'-next';
-				jQuery(idSelector).click();
-			}
-		});
-		
-	}
+
 /** JS-BUTTONS **/
 	initJsButtonEvents();
 	function initJsButtonEvents(){
@@ -331,13 +339,6 @@ jQuery(document).ready(function(){
 		jQuery('.js-button').on('click',function(e){
 			var idCmps=jQuery(this).attr('id').split('-');
 			var cmd=idCmps.pop(),containerId=idCmps.pop(),method=idCmps.pop();
-			if (method.localeCompare('getImageShuffle')===0){
-				if (cmd.localeCompare('next')){
-					showNextImageShuffleItem(containerId,true);
-				} else if (cmd.localeCompare('prev')){
-					showNextImageShuffleItem(containerId,false);
-				}
-			}
 		});
 	}
 
@@ -358,11 +359,12 @@ jQuery(document).ready(function(){
 					stop: function(){
 						let top=5*Math.round(parseInt(jQuery(this).css('top'))/5);
 						let left=5*Math.round(parseInt(jQuery(this).css('left'))/5);
-						let arr={'Content':{'Style':{'top':top,'left':left}},
-                                 'Source':jQuery(this).attr('source'),
-                                 'EntryId':jQuery(this).attr('entry-id'),
-                                 'function':'setCanvasElementStyle',
-                                 };
+						let arr={
+							'Content':{'Style':{'top':top,'left':left}},
+							'Source':jQuery(this).attr('source'),
+							'EntryId':jQuery(this).attr('entry-id'),
+							'function':'setCanvasElementStyle',
+						};
 						jQuery.ajax({
                             method:"POST",
                             url:'js.php',
@@ -382,13 +384,17 @@ jQuery(document).ready(function(){
 		});
 	}
 
-	let isBusyUDS=[];
+	let isBusyUDS=[],originalCss=[];
 	function updateDynamicStyle(){
 		jQuery("[dynamic-style-id]").each(function(canvasElementIndex){
 			let data={'function':'getDynamicStyle','dynamic-style-id':jQuery(this).attr("dynamic-style-id")};
-			let cnavasElement=jQuery(this);
-			let dynamicStyleId=data['dynamic-style-id'];
-			if (isBusyUDS[dynamicStyleId]==true){return false;}
+			let canvasElement=jQuery(this),dynamicStyleId=data['dynamic-style-id'];
+			if (typeof originalCss[dynamicStyleId]=='undefined'){
+				originalCss[dynamicStyleId]=jQuery(canvasElement).attr('style');
+			}
+			if (isBusyUDS[dynamicStyleId]==true){
+				return false;
+			}
 			isBusyUDS[dynamicStyleId]=true;
 			jQuery.ajax({
 				method:"POST",
@@ -397,13 +403,19 @@ jQuery(document).ready(function(){
 				data:data,
 				dataType: "json"
 			}).done(function(data){
-				jQuery(cnavasElement).css(data['arr']['property'],data['arr']['value']);
+				if (Object.hasOwn(data['arr'],"property")===false || Object.hasOwn(data['arr'],"value")===false){
+					jQuery('[dynamic-style-id='+dynamicStyleId+']').attr('style',originalCss[dynamicStyleId]);
+				} else {
+					console.log(data['arr']);
+					jQuery(canvasElement).css(data['arr']['property'],data['arr']['value']);
+				}
 			}).fail(function(data){
 				console.log(data);
 			}).always(function(data){
 				isBusyUDS[dynamicStyleId]=false;
 			});
 		});
+		
 	}
 
 /** USER ACTIONS **/
@@ -522,8 +534,10 @@ jQuery(document).ready(function(){
 		if (heartbeats%17===0){
 			updateDynamicStyle();
 		}
+		if (heartbeats%10===0){
+			nextMediaShuffleItem();
+		}
 		if (heartbeats%25===0){
-			autoImageShuffle();
 			showUserActions();
 		}
 	})();

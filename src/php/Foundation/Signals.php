@@ -124,7 +124,7 @@ class Signals{
     }
     public function getSignalPropertiesById(array $signalSelector,string $timespanDefinedByFormat='',string $timezone=''):array
     {
-        $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimestamp'=>0];
+        $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimeStamp'=>0,'maxTimeStamp'=>0,'lastValueAge'=>NULL,'lastValue'=>NULL];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
         foreach($signal['Content']['signal'] as $index=>$signalItem){
             if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
@@ -141,11 +141,16 @@ class Signals{
             if ($properties['max']===FALSE || $properties['max']<$signalItem['value']){
                 $properties['max']=$signalItem['value'];
             }
-            $properties['avgTimestamp']+=$signalItem['timeStamp'];
+            if ($properties['maxTimeStamp']<$signalItem['timeStamp']){
+                $properties['maxTimeStamp']=$signalItem['timeStamp'];
+                $properties['lastValueAge']=time()-$signalItem['timeStamp'];
+                $properties['lastValue']=$signalItem['value'];
+            }
+            $properties['avgTimeStamp']+=$signalItem['timeStamp'];
         }
         $properties['avg']=($properties['count']==0)?FALSE:($properties['sum']/$properties['count']);
         $properties['range']=$properties['max']-$properties['min'];
-        $properties['avgTimestamp']=round($properties['avgTimestamp']/($properties['count']?:1));
+        $properties['avgTimeStamp']=round($properties['avgTimeStamp']/($properties['count']?:1));
         return $properties;
     }
 
@@ -584,7 +589,6 @@ class Signals{
         } else {
             return '';
         }
-        
     }
 
     private function metaArrCleanup(array $meta):array
