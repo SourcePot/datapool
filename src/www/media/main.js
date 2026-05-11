@@ -61,7 +61,7 @@ jQuery(document).ready(function(){
         });
     }
 
-/** Geolocation **/
+/** Geo location **/
 	const options = {
 		maximumAge: 300000,
 		timeout: 15000, //Longer timeout for low accuracy

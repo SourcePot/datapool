@@ -70,6 +70,10 @@ class GeoTools{
             $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($user,1);
+            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon']]],'targetKey'=>'Address']);
+            $arr['Geo']['address']=($this->permitted)?$addressArr['Params']['Address']['display_name']:'';
+            $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
+            unset($arr['Geo']['accuracy']);
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Geo '.$user['EntryId'],$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
         } else if ($this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data')){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','id'=>'user-location-hook','element-content'=>'User location hook','style'=>['display'=>'none']]);
