@@ -439,8 +439,8 @@ class Signals{
         foreach($signal['Content']['signal'] as $item){
             if ($item['dataType']==='geo'){
                 $geoSignalMatrix['meta']=['user'=>$item['label']];
-                $dateTime=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$item['timeStamp'],'',\SourcePot\Datapool\Root::getUserTimezone());
-                $geoSignalMatrix[$dateTime]=$item['value'];
+                $dateTime=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$item['timeStamp'],'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
+                $geoSignalMatrix[$dateTime.' ('.\SourcePot\Datapool\Root::getUserTimezone().')']=$item['value'];
                 continue;
             }
             $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],'float');
