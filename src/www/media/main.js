@@ -94,7 +94,7 @@ jQuery(document).ready(function(){
 	}
 	
 /** STEP-BY-STEP ENTRY PRESENTATION (loadEntry), used e.g. by the forum **/
-	var busyLoadingEntry=false,mediaElements2process=[],mediaElements=[];
+	var busyLoadingEntry=false,mediaElements=[],lastMediaId='',mediaWasTriggered=false;
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]:visible').first();
 		if (busyLoadingEntry===false){
@@ -106,8 +106,9 @@ jQuery(document).ready(function(){
 				'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
 			};
 			if (arr['selector']['EntryId']==undefined){
-				if (mediaElements2process.length>0){
-					addEvents2media();
+				if (!mediaWasTriggered){
+					playMedia(lastMediaId);
+					mediaWasTriggered=true;
 				}
 			} else {
 				loadNextSelectedView(arr);
@@ -132,7 +133,7 @@ jQuery(document).ready(function(){
 			if (jQuery(data['arr']).find('video','audio').length>0){
 				mediaId=jQuery(data['arr']).find('video','audio').attr('id');
 				jQuery('#'+mediaId).get(0).pause();
-				mediaElements2process.push(mediaId);
+				addEvent2media(mediaId);
 			}
 		}).fail(function(data){
 			console.log(data);
@@ -141,7 +142,8 @@ jQuery(document).ready(function(){
 		});
 	}
 
-	const playMedia=function(mediaId){
+	function playMedia(mediaId){
+		console.log(mediaId);
 		for(const mediaElement of mediaElements){
 			if (mediaElement==mediaId){
 				document.getElementById(mediaElement).play();
@@ -151,14 +153,12 @@ jQuery(document).ready(function(){
 		}
 	}
 	
-	const addEvents2media=function(){
-		while(mediaElements2process.length>0){
-			mediaId=mediaElements2process.pop();
-			mediaElements.push(mediaId);
-			jQuery('#'+mediaId).on('play',function(event){
-				playMedia(jQuery(this).attr('id'));
-			});
-		}
+	function addEvent2media(mediaId){
+		lastMediaId=mediaId;
+		mediaElements.push(mediaId);
+		jQuery('#'+mediaId).on('play',function(event){
+			playMedia(jQuery(this).attr('id'));
+		});
 	}
 
 /** Image shuffle **/
