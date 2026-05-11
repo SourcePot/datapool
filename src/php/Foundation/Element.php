@@ -41,7 +41,7 @@ class Element{
             'virtualkeyboardpolicy'=>FALSE,
             'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
             'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,'nonce'=>FALSE,
-            'data-value'=>FALSE,'data-timestamp'=>FALSE,'data-label'=>FALSE,
+            'data-value'=>FALSE,'data-timestamp'=>FALSE,'data-label'=>FALSE,'data-lat'=>FALSE,'data-lon'=>FALSE,'data-datetime'=>False,
         ],
         // Table
         'table'=>[],
@@ -85,7 +85,7 @@ class Element{
         // Media
         'audio'=>['src'=>TRUE,'autoplay'=>FALSE,'controls'=>FALSE,'crossorigin'=>FALSE,'loop'=>FALSE,'muted'=>FALSE,'preload'=>FALSE,'height'=>FALSE,'width'=>FALSE],
         'canvas'=>['height'=>FALSE,'width'=>FALSE],
-        'object'=>['data'=>TRUE,'type'=>TRUE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'autoplay'=>FALSE],
+        'object'=>['data'=>TRUE,'type'=>TRUE,'crossorigin'=>FALSE,'controls'=>FALSE,'height'=>FALSE,'width'=>FALSE,'autoplay'=>FALSE],
         'embed'=>['src'=>TRUE,'height'=>FALSE,'width'=>FALSE,'type'=>FALSE],
         'iframe'=>['src'=>TRUE,'height'=>FALSE,'width'=>FALSE],
         'img'=>['src'=>TRUE,'alt'=>FALSE,'crossorigin'=>FALSE,'height'=>FALSE,'width'=>FALSE,'orgheight'=>FALSE,'orgwidth'=>FALSE,'loading'=>FALSE],

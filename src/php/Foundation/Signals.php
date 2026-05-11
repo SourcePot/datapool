@@ -440,6 +440,8 @@ class Signals{
             if ($item['dataType']==='geo'){
                 $geoSignalMatrix['meta']=['user'=>$item['label']];
                 $dateTime=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$item['timeStamp'],'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
+                $item['value']['lat']=['tag'=>'p','element-content'=>$item['value']['lat'],'data-lat'=>$item['value']['lat'],'data-lon'=>$item['value']['lon'],'data-datetime'=>$dateTime];
+                $item['value']['lon']=['tag'=>'p','element-content'=>$item['value']['lon']];
                 $geoSignalMatrix[$dateTime.' ('.\SourcePot\Datapool\Root::getUserTimezone().')']=$item['value'];
                 continue;
             }
@@ -620,10 +622,11 @@ class Signals{
 
     private function geoSignalPlotHtml(array $geoSignalMatrix,array $meta):string
     {
+        $html=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
         $metaData=$geoSignalMatrix['meta'];
         unset($geoSignalMatrix['meta']);
         krsort($geoSignalMatrix);
-        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$geoSignalMatrix,'caption'=>'Geo waypoints of '.$metaData['user'],'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'style'=>['clear'=>'both']]);
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$geoSignalMatrix,'caption'=>'Geo waypoints of '.$metaData['user'],'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'style'=>['clear'=>'both']]);
         return $html;
     }
 }

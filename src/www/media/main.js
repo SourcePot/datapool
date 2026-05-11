@@ -187,11 +187,25 @@ jQuery(document).ready(function(){
     loadDynamicMap()
     
     function loadDynamicMap(){
-        mapEntryObjArr=Object.values(jQuery('[entry-id]'));
         mapEntries={};
-        if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){loadMapEntry();}
-    }
+        mapEntryGeoArr=Object.values(jQuery('[lat][lon]'));
+        if (mapEntryGeoArr.length>0 && jQuery('[function=getDynamicMap]').length>0){
+			loadMapGeoArr();
+		} else {
+			mapEntryObjArr=Object.values(jQuery('[entry-id]'));
+			if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){loadMapEntry();}
+		}
+	}
     
+	function loadMapGeoArr(){
+		jQuery('[data-lat][data-lon]').each(function(i){
+			let lat=parseFloat(jQuery(this).attr('data-lat')),lon=parseFloat(jQuery(this).attr('data-lon'));
+			if (isNaN(lat) || isNaN(lon)){return true;}
+			mapEntries[i]={'EntryId':i,'Name':jQuery(this).attr('data-datetime'),'Folder':'Way point','Params':{'Geo':{'lat':lat,'lon':lon}}};
+		});
+		entries2dynamicMap();
+	}
+
     function loadMapEntry(){
         let obj=mapEntryObjArr.shift();
 		if (obj == undefined){
