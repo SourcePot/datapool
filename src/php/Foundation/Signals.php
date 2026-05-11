@@ -22,6 +22,8 @@ class Signals{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
     ];
+
+    private $hasDynamicMap=FALSE;
     
     private const ACTIVE_IF=[
         'stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable within range defined by th.)',
@@ -622,7 +624,10 @@ class Signals{
 
     private function geoSignalPlotHtml(array $geoSignalMatrix,array $meta):string
     {
-        $html=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+        if (!$this->hasDynamicMap){
+            $html=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+            $this->hasDynamicMap=TRUE;
+        }
         $metaData=$geoSignalMatrix['meta'];
         unset($geoSignalMatrix['meta']);
         krsort($geoSignalMatrix);
