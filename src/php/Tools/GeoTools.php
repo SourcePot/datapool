@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
+
+    private const INIT_MAP_LOCATION='48.1520963,11.5111696,4';   // lat,lon,zoom
     
     private const MISSING_PERMISSION_ELEMENT=[
         'tag'=>'p',
@@ -265,6 +267,7 @@ class GeoTools{
         $arr['style']['width']=600;
         $arr['style']['height']=400;
         $arr['function']=__FUNCTION__;
+        $arr['data-location']=$arr['data-location']??self::INIT_MAP_LOCATION;
         $arr['element-content']=$arr['element-content']??' ';
         $arr['keep-element-content']=$arr['keep-element-content']??TRUE;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);

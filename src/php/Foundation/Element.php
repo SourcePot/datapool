@@ -41,7 +41,7 @@ class Element{
             'virtualkeyboardpolicy'=>FALSE,
             'stroke'=>FALSE,'stroke-dasharray'=>FALSE,'stroke-width'=>FALSE,'stroke-linecap'=>FALSE,'fill'=>FALSE,'fill-opacity'=>FALSE,
             'font'=>FALSE,'clip-path'=>FALSE,'viewBox'=>FALSE,'version'=>FALSE,'xmlns'=>FALSE,'integrity'=>FALSE,'nonce'=>FALSE,
-            'data-value'=>FALSE,'data-timestamp'=>FALSE,'data-label'=>FALSE,'data-lat'=>FALSE,'data-lon'=>FALSE,'data-datetime'=>False,
+            'data-value'=>FALSE,'data-timestamp'=>FALSE,'data-label'=>FALSE,'data-lat'=>FALSE,'data-lon'=>FALSE,'data-datetime'=>False,'data-location'=>False,
         ],
         // Table
         'table'=>[],

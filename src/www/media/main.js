@@ -188,12 +188,15 @@ jQuery(document).ready(function(){
     
     function loadDynamicMap(){
         mapEntries={};
-        mapEntryGeoArr=Object.values(jQuery('[lat][lon]'));
-        if (mapEntryGeoArr.length>0 && jQuery('[function=getDynamicMap]').length>0){
+        mapEntryGeoArr=Object.values(jQuery('[data-lat][data-lon]'));
+		if (mapEntryGeoArr.length>0 && jQuery('[function=getDynamicMap]').length>0){
 			loadMapGeoArr();
+		}
+		mapEntryObjArr=Object.values(jQuery('[entry-id]'));
+		if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){
+			loadMapEntry();
 		} else {
-			mapEntryObjArr=Object.values(jQuery('[entry-id]'));
-			if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){loadMapEntry();}
+			entries2dynamicMap();
 		}
 	}
     
@@ -203,7 +206,6 @@ jQuery(document).ready(function(){
 			if (isNaN(lat) || isNaN(lon)){return true;}
 			mapEntries[i]={'EntryId':i,'Name':jQuery(this).attr('data-datetime'),'Folder':'Way point','Params':{'Geo':{'lat':lat,'lon':lon}}};
 		});
-		entries2dynamicMap();
 	}
 
     function loadMapEntry(){
@@ -235,10 +237,11 @@ jQuery(document).ready(function(){
         }
     }
     function entries2dynamicMap(){
-        var map=false;
+		if (jQuery('[data-location]').length==0){return true;}
+		let location=jQuery('[data-location]').attr('data-location').split(',');
+		var map=false;
         map=L.map('dynamic-map');
-        var location=[51.505,0];
-        map.setView(location,4);
+        map.setView([location[0],location[1]],location[2]);
         const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
 				maxZoom: 19,
 				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -262,8 +265,6 @@ jQuery(document).ready(function(){
                 });
             }
         }
-        map.setView(location,4);
-        
     }
 /** CLIPBOARD **/
     jQuery('button[id^=clipboard]').on('click',function(e){
