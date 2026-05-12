@@ -76,7 +76,8 @@ class Documents implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapoo
                     }
                     $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container($containerTitle,'entryList',$selector,$settings,[]); 
                 } else if ($presentation=='entryByEntry'){
-                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',TRUE) as $entry){
+                    $settings=['orderBy'=>'Date','isAsc'=>TRUE,'limit'=>500];
+                    foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],) as $entry){
                         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'&#10227;','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>self::TILE_STYLE]);
                     }
                 } else {

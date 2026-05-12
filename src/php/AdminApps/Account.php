@@ -78,6 +78,8 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
                 $html.='Please select a user...';
             }
         }
+        $signalSelector=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalSelector('SourcePot\Datapool\Tools\GeoTools','updateUserLocationHook','Geo '.$user['EntryId']);
+        $html.=$this->oc['SourcePot\Datapool\Foundation\Signals']->selector2plot($signalSelector,['caption'=>'']);
         return $html;
     }
 

@@ -22,6 +22,8 @@ class Signals{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Write access setting. It is a bit-array.'],
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
     ];
+
+    private $hasDynamicMap=FALSE;
     
     private const ACTIVE_IF=[
         'stable'=>'&#9596;&#9598;&#9596;&#9598;&#9596;&#9598;&#9596;&#9598; (stable within range defined by th.)',
@@ -127,6 +129,9 @@ class Signals{
         $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimeStamp'=>0,'maxTimeStamp'=>0,'lastValueAge'=>NULL,'lastValue'=>NULL];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
         foreach($signal['Content']['signal'] as $index=>$signalItem){
+            if ($signalItem['dataType']==='geo'){
+                continue;
+            }
             if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
                 continue;
             }
@@ -416,6 +421,7 @@ class Signals{
 
     public function signalPlot($signal,$metaOverwrite=[]):string
     {
+        $geoSignalMatrix=[];
         $metaOverwrite['tickLength']=($metaOverwrite['tickLength']??6)?:6;
         $metaOverwrite=array_merge($metaOverwrite,$signal['Params']['signal']??[]);
         $metaOverwrite=$this->metaArrCleanup($metaOverwrite);
@@ -433,6 +439,14 @@ class Signals{
         $value=0;
         $item=['timeStamp'=>$item['timeStamp']??time()];
         foreach($signal['Content']['signal'] as $item){
+            if ($item['dataType']==='geo'){
+                $geoSignalMatrix['meta']=['user'=>$item['label']];
+                $dateTime=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$item['timeStamp'],'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
+                $item['value']['lat']=['tag'=>'p','element-content'=>$item['value']['lat'],'data-lat'=>$item['value']['lat'],'data-lon'=>$item['value']['lon'],'data-datetime'=>$dateTime];
+                $item['value']['lon']=['tag'=>'p','element-content'=>$item['value']['lon']];
+                $geoSignalMatrix[$dateTime.' ('.\SourcePot\Datapool\Root::getUserTimezone().')']=$item['value'];
+                continue;
+            }
             $value=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($item['value'],'float');
             if (!empty($metaOverwrite['normalizer'])){
                 $normalizer=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($metaOverwrite['normalizer']['value'],'float');
@@ -454,6 +468,14 @@ class Signals{
             $data[$item['timeStamp']]=['timeStamp'=>$item['timeStamp'],'value'=>$value,'label'=>$item['label']??'-','color'=>$item['color']??''];
         }
         $meta=array_merge($meta,$metaOverwrite);
+        // generate geo signal plot html
+        $html='';
+        if (!empty($geoSignalMatrix)){
+            $html=$this->geoSignalPlotHtml($geoSignalMatrix,$meta);
+        }
+        if ($meta['xMin']===NULL || $meta['xMax']===NULL){
+            return $html;
+        }
         // sorting and scaling data
         ksort($data);
         if ($meta['xMax']==$meta['xMin']){
@@ -470,7 +492,6 @@ class Signals{
         $meta['yOffset']=$meta['yMin']*$meta['yScaler'];
         // generate bars html
         $barBase=0;
-        $html='';
         $html.=$this->getY0axis($meta,$plot);
         foreach($data as $timeStamp=>$item){
             $barHeight=$this->value2pixel($item['value']+$meta['yMin']-$barBase,$meta,TRUE);
@@ -599,6 +620,19 @@ class Signals{
             $meta[$key]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($meta[$key],$type);
         }
         return $meta;
+    }
+
+    private function geoSignalPlotHtml(array $geoSignalMatrix,array $meta):string
+    {
+        if (!$this->hasDynamicMap){
+            $html=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
+            $this->hasDynamicMap=TRUE;
+        }
+        $metaData=$geoSignalMatrix['meta'];
+        unset($geoSignalMatrix['meta']);
+        krsort($geoSignalMatrix);
+        $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$geoSignalMatrix,'caption'=>'Geo waypoints of '.$metaData['user'],'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'style'=>['clear'=>'both']]);
+        return $html;
     }
 }
 ?>

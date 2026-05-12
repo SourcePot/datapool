@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
+
+    private const INIT_MAP_LOCATION='48.1520963,11.5111696,4';   // lat,lon,zoom
     
     private const MISSING_PERMISSION_ELEMENT=[
         'tag'=>'p',
@@ -62,6 +64,22 @@ class GeoTools{
         if (empty($this->countryCodes)){
             $this->oc['logger']->log('error','File error "countryCodes.json"',[]);    
         }
+    }
+
+    public function updateUserLocationHook(array $arr=[]):array
+    {
+        if (!empty($arr)){
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+            $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($user,1);
+            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon']]],'targetKey'=>'Address']);
+            $arr['Geo']['address']=($this->permitted)?$addressArr['Params']['Address']['display_name']:'';
+            $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
+            unset($arr['Geo']['accuracy']);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Geo '.$user['EntryId'],$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
+        } else if ($this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data')){
+            $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','id'=>'user-location-hook','element-content'=>'User location hook','style'=>['display'=>'none']]);
+        }
+        return $arr;   
     }
 
     public function location2address(array $entry,$targetKey='Address',bool $isDebugging=FALSE):array
@@ -248,6 +266,7 @@ class GeoTools{
         $arr['style']['width']=600;
         $arr['style']['height']=400;
         $arr['function']=__FUNCTION__;
+        $arr['data-location']=$arr['data-location']??self::INIT_MAP_LOCATION;
         $arr['element-content']=$arr['element-content']??' ';
         $arr['keep-element-content']=$arr['keep-element-content']??TRUE;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);

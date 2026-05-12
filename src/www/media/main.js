@@ -60,8 +60,41 @@ jQuery(document).ready(function(){
             }
         });
     }
-/** STEP-BY-STEP ENTRY PRESENTATION, used e.g. by the forum **/
-	var busyLoadingEntry=false,mediaElements2process=[],mediaElements=[];
+
+/** Geo location **/
+	const options = {
+		maximumAge: 300000,
+		timeout: 15000, //Longer timeout for low accuracy
+		enableHighAccuracy: true // for faster, less accurate result
+	};
+
+	function success(pos) {
+		const crd = pos.coords;
+		jQuery.ajax({
+			method:"POST",
+			url:'js.php',
+			context:document.body,
+			data:{'function':'updateUserLocationHook','Geo':{'lat':crd.latitude,'lon':pos.coords.longitude,'accuracy':pos.coords.accuracy}},
+			dataType: "json"
+		}).done(function(data){
+            console.log(data);
+		}).fail(function(data){
+			console.log(data);
+		}).always(function(){
+			busyLoadingEntry=false;
+		});
+	}
+
+	function error(err) {
+		console.warn(`ERROR(${err.code}): ${err.message}`);
+	}
+
+	if (jQuery('#user-location-hook').length>0){
+		navigator.geolocation.getCurrentPosition(success, error, options);
+	}
+	
+/** STEP-BY-STEP ENTRY PRESENTATION (loadEntry), used e.g. by the forum **/
+	var busyLoadingEntry=false,mediaElements=[],lastMediaId='',mediaWasTriggered=false;
 	function loadNextEntry(){
 		let obj=jQuery('[function=loadEntry]:visible').first();
 		if (busyLoadingEntry===false){
@@ -73,8 +106,9 @@ jQuery(document).ready(function(){
 				'replaceSelector':'[function=loadEntry][entry-id='+jQuery(obj).attr('entry-id')+']'
 			};
 			if (arr['selector']['EntryId']==undefined){
-				if (mediaElements2process.length>0){
-					addEvents2media();
+				if (!mediaWasTriggered){
+					playMedia(lastMediaId);
+					mediaWasTriggered=true;
 				}
 			} else {
 				loadNextSelectedView(arr);
@@ -99,7 +133,7 @@ jQuery(document).ready(function(){
 			if (jQuery(data['arr']).find('video','audio').length>0){
 				mediaId=jQuery(data['arr']).find('video','audio').attr('id');
 				jQuery('#'+mediaId).get(0).pause();
-				mediaElements2process.push(mediaId);
+				addEvent2media(mediaId);
 			}
 		}).fail(function(data){
 			console.log(data);
@@ -108,7 +142,8 @@ jQuery(document).ready(function(){
 		});
 	}
 
-	const playMedia=function(mediaId){
+	function playMedia(mediaId){
+		console.log(mediaId);
 		for(const mediaElement of mediaElements){
 			if (mediaElement==mediaId){
 				document.getElementById(mediaElement).play();
@@ -118,14 +153,12 @@ jQuery(document).ready(function(){
 		}
 	}
 	
-	const addEvents2media=function(){
-		while(mediaElements2process.length>0){
-			mediaId=mediaElements2process.pop();
-			mediaElements.push(mediaId);
-			jQuery('#'+mediaId).on('play',function(event){
-				playMedia(jQuery(this).attr('id'));
-			});
-		}
+	function addEvent2media(mediaId){
+		lastMediaId=mediaId;
+		mediaElements.push(mediaId);
+		jQuery('#'+mediaId).on('play',function(event){
+			playMedia(jQuery(this).attr('id'));
+		});
 	}
 
 /** Image shuffle **/
@@ -154,11 +187,27 @@ jQuery(document).ready(function(){
     loadDynamicMap()
     
     function loadDynamicMap(){
-        mapEntryObjArr=Object.values(jQuery('[entry-id]'));
         mapEntries={};
-        if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){loadMapEntry();}
-    }
+        mapEntryGeoArr=Object.values(jQuery('[data-lat][data-lon]'));
+		if (mapEntryGeoArr.length>0 && jQuery('[function=getDynamicMap]').length>0){
+			loadMapGeoArr();
+		}
+		mapEntryObjArr=Object.values(jQuery('[entry-id]'));
+		if (mapEntryObjArr.length>0 && jQuery('[function=getDynamicMap]').length>0){
+			loadMapEntry();
+		} else {
+			entries2dynamicMap();
+		}
+	}
     
+	function loadMapGeoArr(){
+		jQuery('[data-lat][data-lon]').each(function(i){
+			let lat=parseFloat(jQuery(this).attr('data-lat')),lon=parseFloat(jQuery(this).attr('data-lon'));
+			if (isNaN(lat) || isNaN(lon)){return true;}
+			mapEntries[i]={'EntryId':i,'Name':jQuery(this).attr('data-datetime'),'Folder':'Way point','Params':{'Geo':{'lat':lat,'lon':lon}}};
+		});
+	}
+
     function loadMapEntry(){
         let obj=mapEntryObjArr.shift();
 		if (obj == undefined){
@@ -188,10 +237,11 @@ jQuery(document).ready(function(){
         }
     }
     function entries2dynamicMap(){
-        var map=false;
+		if (jQuery('[data-location]').length==0){return true;}
+		let location=jQuery('[data-location]').attr('data-location').split(',');
+		var map=false;
         map=L.map('dynamic-map');
-        var location=[51.505,0];
-        map.setView(location,4);
+        map.setView([location[0],location[1]],location[2]);
         const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
 				maxZoom: 19,
 				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -215,8 +265,6 @@ jQuery(document).ready(function(){
                 });
             }
         }
-        map.setView(location,4);
-        
     }
 /** CLIPBOARD **/
     jQuery('button[id^=clipboard]').on('click',function(e){

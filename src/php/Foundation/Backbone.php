@@ -126,6 +126,7 @@ class Backbone{
 
     public function addHtmlPageBackbone(array $arr):array
     {
+        $userLocationHook=$this->oc['SourcePot\Datapool\Tools\GeoTools']->updateUserLocationHook();
         $lngCode=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->getLanguageCode();
         $formId=md5($this->settings['pageTitle']);
         $arr['toReplace']=[
@@ -159,6 +160,7 @@ class Backbone{
         $arr['page html'].='<button id="js-refresh" style="display:none;">°</button>'.PHP_EOL;
         $arr['page html'].='{{body}}'.PHP_EOL;
         $arr['page html'].='</form>'.PHP_EOL;
+        $arr['page html'].=$userLocationHook['html'].PHP_EOL;
         $arr['page html'].='</body>'.PHP_EOL;
         $arr['page html'].="</html>";
         return $arr;

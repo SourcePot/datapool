@@ -320,6 +320,7 @@ class Computations{
         } else {
             $newValue=match($dataType){
                 'keep'=>$value,
+                'geo'=>$value,
                 'string'=>$this->str2str($value),
                 'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
                 'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),

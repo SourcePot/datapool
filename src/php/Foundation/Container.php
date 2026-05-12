@@ -20,7 +20,8 @@ class Container{
         'setCanvasElementStyle'=>'SourcePot\Datapool\Foundation\DataExplorer',
         'entryById'=>'SourcePot\Datapool\Foundation\Database',
         'getUserActions'=>'SourcePot\Datapool\Foundation\DataExplorer',
-        'getDynamicStyle'=>'SourcePot\Datapool\Foundation\DataExplorer',    
+        'getDynamicStyle'=>'SourcePot\Datapool\Foundation\DataExplorer',
+        'updateUserLocationHook'=>'SourcePot\Datapool\Tools\GeoTools',
     ];
     
     private const MD_TEMPLATE="[//]: # (This a Markdown document)\n\n[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n#Empty document...";

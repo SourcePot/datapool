@@ -84,7 +84,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
                 $chatAuthorName.=' (-'.$timeDiff.')';
             }
             $chat['Content']['Author']=$chatAuthorName;
-            $entryHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['maxDim'=>30,'margin'=>'1rem 0.25rem','selector'=>$chatAuthor,'returnHtmlOnly'=>TRUE]);
+            $entryHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['maxDim'=>40,'margin'=>'1rem 0.25rem','selector'=>$chatAuthor,'returnHtmlOnly'=>TRUE]);
             $presentArr['selector']=$chat;
             $entryContentHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             $entryHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$entryContentHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
