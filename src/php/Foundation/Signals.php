@@ -129,7 +129,7 @@ class Signals{
         $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimeStamp'=>0,'maxTimeStamp'=>0,'lastValueAge'=>NULL,'lastValue'=>NULL];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
         foreach($signal['Content']['signal'] as $index=>$signalItem){
-            if ($signalItem['dataType']!=='geo'){
+            if ($signalItem['dataType']==='geo'){
                 continue;
             }
             if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){

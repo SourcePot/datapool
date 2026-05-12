@@ -69,7 +69,6 @@ class GeoTools{
     public function updateUserLocationHook(array $arr=[]):array
     {
         if (!empty($arr)){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($arr);
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($user,1);
             $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon']]],'targetKey'=>'Address']);

@@ -150,11 +150,9 @@ private function signalsDerived(array $selector):string
     {
         // get derived signals linked to the original signal
         $relevantDerivedSignalsSelector=[];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$this->entryTable,'Content'=>'%'.($signal['EntryId']?:'__NOTHING_HERE__').'%'],TRUE,'Read') as $relevantDerivedSignalRule){
+        $selector=['Source'=>$this->entryTable,'Content'=>'%'.($signal['EntryId']?:'__NOTHING_HERE__').'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $relevantDerivedSignalRule){
             $derivedSignalId=md5($relevantDerivedSignalRule['Group'].'|'.$relevantDerivedSignalRule['Folder']);
-            if (isset($relevantDerivedSignals[$derivedSignalId])){
-                continue;
-            }
             $relevantDerivedSignalsSelector[$derivedSignalId]=['Source'=>$this->entryTable,'Group'=>$relevantDerivedSignalRule['Group'],'Folder'=>$relevantDerivedSignalRule['Folder']];
         }
         // aquire derived signal configurations
