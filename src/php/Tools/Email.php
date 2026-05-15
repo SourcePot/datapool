@@ -16,8 +16,6 @@ use PHPMailer\PHPMailer\Exception;
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\FileMessage;
 use Carbon\Carbon;
-use Hfig\MAPI\MapiMessageFactory;
-use Hfig\MAPI\OLE\Pear\DocumentFactory;
 
 class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
 
@@ -321,7 +319,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry['Content']['Subject']=$headers['SUBJECT']?:$headers['Subject']?:'{Missing subject}';
         $entry['Content']['Message']=$message->body??'';
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
-        $id=$id?:$entry['message-id']?:mt_rand(100000,999999);
+        $id=$id?:$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
@@ -365,7 +363,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
         $entry['Content']['Message']=$message->text()?:($htmlContent??'');
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
-        $id=$id?:$entry['message-id']?:'';
+        $id=$id?:$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
@@ -415,7 +413,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $subKey=$match[1]??'root';
                 $value=$match[2]??$value;
                 $entry['Params']['Email'][$key][$subKey]=$value;
-                if (stripos($key,'message-id')!==FALSE && stripos($subKey,'root')!==FALSE){
+                if (strtolower($key)==='message-id' && stripos($subKey,'root')!==FALSE){
                     $entry['message-id']=$value;
                 }
             }            
