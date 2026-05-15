@@ -321,7 +321,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry['Content']['Subject']=$headers['SUBJECT']?:$headers['Subject']?:'{Missing subject}';
         $entry['Content']['Message']=$message->body??'';
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
-        $id=$id?:$entry['message-id']?:mt_rand(100000,999999);
+        $id=$id?:$entry['Params']['Email']['message-id']['root']?:mt_rand(100000,999999);
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
