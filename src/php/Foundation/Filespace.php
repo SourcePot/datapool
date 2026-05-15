@@ -635,7 +635,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && (stripos($entry['Params']['File']['MIME-Type'],'/vnd.ms-outlook')!==FALSE || $entry['Params']['File']['Extension']=='msg')){
             // Outlook email
             $email=file_get_contents($file);
-            $this->oc['SourcePot\Datapool\Tools\Email']->ole2entries($entry,$email,'',[]);
+            $this->oc['SourcePot\Datapool\Tools\Email']->outlook2entries($entry,$file,'',[]);
             return TRUE;
         } else if ($this->oc['SourcePot\Datapool\Foundation\Explorer']->selector2setting($entry,'File upload extract email parts') && $entry['Params']['File']['Extension']=='p7m'){
             // signed email

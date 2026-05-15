@@ -306,25 +306,25 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $this->messageObj2entries($entry,$message,$id,$context);
     }
 
-    public function ole2entries(array $entry,string $oleMsg,string $id,array $context):array
+    public function outlook2entries(array $entry,string $msgFile,string $id,array $context)
     {
-        if (empty($oleMsg)){return $context;}
-        $context['messages']++;
-        // ole-content -> message object
-        $messageFactory = new MapiMessageFactory();
-        $documentFactory = new DocumentFactory(); 
-        $stream=fopen('data://text/plain;base64,'.base64_encode($oleMsg),'r');
-        $ole=$documentFactory->createFromStream($stream);
-        $message=$messageFactory->parseMessage($ole);
-        // entry base data
-        $entry=$this->header2entry($entry,$message->properties()->transport_message_headers??'');
-        $entry['Content']['Subject']=$message->properties['subject']??'{Missing subject}';
-        $entry['Content']['File content']=$message->getBody();
-        $entry['Content']['Message']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['File content']);
+        $parser = new \Opt\OLE\MsgParser($msgFile);
+        $message = $parser->parse();
+        // add header to entry
+        $headers=$message->headers;
+        if (!empty($headers['TRANSPORT_MESSAGE_HEADERS'])){
+            $entry=$this->header2entry($entry,$headers['TRANSPORT_MESSAGE_HEADERS']??'');
+            unset($headers['TRANSPORT_MESSAGE_HEADERS']);
+        }
+        $entry['Params']['Email']=array_merge($headers,$entry['Params']['Email']??[]);
+        // add content to entry
+        $entry['Content']['Subject']=$headers['SUBJECT']?:$headers['Subject']?:'{Missing subject}';
+        $entry['Content']['Message']=$message->body??'';
+        $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
+        $id=$id?:$entry['message-id']?:mt_rand(100000,999999);
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
-        // html message
+        // html entry
         $context['messageEntries']++;
-        $htmlContent=$message->getBodyHTML()??'';
         if (empty($htmlContent)){
             $entry['Name']=$nameBase.') [text/plain]';
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
@@ -335,22 +335,23 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $entry['fileName']='message.html';
             $entry['fileContent']=$htmlContent;
             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+            $context['messageEntries']++;
         }
-        // message attachments
-        foreach($message->getAttachments() as $attachment){
-            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment->getContentId(),TRUE);
-            $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment->getMimeType().']';
+        // attachment entries
+        foreach ($message->attachments as $attachment){
+            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment['data'],TRUE);
+            $entry['fileName']=$attachment['filename']?:($contentIdHash.'.file');
+            $entry['fileContent']=$attachment['data'];
+            $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment['mimeType'].']';
             $entry['Name']=str_replace('{Missing subject}',$entry['fileName'],$entry['Name']);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-            $entry['fileName']=$attachment->getFilename()?:($contentIdHash.'.file');
-            $entry['fileContent']=$attachment->getData();
-            $entry['Params']['File']['MIME-Type']=$attachment->getMimeType();
+            $entry['Params']['File']['MIME-Type']=$attachment['mimeType'];
             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
             $context['messageEntries']++;
         }
         return $context;
     }
-
+    
     private function messageObj2entries(array $entry,$message,$id,$context):array
     {
         if (empty($message)){
