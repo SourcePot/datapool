@@ -116,36 +116,12 @@ sudo apt-get install php-curl
 >Remember to ensure security, you need to adjust all file permissions to the minimum necessary access level. Especially if you run the application on a publicly accessible server. Make sure that **only** the `../src/www/`-subdirectory is visible to the public and public write-access must be prohibited.
 
 ## Initial adjustments
-After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Allways use the &check; button to save changes.
+After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Always use the &check; button to save changes.
 
-## Dependencies: PEAR
+>[!IMPORTANT]
+>Displaying entries requires the appropriate settings. An error message appears in the Logger list, if an entry presentation setting is missing. The settings can be found here: Admin &rarr; Settings Souce: settings, Group: Presentation
 
-PEAR may be required for processing office documents such as emails. If the upload of emails fails, the php script might have failed to include PEAR. The exception **"Failed opening required 'PEAR.php' (include_path='/var/www/vhosts/...** indicates a faulty dicetory setting for PEAR. Check if PEAR is installed and the location of the PEAR directory is set correctly on the server. If PEAR is installed, you can check the directory as follows:
-
-If PEAR is not currently installed, it can be installed on a Linux system using the following command:
-```
-sudo apt-get install php-pear
-sudo /etc/init.d/apache2 restart
-```
-
-The following command returns the PEAR directory:
-```
-pear config-get php_dir
-> /usr/share/php
-```
-
-If you use PLESK for your server administration, you can add the correct path as follows in **Websites & Domains**, **PHP Settings for...**:
-
-![Added the PEAR directory in PLESK](/assets/img/plesk_settings_pear.png "Added the PEAR directory in PLESK")
-
-You need to append the PEAR folder path relative to the selected PHP version to **include_path** e.g. 
-```
-.:/opt/plesk/php/8.4/share/pear
-``` 
-and **open_basedir** e.g. 
-```
-{WEBSPACEROOT}{/}{:}{TMP}{/}:/opt/plesk/php/8.4/share/pear
-``` 
+If a presentation setting is missingan, an error e.g. *Entry presentation setting missing for _SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ appears in the Logger window. _"SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ is equal to the Folder of the missing entry presentation setting. A starting point for a proper would be to add _getPreview()_ as "Entry key" in the first rule.
 
 # Under the Hood
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
