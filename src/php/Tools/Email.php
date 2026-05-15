@@ -16,8 +16,6 @@ use PHPMailer\PHPMailer\Exception;
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\FileMessage;
 use Carbon\Carbon;
-use Hfig\MAPI\MapiMessageFactory;
-use Hfig\MAPI\OLE\Pear\DocumentFactory;
 
 class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\Interfaces\Transmitter,\SourcePot\Datapool\Interfaces\Receiver,\SourcePot\Datapool\Interfaces\HomeApp{
 
