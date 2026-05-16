@@ -32,7 +32,7 @@ final class Root{
         'Cache-Control: max-age=2',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: require-trusted-types-for 'script'; base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'unsafe-inline' 'nonce-{{nonce}}' {{script-src}}; style-src-attr 'unsafe-inline';img-src 'self' {{img-src}} data: blob:; frame-src 'self' {{frame-src}}; style-src-elem 'self' 'nonce-{{nonce}}' {{style-src-elem}}; ",
+        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'unsafe-inline' 'nonce-{{nonce}}' {{script-src}}; style-src-attr 'unsafe-inline';img-src 'self' {{img-src}} data: blob:; frame-src 'self' {{frame-src}}; style-src-elem 'self' 'nonce-{{nonce}}' {{style-src-elem}}; ",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
@@ -849,7 +849,7 @@ final class Root{
         $loadAvg['Load [%]']=round($loadAvg['Load']*100);
         // add measurements to signal
         $description='Server load measurements. The signal is updated on any job call.';
-        $color=($loadAvg['Load [%]']>100)?'var(--red)':(($loadAvg['Load [%]']>70)?'var(--blue)':'var(--green)');
+        $color=($loadAvg['Load [%]']>100)?'var(--redH)':(($loadAvg['Load [%]']>70)?'var(--blueH)':'var(--greenH)');
         $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Server load [%]',$loadAvg['Load [%]'],'int',['yMin'=>0,'label'=>$loadAvg['OS'],'description'=>$description,'color'=>$color]);
         // get signal properties
         $properties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalProperties(__CLASS__,__FUNCTION__,'Server load [%]');
