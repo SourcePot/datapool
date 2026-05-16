@@ -161,9 +161,8 @@ class PdfTools{
                     $embeddedFileContent=$filespec->getHeader()->get('EF')->get('F')->getContent();
                     if (!empty($embeddedFileContent)){
                         if (stripos($embeddedFileContent,'rsm:CrossIndustryInvoice')!==FALSE){
-                            // XRechnung
-                            $entry=$this->oc['SourcePot\Datapool\Tools\ZUGFeRD']->xmlString2entry($embeddedFileContent,$entry);
-                            $this->oc['logger']->log('info','Method "{class} &rarr; {function}()" found embedded XRechnung-file "{embeddedFileName}" in "{file}". No additional entry was created, instead the file content will be added to the entry Content-key "zugferd".',$context);
+                            $entry['Content']['XRechnung']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->xml2arr($embeddedFileContent);
+                            $this->oc['logger']->log('info','Method "{class} &rarr; {function}()" found embedded XRechnung-file "{embeddedFileName}" in "{file}". No additional entry was created, instead the file content will be added to the entry Content-key "XRechnung".',$context);
                         } else {
                             // misc embedded file
                             $newEntry=$entry;

@@ -32,7 +32,7 @@ final class Root{
         'Cache-Control: max-age=2',
         'X-Content-Type-Options: nosniff',
         'X-Frame-Options: SAMEORIGIN',
-        "Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}' {{script-src}}; style-src-attr 'unsafe-inline';img-src 'self' {{img-src}} data: blob:; frame-src 'self' {{frame-src}}; style-src-elem 'self' 'nonce-{{nonce}}' {{style-src-elem}};  ",
+        "Content-Security-Policy: require-trusted-types-for 'script'; base-uri 'self'; frame-ancestors 'self'; default-src 'strict-dynamic' 'self' 'nonce-{{nonce}}'; object-src 'self' 'nonce-{{nonce}}'; script-src 'unsafe-inline' 'nonce-{{nonce}}' {{script-src}}; style-src-attr 'unsafe-inline';img-src 'self' {{img-src}} data: blob:; frame-src 'self' {{frame-src}}; style-src-elem 'self' 'nonce-{{nonce}}' {{style-src-elem}}; ",
     ];
     
     // all classes listed at ADD_VENDOR_CLASSES will be initiated and added to the Object Collection "oc"
