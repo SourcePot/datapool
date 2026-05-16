@@ -148,7 +148,7 @@ class Backbone{
         $arr['page html'].='<meta name="viewport" content="'.$this->settings['metaViewport'].'">'.PHP_EOL;
         $arr['page html'].='<meta name="description" content="'.$this->settings['metaDescription'].'">'.PHP_EOL;
         $arr['page html'].='<meta name="robots" content="'.$this->settings['metaRobots'].'">'.PHP_EOL;
-        $arr['page html'].='<meta name="referrer" content="strict-origin" />'.PHP_EOL;
+        $arr['page html'].='<meta name="referrer" content="strict-origin-when-cross-origin"/>'.PHP_EOL;
         $arr['page html'].='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
         $arr['page html'].='{{head}}'.PHP_EOL;
         $arr['page html'].='</head>'.PHP_EOL;

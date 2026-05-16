@@ -89,6 +89,10 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         $query=preg_replace('/\s+/','%',trim($query));
         $currentUserContent=$this->oc['SourcePot\Datapool\Root']->getCurrentUser()['Content']??[];
         foreach($currentUserContent['My search interests']??[] as $class2query){
+            if (!isset($this->oc[$class2query]) || !method_exists($this->oc[$class2query],'query')){
+                $this->oc['logger']->log('notice','Class or method missing. Failed with {class}&rarr;{method}',['class'=>$class2query,'method'=>'query']);    
+                continue;
+            }
             $entries=$this->oc[$class2query]->query($query,$limit=10,$tags=[],$language='');
             foreach($entries as $entry){
                 if (isset($arr['Hits'][$entry['EntryId']])){

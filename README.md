@@ -121,7 +121,7 @@ After you have set up your admin account you should login and update the webmast
 >[!IMPORTANT]
 >Displaying entries requires the appropriate settings. An error message appears in the Logger list, if an entry presentation setting is missing. The settings can be found here: Admin &rarr; Settings Souce: settings, Group: Presentation
 
-If a presentation setting is missingan, an error e.g. *Entry presentation setting missing for _SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ appears in the Logger window. _"SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ is equal to the Folder of the missing entry presentation setting. A starting point for a proper would be to add _getPreview()_ as "Entry key" in the first rule.
+If a presentation setting is missingan, an error e.g. _Entry presentation setting missing for "SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ appears in the Logger window. _"SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ is equal to the Folder of the missing entry presentation setting. A starting point for a proper would be to add _getPreview()_ as "Entry key" in the first rule.
 
 # Under the Hood
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
