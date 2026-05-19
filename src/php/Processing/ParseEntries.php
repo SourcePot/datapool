@@ -278,7 +278,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $result['Mapping']=$mappingResult['result'];
         if ($mappingResult['failed']){
             // mapper failed
-            $singleEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll([]);
             return $this->finalizeFailedEntry($result,$sourceEntry,$base,$params,$testRun);
         }
         // content found, get sections
@@ -370,6 +369,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private function finalizeFailedEntry($result,$sourceEntry,$base,$params,$testRun):array
     {
         $result['Statistics']['Entries moved (failure)']['Value']++;
+        $sourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($sourceEntry);
         $failedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$params['Target on failure']],TRUE,$testRun);
         $this->oc['SourcePot\Datapool\Tools\MiscTools']->add2hitStatistics($failedEntry,'failed');
         if (!isset($result['Sample result (failure)']) || mt_rand(1,100)>80){
