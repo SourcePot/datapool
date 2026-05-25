@@ -237,9 +237,9 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
     {
         $idArr=[
             'client_id'=>$clientRequest['client_id'],
-            'Group'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Group'],
-            'Folder'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Folder'],
-            'Name'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Name']
+            'Group'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Group']??'Status'.self::ONEDIMSEPARATOR.'Group missing',
+            'Folder'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Folder']??'Status'.self::ONEDIMSEPARATOR.'Folder missing',
+            'Name'=>$clientRequest['Status'.self::ONEDIMSEPARATOR.'Name']??'Status'.self::ONEDIMSEPARATOR.'Name missing',
         ];
         $baseEntryId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($idArr,TRUE);
         // create templates from clientRequest
