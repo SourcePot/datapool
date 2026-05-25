@@ -24,7 +24,7 @@ class ExifTools{
         $this->oc=$oc;
     }
 
-    public function addExif2entry(array $entry,string $file):array
+    public function addProps2entry(array $entry,string $file):array
     {
         $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addExif2entry($entry,$file);
         $entry=$this->oc['SourcePot\Datapool\Tools\MediaTools']->addGPano2entry($entry,$file);
@@ -33,6 +33,7 @@ class ExifTools{
         $entry=$this->addCamera($entry);
         $entry=$this->addGPS($entry);
         $entry=$this->addDateTime($entry);
+        $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" properties such as exif data added',['class'=>__CLASS__,'function'=>__FUNCTION__]+$entry['exif']);
         unset($entry['exif']);
         return $entry;
     }

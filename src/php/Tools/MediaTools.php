@@ -626,11 +626,11 @@ class MediaTools{
         $entry['exif']=[];   
         if (!is_file($file)){
             // no attched file
-        } else if (!function_exists('exif_read_data')){
-            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',[]);   
-        } else {
+        } else if (function_exists('exif_read_data')){
             $exif=@exif_read_data($file,'IFD0');
             $entry['exif']=(empty($exif))?[]:$exif;
+        } else {
+            $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',[]);   
         }
         return $entry;
     }

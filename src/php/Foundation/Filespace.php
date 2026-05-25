@@ -579,7 +579,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
             return $entry;
         }
         $entry=$this->addFileProps($entry,$file);
-        $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$file);
+        $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addProps2entry($entry,$file);
         if ($this->specialFileHandling($file,$entry,$noUpdateButCreateIfMissing,$isSystemCall)){
             // Files are processed by specialFileHandling()
             // If a file is an archive or an email, this method will be called again with each of the separated files
@@ -627,6 +627,7 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         $entry['Params']['File']['Date (created)']=filectime($file);
         $entry['Params']['File']['MIME-Type']=mime_content_type($file);
         $entry['Params']['File']['Style class']='';
+        $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" properties added: Name={Name}, Extension={NaExtensionme}, Size={Size}, Date (created)={Date (created)}, MIME-Type={MIME-Type}, ',['class'=>__CLASS__,'function'=>__FUNCTION__]+$entry['Params']['File']);
         return $entry;
     }
 
@@ -713,26 +714,31 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                     $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" parser failed: {msg}',$context);
                 }
             }
-            // extract attachments
+            // extract pdf-attachments
             try{
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
             } catch (\Exception $e){
                 $context['msg']=$e->getMessage();
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed to scan for pdf-attachments: {msg}',$context);
             }    
+            $context['steps'].=' | pdf added, possible attachements added as extra entries, possible text parsed';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'csv')!==FALSE){
             $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file)->current();
             $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
             $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
+            $context['steps'].=' | spreadsheet added to entry["Params"]["File"]["Spreadsheet"]';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'xls')!==FALSE){
             $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($file,$entry['Params']['File']['Extension'])->current();
             $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\XLStools';
             $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
+            $context['steps'].=' | spreadsheet added to entry["Params"]["File"]["Spreadsheet"]';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'txt')!==FALSE){
             $entry['Content']['File content']=file_get_contents($file);
+            $context['steps'].=' | text added to entry["Content"]["File content"]';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'json')!==FALSE){
             $fileContent=file_get_contents($file)?:'{}';
             $entry['Content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr($fileContent);
+            $context['steps'].=' | json data added to entry["Content"]';
         }
         // add file to entry
         if (empty($entry['EntryId'])){
@@ -742,11 +748,13 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         $context['targetFile']=$this->selector2file($entry,TRUE);
         if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->tryCopy($file,$context['targetFile'])){
             // success
-            $context['steps']='File copied to entry|';
+            $context['steps'].=' | File '.$entry['Params']['File']['Name'].' copied to entry|';
         } else {
-            $context['steps']='Failed to copy file to entry|';
+            $context['steps'].=' | Failed to copy file '.$entry['Params']['File']['Name'].' to entry|';
             $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" failed to copy "{file}" to "{targetFile}"',$context);
         }
+        $context['steps']=trim($context['steps'],' |');
+        $this->oc['logger']->log('info','Function "{class} &rarr; {function}()": {steps}',$context);
         $entry[__FUNCTION__]=$context;
         return $entry;
     }

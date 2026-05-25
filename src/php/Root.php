@@ -112,6 +112,7 @@ final class Root{
         // initialize the environment, setup the Object Collection (oc) with a temporary logger and setting up the user
         $this->oc=[__CLASS__=>$this,'logger'=>$this,'logger_1'=>$this];
         $GLOBALS['script start time']=hrtime(TRUE);
+        $GLOBALS['script start timestamp']=time();
         date_default_timezone_set('UTC');
         // session start
         $this->builderProgress[hrtime(TRUE)]=__CLASS__.'&rarr;__constructor() called';

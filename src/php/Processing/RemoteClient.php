@@ -288,7 +288,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                 $fileArr=current($_FILES);
                 if ($fileArr && empty($fileArr['error'])){
                     $success=move_uploaded_file($fileArr['tmp_name'],$sourceFile);
-                    $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addExif2entry($entry,$sourceFile);
+                    $entry=$this->oc['SourcePot\Datapool\Tools\ExifTools']->addProps2entry($entry,$sourceFile);
                 } else if ($fileArr && !empty($fileArr['error'])){
                     unlink($sourceFile);
                     unset($entry['Params']['File']);
