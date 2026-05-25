@@ -33,7 +33,8 @@ class ExifTools{
         $entry=$this->addCamera($entry);
         $entry=$this->addGPS($entry);
         $entry=$this->addDateTime($entry);
-        $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" properties such as exif data added',['class'=>__CLASS__,'function'=>__FUNCTION__]+$entry['exif']);
+        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($entry);
+        $this->oc['logger']->log('info','Function "{class} &rarr; {function}()" properties such as exif data added, e.g. lat={lat}, lon={lon}',['class'=>__CLASS__,'function'=>__FUNCTION__]+$entry['Params']['Geo']);
         unset($entry['exif']);
         return $entry;
     }
