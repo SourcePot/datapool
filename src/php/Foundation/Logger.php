@@ -170,6 +170,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
             $timestamp=strval($logDateTimeObj->getTimestamp()).'.000';
             $timestamp=strval($log['Content']['timestamp']?:$timestamp);
             $logDateTimeObj = \DateTime::createFromFormat('U.u',$timestamp);
+            if (empty($logDateTimeObj)){continue;}
             $logDate=$logDateTimeObj->format("Y-m-d H:i:s.u");
             $logDate=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($logDate,\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::getUserTimezone(),'Y-m-d H:i:s.u');
             $log['Date']=str_replace($today,'',$logDate);
