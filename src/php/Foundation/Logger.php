@@ -177,7 +177,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
             foreach($arr['settings']['columns'] as $column){
                 if (!isset($flatLog[$column])){continue;}
-                $logs[$logDate][$column]=$flatLog[$column];
+                $logs[$timestamp][$column]=$flatLog[$column];
             }
         }
         // compile html
