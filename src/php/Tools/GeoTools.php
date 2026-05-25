@@ -97,6 +97,7 @@ class GeoTools{
         $debugArr=['entry_in'=>$entry];
         $entry['Params'][$targetKey]=[];
         if ($this->permitted && isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
+            $this->oc['logger']->log('info','Method "{method}" called for entry with location lat={lat}, lon={lon}',['method'=>__FUNCTION__]+$entry['Params']['Geo']);
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
             $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
             $options=[
