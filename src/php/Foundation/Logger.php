@@ -149,8 +149,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $entry['Name']=mb_substr($entry['Content']['msg'],0,100);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0);
         $entry['Content']['timestamp']=$GLOBALS['script start timestamp']+((hrtime(TRUE)-$GLOBALS['script start time'])/1000000000);
-        $nowDateTimeObj = \DateTime::createFromFormat('U.u',strval($entry['Content']['timestamp']));
-        $entry['Date']=$nowDateTimeObj->format("Y-m-d H:i:s.u");
+        $entry['Date']=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('now',\SourcePot\Datapool\Root::DB_TIMEZONE);
         // write to database
         if (!empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
