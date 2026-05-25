@@ -129,13 +129,18 @@ class Signals{
         $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimeStamp'=>0,'maxTimeStamp'=>0,'lastValueAge'=>NULL,'lastValue'=>NULL];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
         foreach($signal['Content']['signal'] as $index=>$signalItem){
-            if ($signalItem['dataType']==='geo'){
-                continue;
-            }
             if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
                 continue;
             }
+            if ($properties['maxTimeStamp']<$signalItem['timeStamp']){
+                $properties['maxTimeStamp']=$signalItem['timeStamp'];
+                $properties['lastValueAge']=time()-$signalItem['timeStamp'];
+                $properties['lastValue']=$signalItem['value'];
+            }
             $properties['count']++;
+            if ($signalItem['dataType']==='geo'){
+                continue;
+            }
             $properties['sum']+=$signalItem['value'];
             if ($properties['min']===FALSE || $properties['min']>$signalItem['value']){
                 $properties['min']=$signalItem['value'];
@@ -145,11 +150,6 @@ class Signals{
             }
             if ($properties['max']===FALSE || $properties['max']<$signalItem['value']){
                 $properties['max']=$signalItem['value'];
-            }
-            if ($properties['maxTimeStamp']<$signalItem['timeStamp']){
-                $properties['maxTimeStamp']=$signalItem['timeStamp'];
-                $properties['lastValueAge']=time()-$signalItem['timeStamp'];
-                $properties['lastValue']=$signalItem['value'];
             }
             $properties['avgTimeStamp']+=$signalItem['timeStamp'];
         }

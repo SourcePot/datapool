@@ -13,6 +13,8 @@ namespace SourcePot\Datapool\Tools;
 class GeoTools{
 
     private const INIT_MAP_LOCATION='48.1520963,11.5111696,4';   // lat,lon,zoom
+
+    private const MAX_LOCATION_AGE=120;
     
     private const MISSING_PERMISSION_ELEMENT=[
         'tag'=>'p',
@@ -69,13 +71,21 @@ class GeoTools{
     public function updateUserLocationHook(array $arr=[]):array
     {
         if (!empty($arr)){
+            // get user
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($user,1);
+            $signalName='Geo '.$user['EntryId'];
+            // get signal properties, skip location if last location is younger than threshold
+            $properties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalProperties(__CLASS__,__FUNCTION__,$signalName);
+            if ($properties['lastValueAge']<self::MAX_LOCATION_AGE){
+                return $arr;
+            }
+            // get current location & address
             $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon']]],'targetKey'=>'Address']);
             $arr['Geo']['address']=($this->permitted)?$addressArr['Params']['Address']['display_name']:'';
             $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
             unset($arr['Geo']['accuracy']);
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Geo '.$user['EntryId'],$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
         } else if ($this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data')){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','id'=>'user-location-hook','element-content'=>'User location hook','style'=>['display'=>'none']]);
         }
