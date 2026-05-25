@@ -166,13 +166,13 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $logs=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read',$arr['settings']['orderBy'],$arr['settings']['isAsc'],$arr['settings']['limit'],$arr['settings']['offset']) as $log){
             $logDateTimeObj=new \DateTime($log['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-            $timestamp=strval($logDateTimeObj->getTimestamp()).'.000';
-            $timestamp=strval($log['Content']['timestamp']?:$timestamp);
+            $timestamp=number_format(floatval($log['Content']['timestamp']?:$logDateTimeObj->getTimestamp()),6,'.','');
             $logDateTimeObj = \DateTime::createFromFormat('U.u',$timestamp);
-            if (empty($logDateTimeObj)){continue;}
             $logDate=$logDateTimeObj->format("Y-m-d H:i:s.u");
             $logDate=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($logDate,\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::getUserTimezone(),'Y-m-d H:i:s.u');
-            $log['Date']=str_replace($today,'',$logDate);
+            if (strpos($logDate,$today)!==FALSE){
+                $log['Date']=str_replace($today,'',$logDate);
+            }
             // logs to be shown
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
             foreach($arr['settings']['columns'] as $column){
