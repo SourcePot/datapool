@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
+use DateTimeZone;
 use Monolog\LogRecord;
 use Monolog\Level;
 
@@ -147,7 +148,9 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         }
         $entry['Name']=mb_substr($entry['Content']['msg'],0,100);
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,array('Source','Group','Folder','Name'),0);
-        $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+        $entry['Content']['timestamp']=$GLOBALS['script start timestamp']+((hrtime(TRUE)-$GLOBALS['script start time'])/1000000000);
+        $nowDateTimeObj = \DateTime::createFromFormat('U.u',strval($entry['Content']['timestamp']));
+        $entry['Date']=$nowDateTimeObj->format("Y-m-d H:i:s.u");
         // write to database
         if (!empty($this->oc['SourcePot\Datapool\Foundation\Database']->getDbStatus())){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
@@ -156,27 +159,34 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getLogsHtml(array $arr):array
     {
-        $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
-        $sourceTimezone=\SourcePot\Datapool\Root::DB_TIMEZONE;
-        $today=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('now',$sourceTimezone,$pageTimeZone);
+        $today=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate('now',\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::getUserTimezone());
         $today=mb_substr($today,0,11);
         $columns=['Date','Group','Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'msg'];
-        $arr['settings']=array_replace_recursive(array('orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'),$arr['settings']);
+        $arr['settings']=array_replace_recursive(['orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'],$arr['settings']);
         $arr['selector']['Source']=$this->entryTable;
-        $arr['html']=' ';
-        $_SESSION[__CLASS__]['age']=10;
+        $logs=[];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read',$arr['settings']['orderBy'],$arr['settings']['isAsc'],$arr['settings']['limit'],$arr['settings']['offset']) as $log){
-            if (isset($log['Content']['timestamp'])){
-                $age=time()-$log['Content']['timestamp'];
-                if ($_SESSION[__CLASS__]['age']>$age){$_SESSION[__CLASS__]['age']=$age;}
-            }
-            $rowHtml='';
+            $logDateTimeObj=new \DateTime($log['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+            $timestamp=strval($logDateTimeObj->getTimestamp()).'.000';
+            $timestamp=strval($log['Content']['timestamp']?:$timestamp);
+            $logDateTimeObj = \DateTime::createFromFormat('U.u',$timestamp);
+            $logDate=$logDateTimeObj->format("Y-m-d H:i:s.u");
+            $logDate=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($logDate,\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::getUserTimezone(),'Y-m-d H:i:s.u');
+            $log['Date']=str_replace($today,'',$logDate);
+            // logs to be shown
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
-            $flatLog['Date']=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($flatLog['Date'],$sourceTimezone,$pageTimeZone);
-            $flatLog['Date']=str_replace($today,'',$flatLog['Date']);
             foreach($arr['settings']['columns'] as $column){
                 if (!isset($flatLog[$column])){continue;}
-                $rowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$flatLog[$column],'keep-element-content'=>TRUE,'style'=>self::LOG_LEVEL_CONFIG[$log['Group']]['style'],'class'=>$arr['settings']['class']]);
+                $logs[$logDate][$column]=$flatLog[$column];
+            }
+        }
+        // compile html
+        krsort($logs);
+        $arr['html']=' ';
+        foreach($logs as $logDate=>$log){
+            $rowHtml='';
+            foreach($log as $column=>$value){
+                $rowHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','element-content'=>$value,'keep-element-content'=>TRUE,'style'=>self::LOG_LEVEL_CONFIG[$log['Group']]['style'],'class'=>$arr['settings']['class']]);
             }
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$rowHtml,'keep-element-content'=>TRUE,'class'=>$arr['settings']['class']]);
         }
@@ -191,9 +201,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $arr['wrapper']=['class'=>'log','style'=>['overflow-y'=>'scroll']];
         $contentHtml=$this->oc['SourcePot\Datapool\Foundation\Container']->container('My Logs '.__FUNCTION__,'generic',$arr['selector'],$arr['settings'],$arr['wrapper']);
         // add to app
-        $appArr=['class'=>'log','icon'=>'Logger'];
-        if ($_SESSION[__CLASS__]['age']<2){$appArr['open']=TRUE;}
-        $appArr['html']=$contentHtml;
+        $appArr=['class'=>'log','icon'=>'Logger','open'=>FALSE,'html'=>$contentHtml];
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app($appArr);
         return $html;
     } 
