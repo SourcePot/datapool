@@ -121,6 +121,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     
     private function loginSuccess($user,$email)
     {
+        $this->oc['SourcePot\Datapool\Cookies\Cookies']->setSettingsCookie('UserId',$user['EntryId']);
         $this->resetSession();
         if ($this->oc['SourcePot\Datapool\Components\TwoFactorAuthentication']->isTwoFactorAuthenticationRequired($user)){
             // Two-factor authentication (2FA)

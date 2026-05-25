@@ -72,9 +72,9 @@ class GeoTools{
     {
         if (!empty($arr)){
             // get user
-            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-            $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($user,1);
-            $signalName='Geo '.$user['EntryId'];
+            $userId=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('UserId')??$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();;
+            $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($userId,1);
+            $signalName='Geo '.$userId;
             // get signal properties, skip location if last location is younger than threshold
             $properties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalProperties(__CLASS__,__FUNCTION__,$signalName);
             if ($properties['lastValueAge']<self::MAX_LOCATION_AGE){
