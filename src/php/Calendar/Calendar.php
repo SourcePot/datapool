@@ -430,7 +430,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                     continue;
                 }
             }
-            if (mb_strpos($event['State'],'Upcomming')!==FALSE){
+            if (mb_strpos($event['State'],'Upcoming')!==FALSE){
                 $matrices[$event['State']][$EntryId]=['Event'=>$event['Name'],'Starts&nbsp;in'=>$this->getTimeDiff($event['Start'],'now',\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::DB_TIMEZONE)];
             } else {
                 $matrices[$event['State']][$EntryId]=['Event'=>$event['Name'],'Ends&nbsp;in'=>$this->getTimeDiff($event['End'],'now',\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::DB_TIMEZONE)];
@@ -608,7 +608,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         return ceil(($calendarDateTime->getTimestamp()-$calendarStartTimestamp)*$this->pageState['Day width']/86400);
     }
     
-    public function getTimezoneDate($date,$sourceTimezone,$targetTimezone)
+    public function getTimezoneDate($date,$sourceTimezone,$targetTimezone,string $format='Y-m-d H:i:s')
     {
         $sourceTimezone=new \DateTimeZone($sourceTimezone);
         $targetTimezone=new \DateTimeZone($targetTimezone);
@@ -620,7 +620,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $dateTime=new \DateTime($date,$sourceTimezone);
         }
         $dateTime->setTimezone($targetTimezone);
-        return $dateTime->format('Y-m-d H:i:s');
+        return $dateTime->format($format);
     }
 
     private function getEvents($timestamp,$isSystemCall=FALSE)
@@ -642,8 +642,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $oldEvents=[];
         $selectors=[];
         $selectors['Ongoing event']=['Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start<'=>$viewStart,'End>'=>$viewEnd];
-        $selectors['Finnishing event']=['Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','End>='=>$viewStart,'End<='=>$viewEnd];
-        $selectors['Upcomming event']=['Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start>='=>$viewStart,'Start<='=>$viewEnd];
+        $selectors['Finishing event']=['Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','End>='=>$viewStart,'End<='=>$viewEnd];
+        $selectors['Upcoming event']=['Source'=>$this->entryTable,'Group_1'=>'Events','Group_2'=>'Bank holidays','Start>='=>$viewStart,'Start<='=>$viewEnd];
         $selectors['Serial event']=['Source'=>$this->entryTable,'Group'=>'Serial events'];
         foreach($selectors as $state=>$selector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,$isSystemCall,'Read','Start') as $entry){
@@ -659,8 +659,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
                     }
                     $key=$entry['EntryId'];
                     $eventStartTimestamp=strtotime($entry['Start']);
-                    if (strcmp($state,'Finnishing event')===0){
-                        if ($eventStartTimestamp>time()){$state='Upcomming event';}
+                    if (strcmp($state,'Finishing event')===0){
+                        if ($eventStartTimestamp>time()){$state='Upcoming event';}
                     }
                     $events[$key]=$entry;
                     $events[$key]['State']=$state;
