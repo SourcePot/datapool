@@ -32,6 +32,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         // add content structure of parameters here...
         'Keep failed cases'=>['method'=>'select','excontainer'=>TRUE,'value'=>0,'options'=>['No','Yes']],
         'Cases to match'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
+        'Manual match case ref. key'=>['method'=>'keySelect','standardColumsOnly'=>TRUE,'excontainer'=>TRUE,'value'=>'Name',],
         'Target matched list entries'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
         'Target cases without OPS match'=>['method'=>'canvasElementSelect','addBlackHole'=>TRUE,'excontainer'=>TRUE],
     ];
@@ -56,8 +57,7 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
 
     private const MANUAL_FAMILY_MATCH_RULES=[
         // add content structure of rules here...
-        'Case'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[]],
-        'Entry key for Family value'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder',],
+        'Matching case ref.'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'2007P48036WEAT  ','excontainer'=>TRUE],
         'ip number'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'','placeholder'=>'AT-E-620,003','excontainer'=>TRUE],
     ];
     
@@ -251,10 +251,6 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         $casesCanvasElement=$this->casesCanvasElement($callingElement);
         // build content structure
         $contentStructure=self::MANUAL_FAMILY_MATCH_RULES;
-        $casesSelector=$this->getCasesSelector($callingElement);
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($casesSelector,TRUE) as $caseEntry){
-            $contentStructure['Case']['options'][$caseEntry['EntryId']]=$caseEntry['Name'];
-        }
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$casesCanvasElement);
         // get calling element and add content structure
         $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
@@ -318,38 +314,40 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
         unset($list['tmp']);
         $processorParams=current($base['processorparamshtml'])['Content'];
         $targetSelectorSuccess=$base['entryTemplates'][$processorParams['Target matched list entries']]??[];
-        $caseSelector=$this->getCasesSelector($callingElement);
-        $index=0;
-        foreach($list as $listEntryId=>$listEntryValue){
-            foreach($base['manualmatchruleshtml']??[] as $ruleEntryId=>$rule){
-                $index++;
-                // match successful, get case
-                $caseSelector['EntryId']=$rule['Content']['Case'];
-                $case=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($caseSelector,TRUE);
-                $flatCase=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($case);
-                $family=$flatCase[$rule['Content']['Entry key for Family value']];
-                $result['Manual match'][$index]=['Case'=>$case['Name'],'Familiy'=>$family,'Provided ip number'=>$rule['Content']['ip number'],'=?= List ip number'=>$listEntryValue,'Familiy'=>$family,'Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
-                // try to match
-                if (stripos($listEntryValue,$rule['Content']['ip number']??'__MISSING__')===FALSE){
-                    if (count($result['Manual match'])>15){
-                        unset($result['Manual match'][$index]);
-                        $overflow=TRUE;
-                    }
-                    continue;
-                }
-                $result['Manual match'][$index]['Match']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(TRUE);
-                // update and move matched list entry
-                $listEntry=$this->getListEntry($callingElement,$listEntryId);
-                $listEntry['Content']['Match']=['Family'=>$family];
-                $listEntry['Content']['Matched case']=$case['Content'];
-                $listEntry['Content']['Match type']='OPS match';
-                // move successfully matched list entry
-                $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,FALSE);
-                $result['Statistics']['Entries moved (success)']['Value']++;
+        $caseSelectorTemplate=$this->getCasesSelector($callingElement);
+        foreach($base['manualmatchruleshtml']??[] as $ruleId=>$rule){
+            $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($ruleId)[0];
+            // get ipNumber
+            $ipNumbers=$this->getList($callingElement);
+            unset($ipNumbers['tmp']);
+            $listEntries=[];
+            foreach($ipNumbers as $entryId=>$ipNumber){
+                if (stripos($ipNumber,$rule['Content']['ip number'])===FALSE){continue;}
+                $listEntry=array_merge($callingElement['Content']['Selector'],['EntryId'=>$entryId]);
+                $listEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($listEntry,TRUE);
+                $listEntry['ipNumber']=$ipNumber;
+                $listEntries[$entryId]=$listEntry;
             }
-        }
-        if ($overflow){
-            $result['Manual match'][$index]=['Case'=>'...','Familiy'=>'...','Provided ip number'=>'...','=?= List ip number'=>'...','Familiy'=>'...','Match'=>'...'];
+            // match case, if list entry is present
+            $caseEntry=FALSE;
+            if (empty($listEntries)){
+                $result['Manual match'][$ruleKey]=['ip number'=>'not found','Case'=>'','Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(FALSE)];
+            } else {
+                // get matching case
+                $caseSelector=array_merge($caseSelectorTemplate,[$processorParams['Manual match case ref. key']=>$rule['Content']['Matching case ref.']]);
+                foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($caseSelector,TRUE) as $caseEntry){
+                    // match successful, move list entry
+                    foreach($listEntries as $listEntry){
+                        $listEntry['Content']['Match']=[];
+                        $listEntry['Content']['Matched case']=$caseEntry['Content'];
+                        $listEntry['Content']['Match type']='Manual match';
+                        $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($listEntry,$targetSelectorSuccess,TRUE,$testRun,FALSE);
+                        $result['Statistics']['Entries moved (success)']['Value']++;
+                    }
+                    break;
+                }
+            }
+            $result['Manual match'][$ruleKey]=['Entry count'=>count($listEntries),'ip number'=>$listEntry['ipNumber']?:'not found','Case'=>$caseEntry['Name']?:'not found','Match'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element(!empty($caseEntry))];
         }
         return $result;
     }
@@ -391,7 +389,6 @@ class OPSListMatcher implements \SourcePot\Datapool\Interfaces\Processor{
             $result['List matcher'][$index]['Errors']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$errorsMatrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'style'=>['border'=>'none']]);
             // match successful, move list entry
             $listEntry=$this->getListEntry($callingElement,$listMatch->entryIdRoyaltyEntry);
-            $listEntry['Folder']=$caseEntry['Folder'];
             $listEntry['Content']['Match']=$listMatch->to_array();
             $listEntry['Content']['Matched case']=$caseEntry['Content'];
             $listEntry['Content']['Match type']='OPS match';
