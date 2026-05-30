@@ -75,7 +75,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 $toOptimize=$table;
             }
         }
-        $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($vars['Last optimised']??[]);
         // Optimise table or delete expired entries
         $startTime=hrtime(TRUE);
         if (empty($toOptimize)){
