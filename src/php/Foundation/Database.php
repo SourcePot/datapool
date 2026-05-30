@@ -16,7 +16,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     private $dbObj;
     
-    public const TIME_BETWEEN_TABLE_OPTIMISATIONS=5000;
+    public const TIME_BETWEEN_ACTIONS=[
+        'Table optimized'=>['min'=>9000,'max'=>864000],
+        'Table refreshed indices'=>['min'=>4000,'max'=>86400],
+        'Table deleted expired entries'=>['min'=>0,'max'=>300],
+    ];
     public const TABLE_UNLOCK_REQUIRED=['persistency'=>TRUE];
     public const CHARACTER_SET='utf8mb4';
     public const TABLE_COLLATION='utf8mb4_unicode_ci';
@@ -57,53 +61,68 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function job(array $vars):array
     {
-        $toOptimize=FALSE;  
-        $lastOptimised=time();
-        $allTables=array_flip(array_keys($GLOBALS['dbInfo']));
-        $allTables=array_merge($allTables,$vars['Last optimised']??['logger'=>0]);
-        foreach($allTables as $table=>$optimised){
-            if (!isset($GLOBALS['dbInfo'][$table])){
-                $vars['Last optimised'][$table]='__TODELETE__';
-                continue;
+        // evaluate which action is required
+        $toDo=FALSE;
+        $allDetectedTables=array_flip(array_keys($GLOBALS['dbInfo']));
+        foreach(self::TIME_BETWEEN_ACTIONS as $action=>$timeLimits){
+            $newestTimeStamp=$oldestTimeStamp=FALSE;
+            $allTables=array_merge($allDetectedTables,$vars[$action]??['logger'=>0]);
+            foreach($allTables as $table=>$actionTimeStamp){
+                if ($newestTimeStamp<$actionTimeStamp || $newestTimeStamp===FALSE){
+                    $newestTimeStamp=$actionTimeStamp;
+                }
+                if ($oldestTimeStamp>$actionTimeStamp || $oldestTimeStamp===FALSE){
+                    $oldestTimeStamp=$actionTimeStamp;
+                    if ((time()-$oldestTimeStamp)>$timeLimits['max']){
+                        $toDo=['action'=>$action,'table'=>$table];
+                    }
+                }
             }
-            if ($optimised<$lastOptimised){
-                $lastOptimised=$optimised;
-            } else {
-                continue;
-            }
-            if ((time()-$lastOptimised)>self::TIME_BETWEEN_TABLE_OPTIMISATIONS){
-                $toOptimize=$table;
-            }
+            $toDo=((time()-$newestTimeStamp)<$timeLimits['min'])?FALSE:$toDo;
+            if (!empty($toDo)){break;}
         }
-        // Optimise table or delete expired entries
-        $startTime=hrtime(TRUE);
-        if (empty($toOptimize)){
-            // delete expired entries
-            foreach($GLOBALS['dbInfo'] as $table=>$template){
-                $startTime=hrtime(TRUE);
-                $this->resetStatistic();
-                $statistic=$this->deleteExpiredEntries($table);
-                // update deleted signal
-                $params=['yMin'=>0];
-                $params['description']='Each data point represents a deletion event for expired entries in the table. The value stands the amount of deleted entries & the label for the time consumption.';
-                $params['label']=round((hrtime(TRUE)-$startTime)/1000000).' ms';
-                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Expired entries deleted ['.$table.']',$statistic['deleted'],'int',$params);
-            }
-            $vars['action']='Deleted expired entries';
+        // run required action
+        if (empty($toDo)){
+            $vars['action']='There was nothing to do...';
         } else {
-            // optimise table
-            $sql='OPTIMIZE TABLE `'.$toOptimize.'`;';
-            $stmt=$this->executeStatement($sql,[]);
-            $vars['OPTIMIZE TABLE'][$toOptimize]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $vars['action']='Check and repair table "'.$toOptimize.'"';
-            $vars['Last optimised'][$toOptimize]=$vars['Last optimised timestamp']=time();
-            // update deleted signal
-            $params=['yMin'=>0];
-            $params['description']='Each data point represents a table optimisation. The data value represents the time consumption & the label the table name';
-            $params['label']=$toOptimize;
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000000),'int',$params);
+            $startTime=hrtime(TRUE);
+            $this->resetStatistic();    
+            if ($toDo['action']==='Table optimized'){
+                $sql='OPTIMIZE TABLE `'.$toDo['table'].'`;';
+                $stmt=$this->executeStatement($sql,[]);
+                $vars['OPTIMIZE TABLE'][$toDo['table']]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+                // update signal
+                $params=['yMin'=>0];
+                $params['description']='Each data point represents a table optimisation. The data value represents the time consumption & the label the table name';
+                $params['label']=$toDo['table'];
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000000),'int',$params);    
+            } else if ($toDo['action']==='Table refreshed indices'){
+                $this->dropTableIndices($toDo['table']);
+                $this->setTableIndices($toDo['table']);
+                // update signal
+                $params=['yMin'=>0];
+                $params['description']='Each data point represents a table optimisation. The data value represents the time consumption & the label the table name';
+                $params['label']=$toDo['table'];
+                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption refreshing table indices [ms]',round((hrtime(TRUE)-$startTime)/1000000),'int',$params);
+            } else if ($toDo['action']==='Table deleted expired entries'){
+                $toDo['table']='';
+                foreach($GLOBALS['dbInfo'] as $table=>$template){
+                    $startTime=hrtime(TRUE);
+                    $this->resetStatistic();
+                    $statistic=$this->deleteExpiredEntries($table);
+                    $toDo['table'].=$table.', ';
+                    // update deleted signal
+                    $params=['yMin'=>0];
+                    $params['description']='Each data point represents a deletion event for expired entries in the table. The value stands the amount of deleted entries & the label for the time consumption.';
+                    $params['label']=round((hrtime(TRUE)-$startTime)/1000000).' ms';
+                    $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Expired entries deleted ['.$table.']',$statistic['deleted'],'int',$params);
+                }
+                $toDo['table']=trim($toDo['table'],', ');
+            }
+            // add infos to vars
+            $vars[$toDo['action']][$toDo['table']]=time();
+            $vars['action']=$toDo['action'].' ['.$toDo['table'].']';
         }
-        // add infos to html
         $vars['html']='<h3>'.$vars['action'].'</h3>';
         $vars['Last run']=time();
         return $vars;
