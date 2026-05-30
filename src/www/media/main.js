@@ -74,7 +74,7 @@ jQuery(document).ready(function(){
 			method:"POST",
 			url:'js.php',
 			context:document.body,
-			data:{'function':'updateUserLocationHook','Geo':{'lat':crd.latitude,'lon':pos.coords.longitude,'accuracy':pos.coords.accuracy}},
+			data:{'function':'updateUserLocationHook','Geo':{'lat':crd.latitude,'lon':pos.coords.longitude,'alt':pos.coords.altitude,'accuracy':pos.coords.accuracy}},
 			dataType: "json"
 		}).done(function(data){
             console.log(data);

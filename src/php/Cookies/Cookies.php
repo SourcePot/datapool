@@ -21,7 +21,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
     const PERMISSIONS_COOKIE=[
         'Essential cookies'=>['disabled'=>TRUE,'initialSetting'=>TRUE,'description'=>'The "session cookie" and the "dataprotection cookie" are essential for the correct functioning of this web page. The "session cookie" stores your login status based on a session id. The "dataprotection cookie" stores your settings.'],
         'OpenStreetMap'=>['disabled'=>FALSE,'initialSetting'=>TRUE,'description'=>'If you permit this, this web page may send location or address data embedded in files or entered by you to OpenStreetMap for processing, e.g. to display a location on a map or to specify an address in relation to a location.'],
-        'Your location data'=>['disabled'=>FALSE,'initialSetting'=>FALSE,'description'=>'If you permit this, this web page can collect, temporarily store and process location information provided by your web browser.'],
+        'Your location data'=>['disabled'=>FALSE,'initialSetting'=>FALSE,'description'=>'If you give permission, the website will process and store the location information provided by your web browser.'],
     ];
 
     private $permissonsCookie=[];

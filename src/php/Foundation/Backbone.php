@@ -75,8 +75,6 @@ class Backbone{
         'metaRobots'=>'index',
         'loginForm'=>0,
         'logLevel'=>'monitoring',
-        'iconFile'=>'main.ico',
-        'logoFile'=>'logo.jpg',
         'homePageContent'=>'video',
         'charset'=>'utf-8',
         'emailWebmaster'=>'admin@datapool.info',
@@ -168,6 +166,7 @@ class Backbone{
 
     public function addHtmlPageHeader(array $arr):array
     {
+        $headerFiles=[];
         $jQueryImport='';
         $jQueryUIImport='';
         $arr['toReplace']['{{head}}']=$arr['toReplace']['{{head}}']??'';
@@ -176,12 +175,14 @@ class Backbone{
         foreach($wwwMediaFiles as $wwwMediaFile){
             $fileName=$GLOBALS['relDirs']['media'].'/'.$wwwMediaFile;
             $fileArr=pathinfo($fileName);
+            // only css, js and ico files
             if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
                 continue;
             }
             if ($fileArr['extension']==='css' && strpos($fileArr['filename'],'main')===0 && $fileArr['filename']!==($this->webPageStyleSheet?:self::DEFAULT_STYLESHEET)){
                 continue;
             }
+            // add file to header
             $elArr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']];
             $srcAttr=self::HEADER_FILES_TEMPLATES[$fileArr['extension']]['srcAttr'];
             $elArr[$srcAttr]=$fileName;
@@ -192,15 +193,23 @@ class Backbone{
             } else {
                 $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elArr).PHP_EOL;
             }
+            // document header files
+            $headerFiles[$fileArr['extension']][]=$fileArr['filename'];
         }
         $arr['toReplace']['{{head}}']=$jQueryImport.$jQueryUIImport.$arr['toReplace']['{{head}}'];
-        // External libraries
+        // external libraries
         foreach(self::EXTERNAL_SOURCES as $element){
-            $fileInfo=pathinfo($element['href']??$element['src']??'');
-            if (($fileInfo['extension']??'')!=='css' && ($fileInfo['extension']??'')!=='js'){
+            $fileArr=pathinfo($element['href']??$element['src']??'');
+            if (($fileArr['extension']??'')!=='css' && ($fileArr['extension']??'')!=='js'){
                 continue;
             }
             $arr['toReplace']['{{head}}'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+            $headerFiles['EXTERNAL_'.$fileArr['extension']][]=$fileArr['filename'];
+        }
+        // documentation of header files
+        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($headerFiles);  // <-- for debugging, adds overview of header files to debugging-dir
+        if (count($headerFiles['ico'])<1){
+            $this->oc['logger']->log('notice','No *.ico file added to the web page header. Please add an *.ico file to /src/www/media/.',$headerFiles);
         }
         return $arr;
     }

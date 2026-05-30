@@ -441,9 +441,11 @@ class Signals{
         foreach($signal['Content']['signal'] as $item){
             if ($item['dataType']==='geo'){
                 $geoSignalMatrix['meta']=['user'=>$item['label']];
+                $item['value']=array_merge(['lat'=>'','lon'=>'','alt'=>''],$item['value']);
                 $dateTime=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$item['timeStamp'],'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
-                $item['value']['lat']=['tag'=>'p','element-content'=>$item['value']['lat'],'data-lat'=>$item['value']['lat'],'data-lon'=>$item['value']['lon'],'data-datetime'=>$dateTime];
+                $item['value']['lat']=['tag'=>'p','element-content'=>$item['value']['lat'],'data-lat'=>$item['value']['lat'],'data-lon'=>$item['value']['lon'],'data-alt'=>$item['value']['alt'],'data-datetime'=>$dateTime];
                 $item['value']['lon']=['tag'=>'p','element-content'=>$item['value']['lon']];
+                $item['value']['alt']=['tag'=>'p','element-content'=>$item['value']['alt']];
                 $geoSignalMatrix[$dateTime.' ('.\SourcePot\Datapool\Root::getUserTimezone().')']=$item['value'];
                 continue;
             }

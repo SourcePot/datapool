@@ -348,7 +348,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $onlineUser['Privileges']=1;
             $onlineUser['Owner']='SYSTEM';
             $onlineUser['EntryId']='online_'.$onlineUser['EntryId'];
-            $onlineUser['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT10H');
+            $onlineUser['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P2D');
             $onlineUser['Content']['timestamp']=time();
             $onlineUser['Content']['location']='';
             $onlineUser=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($onlineUser,TRUE);
@@ -367,7 +367,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             // get user
             $userEntryId=str_replace('online_','',$onlineUser['EntryId']);
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById(['Source'=>$this->entryTable,'EntryId'=>$userEntryId],TRUE);
-            // user html
+            // user html - lat seen when...
             if (empty($timeDiff)){
                 $onlineUser['Content']['lastSeenStr']='';
             } else {
@@ -376,6 +376,21 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 $lastSeenStr.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('ago');
                 $onlineUser['Content']['lastSeenStr']=$lastSeenStr;
             }
+            // user html - las see where
+            $properties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalProperties('SourcePot\Datapool\Tools\GeoTools','updateUserLocationHook','Geo '.$user['EntryId']);
+            if (!empty($properties['lastValue']['address'])){
+                $targetTimeZone=$this->oc['SourcePot\Datapool\Root']->getUserTimezone();
+                $lastSeenLocation=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Last known location');
+                $lastSeenLocation.=': '.$properties['lastValue']['address'].' [';
+                if (!empty($properties['lastValue']['alt'])){
+                    $lastSeenLocation.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Altitude');
+                    $lastSeenLocation.=': '.intval($properties['lastValue']['alt']).'m, ';
+                }
+                $lastSeenLocation.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Recorded');
+                $lastSeenLocation.=': '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$properties['maxTimeStamp'],'','','Y-m-d H:i:s',$targetTimeZone).', '.$targetTimeZone.']';
+                $onlineUser['Content']['lastSeenLocation'].=$lastSeenLocation;
+            }
+            // present user
             $presentArr['selector']=$onlineUser;
             $textHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             $userHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);

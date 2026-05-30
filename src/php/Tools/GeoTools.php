@@ -12,18 +12,16 @@ namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
 
-    private const INIT_MAP_LOCATION='48.1520963,11.5111696,4';   // lat,lon,zoom
+    private $oc;
 
+    private const INIT_MAP_LOCATION='48.1520963,11.5111696,4';   // lat,lon,zoom
     private const MAX_LOCATION_AGE=120;
-    
     private const MISSING_PERMISSION_ELEMENT=[
         'tag'=>'p',
         'element-content'=>'OpenStreetMap permission missing! Adjust data protection / cookie settings on the start page (Home) to enable OpenStreetMap on this page.',
         'keep-element-content'=>TRUE,
         'style'=>['color'=>'#c00','padding'=>'0.5rem'],
     ];
-
-    private $oc;
 
     private $referrer='';
     private $permitted=FALSE;
@@ -81,7 +79,7 @@ class GeoTools{
                 return $arr;
             }
             // get current location & address
-            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon']]],'targetKey'=>'Address']);
+            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon'],'alt'=>$arr['Geo']['alt']]],'targetKey'=>'Address']);
             $arr['Geo']['address']=($this->permitted)?$addressArr['Params']['Address']['display_name']:'';
             $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
             unset($arr['Geo']['accuracy']);
