@@ -21,7 +21,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private const CONTENT_STRUCTURE_PARAMS=[
         'New entry name'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'New entry name','excontainer'=>TRUE],
-        'Grouping column'=>['method'=>'element','tag'=>'p','element-content'=>'Folder','excontainer'=>TRUE],
+        'Grouping column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Folder','title'=>'Entries with the same value in this column will be merged into one target entry. The group value will be mapped to target entry[Name].'],
         'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
     ];
@@ -42,6 +42,13 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'To data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
     ];
         
+    private const CONTENT_STRUCTURE_MAPPING=[
+        'Select value by key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE],
+        '... or constant'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Content','standardColumsOnly'=>TRUE,'addColumns'=>['Write to file'=>'Write to file']],
+        'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+    ];
+    
     private $entryTable='';
     private $entryTemplate=[];
     private $caches=[];
@@ -139,6 +146,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging params '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Merging rules'.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMergeRulesHtml','classWithNamespace'=>__CLASS__],[]);
+            $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Mapping rules'.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getMappingRulesHtml','classWithNamespace'=>__CLASS__],[]);
         }
         return $html;
     }
@@ -148,11 +156,17 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $arr['html'].=$this->mergingParams($arr['selector']);
         return $arr;
     }
-    
+
     public function getMergeRulesHtml($arr){
         if (!isset($arr['html'])){$arr['html']='';}
         $arr['html'].=$this->mergingIntraEntryRules($arr['selector']);
         $arr['html'].=$this->mergingInterEntryRules($arr['selector']);
+        return $arr;
+    }
+    
+    public function getMappingRulesHtml($arr){
+        if (!isset($arr['html'])){$arr['html']='';}
+        $arr['html'].=$this->mappingRules($arr['selector']);
         return $arr;
     }
     
@@ -198,7 +212,24 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
         
-    public function runMergeEntries($callingElement,$testRun=1){
+    private function mappingRules($callingElement){
+        $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,[]);
+        // build content structure
+        $contentStructure=self::CONTENT_STRUCTURE_MAPPING;
+        $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
+        foreach($base['merginginterentryrules'] as $rule){
+            $flatKey=$rule['Content']['Target column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$rule['Content']['Target key'];
+            $contentStructure['Select value by key']['addColumns'][$flatKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatKey);
+        }
+        // get calling element and add content structure
+        $arr=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2arr(__CLASS__,__FUNCTION__,$callingElement,TRUE);
+        $arr['contentStructure']=$contentStructure;
+        $arr['caption']='Rules for direct mapping after merging entries';
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryListEditor($arr);
+        return $html;
+    }
+    
+    private function runMergeEntries($callingElement,$testRun=1){
         $base=['mergingparams'=>[],'mergingrules'=>[],'processId'=>$callingElement['EntryId']];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['mergingparams'])['Content']['Keep source entries']??FALSE);
@@ -214,20 +245,70 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         // finalize computations, save target entry and present result
         $params=current($base['mergingparams'])['Content'];
         $targetSelector=$base['entryTemplates'][$params['Target']]??[];
-        foreach($this->caches as $folder=>$flatSourceEntry){
-            $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($flatSourceEntry,$folder);
+        foreach($this->caches as $groupingColumnValue=>$flatSourceEntry){
+            $flatSourceEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($flatSourceEntry,$groupingColumnValue);
+            // mapping
+            $flatSourceEntry['Name']=$groupingColumnValue;
+            $result=$this->mapEntry($base,$flatSourceEntry,$result,$testRun);
+            $flatSourceEntry=$result['flatSourceEntry'];
+            unset($result['flatSourceEntry']);
+            // create or update target entry
             $updatedSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatSourceEntry);
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($updatedSourceEntry,$targetSelector,TRUE,$testRun,!empty($params['Keep source entries']));
             $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->removeFileFromEntry($targetEntry);
             $result['Statistics']['Entries moved (success)']['Value']++;
             if (count($result)<20){
-                $result['Target entry "'.$folder.'"']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
+                $result['Target entry "'.$groupingColumnValue.'"']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetEntry);
             }
         }
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
-    public function mergeEntries($base,$sourceEntry,$result,$testRun){
+    private function mapEntry($base,$flatSourceEntry,$result,$testRun):array
+    {
+        $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($flatSourceEntry);
+        foreach($base['mappingrules']??[] as $mappingRuleId=>$mappingRule){
+            $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($mappingRuleId)[0];
+            $sourceConstValue=$sourceValueByKey='-';
+            if ($mappingRule['Content']['Select value by key']==='useValue'){
+                $sourceConstValue=$targetValue=$mappingRule['Content']['... or constant']??'';
+            } else {
+                $targetValue=[];
+                foreach($flatSourceEntry as $flatKey=>$flatValue){
+                    if ($flatKey=== $mappingRule['Content']['Select value by key']){
+                        $targetValue=$flatSourceEntry[$flatKey];
+                        break;
+                    } else if (strpos($flatKey,$mappingRule['Content']['Select value by key'])===0){
+                        $targetValue[$flatKey]=$flatValue;
+                    }
+                }
+                if (is_array($targetValue)){
+                    $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($targetValue);
+                }
+                $sourceValueByKey=$targetValue;
+            }
+            $flatTargetKey=$mappingRule['Content']['Target column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$mappingRule['Content']['Target key'];
+            $flatSourceEntry[$flatTargetKey]=$targetValue;
+            // compile result
+            $sourceValueByKeyHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceValueByKey);
+            $sourceValueByKeyHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$sourceValueByKeyHtml,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
+            $sourceConstValueHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>[0=>['value'=>$sourceConstValue]],'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
+            $flatTargetKeyHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatTargetKey);
+            $flatTargetValueHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetValue);
+            $flatTargetValueHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$flatTargetValueHtml,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
+            $result['Mapping "'.$flatSourceEntry['Name'].'"'][$ruleKey]=[
+                'Select value by key'=>$sourceValueByKeyHtml,
+                '... or constant'=>$sourceConstValueHtml,
+                'Target key'=>$flatTargetKeyHtml,
+                'Target value'=>$flatTargetValueHtml,
+            ];
+        }
+        $result['flatSourceEntry']=$flatSourceEntry;
+        return $result;
+    }
+    
+    private function mergeEntries($base,$sourceEntry,$result,$testRun):array
+    {
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         // enrich source entry, process intra entry merge rules
         $cacheArr=[];
@@ -251,6 +332,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($flatSourceEntry);
         // create target entry, process inter entries merge rules
         $params=current($base['mergingparams'])['Content'];
+        $groupingColumn=$params['Grouping column']??'Folder';
         $sourceEntry['Name']=$params['New entry name'];
         foreach($base['merginginterentryrules']??[] as $interEntryRuleId=>$interEntryRule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->orderedListComps($interEntryRuleId)[0];
@@ -260,10 +342,10 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $value=$flatSourceEntry[$interEntryRule['Content']['Select value by key to be merged']];
             $dataType=$interEntryRule['Content']['To data type'];
             if (!empty($column)){
-                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($combineOperation,$column,$key,$value,$sourceEntry['Folder'],$dataType);
+                $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($combineOperation,$column,$key,$value,$flatSourceEntry[$groupingColumn],$dataType);
             }
         }
-        $this->caches[$sourceEntry['Folder']]=$flatSourceEntry;
+        $this->caches[$flatSourceEntry[$groupingColumn]]=$flatSourceEntry;
         return $result;
     }
 
