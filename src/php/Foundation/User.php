@@ -381,8 +381,13 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             if (!empty($properties['lastValue']['address'])){
                 $targetTimeZone=$this->oc['SourcePot\Datapool\Root']->getUserTimezone();
                 $lastSeenLocation=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Last known location');
-                $lastSeenLocation.='; '.$properties['lastValue']['address'].' ';
-                $lastSeenLocation.=' ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$properties['maxTimeStamp'],'','','Y-m-d H:i:s',$targetTimeZone).', '.$targetTimeZone.')';
+                $lastSeenLocation.=': '.$properties['lastValue']['address'].' [';
+                if (!empty($properties['lastValue']['alt'])){
+                    $lastSeenLocation.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Altitude');
+                    $lastSeenLocation.=': '.intval($properties['lastValue']['alt']).'m, ';
+                }
+                $lastSeenLocation.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Recorded');
+                $lastSeenLocation.=': '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$properties['maxTimeStamp'],'','','Y-m-d H:i:s',$targetTimeZone).', '.$targetTimeZone.']';
                 $onlineUser['Content']['lastSeenLocation'].=$lastSeenLocation;
             }
             // present user

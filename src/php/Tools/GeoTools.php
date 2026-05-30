@@ -81,7 +81,7 @@ class GeoTools{
                 return $arr;
             }
             // get current location & address
-            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon']]],'targetKey'=>'Address']);
+            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon'],'alt'=>$arr['Geo']['alt']]],'targetKey'=>'Address']);
             $arr['Geo']['address']=($this->permitted)?$addressArr['Params']['Address']['display_name']:'';
             $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
             unset($arr['Geo']['accuracy']);
