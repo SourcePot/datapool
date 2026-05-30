@@ -752,12 +752,14 @@ final class MiscTools{
     /**
     * @return array This method returns an array which is a matrix used to create an html-table and a representation of the provided array.
     */
-    public function arr2matrix(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$previewOnly=FALSE):array
+    public function arr2matrix($arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$previewOnly=FALSE):array
     {
-        $matrix=[];
+        if (!is_array($arr)){
+            return [0=>['value'=>$arr]];
+        }
         $previewRowCount=3;
         $rowIndex=0;
-        $rows=[];
+        $matrix=$rows=[];
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
             if (is_string($value)){
