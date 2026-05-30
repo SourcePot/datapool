@@ -8,6 +8,7 @@
 /src/tmp_private
 # /src/www-directory
 /src/www/tmp
+/src/www/media/main.ico
 /src/www/assets/*
 !/src/www/assets/logo.jpg
 !/src/www/assets/login.jpg
