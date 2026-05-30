@@ -296,7 +296,7 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $flatTargetKeyHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatTargetKey);
             $flatTargetValueHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetValue);
             $flatTargetValueHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$flatTargetValueHtml,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
-            $result['Mapping "'.$flatSourceEntry['Name'].'"'][$ruleKey]=[
+            $result['Mapping "'.$flatSourceEntry['Name'].'"']['Rule '.$ruleKey]=[
                 'Select value by key'=>$sourceValueByKeyHtml,
                 '... or constant'=>$sourceConstValueHtml,
                 'Target key'=>$flatTargetKeyHtml,
