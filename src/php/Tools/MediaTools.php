@@ -13,8 +13,9 @@ namespace SourcePot\Datapool\Tools;
 class MediaTools{
 
     private $oc;
-    private const TMP_FILE_PERMISSIONS=0774;
 
+    private const ICON_DEFAULT_SIZE=70;
+    private const TMP_FILE_PERMISSIONS=0774;
     private const MD_STYLECLASS_TAGS=['h1','h2','h3','code','ul','ol','li','b','i','p'];
     
     public function __construct(array $oc)
@@ -93,7 +94,7 @@ class MediaTools{
     public function getIcon(array $arr):array|string
     {
         $arr['html']=$arr['html']??'';
-        $arr['maxDim']=$arr['maxDim']??50;
+        $arr['maxDim']=$arr['maxDim']??self::ICON_DEFAULT_SIZE;
         $arr['margin']=$arr['margin']??'5px';
         $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['TmpFile']['MIME-Type']??'text';
         $fontSize=round($arr['maxDim']*0.4);
@@ -628,7 +629,7 @@ class MediaTools{
             // no attched file
         } else if (function_exists('exif_read_data')){
             $exif=@exif_read_data($file,'IFD0');
-            $entry['exif']=(empty($exif))?[]:$exif;
+            $entry['exif']=$exif?:[];
         } else {
             $this->oc['logger']->log('warning','Exif Function "exif_read_data" missing',[]);   
         }
