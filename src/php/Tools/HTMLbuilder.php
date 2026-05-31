@@ -1066,7 +1066,7 @@ class HTMLbuilder{
                     $presentationValue=strip_tags((string)$presentationValue);  // prevent XSS atacks
                     if ($key==='Date'){
                         $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
-                        $date=new \DateTime($presentationValue,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                        $date=new \DateTimeImmutable($presentationValue,new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
                         $date->setTimezone(new \DateTimeZone($pageTimeZone));
                         $presentationValue=$date->format('Y-m-d H:i:s').' ('.$pageTimeZone.')';
                     }
