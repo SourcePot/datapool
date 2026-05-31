@@ -45,8 +45,10 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private const CONTENT_STRUCTURE_MAPPING=[
         'Select value by key'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'useValue','addSourceValueColumn'=>TRUE],
         '... or constant'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Target data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'string','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
         'Target column'=>['method'=>'keySelect','excontainer'=>TRUE,'value'=>'Content','standardColumsOnly'=>TRUE,'addColumns'=>['Write to file'=>'Write to file']],
         'Target key'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
+        'Combine'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Foundation\Computations::COMBINE_OPTIONS,'title'=>"Controls the resulting value, fIf the target already exsists."],
     ];
     
     private $entryTable='';
@@ -273,37 +275,25 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if ($mappingRule['Content']['Select value by key']==='useValue'){
                 $sourceConstValue=$targetValue=$mappingRule['Content']['... or constant']??'';
             } else {
-                $targetValue=[];
-                foreach($flatSourceEntry as $flatKey=>$flatValue){
-                    if ($flatKey=== $mappingRule['Content']['Select value by key']){
-                        $targetValue=$flatSourceEntry[$flatKey];
-                        break;
-                    } else if (strpos($flatKey,$mappingRule['Content']['Select value by key'])===0){
-                        $targetValue[$flatKey]=$flatValue;
-                    }
-                }
-                if (is_array($targetValue)){
-                    $targetValue=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($targetValue);
-                }
-                $sourceValueByKey=$targetValue;
+                if (!isset($flatSourceEntry[$mappingRule['Content']['Select value by key']])){
+                    $sourceValueByKey='<b>ERROR: No source value was found.<br/>Check if the source value is an array data type.<br/>Mapping only works with scalar types...</b>';
+                } else {
+                    $sourceValueByKey=$targetValue=$flatSourceEntry[$mappingRule['Content']['Select value by key']]?:'-';
+                } 
             }
-            $flatTargetKey=$mappingRule['Content']['Target column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$mappingRule['Content']['Target key'];
-            $flatSourceEntry[$flatTargetKey]=$targetValue;
+            $targetValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($targetValue,$mappingRule['Content']['Target data type']);
+            $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($mappingRule['Content']['Combine'],$mappingRule['Content']['Target column'],$mappingRule['Content']['Target key'],$targetValue);
             // compile result
-            $sourceValueByKeyHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($sourceValueByKey);
-            $sourceValueByKeyHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$sourceValueByKeyHtml,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
-            $sourceConstValueHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>[0=>['value'=>$sourceConstValue]],'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
-            $flatTargetKeyHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($flatTargetKey);
             $flatTargetValueHtml=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($targetValue);
             $flatTargetValueHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$flatTargetValueHtml,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE]);
             $result['Mapping "'.$flatSourceEntry['Name'].'"']['Rule '.$ruleKey]=[
-                'Select value by key'=>$sourceValueByKeyHtml,
-                '... or constant'=>$sourceConstValueHtml,
-                'Target key'=>$flatTargetKeyHtml,
+                'Select value by key'=>$sourceValueByKey,
+                '... or constant'=>$sourceConstValue,
+                'Target key'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($mappingRule['Content']['Target column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR.$mappingRule['Content']['Target key']),
                 'Target value'=>$flatTargetValueHtml,
             ];
         }
-        $result['flatSourceEntry']=$flatSourceEntry;
+        $result['flatSourceEntry']=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($flatSourceEntry);
         return $result;
     }
     
