@@ -127,11 +127,10 @@ class Container{
         if (isset($return['settings'])){
             $_SESSION['container store'][$containerId]['settings']=array_replace_recursive($_SESSION['container store'][$containerId]['settings'],$return['settings']);
         }
-        $reloadBtnStyle=['position'=>'absolute','top'=>'0','right'=>'0','margin'=>'0','padding'=>'0','border'=>'none','background'=>'none'];
         if (!empty($wrapperSettings['hideReloadBtn'])){
             $reloadBtnStyle['display']='none';
         }
-        $reloadBtnArr=['tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle,'key'=>['reloadBtnArr'],'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE];
+        $reloadBtnArr=['tag'=>'button','type'=>'submit','element-content'=>'&orarr;','class'=>'reload-btn','container-id'=>'btn-'.$containerId,'style'=>$reloadBtnStyle??[],'key'=>['reloadBtnArr'],'callingClass'=>__CLASS__,'callingFunction'=>$containerId,'keep-element-content'=>TRUE];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($reloadBtnArr);
         // add wrappers
         if (isset($wrapperSettings['html'])){
