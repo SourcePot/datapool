@@ -148,6 +148,16 @@ input.filter[type="text"]{
     border:2px dotted var(--blueH);
 }
 /** BUTTONS **/
+button.reload-btn{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    z-index: 10;
+}
 button,input[type="submit"],input[type="file"],a.btn,a.cookies,a.plot,.js-button{
     clear:none;
     background-color:var(--bgColorA);
