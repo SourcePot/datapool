@@ -227,7 +227,7 @@ class Computations{
             $flatEntry[$cache['__COLUMN__']]=$this->arrOperation($arr,$cache['__OPERATION__'],TRUE,$cache['__DATATYPE__']??'');
         } else {
             // array columns
-            if (!is_array($flatEntry[$cache['__COLUMN__']])){
+            if (!is_array($flatEntry[$cache['__COLUMN__']??'__MISSING__']??NULL)){
                 $flatEntry[$cache['__COLUMN__']]=[];
             }
             foreach($cache['__VALUES__'] as $key=>$value){
