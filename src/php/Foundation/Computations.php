@@ -15,7 +15,7 @@ class Computations{
     private const COMPARE_EQUAL_PRECISION=5;
     
     public const DATA_TYPES=[
-        'keep'=>'Keep as is','string'=>'&rarr; String','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+        'keep'=>'Keep as is','string'=>'&rarr; String','string2lower'=>'&rarr; lowercase(String)','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
         'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
         'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
         'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
@@ -26,7 +26,7 @@ class Computations{
     ];
     
     public const CONDITION_TYPES=[
-        '>'=>'A > B','=='=>'A == B','!='=>'A != B','<'=>'A < B',
+        '>'=>'A > B','>='=>'A >= B','=='=>'A == B','!='=>'A != B','<'=>'A < B','<='=>'A <= B',
         '&&'=>'A AND B','||'=>'A OR B','^'=>'A XOR B','~'=>'A == !B',
         'TRUE'=>'always TRUE','FALSE'=>'always FALSE',
         'empty'=>'empty(A)','!empty'=>'!empty(A)','strpos'=>'A contains B','!strpos'=>'A does not contain B',
@@ -322,6 +322,7 @@ class Computations{
                 'keep'=>$value,
                 'geo'=>$value,
                 'string'=>$this->str2str($value),
+                'string2lower'=>$this->str2str(strtolower($value)),
                 'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
                 'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),
                 'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
@@ -535,7 +536,7 @@ class Computations{
         // numeric tests
         if ($condition==='>'){
             return $valueA>$valueB;
-        } else if ($condition==='=='){
+        } else if ($condition==='==' || $condition==='>=' || $condition==='<='){
             return round(floatval($valueA),self::COMPARE_EQUAL_PRECISION)==round($valueB,self::COMPARE_EQUAL_PRECISION);
         } else if ($condition==='!='){
             return round(floatval($valueA),self::COMPARE_EQUAL_PRECISION)!=round($valueB,self::COMPARE_EQUAL_PRECISION);
