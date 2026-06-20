@@ -166,9 +166,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     * 
     */
     
-    public function receive(string $id):array
+    public function receive(string $inboxId):array
     {
-        $result=$this->todaysEmails($id);
+        $result=$this->todaysEmails($inboxId);
         return $result;
     }
     
@@ -247,9 +247,9 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $mailboxArr;
     }
     
-    private function getReceiverMeta($id):string
+    private function getReceiverMeta($inboxId):string
     {
-        $mailboxArr=$this->receiverSetting2mailboxArr($id);
+        $mailboxArr=$this->receiverSetting2mailboxArr($inboxId);
         $folderName=$mailboxArr['Folder']?:'INBOX';
         if (empty($mailboxArr['Enabled'])){
             $matrix=['Notice'=>['Value'=>'Check settings, this mailbox is currently disabled']];
@@ -273,11 +273,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Account folder']);
     }
 
-    private function todaysEmails($id)
+    private function todaysEmails($inboxId)
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'messages'=>0,'messageEntries'=>0,'alerts'=>'','errors'=>''];
         // get the mailbox
-        $mailboxArr=$this->receiverSetting2mailboxArr($id);
+        $mailboxArr=$this->receiverSetting2mailboxArr($inboxId);
         if (empty($mailboxArr["Enabled"])){
             $context['notice']='Mailbox is not enabled, please check settings.';
             return $context;
@@ -288,23 +288,27 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         } else {
             $folder=$mailbox->folders()->find($mailboxArr['Folder']);
         }
+        if (empty($folder)){
+            $context['notice']='Mailbox folder "'.$mailboxArr['Folder'].'" not found, please check settings.';
+            return $context;
+        }
         //create entry template
-        $entry=$this->id2entrySelector($id,['Folder'=>$mailboxArr['Folder']?:'INBOX']);
+        $entry=$this->id2entrySelector($inboxId,['Folder'=>$mailboxArr['Folder']?:'INBOX']);
         $entry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','P10D');
         foreach($folder->messages()->since(Carbon::now()->subDays(7))->withHeaders()->withFlags()->withBody()->get() as $message){
-            $id=$mailboxArr['host'].$mailboxArr['username'].$message->uid();
-            $context=$this->messageObj2entries($entry,$message,$id,$context);
+            $inboxId=$mailboxArr['host'].$mailboxArr['username'].$message->uid();
+            $context=$this->messageObj2entries($entry,$message,$inboxId,$context);
         }
         return $context;
     }
 
-    public function msg2entries(array $entry,string $msg,string $id,array $context):array
+    public function msg2entries(array $entry,string $msg,string $inboxId,array $context):array
     {
         $message=new FileMessage($msg);
-        return $this->messageObj2entries($entry,$message,$id,$context);
+        return $this->messageObj2entries($entry,$message,$inboxId,$context);
     }
 
-    public function outlook2entries(array $entry,string $msgFile,string $id,array $context)
+    public function outlook2entries(array $entry,string $msgFile,string $inboxId,array $context)
     {
         $parser = new \Opt\OLE\MsgParser($msgFile);
         $message = $parser->parse();
@@ -315,11 +319,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             unset($headers['TRANSPORT_MESSAGE_HEADERS']);
         }
         $entry['Params']['Email']=array_merge($headers,$entry['Params']['Email']??[]);
+        $entry['Params']['Email']['Inbox id']=$inboxId;
         // add content to entry
         $entry['Content']['Subject']=$headers['SUBJECT']?:$headers['Subject']?:'{Missing subject}';
         $entry['Content']['Message']=$message->body??'';
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
-        $id=$id?:$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
+        $id=$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
@@ -350,7 +355,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $context;
     }
     
-    private function messageObj2entries(array $entry,$message,$id,$context):array
+    private function messageObj2entries(array $entry,$message,$inboxId,$context):array
     {
         if (empty($message)){
             return $context;
@@ -360,10 +365,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $rawEmail=$message->__toString();
         $htmlContent=$message->html();
         $entry=$this->header2entry($entry,substr($rawEmail,0,strpos($rawEmail,"\r\n\r\n")));
+        $entry['Params']['Email']['Inbox id']=$inboxId;
         $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
         $entry['Content']['Message']=$message->text()?:($htmlContent??'');
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
-        $id=$id?:$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
+        $id=$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
