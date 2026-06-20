@@ -15,7 +15,7 @@ class Computations{
     private const COMPARE_EQUAL_PRECISION=5;
     
     public const DATA_TYPES=[
-        'keep'=>'Keep as is','string'=>'&rarr; String','string2lower'=>'&rarr; lowercase(String)','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W',
+        'keep'=>'Keep as is','string'=>'&rarr; String','string2lower'=>'&rarr; lowercase(String)','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W','stringWordChrsOnlySpace'=>'&rarr; \W &rarr; space',
         'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
         'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
         'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
@@ -325,7 +325,8 @@ class Computations{
                 'string2lower'=>$this->str2str(strtolower($value)),
                 'stringNoWhitespaces'=>$this->convert2stringWhitespaces($value,''),
                 'stringNoMultipleWhitespaces'=>$this->convert2stringWhitespaces($value,' '),
-                'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value),
+                'stringWordChrsOnly'=>$this->convert2stringWordChrsOnly($value,''),
+                'stringWordChrsOnlySpace'=>$this->convert2stringWordChrsOnly($value,' '),
                 'splitString'=>$this->convert2splitString($value),
                 'int'=>$this->str2int($value),
                 'float'=>$this->str2float($value),
@@ -407,10 +408,10 @@ class Computations{
         return $value;
     }
 
-    public function convert2stringWordChrsOnly($value):string
+    public function convert2stringWordChrsOnly($value,$replacement=''):string
     {
         $value=strval($value);
-        $value=preg_replace('/[^A-Za-zäüöÄÜÖßÁÓÍÀÒÌáíóàòìâôî\s\-]/u','',$value);
+        $value=preg_replace('/[^A-Za-zäüöÄÜÖßÁÓÍÀÒÌáíóàòìâôî\-]+/u',$replacement,$value);
         return $value;
     }
 
