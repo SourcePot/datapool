@@ -16,6 +16,7 @@ class HTMLbuilder{
 
     private const SHOW_FILTER_OPTION_COUNT=20;
     private const MAX_SELECT_OPTION_COUNT=10000;
+    private const MAX_ROW_COUNT=999;
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
 
@@ -818,7 +819,7 @@ class HTMLbuilder{
         // initialization
         $arr['caption']=(empty($arr['caption']))?'CAPTION MISSING':$arr['caption'];
         $arr['caption'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'span','element-content'=>' ('.$arr['selector']['EntryId'].')','style'=>['font-size'=>'0.6rem']]);
-        $arr['maxRowCount']=($arr['returnRow'])?1:($arr['maxRowCount']?:999);
+        $arr['maxRowCount']=($arr['returnRow'])?1:(($arr['maxRowCount']??self::MAX_ROW_COUNT)?:self::MAX_ROW_COUNT);
         $this->oc['SourcePot\Datapool\Foundation\Database']->buildOrderedList($arr['selector'],['singleEntry'=>$arr['returnRow']]);
         // command processing
         $movedEntryId='';
@@ -939,7 +940,7 @@ class HTMLbuilder{
                 $matrix[$rowIndex]['trStyle']['background-color']='var(--blue)';
             }
         } // end of loop through list entries
-        $matrix['']=array_merge($emptyRow,[' '=>$addBtn,'    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);
+        $matrix['']=array_merge($emptyRow,[' '=>$addBtn??'','    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);
         // write protection
         if ($noWriteAccess){$matrix=[];}
         // prepare return values
