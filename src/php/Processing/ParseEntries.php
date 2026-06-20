@@ -19,6 +19,7 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private const CONTENT_STRUCTURE_PARAMS=[
         'Source column'=>['method'=>'keySelect','value'=>'','excontainer'=>TRUE,'addSourceValueColumn'=>TRUE],
         'Pre-processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'stripTags','options'=>[''=>'-','stripTags'=>'Strip tags','whiteSpaceToSpace'=>'\s+ to "space"'],'title'=>''],
+        'RegEx filter'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         'Target on success'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Target on failure'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
         'Attached file on success'=>['method'=>'select','value'=>0,'excontainer'=>TRUE,'options'=>['Keep','Remove from target']],
@@ -268,6 +269,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $fullText=preg_replace('/\s+/',' ',$fullText);
             } else if ($params['Pre-processing']=='whiteSpaceToSpace'){
                 $fullText=preg_replace('/\s+/',' ',$fullText);
+            }
+            if (!empty($params['RegEx filter'])){
+                $fullText=preg_replace('/'.$params['RegEx filter'].'/', '', $fullText);
             }
         } else {
             // Parser failed, content column not found
