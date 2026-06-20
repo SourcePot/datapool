@@ -260,6 +260,9 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         if (isset($flatSourceEntry[$params['Source column']])){
             $fullText=$flatSourceEntry[$params['Source column']];
+            if (!empty($params['RegEx filter'])){
+                $fullText=preg_replace('/'.$params['RegEx filter'].'/',' ', $fullText);
+            }
             if (empty($params['Pre-processing'])){
                 // no pre-processing    
             } else if ($params['Pre-processing']=='stripTags'){
@@ -269,9 +272,6 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $fullText=preg_replace('/\s+/',' ',$fullText);
             } else if ($params['Pre-processing']=='whiteSpaceToSpace'){
                 $fullText=preg_replace('/\s+/',' ',$fullText);
-            }
-            if (!empty($params['RegEx filter'])){
-                $fullText=preg_replace('/'.$params['RegEx filter'].'/', '', $fullText);
             }
         } else {
             // Parser failed, content column not found
