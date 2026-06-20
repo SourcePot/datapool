@@ -245,7 +245,7 @@ class Container{
             $entry['EntryId']=NULL;
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry,['app'=>'','Source'=>FALSE,'EntryId'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE]);
             $entry=array_merge($entry,['Expires'=>\SourcePot\Datapool\Root::NULL_DATE,'Owner'=>'SYSTEM','Read'=>'ALL_R','Write'=>'ALL_CONTENTADMIN_R']);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,$entry['Read'],$entry['$Write']);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,$entry['Read'],$entry['Write']);
             $entry['Params']['File']=['UploaderId'=>'SYSTEM','UploaderName'=>'System','Extension'=>'md','MIME-Type'=>'text/plain'];
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry,$lngCode);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name','Type'],'0','',TRUE);
