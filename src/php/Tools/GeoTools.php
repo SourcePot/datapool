@@ -85,6 +85,7 @@ class GeoTools{
             unset($arr['Geo']['accuracy']);
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
         } else if ($this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data')){
+            $arr['html']=$arr['html']??'';
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','id'=>'user-location-hook','element-content'=>'User location hook','style'=>['display'=>'none']]);
         }
         return $arr;   

@@ -209,7 +209,7 @@ class Computations{
     public function combineAll(array $flatEntry, string $groupingColumnValue=''):array
     {
         foreach($this->combineCache as $fcacheId=>$cache){
-            if ($groupingColumnValue!==$cache['__GROUPING_COLUMN__']){continue;}
+            if ($groupingColumnValue!==($cache['__GROUPING_COLUMN__']??'__MISSING__')){continue;}
             $flatEntry=$this->combine($flatEntry,$cache);
             $this->combineCache[$fcacheId]=[];
         }
