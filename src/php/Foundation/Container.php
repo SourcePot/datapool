@@ -245,7 +245,7 @@ class Container{
             $entry['EntryId']=NULL;
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry,['app'=>'','Source'=>FALSE,'EntryId'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'Type'=>FALSE]);
             $entry=array_merge($entry,['Expires'=>\SourcePot\Datapool\Root::NULL_DATE,'Owner'=>'SYSTEM','Read'=>'ALL_R','Write'=>'ALL_CONTENTADMIN_R']);
-            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,$entry['Read'],$entry['$Write']);
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,$entry['Read'],$entry['Write']);
             $entry['Params']['File']=['UploaderId'=>'SYSTEM','UploaderName'=>'System','Extension'=>'md','MIME-Type'=>'text/plain'];
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->addType2entry($entry,$lngCode);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name','Type'],'0','',TRUE);
@@ -282,13 +282,12 @@ class Container{
         return $returnEntry;
     }
     
-    public function entryEditor(array $arr,bool $isDebugging=FALSE):array
+    public function entryEditor(array $arr):array
     {
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         if (empty($arr['selector'])){return $arr;}
         if (!isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']])){$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=$arr['settings'];}
         $settings=$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']];
-        $debugArr=['arr in'=>$arr,'settings in'=>$settings];
         if (!isset($arr['html'])){$arr['html']='';}
         $tableInfo=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['selector']['Source']);
         $entryCanWrite=!empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write'));
@@ -297,7 +296,6 @@ class Container{
         } else {
             $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
             $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-            $debugArr['formData']=$formData;
             if (!empty($formData['cmd'])){
                 if (isset($formData['cmd']['Upload'])){
                     $fileArr=current(current($formData['files']));
@@ -359,18 +357,24 @@ class Container{
             }
             $flatEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($arr['selector']);
             foreach($flatEntry as $flatKey=>$value){
-                if (is_object($value)){$value='{object}';}
                 if (mb_strpos($flatKey,$settings['selectorKey'])!==0){continue;}
                 $flatKeyComps=explode($S,$flatKey);
                 if (!isset($tableInfo[$flatKeyComps[0]])){continue;}
-                if (empty($settings['selectorKey'])){$subFlatKey=str_replace($settings['selectorKey'],'',$flatKey);} else {$subFlatKey=str_replace($settings['selectorKey'].$S,'',$flatKey);}
+                if (is_object($value)){$value='{object}';}
+                if (empty($settings['selectorKey'])){
+                    $subFlatKey=str_replace($settings['selectorKey'],'',$flatKey);
+                } else {
+                    $subFlatKey=str_replace($settings['selectorKey'].$S,'',$flatKey);
+                }
                 $subFlatKeyComps=explode($S,$subFlatKey);
                 $valueHtml='';
-                if (count($subFlatKeyComps)>1){
+                if (count($subFlatKeyComps)>1 || ($value==='{}' && $level===0)){
                     // value is array
                     $element=['tag'=>'button','element-content'=>'{...}','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']];
                     $element['key']=['stepIn',$subFlatKeyComps[0]];
                     $valueHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
+                } else if ($value==='{}' && $level>0){
+                    continue;
                 } else {
                     // non-array value
                     $element=$this->oc['SourcePot\Datapool\Foundation\Definitions']->selectorKey2element($arr['selector'],$flatKey,$value,$arr['callingClass'],$arr['callingFunction']);
@@ -410,15 +414,10 @@ class Container{
                 $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$arr['selector']]);
             }
         }
-        if ($isDebugging){
-            $debugArr['arr out']=$arr;
-            $debugArr['settings out']=$settings;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
         return $arr;        
     }
     
-    private function entryList(array $arr,bool $isDebugging=FALSE):array
+    private function entryList(array $arr,):array
     {
         $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         $SettingsTemplate=[
@@ -432,12 +431,10 @@ class Container{
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         $_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]=(isset($_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]))?$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]:$arr['settings'];
         // get settings
-        $debugArr=['arr'=>$arr,'settings in'=>$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]];
         $settings=array_replace_recursive($SettingsTemplate,$_SESSION[__CLASS__][__FUNCTION__][$arr['containerId']]);
         // form processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
         if (!empty($formData['cmd'])){
-            $debugArr['formData']=$formData;
             // update from form values
             $settings=array_replace_recursive($settings,$formData['val']);
             // command processing
@@ -575,11 +572,6 @@ class Container{
             $caption=$arr['containerKey'];
             $caption.=' ('.$rowCount.')';
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$caption]);
-        }
-        if ($isDebugging){
-            $debugArr['arr out']=$arr;
-            $debugArr['settings out']=$settings;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
         }
         return $arr;        
     }
