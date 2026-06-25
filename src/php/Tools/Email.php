@@ -146,15 +146,15 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $selector=['Class'=>__CLASS__.'-rec'];
             $vars['Inboxes']=[];
             foreach($this->oc['SourcePot\Datapool\Foundation\Filespace']->entryIterator($selector,TRUE,'Read') as $entry){
-                $vars['Inboxes'][$entry['EntryId']]=$entry;
+                $vars['Inboxes'][]=$entry['EntryId'];
             }
         }
+        $vars['Inboxes to process']=count($vars['Inboxes']??[]);
         if (!empty($vars['Inboxes'])){
-            $inbox=array_shift($vars['Inboxes']);
-            if (isset($inbox['Content']['EntryId'])){
-                $vars['Result']=$this->todaysEmails($inbox['Content']['EntryId']);
-            }                
-            $vars['Inboxes to process']=count($vars['Inboxes']);
+            $currentInboxKey=key($vars['Inboxes']);
+            $vars['Result']=$this->todaysEmails($vars['Inboxes'][$currentInboxKey]);
+            $vars['Inbox processed']=$vars['Inboxes'][$currentInboxKey];
+            $vars['Inboxes'][$currentInboxKey]=NULL;
         }
         return $vars;
     }
