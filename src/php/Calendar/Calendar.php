@@ -353,6 +353,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$event]);
         } else {
             // stanrad event selected
+            $event['calledBy']=__FUNCTION__;
             $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
             $this->resetEventCache();
@@ -566,10 +567,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
         $calendarTimezone=new \DateTimeZone($this->pageState['Timezone']);
         $dbTimezone=new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE);
         $selectedEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($this->pageState);
-        if (!empty($selectedEntry['Start']) && strpos($selectedEntry['EntryId']?:'','___')===FALSE){
-            // use entry Start date
-            $calendarDateTime=new \DateTime($selectedEntry['Start'],$dbTimezone);    
-        } else if (!empty($this->pageState['Calendar date'])){
+        if (!empty($this->pageState['Calendar date'])){
             // use Calendar date 
             $calendarDate=$this->stdReplacements($this->pageState['Calendar date']);
             $calendarDateTime=new \DateTime($calendarDate,$calendarTimezone);
