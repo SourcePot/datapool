@@ -62,7 +62,7 @@ class Element{
         'option'=>['value'=>TRUE,'selected'=>FALSE],
         'output'=>['name'=>TRUE],
         'progress'=>['value'=>FALSE,'min'=>FALSE,'max'=>FALSE,],
-        'meter'=>['min'=>TRUE,'max'=>TRUE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE],
+        'meter'=>['min'=>FALSE,'max'=>FALSE,'low'=>FALSE,'high'=>FALSE,'optimum'=>FALSE,'value'=>FALSE],
         'select'=>['name'=>TRUE],
         'textarea'=>['name'=>TRUE,'rows'=>FALSE,'cols'=>FALSE,'required'=>FALSE,'minlength'=>FALSE,'maxlength'=>FALSE,'placeholder'=>FALSE],
         'a'=>['href'=>FALSE,'target'=>FALSE],
