@@ -39,7 +39,7 @@ class Job{
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         // all jobs settings - remove non-existing job methods and add new job methods
-        $arr['run']=(isset($arr['run']))?$arr['run']:'';
+        $arr['run']=$arr['run']??'';
         $jobs=array('due'=>[],'undue'=>[]);
         $allJobsSettingInitContent=['class'=>'','method'=>'job','Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0];
         $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
@@ -119,7 +119,7 @@ class Job{
             $jobVars=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($jobVars,TRUE);
             // show results
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($allJobsSetting['Content'][$dueJob]);
-            $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Job done','keep-element-content'=>TRUE,'hideKeys'=>TRUE]);
+            $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Job done ['.$dueJob.']','keep-element-content'=>TRUE,'hideKeys'=>TRUE]);
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobStatistic);
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Job statistic','keep-element-content'=>TRUE,'hideKeys'=>TRUE]);
             ksort($allJobsSetting['Content'][$dueJob]);
