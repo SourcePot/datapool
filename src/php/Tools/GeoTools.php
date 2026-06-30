@@ -24,7 +24,7 @@ class GeoTools{
     ];
 
     private $referrer='';
-    private $permitted=FALSE;
+    private $permitted=[];
     private $alias=[
         'Number'=>'House number','Street number'=>'House number','House_number'=>'House number','House number'=>'House number',
         'Road'=>'Street','Street'=>'Street',
@@ -49,7 +49,10 @@ class GeoTools{
 
     public function init()
     {
-        $this->permitted=$this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('OpenStreetMap');
+        $this->permitted=[
+            'OpenStreetMap'=>$this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('OpenStreetMap'),
+            'Your location data'=>$this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data'),
+        ];
         // get HTTP Referrer
         $this->referrer=$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $queryPos=mb_strpos($this->referrer,'?');
@@ -82,14 +85,14 @@ class GeoTools{
                 return $arr;
             }
             // get current location & address
-            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon'],'alt'=>$arr['Geo']['alt']]],'targetKey'=>'Address']);
-            $arr['Geo']['address']=($this->permitted)?$addressArr['Params']['Address']['display_name']:'';
             $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
             unset($arr['Geo']['accuracy']);
+            $addressArr=$this->location2address(['Params'=>['Geo'=>['lat'=>$arr['Geo']['lat'],'lon'=>$arr['Geo']['lon'],'alt'=>$arr['Geo']['alt']]],'targetKey'=>'Address']);
+            $arr['Geo']['address']=$addressArr['Params']['Address']['display_name']??'';
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
         } else if (isset($arr['Geo']['error']) && isset($arr['Geo']['message'])){
-            $this->oc['logger']->log('notice','{class}→{function}: User location error {error} with message "{message}"',$context);
-        } else if ($this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data')){
+            $this->oc['logger']->log('notice','{class}→{function}(): User location error "{error}" with message "{message}"',$context);
+        } else if ($this->permitted['Your location data']){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','id'=>'user-location-hook','element-content'=>'User location hook','style'=>['display'=>'none']]);
         }
         return $arr;   
@@ -99,7 +102,7 @@ class GeoTools{
     {
         $debugArr=['entry_in'=>$entry];
         $entry['Params'][$targetKey]=[];
-        if ($this->permitted && isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
+        if ($this->permitted['OpenStreetMap'] && isset($entry['Params']['Geo']['lon']) && isset($entry['Params']['Geo']['lat'])){
             $this->oc['logger']->log('info','Method "{method}" called for entry with location lat={lat}, lon={lon}',['method'=>__FUNCTION__]+$entry['Params']['Geo']);
             $entry['Params']['Geo']['lat']=floatval($entry['Params']['Geo']['lat']);
             $entry['Params']['Geo']['lon']=floatval($entry['Params']['Geo']['lon']);
@@ -144,7 +147,7 @@ class GeoTools{
             $address=[];
         }
         $debugArr['address']=$address;
-        if ($this->permitted && !empty($address)){
+        if ($this->permitted['OpenStreetMap'] && !empty($address)){
             $query=$this->getRequestAddress($address);
             $debugArr['query']=$query;
             $options=['headers'=>[],'query'=>$query];
@@ -214,7 +217,7 @@ class GeoTools{
         $template=['style'=>['float'=>'left','clear'=>'both','min-width'=>'31rem','min-height'=>'19rem',],'class'=>'ep-std','dL'=>0.001];
         $arr=array_replace_recursive($template,$arr);
         $arr['html']=$arr['html']??'';
-        if (!$this->permitted){
+        if (!$this->permitted['OpenStreetMap']){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(self::MISSING_PERMISSION_ELEMENT);
             return $arr;
         }
@@ -240,7 +243,7 @@ class GeoTools{
     
     private function getMapLink(array $entry):string
     {
-        if (!$this->permitted || empty($entry['Params']['Geo'])){
+        if (!$this->permitted['OpenStreetMap'] || empty($entry['Params']['Geo'])){
             return '';
         }
         $href='http://www.openstreetmap.org/';
@@ -270,7 +273,7 @@ class GeoTools{
     public function getDynamicMap(array $arr=[]):string
     {
         $html='';
-        if ($this->permitted){
+        if ($this->permitted['OpenStreetMap']){
             $html='';
         } else {
             return $this->oc['SourcePot\Datapool\Foundation\Element']->element(self::MISSING_PERMISSION_ELEMENT);
