@@ -76,17 +76,17 @@ jQuery(document).ready(function(){
 			context:document.body,
 			data:{'function':'updateUserLocationHook','Geo':{'lat':crd.latitude,'lon':pos.coords.longitude,'alt':pos.coords.altitude,'accuracy':pos.coords.accuracy}},
 			dataType: "json"
-		}).done(function(data){
-            console.log(data);
-		}).fail(function(data){
-			console.log(data);
-		}).always(function(){
-			busyLoadingEntry=false;
 		});
 	}
 
 	function error(err) {
-		console.warn(`ERROR(${err.code}): ${err.message}`);
+		jQuery.ajax({
+			method:"POST",
+			url:'js.php',
+			context:document.body,
+			data:{'function':'updateUserLocationHook','Geo':{'error':err.code,'message':err.message}},
+			dataType: "json"
+		});
 	}
 
 	if (jQuery('#user-location-hook').length>0){

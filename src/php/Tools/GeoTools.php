@@ -68,8 +68,10 @@ class GeoTools{
 
     public function updateUserLocationHook(array $arr=[]):array
     {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        $context+=$arr['Geo']??[];
         $arr['html']=$arr['html']??'';
-        if (!empty($arr)){
+        if (isset($arr['Geo']['lat'])){
             // get user
             $userId=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('UserId')??$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();;
             $userName=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($userId,1);
@@ -85,6 +87,8 @@ class GeoTools{
             $arr['Geo']['accuracy [m]']=round(floatval($arr['Geo']['accuracy']),2);
             unset($arr['Geo']['accuracy']);
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$arr['Geo'],'geo',['label'=>$userName,'description'=>'Location data of user '.$userName]);
+        } else if (isset($arr['Geo']['error']) && isset($arr['Geo']['message'])){
+            $this->oc['logger']->log('notice','{class}→{function}: User location error {error} with message "{message}"',$context);
         } else if ($this->oc['SourcePot\Datapool\Cookies\Cookies']->permitted('Your location data')){
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'p','id'=>'user-location-hook','element-content'=>'User location hook','style'=>['display'=>'none']]);
         }
