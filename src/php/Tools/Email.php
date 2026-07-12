@@ -324,64 +324,42 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry['Content']['Subject']=$headers['SUBJECT']?:$headers['Subject']?:'{Missing subject}';
         $entry['Content']['Message']=$message->body??'';
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
-        $id=$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
-        $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
-        // html entry
-        $context['messageEntries']++;
-        if (empty($htmlContent)){
-            $entry['Name']=$nameBase.') [text/plain]';
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-        } else {
-            $entry['Name']=$nameBase.') [text/html]';
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-            $entry['fileName']='message.html';
-            $entry['fileContent']=$htmlContent;
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
-            $context['messageEntries']++;
-        }
-        // attachment entries
-        foreach ($message->attachments as $attachment){
-            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment['data'],TRUE);
-            $entry['fileName']=$attachment['filename']?:($contentIdHash.'.file');
-            $entry['fileContent']=$attachment['data'];
-            $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment['mimeType'].']';
-            $entry['Name']=str_replace('{Missing subject}',$entry['fileName'],$entry['Name']);
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-            $entry['Params']['File']['MIME-Type']=$attachment['mimeType'];
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
-            $context['messageEntries']++;
-        }
+        $context=$this->mail2entry($entry,$message,$context);
+        $context['messages']++;
         return $context;
     }
     
     private function messageObj2entries(array $entry,$message,$inboxId,$context):array
     {
-        if (empty($message)){
-            return $context;
+        if (!empty($message)){
+            $entry=$this->header2entry($entry,substr($message->__toString(),0,strpos($message->__toString(),"\r\n\r\n")));
+            $entry['Params']['Email']['Inbox id']=$inboxId;
+            // add content to entry
+            $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
+            $entry['Content']['Message']=$message->text()?:($message->html()??'');
+            $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
+            $context=$this->mail2entry($entry,$message,$context);
+            $context['messages']++;
         }
-        $context['messages']++;
-        // html and/or text message
-        $rawEmail=$message->__toString();
-        $htmlContent=$message->html();
-        $entry=$this->header2entry($entry,substr($rawEmail,0,strpos($rawEmail,"\r\n\r\n")));
-        $entry['Params']['Email']['Inbox id']=$inboxId;
-        $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
-        $entry['Content']['Message']=$message->text()?:($htmlContent??'');
-        $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
+        return $context;
+    }
+
+    private function mail2entry(array $entry,$message,array $context):array
+    {
         $id=$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // html entry
         $context['messageEntries']++;
-        if (empty($htmlContent)){
+        if (empty($message->html())){
             $entry['Name']=$nameBase.') [text/plain]';
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
         } else {
             $entry['Name']=$nameBase.') [text/html]';
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
             $entry['fileName']='message.html';
-            $entry['fileContent']=$htmlContent;
+            $entry['fileContent']=$message->html();
+            $entry['Params']['File']['MIME-Type']='text/html';
+            $entry['EntryId']=hash('sha256',$entry['fileContent'],FALSE,[]);
             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
             $context['messageEntries']++;
         }
@@ -392,8 +370,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $entry['fileContent']=$attachment->contents();
             $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment->contentType().']';
             $entry['Name']=str_replace('{Missing subject}',$entry['fileName'],$entry['Name']);
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
             $entry['Params']['File']['MIME-Type']=$attachment->contentType();
+            $entry['EntryId']=hash('sha256',$entry['fileContent'],FALSE,[]);
             $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
             $context['messageEntries']++;
         }
