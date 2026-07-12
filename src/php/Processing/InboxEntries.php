@@ -220,7 +220,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             // loop through entries
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
-                if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreIsNew($callingElement['EntryId'],$sourceEntry['EntryId'])){
+                if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreHasId($callingElement['EntryId'],$sourceEntry['EntryId'])){
                     $result['Processing statistics']['Itmes already processed and skipped']['value']++;
                     continue;
                 }
