@@ -242,7 +242,7 @@ class Queue implements \SourcePot\Datapool\Interfaces\Job{
         }
     }
 
-    public function idStoreIsNew(string $storeId, string $EntryId):bool
+    public function idStoreHasId(string $storeId, string $EntryId):bool
     {
         $selector=$this->getIdStoreSelector($storeId);
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);

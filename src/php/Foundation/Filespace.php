@@ -592,6 +592,10 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                 $entry=$this->oc['SourcePot\Datapool\Tools\PdfTools']->attachments2arrSmalot($file,$entry);
             }
             // update entry
+            $file=$this->selector2file($entry,TRUE);
+            if (is_file($file)){
+                $entry['Params']['File']['Hash']=hash_file('sha256',$file);
+            }
             $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,$isSystemCall,$noUpdateButCreateIfMissing);
         }
         $entry[__FUNCTION__]=$context;

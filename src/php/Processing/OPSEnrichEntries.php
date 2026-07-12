@@ -219,7 +219,7 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $selector=$callingElement['Content']['Selector'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $sourceEntry){
             if (empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
-                if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreIsNew($callingElement['EntryId'],$sourceEntry['EntryId'])){
+                if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreHasId($callingElement['EntryId'],$sourceEntry['EntryId'])){
                     $result['Statistics']['Itmes already processed and skipped']['value']++;
                     continue;
                 }
@@ -235,7 +235,7 @@ class OPSEnrichEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
                 foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$sourceEntry['Params']['File']['Extension']) as $rowIndex=>$rowArr){
                     $idStoreId=$sourceEntry['EntryId'].'_'.$rowIndex;
-                    if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreIsNew($callingElement['EntryId'],$idStoreId)){
+                    if ($this->oc['SourcePot\Datapool\Foundation\Queue']->idStoreHasId($callingElement['EntryId'],$idStoreId)){
                         $result['Statistics']['Itmes already processed and skipped']['value']++;
                         continue;
                     }
