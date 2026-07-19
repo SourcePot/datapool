@@ -324,6 +324,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $entry['Content']['Subject']=$headers['SUBJECT']?:$headers['Subject']?:'{Missing subject}';
         $entry['Content']['Message']=$message->body??'';
         $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
+        $entry['attachments']=$message->attachments??[];
+        $entry['html']=$message->html??'';
         $context=$this->mail2entry($entry,$message,$context);
         $context['messages']++;
         return $context;
@@ -338,6 +340,8 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $entry['Content']['Subject']=$message->subject()??'{Missing subject}';
             $entry['Content']['Message']=$message->text()?:($message->html()??'');
             $entry['Content']['File content']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags($entry['Content']['Message']);
+            $entry['attachments']=$message->attachments()??[];
+            $entry['html']=$message->html()??'';
             $context=$this->mail2entry($entry,$message,$context);
             $context['messages']++;
         }
@@ -354,19 +358,17 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
         $context['messageEntries']++;
         // message html entry
-        if (method_exists($message,'html')){
-            if (!empty($message->html())){
-                $entry['Name']=$nameBase.') [text/html]';
-                $entry['fileName']='message.html';
-                $entry['fileContent']=$message->html();
-                $entry['Params']['File']['MIME-Type']='text/html';
-                $entry['EntryId']=hash('sha256',$entry['fileContent'],FALSE,[]);
-                $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
-                $context['messageEntries']++;
-            }
+        if (!empty($entry['html'])){
+            $entry['Name']=$nameBase.') [text/html]';
+            $entry['fileName']='message.html';
+            $entry['fileContent']=$entry['html'];
+            $entry['Params']['File']['MIME-Type']='text/html';
+            $entry['EntryId']=hash('sha256',$entry['fileContent'],FALSE,[]);
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+            $context['messageEntries']++;
         }
         // attachment entries
-        foreach($message->attachments() as $attachment){
+        foreach($entry['attachments'] as $attachment){
             $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment->contentId(),TRUE);
             $entry['fileName']=$attachment->filename()?:($contentIdHash.'.file');
             $entry['fileContent']=$attachment->contents();
