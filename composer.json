@@ -9,7 +9,6 @@
     "require":{
         "php":"^8.0",
         "phpoffice/phpspreadsheet":">=2.2.1",
-        "sourcepot/php-ole-msg-parser":">=v1.2.0",
         "michelf/php-markdown":"^2.0.0",
         "monolog/monolog":"^3.5.0",
         "psr/log":"^3",
@@ -19,14 +18,15 @@
         "tecnickcom/tc-lib-pdf":"^8.22.0",
         "directorytree/imapengine":"^v1.15.5",
         "phpmailer/phpmailer": "^6.10.0",
-        "sourcepot/ops":"^v1.3.0",
-        "sourcepot/mediaplayer":"^v4.3.1",
-        "sourcepot/sms":"^v2.4.3",
-        "sourcepot/checkentries":"^v1.5.0",
-        "sourcepot/statistic":"^v1.1.0",
-        "sourcepot/bankholidays":"^v2.2.0",
-        "sourcepot/asset":"^v2.3.0",
-        "sourcepot/match":"^v1.6.4"
+        "sourcepot/php-ole-msg-parser":">=v1.2.0",
+        "sourcepot/ops":">=v1.3.0",
+        "sourcepot/mediaplayer":">=v4.3.1",
+        "sourcepot/sms":">=v2.4.3",
+        "sourcepot/checkentries":">=v1.5.0",
+        "sourcepot/statistic":">=v1.1.0",
+        "sourcepot/bankholidays":">=v2.2.0",
+        "sourcepot/asset":">=v2.3.0",
+        "sourcepot/match":">=v1.6.4"
     },
     "autoload":{
         "psr-4":{
