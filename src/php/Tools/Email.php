@@ -348,20 +348,22 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     {
         $id=$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
-        // html entry
+        // message text entry
+        $entry['Name']=$nameBase.') [text/plain]';
+        $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
+        $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
         $context['messageEntries']++;
-        if (empty($message->html())){
-            $entry['Name']=$nameBase.') [text/plain]';
-            $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
-        } else {
-            $entry['Name']=$nameBase.') [text/html]';
-            $entry['fileName']='message.html';
-            $entry['fileContent']=$message->html();
-            $entry['Params']['File']['MIME-Type']='text/html';
-            $entry['EntryId']=hash('sha256',$entry['fileContent'],FALSE,[]);
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
-            $context['messageEntries']++;
+        // message html entry
+        if (method_exists($message,'html')){
+            if (!empty($message->html())){
+                $entry['Name']=$nameBase.') [text/html]';
+                $entry['fileName']='message.html';
+                $entry['fileContent']=$message->html();
+                $entry['Params']['File']['MIME-Type']='text/html';
+                $entry['EntryId']=hash('sha256',$entry['fileContent'],FALSE,[]);
+                $this->oc['SourcePot\Datapool\Foundation\Filespace']->fileContent2entry($entry);
+                $context['messageEntries']++;
+            }
         }
         // attachment entries
         foreach($message->attachments() as $attachment){
