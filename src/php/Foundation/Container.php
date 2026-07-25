@@ -564,7 +564,7 @@ class Container{
                     $options=[5=>'5',10=>'10',25=>'25',50=>'50',100=>'100',200=>'200'];
                     $matrix['Limit, offset'][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'key'=>['limit'],'value'=>$settings['limit'],'title'=>'Rows to show','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction']]);
                     $matrix['Limit, offset'][$columnIndex].=$this->getOffsetSelector($arr,$settings,$rowCount);
-                    $matrix['Limit, offset'][$columnIndex].=$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix);
+                    $matrix['Limit, offset'][$columnIndex].=$this->oc['SourcePot\Datapool\Tools\XLStools']->matrix2spreadsheetDownload($csvMatrix);
                 } else {
                     $matrix['Limit, offset'][$columnIndex]='';
                 }

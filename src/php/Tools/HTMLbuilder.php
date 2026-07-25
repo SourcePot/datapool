@@ -940,7 +940,7 @@ class HTMLbuilder{
                 $matrix[$rowIndex]['trStyle']['background-color']='var(--blue)';
             }
         } // end of loop through list entries
-        $matrix['']=array_merge($emptyRow,[' '=>$addBtn??'','    '=>$this->oc['SourcePot\Datapool\Tools\CSVtools']->matrix2csvDownload($csvMatrix)]);
+        $matrix['']=array_merge($emptyRow,[' '=>$addBtn??'','    '=>$this->oc['SourcePot\Datapool\Tools\XLStools']->matrix2spreadsheetDownload($csvMatrix)]);
         // write protection
         if ($noWriteAccess){$matrix=[];}
         // prepare return values

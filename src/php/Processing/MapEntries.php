@@ -231,7 +231,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if ($base['csvRequested'] || $base['zipRequested']){
             // write csv file
             $result['Mapping statistics']['Output format']['value']='CSV';
-            $csvEntry=$this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
+            //$csvEntry=$this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
+            $csvEntry=$this->oc['SourcePot\Datapool\Tools\XLStools']->entry2spreadsheet();
         }            
         if ($base['zipRequested'] && isset($csvEntry['EntryId'])){
             // add csv file to zip archive
@@ -300,7 +301,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]??[]);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,['Name'],'0','',FALSE);
             if (!$testRun){
-                $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
+                //$this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
+                $this->oc['SourcePot\Datapool\Tools\XLStools']->entry2spreadsheet($targetEntry);
             }
         } else {
             // update and move entry to target
