@@ -271,6 +271,10 @@ class MediaTools{
         $arr['settings']['style']=array_merge(['overflow'=>'auto'],$arr['settings']['style']);
         $iteratorClass=$arr['selector']['Params']['File']['SpreadsheetIteratorClass'];
         $iteratorMethod=$arr['selector']['Params']['File']['SpreadsheetIteratorMethod'];
+        if (empty($this->oc[$iteratorClass])){
+            $arr['html']='Missing '.$iteratorClass.'&rarr;'.$iteratorMethod.'()';
+            return $arr;
+        }
         $worksheets=$arr['selector']['Params']['File']['SpreadsheetByWorksheet']??[0=>$arr['selector']['Params']['File']['Spreadsheet']]??[];
         $spreadsheetsHtml='';
         foreach($worksheets as $worksheetName=>$worksheetSample){
