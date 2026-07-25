@@ -207,7 +207,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $entry['Name']=$entry['Content']['Style']['Text'];
         }
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ALL_MEMBER_R','ALL_CONTENTADMIN_R');
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
+        if ($entry['Group']==='Canvas elements'){
+            $entry=$this->oc['SourcePot\Datapool\Foundation\Definitions']->definition2entry($this->definition,$entry);
+        }
         return $entry;
     }
 
@@ -329,6 +331,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
                     $this->oc['logger']->log('error','Processor class {processor} missing',['processor'=>$processorClass]);
                 }
             }
+            $htmlArr['cntr'].=$this->spreadsheetSettingsHtml($callingClass);
             $htmlArr['cntr'].=$this->exportImportHtml($callingClass);
         }
         return $htmlArr;
@@ -670,6 +673,21 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $btnArr['hasCover']=TRUE;
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($btnArr);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'&#9850;']);
+        return $html;
+    }
+
+    /**
+    * Export/import form linked to the App.
+    * @param    string  $callingClass  Is the class calling this method
+    * @return   string  Import/export html form
+    */
+    private function spreadsheetSettingsHtml(string $callingClass):string
+    {
+        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_MEMBER_R')){
+            return '';
+        }
+        $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Spreadsheet settings','generic',['callingClass'=>$callingClass],['method'=>'settingsWidget','classWithNamespace'=>'SourcePot\Datapool\Tools\XLStools'],['style'=>[]]);
+        $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'Spreadsheet']);
         return $html;
     }
 

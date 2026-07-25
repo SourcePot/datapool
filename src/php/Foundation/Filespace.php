@@ -726,15 +726,8 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed to scan for pdf-attachments: {msg}',$context);
             }    
             $context['steps'].=' | pdf added, possible attachements added as extra entries, possible text parsed';
-        } else if (stripos(strval($entry['Params']['File']['Extension']),'csv')!==FALSE){
-            $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($file)->current();
-            $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\CSVtools';
-            $entry['Params']['File']['SpreadsheetIteratorMethod']='csvIterator';
-            $context['steps'].=' | spreadsheet added to entry["Params"]["File"]["Spreadsheet"]';
-        } else if (stripos(strval($entry['Params']['File']['Extension']),'xls')!==FALSE){
-            $entry['Params']['File']['Spreadsheet']=$this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($file,$entry['Params']['File']['Extension'])->current();
-            $entry['Params']['File']['SpreadsheetIteratorClass']='SourcePot\Datapool\Tools\XLStools';
-            $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
+        } else if ($this->oc['SourcePot\Datapool\Tools\XLStools']->isSpreadsheet($file)!==FALSE){
+            $entry=$this->oc['SourcePot\Datapool\Tools\XLStools']->addSpreadsheetInfo($file,$entry);
             $context['steps'].=' | spreadsheet added to entry["Params"]["File"]["Spreadsheet"]';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'txt')!==FALSE){
             $entry['Content']['File content']=file_get_contents($file);

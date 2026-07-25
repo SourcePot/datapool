@@ -108,17 +108,11 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
             'settings'=>['hideUpload'=>TRUE,'columns'=>[['Column'=>'EntryId','Filter'=>''],['Column'=>'Group','Filter'=>''],['Column'=>'Folder','Filter'=>''],['Column'=>'Name','Filter'=>''],]],
             'description'=>'Here you can delete the remote client definitions. It will be renewed when the client is connected'
         ],
-        'CSV output settings'=>[
-            'selector'=>\SourcePot\Datapool\Tools\CSVtools::CSV_SELECTOR['output'],
-            'settings'=>\SourcePot\Datapool\Tools\CSVtools::CSV_CONTAINER_SETTINGS,
+        'Spreadsheet generic settings'=>[
+            'selector'=>['Source'=>'xlstools','Group'=>'Settings'],
+            'settings'=>['method'=>'settingsWidget','classWithNamespace'=>'SourcePot\Datapool\Tools\XLStools'],
             'containerType'=>'generic',
-            'description'=>'These are the settings used for csv-files created by this web application',
-        ],
-        'CSV input settings'=>[
-            'selector'=>\SourcePot\Datapool\Tools\CSVtools::CSV_SELECTOR['input'],
-            'settings'=>\SourcePot\Datapool\Tools\CSVtools::CSV_CONTAINER_SETTINGS,
-            'containerType'=>'generic',
-            'description'=>'These are the settings used for csv-files created by this web application',
+            'description'=>'These are the settings used for spreadsheet-files created by this web application',
         ],
     ];
 

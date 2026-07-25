@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\Processing;
 class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $oc;
-
+    
     private const CONTENT_STRUCTURE_PARAMS=[
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
         'Target'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
@@ -211,23 +211,27 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             // map entry
-            if (empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
-                $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
+            $worksheet=$this->getSpreadsheetWorksheet($base);
+            if ($worksheet===FALSE){
+                $result=$this->mapEntry($base,$sourceEntry,$result,$testRun,$callingElement);
             } else {
                 $iteratorClass=$sourceEntry['Params']['File']['SpreadsheetIteratorClass'];
                 $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
-                foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$sourceEntry['Params']['File']['Extension']) as $rowIndex=>$rowArr){
+                foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$worksheet) as $rowIndex=>$rowArr){
                     $result['Mapping statistics']['Spreadsheet entries']['value']++;
-                    $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
-                    $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
+                    if (empty($worksheet)){
+                        $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
+                    } else {
+                        $sourceEntry['Params']['File']['SpreadsheetByWorksheet'][$worksheet]=$rowArr;
+                    }
+                    $result=$this->mapEntry($base,$sourceEntry,$result,$testRun,$callingElement);
                 }
             }
-
         } // end of entry loop
         if ($base['csvRequested'] || $base['zipRequested']){
             // write csv file
             $result['Mapping statistics']['Output format']['value']='CSV';
-            $csvEntry=$this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv();
+            $csvEntry=$this->oc['SourcePot\Datapool\Tools\XLStools']->entry2spreadsheet();
         }            
         if ($base['zipRequested'] && isset($csvEntry['EntryId'])){
             // add csv file to zip archive
@@ -265,7 +269,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
-    private function mapEntry($base,$sourceEntry,$result,$testRun){
+    private function mapEntry($base,$sourceEntry,$result,$testRun,$callingElement){
         $params=current($base['mappingparams']);
         $targetEntry=[];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
@@ -280,7 +284,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             $targetValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($targetValue,$rule['Content']['Target data type']);
-            $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue);
+            $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine']??'',$rule['Content']['Target column']??'',$rule['Content']['Target key']??'',$targetValue);
         }
         $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($targetEntry);
         // wrapping up
@@ -296,7 +300,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetEntry=array_replace_recursive($sourceEntry,$targetEntry,$base['entryTemplates'][$params['Content']['Target']]??[]);
             $targetEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($targetEntry,['Name'],'0','',FALSE);
             if (!$testRun){
-                $this->oc['SourcePot\Datapool\Tools\CSVtools']->entry2csv($targetEntry);
+                $targetEntry['callingClass']=$callingElement['Folder'];
+                $this->oc['SourcePot\Datapool\Tools\XLStools']->entry2spreadsheet($targetEntry);
             }
         } else {
             // update and move entry to target
@@ -327,6 +332,24 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         return $entry;
+    }
+
+    private function getSpreadsheetWorksheet(array $base):string|int|FALSE
+    {
+        $worksheets=[];
+        foreach($base['mappingrules'] as $rule){
+            $mappingKeyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$rule['Content']['...value selected by']??'');
+            if (($mappingKeyComps[2]??'')==='Spreadsheet'){
+                $worksheets[0]=0;
+            } else if (($mappingKeyComps[2]??'')==='SpreadsheetByWorksheet'){
+                $worksheets[$mappingKeyComps[3]]=$mappingKeyComps[3];
+            }
+        }
+        $worksheet=current($worksheets)??FALSE;
+        if (count($worksheets)>1){
+            $this->oc['logger']->log('warning','Mapping rules refer to more than one spreadsheet worksheet "{worksheets}", only worksheet "{worksheet}" was used.',['worksheet'=>$worksheet,'worksheets'=>implode(', ',$worksheets)]);
+        }
+        return $worksheet;
     }
 
 }

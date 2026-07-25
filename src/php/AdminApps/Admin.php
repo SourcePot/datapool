@@ -161,8 +161,10 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
     {
         $matrix=[];
         $objectListFile=$GLOBALS['dirs']['setup'].'objectList.csv';
-        if (!is_file($objectListFile)){return 'Please reload to create a new object list.';}
-        foreach($this->oc['SourcePot\Datapool\Tools\CSVtools']->csvIterator($objectListFile) as $row){
+        if (!is_file($objectListFile)){
+            return 'Please reload to create a new object list.';
+        }
+        foreach($this->oc['SourcePot\Datapool\Tools\XLStools']->iterator($objectListFile) as $row){
             if (!isset($row['type'])){continue;}
             $matrix[$row['classWithNamespace']]=$row;
         }
