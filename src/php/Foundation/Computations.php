@@ -15,7 +15,7 @@ class Computations{
     private const COMPARE_EQUAL_PRECISION=5;
     
     public const DATA_TYPES=[
-        'keep'=>'Keep as is','string'=>'&rarr; String','string2lower'=>'&rarr; lowercase(String)','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W','stringWordChrsOnlySpace'=>'&rarr; \W &rarr; space',
+        'keep'=>'Keep as is','string'=>'&rarr; String','string2lower'=>'&rarr; lowercase(String)','stringNoMultipleWhitespaces'=>'&rarr; String remove multiple \s','stringNoWhitespaces'=>'&rarr; String remove \s','stringWordChrsOnly'=>'&rarr; String remove \W','stringWordChrsOnlySpace'=>'&rarr; String \W &rarr; space',
         'splitString'=>'&rarr; Split string','int'=>'&rarr; integer','float'=>'&rarr; float','fraction'=>'Fraction &rarr; float',
         'bool'=>'&rarr; boolean','money'=>'&rarr; money','date'=>'&rarr; date','dateString'=>'&rarr; date, empty if invalid',
         'excelDate'=>'Excel &rarr; date','timestamp'=>'Timestamp &rarr; date','dateExchageRates'=>'Date &rarr; EUR exchange rates','excelDateExchageRates'=>'Excel date &rarr; EUR exchange rates',
@@ -314,7 +314,8 @@ class Computations{
     * Generic conversions
     */
 
-    public function convert($value,$dataType){
+    public function convert($value,$dataType)
+    {
         if (empty($dataType)){
             $newValue=$value;
         } else {

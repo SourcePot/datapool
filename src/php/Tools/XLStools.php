@@ -24,65 +24,124 @@ class XLStools{
     {
         $this->oc=$oc;
     }
-    
-    public function isXLS(array $selector):bool
+
+    public function isSpreadsheet(array|string $selector):string|FALSE
     {
-        $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
-        if (!is_file($file)){return FALSE;}
-        if (mb_strpos(mime_content_type($file),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')===FALSE){
+        $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
+        if (!is_file($spreadsheetFile)){
             return FALSE;
-        } else {
-            return TRUE;
+        }
+        try {
+            $fileType=\PhpOffice\PhpSpreadsheet\IOFactory::identify($spreadsheetFile,NULL,TRUE);
+            return $fileType;
+        } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+            return FALSE;        
         }
     }
-    
-    public function iterator(array|string $selector,$reader='xlsx'):\Generator
+
+    private function getSpreadsheetReaderWorksheets(array|string $selector,string|int $loadSelectedWorksheet=0):array
     {
-        // get file from selector
-        if (is_array($selector)){
-            $xlsFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector);
-        } else {
-            $xlsFile=$selector;
+        $arr=['class'=>__CLASS__,'function'=>__FUNCTION__,'Worksheets'=>[]];
+        $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
+        $arr['fileName']=array_pop(preg_split('/[\/\\\]/',$spreadsheetFile));
+        if (!is_file($spreadsheetFile)){
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load open "{fileName}"',$arr);         
+            return $arr;
         }
-        if (is_file($xlsFile)){
-            // scan file
-            $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader(ucfirst($reader));
-            $reader->setReadDataOnly(TRUE);
-            try{
-                $spreadsheet=$reader->load($xlsFile);
-            } catch(\Exception $e){
-                $this->oc['logger']->log('error','"{function}" failed to load "{file}"',['function'=>__FUNCTION__,'file'=>$xlsFile,'msg'=>$e->getMessage()]);         
-                yield [];
-                return FALSE;
-            }
-            $worksheet=$spreadsheet->getActiveSheet();
-            $xls=$worksheet->getRowIterator();
-            $keys=[];
-            while($xls->valid()){
-                $result=[];
-                $cellIterator=$xls->current()->getCellIterator();
-                $cellIterator->setIterateOnlyExistingCells(FALSE);
-                foreach($cellIterator as $columnIndex=>$cell){
-                    $cellValue=$cell->getValue();
-                    $cellValue??='';
-                    if (isset($keys[$columnIndex])){
-                        $result[$keys[$columnIndex]]=$cellValue;
-                    } else {
-                        $keys[$columnIndex]=$cellValue;
-                    }
-                }
-                if ($xls->key()>1){
-                    yield $result;
-                }
-                $xls->next();
-            }
+        try {
+            $arr['fileType']=\PhpOffice\PhpSpreadsheet\IOFactory::identify($spreadsheetFile,NULL,TRUE);
+        } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+            $arr['msg']=$e->getMessage();
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to detect spreadsheet file type of "{fileName}": "{msg}"',$arr);
+            return $arr;        
+        }
+        try{
+            $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader($arr['fileType']);
+            $arr['Worksheets']=$reader->listWorksheetInfo($spreadsheetFile);
+        } catch(\Exception $e){
+            $arr['msg']=$e->getMessage();
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to aquire spreadsheet information from "{fileName}": "{msg}"',$arr);     
+            return $arr;    
+        }
+        if (empty($loadSelectedWorksheet)){
+            return $arr;
         } else {
-            // file missing
-            yield ['ERROR'=>'"'.__FUNCTION__.'" called but file "'.$xlsFile.'" not found.'];
-            return FALSE;
+            $arr['selectedWorksheet']=$loadSelectedWorksheet;
+            $reader->setLoadSheetsOnly($loadSelectedWorksheet);
+        }
+        try{
+            $reader->setReadEmptyCells(FALSE);
+            $reader->setReadDataOnly(TRUE);
+            $arr['spreadsheet']=$reader->load($spreadsheetFile);
+            $arr['worksheet']=$arr['spreadsheet']->getActiveSheet();
+        } catch(\Exception $e){
+            $arr['msg']=$e->getMessage();
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load worksheet "{selectedWorksheet}" from "{fileName}": "{msg}"',$arr);         
+        }
+        return $arr;
+    }
+
+    public function addSpreadsheetInfo(array|string $selector,array $entry=[],):array
+    {
+        $info=$this->getSpreadsheetReaderWorksheets($selector,0);
+        if (empty($info['Worksheets'])){
+            return $entry;
+        }
+        $entry['Params']['File']['SpreadsheetIteratorClass']=__CLASS__;
+        $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
+        foreach($info['Worksheets'] as $worksheetInfo){
+            $sample=[];
+            foreach($this->iterator($selector,$worksheetInfo['worksheetName'],10) as $cells){
+                $sample=array_merge($sample,$cells);
+            }
+            if (empty($entry['Params']['File']['Spreadsheet'])){
+                $entry['Params']['File']['Spreadsheet']=$sample;    
+            }
+            $entry['Params']['File']['SpreadsheetByWorksheet'][$worksheetInfo['worksheetName']]=$sample;
+        }
+        return $entry;
+    }
+    
+    public function iterator(array|string $selector,string|int $worksheetName=0,int $rows2load=-1):\Generator
+    {
+        $spreadsheetArr=$this->getSpreadsheetReaderWorksheets($selector,$worksheetName);
+        if (empty($worksheetName)){
+            $worksheetName=$spreadsheetArr['Worksheets'][0]['worksheetName'];
+            $spreadsheetArr=$this->getSpreadsheetReaderWorksheets($selector,$worksheetName);
+        }
+        $row=$spreadsheetArr['worksheet']->getRowIterator();
+        $maxColumnIndex=$lastMaxColumnIndex=0;
+        $keys=[];
+        while($row->valid() && $rows2load!==0){
+            $cellIterator=$row->current()->getCellIterator();
+            $cells=$styles=[];
+            $lastMaxColumnIndex=$maxColumnIndex;
+            foreach($cellIterator as $columnIndex=>$cell){
+                $cells[$columnIndex]=$cell->getValue();
+                $styles[$columnIndex]=$cell->getStyle();
+                if ($cell->getValue()!==NULL && $columnIndex>$maxColumnIndex){
+                    $maxColumnIndex=$columnIndex;
+                }
+            }
+            $row->next();
+            if ($rows2load>0){$rows2load--;}
+            // process row
+            if ($maxColumnIndex>$lastMaxColumnIndex){
+                // is new header
+                $keys=$cells;
+            } else {
+                // is data row
+                $returnRow=[];
+                foreach($keys as $columnIndex=>$key){
+                    $key=$key??'Column_'.$columnIndex;
+                    $returnRow[$key]=$cells[$columnIndex]??NULL;
+                }
+                yield $returnRow;
+            }
         }
         return TRUE;
     }
+
 
 }
 ?>

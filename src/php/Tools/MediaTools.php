@@ -269,17 +269,29 @@ class MediaTools{
     {
         $arr['settings']['style']=$arr['settings']['style']??[];
         $arr['settings']['style']=array_merge(['overflow'=>'auto'],$arr['settings']['style']);
-        $rowCount=0;
-        $matrix=[];
         $iteratorClass=$arr['selector']['Params']['File']['SpreadsheetIteratorClass'];
         $iteratorMethod=$arr['selector']['Params']['File']['SpreadsheetIteratorMethod'];
-        foreach($this->oc[$iteratorClass]->$iteratorMethod($arr['selector']) as $index=>$data){
-            if (!$isSmallPreview || $index<5){$matrix[$index]=$data;}
-            $rowCount++;
+        $worksheets=$arr['selector']['Params']['File']['SpreadsheetByWorksheet']??[0=>$arr['selector']['Params']['File']['Spreadsheet']]??[];
+        $spreadsheetsHtml='';
+        foreach($worksheets as $worksheetName=>$worksheetSample){
+            $matrixIndex=0;
+            $matrixces=$matrixRowCount=[];
+            $lastKeys=[];
+            foreach($this->oc[$iteratorClass]->$iteratorMethod($arr['selector'],$worksheetName,$isSmallPreview?10:-1) as $key=>$data){
+                if ($lastKeys!==array_keys($data)){
+                    $matrixIndex++;
+                }
+                $matrixces[$matrixIndex][$key]=$data;
+                $matrixRowCount[$matrixIndex]=$matrixRowCount[$matrixIndex]??0;
+                $matrixRowCount[$matrixIndex]++;
+                $lastKeys=array_keys($data);
+            }
+            foreach($matrixces as $matrixIndex=>$matrix){
+                $caption=$arr['selector']['Name'].' "'.$worksheetName.'" ('.$$matrixIndex.':'.$matrixRowCount[$matrixIndex].' rows)';
+                $spreadsheetsHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'caption'=>$caption,'style'=>['clear'=>'both','font-size'=>($isSmallPreview?'0.6rem':'1rem')]]);
+            }
         }
-        $caption=$arr['selector']['Name'].' ('.$rowCount.' rows)';
-        $spreadsheet=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'caption'=>$caption,'style'=>['clear'=>'both','font-size'=>($isSmallPreview?'0.6rem':'1rem')]]);
-        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$spreadsheet,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
+        $arr['html']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$spreadsheetsHtml,'keep-element-content'=>TRUE,'style'=>$arr['settings']['style']]);
         return $arr;
     }
 

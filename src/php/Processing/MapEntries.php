@@ -211,18 +211,22 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             // map entry
-            if (empty($sourceEntry['Params']['File']['SpreadsheetIteratorClass'])){
+            $worksheet=$this->getSpreadsheetWorksheet($base);
+            if ($worksheet===FALSE){
                 $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
             } else {
                 $iteratorClass=$sourceEntry['Params']['File']['SpreadsheetIteratorClass'];
                 $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
-                foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$sourceEntry['Params']['File']['Extension']) as $rowIndex=>$rowArr){
+                foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$worksheet) as $rowIndex=>$rowArr){
                     $result['Mapping statistics']['Spreadsheet entries']['value']++;
-                    $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
+                    if (empty($worksheet)){
+                        $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
+                    } else {
+                        $sourceEntry['Params']['File']['SpreadsheetByWorksheet'][$worksheet]=$rowArr;
+                    }
                     $result=$this->mapEntry($base,$sourceEntry,$result,$testRun);
                 }
             }
-
         } // end of entry loop
         if ($base['csvRequested'] || $base['zipRequested']){
             // write csv file
@@ -280,7 +284,7 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 }
             }
             $targetValue=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($targetValue,$rule['Content']['Target data type']);
-            $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine'],$rule['Content']['Target column'],$rule['Content']['Target key'],$targetValue);
+            $this->oc['SourcePot\Datapool\Foundation\Computations']->add2combineCache($rule['Content']['Combine']??'',$rule['Content']['Target column']??'',$rule['Content']['Target key']??'',$targetValue);
         }
         $targetEntry=$this->oc['SourcePot\Datapool\Foundation\Computations']->combineAll($targetEntry);
         // wrapping up
@@ -327,6 +331,24 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         return $entry;
+    }
+
+    private function getSpreadsheetWorksheet(array $base):string|int|FALSE
+    {
+        $worksheets=[];
+        foreach($base['mappingrules'] as $rule){
+            $mappingKeyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$rule['Content']['...value selected by']??'');
+            if (($mappingKeyComps[2]??'')==='Spreadsheet'){
+                $worksheets[0]=0;
+            } else if (($mappingKeyComps[2]??'')==='SpreadsheetByWorksheet'){
+                $worksheets[$mappingKeyComps[3]]=$mappingKeyComps[3];
+            }
+        }
+        $worksheet=current($worksheets)??FALSE;
+        if (count($worksheets)>1){
+            $this->oc['logger']->log('warning','Mapping rules refer to more than one spreadsheet worksheet "{worksheets}", only worksheet "{worksheet}" was used.',['worksheet'=>$worksheet,'worksheets'=>implode(', ',$worksheets)]);
+        }
+        return $worksheet;
     }
 
 }
