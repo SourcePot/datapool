@@ -100,13 +100,16 @@ class XLStools{
         return $settingsEntry?:$selector;
     }
 
-    public function getSpreadsheetSettings($callingClass=''):array
+    public function getSpreadsheetSettings($callingClass='',bool $rawSetting=FALSE):array
     {
         $setting=[];
         $settingsEntry=$this->getSpreadsheetSettingsEntry($callingClass);    
         foreach(self::SPREADSHEET_SETTINGS as $key=>$options){
             reset($options);
-            $setting[$key]=strtr($settingsEntry['Content'][$key]??key($options),self::KEY_MAP);
+            $setting[$key]=$settingsEntry['Content'][$key]??key($options);
+            if (!$rawSetting){
+                $setting[$key]=strtr($setting[$key],self::KEY_MAP);
+            }
         }
         return $setting;
     }
@@ -121,8 +124,9 @@ class XLStools{
         }
         // create HTML
         $matrix=[];
+        $setting=$this->getSpreadsheetSettings($arr['selector']['callingClass'],TRUE);
         foreach(self::SPREADSHEET_SETTINGS as $key=>$options){
-            $selectArr=['key'=>[$key],'options'=>$options,'value'=>$settingsEntry['Content'][$key]??current($options),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+            $selectArr=['key'=>[$key],'options'=>$options,'value'=>$setting[$key],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
             $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr)];
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Settings']);    
