@@ -127,9 +127,9 @@ class XLStools{
         $setting=$this->getSpreadsheetSettings($arr['selector']['callingClass'],TRUE);
         foreach(self::SPREADSHEET_SETTINGS as $key=>$options){
             $selectArr=['key'=>[$key],'options'=>$options,'value'=>$setting[$key],'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
-            $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr)];
+            $matrix[ucfirst($key)]=['value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr)];
         }
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Settings']);    
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Settings']);    
         return $arr;
     }
 
