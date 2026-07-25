@@ -10,11 +10,44 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Tools;
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+
 class XLStools{
 
     private $oc;
+    private $entryTable='';
+    private $entryTemplate=[
+        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+        'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
+    ];
+    
     private $spreadsheetTimestamp=FALSE;
     private $mapIndex2letter=[];
+
+    private const SPREADSHEET_SETTINGS=[
+        'output format'=>['Csv'=>'Csv','Xls'=>'Xls',"Xlsx"=>'Xlsx','Ods'=>'Ods','Pdf'=>'PDF'],
+        'delimiter'=>[';'=>'Semicolon',','=>'Comma','TAB'=>'Tabulator',],
+        'enclosure'=>['"'=>'"',"'"=>"'",''=>'None'],
+        'escape'=>[''=>'None','\\'=>'\\',],
+        'lineSeparator'=>['CRLF'=>'Carriage return & line feed','LF'=>'Line feed','CR'=>'Carriage return','PHP_EOL'=>'PHP_EOL'],
+    ];
+
+    private const KEY_MAP=[
+        'TAB'=>"\t",
+        'LFCR'=>"\n\r",
+        'CRLF'=>"\r\n",
+        'LF'=>"\n",
+        'CR'=>"\r",
+        'PHP_EOL'=>PHP_EOL,
+    ];
+
+    private const MIME_MAP=[
+        'csv'=>'text/csv',
+        'xls'=>'application/vnd.ms-excel',
+        'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ods'=>'application/vnd.oasis.opendocument.spreadsheet',
+    ];
     
     public function __construct(array $oc)
     {
@@ -25,10 +58,13 @@ class XLStools{
     Public function loadOc(array $oc):void
     {
         $this->oc=$oc;
+        $table=str_replace(__NAMESPACE__,'',__CLASS__);
+        $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
     public function init()
     {
+        $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         for($indexA=65;$indexA<=90;$indexA++){
             $this->mapIndex2letter[]=chr($indexA);
         }
@@ -40,6 +76,59 @@ class XLStools{
         $this->entry2spreadsheet();    
     }
 
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
+
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
+
+    public function spreadsheetSettingsSelector($callingClass=''):array
+    {
+        $elector=['Source'=>$this->getEntryTable(),'Group'=>'Settings','Folder'=>'Spreadsheet','Name'=>$callingClass?:'GENERIC'];
+        $elector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($elector,['Group','Folder','Name'],0);
+        return $elector;
+    }
+
+    public function getSpreadsheetSettingsEntry($callingClass=''):array
+    {
+        $selector=$this->spreadsheetSettingsSelector($callingClass);
+        $settingsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE);    
+        return $settingsEntry?:$selector;
+    }
+
+    public function getSpreadsheetSettings($callingClass=''):array
+    {
+        $setting=[];
+        $settingsEntry=$this->getSpreadsheetSettingsEntry($callingClass);    
+        foreach(self::SPREADSHEET_SETTINGS as $key=>$options){
+            reset($options);
+            $setting[$key]=strtr($settingsEntry['Content'][$key]??key($options),self::KEY_MAP);
+        }
+        return $setting;
+    }
+    
+    public function settingsWidget(array $arr):array
+    {
+        $settingsEntry=$this->getSpreadsheetSettingsEntry($arr['selector']['callingClass']);    
+        $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
+        if (!empty($formData['val'])){
+            $settingsEntry['Content']=$formData['val'];
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($settingsEntry);
+        }
+        // create HTML
+        $matrix=[];
+        foreach(self::SPREADSHEET_SETTINGS as $key=>$options){
+            $selectArr=['key'=>[$key],'options'=>$options,'value'=>$settingsEntry['Content'][$key]??current($options),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
+            $matrix[$key]=['value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($selectArr)];
+        }
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Settings']);    
+        return $arr;
+    }
+
     public function isSpreadsheet(array|string $selector):string|FALSE
     {
         $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
@@ -47,7 +136,7 @@ class XLStools{
             return FALSE;
         }
         try {
-            $fileType=\PhpOffice\PhpSpreadsheet\IOFactory::identify($spreadsheetFile,NULL,TRUE);
+            $fileType=IOFactory::identify($spreadsheetFile,NULL,TRUE);
             return $fileType;
         } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
             return FALSE;        
@@ -64,14 +153,14 @@ class XLStools{
             return $arr;
         }
         try {
-            $arr['fileType']=\PhpOffice\PhpSpreadsheet\IOFactory::identify($spreadsheetFile,NULL,TRUE);
+            $arr['fileType']=IOFactory::identify($spreadsheetFile,NULL,TRUE);
         } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
             $arr['msg']=$e->getMessage();
             $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to detect spreadsheet file type of "{fileName}": "{msg}"',$arr);
             return $arr;        
         }
         try{
-            $reader= \PhpOffice\PhpSpreadsheet\IOFactory::createReader($arr['fileType']);
+            $reader=IOFactory::createReader($arr['fileType']);
             $arr['Worksheets']=$reader->listWorksheetInfo($spreadsheetFile);
         } catch(\Exception $e){
             $arr['msg']=$e->getMessage();
@@ -157,13 +246,13 @@ class XLStools{
         return TRUE;
     }
 
-    private function matrix2shreadsheetTmpFile(array $matrix,array $entry, string $fileType='csv'):string
+    private function matrix2shreadsheetTmpFile(array $matrix,array $entry,string $fileType):string
     {
         $fileType=strtolower($fileType);
-        $csvSetting=$this->oc['SourcePot\Datapool\Tools\CSVtools']->getSetting(TRUE);
+        $spreadsheetSetting=$this->getSpreadsheetSettings($entry['callingClass']);
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $author=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUser,4);
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
             ->setCreator($author)
             ->setLastModifiedBy($author)
@@ -193,15 +282,17 @@ class XLStools{
         }
         // save to file
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir(__FUNCTION__).md5($entry['Name']).'.'.$fileType;
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet,ucfirst($fileType));
-        $writer->setDelimiter($csvSetting['separator']);
-        $writer->setEnclosure($csvSetting['enclosure']);
-        $writer->setLineEnding(strtr($csvSetting['lineSeparator'],['CRLF'=>"\r\n",'LF'=>"\n",'CR'=>"\r",'PHP_EOL'=>PHP_EOL]));
+        $writer = IOFactory::createWriter($spreadsheet,ucfirst($fileType));
+        if ($fileType==='csv'){
+            $writer->setDelimiter($spreadsheetSetting['delimiter']);
+            $writer->setEnclosure($spreadsheetSetting['enclosure']);
+            $writer->setLineEnding($spreadsheetSetting['lineSeparator']);
+        }
         $writer->save($file);
         return $file;
     }
 
-    public function entry2spreadsheet(array $entry=[],string $fileType='csv'):array|bool
+    public function entry2spreadsheet(array $entry=[]):array|bool
     {
         if (empty($entry) && isset($_SESSION['spreadSheetVarSpace'])){
             // write csvVarSpace -> spreadsheet
@@ -209,6 +300,8 @@ class XLStools{
             foreach($_SESSION['spreadSheetVarSpace'] as $EntryId=>$csvDefArr){
                 unset($_SESSION['spreadSheetVarSpace'][$EntryId]);
                 $entry=$csvDefArr['entry'];
+                $spreadsheetSetting=$this->getSpreadsheetSettings($entry['callingClass']);
+                $fileType=strtolower($spreadsheetSetting['output format']);
                 $file=$this->matrix2shreadsheetTmpFile($csvDefArr['rows'],$entry,$fileType);
                 // add entry
                 $entry['fileContent']=file_get_contents($file);
@@ -249,16 +342,20 @@ class XLStools{
         return FALSE;
     }
 
-public function matrix2spreadsheetDownload(array $matrix,string $fileType='csv'):string
+public function matrix2spreadsheetDownload(array $matrix):string
     {
+        $spreadsheetSetting=$this->getSpreadsheetSettings('');
+        $fileType=strtolower($spreadsheetSetting['output format']);
         $file=$this->matrix2shreadsheetTmpFile($matrix,['Name'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($matrix)],$fileType);
+        $fileComps=explode('.',$file);
+        $fileExtension=array_pop($fileComps);
         // command processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['download'])){
             $file2download=key($formData['cmd']['download']);
             if (is_file($file2download)){
-                header('Content-Type: application/csv');
-                header('Content-Disposition: attachment; filename="'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime().'_matrix.csv');
+                header('Content-Type: '.self::MIME_MAP[$fileExtension]);
+                header('Content-Disposition: attachment; filename="'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime().'_matrix.'.$fileExtension);
                 header('Content-Length: '.fileSize($file2download));
                 readfile($file2download);
                 exit;
