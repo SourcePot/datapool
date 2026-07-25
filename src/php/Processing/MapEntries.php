@@ -217,14 +217,18 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $iteratorClass=$sourceEntry['Params']['File']['SpreadsheetIteratorClass'];
                 $iteratorMethod=$sourceEntry['Params']['File']['SpreadsheetIteratorMethod'];
-                foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$worksheet) as $rowIndex=>$rowArr){
-                    $result['Mapping statistics']['Spreadsheet entries']['value']++;
-                    if (empty($worksheet)){
-                        $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
-                    } else {
-                        $sourceEntry['Params']['File']['SpreadsheetByWorksheet'][$worksheet]=$rowArr;
+                if (empty($this->oc[$iteratorClass])){
+                    // iterator class does not exist
+                } else {
+                    foreach($this->oc[$iteratorClass]->$iteratorMethod($sourceEntry,$worksheet) as $rowIndex=>$rowArr){
+                        $result['Mapping statistics']['Spreadsheet entries']['value']++;
+                        if (empty($worksheet)){
+                            $sourceEntry['Params']['File']['Spreadsheet']=$rowArr;
+                        } else {
+                            $sourceEntry['Params']['File']['SpreadsheetByWorksheet'][$worksheet]=$rowArr;
+                        }
+                        $result=$this->mapEntry($base,$sourceEntry,$result,$testRun,$callingElement);
                     }
-                    $result=$this->mapEntry($base,$sourceEntry,$result,$testRun,$callingElement);
                 }
             }
         } // end of entry loop
