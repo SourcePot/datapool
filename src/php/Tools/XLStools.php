@@ -151,16 +151,16 @@ class XLStools{
     {
         $arr=['class'=>__CLASS__,'function'=>__FUNCTION__,'Worksheets'=>[]];
         $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
-        $arr['fileName']=array_pop(preg_split('/[\/\\\]/',$spreadsheetFile));
+        $arr+=pathinfo($spreadsheetFile);
         if (!is_file($spreadsheetFile)){
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load open "{fileName}"',$arr);         
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load open "{filename}"',$arr);         
             return $arr;
         }
         try {
-            $arr['fileType']=IOFactory::identify($spreadsheetFile,NULL,TRUE);
-        } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+            $arr['fileType']=IOFactory::identify($spreadsheetFile);
+        } catch (\Exception $e) {
             $arr['msg']=$e->getMessage();
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to detect spreadsheet file type of "{fileName}": "{msg}"',$arr);
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to detect spreadsheet file type of "{filename}": "{msg}"',$arr);
             return $arr;        
         }
         try{
@@ -168,7 +168,7 @@ class XLStools{
             $arr['Worksheets']=$reader->listWorksheetInfo($spreadsheetFile);
         } catch(\Exception $e){
             $arr['msg']=$e->getMessage();
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to aquire spreadsheet information from "{fileName}": "{msg}"',$arr);     
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to aquire spreadsheet information from "{filename}": "{msg}"',$arr);     
             return $arr;    
         }
         if (empty($loadSelectedWorksheet)){
@@ -184,7 +184,7 @@ class XLStools{
             $arr['worksheet']=$arr['spreadsheet']->getActiveSheet();
         } catch(\Exception $e){
             $arr['msg']=$e->getMessage();
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load worksheet "{selectedWorksheet}" from "{fileName}": "{msg}"',$arr);         
+            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load worksheet "{selectedWorksheet}" from "{filename}": "{msg}"',$arr);         
         }
         return $arr;
     }
