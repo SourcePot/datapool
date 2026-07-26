@@ -36,11 +36,19 @@ class Job{
     */
     public function trigger(array $arr):array
     {
+        $arr['run']=$arr['run']??'';
+        $arr['page html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Job processing triggered']);
+        $jobUser=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'Group'=>'Job'],TRUE);
+        if (empty($jobUser)){
+            $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>'Skipped, system job account missing']);
+            return $arr;
+        } else {
+            $this->oc['SourcePot\Datapool\Foundation\User']->loginUser($jobUser);
+        }
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
         // all jobs settings - remove non-existing job methods and add new job methods
-        $arr['run']=$arr['run']??'';
-        $jobs=array('due'=>[],'undue'=>[]);
+        $jobs=['due'=>[],'undue'=>[]];
         $allJobsSettingInitContent=['class'=>'','method'=>'job','Last run'=>time(),'Min time in sec between each run'=>600,'Last run time consumption [ms]'=>0];
         $allJobsSettingInitContent['Last run date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','',$pageTimeZone);
         $allJobsSetting=['Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Job processing','Folder'=>'All jobs','Name'=>'Timing','Owner'=>'SYSTEM'];
@@ -76,7 +84,6 @@ class Job{
             }
         }
         // get most overdue job
-        $arr['page html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Job processing triggered']);
         if (empty($jobs['due'])){
             $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($jobs);
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Jobs','keep-element-content'=>TRUE,'hideKeys'=>TRUE]);
@@ -126,6 +133,7 @@ class Job{
             $arr['jobVars']=$jobVars['Content'];
         }
         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($allJobsSetting,TRUE);
+        $this->oc['SourcePot\Datapool\Components\Logout']->logoutUser();
         return $arr;
     }
     

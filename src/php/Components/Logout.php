@@ -31,16 +31,21 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
         if ($arr===TRUE){
             return ['Category'=>'Logout','Emoji'=>'&#10006;','Label'=>'Logout','Read'=>self::APP_ACCESS,'Class'=>__CLASS__];
         } else {
-            $this->oc['SourcePot\Datapool\Foundation\Filespace']->removeTmpDirs(session_id());
-            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-            $this->oc['logger']->log('info','User logout {user} at {dateTime}',['user'=>$user['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);
-            // reset session | keep page state
-            $_SESSION=['page state'=>$_SESSION['page state']];
-            session_regenerate_id(TRUE);
+            $this->logoutUser();
             // load Home-app
             header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['app'=>'SourcePot\Datapool\Components\Home']));
             exit;
         }
+    }
+
+    public function logoutUser()
+    {
+        $this->oc['SourcePot\Datapool\Foundation\Filespace']->removeTmpDirs(session_id());
+        $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $this->oc['logger']->log('info','User logout {user} at {dateTime}',['user'=>$user['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);
+        // reset session | keep page state
+        $_SESSION=['page state'=>$_SESSION['page state']];
+        session_regenerate_id(TRUE);
     }
 
 }

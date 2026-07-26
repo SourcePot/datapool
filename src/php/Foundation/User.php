@@ -217,7 +217,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailJob'),
                 'Password'=>$this->initPsw(32),
                 'Owner'=>'SYSTEM',
-                'Privileges'=>'ADMIN_R',
+                'Privileges'=>'REGISTERED_R',
             ];
             $job['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($job['Email']);
             $job['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($job['Email'],$job['Password']);
