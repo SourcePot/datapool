@@ -164,7 +164,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
-        $entry['Group']='User';
+        $entry['Group']=(($entry['Group']??'')!=='Job' && ($entry['Group']??'')!=='Admin')?'User':$entry['Group'];
         if (isset($entry['Email'])){$entry['Folder']=$entry['Email'];}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
@@ -174,9 +174,9 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         return $entry;
     }
     
-    private function initPsw():string
+    private function initPsw(int $byteCount=16):string
     {
-        return trim(base64_encode(random_bytes(16)),'=');
+        return trim(base64_encode(random_bytes($byteCount)),'=');
     }
     
     public function initAdminAccount():bool
@@ -185,14 +185,14 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if ($noAdminAccountFound){
             $admin=[
                 'Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',
+                'Group'=>'Admin',
                 'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
                 'Password'=>$this->initPsw(),
                 'Owner'=>'SYSTEM'
             ];
             $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
             $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
-            $admin['Content']['Contact details']['First name']='Admin';
-            $admin['Content']['Contact details']['Family name']='Admin';
+            $admin['Content']['Contact details']=['First name'=>'System','Family name'=>'Admin account'];
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin,TRUE);
             if ($success){
                 // Save init admin details
@@ -200,7 +200,31 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 $adminFile['Content']['Admin email']=$admin['Email'];
                 $adminFile['Content']['Admin password']=$admin['Password'];
                 $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->insertEntry($adminFile,TRUE);
-                $this->oc['logger']->log('alert','No admin account found. I have created a new admin account, the credential can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
+                $this->oc['logger']->log('alert','No admin account found. I have created a new admin account, the credentials can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+    
+    public function initJobAccount():bool
+    {
+        $noJobAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$this->getEntryTable(),'Group'=>'Job'],TRUE));
+        if ($noJobAccountFound){
+            $job=[
+                'Source'=>$this->entryTable,
+                'Group'=>'Job',
+                'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailJob'),
+                'Password'=>$this->initPsw(32),
+                'Owner'=>'SYSTEM',
+                'Privileges'=>'ADMIN_R',
+            ];
+            $job['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($job['Email']);
+            $job['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($job['Email'],$job['Password']);
+            $job['Content']['Contact details']=['First name'=>'System','Family name'=>'Job account'];
+            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($job,TRUE);
+            if ($success){
+                $this->oc['logger']->log('alert','No job account found. I have created a new job account, the credentials can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
                 return TRUE;
             }
         }
