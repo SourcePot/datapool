@@ -224,7 +224,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $job['Content']['Contact details']=['First name'=>'System','Family name'=>'Job account'];
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($job,TRUE);
             if ($success){
-                $this->oc['logger']->log('alert','No job account found. I have created a new job account, the credentials can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
+                $this->oc['logger']->log('alert','No job account found, new job account created');    
                 return TRUE;
             }
         }

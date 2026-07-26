@@ -101,9 +101,16 @@ sudo apt-get install php-curl
 ```
 
 ## Connecting the web application with the database
-1. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
-2. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
-3. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
+1. Create a database and a database user, for example using MySQL, as follows:
+```
+CREATE DATABASE webpage;
+CREATE USER 'webpageuser'@'localhost' IDENTIFIED BY '...enter..password..here....';
+GRANT ALL PRIVILEGES ON testdb.* TO 'webpageuser'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+2. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
+3. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
+4. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
