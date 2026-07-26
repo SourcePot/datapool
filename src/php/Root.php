@@ -177,6 +177,8 @@ final class Root{
         $this->builderProgress[hrtime(TRUE)]='checkExtensions done';
         $this->oc['SourcePot\Datapool\Foundation\User']->initAdminAccount();
         $this->builderProgress[hrtime(TRUE)]='initAdminAccount done';
+        $this->oc['SourcePot\Datapool\Foundation\User']->initJobAccount();
+        $this->builderProgress[hrtime(TRUE)]='initJobAccount done';
     }
     
     /**
