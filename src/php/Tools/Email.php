@@ -302,12 +302,6 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $context;
     }
 
-    public function msg2entries(array $entry,string $msg,string $inboxId,array $context):array
-    {
-        $message=new FileMessage($msg);
-        return $this->messageObj2entries($entry,$message,$inboxId,$context);
-    }
-
     public function outlook2entries(array $entry,string $msgFile,string $inboxId,array $context)
     {
         $parser = new \Opt\OLE\MsgParser($msgFile);
@@ -331,6 +325,12 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $context;
     }
     
+    public function msg2entries(array $entry,string $msg,string $inboxId,array $context):array
+    {
+        $message=new FileMessage($msg);
+        return $this->messageObj2entries($entry,$message,$inboxId,$context);
+    }
+
     private function messageObj2entries(array $entry,$message,$inboxId,$context):array
     {
         if (!empty($message)){

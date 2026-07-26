@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\AdminApps;
 
 class Admin implements \SourcePot\Datapool\Interfaces\App{
     
+    private const INIT_ADMIN_EMAIL='admin@datapool.info';
+    private const INIT_JOB_EMAIL='job@datapool.info';
     private const APP_ACCESS='ADMIN_R';
     private const CLASS_LINE_REGEX="/class\s+([A-Za-z]+)\s+implements\s+/";
     private const APP_ACCESS_REGEX="/private const APP_ACCESS='([^´;]+)'/";
@@ -32,7 +34,8 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         'metaDescription'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'Web application for data processing','style'=>['min-width'=>'50vw']],
         'metaRobots'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'index','style'=>['min-width'=>'50vw']],
         'logLevel'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::LOG_LEVEL,'excontainer'=>TRUE],
-        'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>'admin@datapool.info'],
+        'emailWebmaster'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>self::INIT_ADMIN_EMAIL],
+        'emailJob'=>['method'=>'element','tag'=>'input','type'=>'email','value'=>self::INIT_JOB_EMAIL],
         'loginForm'=>['method'=>'select','options'=>['Password','Pass icons'],'excontainer'=>TRUE],
         'Two-factor authentication'=>['method'=>'select','options'=>[0=>'Off',65532=>'All member',49152=>'All admins & content admins'],'excontainer'=>TRUE],
         'homePageContent'=>['method'=>'select','options'=>[''=>'None','imageShuffle'=>'Image shuffle','video'=>'Video (./www/assets/home.mp4)'],'value'=>'video','excontainer'=>TRUE],
