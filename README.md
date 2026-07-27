@@ -130,6 +130,12 @@ After you have set up your admin account you should login and update the webmast
 
 If a presentation setting is missing, an error e.g. _Entry presentation setting missing for "SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ appears in the Logger window. _"SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ is equal to the Folder of the missing entry presentation setting. A starting point for a proper setting would be to add _getPreview()_ as "Entry key" as the first rule.
 
+## Upload the basic configuration
+
+In the _“examples”_ directory, you will find the file _“Basic_settings_dump.zip”_, which contains a possible basic configuration for the web application. The file can be imported into the web application's database under **Admin &rarr; Admin &rarr; Backup, recover, object list &rarr; Recover from file**.
+
+![Browser call flow](/assets/img/upload_configurations.png "Import a dump file")
+
 # Under the Hood
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `loadOc(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the loadOc method of the class.
