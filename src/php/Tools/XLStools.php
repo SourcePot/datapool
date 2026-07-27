@@ -215,6 +215,9 @@ class XLStools{
             $worksheetName=$spreadsheetArr['Worksheets'][0]['worksheetName'];
             $spreadsheetArr=$this->getSpreadsheetReaderWorksheets($selector,$worksheetName);
         }
+        if (empty($spreadsheetArr['worksheet'])){
+            return FALSE;
+        }
         $row=$spreadsheetArr['worksheet']->getRowIterator();
         $maxColumnIndex=$lastMaxColumnIndex=0;
         $keys=[];
