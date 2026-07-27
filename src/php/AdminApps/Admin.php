@@ -146,7 +146,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         $fileArr['type']='file';
         $fileArr['multiple']=TRUE;
         $fileArr['key']=$btnArr['key']=['import'];
-        $btnArr['title']="Import database entries from file.\nEntries with the same EntryId will be replaced by the import!";
+        $btnArr['title']=$fileArr['title']="Import database entries from file.\nEntries with the same EntryId will be replaced by the import!";
         $btnArr['element-content']='Import';
         $btnArr['hasCover']=TRUE;
         $matrix['Recover from file']=['Input'=>$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileArr),'Cmd'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($btnArr)];
