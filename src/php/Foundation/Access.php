@@ -76,7 +76,7 @@ class Access{
     public function addRights(array $entry,$Read=FALSE,$Write=FALSE,$Privileges=FALSE):array
     {
         //  set defaults if right argument are empty
-        $rigthTypes=['Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,'Write'=>(empty($Write))?'ADMIN_R':$Read,'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges];
+        $rigthTypes=['Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,'Write'=>(empty($Write))?'ADMIN_R':$Write,'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges];
         // add rights to the entry
         foreach($rigthTypes as $type=>$default){
             // set to default value
