@@ -132,9 +132,11 @@ If a presentation setting is missing, an error e.g. _Entry presentation setting 
 
 ## Upload the basic configuration
 
-In the _“examples”_ directory, you will find the file _“Basic_settings_dump.zip”_, which contains a possible basic configuration for the web application. The file can be imported into the web application's database under **Admin &rarr; Admin &rarr; Backup, recover, object list &rarr; Recover from file**.
+In the _“examples”_ directory of this repository, you will find the file _“Basic_settings_dump.zip”_, which contains a possible basic configuration for the web application. The file can be imported into the web application's database under **Admin &rarr; Admin &rarr; Backup, recover, object list &rarr; Recover from file**:
 
 ![Browser call flow](/assets/img/upload_configurations.png "Import a dump file")
+
+Any “dump file” can be imported this way, including backups of DataApps.
 
 # Under the Hood
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
