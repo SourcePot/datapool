@@ -19,10 +19,8 @@ class HTMLbuilder{
     private const MAX_ROW_COUNT=999;
     private const MAX_PREV_WIDTH=300;
     private const MAX_PREV_HEIGHT=150;
-
     private const APPROVE_STYLE=['border'=>'2px solid var(--green)'];
     private const DECLINE_STYLE=['border'=>'2px solid var(--redH)'];
-
     private const SET_ACCESS_BYTE_INFO="Security relevant setting!\nNew Privileges will become active at the next user login.";
 
     private const PRESENTATION_SETTINGS_INFO=[
@@ -607,7 +605,7 @@ class HTMLbuilder{
         if (empty($entry)){
             return '';
         }
-        // only the Admin has access to the method if columns 'Privileges' is selected
+        // only the Admin has access to this method if columns 'Privileges' is selected
         if (is_array($arr['key'])){
             $arr['key']=array_shift($arr['key']);
         }
@@ -958,32 +956,18 @@ class HTMLbuilder{
         return implode(' &rarr; ',$result);
     }
 
-    public function row2table(array $row,string $caption='Row as table',bool $flip=FALSE):string
-    {
-        if ($flip){
-            $matrix=[];
-            foreach($row as $key=>$value){
-                $matrix[$key]=['value'=>$value];
-            }
-        } else {
-            $matrix=[$caption=>$row];
-        }
-        return $this->table(['matrix'=>$matrix,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption]);
-    }
-    
     public function value2tableCellContent($html,array $arr=[])
     {
         $arr['tag']='p';
-        if (!is_string($html) || empty($html)){
-            return $html;
-        } else if ($this->oc['SourcePot\Datapool\Tools\MiscTools']->containsTags($html)){
-            $arr['class']='td-content-wrapper';
-            $arr['keep-element-content']=TRUE;
-            $arr['element-content']=htmlspecialchars($html,ENT_QUOTES,'UTF-8');
+        $arr['class']='td-content-wrapper';
+        $arr['keep-element-content']=FALSE; // if FLASE -> htmlspecialchars($arr['element-content'], ENT_QUOTES, 'UTF-8')
+        if (is_bool($html)){
+            $arr['value']=$html;
+            return $this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
+        } else if (is_object($html)){
+            $arr['element-content']=get_class($html);
         } else {
-            $arr['class']='td-content-wrapper';
-            $arr['keep-element-content']=FALSE;
-            $arr['element-content']=$html;
+            $arr['element-content']=strval($html);
         }
         return $this->oc['SourcePot\Datapool\Foundation\Element']->element($arr);
     }
