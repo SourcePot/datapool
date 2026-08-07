@@ -277,7 +277,7 @@ class Element{
         if (isset($arr['element-content'])){
             $arr['element-content']=strval($arr['element-content']);
             if (empty($arr['keep-element-content'])){
-                $arr['element-content']=htmlentities($arr['element-content']);
+                $arr['element-content']=htmlspecialchars($arr['element-content'], ENT_QUOTES, 'UTF-8');
             }
             $html='<'.$elementArr['tag'].' '.implode(' ',$elementArr['attr']).'>'.$arr['element-content'].'</'.$elementArr['tag'].'>';
         } else {

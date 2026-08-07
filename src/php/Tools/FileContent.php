@@ -13,6 +13,7 @@ namespace SourcePot\Datapool\Tools;
 final class FileContent{
 
     private const COST_TEXT_MAX_LENGTH=50;
+    private const DEFAULT_CURRENCY='EUR';
 
     private $oc;
     
@@ -54,6 +55,7 @@ final class FileContent{
                 }
             }
         }
+        $attachedFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $entry['currentUserId']=$currentUser['EntryId'];
         $entry['currentUser']=$currentUser['Content']['Contact details']['First name'].' '.$currentUser['Content']['Contact details']['Family name'];
@@ -63,7 +65,7 @@ final class FileContent{
         $entry['nowTimeUTC']=date('H:i:s');
         $entry['+1DayFromNowUTC']=date('Y-m-d H:i:s',86400+time());
         $entry['+10DaysFromNowUTC']=date('Y-m-d H:i:s',864000+time());
-        $entry['attachedFile']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);    
+        $entry['attachedFile']=(is_file($attachedFile))?$attachedFile:FALSE;
         if (!empty($entry['Content']['File content'])){
             $entry=$this->addCosts($entry,$entry['Content']['File content']);
             $entry=$this->getXRechnungSummary($entry);
@@ -126,19 +128,24 @@ final class FileContent{
 
     private function getXRechnungSummary(array $entry):array
     {
-        $currency='';
-        $itemIndex=0;
-        $itemsName=$itemsPrice=[];
+        $currency=self::DEFAULT_CURRENCY;
+        $lineName=$linePrice=$lineQuantity=$itemPrice=[];
         $xRechnung=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry['Content']['XRechnung']??[]);
+        $entry['XRechnung']=['Lines'=>[],'TaxBasisTotalAmount'=>'0.00','TaxTotalAmount'=>'0.00','GrandTotalAmount'=>'0.00','TotalPrepaidAmount'=>'0.00','DuePayableAmount'=>'0.00'];
         ksort($xRechnung);
-        $entry['XRechnung']=['Items'=>[],'TaxBasisTotalAmount'=>'0.00','TaxTotalAmount'=>'0.00','GrandTotalAmount'=>'0.00','TotalPrepaidAmount'=>'0.00','DuePayableAmount'=>'0.00'];
         foreach($xRechnung as $flatKey=>$value){
             if (strpos($flatKey,'ram:IncludedSupplyChainTradeLineItem')!==FALSE){
-                if (strpos($flatKey,'ram:Name')!==FALSE){
-                    $itemsName[$itemIndex]=$value;
-                    $itemIndex++;
-                } else if (strpos($flatKey,'ram:LineTotalAmount')!==FALSE){
-                    $itemsPrice[$itemIndex]=$value;    
+                $keyComps=explode('ram:IncludedSupplyChainTradeLineItem',$flatKey);
+                $keyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$keyComps[1]??'');
+                $lineIndex=intval($keyComps[1]??0);
+                if (strpos($flatKey,'ram:SpecifiedTradeProduct')!==FALSE && strpos($flatKey,'ram:Name')!==FALSE){
+                    $lineName[$lineIndex]=$value;
+                } else if (strpos($flatKey,'ram:SpecifiedLineTradeSettlement')!==FALSE && strpos($flatKey,'ram:LineTotalAmount')!==FALSE){
+                    $linePrice[$lineIndex]=$value;    
+                } else if (strpos($flatKey,'ram:SpecifiedLineTradeDelivery')!==FALSE && strpos($flatKey,'ram:BilledQuantity')!==FALSE){
+                    $lineQuantity[$lineIndex]=$value;    
+                } else if (strpos($flatKey,'ram:SpecifiedLineTradeAgreement')!==FALSE && strpos($flatKey,'ram:ChargeAmount')!==FALSE){
+                    $itemPrice[$lineIndex]=$value;    
                 }
             }
             if (strpos($flatKey,'ram:SpecifiedTradeSettlementHeaderMonetarySummation')!==FALSE){  
@@ -158,10 +165,14 @@ final class FileContent{
                 $currency=$value;
             }
         }
-        foreach($itemsPrice as $itemIndex=>$price){
-            $itemsPrice[$itemIndex]=$price.' '.$currency;
+        foreach($lineName as $index=>$name){
+            if (isset($lineQuantity[$index]) && isset($itemPrice[$index])){
+                $key=$name.' ('.$lineQuantity[$index].' á '.$itemPrice[$index].' '.$currency.')';
+            } else {
+                $key=$name;
+            }
+            $entry['XRechnung']['Lines'][$index+1][$key]=($linePrice[$index]??'0.00').' '.$currency;
         }
-        $entry['XRechnung']['Items']=array_combine($itemsName,$itemsPrice);
         $entry['XRechnung']['TaxBasisTotalAmount']=$entry['XRechnung']['TaxBasisTotalAmount'].' '.$currency;
         $entry['XRechnung']['TaxTotalAmount']=$entry['XRechnung']['TaxTotalAmount'].' '.$currency;
         $entry['XRechnung']['GrandTotalAmount']=$entry['XRechnung']['GrandTotalAmount'].' '.$currency;
