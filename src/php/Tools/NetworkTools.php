@@ -142,6 +142,14 @@ class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
         }
     }
 
+    public function isHttps():bool
+    {
+        if (($_SERVER['HTTPS']??'')=='on'){
+            return TRUE;
+        }
+        return FALSE;
+    }
+
     public function answer(array $header,array $data,string $dataType='application/json',string $charset='UTF-8')
     {
         if (mb_strpos($dataType,'json')>0){

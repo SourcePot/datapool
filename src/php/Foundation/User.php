@@ -365,7 +365,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     public function userStatusLog():void
     {
-        if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights(FALSE,'ALL_MEMBER_R')){
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->hasRights([],'ALL_MEMBER_R')){
             $onlineUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             $onlineUser['Group']='Status';
             $onlineUser['LoginId']='online';

@@ -59,7 +59,7 @@ class Access{
         return array_flip($this->access);
     }
     
-    public function accessString2int($string='NO_R'):int
+    public function accessString2int(string $string='NO_R'):int
     {
         if (isset($this->access[$string])){
             return $this->access[$string];
@@ -73,16 +73,20 @@ class Access{
     *
     * @return array An associative array that contains the resulting entry
     */
-    public function addRights(array $entry,$Read=FALSE,$Write=FALSE,$Privileges=FALSE):array
+    public function addRights(array $entry,int|string $Read=0,int|string $Write=0,int|string $Privileges=0):array
     {
         //  set defaults if right argument are empty
-        $rigthTypes=['Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,'Write'=>(empty($Write))?'ADMIN_R':$Read,'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges];
+        $rigthTypes=['Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,'Write'=>(empty($Write))?'ADMIN_R':$Write,'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges];
         // add rights to the entry
         foreach($rigthTypes as $type=>$default){
             // set to default value
-            if (!isset($entry[$type])){$entry[$type]=$default;}
+            if (!isset($entry[$type])){
+                $entry[$type]=$default;
+            }
             // set to method argument
-            if (isset($this->access[$$type])){$entry[$type]=$this->access[$$type];}
+            if (isset($this->access[$$type])){
+                $entry[$type]=$this->access[$$type];
+            }
             // replace alias values
             $entry=$this->replaceRightConstant($entry,$type);
             $entry[$type]=intval($entry[$type]);
@@ -90,10 +94,14 @@ class Access{
         return $entry;        
     }
     
-    public function replaceRightConstant(array $entry,string $type='Read'):array
+    public function replaceRightConstant(array $entry,string $type):array
     {
-        if (!isset($entry[$type])){return $entry;}
-        if (is_array($entry[$type])){return $entry;}
+        if (!isset($entry[$type])){
+            return $entry;
+        }
+        if (is_array($entry[$type])){
+            return $entry;
+        }
         if (isset($this->access[$entry[$type]])){
             $entry[$type]=$this->access[$entry[$type]];
         }
@@ -102,32 +110,38 @@ class Access{
 
     private function isEntryWithoutContent(array $entry):bool
     {
-        if (isset($entry['app'])){unset($entry['app']);}
+        if (isset($entry['app'])){
+            unset($entry['app']);
+        }
         return empty($entry);
     }
     
-    public function access($entry,$type='Write',$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE)
+    public function access(array $entry,string $type='Write',array $user=[],bool $isSystemCall=FALSE,bool $ignoreOwner=FALSE)
     {
         if ($this->isEntryWithoutContent($entry)){
             $this->oc['logger']->log('critical','Function "{class} &rarr; {function}()" access test on empty entry.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
             return FALSE;
-            //return 'EMPTY ENTRY';
         }
         if ($isSystemCall===TRUE){
             // system call access
             return 'SYSTEMCALL';
         }
-        if (empty($entry)){return FALSE;}
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
             if (empty($user)){
                 return FALSE;
             }
         }
-        if (empty($entry['Owner'])){$entry['Owner']='Entry Owner Missing';}
-        if (empty($user['Owner'])){$user['Owner']='User EntryId Missing';}
-        if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){$user['EntryId']='User id Invalid';}
-        if (strcmp($entry['Owner'],$user['EntryId'])===0){
+        if (empty($entry['Owner'])){
+            $entry['Owner']='Entry Owner Missing';
+        }
+        if (empty($user['Owner'])){
+            $user['Owner']='User EntryId Missing';
+        }
+        if (strcmp($user['Owner'],'SYSTEM')===0 || $ignoreOwner){
+            $user['EntryId']='User id Invalid';
+        }
+        if (hash_equals($entry['Owner'],$user['EntryId'])){
             // owner access
             return 'OWNER MATCH';
         } else if (isset($entry[$type])){
@@ -135,13 +149,14 @@ class Access{
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
             if ($accessLevel>0){return $accessLevel;}
         } else if (!empty($entry['Source'])){
-            $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" missing "entry[{type}]", access to incomplete entry denied',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
+            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" missing "entry[{type}]", access to incomplete entry denied',['class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type]);
         }
         return FALSE;
     }
     
-    public function accessSpecificValue($right,$successValue=TRUE,$failureValue=FALSE,$user=FALSE,$isSystemCall=FALSE,$ignoreOwner=FALSE){
-        $accessArr=$this->replaceRightConstant(array('Read'=>$right),'Read');
+    public function accessSpecificValue(string $right,bool $successValue=TRUE,bool $failureValue=FALSE,array $user=[],bool $isSystemCall=FALSE,bool $ignoreOwner=FALSE):bool
+    {
+        $accessArr=$this->replaceRightConstant(['Read'=>$right],'Read');
         if ($this->access($accessArr,'Read',$user,$isSystemCall,$ignoreOwner)){
             return $successValue;
         } else {
@@ -149,12 +164,12 @@ class Access{
         }
     }
     
-    public function emailId($email){
+    public function emailId(string $email){
         $emailId=md5($email."kjHD1W82IQ9iBS");
         return $emailId;
     }
 
-    public function loginId($email,$password):string
+    public function loginId(string $email,string $password):string
     {
         $emailId=$this->emailId($email);
         $userPass=$password.$emailId;
@@ -162,7 +177,7 @@ class Access{
         return $loginId;
     }
     
-    public function verfiyPassword($email,$password,$loginId):bool
+    public function verifyPassword(string $email,string $password,string $loginId):bool
     {
         if (empty($email) || empty($password) || empty($loginId)){
             return FALSE;
@@ -177,7 +192,7 @@ class Access{
         }
     }
     
-    private function rehashPswIfNeeded($user,$userPass,$loginId):bool
+    private function rehashPswIfNeeded(array $user,string $userPass,string $loginId):bool
     {
         if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
             $user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
@@ -189,32 +204,32 @@ class Access{
         }
     }
 
-    public function isAdmin($user=FALSE):bool
+    public function isAdmin(array $user=[]):bool
     {
         return $this->hasRights($user,'ADMIN_R');
     }
     
-    public function isContentAdmin($user=FALSE):bool
+    public function isContentAdmin(array $user=[]):bool
     {
         return $this->hasRights($user,'ALL_CONTENTADMIN_R');
     }
     
-    public function isMember($user=FALSE):bool
+    public function isMember(array $user=[]):bool
     {
         return $this->hasRights($user,'ALL_MEMBER_R');
     }
     
-    public function isPublic($user=FALSE):bool
+    public function isPublic(array $user=[]):bool
     {
         return $this->hasRights($user,'PUBLIC_R');
     }
     
-    public function isRegistered($user=FALSE):bool
+    public function isRegistered(array $user=[]):bool
     {
         return $this->hasRights($user,'REGISTERED_R');
     }
     
-    public function hasRights($user=FALSE,string $right='ADMIN_R'):bool
+    public function hasRights(array $user=[],string $right='ADMIN_R'):bool
     {
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -222,14 +237,17 @@ class Access{
                 return FALSE;
             }
         }
-        if (($user['Privileges'] & $this->access[$right])>0){
+        if (!isset($this->access[$right])){
+            $this->oc['logger']->log('warning','{class}&rarr;{function}: Unknown right "{right}" requested',['class'=>__CLASS__,'function'=>__FUNCTION__,'right'=>$right]);
+            return FALSE;
+        } else if (($user['Privileges'] & $this->access[$right])>0){
             return TRUE;
         } else {
             return FALSE;
         }    
     }
 
-    public function hasAccess($user=FALSE,int $right=32768):bool
+    public function hasAccess(array $user=[],int $right=32768):bool
     {
         if (empty($user)){
             $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
@@ -250,7 +268,10 @@ class Access{
         if (isset($arr['selector'][$right])){
             foreach($this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE) as $value=>$name){
                 if ((intval($value) & intval($arr['selector'][$right]))>0){
-                    if (!empty($arr['html'])){$arr['html'].='<br/>';}
+                    if (!empty($arr['html'])){
+                        $arr['html'].='<br/>';
+                    }
+                    $name=htmlspecialchars($name,ENT_QUOTES,'UTF-8');
                     if (stripos($name,'admin')!==FALSE){
                         $arr['html'].='<span style="font-weight:bold;color:red;">'.$name.'</span>';
                     } else {

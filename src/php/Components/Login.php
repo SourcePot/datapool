@@ -13,10 +13,12 @@ namespace SourcePot\Datapool\Components;
 class Login implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='PUBLIC_R';
+    private const FAILED_LOGIN_DETECTION_TIMESPAN=300; // seconds
+    private const FAILED_LOGIN_COUNT_THRESHOLD=3; // number of failed login attempts within the time span
     
     private $oc;
     
-    const MIN_PASSPHRASDE_LENGTH=4;
+    const MIN_PASSPHRASDE_LENGTH=5;
     
     public function __construct($oc)
     {
@@ -69,7 +71,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     public function getLoginFormHtml(array $arr):string
     {
         $loginArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getLoginForm($arr);
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($loginArr['result'],hrtime(TRUE).'-'.__FUNCTION__);
+        $loginArr['result']['Email']=filter_var($loginArr['result']['Email'],FILTER_VALIDATE_EMAIL);
         if (strcmp($loginArr['result']['cmd'],'Login')===0){
             $this->loginRequest($loginArr['result']);
         } else if (strcmp($loginArr['result']['cmd'],'Register')===0){
@@ -91,20 +93,24 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
             // credentials missing
             $this->oc['logger']->log('notice','Login failed, password and/or email were empty',['lifetime'=>'P30D']);    
+        } else if ($this->tooManyLoginAttempts($arr['Email'])){
+            // account is locked due to too many failed login attempts
+            $this->oc['logger']->log('info','Account locked, too many failed login attempts for "{email}".',['email'=>$arr['Email']]);
         } else {
             // get user from email
             $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email'])];
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
             if (empty($user)){
                 // not registered
-            } else  if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
+                $this->loginFailed($user,$arr['Email']);
+            } else  if ($this->oc['SourcePot\Datapool\Foundation\Access']->verifyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
                 // sucessfull login
                 $this->loginSuccess($user,$arr['Email']);
             } else {
                 // check for one-time login
                 $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($arr['Email'])];
                 $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
-                if ($this->oc['SourcePot\Datapool\Foundation\Access']->verfiyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId'])){
+                if ($this->oc['SourcePot\Datapool\Foundation\Access']->verifyPassword($arr['Email'],$arr['Passphrase'],$user['LoginId']??'')){
                     $this->oc['logger']->log('info','One-time login "{email}" at "{dateTime}" was successful.',['lifetime'=>'P30D','email'=>$arr['Email'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
                     // delete temporary user, switch back to original user and login
                     $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($user,TRUE);
@@ -116,13 +122,14 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
                 }  
             }
         }
+        header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Home']));
         exit;
     }
     
     private function loginSuccess($user,$email)
     {
-        $this->oc['SourcePot\Datapool\Cookies\Cookies']->setSettingsCookie('UserId',$user['EntryId']);
         $this->resetSession();
+        $this->oc['SourcePot\Datapool\Cookies\Cookies']->setSettingsCookie('UserId',$user['EntryId']);
         if ($this->oc['SourcePot\Datapool\Components\TwoFactorAuthentication']->isTwoFactorAuthenticationRequired($user)){
             // Two-factor authentication (2FA)
             $user['Privileges']=1;
@@ -144,15 +151,13 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $_SESSION['currentUser']=[];
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
         $this->oc['logger']->log('notice','Login failed at "{dateTime}" for "{email}".',['lifetime'=>'P30D','email'=>$email,'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
-        // return to login page
-        sleep(30);
         header("Location: ".$this->oc['SourcePot\Datapool\Tools\NetworkTools']->href(['category'=>'Login']));
         exit;
     }
 
     private function resetSession()
     {
-        $_SESSION=[]; // reset session
+        $_SESSION=[];
         session_regenerate_id(TRUE);
     }    
 
@@ -282,6 +287,13 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $entry=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($email),];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry,TRUE);
         return $entry;
+    }
+
+    private function tooManyLoginAttempts($email):bool
+    {
+        $selector=['Source'=>'logger','Content'=>'%Login failed %'.$email.'%'];
+        $selector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.(time()-self::FAILED_LOGIN_DETECTION_TIMESPAN));
+        return $this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE)>self::FAILED_LOGIN_COUNT_THRESHOLD;
     }
 
 }

@@ -153,7 +153,7 @@ class Home implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Int
         $html='';
         $widgetTemplate=['tag'=>'div','class'=>'widget','element-content'=>'Widget did not provide content...','keep-element-content'=>TRUE];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(self::WIDGET_SETTINGS_SELECTOR,TRUE,'Read','EntryId',TRUE) as $widgetSetting){
-            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess(FALSE,intval($widgetSetting['Content']['Access']))){
+            if (!$this->oc['SourcePot\Datapool\Foundation\Access']->hasAccess([],intval($widgetSetting['Content']['Access']))){
                 continue;
             }
             $widgetHtml='';
