@@ -38,22 +38,29 @@ class Container{
         $this->oc=$oc;
     }
 
+    private function getPostSupperGlobal():array
+    {
+        $post=$_POST;
+        return $post;
+    }
+
     public function jsCall(array $arr):array
     {
         $jsAnswer=[];
-        if (isset($_POST['function'])){
-            if (strcmp($_POST['function'],'container')===0){
-                $jsAnswer['html']=$this->container('','',[],[],[],$_POST['container-id'],TRUE);
-            } else if (strcmp($_POST['function'],'containerMonitor')===0){
-                $jsAnswer['arr']=['isUp2date'=>$this->containerMonitor($_POST['container-id']),'container-id'=>$_POST['container-id']];
+        $post=$this->getPostSupperGlobal();
+        if (isset($post['function'])){
+            if (strcmp($post['function'],'container')===0){
+                $jsAnswer['html']=$this->container('','',[],[],[],$post['container-id'],TRUE);
+            } else if (strcmp($post['function'],'containerMonitor')===0){
+                $jsAnswer['arr']=['isUp2date'=>$this->containerMonitor($post['container-id']),'container-id'=>$post['container-id']];
             } else {
-                if (isset(self::JS_FUNCTION_WHITELIST[$_POST['function']])){
-                    $class=self::JS_FUNCTION_WHITELIST[$_POST['function']];
-                    $function=$_POST['function'];
-                    $jsAnswer['arr']=$this->oc[$class]->$function($_POST);
+                if (isset(self::JS_FUNCTION_WHITELIST[$post['function']])){
+                    $class=self::JS_FUNCTION_WHITELIST[$post['function']];
+                    $function=$post['function'];
+                    $jsAnswer['arr']=$this->oc[$class]->$function($post);
                 } else {
                     // js requested function missing in WHITELIST
-                    $this->oc['logger']->log('error','JS requested function "{function}" is not white listed',$_POST);
+                    $this->oc['logger']->log('error','JS requested function "{function}" is not white listed',$post);
                 }
             }
         } else if (!empty($_FILES)){
@@ -97,7 +104,7 @@ class Container{
             $settings=$_SESSION['container store'][$containerId]['settings'];
             $wrapperSettings=$_SESSION['container store'][$containerId]['wrapperSettings'];
         } else {
-            $containerId=md5($key);
+            $containerId=hash('sha256',$key);
             if (isset($_SESSION['container store'][$containerId]['callPageCount'])){
                 $_SESSION['container store'][$containerId]['callPageCount']++;
             } else {

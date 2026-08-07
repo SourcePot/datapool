@@ -428,17 +428,16 @@ class Computations{
     public function convert2codepfadArr($value):array
     {
         $codepfade=explode(';',strval($value));
-        $arr=[0=>['FhI'=>'','FhI Teil'=>'','OE'=>'','Codepfad all'=>''],];
+        $arr=[0=>['FhI'=>0,'FhI Teil'=>0,'OE'=>0,'Codepfad all'=>'0|0|0'],];
         foreach($codepfade as $codePfadIndex=>$codepfad){
             $codepfadComps=explode('\\',$codepfad);
             $arr[$codePfadIndex]=[
-                'FhI'=>(intval($codepfadComps[0])>0)?intval($codepfadComps[0]):'',
-                'FhI Teil'=>(intval($codepfadComps[1])>0)?intval($codepfadComps[1]):'',
-                'OE'=>(intval($codepfadComps[2])>0)?intval($codepfadComps[2]):'',
-                'Codepfad all'=>implode('|',$codepfadComps),
+                'FhI'=>intval($codepfadComps[0]??0),
+                'FhI Teil'=>intval($codepfadComps[1]??0),
+                'OE'=>intval($codepfadComps[2]??0),
             ];
+            $arr[$codePfadIndex]['Codepfad all']=implode('|',$arr[$codePfadIndex]);
         }
-        //var_dump(['value'=>$value,'arr'=>$arr]);
         return $arr;
     }
     

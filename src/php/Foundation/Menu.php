@@ -71,7 +71,7 @@ class Menu{
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $selectAppClass=(empty($this->oc[$selectAppClass]))?self::CATEGORIES['Home']['Class']:$selectAppClass;
         $appDef=$this->oc[$selectAppClass]->run(TRUE);
-        $appDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($appDef);
+        $appDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($appDef,'Read');
         if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($appDef,'Read',$user,FALSE))){
             // access denied -> Hone app
             $_SESSION['page state']['selectedCategory']=self::CATEGORIES['Home']['Category'];
@@ -101,7 +101,7 @@ class Menu{
         $implementedApps=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\App');
         foreach($implementedApps as $classWithNamespace){
             $menuDef=$this->oc[$classWithNamespace]->run(TRUE);
-            $menuDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef);
+            $menuDef=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($menuDef,'Read');
             if (empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($menuDef,'Read',$user,FALSE))){
                 // skip app if access rights are not sufficient
             } else {

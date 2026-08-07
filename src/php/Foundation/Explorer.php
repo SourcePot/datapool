@@ -358,7 +358,7 @@ class Explorer{
         if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
         $access=TRUE;
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
-        if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
+        if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[])){
             return ['html'=>'','icon'=>'&#10010;','class'=>'explorer'];
         } else {
             $contentHtml='';
@@ -372,7 +372,7 @@ class Explorer{
                     $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','key'=>['add entry'],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
                     $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add entry','key'=>['add entry'],'value'=>$stateKeys['nextKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
                 }
-            } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0 && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
+            } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0 && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[])){
                 if ($this->addEntryByFileUpload){
                     $headline='Replace file';
                     $contentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['update file'],'element-content'=>'Update entry file'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
@@ -395,7 +395,7 @@ class Explorer{
     private function editEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
         if (empty($this->isVisible[__FUNCTION__])){return ['html'=>''];}
-        if (strcmp($stateKeys['selectedKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE)){
+        if (strcmp($stateKeys['selectedKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[])){
             return ['html'=>'','icon'=>'&#9998;','class'=>'explorer'];
         }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>'Edit']);
@@ -439,7 +439,7 @@ class Explorer{
         $html='';
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $guideEntry=$this->getGuideEntry($selector);
-        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($guideEntry,'Write',FALSE)){
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($guideEntry,'Write',[])){
             $pdfParser=$this->oc['SourcePot\Datapool\Tools\PdfTools']->getPdfTextParserOptions();
             $options=['File upload extract email parts'=>['No','Yes'],'File upload extract archive'=>['No','Yes'],'pdf-file parser'=>$pdfParser['@options'],'widget'=>['entryList'=>'Entry list','entryByEntry'=>'Entry by entry']];
             $settings=$this->selector2setting($selector);

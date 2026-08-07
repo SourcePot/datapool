@@ -51,9 +51,10 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function getQueryHtml(array $arr):array
     {
         $queryEntry=['Source'=>$this->entryTable,'Group'=>'Queries','Folder'=>$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId()];
+        $serachResult=['Query'=>'','html'=>'','Hits'=>[],'Names'=>[]];
         // process data
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
-        if ((isset($formData['cmd']['search']) || isset($formData['cmd']['reloadBtnArr']) && !empty($formData['val']['Query']))){
+        if (((isset($formData['cmd']['search']) || isset($formData['cmd']['reloadBtnArr'])) && !empty($formData['val']['Query']))){
             $serachResult=$this->getSerachResultHtml($formData['val']['Query']);
             $queryEntry['Name']=substr($formData['val']['Query'],0,20);
             $queryEntry['Content']=['Query'=>$serachResult['Query'],'Names'=>$serachResult['Names']];
@@ -66,8 +67,6 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
                 break;
             }
         }
-        $serachResult['Query']=$serachResult['Query']??'';
-        $serachResult['html']=$serachResult['html']??'';
         // compile html - add query div
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','value'=>$serachResult['Query'],'placeholder'=>'Enter your query here...','key'=>['Query'],'excontainer'=>FALSE,'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Search','key'=>['search'],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'style'=>[]]);
@@ -86,7 +85,8 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (empty($query)){
             return $arr;
         }
-        $query=preg_replace('/\s+/','%',trim($query));
+        $query=str_replace('_','\_',trim($query));
+        $query=preg_replace('/\s+/','%',$query);
         $currentUserContent=$this->oc['SourcePot\Datapool\Root']->getCurrentUser()['Content']??[];
         foreach($currentUserContent['My search interests']??[] as $class2query){
             if (!isset($this->oc[$class2query]) || !method_exists($this->oc[$class2query],'query')){
@@ -116,9 +116,16 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     public function getQuerySampleText(array $entry,string|bool $column,string $query):string
     {
-        if (empty($column)){return '';}
+        if (empty($column)){
+            return '';
+        }
+        //
         $halfSmapleLength=intval(self::SAMPLE_LENGTH/2);
         $text=(is_array($entry[$column]))?($this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($entry[$column])):$entry[$column];
+        // clean the query string to avoid XSS attacks
+        $query=htmlspecialchars($query,ENT_QUOTES,'UTF-8');
+        $text=htmlspecialchars($text,ENT_QUOTES,'UTF-8');
+        // Mark text - start sat pos=0 if not found
         $queryPos=intval(mb_strpos($text,$query));
         $startPos=($queryPos>$halfSmapleLength)?($queryPos-$halfSmapleLength):0;
         $sampleText=mb_substr($text,$startPos,self::SAMPLE_LENGTH);
@@ -156,7 +163,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $element=['element-content'=>''];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Search','keep-element-content'=>TRUE]);
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>'SourcePot\Datapool\Foundation\Haystack'],['style'=>['padding'=>'0px']]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Query container','generic',[],['method'=>'getQueryHtml','classWithNamespace'=>__CLASS__],['style'=>['padding'=>'0px']]);
         return $element;
     }
     

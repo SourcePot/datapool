@@ -56,9 +56,8 @@ class ClientAccess{
     public function request($arr,$isDebugging=FALSE){
         $debugArr=['arr in'=>$arr];
         $header=[];
-        $whitelist=['127.0.0.1','::1'];
-       if (isset($_SERVER['HTTPS']) || in_array($_SERVER['REMOTE_ADDR'],$whitelist)){
-            // process the request if https is confirmed
+        if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->isHttps() || \SourcePot\Datapool\Root::PRODUCTION_ENVIRONMENT===FALSE){
+            // process the request if https is confirmed or testing
             $data=$this->globals2data();
             $headers=apache_request_headers();
             if (isset($headers['Authorization'])){
@@ -164,10 +163,9 @@ class ClientAccess{
         if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
             $credentialsSelector=['Source'=>$this->entryTable,'Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%'];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
-                if (strcmp($entry['Content']['client_id'],$authorizationArr['client_id'])===0 && strcmp($entry['Content']['client_secret'],$authorizationArr['client_secret'])===0){
+                if (hash_equals($entry['Content']['client_id'],$authorizationArr['client_id']) && hash_equals($entry['Content']['client_secret'],$authorizationArr['client_secret'])){
                     $authorizationEntry=$entry;
                     unset($authorizationEntry['Content']['client_secret']);
-                    break;
                 }
             }
         } else {
@@ -259,7 +257,7 @@ class ClientAccess{
 
     public function clientAppCredentialsForm($arr){
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
-        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',FALSE,FALSE,TRUE)){return $arr;}
+        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',[],FALSE,TRUE)){return $arr;}
         $contentStructure=[
             'scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\Datapool\Processing\RemoteClient','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()],
             'method'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE],

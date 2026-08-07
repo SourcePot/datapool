@@ -236,6 +236,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getTableIndices(string $table):array
     {
+        if (!isset($GLOBALS['dbInfo'][$table])){return [];}
         $stmt=$this->executeStatement("SHOW INDEXES FROM `".$table."`;",[]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
             $indices[$row["Key_name"]]=$row;
@@ -245,13 +246,15 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function updateCollation(string $table)
     {
+        if (!isset($GLOBALS['dbInfo'][$table])){return FALSE;}
         $updateSql='';
-        $stmt=$this->executeStatement("SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE '".$table."';",[]);
+        $stmt=$this->executeStatement("SELECT TABLE_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE :table;",[':table'=>$table]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
             if ($table!==$row['TABLE_NAME']){continue;}
             if ($row['COLLATION_NAME']===self::TABLE_COLLATION || $row['COLLATION_NAME']===NULL){continue;}
             $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
             $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CONVERT TO CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
+            break;
         }
         if (empty($updateSql)){
             $this->oc['logger']->log('info','Table "{table}" CHARACTER_SET and TABLE_COLLATION is already up-to-date',['table'=>$table]);
@@ -267,6 +270,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function setTableIndices(string $table)
     {
+        if (!isset($GLOBALS['dbInfo'][$table])){return FALSE;}
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
         $sql="";
         $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(30),`Group`(30),`Folder`(30),`Name`(30)); ";
@@ -277,6 +281,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function dropTableIndices(string $table)
     {
+        if (!isset($GLOBALS['dbInfo'][$table])){return FALSE;}
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
         $sql="";
         $indices=$this->getTableIndices($table);
@@ -287,6 +292,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty($sql)){$this->executeStatement($sql,[]);}
         $context['dropped']=trim($context['dropped'],'| ');
         $this->oc['logger']->log('notice','Existing indices "{dropped}" and "primary key" of database table "{table}" dropped.',$context);
+        return TRUE;
     }
 
     public function unifyEntry(array $entry,bool $addDefaults=FALSE):array
@@ -361,7 +367,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $namespaceComps=explode('\\',__NAMESPACE__);
         $dbName=mb_strtolower($namespaceComps[0]);
         $access=['Class'=>$class,'EntryId'=>$entryId,'Read'=>65535];
-        $access['Content']=['dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>session_id()];
+        $access['Content']=['dbServer'=>'localhost','dbName'=>$dbName,'dbUser'=>'webpage','dbUserPsw'=>'ADD_DATABASE_USER_PASSWORD_HERE'];
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
         try{
             $dbObj=new \PDO('mysql:host='.$access['Content']['dbServer'].';dbname='.$access['Content']['dbName'],$access['Content']['dbUser'],$access['Content']['dbUserPsw']);
@@ -526,7 +532,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         } else if (is_array($entryTemplate[$column]['value'])){
             $result[$column]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->json2arr((string)$value);
             if (isset($result[$column]['!serialized!']) && empty($result['unlock'])){
-                $result[$column]=unserialize($result[$column]['!serialized!']);
+                $result[$column]=unserialize($result[$column]['!serialized!'],['allowed_classes'=>FALSE]);
             }
         } else if (strpos($entryTemplate[$column]['type'],'INT')!==FALSE){
             $result[$column]=intval($value);
@@ -570,8 +576,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $stmt=$this->executeStatement($sql);
         $entries=[];
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
-            foreach($row as $column=>$value){
-                $row=$this->addColumnValue2result($row,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
+            foreach($row as $columnName=>$value){
+                $row=$this->addColumnValue2result($row,$columnName,$value,$GLOBALS['dbInfo'][$selector['Source']]);
             }
             $row=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($row);
             $entries[$row['EntryId']]=$row;
@@ -596,13 +602,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         } else {
             $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries);
             $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
-            //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
             $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'','unlock'=>$selector['unlock']??FALSE];
             $this->addStatistic('matches',$result['rowCount']);
             while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
-                foreach($row as $column=>$value){
-                    $result=$this->addColumnValue2result($result,$column,$value,$GLOBALS['dbInfo'][$selector['Source']]);
+                foreach($row as $columnName=>$value){
+                    $result=$this->addColumnValue2result($result,$columnName,$value,$GLOBALS['dbInfo'][$selector['Source']]);
                 }
                 $result=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($result);
                 $result=$this->addSelector2result($selector,$result);
@@ -615,7 +620,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=[],bool $removeGuideEntries=TRUE):\Generator
     {
-        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return [];}
+        if (!isset($GLOBALS['dbInfo'][$selector['Source']])){return [];}
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
         if (empty($selectExprArr)){
             $selectExprSQL=$selector['Source'].'.*';
@@ -658,7 +663,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $sqlArr=['sql'=>"SELECT * FROM `".$selector['Source']."` WHERE `".'EntryId'."`=".$sqlPlaceholder,'inputs'=>[$sqlPlaceholder=>$selector['EntryId']]];
             $sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
             $sqlArr['sql'].=';';
-            //var_dump($sqlArr);
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
             $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'primaryKey'=>'EntryId','primaryValue'=>$selector['EntryId'],'Source'=>$selector['Source'],'unlock'=>$selector['unlock']??FALSE];
             $this->addStatistic('matches',$result['rowCount']);
@@ -678,17 +682,20 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     private function selector2idGroups(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeFile=TRUE):array
     {
-        $groupIdIndex=0;
+        $groupIndex=$entryIndex=0;
         $entryIdGroups=[];
         foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,['EntryId'],FALSE,FALSE) as $row){
-            // build entryId list
-            $groupIdIndex=($groupIdIndex>self::MAX_IDLIST_COUNT)?($groupIdIndex++):$groupIdIndex;
-            $entryIdGroups[$groupIdIndex][]="'".$row['EntryId']."'";
-            // remove attached file
-            if (!$removeFile){continue;}
-            $entrySelector=['Source'=>$selector['Source'],'EntryId'=>$row['EntryId']];
-            $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
-            $this->removeFile($fileToDelete);
+            if ($entryIndex>self::MAX_IDLIST_COUNT){
+                $entryIndex=0;
+                $groupIndex++;
+            }
+            $entryIdGroups[$groupIndex][$entryIndex]="'".$row['EntryId']."'";
+            $entryIndex++;
+            if ($removeFile){
+                $entrySelector=['Source'=>$selector['Source'],'EntryId'=>$row['EntryId']];
+                $fileToDelete=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entrySelector);
+                $this->removeFile($fileToDelete);
+            }
         }
         return $entryIdGroups;
     }
@@ -729,22 +736,22 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
-        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
-        // check for lock
-        if (!empty(self::TABLE_UNLOCK_REQUIRED[$entry['Source']]) && empty($entry['unlock'])){
-            $this->oc['logger']->log('notice','Tried to insert table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$entry);
+        if (!isset($GLOBALS['dbInfo'][$entry['Source']])){
+            $this->oc['logger']->log('warning','{class}&rarr;{function}() called with empty entry[Source]',$entry+['class'=>__FUNCTION__,'function'=>__FUNCTION__,]);
+            return [];
+        } else if (!empty(self::TABLE_UNLOCK_REQUIRED[$entry['Source']]) && empty($entry['unlock'])){
+            $this->oc['logger']->log('warning','{class}&rarr;{function}() called on locked table "{Source}" without setting entry[unlock]=TRUE',$entry+['class'=>__FUNCTION__,'function'=>__FUNCTION__,]);
             return [];
         }
         // complete entry
         $entryTemplate=$this->getEntryTemplate($entry['Source']);
-        $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($entry,$addDefaults);
+        $entry=$this->unifyEntry($entry,$addDefaults);
         if (!empty($entry['Owner'])){
             if (strpos($entry['Owner'],'ANONYM_')!==FALSE){
                 $entry['Expires']=date('Y-m-d H:i:s',time()+600);
             }
         }
-        $columns='';
-        $values='';
+        $columns=$values='';
         $inputs=[];
         foreach ($entry as $column => $value){
             if (!isset($entryTemplate[$column]) || strcmp($column,'Source')===0){continue;}
@@ -756,7 +763,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             }
             $inputs[$sqlPlaceholder]=strval($value);
         }
-        $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`='".$entry['EntryId']."';";
+        $sql="INSERT INTO `".$entry['Source']."` (".trim($columns,',').") VALUES (".trim($values,',').") ON DUPLICATE KEY UPDATE `EntryId`=:EntryId;";
         $stmt=$this->executeStatement($sql,$inputs);
         $this->addStatistic('inserted',$stmt->rowCount());
         $entry=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($entry);
@@ -833,7 +840,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             }
             // insert new entry
             $entry=$this->insertEntry($entry,TRUE);
-        } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
+        } else if (empty($noUpdateButCreateIfMissing) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',[],$isSystemCall)){
             // existing entry -> update
             $isSystemCall=TRUE; // if there is write access to an entry, missing read access must not interfere
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->mergeArr($existingEntry,$entry);
@@ -848,7 +855,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE,$isDebugging=FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
             $context['Info']='Entry updated by "'.__FUNCTION__.'"';
-        } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',FALSE,$isSystemCall)){
+        } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',[],$isSystemCall)){
             // existing entry -> no write access -> no update 
             $entry=$existingEntry;
             $context['Info']='Entry not updated by "'.__FUNCTION__.'", no write access';
@@ -892,7 +899,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $this->oc['logger']->log('error','{class} &rarr; {function} called with empty sourceEntry[Source], sourceEntry[EntryId] or targetEntry. Source entry was not moved.',$context);    
             return [];
         }
-        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',FALSE,$isSystemCall)){
+        if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',[],$isSystemCall)){
             // write access
             if ($updateSourceFirst && !$isTestRun){
                 $sourceEntry=$this->updateEntry($sourceEntry,$isSystemCall);
@@ -954,11 +961,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function removeFileFromEntry(array $entry,bool $isSystemCall=FALSE):array
     {
-        if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',FALSE,$isSystemCall)){
+        if (!empty($entry['EntryId']) && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[],$isSystemCall)){
             $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
-            if ($this->oc['SourcePot\Datapool\Foundation\Database']->removeFile($file)){
+            if ($this->removeFile($file)){
                 $entry['Params']['File']=NULL;
-                return $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
+                return $this->updateEntry($entry,$isSystemCall);
             }
         }
         return $entry;
@@ -1024,7 +1031,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $this->deleteEntries($entrySelector,TRUE);
         if (empty($backupEntries)){
             $backupEntryId=$this->addOrderedListIndexToEntryId($backupOlKey,1);
-            $cmdStr=(($cmd['moveUpEntryId']??'')===$entry['EntryId'])?'moveUpEntryId':((($cmd['moveDownEntryId']??'')===$entry['EntryId'])?'moveDownEntryId':'');
+            $cmdStr=(($cmd['moveUpEntryId']??'')===$selector['EntryId'])?'moveUpEntryId':((($cmd['moveDownEntryId']??'')===$selector['EntryId'])?'moveDownEntryId':'');
             $backupEntries[2]=array_merge($selector,['EntryId'=>$backupEntryId,'backupFile'=>'','originalEntryId'=>$selector['EntryId'],'olKey'=>$olKey,'cmd'=>$cmdStr]);
         }
         // process cmd ob backed-up list = 'singleEntry' | 'moveUpEntryId' | 'moveDownEntryId'
@@ -1050,6 +1057,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         ksort($backupEntries);
         // create updated ordered list from backupEntries including files
         $entryIndex=0;
+        $affectedEntryId='';
         foreach($backupEntries as $backupEntry){
             $entryIndex++;
             $entryId=$this->addOrderedListIndexToEntryId($olKey,$entryIndex);
@@ -1065,7 +1073,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             }
             $entry=$this->updateEntry($entry,FALSE);
         }
-        return $affectedEntryId??'';
+        return $affectedEntryId;
     }
 
 }

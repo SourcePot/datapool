@@ -19,6 +19,9 @@ use Monolog\Handler\StreamHandler;
 
 final class Root{
 
+    // ENVIRONMENT SETTINGS | SECURITY CHECKS
+    public const PRODUCTION_ENVIRONMENT=TRUE;   // <------ SHOULD BE SET "TRUE"
+
     // header & session cockie
     private const SESSION_COCKIE=[
         'cookie_lifetime'=>43200,

@@ -19,7 +19,6 @@ final class MiscTools{
     
     public $emojis=[];
     private $emojiFile='';
-
     private $multipleHitsStatistic=[];
     
     public function __construct()
@@ -87,9 +86,11 @@ final class MiscTools{
         $arr=[];
         $styleChunks=explode(';',$style);
         while($styleChunk=array_shift($styleChunks)){
-            $styleDef=explode(':',$styleChunk);
-            if (count($styleDef)!==2){continue;}
-            $arr[$styleDef[0]]=$styleDef[1];
+            $colonPos=strpos($styleChunk,':');
+            if ($colonPos===FALSE){
+                continue;
+            }
+            $arr[trim(substr($styleChunk,0,$colonPos))]=trim(substr($styleChunk,$colonPos+1));
         }
         return $arr;
     }
@@ -127,14 +128,19 @@ final class MiscTools{
     
     public function xml2arr(string $xml)
     {
+        $arr=[];
         if (extension_loaded('SimpleXML')){
-            $this->normalize_xml2array(simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOCDATA),$result);
+            $xmlObj=@simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOCDATA);
+            if ($xmlObj===FALSE){
+                throw new \ErrorException('Function '.__FUNCTION__.': invalid XML input.',0,E_ERROR,__FILE__,__LINE__);
+            }
+            $this->normalize_xml2array($xmlObj,$result);
             $json=json_encode($result);
-            return json_decode($json,TRUE);
+            $arr=json_decode($json,TRUE);
         } else {
             throw new \ErrorException('Function '.__FUNCTION__.': PHP extension SimpleXML missing.',0,E_ERROR,__FILE__,__LINE__);
-            return FALSE;
         }
+        return $arr;
     }
     
     public function arr2xml(array $arr,$rootElement=NULL,$xml=NULL)
@@ -229,16 +235,14 @@ final class MiscTools{
     public function getRandomString(int $length):string
     {
         $hash='';
-        $byteStr=random_bytes($length);
-        for ($i=0;$i<$length;$i++){
-            $byte=ord($byteStr[$i]);
-            if ($byte>180){
-                $hash.=chr(97+($byte%26));
-            } else if ($byte>75){
-                $hash.=chr(65+($byte%26));
-            } else {
-                $hash.=chr(48+($byte%10));
+        $chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $max=strlen($chars)-1;
+        while(strlen($hash)<$length){
+            $byte=ord(random_bytes(1));
+            if ($byte>($max*(intdiv(255,$max+1)))){
+                continue;
             }
+            $hash.=$chars[$byte%strlen($chars)];
         }
         return $hash;
     }
@@ -266,7 +270,7 @@ final class MiscTools{
         if ($base){
             $suffix=$this->getHash($base,TRUE);
         } else {
-            $suffix=mt_rand(100000,999999);
+            $suffix=random_int(100000,999999);
         }
         if ($timestamp===FALSE){
             $timestamp=time();
@@ -333,9 +337,10 @@ final class MiscTools{
     
     private function emojiList2file():array|bool
     {
-        //$html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
-        $html=file_get_contents('D:/Full Emoji List, v15.0.htm');
-        if (empty($html)){return FALSE;}
+        $html=file_get_contents('https://unicode.org/emoji/charts/full-emoji-list.html');
+        if (empty($html)){
+            return FALSE;
+        }
         $result=[];
         $rows=explode('</tr>',$html);
         while($row=array_shift($rows)){
@@ -518,7 +523,6 @@ final class MiscTools{
     * Creates a new selector from a deletion selector. Example:
     * $selector=['Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>'Kanzlei XYZ']  
     * return ['Source'=>'SAP','Group'=>'Buchungen','Folder'=>'IP','Name'=>FALSE,'EntryId'=>FALSE]
-    * 
     * @param    array   $selector   Is an selector to select entries or an entry 
     * @return   array   The new selector
     */
@@ -568,7 +572,7 @@ final class MiscTools{
     {
         $json=strval($json);
         if (strpos($json,self::SERIALIZED_INDICATOR)===0){
-            $arr=unserialize(substr($json,strlen(self::SERIALIZED_INDICATOR)));
+            $arr=unserialize(substr($json,strlen(self::SERIALIZED_INDICATOR)),['allowed_classes'=>FALSE]);
         } else {
             $arr=json_decode($json,TRUE,512,JSON_INVALID_UTF8_IGNORE);
             $arr=$arr?:json_decode(stripslashes($json),TRUE,512,JSON_INVALID_UTF8_IGNORE);
@@ -581,7 +585,6 @@ final class MiscTools{
     */
     public function arr2flat(array $arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
-        if (!is_array($arr)){return $arr;}
         $flat=[];
         $this->arr2flatHelper($arr,$flat,'',$S);
         return $flat;
@@ -611,7 +614,7 @@ final class MiscTools{
     */
     public function flat2arr($arr,string $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR):array
     {
-        if (!is_array($arr)){return $arr;}
+        if (!is_array($arr)){return [$arr];}
         $result=[];
         foreach($arr as $key=>$value){
             if ($value==='{}'){$value=[];}
@@ -763,7 +766,7 @@ final class MiscTools{
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
             if (is_string($value)){
-                $value=strip_tags($value);  // prevent XSS atacks
+                $value=htmlspecialchars(strip_tags($value),ENT_QUOTES,'UTF-8');  // prevent XSS atacks
             }
             $columns=explode($S,strval($flatKey));
             $columnCount=count($columns);
