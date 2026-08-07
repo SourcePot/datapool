@@ -66,6 +66,7 @@ final class FileContent{
         $entry['attachedFile']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);    
         if (!empty($entry['Content']['File content'])){
             $entry=$this->addCosts($entry,$entry['Content']['File content']);
+            $entry=$this->getXRechnungSummary($entry);
             $entry=$this->addUnycom($entry,$entry['Content']['File content']);
         }
         return $entry;
@@ -123,5 +124,50 @@ final class FileContent{
         return $entry;
     }
 
+    private function getXRechnungSummary(array $entry):array
+    {
+        $currency='';
+        $itemIndex=0;
+        $itemsName=$itemsPrice=[];
+        $xRechnung=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($entry['Content']['XRechnung']??[]);
+        ksort($xRechnung);
+        $entry['XRechnung']=['Items'=>[],'TaxBasisTotalAmount'=>'0.00','TaxTotalAmount'=>'0.00','GrandTotalAmount'=>'0.00','TotalPrepaidAmount'=>'0.00','DuePayableAmount'=>'0.00'];
+        foreach($xRechnung as $flatKey=>$value){
+            if (strpos($flatKey,'ram:IncludedSupplyChainTradeLineItem')!==FALSE){
+                if (strpos($flatKey,'ram:Name')!==FALSE){
+                    $itemsName[$itemIndex]=$value;
+                    $itemIndex++;
+                } else if (strpos($flatKey,'ram:LineTotalAmount')!==FALSE){
+                    $itemsPrice[$itemIndex]=$value;    
+                }
+            }
+            if (strpos($flatKey,'ram:SpecifiedTradeSettlementHeaderMonetarySummation')!==FALSE){  
+                if (strpos($flatKey,'ram:TaxBasisTotalAmount')!==FALSE){
+                    $entry['XRechnung']['TaxBasisTotalAmount']=$value;
+                } else if (strpos($flatKey,'ram:TaxTotalAmount')!==FALSE){
+                    $entry['XRechnung']['TaxTotalAmount']=$value;
+                } else if (strpos($flatKey,'ram:GrandTotalAmount')!==FALSE){
+                    $entry['XRechnung']['GrandTotalAmount']=$value;
+                } else if (strpos($flatKey,'ram:TotalPrepaidAmount')!==FALSE){
+                    $entry['XRechnung']['TotalPrepaidAmount']=$value;
+                } else if (strpos($flatKey,'ram:DuePayableAmount')!==FALSE){
+                    $entry['XRechnung']['DuePayableAmount']=$value;
+                }
+            }
+            if (strpos($flatKey,'InvoiceCurrencyCode')!==FALSE){
+                $currency=$value;
+            }
+        }
+        foreach($itemsPrice as $itemIndex=>$price){
+            $itemsPrice[$itemIndex]=$price.' '.$currency;
+        }
+        $entry['XRechnung']['Items']=array_combine($itemsName,$itemsPrice);
+        $entry['XRechnung']['TaxBasisTotalAmount']=$entry['XRechnung']['TaxBasisTotalAmount'].' '.$currency;
+        $entry['XRechnung']['TaxTotalAmount']=$entry['XRechnung']['TaxTotalAmount'].' '.$currency;
+        $entry['XRechnung']['GrandTotalAmount']=$entry['XRechnung']['GrandTotalAmount'].' '.$currency;
+        $entry['XRechnung']['TotalPrepaidAmount']=$entry['XRechnung']['TotalPrepaidAmount'].' '.$currency;
+        $entry['XRechnung']['DuePayableAmount']=$entry['XRechnung']['DuePayableAmount'].' '.$currency;
+        return $entry;
+    }
 }
 ?>
