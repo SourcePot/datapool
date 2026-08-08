@@ -100,6 +100,9 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             // get user from email
             $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email'])];
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
+            // +++ LEGACY USER UPDATE - START
+            $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateUser($user,$arr['Passphrase']);
+            // +++ LEGACY USER UPDATE - END
             if (empty($user)){
                 // not registered
                 $this->loginFailed($user,$arr['Email']);
@@ -180,7 +183,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             if ($existingUser){
                 $err='You ({email}) are registered already, try to login.';
             } else {
-                $user['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);
+                $user['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Passphrase']);
                 $user=$this->oc['SourcePot\Datapool\Foundation\User']->newlyRegisteredUserLogin($user);
             }
         }
@@ -209,7 +212,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             if (strlen($arr['Passphrase'])<self::MIN_PASSPHRASDE_LENGTH){
                 $this->oc['logger']->log('notice','Passphrase with {length} characters is too short (min. {minLength} characters), passphrase update failed.',['length'=>strlen($arr['Passphrase']),'minLength'=>self::MIN_PASSPHRASDE_LENGTH]);    
             } else {
-                $existingUser['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Email'],$arr['Passphrase']);            
+                $existingUser['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($arr['Passphrase']);            
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($existingUser);
                 $this->oc['logger']->log('info','Passphrase for "{email}" updated.',['lifetime'=>'P30D','email'=>$arr['Email']]);    
             }
@@ -252,7 +255,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $pswArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getOneTimePswArr();
         $loginEntry=$user;
         $loginEntry['EntryId']=$this->getOneTimeEntryEntryId($email);
-        $loginEntry['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($email,$pswArr['string']);
+        $loginEntry['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($pswArr['string']);
         $loginEntry['Content']=['To'=>$email];
         $loginEntry['Content']['From']=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster');
         $loginEntry['Content']['Subject']='Your one-time password for '.$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
