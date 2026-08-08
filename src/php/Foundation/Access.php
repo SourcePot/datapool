@@ -70,32 +70,21 @@ class Access{
         }
     }
 
-    /**
-    * This method adds rights to an entry
-    *
-    * @return array An associative array that contains the resulting entry
-    */
-    public function addRights(array $entry,int|string $Read=0,int|string $Write=0,int|string $Privileges=0):array
+    public function addRights(array $entry,int|string|null $Read=NULL,int|string|null $Write=NULL,int|string|null $Privileges=NULL):array
     {
-        //  set defaults if right argument are empty
-        $rigthTypes=['Read'=>(empty($Read))?'ALL_CONTENTADMIN_R':$Read,'Write'=>(empty($Write))?'ADMIN_R':$Write,'Privileges'=>(empty($Privileges))?'PUBLIC_R':$Privileges];
-        // add rights to the entry
-        foreach($rigthTypes as $type=>$default){
-            // set to default value
-            if (!isset($entry[$type])){
-                $entry[$type]=$default;
+        $argValue=['Read'=>$Read,'Write'=>$Write,'Privileges'=>$Privileges];
+        $defaultValue=['Read'=>'ALL_CONTENTADMIN_R','Write'=>'ADMIN_R','Privileges'=>'PUBLIC_R'];
+        foreach($argValue as $rightType=>$rightValue){
+            if ($rightValue!==NULL){
+                $entry[$rightType]=$rightValue;
+            } else if (!isset($entry[$rightType])){
+                $entry[$rightType]=$defaultValue[$rightType];
             }
-            // set to method argument
-            if (isset($this->access[$$type])){
-                $entry[$type]=$this->access[$$type];
-            }
-            // replace alias values
-            $entry=$this->replaceRightConstant($entry,$type);
-            $entry[$type]=intval($entry[$type]);
+            $entry[$rightType]=intval($this->access[$entry[$rightType]]??$entry[$rightType]);
         }
         return $entry;        
     }
-    
+
     public function replaceRightConstant(array $entry,string $type):array
     {
         if (!isset($entry[$type])){
@@ -166,7 +155,9 @@ class Access{
         }
     }
     
-    public function emailId(string $email){
+    public function emailId(string $email):string
+    {
+        // EmailId is not a secret, EmailId needs only be collision resistant
         $emailId=md5($email.self::APPLICATION_ID);
         return $emailId;
     }
@@ -264,21 +255,22 @@ class Access{
     {
         $arr['html']='';
         if (isset($arr['selector'][$right])){
-            foreach($this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(TRUE) as $value=>$name){
-                if ((intval($value) & intval($arr['selector'][$right]))>0){
+            foreach($this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(FALSE) as $userRoleArr){
+                if ((intval($userRoleArr['Value']) & intval($arr['selector'][$right]))>0){
                     if (!empty($arr['html'])){
                         $arr['html'].='<br/>';
                     }
-                    $name=htmlspecialchars($name,ENT_QUOTES,'UTF-8');
-                    if (stripos($name,'admin')!==FALSE){
-                        $arr['html'].='<span style="font-weight:bold;color:red;">'.$name.'</span>';
+                    if (intval($userRoleArr['Value']) & $this->access['ALL_CONTENTADMIN_R']){
+                        $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
+                        $arr['html'].='<span style="font-weight:bold;color:var(--red);">'.$name.'</span>';
+                    } else if (intval($userRoleArr['Value']) & ($this->access['PUBLIC_R'] + $this->access['REGISTERED_R'])){
+                        $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
+                        $arr['html'].='<span style="font-weight:bold;color:var(--green);">'.$name.'</span>';
                     } else {
+                        $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
                         $arr['html'].=$name;
                     }
                 }
-            }
-            if ($arr['html']==='Registered'){
-                $arr['html']='<span style="font-weight:bold;color:green;">'.$arr['html'].'</span>';
             }
         } else {
             $arr['html']='{Nothing here...}';
