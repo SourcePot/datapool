@@ -26,7 +26,9 @@ class Legacy{
 
     public function updateUser(array $user,#[\SensitiveParameter]string $password):array
     {
-        if (hash_equals(\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP,$user['Group'])){
+        if (empty($user)){
+            return $user;
+        } else if (hash_equals(\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP,$user['Group'])){
             // user is up-to-date
             $this->oc['logger']->log('debug','User account for "{Name}" is up-to-date.',$user);
             return $user;
