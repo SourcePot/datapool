@@ -221,7 +221,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             ];
             $job['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($job['Email']);
             $job['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($job['Email'],$job['Password']);
-            $job['Content']['Contact details']=['First name'=>'System','Family name'=>'Job account'];
+            $job['Content']['Contact details']=['First name'=>'System','Family name'=>'Job account','Email'=>$job['Email']];
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($job,TRUE);
             if ($success){
                 $this->oc['logger']->log('alert','No job account found, new job account created');    

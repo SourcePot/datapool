@@ -47,6 +47,22 @@ class ClientAccess{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
+    public function job(array $vars):array
+    {
+        $validUser=[];
+        $validUserSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'Privileges>'=>2];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($validUserSelector,TRUE) as $user){
+            if (strpos($user['EntryId'],'oneTimeLink')!==FALSE){continue;}
+            $validUser[$user['EntryId']]=$user['Name'];
+        }
+        $clientCredentialsSelector=['Source'=>$this->getEntryTable(),'Group'=>'Client credentials'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($clientCredentialsSelector,TRUE) as $clientCredentials){
+            if (isset($validUser[$clientCredentials['Folder']])){continue;}
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($clientCredentials,TRUE);
+        }
+        return $vars;
+    }
+
     public function getEntryTable():string
     {
         return $this->entryTable;
@@ -165,6 +181,7 @@ class ClientAccess{
             // create new token
             $accessToken=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(64);
             $authorizationEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval(time()+self::AUTHORIZATION_LIFESPAN));
+            $authorizationEntry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
             $authorizationEntry['Owner']='SYSTEM';
             $authorizationEntry['Name']=$accessToken;
             $authorizationEntry['Group']='Client token';
@@ -258,7 +275,7 @@ class ClientAccess{
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',[],FALSE,TRUE)){return $arr;}
         $contentStructure=[
-            'scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'METHOD_WHITELIST','keep-element-content'=>TRUE,'options'=>self::METHOD_WHITELIST],
+            'scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>key(self::METHOD_WHITELIST),'keep-element-content'=>TRUE,'options'=>self::METHOD_WHITELIST],
             'method'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE],
             'client_id'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'pi','excontainer'=>TRUE],
             'client_secret'=>['method'=>'element','tag'=>'input','value'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(32),'type'=>'text','excontainer'=>TRUE],
