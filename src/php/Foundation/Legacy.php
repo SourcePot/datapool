@@ -24,12 +24,12 @@ class Legacy{
         $this->oc=$oc;
     }
 
-    public function updateUser(array $user,#[\SensitiveParameter]string $password):bool
+    public function updateUser(array $user,#[\SensitiveParameter]string $password):array
     {
         if (hash_equals(\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP,$user['Group'])){
             // user is up-to-date
             $this->oc['logger']->log('debug','User account for "{Name}" is up-to-date.',$user);
-            return FALSE;
+            return $user;
         }
         // user needs update
         $legacyUserPass=$password.$user['EntryId'];
@@ -37,13 +37,13 @@ class Legacy{
             // valid password provided
             $user['LoginId']=password_hash($password,PASSWORD_DEFAULT);
             $user['Group']=\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP;
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
+            $user=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
             $this->oc['logger']->log('info','Legacy user account update for "{Name}".',$user);
-            return TRUE;
+            return $user;
         } else {
             // invalid password provided
             $this->oc['logger']->log('info','Legacy user account update for "{Name}" failed. Wrong password provided.',$user);
-            return FALSE;
+            return $user;
         }
     }
 }

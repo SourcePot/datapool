@@ -101,7 +101,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
             $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($arr['Email'])];
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
             // +++ LEGACY USER UPDATE - START
-            $this->oc['SourcePot\Datapool\Foundation\Legacy']->updateUser($user,$arr['Passphrase']);
+            $user=$this->oc['SourcePot\Datapool\Foundation\Legacy']->updateUser($user,$arr['Passphrase']);
             // +++ LEGACY USER UPDATE - END
             if (empty($user)){
                 // not registered
