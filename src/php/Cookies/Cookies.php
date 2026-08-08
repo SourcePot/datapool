@@ -24,7 +24,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         'Your location data'=>['disabled'=>FALSE,'initialSetting'=>FALSE,'description'=>'If you give permission, the website will process and store the location information provided by your web browser.'],
     ];
 
-    private $permissonsCookie=[];
+    private $permissionsCookie=[];
     private $settingsCookie=[];
   
     private $entryTable='';
@@ -38,7 +38,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
-        $this->permissonsCookie=$this->refreshPermissionsCookie();
+        $this->permissionsCookie=$this->refreshPermissionsCookie();
         $this->settingsCookie=$this->refreshSettingsCookie();
     }
 
@@ -74,20 +74,21 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         }
     }
 
-    /*  DATAPROTECTION COOCKIE - PERMISSIONS
+    /*  DATAPROTECTION COOKIE - PERMISSIONS
      * 
      */
 
     public function permitted(string $key):bool|array
     {
         if (empty($key)){
-            return $this->permissonsCookie;
+            return $this->permissionsCookie;
         }
-        return $this->permissonsCookie[$key]??FALSE;
+        return $this->permissionsCookie[$key]??FALSE;
     }
 
-    private function getPermissionsCookieIntialValues():array
+    private function getPermissionsCookieInitialValues():array
     {
+        $values=[];
         foreach(self::PERMISSIONS_COOKIE as $name=>$definition){
             $values[$name]=$definition['initialSetting'];
         }
@@ -101,19 +102,19 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
     
     private function refreshPermissionsCookie():array
     {
-        $values=json_decode($_COOKIE["dataprotection"]??'',TRUE)?:$this->getPermissionsCookieIntialValues();
+        $values=json_decode($_COOKIE["dataprotection"]??'',TRUE)?:$this->getPermissionsCookieInitialValues();
         return $this->setPermissionsCookie($values);
     }
     
     private function setPermissionsCookie(array $values=[]):array
     {
-        $values=$values?:$this->getPermissionsCookieIntialValues();
+        $values=$values?:$this->getPermissionsCookieInitialValues();
         $cookieValue=json_encode($values);
         $cookieOptions=[
             'expires'=>time()+self::COOKIE_LIFETIME, 
             'path'=>'/', 
-            'domain'=>($_SERVER['HTTP_HOST']=='localhost')?'':$_SERVER['HTTP_HOST'],
-            'secure'=>TRUE,
+            'domain'=>'',
+            'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
             'httponly'=>TRUE,
             'samesite'=>'Strict', // None || Lax  || Strict
         ];
@@ -136,7 +137,8 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         }
         // compile html
         $matrix=[];
-        foreach($values as $name=>$value){
+        foreach(self::PERMISSIONS_COOKIE as $name=>$definition){
+            $value=$values[$name]??$definition['initialSetting'];
             $btn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'TRUE':'FALSE'),'style'=>['line-height'=>'2rem'],'class'=>(boolval($value)?'status-on':'status-off'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'disabled'=>self::PERMISSIONS_COOKIE[$name]['disabled']];
             $description=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$name,'style'=>['clear'=>'both','font-weight'=>'bold','padding-top'=>'1rem ']]);
             $description.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>self::PERMISSIONS_COOKIE[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding-bottom'=>'1rem ']]);
@@ -147,7 +149,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         return $arr;
     }
 
-    /*  SETTINGS COOCKIE
+    /*  SETTINGS COOKIE
      * 
      */
 
@@ -156,8 +158,8 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         $cookieOptions=[
             'expires'=>time()+self::COOKIE_LIFETIME, 
             'path'=>'/', 
-            'domain'=>($_SERVER['HTTP_HOST']=='localhost')?'':$_SERVER['HTTP_HOST'],
-            'secure'=>TRUE,
+            'domain'=>'',
+            'secure'=>isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
             'httponly'=>TRUE,
             'samesite'=>'Strict', // None || Lax  || Strict
         ];
@@ -181,7 +183,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         return $settings;
     }
 
-    public function getSettingsCookieValue(string|FALSE $key)
+    public function getSettingsCookieValue(string|bool $key)
     {
         if ($key===FALSE){
             return $this->settingsCookie;
@@ -196,7 +198,7 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
         // compile html
         $matrix=[];
         foreach($settings as $name=>$value){
-            $matrix['<b>'.$name.'<b/>']=['Value'=>$value];
+            $matrix['<b>'.$name.'</b>']=['Value'=>$value];
         }
         $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Your settings-cookie','id'=>'settings-cookies','keep-element-content'=>TRUE]);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'keep-element-content'=>TRUE,'hideKeys'=>FALSE,'hideHeader'=>FALSE,'style'=>['border'=>'none']]);

@@ -22,7 +22,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable();
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -107,11 +107,14 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         return $html;
     }
 
-    private function tableInfo($selector):string
+    private function tableInfo(array $selector):string
     {
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
-        $tableKey='Table "'.$table.'"';
+        if (!isset($GLOBALS['dbInfo'][$table])){
+            return '';
+        }
+        $tableKey='Table "'.$table.'" of database "'.$db.'"';
         $matrices=[$tableKey=>[],'Columns'=>[],'Index'=>[]];
         $sql='SHOW INDEX FROM `'.$table.'`;';
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
@@ -137,10 +140,9 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             unset($columnInfo['TABLE_NAME']);
             $matrices['Charset, Collation'][$column]=$columnInfo;
         }
-        $sql="SELECT TABLE_NAME,TABLE_COLLATION,ENGINE,TABLE_ROWS,DATA_LENGTH,INDEX_LENGTH,AUTO_INCREMENT,CREATE_TIME,UPDATE_TIME FROM INFORMATION_SCHEMA.TABLES;";
+        $sql="SELECT TABLE_NAME,TABLE_COLLATION,ENGINE,TABLE_ROWS,DATA_LENGTH,INDEX_LENGTH,AUTO_INCREMENT,CREATE_TIME,UPDATE_TIME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '".$table."';";
         $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
         foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $tableInfo){
-            if ($tableInfo['TABLE_NAME']!==$table){continue;}
             unset($tableInfo['TABLE_NAME']);
             foreach($tableInfo as $key=>$value){
                 if (mb_strpos($key,'_LENGTH')!==FALSE){
@@ -180,26 +182,31 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
         if (isset($formData['cmd']['INDICES'])){
             $context['table']=key($formData['cmd']['INDICES']);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->dropTableIndices($context['table']);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->setTableIndices($context['table']);
-            $this->oc['logger']->log('notice','User "{currentUser}" set standard inices for table "{table}".',$context);
+            if (isset($GLOBALS['dbInfo'][$context['table']])){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->dropTableIndices($context['table']);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->setTableIndices($context['table']);
+                $this->oc['logger']->log('notice','User "{currentUser}" set standard indices for table "{table}".',$context);
+            }
         } else if (isset($formData['cmd']['DROP'])){
             $context['table']=key($formData['cmd']['DROP']);
-            $sql='DROP TABLE '.$context['table'].';';
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
-            $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}"',$context);
-            // Reset $GLOBALS['dbInfo'] to create table
-            $baseClass=$GLOBALS['dbInfo'][$context['table']]['EntryId']['baseClass'];
-            unset($GLOBALS['dbInfo'][$context['table']]);
-            $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}" and re-created this table.',$context);
+            if (isset($GLOBALS['dbInfo'][$context['table']])){
+                $sql='DROP TABLE '.$context['table'].';';
+                $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
+                unset($GLOBALS['dbInfo'][$context['table']]);
+                $this->oc['logger']->log('notice','User "{currentUser}" dropped table "{table}" and re-created this table.',$context);
+            }
         } else if (isset($formData['cmd']['TRUNCATE'])){
             $context['table']=key($formData['cmd']['TRUNCATE']);
-            $sql='TRUNCATE TABLE '.$context['table'].';';
-            $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
-            $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
+            if (isset($GLOBALS['dbInfo'][$context['table']])){
+                $sql='TRUNCATE TABLE '.$context['table'].';';
+                $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
+                $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
+            }
         } else if (isset($formData['cmd']['ALTERTABLE'])){
             $context['table']=key($formData['cmd']['ALTERTABLE']);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateCollation($context['table']);
+            if (isset($GLOBALS['dbInfo'][$context['table']])){
+                $this->oc['SourcePot\Datapool\Foundation\Database']->updateCollation($context['table']);
+            }
         }
     }
 }

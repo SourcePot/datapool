@@ -56,58 +56,44 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         return $this->entryTemplate;
     }
     
-    /**
-    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
-    * @param    string $vars Initial persistent data space
-    * @return   array  Array Updateed persistent data space
-    */
     public function job(array $vars):array
     {
-        if (isset($vars['Error'])){
-            unset($vars['Error']);
-        }
-        if (empty($vars['Dirs to process'])){
-            $dirs=scandir($GLOBALS['dirs']['filespace']);
-            foreach($dirs as $dir){
-                if (strcmp($dir,'.')===0 || strcmp($dir,'..')===0){continue;}
-                $vars['Dirs to process'][$dir]=['dir'=>$GLOBALS['dirs']['filespace'].$dir,'table'=>$dir];
+        // check for directories not linked to database tables
+        $deletedDirs=[];
+        $filespaceDirs=scandir($GLOBALS['dirs']['filespace']);
+        foreach($filespaceDirs as $filespaceDir){
+            if (strcmp($filespaceDir,'.')===0 || strcmp($filespaceDir,'..')===0 || strpos($filespaceDir,'__')===0 || isset($GLOBALS['dbInfo'][$filespaceDir])){
+                continue;
             }
+            $dir2delete=$GLOBALS['dirs']['filespace'].$filespaceDir;
+            $this->delDir($dir2delete);
+            $deletedDirs[]=$dir2delete;
         }
-        $vars['Last deleted files']=[];
-        $vars['Last failed deletions']=[];
-        $dir2process=array_shift($vars['Dirs to process']);
-        if (empty($dir2process['dir'])){
-            $this->oc['logger']->log('error','Failed "{class} &rarr; {function}()" due to array key in "dir2process[dir]" missing or empty array',['class'=>__CLASS__,'function'=>__FUNCTION__]);    
-            $vars['Error']='Key missing or empty: dir2process[dir]';
-        } else {
-            $files=scandir($dir2process['dir']);
-            foreach($files as $fileName){
-                $file=$dir2process['dir'].'/'.$fileName;
-                $extensionPos=mb_strpos($fileName,'.file');
-                if (empty($extensionPos)){continue;}
-                $entryId=mb_substr($fileName,0,$extensionPos);
-                $sql="SELECT ".$dir2process['table'].".EntryId FROM `".$dir2process['table']."` WHERE `EntryId` LIKE '".$entryId."';";
-                $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql);
-                if (empty($stmt->fetchAll())){
-                    if (is_file($file)){
-                        if (unlink($file)){
-                            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('removed',1);
-                            $vars['Last deleted files'][]=$file;
-                        } else {
-                            $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('failed',1);
-                            $vars['Last failed deletions'][]=$file;
-                        }
-                    }
-                    $this->oc['SourcePot\Datapool\Foundation\Database']->addStatistic('matches',1);
+        $vars['Deleted dirs (missing database table)']=implode(', ',$deletedDirs);
+        // check for files not linked to database entries
+        $unlinkedFiles=[];
+        $filespaceDirs=scandir($GLOBALS['dirs']['filespace']);
+        foreach($filespaceDirs as $filespaceDir){
+            if (strcmp($filespaceDir,'.')===0 || strcmp($filespaceDir,'..')===0 || strpos($filespaceDir,'__')===0 || !isset($GLOBALS['dbInfo'][$filespaceDir])){
+                continue;
+            }
+            $unlinkedFiles[$filespaceDir]=0;
+            $dir2check=$GLOBALS['dirs']['filespace'].$filespaceDir;    
+            $files=scandir($dir2check);
+            foreach($files as $file){  
+                $fullFileName=$dir2check.'/'.$file;
+                if (strcmp($file,'.')===0 || strcmp($file,'..')===0 || !is_file($fullFileName)){
+                    continue;
                 }
+                $pathcomps=pathinfo($fullFileName);
+                $selector=['Source'=>$filespaceDir,'EntryId'=>$pathcomps['filename']];
+                if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector,TRUE)){
+                    continue;
+                }
+                $unlinkedFiles[$filespaceDir]+=intval(unlink($fullFileName));
             }
-            if (!empty($vars['Last deleted files']) || !empty($vars['Last failed deletions'])){
-                $context=['table'=>$dir2process['table'],'deleted'=>count($vars['Last deleted files']),'failed'=>count($vars['Last failed deletions'])];
-                $this->oc['logger']->log('error','Files without corresponding entries found in "{table}", deleted="{deleted}" failed="{failed}"',$context);         
-                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Deleted unlinked files',$context['deleted'],'int'); 
-            }
-            $vars['Last processed dir']=$dir2process['dir'];
         }
+        $vars['Deleted files (missing database entry)']=$unlinkedFiles;
         return $vars;
     }
 
@@ -204,15 +190,6 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         }
     }
 
-    /**
-    * The method returns the first entry that matches the selector or false, if no match is found.
-    *
-    * @param array $selector Is the selector.  
-    * @param boolean $isSystemCall The value is provided to access control. 
-    * @param boolean $returnMetaOnNoMatch If true and EntryId is provided, meta data is return on no match instead of false. 
-    *
-    * @return array|boolean The entry, an empty array or false if no entry was found.
-    */
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
     {
         if (empty($selector['Class'])){return FALSE;}
@@ -228,9 +205,6 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
 
     public function entryById(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',bool $returnMetaOnNoMatch=FALSE):array
     {
-        // This method returns the entry from a setup-file selected by the selector arguments.
-        // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
-        //
         $entry=['rowCount'=>0,'rowIndex'=>0,'access'=>'NO ACCESS RESTRICTION'];
         $selector['EntryId']=trim($selector['EntryId']?:'','%');
         $entry['file']=$this->selector2file($selector);
@@ -260,9 +234,6 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
 
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateCreateIfMissing=FALSE,bool $recursiveReplace=TRUE):array
     {
-        // This method updates and returns the entry from the setup-directory.
-        // The selector argument is an array which must contain at least the array-keys 'Class' and 'EntryId'.
-        //
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $existingEntry=$this->entryById($entry,TRUE,'Read',TRUE);
         if (empty($existingEntry['rowCount'])){
@@ -302,13 +273,6 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         return $this->updateEntry($entry,$isSystemCall,TRUE);
     }
 
-    /**
-    * This method deletes the selected entries including linked files 
-    * and returns the count of deleted entries or false on error.
-    *
-    * @param array $selector Is the selector to select the entries to be deleted  
-    * @return int|boolean The count of deleted entries or false on failure
-    */
     public function deleteEntries(array $selector,bool $isSystemCall=FALSE):array
     {
         foreach($this->entryIterator($selector,$isSystemCall) as $EntryId=>$entry){
@@ -318,13 +282,6 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         return $this->getStatistic();
     }
 
-    /**
-    * This method deletes the selected entries including linked files 
-    * and returns the count of deleted entries or false on error.
-    *
-    * @param array $selector Is the selector to select the entries to be deleted  
-    * @return int|boolean The count of deleted entries or false on failure
-    */
     public function deleteEntry(array $selector,bool $isSystemCall=FALSE):array
     {
         foreach($this->entryIterator($selector,$isSystemCall) as $EntryId=>$entry){
@@ -344,7 +301,9 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
             $selector=$entry;
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector) as $entry){
                 $file=$this->selector2file($entry);
-                if (!is_file($file)){continue;}
+                if (!is_file($file)){
+                    continue;
+                }
                 $zip->addFile($file,str_replace('_', '-',basename($entry['Params']['File']['Name']??'filename_unset_'.hrtime(TRUE))));
             }
             $zip->close();
@@ -428,7 +387,6 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                     $age=time()-filemtime($fullDir);
                     if ($age>$maxAge){
                         $this->delDir($fullDir);
-                        //$this->oc['logger']->log('info','Function "{class} &rarr; {function}()" expired dir "{dirKey} &rarr; {dir}" removed, MAX_AGE key "{maxAgeKey}"',$context);         
                     }
                 }
             }
@@ -442,6 +400,9 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         if (is_dir($dir)){
             $files2delete=scandir($dir);
             foreach($files2delete as $fileIndex=>$file){
+                if ($file==='.' || $file==='..'){
+                    continue;
+                }
                 $file=$dir.'/'.$file;
                 if (is_file($file)){
                     $this->addStatistic('deleted files',intval(unlink($file)));

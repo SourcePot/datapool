@@ -92,7 +92,7 @@ class Backbone{
         }
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
         // initialize page settings
@@ -102,7 +102,7 @@ class Backbone{
         $this->settings=$settings['Content'];
     }
 
-    public function init()
+    public function init():void
     {
         $this->styleClassSelectorCmdProcessing();
         $this->webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
@@ -142,12 +142,12 @@ class Backbone{
         $arr['page html'].='<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$lngCode.'">'.PHP_EOL;
         // page header
         $arr['page html'].='<head>'.PHP_EOL;
-        $arr['page html'].='<meta charset="'.$this->settings['charset'].'">'.PHP_EOL;
-        $arr['page html'].='<meta name="viewport" content="'.$this->settings['metaViewport'].'">'.PHP_EOL;
-        $arr['page html'].='<meta name="description" content="'.$this->settings['metaDescription'].'">'.PHP_EOL;
-        $arr['page html'].='<meta name="robots" content="'.$this->settings['metaRobots'].'">'.PHP_EOL;
+        $arr['page html'].='<meta charset="'.htmlspecialchars($this->settings['charset'],ENT_QUOTES,'UTF-8').'">'.PHP_EOL;
+        $arr['page html'].='<meta name="viewport" content="'.htmlspecialchars($this->settings['metaViewport'],ENT_QUOTES,'UTF-8').'">'.PHP_EOL;
+        $arr['page html'].='<meta name="description" content="'.htmlspecialchars($this->settings['metaDescription'],ENT_QUOTES,'UTF-8').'">'.PHP_EOL;
+        $arr['page html'].='<meta name="robots" content="'.htmlspecialchars($this->settings['metaRobots'],ENT_QUOTES,'UTF-8').'">'.PHP_EOL;
         $arr['page html'].='<meta name="referrer" content="strict-origin-when-cross-origin"/>'.PHP_EOL;
-        $arr['page html'].='<title>'.$this->settings['pageTitle'].'</title>'.PHP_EOL;
+        $arr['page html'].='<title>'.htmlspecialchars($this->settings['pageTitle'],ENT_QUOTES,'UTF-8').'</title>'.PHP_EOL;
         $arr['page html'].='{{head}}'.PHP_EOL;
         $arr['page html'].='</head>'.PHP_EOL;
         // page body
@@ -175,6 +175,7 @@ class Backbone{
         foreach($wwwMediaFiles as $wwwMediaFile){
             $fileName=$GLOBALS['relDirs']['media'].'/'.$wwwMediaFile;
             $fileArr=pathinfo($fileName);
+            $fileArr['extension']=$fileArr['extension']??'';
             // only css, js and ico files
             if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
                 continue;
@@ -207,8 +208,7 @@ class Backbone{
             $headerFiles['EXTERNAL_'.$fileArr['extension']][]=$fileArr['filename'];
         }
         // documentation of header files
-        //$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($headerFiles);  // <-- for debugging, adds overview of header files to debugging-dir
-        if (count($headerFiles['ico'])<1){
+        if (empty($headerFiles['ico'])){
             $this->oc['logger']->log('notice','No *.ico file added to the web page header. Please add an *.ico file to /src/www/media/.',$headerFiles);
         }
         return $arr;
@@ -261,7 +261,7 @@ class Backbone{
         foreach($wwwMediaFiles as $wwwMediaFile){
             $fileName=$GLOBALS['relDirs']['media'].'/'.$wwwMediaFile;
             $fileArr=pathinfo($fileName);
-            if ($fileArr['extension']!=='css' || strpos($fileArr['filename'],'main')!==0){
+            if (($fileArr['extension']??'')!=='css' || strpos($fileArr['filename'],'main')!==0){
                 continue;
             }
             $select['options'][$fileArr['filename']]=$wwwMediaFile;

@@ -44,7 +44,7 @@ class Access{
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $access=['Class'=>__CLASS__,'EntryId'=>__FUNCTION__,'Content'=>$this->access];
         $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->entryByIdCreateIfMissing($access,TRUE);
@@ -135,7 +135,7 @@ class Access{
             return 'OWNER MATCH';
         } else if (isset($entry[$type])){
             // standard access
-            $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
+            $accessLevel=intval($entry[$type]) & intval($user['Privileges']??0);
             if ($accessLevel>0){return $accessLevel;}
         } else if (!empty($entry['Source'])){
             $this->oc['logger']->log('warning','Function "{class}&rarr;{function}()" missing "entry[{type}]", access to incomplete entry denied',['class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type]);
@@ -227,7 +227,7 @@ class Access{
         if (!isset($this->access[$right])){
             $this->oc['logger']->log('warning','{class}&rarr;{function}: Unknown right "{right}" requested',['class'=>__CLASS__,'function'=>__FUNCTION__,'right'=>$right]);
             return FALSE;
-        } else if (($user['Privileges'] & $this->access[$right])>0){
+        } else if ((intval($user['Privileges']??0) & $this->access[$right])>0){
             return TRUE;
         } else {
             return FALSE;
@@ -242,7 +242,7 @@ class Access{
                 return FALSE;
             }
         }
-        if (($user['Privileges'] & $right)>0){
+        if ((intval($user['Privileges']??0) & $right)>0){
             return TRUE;
         } else {
             return FALSE;
@@ -287,8 +287,8 @@ class Access{
         $readRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Read');
         $writeRols=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml(['selector'=>$entry],'Write');
         $matrix=[];
-        $matrix['Read access']=['Your rols'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
-        $matrix['Write access']=['Your rols'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
+        $matrix['Read access']=['Your roles'=>$userRols,'Entry access for'=>$readRols,'Owner'=>$owner,'Access granted'=>(empty($readAccess)?'FALSE':$readAccess)];
+        $matrix['Write access']=['Your roles'=>$userRols,'Entry access for'=>$writeRols,'Owner'=>$owner,'Access granted'=>(empty($writeAccess)?'FALSE':$writeAccess)];
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'hideCaption'=>$arr['hideCaption']??FALSE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']??'Access infos']);
     }
 
