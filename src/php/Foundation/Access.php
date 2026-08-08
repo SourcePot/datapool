@@ -110,11 +110,10 @@ class Access{
     public function access(array $entry,string $type='Write',array $user=[],bool $isSystemCall=FALSE,bool $ignoreOwner=FALSE)
     {
         if ($this->isEntryWithoutContent($entry)){
-            $this->oc['logger']->log('critical','Function "{class} &rarr; {function}()" access test on empty entry.',array('class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type));
+            $this->oc['logger']->log('critical','Function "{class}&rarr;{function}()" access test on empty entry.',['class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type]);
             return FALSE;
         }
         if ($isSystemCall===TRUE){
-            // system call access
             return 'SYSTEMCALL';
         }
         if (empty($user)){
@@ -133,14 +132,13 @@ class Access{
             $user['EntryId']='User id Invalid';
         }
         if (hash_equals($entry['Owner'],$user['EntryId'])){
-            // owner access
             return 'OWNER MATCH';
         } else if (isset($entry[$type])){
             // standard access
             $accessLevel=intval($entry[$type]) & intval($user['Privileges']);
             if ($accessLevel>0){return $accessLevel;}
         } else if (!empty($entry['Source'])){
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" missing "entry[{type}]", access to incomplete entry denied',['class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type]);
+            $this->oc['logger']->log('warning','Function "{class}&rarr;{function}()" missing "entry[{type}]", access to incomplete entry denied',['class'=>__CLASS__,'function'=>__FUNCTION__,'type'=>$type]);
         }
         return FALSE;
     }
@@ -261,15 +259,14 @@ class Access{
                         $arr['html'].='<br/>';
                     }
                     if (intval($userRoleArr['Value']) & $this->access['ALL_CONTENTADMIN_R']){
-                        $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
-                        $arr['html'].='<span style="font-weight:bold;color:var(--red);">'.$name.'</span>';
+                        $style='font-weight:bold;color:var(--red)';
                     } else if (intval($userRoleArr['Value']) & ($this->access['PUBLIC_R'] + $this->access['REGISTERED_R'])){
-                        $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
-                        $arr['html'].='<span style="font-weight:bold;color:var(--green);">'.$name.'</span>';
+                        $style='font-weight:bold;color:var(--green)';
                     } else {
-                        $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
-                        $arr['html'].=$name;
+                        $style='color:var(--color)';
                     }
+                    $name=htmlspecialchars($userRoleArr['Name'],ENT_QUOTES,'UTF-8');
+                    $arr['html'].='<span style="'.$style.'">'.$name.'</span>';
                 }
             }
         } else {
