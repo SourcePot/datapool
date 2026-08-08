@@ -47,6 +47,22 @@ class ClientAccess{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
+    public function job(array $vars):array
+    {
+        $validUser=[];
+        $validUserSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'Privileges>'=>2];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($validUserSelector,TRUE) as $user){
+            if (strpos($user['EntryId'],'oneTimeLink')!==FALSE){continue;}
+            $validUser[$user['EntryId']]=$user['Name'];
+        }
+        $clientCredentialsSelector=['Source'=>$this->getEntryTable(),'Group'=>'Client credentials'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($clientCredentialsSelector,TRUE) as $clientCredentials){
+            if (isset($validUser[$clientCredentials['Folder']])){continue;}
+            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($clientCredentials,TRUE);
+        }
+        return $vars;
+    }
+
     public function getEntryTable():string
     {
         return $this->entryTable;
