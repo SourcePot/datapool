@@ -14,9 +14,14 @@ namespace SourcePot\Datapool\Foundation;
 
 class ClientAccess{
     
-    public const AUTHORIZATION_LIFESPAN=600;
-
-    private $oc;
+    private const AUTHORIZATION_LIFESPAN=3600;
+    private const FAILED_LOGIN_DETECTION_TIMESPAN=100;
+    private const FAILED_LOGIN_COUNT_THRESHOLD=3;
+    private const METHOD_WHITELIST=[
+        'SourcePot\Datapool\Processing\RemoteClient::clientCall'=>'SourcePot\Datapool\Processing\RemoteClient&rarr;clientCall()',
+    ];
+    
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[
@@ -25,9 +30,8 @@ class ClientAccess{
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.'],
     ];
 
-    private $methodBlackList=['run','init'];
-    
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -43,18 +47,18 @@ class ClientAccess{
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
-    public function getEntryTable(){return $this->entryTable;}
+    public function getEntryTable():string
+    {
+        return $this->entryTable;
+    }
 
-    public function getEntryTemplate(){return $this->entryTemplate;}
+    public function getEntryTemplate():array
+    {
+        return $this->entryTemplate;
+    }
     
-    /**
-    * This methed is invoked when a client calls ../resource.php
-    * The method outputs the answer created based on the request that consits of $_POST and/or $_GET values.
-    * @param array arr
-    * @return array arr
-    */
-    public function request($arr,$isDebugging=FALSE){
-        $debugArr=['arr in'=>$arr];
+    public function request(array $arr):array
+    {
         $header=[];
         if ($this->oc['SourcePot\Datapool\Tools\NetworkTools']->isHttps() || \SourcePot\Datapool\Root::PRODUCTION_ENVIRONMENT===FALSE){
             // process the request if https is confirmed or testing
@@ -63,7 +67,6 @@ class ClientAccess{
             if (isset($headers['Authorization'])){
                 $data['Authorization']=$headers['Authorization'];
             }
-            $debugArr['headers in']=$headers;
             $data=$this->request2data($data);
         } else {
             // client requests must use HTTPS
@@ -71,20 +74,11 @@ class ClientAccess{
         }
         $arr['data']=$data;
         $this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
-        if ($isDebugging){
-            $debugArr['arr out']=$arr;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
         return $arr;
     }
 
-    /**
-    * This methed adds $_POST and/or $_GET values to data.
-    * @param array data
-    * @return array data
-    */
-    private function globals2data($data=[]){
-        // add all request data to $data
+    private function globals2data(array $data=[]):array
+    {
         foreach($_POST as $name=>$value){
             $data[$name]=filter_input(INPUT_POST,$name);
         }
@@ -94,35 +88,32 @@ class ClientAccess{
         return $data;
     }
     
-    /**
-    * This method compiles the answer from the request and adds it to the data argument.
-    * There are two request types: a request for an new access token and a request to invoke the method stated in the request.
-    * The scope of the request is the object (class with namespace) provided by the "Client credentials"-entry.
-    * @param array data
-    * @return array data
-    */
-    private function request2data($data,$isDebugging=FALSE){
+    private function request2data(array $data):array
+    {
         $this->deleteExpiredEntries();
         $data['grant_type']=$data['grant_type']??'';
         $data['Authorization']=$data['Authorization']??'';
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        $context['ipFailedNeedle']=$this->getFailedNeedle();
         if (strcmp($data['grant_type'],'authorization_code')===0 && mb_strpos($data['Authorization'],'Basic ')===0){
             // new token request
             $data=$this->newToken($data);
+            return $data;
         } else if (mb_strpos($data['Authorization'],'Bearer ')===0){
             // check token
             $data=$this->checkToken($data);
             unset($data['Authorization']);
             // call the method on the object provided as Client credential's scope
             if (empty($data['answer']['error'])){
-                $class=$data['answer']['scope'];
-                $method=$data['answer']['method'];
+                $scopeComps=explode('::',$data['answer']['scope']);
+                $class=$scopeComps[0];
+                $method=$scopeComps[1]??'';
                 $data['client_id']=$data['answer']['client_id'];
-                if (in_array($method,$this->methodBlackList)){
-                    $data['answer']['error']='Access '.$class.'::'.$method.'() blocked';
-                    $this->oc['logger']->log('warning',$data['answer']['error'],[]);    
-                } else if (empty($this->oc[$class])){
-                    $this->oc['logger']->log('warning','Client request failed, Scope "{scope}::{method}" is inavlid. Please check Admin &rarr; Account &rarr; App credentials AND table "clientaccess"',$data['answer']);
-                } else if (method_exists($this->oc[$class],$method)){
+                if (!isset(self::METHOD_WHITELIST[$data['answer']['scope']])){
+                    $data['answer']['error']='Invalid scope '.$data['answer']['scope'].'()';
+                } else if (!method_exists($this->oc[$class],$method)){
+                    $data['answer']['error']='Scope does not exist '.$data['answer']['scope'].'()';
+                } else {
                     // set user from owner
                     $user=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$data['answer']['owner']];
                     $user=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($user,TRUE);
@@ -132,35 +123,31 @@ class ClientAccess{
                     unset($data['answer']);
                     $data['answer']=$this->oc[$class]->$method($data);
                     $data['answer']['token_expires_in_sec']=$tokenExpiresInSec;
-                } else {
-                    $data['answer']=['error'=>'Method '.$class.'::'.$method.'() does not exist'];
+                    return $data;
                 }
             } else {
-                $this->oc['logger']->log('error','Access token failed: {failed}',['failed'=>$data['answer']['error']]);
+                // check token failed, logged by checkToken() already
+                return $data;
             }
         } else {
             // authorization missing
-            $data['answer']['error']='invalid_request';
+            $data['answer']['error']='Authorization missing';
         }
-        if ($isDebugging){
-            $debugArr['data']=$data;
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file($debugArr);
-        }
+        $this->oc['logger']->log('warning','{ipFailedNeedle}: '.$data['answer']['error'],$context);        
         return $data;
     }
     
-    /**
-    * This methed returns a new access-token if the user credentials provided in the request are correct.
-    * The user credentials must be provided through $_POST['Authorization'] or $_GET['Authorization'], the format is "Basic ${Base64(<client_id>:<client_secret>)}"
-    * @param array data
-    * @return array data
-    */
-    private function newToken($data){
+    private function newToken(array $data):array
+    {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'ipFailedNeedle'=>$this->getFailedNeedle()];
         $authorizationArr=$this->decodeAuthorization($data['Authorization']);
-        $authorizationArr['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(FALSE);
         // get credentials entry and try match
         $authorizationEntry=FALSE;
-        if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
+        if ($this->tooManyFailedTokenChecks($context['ipFailedNeedle'])){
+            // ip is blocked
+            $data['answer']['error']='IP blocked';
+        } else if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
+            $context['client_id']=$authorizationArr['client_id'];
             $credentialsSelector=['Source'=>$this->entryTable,'Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%'];
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($credentialsSelector,TRUE) as $entry){
                 if (hash_equals($entry['Content']['client_id'],$authorizationArr['client_id']) && hash_equals($entry['Content']['client_secret'],$authorizationArr['client_secret'])){
@@ -168,15 +155,13 @@ class ClientAccess{
                     unset($authorizationEntry['Content']['client_secret']);
                 }
             }
+            if (empty($authorizationEntry)){
+                $data['answer']['error']='Invalid client';
+            }
         } else {
-            $data['answer']['error']='invalid_authorization_request';
-            $this->oc['logger']->log('error','Invalid authorization request origin "{ip}": type="{type}", client_secret="{client_secret}", client_id="{client_id}"',$authorizationArr);
+            $data['answer']['error']='Invalid authorization request';
         }
-        if (empty($authorizationEntry)){
-            // no matching credentials entry found
-            $data['answer']['error']='invalid_client';
-            $this->oc['logger']->log('error','Invalid client origin "{ip}": type="{type}", client_secret="{client_secret}", client_id="{client_id}"',$authorizationArr);    
-        } else {
+        if (!empty($authorizationEntry)){
             // create new token
             $accessToken=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(64);
             $authorizationEntry['Expires']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.strval(time()+self::AUTHORIZATION_LIFESPAN));
@@ -189,77 +174,91 @@ class ClientAccess{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token
             $data['answer']=$authorizationEntry['Content'];
-            $this->oc['logger']->log('debug','Client authorization success origin "{ip}": type="{type}", client_secret="***", client_id="{client_id}"',$authorizationArr);    
-        }
-        return $data;
-    }
-    
-    /**
-    * This methed checks the access-token provided through the request. 
-    * If the acces-token is invalid or has expired an error is added to the answer.
-    * @param array data
-    * @return array data
-    */
-    private function checkToken($data){
-        $data['answer']['error']='invalid_grant';
-        $tokenSelector=['Source'=>$this->entryTable,'Name'=>mb_substr($data['Authorization'],7)];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tokenSelector,TRUE) as $token){
-            $data['answer']=$token['Content'];
-            $data['answer']['owner']=$token['Owner'];
-            unset($data['answer']['access_token']);
-            unset($data['answer']['error']);
-            //
-            $datetimeObj=new \DateTime($token['Expires'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-            $data['answer']['expires_in']=$datetimeObj->getTimestamp()-time();
+            $this->oc['logger']->log('info','Client "{client_id}" authorization success',$context);    
             return $data;
         }
-        $tokenSelector['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(FALSE);
-        $this->oc['logger']->log('warning','Client token originating from {ip} failed: Source="{Source}", Name="{Name}"',$tokenSelector);    
+        $this->oc['logger']->log('warning','{ipFailedNeedle}: '.$data['answer']['error'],$context);
         return $data;
     }
     
-    private function deleteExpiredEntries(){
+    private function checkToken(array $data):array
+    {
+        $data['answer']['error']='Invalid grant';
+        $tokenSelector=['Source'=>$this->entryTable,'Name'=>mb_substr($data['Authorization'],7),'Expires>'=>date('Y-m-d H:i:s')];
+        $tokenSelector['ipFailedNeedle']=$this->getFailedNeedle();
+        if ($this->tooManyFailedTokenChecks($tokenSelector['ipFailedNeedle'])){
+            $data['answer']['error']='IP blocked';
+        } else if (mb_strlen($tokenSelector['Name'])!==64){
+            $data['answer']['error']='Invalid token';
+        } else {
+            // ip valid, check token
+            foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($tokenSelector,TRUE) as $token){
+                $data['answer']=$token['Content'];
+                $data['answer']['owner']=$token['Owner'];
+                unset($data['answer']['access_token']);
+                unset($data['answer']['error']);
+                //
+                $datetimeObj=new \DateTime($token['Expires'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
+                $data['answer']['expires_in']=$datetimeObj->getTimestamp()-time();
+                return $data;
+            }
+        }
+        $this->oc['logger']->log('warning','{ipFailedNeedle}: '.$data['answer']['error'],$tokenSelector);
+        return $data;
+    }
+
+    private function getFailedNeedle():string
+    {
+        $ip=$this->oc['SourcePot\Datapool\Root']->getIP(FALSE);
+        $safeIP=str_replace(['%','_'],['\%','\_'],$ip);
+        return 'Failed client request from '.$ip;
+    }
+
+    private function tooManyFailedTokenChecks(string $ipFailedNeedle):bool
+    {
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable(),'Content'=>'%'.$ipFailedNeedle.'%'];
+        $selector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.(time()-self::FAILED_LOGIN_DETECTION_TIMESPAN));
+        return $this->oc['SourcePot\Datapool\Foundation\Database']->getRowCount($selector,TRUE)>=self::FAILED_LOGIN_COUNT_THRESHOLD;
+    }
+    
+    private function deleteExpiredEntries()
+    {
         $selector=['Source'=>$this->entryTable,'Expires<'=>date('Y-m-d H:i:s')];
         $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($selector,TRUE);
     }
     
-    private function decodeAuthorization($authorization){
+    private function decodeAuthorization(string $authorization):array
+    {
         $authorizationArr=['type'=>FALSE,'client_id'=>FALSE,'client_secret'=>FALSE];
         $authComps=explode(' ',$authorization);
         $authorizationArr['type']=array_shift($authComps);
         $authComps=current($authComps);
         if (!empty($authComps)){
             $authComps=base64_decode($authComps);
-            $authComps=explode(':',$authComps);
-            $authorizationArr['client_id']=array_shift($authComps);
-            $authorizationArr['client_secret']=array_shift($authComps);
+            $colonPos=mb_strpos($authComps,':');
+            if ($colonPos!==FALSE){
+                $authorizationArr['client_id']=mb_substr($authComps,0,$colonPos);
+                $authorizationArr['client_secret']=mb_substr($authComps,$colonPos+1);
+            }
         }
         return $authorizationArr;
     }
     
-    private function getAuthorizationHeader($data){
+    private function getAuthorizationHeader(array $data):array
+    {
         $header=[];
         if (isset($data['client_id']) && isset($data['client_secret'])){
             $header['Authorization']='Basic '.base64_encode($data['client_id'].':'.$data['client_secret']);
-            //var_dump(urlencode($header['Authorization']));
         }
         return $header;
     }
     
-    private function getScopeOptions(){
-        $options=[];
-        foreach($this->oc as $classWithNamespace=>$obj){
-            $options[$classWithNamespace]=$classWithNamespace;
-        }
-        ksort($options);
-        return $options;
-    }
-
-    public function clientAppCredentialsForm($arr){
+    public function clientAppCredentialsForm(array $arr):array
+    {
         $arr['html']=(isset($arr['html']))?$arr['html']:'';
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($arr['selector'],'Write',[],FALSE,TRUE)){return $arr;}
         $contentStructure=[
-            'scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'SourcePot\Datapool\Processing\RemoteClient','keep-element-content'=>TRUE,'options'=>$this->getScopeOptions()],
+            'scope'=>['method'=>'select','excontainer'=>TRUE,'value'=>'METHOD_WHITELIST','keep-element-content'=>TRUE,'options'=>self::METHOD_WHITELIST],
             'method'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'clientCall','excontainer'=>TRUE],
             'client_id'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>'pi','excontainer'=>TRUE],
             'client_secret'=>['method'=>'element','tag'=>'input','value'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getRandomString(32),'type'=>'text','excontainer'=>TRUE],
