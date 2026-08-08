@@ -69,7 +69,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     private $userRoles=[
         'Content'=>[
             0=>['Value'=>1,'Name'=>'Public','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody not logged in'],
-            1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Everybody registered'],
+            1=>['Value'=>2,'Name'=>'Registered','isAdmin'=>FALSE,'isPublic'=>TRUE,'Description'=>'Everybody registered'],
             2=>['Value'=>4,'Name'=>'Member','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Member state'],
             3=>['Value'=>8,'Name'=>'Business','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Business'],
             4=>['Value'=>16,'Name'=>'Cases','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Cases'],
@@ -82,9 +82,9 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             11=>['Value'=>2048,'Name'=>'Family (uk)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (uk)'],
             12=>['Value'=>4096,'Name'=>'Family (de)','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Family (de)'],
             13=>['Value'=>8192,'Name'=>'Parents','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Parents'],
-            14=>['Value'=>16384,'Name'=>'Config admin','isAdmin'=>FALSE,'isPublic'=>FALSE,'Description'=>'Configuration admin'],
+            14=>['Value'=>16384,'Name'=>'Config admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Configuration admin'],
             15=>['Value'=>32768,'Name'=>'Admin','isAdmin'=>TRUE,'isPublic'=>FALSE,'Description'=>'Administrator']
-            ],
+        ],
         'Type'=>'array',
         'Read'=>'ALL_R',
         'Write'=>'ADMIN_R',
