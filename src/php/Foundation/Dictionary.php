@@ -311,9 +311,13 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     public function lng($phrase,string $lngCode='',string|bool $translation=FALSE,bool $isSystemCall=FALSE)
     {
         $lngCode=(empty($lngCode))?($this->getLanguageCode()):mb_strtolower($lngCode);
-        if (!is_string($phrase) || strcmp($lngCode,'en')===0){return $phrase;}
+        if (!is_string($phrase) || strcmp($lngCode,'en')===0){
+            return $phrase;
+        }
         $phrase=trim($phrase);
-        if (strlen($phrase)!==strlen(strip_tags($phrase))){return $phrase;}
+        if (mb_strlen($phrase)!==mb_strlen(strip_tags($phrase))){
+            return $phrase;
+        }
         $elementId=md5($phrase.'|'.$lngCode);
         if ($translation===FALSE && isset($this->lngCache[$elementId])){
             // translation request answered by cache
@@ -342,7 +346,9 @@ class Dictionary implements \SourcePot\Datapool\Interfaces\App{
         $regexp='/(\s*\{{2}[\w\s]+\}{2}\s*)|([\r\n.,]+)/';
         $phrases=preg_split($regexp,$text);
         foreach($phrases as $index=>$from){
-            if (empty($from)){continue;}
+            if (empty($from)){
+                continue;
+            }
             $to=$this->lng($from);
             $text=str_replace($from,$to,$text);
         }

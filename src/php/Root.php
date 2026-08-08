@@ -23,7 +23,7 @@ final class Root{
     public const PRODUCTION_ENVIRONMENT=TRUE;   // <------ SHOULD BE SET "TRUE"
 
     // header & session cockie
-    private const SESSION_COCKIE=[
+    private const SESSION_COOKIE=[
         'cookie_lifetime'=>43200,
         'cookie_samesite'=>'Strict',
         'cookie_secure'=>TRUE,
@@ -119,7 +119,7 @@ final class Root{
         date_default_timezone_set('UTC');
         // session start
         $this->builderProgress[hrtime(TRUE)]=__CLASS__.'&rarr;__constructor() called';
-        session_start(self::SESSION_COCKIE);
+        session_start(self::SESSION_COOKIE);
         $this->builderProgress[hrtime(TRUE)]='Session started';
         $this->updateCurrentUser();
         $this->builderProgress[hrtime(TRUE)]='Current user updated';
@@ -192,17 +192,17 @@ final class Root{
     public function updateCurrentUser($loginUser=[]):void
     {
         if (!empty($loginUser)){
-            // remote client | BE CAREFUL, THIS OPTION BYPASSES THE LOGIN
+            // For ClientAccessClass: BE CAREFUL, THIS OPTION BYPASSES THE LOGIN
             $this->currentUser=$loginUser;
             $this->currentUser['Content']['Misc']['Timezone']=$this->currentUser['Content']['Misc']['Timezone']??self::USER_TIMEZONE_TEMPLATE;
             $_SESSION['currentUser']=$this->currentUser;
         } else if (empty($_SESSION['currentUser']['EntryId']) || empty($_SESSION['currentUser']['Privileges']) || empty($_SESSION['currentUser']['Owner'])){
             // empty session -> anonymous user
-            $loginId=strval(mt_rand(1,999999999));
+            $loginId=strval(random_int(100000000,999999999));
             $this->currentUser=['Source'=>'user','Group'=>'Public user','Folder'=>'Public','Name'=>'Anonymous','LoginId'=>$loginId,'Expires'=>date('Y-m-d H:i:s',time()+300),'Privileges'=>1,'Read'=>'ALL_MEMBER_R','Write'=>'ADMIN_R'];
             $this->currentUser['Content']=['Contact details'=>['First name'=>'Anonym','Family name'=>'Anonym'],'Address'=>[],'Misc'=>['Timezone'=>self::USER_TIMEZONE_TEMPLATE]];
             $this->currentUser['Params']=[];
-            $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.password_hash($loginId,PASSWORD_DEFAULT);;
+            $this->currentUser['EntryId']=$this->currentUser['Owner']='ANONYM_'.password_hash($loginId,PASSWORD_DEFAULT);
             $_SESSION['currentUser']=$this->currentUser;
         } else {
             // get user from session
@@ -245,7 +245,7 @@ final class Root{
     */
     private function getMonologLogger(string $channel='Root'):Logger
     {
-        $logLevel=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel'));
+        $logLevel=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('logLevel');
         $logFile=$GLOBALS['dirs']['logging'].date('Y-m-d').' '.$channel.'.log';
         $logger = new Logger($channel);
         $logger->pushProcessor(new PsrLogMessageProcessor());
@@ -529,9 +529,9 @@ final class Root{
             if (mb_strpos($dirName,'.php')!==FALSE || mb_strpos($dirName,'.md')!==FALSE || empty(trim($dirName,'.'))){continue;}
             $type=match($dirName){
                 'Interfaces'=>'200|Interface',
-                'Foundation'=>'400|Kernal object',
-                'Tools'=>'500|Kernal object',
-                'Processing'=>'600|Kernal object',
+                'Foundation'=>'400|Kernel object',
+                'Tools'=>'500|Kernel object',
+                'Processing'=>'600|Kernel object',
                 default=>'800|Application object'
             };
             // scan files
@@ -580,7 +580,7 @@ final class Root{
                     $classWithNamespace=$objDef['classWithNamespace'];
                     if (is_file($objDef['file'])){
                         require_once $objDef['file'];
-                        if (strcmp($objDef['type'],'Kernal object')===0 || strcmp($objDef['type'],'Application object')===0){
+                        if (strcmp($objDef['type'],'Kernel object')===0 || strcmp($objDef['type'],'Application object')===0){
                             $this->oc[$classWithNamespace]=new $classWithNamespace($this->oc);
                         } else {
                             // interfaces will be registered when the object collection is completed
@@ -649,7 +649,7 @@ final class Root{
         return $GLOBALS['dirs'];
     }
 
-    private function initExceptionHandler()
+    private function initExceptionHandler():void
     {
         // error handling
         set_exception_handler(function(\Throwable $e){
@@ -666,8 +666,18 @@ final class Root{
                 }
             }
             // logging
-            if (!is_dir($GLOBALS['dirs']['debugging'])){mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);}
-            $err=['date'=>date('Y-m-d H:i:s'),'additional info'=>$addInfo,'message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString()];
+            if (!is_dir($GLOBALS['dirs']['debugging'])){
+                mkdir($GLOBALS['dirs']['debugging'],0770,TRUE);
+            }
+            $err=[
+                'date'=>date('Y-m-d H:i:s'),
+                'additional info'=>$addInfo,
+                'message'=>$e->getMessage(),
+                'file'=>$e->getFile(),
+                'line'=>$e->getLine(),
+                'code'=>$e->getCode(),
+                'traceAsString'=>$e->getTraceAsString()
+            ];
             $logFileContent=json_encode($err);
             $logFileName=$GLOBALS['dirs']['debugging'].'/'.time().'_exceptionsLog.json';
             file_put_contents($logFileName,$logFileContent);

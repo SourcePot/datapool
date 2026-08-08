@@ -51,7 +51,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         // set default entry access rights
         $accessOptions=$oc['SourcePot\Datapool\Foundation\Access']->getAccessOptions();
         $this->rootEntryTemplate['Read']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
-        $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];;
+        $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
     }
 
     Public function loadOc(array $oc):void
@@ -65,13 +65,13 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $toDo=FALSE;
         $allDetectedTables=array_flip(array_keys($GLOBALS['dbInfo']));
         foreach(self::TIME_BETWEEN_ACTIONS as $action=>$timeLimits){
-            $newestTimeStamp=$oldestTimeStamp=FALSE;
+            $newestTimeStamp=$oldestTimeStamp=NULL;
             $allTables=array_merge($allDetectedTables,$vars[$action]??['logger'=>0]);
             foreach($allTables as $table=>$actionTimeStamp){
-                if ($newestTimeStamp<$actionTimeStamp || $newestTimeStamp===FALSE){
+                if ($newestTimeStamp<$actionTimeStamp || is_null($newestTimeStamp)){
                     $newestTimeStamp=$actionTimeStamp;
                 }
-                if ($oldestTimeStamp>$actionTimeStamp || $oldestTimeStamp===FALSE){
+                if ($oldestTimeStamp>$actionTimeStamp || is_null($oldestTimeStamp)){
                     $oldestTimeStamp=$actionTimeStamp;
                     if ((time()-$oldestTimeStamp)>$timeLimits['max']){
                         $toDo=['action'=>$action,'table'=>$table];
@@ -236,60 +236,74 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getTableIndices(string $table):array
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){return [];}
+        $indices=[];
+        if (!isset($GLOBALS['dbInfo'][$table])){
+            return $indices;
+        }
         $stmt=$this->executeStatement("SHOW INDEXES FROM `".$table."`;",[]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
             $indices[$row["Key_name"]]=$row;
         }
-        return $indices??[];
+        return $indices;
     }
     
-    public function updateCollation(string $table)
+    public function updateCollation(string $table):array|bool
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){return FALSE;}
-        $updateSql='';
+        if (!isset($GLOBALS['dbInfo'][$table])){
+            return FALSE;
+        }
+        $updateSql=$result=[];
         $stmt=$this->executeStatement("SELECT TABLE_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE :table;",[':table'=>$table]);
         while($row=$stmt->fetch(\PDO::FETCH_ASSOC)){
-            if ($table!==$row['TABLE_NAME']){continue;}
+            if ($table!==$row['TABLE_NAME']){
+                continue;
+            }
             if ($row['COLLATION_NAME']===self::TABLE_COLLATION || $row['COLLATION_NAME']===NULL){continue;}
-            $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
-            $updateSql.="ALTER TABLE `".$row['TABLE_NAME']."` CONVERT TO CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";\n";
+            $updateSql[]="ALTER TABLE `".$row['TABLE_NAME']."` CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";";
+            $updateSql[]="ALTER TABLE `".$row['TABLE_NAME']."` CONVERT TO CHARACTER SET ".self::CHARACTER_SET." COLLATE ".self::TABLE_COLLATION.";";
             break;
         }
         if (empty($updateSql)){
             $this->oc['logger']->log('info','Table "{table}" CHARACTER_SET and TABLE_COLLATION is already up-to-date',['table'=>$table]);
         } else {
             $this->dropTableIndices($table);
-            $stmt=$this->executeStatement($updateSql,[]);
-            $result=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach($updateSql as $sql){
+                $stmt=$this->executeStatement($sql,[]);
+                $result=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            }
             $this->oc['logger']->log('notice','Updated CHARACTER_SET and TABLE_COLLATION of table "{table}"',['table'=>$table]);
             $this->setTableIndices($table);
         }
         return $result??FALSE;
     }
 
-    public function setTableIndices(string $table)
+    public function setTableIndices(string $table):array|bool
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){return FALSE;}
+        if (!isset($GLOBALS['dbInfo'][$table])){
+            return FALSE;
+        }
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
-        $sql="";
-        $sql.="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(30),`Group`(30),`Folder`(30),`Name`(30)); ";
-        $sql.="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`(40)); ";
+        $updateSql=$result=[];
+        $updateSql[]="ALTER TABLE `".$table."` ADD INDEX STD (`EntryId`(30),`Group`(30),`Folder`(30),`Name`(30)); ";
+        $updateSql[]="ALTER TABLE `".$table."` ADD PRIMARY KEY (`EntryId`(40)); ";
+        foreach($updateSql as $sql){
+            $result[]=$this->executeStatement($sql,[]);
+        }
         $this->oc['logger']->log('notice','Added index to database table "{table}" and "primary key"',$context);
-        return $this->executeStatement($sql,[]);
+        return $result;
     }
 
-    public function dropTableIndices(string $table)
+    public function dropTableIndices(string $table):bool
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){return FALSE;}
+        if (!isset($GLOBALS['dbInfo'][$table])){
+            return FALSE;
+        }
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
-        $sql="";
         $indices=$this->getTableIndices($table);
         foreach($indices as $keyName=>$indexArr){
             $context['dropped']=$keyName.' | ';
-            $sql.="ALTER TABLE `".$table."` DROP INDEX `".$keyName."`; ";
+            $this->executeStatement("ALTER TABLE `".$table."` DROP INDEX `".$keyName."`; ",[]);
         }
-        if (!empty($sql)){$this->executeStatement($sql,[]);}
         $context['dropped']=trim($context['dropped'],'| ');
         $this->oc['logger']->log('notice','Existing indices "{dropped}" and "primary key" of database table "{table}" dropped.',$context);
         return TRUE;
@@ -591,8 +605,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $column=trim($column,'!');
         if (strcmp($column,'Source')===0){
             $tableArr=$GLOBALS['dbInfo'];
-            if ($isAsc){ksort($tableArr);} else {krsort($tableArr);}
-            foreach($GLOBALS['dbInfo'] as $table=>$tableInfoArr){
+            if ($isAsc){
+                ksort($tableArr);
+            } else {
+                krsort($tableArr);
+            }
+            foreach($tableArr as $table=>$tableInfoArr){
                 $result['Source']=$table;
                 yield $result;
                 $result['rowIndex']++;

@@ -62,7 +62,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($clientCredentials,TRUE);
             $deletedClientCredentials++;
         }
-        $vars['Msg']=['Privileged user found'=>count($validUser),'Client credentials deleted'=>$$deletedClientCredentials];
+        $vars['Msg']=['Privileged user found'=>count($validUser),'Client credentials deleted'=>$deletedClientCredentials];
         return $vars;
     }
 

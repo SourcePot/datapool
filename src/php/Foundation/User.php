@@ -30,7 +30,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Middle name'=>['@tag'=>'input','@type'=>'text','@default'=>'','@excontainer'=>TRUE],
                 'Family name'=>['@tag'=>'input','@type'=>'text','@placeholder'=>'Family name','@excontainer'=>TRUE],
                 'Gender'=>['@function'=>'select','@options'=>[''=>'','male'=>'male','female'=>'female','divers'=>'divers'],'@default'=>'','@excontainer'=>TRUE],
-                'Language'=>['@function'=>'select','@options'=>['en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'Frensh'],'@default'=>'en','@excontainer'=>TRUE],
+                'Language'=>['@function'=>'select','@options'=>['en'=>'English','de'=>'German','es'=>'Spanish','fr'=>'French'],'@default'=>'en','@excontainer'=>TRUE],
                 'Email'=>['@tag'=>'input','@type'=>'email','@filter'=>FILTER_SANITIZE_EMAIL,'@default'=>'','@placeholder'=>'e.g. info@company.com','@excontainer'=>TRUE],
                 'Phone'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 89 1234567','@excontainer'=>TRUE],
                 'Mobile'=>['@tag'=>'input','@type'=>'tel','@default'=>'','@placeholder'=>'e.g. +49 160 1234567','@excontainer'=>TRUE],
@@ -97,7 +97,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -149,9 +149,9 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $user['class']='';
         $user['matrix']=[];
         $privileges=$user['Privileges']??$user['selector']['Privileges']??[];
-        foreach($this->userRoles['Content'] as $index=>$rolArrc){
-            if ((intval($privileges) & $rolArrc['Value'])>0){
-                $user['matrix'][$index]=['Role'=>$rolArrc['Name']];
+        foreach($this->userRoles['Content'] as $index=>$rolArr){
+            if ((intval($privileges) & $rolArr['Value'])>0){
+                $user['matrix'][$index]=['Role'=>$rolArr['Name']];
             }
         }
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table($user);
@@ -327,7 +327,6 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function newlyRegisteredUserLogin(array $user):array
     {
         $user['Owner']=$user['EntryId'];
-        $user['LoginId']=$user['LoginId'];
         $user['Privileges']='REGISTERED_R';
         $user=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($user);
         $this->loginUser($user);
@@ -337,16 +336,18 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     public function loginUser(array $user):void
     {
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser($user);
-        $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',['userName'=>$_SESSION['currentUser']['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+        $this->oc['logger']->log('info','Logged in "{userName}" at {dateTime}',['userName'=>$currentUser['Name'],'dateTime'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','','','Y-m-d H:i:s (e)')]);    
     }
     
     public function getUserOptions(array $selector=[],string $flatContactDetailsKey=''):array
     {
         $selector['Source']=$this->entryTable;
         $options=[];
+        $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $user){
             // return only users with matching Privileges
-            if ((intval($_SESSION['currentUser']['Privileges']) & intval($user['Privileges']))===0){
+            if ((intval($currentUser['Privileges']) & intval($user['Privileges']))===0){
                 continue;
             }
             // remove non-user entries
@@ -388,7 +389,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
         $arr['html']=$arr['html']??'';
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator(['Source'=>$arr['selector']['Source'],'EntryId'=>'online_%'],TRUE,'Read','Expires',FALSE) as $onlineUser){
-            $backgronudColor=(time()-$onlineUser['Content']['timestamp']<60)?'var(--greenH)':((time()-$onlineUser['Content']['timestamp']<3660)?'var(--yellowH)':'var(--bgColorA)');
+            $backgroundColor=(time()-$onlineUser['Content']['timestamp']<60)?'var(--greenH)':((time()-$onlineUser['Content']['timestamp']<3660)?'var(--yellowH)':'var(--bgColorA)');
             $timeDiff=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimeDiff('@'.time(),'@'.$onlineUser['Content']['timestamp']);
             // get user
             $userEntryId=str_replace('online_','',$onlineUser['EntryId']);
@@ -414,7 +415,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 }
                 $lastSeenLocation.=$this->oc['SourcePot\Datapool\Foundation\Dictionary']->lng('Recorded');
                 $lastSeenLocation.=': '.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$properties['maxTimeStamp'],'','','Y-m-d H:i:s',$targetTimeZone).', '.$targetTimeZone.']';
-                $onlineUser['Content']['lastSeenLocation'].=$lastSeenLocation;
+                $onlineUser['Content']['lastSeenLocation']=$lastSeenLocation;
             }
             // present user
             $presentArr['selector']=$onlineUser;
@@ -422,7 +423,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             $userHtml=$this->oc['SourcePot\Datapool\Tools\MediaTools']->getIcon(['selector'=>$user,'returnHtmlOnly'=>TRUE]);
             $userHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$textHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-content-wrapper']);
             // html wrapper
-            $style=['border-left'=>'1vw solid '.$backgronudColor];
+            $style=['border-left'=>'1vw solid '.$backgroundColor];
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'div','element-content'=>$userHtml,'keep-element-content'=>TRUE,'class'=>'widget-entry-wrapper','style'=>$style]);
         }
         $arr['html']=$arr['html']?:$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'No active user detected...']);
@@ -433,8 +434,8 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $element=['element-content'=>''];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'Active user','keep-element-content'=>TRUE]);
-        $elector=['Source'=>$this->entryTable,'EntryId'=>'online_%','disableAutoRefresh'=>FALSE];
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$elector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
+        $selector=['Source'=>$this->entryTable,'EntryId'=>'online_%','disableAutoRefresh'=>FALSE];
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Active user '.__CLASS__.__FUNCTION__,'generic',$selector,['method'=>'getActiveUser','classWithNamespace'=>__CLASS__],['style'=>['width'=>'99vw','border'=>'none','padding'=>'0px']]);
         return $element;
     }
     
