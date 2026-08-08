@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace SourcePot\Datapool\Foundation;
 
-class ClientAccess{
+class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
     
     private const AUTHORIZATION_LIFESPAN=3600;
     private const FAILED_LOGIN_DETECTION_TIMESPAN=100;
