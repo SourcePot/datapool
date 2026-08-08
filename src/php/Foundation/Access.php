@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class Access{
     
+    private const APPLICATION_ID='kjHD1W82IQ9iBS';
+    
     private $oc;
 
     private $access=[
@@ -165,39 +167,35 @@ class Access{
     }
     
     public function emailId(string $email){
-        $emailId=md5($email."kjHD1W82IQ9iBS");
+        $emailId=md5($email.self::APPLICATION_ID);
         return $emailId;
     }
 
-    public function loginId(string $email,string $password):string
+    public function loginId(#[\SensitiveParameter]string $password):string
     {
-        $emailId=$this->emailId($email);
-        $userPass=$password.$emailId;
-        $loginId=password_hash($userPass,PASSWORD_DEFAULT);
-        return $loginId;
+        return password_hash($password,PASSWORD_DEFAULT);
     }
     
-    public function verifyPassword(string $email,string $password,string $loginId):bool
+    public function verifyPassword(string $email,#[\SensitiveParameter]string $password,string $loginId):bool
     {
         if (empty($email) || empty($password) || empty($loginId)){
             return FALSE;
         }
         $emailId=$this->emailId($email);
-        $userPass=$password.$emailId;
-        if (password_verify($userPass,$loginId)===TRUE){
-            $this->rehashPswIfNeeded(array('Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$emailId),$userPass,$loginId);
+        if (password_verify($password,$loginId)===TRUE){
+            $this->rehashPswIfNeeded(['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$emailId],$password,$loginId);
             return TRUE;
         } else {
             return FALSE;
         }
     }
-    
-    private function rehashPswIfNeeded(array $user,string $userPass,string $loginId):bool
+
+    private function rehashPswIfNeeded(array $user,#[\SensitiveParameter]string $password,string $loginId):bool
     {
         if (password_needs_rehash($loginId,PASSWORD_DEFAULT)){
-            $user['LoginId']=password_hash($userPass,PASSWORD_DEFAULT);
+            $user['LoginId']=password_hash($password,PASSWORD_DEFAULT);
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
-            $this->oc['logger']->log('warning','User account login id for {EntryId}" was rehashed.',array('EntryId'=>$user['EntryId']));    
+            $this->oc['logger']->log('warning','User account login id for {EntryId}" was rehashed.',['EntryId'=>$user['EntryId']]);    
             return TRUE;
         } else {
             return FALSE;

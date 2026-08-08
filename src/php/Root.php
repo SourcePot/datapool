@@ -409,18 +409,6 @@ final class Root{
                 $arr['page html']='Job skipped due to high server load (threshold='.round($loadAvgThreshold).')...';
             }
             $arr['page html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Values'=>$loadAvg],'hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>FALSE,'caption'=>'Average server load','style'=>['clear'=>'both']]);
-        } else if ($this->script==='import.php'){
-            // import Processing
-            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBackbone($arr);
-            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageHeader($arr);
-            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->addHtmlPageBody($arr);
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin()){
-                $arr=$this->oc['SourcePot\Datapool\Foundation\Legacy']->importPage($arr);
-            } else {
-                $pageContent='Access to content of "'.$this->script.'" denied...';
-                $arr['toReplace']['{{content}}']=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>$pageContent,'keep-element-content'=>TRUE]);
-            }
-            $arr=$this->oc['SourcePot\Datapool\Foundation\Backbone']->finalizePage($arr);
         } else if ($this->script==='resource.php'){
             // client request processing
             $arr=$this->oc['SourcePot\Datapool\Foundation\ClientAccess']->request($arr);

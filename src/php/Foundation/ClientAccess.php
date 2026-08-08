@@ -37,7 +37,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -55,11 +55,14 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
             if (strpos($user['EntryId'],'oneTimeLink')!==FALSE){continue;}
             $validUser[$user['EntryId']]=$user['Name'];
         }
+        $deletedClientCredentials=0;
         $clientCredentialsSelector=['Source'=>$this->getEntryTable(),'Group'=>'Client credentials'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($clientCredentialsSelector,TRUE) as $clientCredentials){
             if (isset($validUser[$clientCredentials['Folder']])){continue;}
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($clientCredentials,TRUE);
+            $deletedClientCredentials++;
         }
+        $vars['Msg']=['Privileged user found'=>count($validUser),'Client credentials deleted'=>$$deletedClientCredentials];
         return $vars;
     }
 

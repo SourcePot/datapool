@@ -12,6 +12,8 @@ namespace SourcePot\Datapool\Foundation;
 
 class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
+    public const TARGET_USER_GROUP='User_1';
+
     private $oc;
     
     private $entryTable='';
@@ -164,7 +166,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         if (empty($entry['Params']['User registration']['Email']) && !empty($entry['Content']['Contact details']['Email'])){
             $entry['Params']['User registration']['Email']=$entry['Content']['Contact details']['Email'];
         }
-        $entry['Group']=(($entry['Group']??'')!=='Job' && ($entry['Group']??'')!=='Admin')?'User':$entry['Group'];
+        $entry['Group']=(($entry['Group']??'')!=='Job' && ($entry['Group']??'')!=='Admin')?self::TARGET_USER_GROUP:$entry['Group'];
         if (isset($entry['Email'])){$entry['Folder']=$entry['Email'];}
         if ($addDefaults){
             $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights($entry,'ADMIN_R','ADMIN_R');
@@ -191,7 +193,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Owner'=>'SYSTEM'
             ];
             $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
-            $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Email'],$admin['Password']);
+            $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Password']);
             $admin['Content']['Contact details']=['First name'=>'System','Family name'=>'Admin account'];
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin,TRUE);
             if ($success){
@@ -220,7 +222,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Privileges'=>'REGISTERED_R',
             ];
             $job['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($job['Email']);
-            $job['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($job['Email'],$job['Password']);
+            $job['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($job['Password']);
             $job['Content']['Contact details']=['First name'=>'System','Family name'=>'Job account','Email'=>$job['Email']];
             $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($job,TRUE);
             if ($success){
