@@ -190,21 +190,18 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
                 'Group'=>'Admin',
                 'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailWebmaster'),
                 'Password'=>$this->initPsw(),
-                'Owner'=>'SYSTEM'
             ];
-            $admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']);
-            $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Password']);
+            $admin['Owner']=$admin['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($admin['Email']?:'');
+            $admin['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($admin['Password']?:'');
             $admin['Content']['Contact details']=['First name'=>'System','Family name'=>'Admin account'];
-            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin,TRUE);
-            if ($success){
-                // Save init admin details
-                $adminFile=['Class'=>__CLASS__,'EntryId'=>__FUNCTION__];
-                $adminFile['Content']['Admin email']=$admin['Email'];
-                $adminFile['Content']['Admin password']=$admin['Password'];
-                $access=$this->oc['SourcePot\Datapool\Foundation\Filespace']->insertEntry($adminFile,TRUE);
-                $this->oc['logger']->log('alert','No admin account found. I have created a new admin account, the credentials can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
-                return TRUE;
-            }
+            $admin=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($admin,TRUE);
+            // Save init admin details to protected setup space
+            $adminFile=['Class'=>__CLASS__,'EntryId'=>__FUNCTION__];
+            $adminFile['Content']['Admin email']=$admin['Email'];
+            $adminFile['Content']['Admin password']=$admin['Password'];
+            $this->oc['SourcePot\Datapool\Foundation\Filespace']->insertEntry($adminFile,TRUE);
+            $this->oc['logger']->log('alert','No admin account found. I have created a new admin account, the credentials can be found in ..\\setup\\User\\'.__FUNCTION__.'.json');    
+            return TRUE;
         }
         return FALSE;
     }
@@ -213,22 +210,26 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     {
         $noJobAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry(['Source'=>$this->getEntryTable(),'Group'=>'Job'],TRUE));
         if ($noJobAccountFound){
+            $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             $job=[
                 'Source'=>$this->entryTable,
                 'Group'=>'Job',
                 'Email'=>$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('emailJob'),
                 'Password'=>$this->initPsw(32),
-                'Owner'=>'SYSTEM',
                 'Privileges'=>'REGISTERED_R',
             ];
-            $job['EntryId']=$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($job['Email']?:'');
+            $job['Owner']=$job['EntryId']='job_'.$this->oc['SourcePot\Datapool\Foundation\Access']->emailId($job['Email']?:'');
             $job['LoginId']=$this->oc['SourcePot\Datapool\Foundation\Access']->loginId($job['Password']?:'');
             $job['Content']['Contact details']=['First name'=>'System','Family name'=>'Job account','Email'=>$job['Email']];
-            $success=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($job,TRUE);
-            if ($success){
-                $this->oc['logger']->log('alert','No job account found, new job account created');    
-                return TRUE;
+            $job=$this->oc['SourcePot\Datapool\Foundation\Database']->insertEntry($job,TRUE);
+            if (empty($this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic('inserted'))){
+                // failed to create account
+                $this->oc['logger']->log('alert','Failed to create missing job account');
+            } else {
+                // success
+                $this->oc['logger']->log('notice','Created missing job account');
             }
+            return TRUE;
         }
         return FALSE;
     }
