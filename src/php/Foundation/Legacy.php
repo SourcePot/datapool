@@ -35,17 +35,27 @@ class Legacy{
         }
         // user needs update
         $legacyUserPass=$password.$user['EntryId'];
-        if (password_verify($legacyUserPass,$user['LoginId'])===TRUE){
+        if ($this->updatePassword($user,$legacyUserPass,$password)){
+            $this->oc['logger']->log('info','Legacy user account update from "{Group}" to "'.\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP.'" for "{Name}".',$user);
+        } else if ($this->updatePassword($user,$password,$password)){
+            $this->oc['logger']->log('info','Legacy user account update from "{Group}" to "'.\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP.'" for "{Name}".',$user);
+        } else {
+            $this->oc['logger']->log('info','Legacy user account update for "{Name}" failed. Wrong password provided.',$user);
+        }
+        return $this->oc['SourcePot\Datapool\Foundation\Database']->entryById($user,TRUE);
+    }
+
+    private function updatePassword(array $user, string $oldPsw, string $newPsw):bool
+    {
+        if (password_verify($oldPsw,$user['LoginId'])===TRUE){
             // valid password provided
-            $user['LoginId']=password_hash($password,PASSWORD_DEFAULT);
+            $user['LoginId']=password_hash($newPsw,PASSWORD_DEFAULT);
             $user['Group']=\SourcePot\Datapool\Foundation\User::TARGET_USER_GROUP;
             $user=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($user,TRUE);
-            $this->oc['logger']->log('info','Legacy user account update for "{Name}".',$user);
-            return $user;
+            return TRUE;
         } else {
             // invalid password provided
-            $this->oc['logger']->log('info','Legacy user account update for "{Name}" failed. Wrong password provided.',$user);
-            return $user;
+            return FALSE;
         }
     }
 }
