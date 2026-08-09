@@ -15,7 +15,9 @@ use Monolog\LogRecord;
 use Monolog\Level;
 
 class Logger implements \SourcePot\Datapool\Interfaces\Job{
-    
+
+    private const MAX_DEBUG_FILE_COUNT=200;
+
     private $oc;
     
     private $entryTable='';
@@ -39,12 +41,12 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
  
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -80,6 +82,26 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
             $toDeleteSelector['Date<']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime($signal['Date'],'-P1D');
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($toDeleteSelector,TRUE);
         }
+        // debug dir clean-up
+        $orgFileCount=0;
+        $fileArr=[];
+        $files=scandir($GLOBALS['dirs']['debugging']);
+        foreach($files as $file){
+            $fullFileName=$GLOBALS['dirs']['debugging'].$file;
+            if (strcmp($file,'.')===0 || strcmp($file,'..')===0 || !is_file($fullFileName)){
+                continue;
+            }
+            $fileTimestamp=filectime($fullFileName);
+            $fileArr[$fileTimestamp.'|'.$orgFileCount]=$fullFileName;
+            $orgFileCount++;
+        }
+        $debugFilesDeleted=0;
+        ksort($fileArr);
+        while(count($fileArr)>self::MAX_DEBUG_FILE_COUNT){
+            $file2delete=array_shift($fileArr);
+            $debugFilesDeleted+=intval(unlink($file2delete));
+        }
+        $vars['Debug file management']=['MAX_DEBUG_FILE_COUNT'=>self::MAX_DEBUG_FILE_COUNT,'New debug file count'=>$fileArr,'Original debug file count'=>$orgFileCount,'Deleted debug files'=>$debugFilesDeleted];
         return $vars;
     }    
     
@@ -92,9 +114,9 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
      * @param string $method Name of the method
      * @param array $args Array containing all method arguments for the test
      * @param string $logLevel Is the LogLevel if test finishes without exceptions
-     * @param string $logger Is tghe name of the logger instance to be used. Instances are created within class Root
+     * @param string $logger Is the name of the logger instance to be used. Instances are created within class Root
      *
-     * @return bool TRUE if no exception is triggered, FALSE if an exception is triggered otherwise
+     * @return array Context, debugging values
      */
     public function methodTest($classInstance,string $method,array $args,string $logLevel='info',string $logger='logger_1'):array
     {
@@ -106,7 +128,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
             $f=new \ReflectionMethod($class,$method);
             foreach($f->getParameters() as $pIndex=>$param){
                 $paramsStr.='{'.$param->name.'},';
-                $context[$param->name]=$args[$pIndex];
+                $context[$param->name]=$args[$pIndex]??NULL;
             }
             $return=call_user_func_array([$classInstance,$method],$args);
             $context['return']=$return;
@@ -121,7 +143,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         return $context;
     }
     
-    public function addLog(LogRecord $record)
+    public function addLog(LogRecord $record):void
     {
         $level=mb_strtolower($record->level->name);
         $context=array_merge($record->context,$record->extra);
@@ -129,7 +151,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $context['ip']=$this->oc['SourcePot\Datapool\Root']->getIP(self::LOG_LEVEL_CONFIG[$level]['hashIp']);
         $context['timestamp']=time();
         $entry=self::LOG_LEVEL_CONFIG[$level];
-        $entry['Owner']=(empty($entry['Owner']))?$_SESSION['currentUser']['EntryId']:$entry['Owner'];
+        $entry['Owner']=$entry['Owner']?:$_SESSION['currentUser']['EntryId']?:'ANONYM';
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Read');
         $entry=$this->oc['SourcePot\Datapool\Foundation\Access']->replaceRightConstant($entry,'Write');
         $entry['Source']=$this->entryTable;
@@ -139,12 +161,8 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $entry['Content']=$context;
         $entry['Content']['msg']=$record->message;
         if (self::LOG_LEVEL_CONFIG[$level]['addTrace']){
-            $entry['Content']['trace']=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             // remove traces due to logging itsself
-            unset($entry['Content']['trace'][0]);
-            unset($entry['Content']['trace'][1]);
-            unset($entry['Content']['trace'][2]);
-            unset($entry['Content']['trace'][3]);
+            $entry['Content']['trace'] = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),4);
         }
         $entry['Name']=mb_substr($entry['Content']['msg'],0,100);
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
@@ -164,21 +182,34 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
         $arr['settings']=array_replace_recursive(['orderBy'=>'Date','isAsc'=>FALSE,'limit'=>FALSE,'offset'=>0,'columns'=>$columns,'class'=>'log'],$arr['settings']);
         $arr['selector']['Source']=$this->entryTable;
         $logs=[];
+        $logIndex=0;
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($arr['selector'],FALSE,'Read',$arr['settings']['orderBy'],$arr['settings']['isAsc'],$arr['settings']['limit'],$arr['settings']['offset']) as $log){
             $logDateTimeObj=new \DateTime($log['Date'],new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
             $timestamp=number_format(floatval($log['Content']['timestamp']?:$logDateTimeObj->getTimestamp()),6,'.','');
             $logDateTimeObj = \DateTime::createFromFormat('U.u',$timestamp);
-            $logDate=$logDateTimeObj->format("Y-m-d H:i:s.u");
+            if (empty($logDateTimeObj)){
+                $validDate=FALSE;
+                $logDate=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
+            } else {
+                $validDate=TRUE;
+                $logDate=$logDateTimeObj->format("Y-m-d H:i:s.u");
+            }
             $logDate=$this->oc['SourcePot\Datapool\Calendar\Calendar']->getTimezoneDate($logDate,\SourcePot\Datapool\Root::DB_TIMEZONE,\SourcePot\Datapool\Root::getUserTimezone(),'Y-m-d H:i:s.u');
             if (strpos($logDate,$today)!==FALSE){
                 $log['Date']=str_replace($today,'',$logDate);
+            } else {
+                $log['Date']=$logDate;
             }
+            $log['Date']=($validDate)?$log['Date']:'~'.$log['Date'];
             // logs to be shown
             $flatLog=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($log);
             foreach($arr['settings']['columns'] as $column){
-                if (!isset($flatLog[$column])){continue;}
-                $logs[$timestamp][$column]=$flatLog[$column];
+                if (!isset($flatLog[$column])){
+                    continue;
+                }
+                $logs[$timestamp.'|'.$logIndex][$column]=$flatLog[$column];
             }
+            $logIndex++;
         }
         // compile html
         krsort($logs);
