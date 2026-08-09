@@ -12,20 +12,25 @@ namespace SourcePot\Datapool\Tools;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Reader\Csv;
 
 class XLStools{
 
-    private $oc;
+    private const SPREADSHEET_FORMAT_ERROR_THRESHOLD=20; // spreadsheet totalColumns/totalRows
+
+    private $oc=[];
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
     
+    private $spreadsheetSetting=[];
     private $spreadsheetTimestamp=FALSE;
     private $mapIndex2letter=[];
 
     private const SPREADSHEET_SETTINGS=[
+        'import formats'=>[''=>'Xlsx, Xls, Xml, Ods, Slk, Gnumeric, Html, Csv','xml'=>'Ignore Xml','html'=>'Ignore Html','xml,html'=>'Ignore Xml & Html'],
         'output format'=>['Csv'=>'Csv','Xls'=>'Xls',"Xlsx"=>'Xlsx','Ods'=>'Ods','Pdf'=>'PDF'],
         'delimiter'=>[';'=>'Semicolon',','=>'Comma','TAB'=>'Tabulator','|'=>'Pipe'],
         'enclosure'=>['"'=>'"',"'"=>"'",''=>'None'],
@@ -64,6 +69,7 @@ class XLStools{
 
     public function init()
     {
+        $this->loadSettings();
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         for($indexA=65;$indexA<=90;$indexA++){
             $this->mapIndex2letter[]=chr($indexA);
@@ -73,7 +79,7 @@ class XLStools{
                 $this->mapIndex2letter[]=chr($indexA).chr($indexB);
             }
         }
-        $this->entry2spreadsheet();    
+        $this->entry2spreadsheet();
     }
 
     public function getEntryTable():string
@@ -84,6 +90,14 @@ class XLStools{
     public function getEntryTemplate():array
     {
         return $this->entryTemplate;
+    }
+
+    private function loadSettings():void
+    {
+        $category=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
+        $app=(\SourcePot\Datapool\Foundation\Menu::CATEGORIES[$category?:'Data']??['Category'=>'Data'])['Category'];
+        $callingClass=$_SESSION['page state']['selectedApp'][$app]['Class']??'GENERIC';
+        $this->spreadsheetSetting=$this->getSpreadsheetSettings($callingClass);
     }
 
     public function spreadsheetSettingsSelector($callingClass=''):array
@@ -133,7 +147,7 @@ class XLStools{
         return $arr;
     }
 
-    public function isSpreadsheet(array|string $selector):string|FALSE
+    public function isSpreadsheet(array|string $selector):string|bool
     {
         $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
         if (!is_file($spreadsheetFile)){
@@ -141,7 +155,13 @@ class XLStools{
         }
         try {
             $fileType=IOFactory::identify($spreadsheetFile,NULL,TRUE);
-            return $fileType;
+            $fileTypeComps=explode('\\',$fileType);
+            $fileTypeStr=array_pop($fileTypeComps);
+            if (stripos($this->spreadsheetSetting['import formats'],$fileTypeStr)!==FALSE){
+                return FALSE;
+            } else {
+                return $fileType;   // e.g. "PhpOffice\\PhpSpreadsheet\\Reader\\Csv"
+            }
         } catch (\Exception $e) {
             return FALSE;        
         }
@@ -149,32 +169,41 @@ class XLStools{
 
     private function getSpreadsheetReaderWorksheets(array|string $selector,string|int $loadSelectedWorksheet=0):array
     {
-        $arr=['class'=>__CLASS__,'function'=>__FUNCTION__,'Worksheets'=>[]];
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        $arr=['Worksheets'=>[]];
         $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
-        $arr+=pathinfo($spreadsheetFile);
+        $context+=pathinfo($spreadsheetFile);
         if (!is_file($spreadsheetFile)){
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load open "{filename}"',$arr);         
+            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to load open "{filename}"',$arr);         
             return $arr;
         }
         try {
-            $arr['fileType']=IOFactory::identify($spreadsheetFile);
+            $arr['readerClass']=IOFactory::identify($spreadsheetFile,NULL,TRUE);
         } catch (\Exception $e) {
-            $arr['msg']=$e->getMessage();
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to detect spreadsheet file type of "{filename}": "{msg}"',$arr);
+            $context['msg']=$e->getMessage();
+            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to detect spreadsheet file type of "{basename}": "{msg}"',$context);
             return $arr;        
         }
         try{
-            $reader=IOFactory::createReader($arr['fileType']);
+            $reader=IOFactory::createReader($arr['readerClass']);
+            if (stripos($arr['readerClass'],'csv')!==FALSE){
+                $reader->setTestAutoDetect(FALSE);
+                $reader->setInputEncoding(Csv::GUESS_ENCODING);
+                $reader->setFallbackEncoding('UTF-8');
+                $reader->setDelimiter($this->spreadsheetSetting['delimiter']);
+                $reader->setEnclosure($this->spreadsheetSetting['enclosure']);
+                $reader->setEscapeCharacter($this->spreadsheetSetting['escape']);
+            }
             $arr['Worksheets']=$reader->listWorksheetInfo($spreadsheetFile);
         } catch(\Exception $e){
-            $arr['msg']=$e->getMessage();
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to aquire spreadsheet information from "{filename}": "{msg}"',$arr);     
+            $context['msg']=$e->getMessage();
+            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to aquire spreadsheet information from "{basename}": "{msg}"',$context);     
             return $arr;    
         }
         if (empty($loadSelectedWorksheet)){
             return $arr;
         } else {
-            $arr['selectedWorksheet']=$loadSelectedWorksheet;
+            $arr['selectedWorksheet']=$context['selectedWorksheet']=$loadSelectedWorksheet;
             $reader->setLoadSheetsOnly($loadSelectedWorksheet);
         }
         try{
@@ -182,9 +211,10 @@ class XLStools{
             $reader->setReadDataOnly(TRUE);
             $arr['spreadsheet']=$reader->load($spreadsheetFile);
             $arr['worksheet']=$arr['spreadsheet']->getActiveSheet();
+            $this->oc['logger']->log('info','"{class}&rarr;{function}()" got worksheet "{selectedWorksheet}" from "{basename}"',$context);         
         } catch(\Exception $e){
-            $arr['msg']=$e->getMessage();
-            $this->oc['logger']->log('error','"{class} &rarr; {function}" failed to load worksheet "{selectedWorksheet}" from "{filename}": "{msg}"',$arr);         
+            $context['msg']=$e->getMessage();
+            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to load worksheet "{selectedWorksheet}" from "{basename}": "{msg}"',$context);         
         }
         return $arr;
     }
@@ -192,11 +222,15 @@ class XLStools{
     public function addSpreadsheetInfo(array|string $selector,array $entry=[],):array
     {
         $info=$this->getSpreadsheetReaderWorksheets($selector,0);
-        if (empty($info['Worksheets'])){return $entry;}
+        if (empty($info['Worksheets'])){
+            return $entry;
+        }
         $entry['Params']['File']['SpreadsheetIteratorClass']=__CLASS__;
         $entry['Params']['File']['SpreadsheetIteratorMethod']='iterator';
         foreach($info['Worksheets'] as $worksheetInfo){
             $sample=[];
+            $entry['Params']['File']['SpreadsheetWorksheets'][$worksheetInfo['worksheetName']]=$worksheetInfo;
+            $entry['Params']['File']['SpreadsheetWorksheets'][$worksheetInfo['worksheetName']]['formatError']=($worksheetInfo['totalColumns']/($worksheetInfo['totalRows']?:0.000000001)>self::SPREADSHEET_FORMAT_ERROR_THRESHOLD);
             foreach($this->iterator($selector,$worksheetInfo['worksheetName'],10) as $cells){
                 $sample=array_merge($sample,$cells);
             }
@@ -251,10 +285,9 @@ class XLStools{
         return TRUE;
     }
 
-    private function matrix2shreadsheetTmpFile(array $matrix,array $entry,string $fileType):string
+    private function matrix2spreadsheetTmpFile(array $matrix,array $entry,string $fileType):string
     {
         $fileType=strtolower($fileType);
-        $spreadsheetSetting=$this->getSpreadsheetSettings($entry['callingClass']);
         $currentUser=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
         $author=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUser,4);
         $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
@@ -275,7 +308,6 @@ class XLStools{
             foreach($row as $header=>$value){
                 if ($rowIndex===1){
                     $dataWorkSheet->setCellValue($this->mapIndex2letter[$columnIndex].$rowIndex,$header);
-                    $statistics['header'][$columnIndex]=$header;
                 }
                 $columnIndex++;
             }
@@ -290,9 +322,9 @@ class XLStools{
         $file=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getPrivatTmpDir(__FUNCTION__).md5($entry['Name']).'.'.$fileType;
         $writer = IOFactory::createWriter($spreadsheet,ucfirst($fileType));
         if ($fileType==='csv'){
-            $writer->setDelimiter($spreadsheetSetting['delimiter']);
-            $writer->setEnclosure($spreadsheetSetting['enclosure']);
-            $writer->setLineEnding($spreadsheetSetting['lineSeparator']);
+            $writer->setDelimiter($this->spreadsheetSetting['delimiter']);
+            $writer->setEnclosure($this->spreadsheetSetting['enclosure']);
+            $writer->setLineEnding($this->spreadsheetSetting['lineSeparator']);
         }
         $writer->save($file);
         return $file;
@@ -302,14 +334,13 @@ class XLStools{
     {
         if (empty($entry) && isset($_SESSION['spreadSheetVarSpace'])){
             // write csvVarSpace -> spreadsheet
-            $statistics=['Spreadsheet entries generated'=>count($_SESSION['spreadSheetVarSpace'])];
+            $statistics=['Spreadsheet entries generated'=>count($_SESSION['spreadSheetVarSpace']),'Spreadsheet rows'=>0];
             foreach($_SESSION['spreadSheetVarSpace'] as $EntryId=>$csvDefArr){
                 unset($_SESSION['spreadSheetVarSpace'][$EntryId]);
                 $entry=$csvDefArr['entry'];
                 $statistics['Spreadsheet rows']=count($csvDefArr['rows']);
-                $spreadsheetSetting=$this->getSpreadsheetSettings($entry['callingClass']);
-                $fileType=strtolower($spreadsheetSetting['output format']);
-                $file=$this->matrix2shreadsheetTmpFile($csvDefArr['rows'],$entry,$fileType);
+                $fileType=strtolower($this->spreadsheetSetting['output format']);
+                $file=$this->matrix2spreadsheetTmpFile($csvDefArr['rows'],$entry,$fileType);
                 // add entry
                 $entry['fileContent']=file_get_contents($file);
                 if (empty($entry['Params']['File']['Name'])){
@@ -349,19 +380,19 @@ class XLStools{
         return FALSE;
     }
 
-public function matrix2spreadsheetDownload(array $matrix):string
+    public function matrix2spreadsheetDownload(array $matrix):string
     {
         $spreadsheetSetting=$this->getSpreadsheetSettings('GENERIC');
         $fileType=strtolower($spreadsheetSetting['output format']);
-        $file=$this->matrix2shreadsheetTmpFile($matrix,['Name'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($matrix)],$fileType);
+        $file=$this->matrix2spreadsheetTmpFile($matrix,['Name'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($matrix)],$fileType);
         $pathParts=pathinfo($file);
         // command processing
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (isset($formData['cmd']['download'])){
             $file2download=key($formData['cmd']['download']);
-            if (is_file($file2download)){
+            if ($this->oc['SourcePot\Datapool\Foundation\Filespace']->isPrivatTmpDirFile($file2download)){
                 header('Content-Type: '.self::MIME_MAP[$pathParts['extension']]);
-                header('Content-Disposition: attachment; filename="'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime().'_matrix.'.$pathParts['extension']);
+                header('Content-Disposition: attachment; filename="'.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime().'_matrix.'.$pathParts['extension'].'"');
                 header('Content-Length: '.fileSize($file2download));
                 readfile($file2download);
                 exit;
