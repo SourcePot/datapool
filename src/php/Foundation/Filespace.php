@@ -338,6 +338,17 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
         }
         return $tmpDir;
     }
+
+    public function isPrivatTmpDirFile(string $file):bool
+    {
+        $dir=realpath($GLOBALS['dirs']['privat tmp']);
+        $realFile=realpath($file);
+        if ($realFile===FALSE || strpos($realFile,$dir)!==0){
+            return FALSE;
+        } else {
+            return TRUE;
+        }
+    }
     
     public function getTmpDir():string
     {
@@ -687,9 +698,9 @@ class Filespace implements \SourcePot\Datapool\Interfaces\Job{
                 $this->oc['logger']->log('notice','Function "{class} &rarr; {function}()" failed to scan for pdf-attachments: {msg}',$context);
             }    
             $context['steps'].=' | pdf added, possible attachements added as extra entries, possible text parsed';
-        } else if ($this->oc['SourcePot\Datapool\Tools\XLStools']->isSpreadsheet($file)!==FALSE){
+        } else if (($spreadsheetType=$this->oc['SourcePot\Datapool\Tools\XLStools']->isSpreadsheet($file))!==FALSE){
             $entry=$this->oc['SourcePot\Datapool\Tools\XLStools']->addSpreadsheetInfo($file,$entry);
-            $context['steps'].=' | spreadsheet added to entry["Params"]["File"]["Spreadsheet"]';
+            $context['steps'].=' | '.$spreadsheetType.' spreadsheet added to entry["Params"]["File"]["Spreadsheet"]';
         } else if (stripos(strval($entry['Params']['File']['Extension']),'txt')!==FALSE){
             $entry['Content']['File content']=file_get_contents($file);
             $context['steps'].=' | text added to entry["Content"]["File content"]';
