@@ -14,7 +14,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
     
-    private const AUTHORIZATION_LIFESPAN=3600;
+    private const AUTHORIZATION_LIFESPAN=1200;
     private const FAILED_LOGIN_DETECTION_TIMESPAN=100;
     private const FAILED_LOGIN_COUNT_THRESHOLD=3;
     private const METHOD_WHITELIST=[
@@ -164,7 +164,8 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
         $authorizationEntry=FALSE;
         if ($this->tooManyFailedTokenChecks($context['ipFailedNeedle'])){
             // ip is blocked
-            $data['answer']['error']='IP blocked';
+            $this->oc['logger']->log('info','{class}&rarr;{function}() IP blocked',['class'=>__CLASS__,'function'=>__FUNCTION__]);
+            return $data;
         } else if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
             $context['client_id']=$authorizationArr['client_id'];
             $credentialsSelector=['Source'=>$this->entryTable,'Group'=>'Client credentials','Content'=>'%'.$authorizationArr['client_id'].'%'];
@@ -207,7 +208,8 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
         $tokenSelector=['Source'=>$this->entryTable,'Name'=>mb_substr($data['Authorization'],7),'Expires>'=>date('Y-m-d H:i:s')];
         $tokenSelector['ipFailedNeedle']=$this->getFailedNeedle();
         if ($this->tooManyFailedTokenChecks($tokenSelector['ipFailedNeedle'])){
-            $data['answer']['error']='IP blocked';
+            $this->oc['logger']->log('info','{class}&rarr;{function}() IP blocked',['class'=>__CLASS__,'function'=>__FUNCTION__]);
+            return $data;
         } else if (mb_strlen($tokenSelector['Name'])!==64){
             $data['answer']['error']='Invalid token';
         } else {
