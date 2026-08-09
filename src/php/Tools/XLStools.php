@@ -94,7 +94,7 @@ class XLStools{
 
     private function loadSettings():void
     {
-        $category=filter_input(INPUT_GET,'category',FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+        $category=filter_input(INPUT_GET,'category',FILTER_SANITIZE_ENCODED);
         $app=(\SourcePot\Datapool\Foundation\Menu::CATEGORIES[$category?:'Data']??['Category'=>'Data'])['Category'];
         $callingClass=$_SESSION['page state']['selectedApp'][$app]['Class']??'GENERIC';
         $this->spreadsheetSetting=$this->getSpreadsheetSettings($callingClass);
@@ -157,9 +157,6 @@ class XLStools{
             $fileType=IOFactory::identify($spreadsheetFile,NULL,TRUE);
             $fileTypeComps=explode('\\',$fileType);
             $fileTypeStr=array_pop($fileTypeComps);
-
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['spreadsheetSetting'=>$this->spreadsheetSetting,'haystack'=>$this->spreadsheetSetting['import formats'],'fileTypeComps'=>$fileTypeComps,'fileTypeStr'=>$fileTypeStr,]);
-
             if (stripos($this->spreadsheetSetting['import formats'],$fileTypeStr)!==FALSE){
                 return FALSE;
             } else {
