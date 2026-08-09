@@ -127,19 +127,29 @@ class Cookies implements \SourcePot\Datapool\Interfaces\App{
 
     public function permissionsCookieForm(array $arr):array
     {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         $values=$this->getPermissionsCookie();
         // process form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,__FUNCTION__);
         if (!empty($formData['cmd'])){
             $name=key($formData['cmd']);
             $values[$name]=boolval(key($formData['cmd'][$name]));
-            $values=$this->setPermissionsCookie($values);
+            if (headers_sent()){
+                $this->oc['logger']->log('notice','{class}&rarr;{function}() failed to set cookie. Header was sent already',$context);
+            } else {
+                $values=$this->setPermissionsCookie($values);
+                if (empty($values)){
+                    $this->oc['logger']->log('notice','{class}&rarr;{function}() permissions cookie update failed.',$context);
+                } else {
+                    $this->oc['logger']->log('info','{class}&rarr;{function}() permissions cookie updated.',$context);
+                }
+            }
         }
         // compile html
         $matrix=[];
         foreach(self::PERMISSIONS_COOKIE as $name=>$definition){
             $value=$values[$name]??$definition['initialSetting'];
-            $btn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'TRUE':'FALSE'),'style'=>['line-height'=>'2rem'],'class'=>(boolval($value)?'status-on':'status-off'),'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'disabled'=>self::PERMISSIONS_COOKIE[$name]['disabled']];
+            $btn=['tag'=>'input','type'=>'submit','key'=>[$name,(boolval($value)?0:1)],'value'=>(boolval($value)?'TRUE':'FALSE'),'style'=>['line-height'=>'2rem'],'class'=>(boolval($value)?'status-on':'status-off'),'excontainer'=>TRUE,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'disabled'=>self::PERMISSIONS_COOKIE[$name]['disabled']];
             $description=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$name,'style'=>['clear'=>'both','font-weight'=>'bold','padding-top'=>'1rem ']]);
             $description.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>self::PERMISSIONS_COOKIE[$name]['description'],'keep-element-content'=>TRUE,'style'=>['padding-bottom'=>'1rem ']]);
             $matrix[$name]=['Permitted'=>$btn,'Description'=>$description];
