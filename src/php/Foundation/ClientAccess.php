@@ -92,7 +92,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
             $data['answer']=['error'=>'https is required'];
         }
         $arr['data']=$data;
-        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']);
+        $this->oc['SourcePot\Datapool\Tools\NetworkTools']->answer($header,$data['answer']??[]);
         return $arr;
     }
 
@@ -164,6 +164,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
         $authorizationEntry=FALSE;
         if ($this->tooManyFailedTokenChecks($context['ipFailedNeedle'])){
             // ip is blocked
+            $data['answer']['error']='IP blocked';
             $this->oc['logger']->log('info','{class}&rarr;{function}() IP blocked',['class'=>__CLASS__,'function'=>__FUNCTION__]);
             return $data;
         } else if (!empty($authorizationArr['type']) && !empty($authorizationArr['client_id']) && !empty($authorizationArr['client_secret'])){
