@@ -1042,10 +1042,10 @@ class HTMLbuilder{
                     $presentationValue=strip_tags((string)$presentationValue);  // prevent XSS atacks
                     if ($key==='Date'){
                         try {
-                            $pageTimeZone=\SourcePot\Datapool\Root::getUserTimezone();
+                            $userTimezone=\SourcePot\Datapool\Root::getUserTimezone();
                             $date=new \DateTime($presentationValue, new \DateTimeZone(\SourcePot\Datapool\Root::DB_TIMEZONE));
-                            $date->setTimezone(new \DateTimeZone($pageTimeZone));
-                            $presentationValue=$date->format('Y-m-d H:i:s').' ('.$pageTimeZone.')';
+                            $date->setTimezone(new \DateTimeZone($userTimezone));
+                            $presentationValue=$date->format('Y-m-d H:i:s').' ('.$userTimezone.')';
                         } catch (\Exception $e) {
                             $this->oc['logger']->log('warning','{class}&rarr;{function}(): Value "{val}" failed with: "{msg}"',['class'=>__CLASS__,'function'=>__FUNCTION__,'val'=>$presentationValue,'msg'=>$e->getMessage()]);
                         }
