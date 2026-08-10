@@ -270,7 +270,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
             if ($entryType==='Settings'){
                 // create settings entry
-                $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.time());
+                $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
                 $settingsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
                 $clientSetting=[];
                 foreach($settingsEntry['Content']['Settings'] as $key=>$propertyValueArr){
@@ -280,7 +280,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                 $this->updateSignalsFromEntry($settingsEntry,$entryType);
             } else {
                 // create status entry
-                $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.($entry['Content']['Status']['timestamp']['@value']??time()));
                 $sourceFile=$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($entry);
                 $fileArr=current($_FILES);
                 if ($fileArr && empty($fileArr['error'])){
@@ -290,6 +289,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                     unlink($sourceFile);
                     unset($entry['Params']['File']);
                 }
+                $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.($entry['Content']['Status']['timestamp']['@value']??time()));
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
                 $this->updateSignalsFromEntry($entry,$entryType);
                 $this->distributeClientEntries($entry);
