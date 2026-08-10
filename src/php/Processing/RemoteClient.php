@@ -268,7 +268,6 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
             $flatEntryTemplate['EntryId']=$flatEntryTemplate['EntryId'].'_'.strtolower($entryType);
             $flatEntry=array_merge($flatEntryTemplate,$flatEntries[$entryType]);
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($flatEntry,self::ONEDIMSEPARATOR);
-            $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.($entry['Content']['Status']['timestamp']['@value']??time()));
             if ($entryType==='Settings'){
                 // create settings entry
                 $settingsEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($entry,TRUE);
@@ -289,6 +288,7 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
                     unlink($sourceFile);
                     unset($entry['Params']['File']);
                 }
+                $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.($entry['Content']['Status']['timestamp']['@value']??time()));
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
                 $this->updateSignalsFromEntry($entry,$entryType);
                 $this->distributeClientEntries($entry);
