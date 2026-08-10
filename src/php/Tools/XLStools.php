@@ -307,14 +307,14 @@ class XLStools{
             $columnIndex=0;
             foreach($row as $header=>$value){
                 if ($rowIndex===1){
-                    $dataWorkSheet->setCellValue($this->mapIndex2letter[$columnIndex].$rowIndex,$header);
+                    $dataWorkSheet->getCell($this->mapIndex2letter[$columnIndex].$rowIndex)->setValueExplicit($header,\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 }
                 $columnIndex++;
             }
             if ($rowIndex===1){$rowIndex++;}
             $columnIndex=0;
             foreach($row as $value){
-                $dataWorkSheet->setCellValue($this->mapIndex2letter[$columnIndex].$rowIndex,$value);
+                $dataWorkSheet->getCell($this->mapIndex2letter[$columnIndex].$rowIndex)->setValueExplicit($value,\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 $columnIndex++;
             }
         }
