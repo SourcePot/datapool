@@ -84,7 +84,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
             'IP blocked replies'=>0,
         ];
         $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable(),'Content'=>'%'.addslashes(__CLASS__).'%'];
-        $selector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.(time()-3600));
+        $selector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.(time()-self::AUTHORIZATION_LIFESPAN));
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $logEntry){
             if (strpos($logEntry['Content']['msg'],'Failed client request from ')!==FALSE){
                 $statistics['Failed client requests']++;
@@ -99,7 +99,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
         $statistics['Failed client request IPs']=count($failedClientRequestIPs);
         $statistics['Authorized IPs']=count($authorizedIPs);
         foreach($statistics as $signalName=>$signalValue){
-            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$signalValue,'int',['description'=>'Number of events per hour']);
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$signalValue,'int',['description'=>'Number of events per '.(self::AUTHORIZATION_LIFESPAN).' sec']);
         }
         return $vars;
     }
