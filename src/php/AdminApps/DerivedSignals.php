@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\AdminApps;
 
 class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
-    private $oc;
+    private $oc=[];
 
     private const APP_ACCESS='ADMIN_R';
 
@@ -42,18 +42,18 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
     ];
 
     private const CONTENTSTRUCTURE_PARAMS=[
-        'Timespan'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>self::TIMESPAN_OPTIONS,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-        'Timezone'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>\SourcePot\Datapool\Root::TIMEZONES,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Timespan'=>['method'=>'select','options'=>self::TIMESPAN_OPTIONS,'value'=>'Y-m-d H','keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Timezone'=>['method'=>'select','options'=>\SourcePot\Datapool\Root::TIMEZONES,'value'=>\SourcePot\Datapool\Root::DB_TIMEZONE,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
         'yMin'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
         'yMax'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
-        'Data type'=>['method'=>'select','excontainer'=>TRUE,'value'=>'float','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE],
+        'Data type'=>['method'=>'select','value'=>'float','options'=>\SourcePot\Datapool\Foundation\Computations::DATA_TYPES,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
         'description'=>['method'=>'element','tag'=>'input','type'=>'text','excontainer'=>TRUE],
     ];
 		
     private const CONTENTSTRUCTURE_RULES=[
-        'Operation'=>['method'=>'select','excontainer'=>TRUE,'value'=>'+','options'=>['+'=>'+','-'=>'-','*'=>'*'],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-        'Signal'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>[],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
-        'Processing'=>['method'=>'select','excontainer'=>TRUE,'value'=>'','options'=>self::PROCESSING_OPTIONS,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Operation'=>['method'=>'select','value'=>'+','options'=>['+'=>'+','-'=>'-','*'=>'*'],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Signal'=>['method'=>'select','value'=>'','options'=>[],'keep-element-content'=>TRUE,'excontainer'=>TRUE],
+        'Processing'=>['method'=>'select','value'=>'','options'=>self::PROCESSING_OPTIONS,'keep-element-content'=>TRUE,'excontainer'=>TRUE],
         'Offset'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>0,'excontainer'=>TRUE],
         'Scaler'=>['method'=>'element','tag'=>'input','type'=>'text','value'=>1,'excontainer'=>TRUE],
     ];	
@@ -73,12 +73,12 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -88,7 +88,7 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
         return $this->entryTable;
     }
     
-    public function getEntryTemplate()
+    public function getEntryTemplate():array
     {
         return $this->entryTemplate;
     }
@@ -115,7 +115,7 @@ class DerivedSignals implements \SourcePot\Datapool\Interfaces\App{
         }
     }
 
-private function signalsDerived(array $selector):string
+    private function signalsDerived(array $selector):string
     {
         $html='';
         $selector['Name']='Params';
@@ -148,16 +148,21 @@ private function signalsDerived(array $selector):string
 
     public function signal2derivedSignal(array $signal):void
     {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
         // get derived signals linked to the original signal
-        $relevantDerivedSignalsSelector=[];
+        $relevantDerivedSignalsSelectors=[];
         $selector=['Source'=>$this->entryTable,'Content'=>'%'.($signal['EntryId']?:'__NOTHING_HERE__').'%'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE,'Read') as $relevantDerivedSignalRule){
-            $derivedSignalId=md5($relevantDerivedSignalRule['Group'].'|'.$relevantDerivedSignalRule['Folder']);
-            $relevantDerivedSignalsSelector[$derivedSignalId]=['Source'=>$this->entryTable,'Group'=>$relevantDerivedSignalRule['Group'],'Folder'=>$relevantDerivedSignalRule['Folder']];
+            $derivedSignalId=hash('sha256',$relevantDerivedSignalRule['Group'].'|'.$relevantDerivedSignalRule['Folder']);
+            $relevantDerivedSignalsSelectors[$derivedSignalId]=[
+                'Source'=>$this->entryTable,
+                'Group'=>$relevantDerivedSignalRule['Group'],
+                'Folder'=>$relevantDerivedSignalRule['Folder']
+            ];
         }
         // aquire derived signal configurations
         $derivedSignals=[];
-        foreach($relevantDerivedSignalsSelector as $index=>$relevantDerivedSignalsSelector){
+        foreach($relevantDerivedSignalsSelectors as $index=>$relevantDerivedSignalsSelector){
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($relevantDerivedSignalsSelector,TRUE,'Read','EntryId',TRUE) as $derivedSignalParamRule){
                 $derivedSignals[$index][$derivedSignalParamRule['Name']][$derivedSignalParamRule['EntryId']]=$derivedSignalParamRule['Content'];
                 $derivedSignals[$index][$derivedSignalParamRule['Name']][$derivedSignalParamRule['EntryId']]['Group']=$derivedSignalParamRule['Group'];
@@ -174,7 +179,7 @@ private function signalsDerived(array $selector):string
             foreach($derivedSignal['Rules'] as $ruleId=>$rule){
                 if (empty($rule['Signal'])){continue;}
                 $sourceSignalProperties=$this->oc['SourcePot\Datapool\Foundation\Signals']->getSignalPropertiesById($rule['Signal'],$params['Timespan'],$params['Timezone']);
-                $signalValue=($sourceSignalProperties[$rule['Processing']]+floatval($rule['Offset']))*$rule['Scaler'];
+                $signalValue=(($sourceSignalProperties[$rule['Processing']]??'avg')+floatval($rule['Offset']))*floatval($rule['Scaler']);
                 if ($result===NULL){
                     $result=$signalValue;    
                 } else if ($rule['Operation']==='+'){
@@ -186,13 +191,21 @@ private function signalsDerived(array $selector):string
                 }
             }
             // signal params
-            $params['yMin']=(empty(strval($params['yMin'])))?NULL:$params['yMin'];
-            $params['yMax']=(empty(strval($params['yMax'])))?NULL:$params['yMax'];
-            $targetTimeZone=new \DateTimeZone($params['Timezone']);
+            $params['yMin']=(empty(strval($params['yMin']??'')))?NULL:$params['yMin'];
+            $params['yMax']=(empty(strval($params['yMax']??'')))?NULL:$params['yMax'];
+            try{
+                $targetTimezone=new \DateTimeZone($params['Timezone']);
+            } catch (\Exception $e){
+                $context['msg']=$e->getMessage();
+                $context['targetTimezone']=$params['Timezone'];
+                $context['fallbackTimezone']=\SourcePot\Datapool\Root::DB_TIMEZONE;
+                $targetTimezone=new \DateTimeZone($context['fallbackTimezone']);
+                $this->oc['logger']->log('warning','{class}&rarr;{function}() timezone "{targetTimezone}" in derived signal params failed with "{msg}", used "{fallbackTimezone}" instead.',$context);
+            }
             $nowDateTime=new \DateTime('@'.time());
-            $nowDateTime->setTimezone($targetTimeZone);
+            $nowDateTime->setTimezone($targetTimezone);
             $dateTimeStr=$nowDateTime->format(self::BASE_DATETIME[$params['Timespan']]);
-            $signalDateTime=new \DateTime($dateTimeStr,new \DateTimeZone($params['Timezone']));
+            $signalDateTime=new \DateTime($dateTimeStr,$targetTimezone);
             $signalTimeStamp=$signalDateTime->getTimestamp();
             $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,$params['Group'],$params['Folder'],$result,$params['Data type']??'float',$params,$signalTimeStamp);
         }

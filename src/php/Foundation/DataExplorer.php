@@ -112,7 +112,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -162,7 +162,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         return $vars;
     }
     
-    private function completeDefintion():void
+    private function completeDefinition():void
     {
         // add Source selector
         $sourceOptions=[''=>''];
@@ -186,7 +186,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     */
     public function unifyEntry(array $entry):array
     {
-        $this->completeDefintion();
+        $this->completeDefinition();
         $entry['Date']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now');
         // new entry -> create structure
         if (!empty($entry['element-content'])){
@@ -248,6 +248,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     */
     private function canvasFormProcessing(string $callingClass):array|bool
     {
+        $canvasElement=[];
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'getCanvas',TRUE);
         if (!empty($formData['cmd'])){
             $cmd=key($formData['cmd']);
@@ -261,7 +262,6 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
             $this->addUserAction($canvasElement,$formData);
         } else if (isset($formData['cmd']['delete'])){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($canvasElement);
-            $canvasElement=[];
         } else if (isset($formData['cmd']['view'])){
             $canvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->setPageStateByKey(__CLASS__,'selectedCanvasElement',$canvasElement);
             $selector=$canvasElement['Content']['Selector'];
@@ -298,8 +298,9 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         if (!$this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){$isEditMode=FALSE;}
         $matrix=[];
         foreach($this->tags as $key=>$tag){
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R',FALSE,TRUE)){continue;}
-            if ($tag['showEditMode']!==$isEditMode){continue;}
+            if ($tag['showEditMode']!==$isEditMode || $this->oc['SourcePot\Datapool\Foundation\Access']->accessSpecificValue('ALL_CONTENTADMIN_R',FALSE,TRUE)){
+                continue;
+            }
             $btn=$tag;
             $btnTemplate=['tag'=>'button','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$key],'style'=>['position'=>'relative','padding'=>'0','margin'=>'0.1em','font-size'=>'18px']];
             $btn=array_replace_recursive($btn,$btnTemplate);
@@ -422,8 +423,8 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         }
         // canvas element
         if ($rowCount!==FALSE && strcmp($canvasElement['Content']['Style']['Text'],'&#9881;')!==0 && strcmp($canvasElement['Content']['Style']['Text'],'&empty;')!==0){
-            $elmentInfo=['tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')'];
-            $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elmentInfo);
+            $elementInfo=['tag'=>'p','class'=>'canvas-info','element-content'=>'('.$rowCount.')'];
+            $text.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($elementInfo);
         }
         $element['source']=$canvasElement['Source'];
         $element['entry-id']=$canvasElement['EntryId'];
@@ -794,8 +795,11 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         $processingTimeSec=(hrtime(TRUE)-$result['cntr']['scriptStartTimestamp'])/1e+9;
         $result['Statistics']['Processing time [sec]']['Value']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($processingTimeSec,3);
         $result['Statistics']['Script time']=['Value'=>date('Y-m-d H:i:s')];
-        $entriesPerSec=$result['Statistics']['Entries touched']['Value']/$result['Statistics']['Processing time [sec]']['Value'];
-        $result['Statistics']['Info']['Value'][]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($entriesPerSec,1).' entries per sec';
+        $processingTime=intval($result['Statistics']['Processing time [sec]']['Value']);
+        if (!empty($processingTime)){
+            $entriesPerSec=intval($result['Statistics']['Entries touched']['Value'])/$processingTime;
+            $result['Statistics']['Info']['Value'][]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->float2str($entriesPerSec,1).' entries per sec';
+        }
         $result['Statistics']['Info']['Value']=implode('<br/>',$result['Statistics']['Info']['Value']);
         return $result;
     }

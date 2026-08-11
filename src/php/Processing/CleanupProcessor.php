@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
     
     private const INFO_MATRIX=[
         'Caption'=>['Comment'=>'CleanupProcessor class'],
@@ -36,7 +36,8 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
     
-    public function __construct($oc){
+    public function __construct($oc=[])
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
@@ -47,7 +48,7 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -57,7 +58,8 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
@@ -84,19 +86,19 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         }
     }
 
-    private function getWidget($callingElement)
+    private function getWidget(array $callingElement)
     {
-        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Default '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getWidgetHtml','classWithNamespace'=>__CLASS__],[]);
+        return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Clean-up '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
 
-    private function getInfo($callingElement):string
+    private function getInfo(array $callingElement):string
     {
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>'Help']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?','open'=>FALSE]);
         return $html;
     }
 
-    public function getWidgetHtml($arr):array
+    public function getWidgetHtml(array $arr):array
     {
         // command processing
         $result=[];
@@ -115,7 +117,7 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         $btnArr['value']='Run';
         $btnArr['key']=['run'];
         $matrix['Commands']['Run']=$btnArr;
-        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Default Processor']);
+        $arr['html']=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'style'=>'clear:left;','hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Clean-up Processor']);
         foreach($result as $caption=>$matrix){
             $appArr=['html'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>TRUE,'caption'=>$caption])];
             $appArr['icon']=$caption;
@@ -126,7 +128,7 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getSettings($callingElement):string
+    private function getSettings(array $callingElement):string
     {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
@@ -136,21 +138,21 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
 
-    public function processorParams($arr)
+    public function processorParams(array $arr):array
     {
         $callingElement=$arr['selector'];
         $arr['html']=$this->processorParamsHtml($callingElement);
         return $arr;
     }
     
-    public function processorRules($arr)
+    public function processorRules(array $arr):array
     {
         $callingElement=$arr['selector'];
         $arr['html']=$this->processorRulesHtml($callingElement);
         return $arr;
     }
     
-    private function processorParamsHtml($callingElement)
+    private function processorParamsHtml(array $callingElement):string
     {
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
@@ -207,6 +209,9 @@ class CleanupProcessor implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($processorRules as $ruleEntryId=>$rule){
             $ruleKey=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleEntryId);
             $canvasElementIdForCleanUp=$rule['Content']['Canvas element to empty'];
+            if (empty($canvasElementIdForCleanUp)){
+                continue;
+            }
             $canvasElementToCleanup=current($this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements(__CLASS__,$canvasElementIdForCleanUp));
             $selectorToCleanup=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->entryId2selector($canvasElementIdForCleanUp);
             if (!$testRun){

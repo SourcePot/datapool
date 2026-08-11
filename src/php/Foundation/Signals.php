@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace SourcePot\Datapool\Foundation;
 
 class Signals{
-    private $oc;
+    private $oc=[];
 
     private const MAX_SIGNAL_DEPTH=500;
     
@@ -42,7 +42,7 @@ class Signals{
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -128,6 +128,9 @@ class Signals{
     {
         $properties=['min'=>FALSE,'minExZero'=>FALSE,'max'=>FALSE,'avg'=>FALSE,'range'=>FALSE,'sum'=>FALSE,'count'=>0,'avgTimeStamp'=>0,'maxTimeStamp'=>0,'lastValueAge'=>NULL,'lastValue'=>NULL];
         $signal=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($signalSelector,TRUE);
+        if (empty($signal['Content']['signal'])){
+            return $properties;
+        }
         foreach($signal['Content']['signal'] as $index=>$signalItem){
             if (!$this->isRelevantSignalItem($signalItem,$timespanDefinedByFormat,$timezone)){
                 continue;
@@ -618,7 +621,9 @@ class Signals{
     {
         $typeKeys=['xMax'=>'int','xMin'=>'int','xOffset'=>'int','yMax'=>'float','yMin'=>'float','yOffset'=>'float','yScaler'=>'float'];
         foreach($typeKeys as $key=>$type){
-            if (!isset($meta[$key])){continue;}
+            if (!isset($meta[$key])){
+                continue;
+            }
             $meta[$key]=$this->oc['SourcePot\Datapool\Foundation\Computations']->convert($meta[$key],$type);
         }
         return $meta;

@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[
@@ -20,18 +20,19 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -41,7 +42,8 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
     
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
@@ -69,7 +71,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         }
     }
 
-    private function getCanvasProcessingWidget($callingElement):string
+    private function getCanvasProcessingWidget(array $callingElement):string
     {
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Canvas processing','generic',$callingElement,['method'=>'getCanvasProcessingWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
@@ -81,7 +83,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
 
-    public function getCanvasProcessingWidgetHtml($arr):array
+    public function getCanvasProcessingWidgetHtml(array $arr):array
     {
         $arr['html']=$arr['html']??'';
         // command processing
@@ -119,7 +121,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getCanvasProcessingSettings($callingElement):string
+    private function getCanvasProcessingSettings(array $callingElement):string
     {
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('CanvasProcessing entries settings','generic',$callingElement,['method'=>'getCanvasProcessingSettingsHtml','classWithNamespace'=>__CLASS__],[]);
@@ -127,14 +129,14 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $html??'';
     }
     
-    public function getCanvasProcessingSettingsHtml($arr):array
+    public function getCanvasProcessingSettingsHtml(array $arr):array
     {
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->canvasProcessingRules($arr['selector']);
         return $arr;
     }
     
-    private function canvasProcessingRules($callingElement):string
+    private function canvasProcessingRules(array $callingElement):string
     {
         $contentStructure=['Process'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],];
         if (!isset($callingElement['Content']['Selector']['Source'])){return '';}
@@ -145,7 +147,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
     
-    public function runCanvasProcessingOnClass($class,$isTestRun=FALSE):array
+    public function runCanvasProcessingOnClass(string $class,$isTestRun=FALSE):array
     {
         $canvasElements=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($class,'',FALSE);
         foreach($canvasElements as $canvasElement){
@@ -158,7 +160,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $result??['Notice'=>'No canvas processing element found for '.$class];
     }
     
-    public function runCanvasProcessing($callingElement,$isTestRun=TRUE):array
+    public function runCanvasProcessing(array $callingElement,bool $isTestRun=TRUE):array
     {
         $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$isTestRun);
         // get rules, i.e. canvas elements to process
@@ -200,7 +202,11 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
                 $infoMsg[]='Processor missing...';
                 $rules2process[$ruleId]=NULL;
             }
-            $infoMsg[]='<b/>step '.$step.'</b>, canvas element <b>'.$canvasElement['Content']['Style']['Text'].'</b>';
+            if (empty($canvasElement['Content']['Style']['Text'])){
+                $infoMsg[]='<b>ERROR: CANVAS ELEMENT NOT FOUND</b>';
+            } else {
+                $infoMsg[]='<b>step '.$step.'</b>, canvas element <b>'.$canvasElement['Content']['Style']['Text'].'</b>';
+            }
             $result['Statistics']['-----------------------------------']['Value']='--------------------------------------------';
             $result['Statistics']['Canvas Processing']['Value']=implode('<br/>',$infoMsg);
             break;
@@ -210,7 +216,7 @@ class CanvasProcessing implements \SourcePot\Datapool\Interfaces\Processor{
         return $result;
     }
 
-    private function getCanvasProcessingStateSelector($callingElement):array|bool
+    private function getCanvasProcessingStateSelector(array $callingElement):array|bool
     {
         $stateSelector=['Source'=>$this->getEntryTable(),'Group'=>'canvasProcessingState','Folder'=>'Rules to process','Name'=>$callingElement['EntryId']];
         return $this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($stateSelector,['Source','Group','Folder','Name'],'0','',FALSE);

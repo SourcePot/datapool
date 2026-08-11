@@ -300,6 +300,14 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         foreach($base['conditionalvaluerules']??[] as $ruleEntryId=>$rule){
             $value='NaN';
             $conditionalvalueRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Conditionalvalue rule');
+            if (!isset($rule['Content']['Condition']) || !isset($rule['Content']['Use value if...'])){
+                $result['Conditional value rules'][$conditionalvalueRuleIndex]=[
+                    'Condition'=>'?',
+                    'Use value if'=>'?',
+                    'Condition met'=>'?',
+                ];
+                continue;
+            }
             if (isset($ruleResults[$rule['Content']['Condition']])){
                 $value=$ruleResults[$rule['Content']['Condition']];
             } else if (isset($flatSourceEntry[$rule['Content']['Condition']])){
@@ -329,6 +337,15 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $isFailure=FALSE;
         foreach($base['failurerules']??[] as $ruleEntryId=>$rule){
             $failureRuleIndex=$this->ruleId2ruleIndex($ruleEntryId,'Failure rule');
+            if (!isset($rule['Content']['Failure if Result...']) || !isset($rule['Content']['Compare value']) || !isset($rule['Content']['Value'])){
+                $result['Failure rules'][$failureRuleIndex]=[
+                    'Value'=>'?',
+                    'Failure if Result'=>'?',
+                    'Compare value'=>'?',
+                    'Condition met'=>'?',
+                ];
+                continue;
+            }
             if (isset($ruleResults[$rule['Content']['Value']])){
                 $value=$ruleResults[$rule['Content']['Value']];
             } else if (isset($flatSourceEntry[$rule['Content']['Value']])){
