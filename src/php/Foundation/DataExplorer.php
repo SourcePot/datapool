@@ -140,7 +140,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
     /**
     * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
     * @param    string $vars Initial persistent data space
-    * @return   array  Array Updateed persistent data space
+    * @return   array  Array Updated persistent data space
     */
     public function job(array $vars=[]):array
     {

@@ -97,7 +97,7 @@ class MediaTools{
         $arr['maxDim']=$arr['maxDim']??self::ICON_DEFAULT_SIZE;
         $arr['margin']=$arr['margin']??'5px';
         $arr['selector']['Params']['TmpFile']['MIME-Type']=$arr['selector']['Params']['TmpFile']['MIME-Type']??'text';
-        $fontSize=round($arr['maxDim']*0.4);
+        $fontSize=round(intval($arr['maxDim'])*0.25);
         $arr=$this->addTmpFile($arr);
         // get text
         if (empty($arr['selector']['Name'])){
