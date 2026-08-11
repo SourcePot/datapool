@@ -311,7 +311,7 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         // build html
         $matrix=[];
         foreach(self::APP_PARAMS as $key=>$arr){
-            $arr=array_merge($arr,['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$key],'value'=>$entry['Content'][$key]]);
+            $arr=array_merge($arr,['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>[$key],'value'=>$entry['Content'][$key]??'']);
             $method=$arr['method'];
             $matrix[$key]=['Value'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->$method($arr)];
         }

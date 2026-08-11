@@ -291,7 +291,7 @@ class MediaTools{
                 $lastKeys=array_keys($data);
             }
             foreach($matrixces as $matrixIndex=>$matrix){
-                $caption=$arr['selector']['Name'].' "'.$worksheetName.'" ('.$$matrixIndex.':'.$matrixRowCount[$matrixIndex].' rows)';
+                $caption=$arr['selector']['Name'].' "'.$worksheetName.'" ('.$matrixIndex.':'.$matrixRowCount[$matrixIndex].' rows)';
                 $spreadsheetsHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'hideHeader'=>FALSE,'hideKeys'=>FALSE,'keep-element-content'=>FALSE,'caption'=>$caption,'style'=>['clear'=>'both','font-size'=>($isSmallPreview?'0.6rem':'1rem')]]);
             }
         }
