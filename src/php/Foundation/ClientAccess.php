@@ -42,27 +42,65 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
 
     public function job(array $vars):array
     {
+        $context=['class'=>__CLASS__,'function'=>__FUNCTION__];
+        // delete client credentials of invalid users
         $validUser=[];
         $validUserSelector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'Privileges>'=>2];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($validUserSelector,TRUE) as $user){
-            if (strpos($user['EntryId'],'oneTimeLink')!==FALSE){continue;}
+            if (strpos($user['EntryId'],'oneTimeLink')!==FALSE){
+                continue;
+            }
             $validUser[$user['EntryId']]=$user['Name'];
         }
         $deletedClientCredentials=0;
         $clientCredentialsSelector=['Source'=>$this->getEntryTable(),'Group'=>'Client credentials'];
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($clientCredentialsSelector,TRUE) as $clientCredentials){
-            if (isset($validUser[$clientCredentials['Folder']])){continue;}
+            if (isset($validUser[$clientCredentials['Folder']])){
+                continue;
+            }
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($clientCredentials,TRUE);
             $deletedClientCredentials++;
         }
+        if ($deletedClientCredentials>0){
+            $context['deletedClientCredentials']=$deletedClientCredentials;
+            $this->oc['logger']->log('warning','"{class}&rarr;{function}()" "{deletedClientCredentials}" ClientAccess credentials for unauthorized users deleted',$context);
+        }
         $vars['Msg']=['Privileged user found'=>count($validUser),'Client credentials deleted'=>$deletedClientCredentials];
+        // failed client requests
+        $authorizedIPs=$failedClientRequestIPs=[];
+        $statistics=[
+            'Authorization success count'=>0,
+            'Authorized IPs'=>0,
+            'Credentials for unauthorized users deleted'=>$deletedClientCredentials,
+            'Failed client requests'=>0,
+            'Failed client request IPs'=>0,
+            'IP blocked replies'=>0,
+        ];
+        $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable(),'Content'=>'%'.addslashes(__CLASS__).'%'];
+        $selector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.(time()-3600));
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,TRUE) as $logEntry){
+            if (strpos($logEntry['Content']['msg'],'Failed client request from ')!==FALSE){
+                $statistics['Failed client requests']++;
+                $failedClientRequestIPs[$logEntry['Content']['ip']]=TRUE;
+            } else if (strpos($logEntry['Content']['msg'],'authorization success')!==FALSE){
+                $statistics['Authorization success count']++;
+                $authorizedIPs[$logEntry['Content']['ip']]=TRUE;
+            } else if (strpos($logEntry['Content']['msg'],'IP blocked replies')!==FALSE){
+                $statistics['IP blocked replies']++;
+            }
+        }
+        $statistics['Failed client request IPs']=count($failedClientRequestIPs);
+        $statistics['Authorized IPs']=count($authorizedIPs);
+        foreach($statistics as $signalName=>$signalValue){
+            $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,$signalName,$signalValue,'int',['description'=>'Number of events per hour']);
+        }
         return $vars;
     }
 
@@ -152,7 +190,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
             // authorization missing
             $data['answer']['error']='Authorization missing';
         }
-        $this->oc['logger']->log('warning','{ipFailedNeedle}: '.$data['answer']['error'],$context);        
+        $this->oc['logger']->log('warning','{class}&rarr;{function}() {ipFailedNeedle}: '.$data['answer']['error'],$context);        
         return $data;
     }
     
@@ -196,10 +234,10 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
             $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($authorizationEntry,TRUE);
             // return new token
             $data['answer']=$authorizationEntry['Content'];
-            $this->oc['logger']->log('info','Client "{client_id}" authorization success',$context);    
+            $this->oc['logger']->log('info','{class}&rarr;{function}() Client "{client_id}" authorization success',$context);    
             return $data;
         }
-        $this->oc['logger']->log('warning','{ipFailedNeedle}: '.$data['answer']['error'],$context);
+        $this->oc['logger']->log('warning','{class}&rarr;{function}() {ipFailedNeedle}: '.$data['answer']['error'],$context);
         return $data;
     }
     
@@ -226,7 +264,7 @@ class ClientAccess implements \SourcePot\Datapool\Interfaces\Job{
                 return $data;
             }
         }
-        $this->oc['logger']->log('warning','{ipFailedNeedle}: '.$data['answer']['error'],$tokenSelector);
+        $this->oc['logger']->log('warning','{class}&rarr;{function}() {ipFailedNeedle}: '.$data['answer']['error'],$tokenSelector);
         return $data;
     }
 
