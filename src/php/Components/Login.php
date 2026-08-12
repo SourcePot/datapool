@@ -71,7 +71,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     public function getLoginFormHtml(array $arr):string
     {
         $loginArr=$this->oc['SourcePot\Datapool\Tools\LoginForms']->getLoginForm($arr);
-        $loginArr['result']['Email']=filter_var($loginArr['result']['Email'],FILTER_VALIDATE_EMAIL);
+        $loginArr['result']['Email']=filter_var($loginArr['result']['Email']??'',FILTER_VALIDATE_EMAIL);
         if (strcmp($loginArr['result']['cmd'],'Login')===0){
             $this->loginRequest($loginArr['result']);
         } else if (strcmp($loginArr['result']['cmd'],'Register')===0){
@@ -263,7 +263,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $msg.='You have requested a login token at '.$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle').'.<br/>';
         $msg.='Please use "<b>'.$pswArr['string'].'</b>" or "<b>'.$pswArr['phrase'].'</b>" to login.<br/>';
         $msg.='This token can be used only once and it is valid for approx. 10mins.<br/><br/>';
-        $msg.='Best reagrds,<br/><br/>';
+        $msg.='Best reagards,<br/><br/>';
         $msg.='Your Admin';
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'p','element-content'=>$msg,'keep-element-content'=>TRUE,'style'=>'font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:400;line-height:24px;']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'html','element-content'=>$html,'keep-element-content'=>TRUE]);
