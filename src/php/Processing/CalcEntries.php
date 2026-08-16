@@ -267,7 +267,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private function calcEntry(array $base,array $sourceEntry,array $result,bool $testRun)
     {
-        $takeSample=empty($result['Calculation rules']) || mt_rand(0,100)>70;
+        $takeSample=empty($result['Calculation rules']) || mt_rand(0,100)>80;
         $params=current($base['calculationparams']);
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         // -- loop through calculation rules --
@@ -317,6 +317,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if (!isset($rule['Content']['Condition']) || !isset($rule['Content']['Use value if...'])){
                 continue;
             }
+            $condition=NULL;
             $validCondition=TRUE;
             if (isset($ruleResults[$rule['Content']['Condition']])){
                 $condition=$ruleResults[$rule['Content']['Condition']];
@@ -333,6 +334,9 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
                     $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$useValue,$rule['Content']['Target data type']);
                 } else if (isset($flatSourceEntry[$rule['Content']['Use']])){
                     $useValue=$flatSourceEntry[$rule['Content']['Use']];
+                    $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$useValue,$rule['Content']['Target data type']);
+                } else if ($ruleResults[$rule['Content']['Use']]){
+                    $useValue=$ruleResults[$rule['Content']['Use']];
                     $sourceEntry=$this->addValue2flatEntry($sourceEntry,$rule['Content']['Target column'],$rule['Content']['Target key'],$useValue,$rule['Content']['Target data type']);
                 } else {
                     $conditionMet=FALSE;
