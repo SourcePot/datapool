@@ -970,7 +970,8 @@ class HTMLbuilder{
         } else if (is_object($html)){
             $arr['element-content']=get_class($html);
         } else if (is_array($html)){
-            $arr['element-content']=json_encode($html);
+            $matrix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($html);
+            return $this->table(['matrix'=>$matrix,'hideKeys'=>TRUE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'class'=>'matrix']);
         } else {
             $arr['element-content']=strval($html);
         }
