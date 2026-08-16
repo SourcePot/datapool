@@ -26,14 +26,14 @@ class Container{
     
     private const MD_TEMPLATE="[//]: # (This a Markdown document)\n\n[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n#Empty document...";
 
-    private $oc;
+    private $oc=[];
     
     public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -521,15 +521,7 @@ class Container{
                             $matrix['Columns'][$columnIndex].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($element);
                         }
                         $matrix['Columns'][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$matrix['Columns'][$columnIndex],'keep-element-content'=>TRUE,'style'=>['width'=>'max-content']]);
-                        // table rows
-                        if (strpos($cntrArr['Column'],'Read ')!==FALSE || strpos($cntrArr['Column'],'Write ')!==FALSE || strpos($cntrArr['Column'],'Privileges ')!==FALSE){
-                            $rightsArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$entry];
-                            $right=substr($cntrArr['Column'],0,strpos($cntrArr['Column'],' '));
-                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml($rightsArr,$right);
-                        } else {
-                            $matrix[$rowIndex][$columnIndex]='{Nothing here...}';
-                        }
-                        // present entry in tavle cell
+                        // present table cell value
                         $subMatix=[];
                         foreach($flatEntry as $flatColumnKey=>$value){
                             if (strpos($flatColumnKey,$cntrArr['Column'])!==0){
@@ -547,7 +539,13 @@ class Container{
                             $subMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($subMatix);
                             $csvMatrix[$rowIndex][$csvKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($subMatix);
                         }
-                        $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($subMatix,[]);
+                        // table cell presentation of right bearing value
+                        if (strpos($cntrArr['Column'],'Read')!==FALSE || strpos($cntrArr['Column'],'Write')!==FALSE || strpos($cntrArr['Column'],'Privileges')!==FALSE){
+                            $rightsArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'selector'=>$entry];
+                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Foundation\Access']->rightsHtml($rightsArr,$cntrArr['Column']);
+                        } else {
+                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($subMatix,[]);
+                        }
                         // table row marking
                         $class=$this->oc['SourcePot\Datapool\Root']->source2class($arr['selector']['Source']);
                         $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($arr['selector']['app']??$class);
