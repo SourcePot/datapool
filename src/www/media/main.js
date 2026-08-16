@@ -61,16 +61,6 @@ jQuery(document).ready(function(){
         });
     }
 
-	highlightMissingOptions();
-	function highlightMissingOptions(){
-		const matches = document.querySelectorAll('select');
-		matches.forEach((selectEl) => {
-			if (selectEl.value.includes('|[]|')){
-				jQuery(selectEl).css('border','1px solid var(--red)');
-			}
-		});
-	}
-
 /** Geo location **/
 	const options = {
 		maximumAge: 300000,
@@ -153,7 +143,6 @@ jQuery(document).ready(function(){
 	}
 
 	function playMedia(mediaId){
-		console.log(mediaId);
 		for(const mediaElement of mediaElements){
 			if (mediaElement==mediaId){
 				document.getElementById(mediaElement).play();

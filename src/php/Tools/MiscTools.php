@@ -250,7 +250,7 @@ final class MiscTools{
     public function getHash($arr,bool $short=FALSE):string
     {
         if (is_array($arr)){
-            $hash=json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_IGNORE);
+            $hash=$this->arr2json($arr);
         } else {
             $hash=strval($arr);
         }

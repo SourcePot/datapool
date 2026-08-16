@@ -239,6 +239,7 @@ class HTMLbuilder{
             }
             if (!isset($arr['options'][$selected]) && !empty($selected)){
                 $arr['options'][$selected]=$selected;
+                $arr['style']['border']='1px solid var(--red)';
             }
             $toReplace=[];
             $selectArr=$arr;
@@ -255,7 +256,9 @@ class HTMLbuilder{
             foreach($arr['options'] as $name=>$label){
                 $optionArr=$arr;
                 $optionArr['tag']='option';
-                if (strval($name)===strval($selected)){$optionArr['selected']=TRUE;}
+                if (strval($name)===strval($selected)){
+                    $optionArr['selected']=TRUE;
+                }
                 if (strval($name)==='useValue'){$optionArr['title']='Use value provided';}
                 $optionArr['value']=$name;
                 $optionArr['element-content']=$label;
@@ -966,6 +969,8 @@ class HTMLbuilder{
             return $this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2html($arr);
         } else if (is_object($html)){
             $arr['element-content']=get_class($html);
+        } else if (is_array($html)){
+            $arr['element-content']=json_encode($html);
         } else {
             $arr['element-content']=strval($html);
         }

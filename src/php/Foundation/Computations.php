@@ -319,6 +319,8 @@ class Computations{
         if (empty($dataType)){
             $newValue=$value;
         } else {
+            $value=($value==='FALSE')?FALSE:$value;
+            $value=($value==='TRUE')?TRUE:$value;
             $newValue=match($dataType){
                 'keep'=>$value,
                 'geo'=>$value,
@@ -332,7 +334,7 @@ class Computations{
                 'int'=>$this->str2int($value),
                 'float'=>$this->str2float($value),
                 'fraction'=>$this->fraction2float($value),
-                'bool'=>($value==='TRUE')?TRUE:(!empty($value)),
+                'bool'=>boolval($value),
                 'money'=>$this->oc['SourcePot\Datapool\Foundation\Money']->str2money($value),
                 'date'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->str2date($value),
                 'excelDate'=>$this->oc['SourcePot\Datapool\Calendar\Calendar']->excel2date($value),
@@ -559,7 +561,9 @@ class Computations{
 
     public function operation($valueA,$valueB,$operation)
     {
-        if (empty($operation)){return NULL;}
+        if (empty($operation)){
+            return NULL;
+        }
         $result=$this->isTrue($valueA,$valueB,$operation);
         if ($result===NULL){
             $valueAstr=strval($valueA);
@@ -664,12 +668,12 @@ class Computations{
                 }
             }
         }
-        $result=($result===NULL)?'NULL':$result;
-        $result=($result===NAN)?'NAN':$result;
-        $result=($result===INF)?'INF':$result;
-        $result=($result===-INF)?'-INF':$result;
-        $result=($result===FALSE)?'FALSE':$result;
-        $result=($result===TRUE)?'TRUE':$result;
+        $result=($result==='NULL')?NULL:$result;
+        $result=($result==='NAN')?NAN:$result;
+        $result=($result==='INF')?INF:$result;
+        $result=($result==='-INF')?-INF:$result;
+        $result=($result==='FALSE')?FALSE:$result;
+        $result=($result==='TRUE')?TRUE:$result;
         return $result;
     }
     
