@@ -529,26 +529,25 @@ class Container{
                         } else {
                             $matrix[$rowIndex][$columnIndex]='{Nothing here...}';
                         }
-                        // present entry
+                        // present entry in tavle cell
                         $subMatix=[];
                         foreach($flatEntry as $flatColumnKey=>$value){
-                            if (is_object($value)){$value='{object}';}
-                            if (strcmp($flatColumnKey,$cntrArr['Column'])===0){
-                                // $flatColumnKey === column selection -> standard entry presentation
-                                $csvMatrix[$rowIndex][$cntrArr['Column']]=$value;
-                                $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($value,[]);
-                            } else if (strpos($flatColumnKey,$cntrArr['Column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR)===0){
-                                // column selection is substring of $flatColumnKey -> submatrix presentation 
-                                $subKey=str_replace($cntrArr['Column'],'',$flatColumnKey);
-                                $subKey=trim($subKey,\SourcePot\Datapool\Root::ONEDIMSEPARATOR);
-                                $subMatix[$subKey]=$value;
+                            if (strpos($flatColumnKey,$cntrArr['Column'])!==0){
+                                continue;
                             }
+                            $key=str_replace($cntrArr['Column'].\SourcePot\Datapool\Root::ONEDIMSEPARATOR,'',$flatColumnKey);
+                            $key=str_replace($cntrArr['Column'],'',$key);
+                            $subMatix[$key]=$value;
                         }
-                        // sub matrix preesentation
-                        if (!empty($subMatix)){
-                            $subMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($subMatix);
-                            $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$subMatix,'hideKeys'=>TRUE,'hideHeader'=>TRUE,'keep-element-content'=>TRUE,'class'=>'matrix']);
+                        $csvKey=str_replace(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,' → ',$cntrArr['Column']);
+                        if (count($subMatix)<2){
+                            $subMatix=current($subMatix);
+                            $csvMatrix[$rowIndex][$csvKey]=$subMatix;
+                        } else {
+                            $subMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flat2arr($subMatix);
+                            $csvMatrix[$rowIndex][$csvKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($subMatix);
                         }
+                        $matrix[$rowIndex][$columnIndex]=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($subMatix,[]);
                         // table row marking
                         $class=$this->oc['SourcePot\Datapool\Root']->source2class($arr['selector']['Source']);
                         $pageStateSelector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($arr['selector']['app']??$class);
