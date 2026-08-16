@@ -323,7 +323,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else if (isset($flatSourceEntry[$rule['Content']['Condition']])){
                 $condition=$flatSourceEntry[$rule['Content']['Condition']];
             } else {
-                $validCondition=FALSE;
+                $condition='VALUE MISSING';
+                //$validCondition=FALSE;
             }
             $conditionMet=$this->oc['SourcePot\Datapool\Foundation\Computations']->isTrueConst($condition,$rule['Content']['Use value if...']);
             if ($validCondition && $conditionMet){
