@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
     private $ruleOptions=[];
 
     private const INFO_MATRIX=[
@@ -323,10 +323,10 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else if (isset($flatSourceEntry[$rule['Content']['Condition']])){
                 $condition=$flatSourceEntry[$rule['Content']['Condition']];
             } else {
-                $condition='VALUE MISSING';
-                //$validCondition=FALSE;
+                $validCondition=FALSE;
             }
             $conditionMet=$this->oc['SourcePot\Datapool\Foundation\Computations']->isTrueConst($condition,$rule['Content']['Use value if...']);
+            $useValue=NULL;
             if ($validCondition && $conditionMet){
                 if (strlen($rule['Content']['Value'])>0){
                     $useValue=$rule['Content']['Value'];
