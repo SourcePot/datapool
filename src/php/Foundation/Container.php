@@ -26,14 +26,14 @@ class Container{
     
     private const MD_TEMPLATE="[//]: # (This a Markdown document)\n\n[//]: # (Use <img src=\"./assets/email.png\" style=\"float:none;\"> for the admin-email-address as image.)\n\n#Empty document...";
 
-    private $oc;
+    private $oc=[];
     
     public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }

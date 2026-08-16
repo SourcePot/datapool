@@ -14,7 +14,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ALL_REGISTERED_R';
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[];
@@ -35,7 +35,7 @@ class Account implements \SourcePot\Datapool\Interfaces\App{
         return $this->entryTemplate;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
