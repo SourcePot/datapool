@@ -122,21 +122,25 @@ class Computations{
         '\\'=>'/',', '=>'/',','=>'/','; '=>'/',';'=>'/','|'=>'/','. '=>'_','.'=>'_',' '=>'_',
     ];
     
-    private const RELEVANT_DATATYPE_KEY=['System short','Reference','Amount',];
+    private const RELEVANT_DATATYPE_KEY=[
+        'RFC2822',
+        'Reference',
+        'string',
+    ];
 
     private const ARR_COLUMNS=['Content'=>TRUE,'PARAMS'=>TRUE,];
     
     private $matchObj=NULL;
     private $combineCache=[];
 
-    private $oc;
+    private $oc=[];
 
     public function __construct($oc)
     {
         $this->oc=$oc;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -307,6 +311,7 @@ class Computations{
                 return $arr[$keyNeedle];
             }
         }
+        reset($arr);
         return array_shift($arr);
     }
 
@@ -321,6 +326,7 @@ class Computations{
         } else {
             $value=($value==='FALSE')?FALSE:$value;
             $value=($value==='TRUE')?TRUE:$value;
+            $value=$this->arr2value($value);
             $newValue=match($dataType){
                 'keep'=>$value,
                 'geo'=>$value,
@@ -379,7 +385,8 @@ class Computations{
     
     public function fraction2float($string)
     {
-        $string=preg_replace('/[^0-9\.\/\-]/u','',strval($string));
+        $string=$this->str2str($string);
+        $string=preg_replace('/[^0-9\.\/\-]/u','',$string);
         $comps=explode('/',$string);
         $float=NULL;
         foreach($comps as $divider){
@@ -397,7 +404,7 @@ class Computations{
         } else if (is_bool($string)){
             return ($string)?1:0;
         } else if (is_string($string)){
-            $assetArr=$asset->guessAssetFromString(strval($string));
+            $assetArr=$asset->guessAssetFromString($string);
             return $assetArr['value'];
         } else {
             return 0;
@@ -406,21 +413,21 @@ class Computations{
 
     public function convert2stringWhitespaces($value,$replacement=''):string
     {
-        $value=strval($value);
+        $value=$this->str2str($value);
         $value=preg_replace('/\s+/u',$replacement,$value);
         return $value;
     }
 
     public function convert2stringWordChrsOnly($value,$replacement=''):string
     {
-        $value=strval($value);
+        $value=$this->str2str($value);
         $value=preg_replace('/[^A-Za-zäüöÄÜÖßÁÓÍÀÒÌáíóàòìâôî\-]+/u',$replacement,$value);
         return $value;
     }
 
     public function convert2splitString($value):array|bool
     {
-        $value=strval($value);
+        $value=$this->str2str($value);
         $value=mb_strtolower($value);
         $value=trim($value);
         $value=preg_split("/[^a-zäöü0-9ß]+/u",$value);
@@ -429,7 +436,8 @@ class Computations{
     
     public function convert2codepfadArr($value):array
     {
-        $codepfade=explode(';',strval($value));
+        $value=$this->str2str($value);
+        $codepfade=explode(';',$value);
         $arr=[0=>['FhI'=>0,'FhI Teil'=>0,'OE'=>0,'Codepfad all'=>'0|0|0'],];
         foreach($codepfade as $codePfadIndex=>$codepfad){
             $codepfadComps=explode('\\',$codepfad);
@@ -445,12 +453,14 @@ class Computations{
     
     public function convert2unycomByKey($value,string $key='Country'):string
     {
+        $value=$this->str2str($value);
         $unycomArr=$this->convert2unycom($value);
         return (isset($unycomArr[$key]))?$unycomArr[$key]:'';
     }
     
     public function convert2unycom($value):array
     {
+        $value=$this->str2str($value);
         $unycomObj = new \SourcePot\Match\UNYCOM();
         $unycomObj->set($value);  
         return $unycomObj->get();
@@ -462,6 +472,7 @@ class Computations{
 
     public function value2numeric($value):float|int|null
     {
+        $value=$this->arr2value($value);
         $value=($value==='INF')?(INF):(($value==='-INF')?(-INF):$value);
         $value=($value==='NAN')?NAN:$value;
         $value=($value==='NULL')?NULL:$value;
@@ -566,8 +577,8 @@ class Computations{
         }
         $result=$this->isTrue($valueA,$valueB,$operation);
         if ($result===NULL){
-            $valueAstr=strval($valueA);
-            $valueBstr=strval($valueB);
+            $valueAstr=strval($this->arr2value($valueA));
+            $valueBstr=strval($this->arr2value($valueB));
             $valueAnum=$this->value2numeric($valueA);
             $valueBnum=$this->value2numeric($valueB);
             if ($valueA===NAN || $valueB===NAN){
