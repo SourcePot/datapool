@@ -353,7 +353,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $id=$entry['message-id']?:($this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($entry['Params']['Email'],TRUE));
         $nameBase=mb_substr($entry['Content']['Subject'],0,200).'... ('.$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($id,TRUE);
         // message text entry
-        $entry['Source']=$this->getEntryTable();
+        $entry['Source']=$entry['Source']??$this->getEntryTable();
         $entry['Name']=$nameBase.') [text/plain]';
         $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->addEntryId($entry,['Source','Group','Folder','Name'],'0','',FALSE);
         $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry);
