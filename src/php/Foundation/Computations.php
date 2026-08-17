@@ -379,7 +379,6 @@ class Computations{
 
     public function str2int($string):int
     {
-        $string=$this->arr2value($string);
         $value=$this->str2float($string);
         return intval(round($value));
     }
