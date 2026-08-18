@@ -607,7 +607,6 @@ jQuery(document).ready(function(){
 		initJsButtonEvents();
 		addFilter();
 		markChages();
-		highlightMissingOptions();
 	});
 
 	animateBackground('swing');
