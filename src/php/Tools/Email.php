@@ -370,9 +370,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         }
         // attachment entries
         foreach($entry['attachments'] as $attachment){
-            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($attachment->contentId(),TRUE);
-            $entry['fileName']=$attachment->filename()?:($contentIdHash.'.file');
-            $entry['fileContent']=$attachment->contents();
+            $fileContent=$attachment->contents();
+            $fileName=$attachment->filename();
+            $contentIdHash=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($fileName.$fileContent,TRUE);
+            $entry['fileName']=$fileName?:($contentIdHash.'.file');
+            $entry['fileContent']=$fileContent;
             $entry['Name']=$nameBase.'|'.$contentIdHash.') ['.$attachment->contentType().']';
             $entry['Name']=str_replace('{Missing subject}',$entry['fileName'],$entry['Name']);
             $entry['Params']['File']['MIME-Type']=$attachment->contentType();

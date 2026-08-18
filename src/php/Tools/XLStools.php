@@ -247,7 +247,7 @@ class XLStools{
         $spreadsheetArr=$this->getSpreadsheetReaderWorksheets($selector,$worksheetName);
         if (empty($worksheetName)){
             $worksheetName=$spreadsheetArr['Worksheets'][0]['worksheetName'];
-            $spreadsheetArr=$this->getSpreadsheetReaderWorksheets($selector,$worksheetName);
+            $spreadsheetArr=$this->getSpreadsheetReaderWorksheets($selector,$worksheetName??'');
         }
         if (empty($spreadsheetArr['worksheet'])){
             return FALSE;
@@ -311,10 +311,13 @@ class XLStools{
                 }
                 $columnIndex++;
             }
-            if ($rowIndex===1){$rowIndex++;}
+            if ($rowIndex===1){
+                $rowIndex++;
+            }
             $columnIndex=0;
             foreach($row as $value){
-                $dataWorkSheet->getCell($this->mapIndex2letter[$columnIndex].$rowIndex)->setValueExplicit($value,\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $dataType=is_numeric($value)?\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC:\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING;
+                $dataWorkSheet->getCell($this->mapIndex2letter[$columnIndex].$rowIndex)->setValueExplicit($value,$dataType);
                 $columnIndex++;
             }
         }
