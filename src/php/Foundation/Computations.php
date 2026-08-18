@@ -123,9 +123,9 @@ class Computations{
     ];
     
     private const RELEVANT_DATATYPE_KEY=[
-        'RFC2822',
+        'System short',
         'Reference',
-        'string',
+        'Amount',
     ];
 
     private const ARR_COLUMNS=['Content'=>TRUE,'PARAMS'=>TRUE,];
