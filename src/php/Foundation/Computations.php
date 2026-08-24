@@ -122,10 +122,11 @@ class Computations{
         '\\'=>'/',', '=>'/',','=>'/','; '=>'/',';'=>'/','|'=>'/','. '=>'_','.'=>'_',' '=>'_',
     ];
     
-    private const RELEVANT_DATATYPE_KEY=[
+    private const FALLBACK_ARRAY_KEY=[
         'System short',
         'Reference',
         'Amount',
+        'USD',
     ];
 
     private const ARR_COLUMNS=['Content'=>TRUE,'PARAMS'=>TRUE,];
@@ -306,7 +307,7 @@ class Computations{
         if (isset($arr[$keyNeedle])){
             return $arr[$keyNeedle];
         }
-        foreach(self::RELEVANT_DATATYPE_KEY as $keyNeedle){
+        foreach(self::FALLBACK_ARRAY_KEY as $keyNeedle){
             if (isset($arr[$keyNeedle])){
                 return $arr[$keyNeedle];
             }
@@ -326,7 +327,9 @@ class Computations{
         } else {
             $value=($value==='FALSE')?FALSE:$value;
             $value=($value==='TRUE')?TRUE:$value;
-            $value=$this->arr2value($value);
+            if ($dataType!=='keep' && $dataType!=='geo'){
+                $value=$this->arr2value($value);
+            }
             $newValue=match($dataType){
                 'keep'=>$value,
                 'geo'=>$value,
@@ -421,7 +424,7 @@ class Computations{
     public function convert2stringWordChrsOnly($value,$replacement=''):string
     {
         $value=$this->str2str($value);
-        $value=preg_replace('/[^A-Za-zäüöÄÜÖßÁÓÍÀÒÌáíóàòìâôî\-]+/u',$replacement,$value);
+        $value=preg_replace('/\W+/u',$replacement,$value);
         return $value;
     }
 
