@@ -73,7 +73,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
                     'hideUpload'=>TRUE,
                     'columns'=>[['Column'=>'Name','Filter'=>''],['Column'=>'Params'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'File','Filter'=>'']]
                 ];
-                if (empty($selector['EntryId'])){
+                if (empty($selector['Group']) || empty($selector['Folder'])){
                     $captionHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h1','element-content'=>'The following entries are a random sample only...','keep-element-content'=>TRUE,]);
                     $mapHtml=$this->oc['SourcePot\Datapool\Tools\GeoTools']->getDynamicMap();
                     $settings['orderBy']='rand()';

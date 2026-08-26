@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class HTMLbuilder{
     
-    private $oc;
+    private $oc=[];
 
     private const SHOW_FILTER_OPTION_COUNT=20;
     private const MAX_SELECT_OPTION_COUNT=10000;
@@ -82,7 +82,7 @@ class HTMLbuilder{
         $this->oc=$oc;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -203,7 +203,11 @@ class HTMLbuilder{
             $tableArr['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tbodyArr);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($tableArr);
         } // if !empty matrix  
-        if ($returnArr){return ['html'=>$html];} else {return $html;}
+        if ($returnArr){
+            return ['html'=>$html];
+        } else {
+            return $html;
+        }
     }
     
     public function select(array $arr,bool $returnArr=FALSE):string|array
@@ -301,7 +305,9 @@ class HTMLbuilder{
     
     public function keySelect(array $arr,array $appendOptions=[]):string
     {
-        if (empty($arr['Source'])){return '';}
+        if (empty($arr['Source'])){
+            return '';
+        }
         $arr['value']=(isset($arr['value']))?$arr['value']:'';
         $stdKeys=$keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>'']);
@@ -326,7 +332,9 @@ class HTMLbuilder{
         $sampleValue='';
         foreach($keys as $key=>$value){
             if (!empty($arr['standardColumsOnly']) && !isset($stdKeys[$key])){continue;}
-            if ($key==$arr['value'] && !empty($arr['showSample'])){$sampleValue=(is_array($value))?'':strval($value);}
+            if ($key==$arr['value'] && !empty($arr['showSample'])){
+                $sampleValue=(is_array($value))?'':strval($value);
+            }
             $arr['options'][$key]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatKey2label($key);
             $keyComps=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$key);
             while(count($keyComps)>1 && !empty($arr['addParentKeys'])){
@@ -548,7 +556,9 @@ class HTMLbuilder{
 
     public function app(array $arr):string
     {
-        if (empty($arr['html'])){return '';}
+        if (empty($arr['html'])){
+            return '';
+        }
         $arr['icon']=$arr['icon']??'?';
         $arr['style']=$arr['style']??[];
         $arr['class']=$arr['class']??'app';
@@ -727,7 +737,9 @@ class HTMLbuilder{
     {
         $tableStyle=['clear'=>'none','margin'=>'0','min-width'=>'200px'];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']??[],FALSE);
-        if (empty($entry)){return '';}
+        if (empty($entry)){
+            return '';
+        }
         // check if a canvas element is selected and it's processor
         $selectedCanvasElement=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageStateByKey('SourcePot\Datapool\Foundation\DataExplorer','selectedCanvasElement');
         $hasCheckEntriesProcessor=(($selectedCanvasElement['Content']['Widgets']['Processor']??'')==='SourcePot\\checkentries\\checkentries');
@@ -980,7 +992,9 @@ class HTMLbuilder{
     
     public function loadEntry(array $arr):string
     {
-        if (empty($arr['selector'])){return '';}
+        if (empty($arr['selector'])){
+            return '';
+        }
         if (empty($arr['excontainer'])){
             $settingsTemplate=['method'=>'presentEntry','classWithNamespace'=>'SourcePot\Datapool\Tools\HTMLbuilder'];
             $arr['settings']=array_merge($arr['settings'],$settingsTemplate);
