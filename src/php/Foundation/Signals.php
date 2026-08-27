@@ -443,6 +443,9 @@ class Signals{
         $item=['timeStamp'=>$item['timeStamp']??time()];
         foreach($signal['Content']['signal'] as $item){
             if ($item['dataType']==='geo'){
+                if (!is_array($item['value'])){
+                    continue;
+                }
                 $geoSignalMatrix['meta']=['user'=>$item['label']];
                 $item['value']=array_merge(['lat'=>'','lon'=>'','alt'=>''],$item['value']);
                 $dateTime=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.$item['timeStamp'],'','',$meta['dateFormat'],\SourcePot\Datapool\Root::getUserTimezone());
