@@ -222,7 +222,7 @@ class MediaTools{
         $arr['selector']=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']);
         $arr=$this->addTmpFile($arr);
         // get source file
-        if (is_file($arr['selector']['Params']['TmpFile']['Source'])){
+        if (is_file($arr['selector']['Params']['TmpFile']['Source']??'')){
             // get target file
             $arr['src']=$this->oc['SourcePot\Datapool\Foundation\Filespace']->abs2rel($arr['selector']['Params']['TmpFile']['Source']);
             $arr['title']='';
