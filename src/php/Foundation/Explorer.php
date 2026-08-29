@@ -94,9 +94,6 @@ class Explorer{
             'Group'=>[
                 'isAsc'=>TRUE,
             ],
-            'Folder'=>[
-                'isAsc'=>FALSE,
-            ],
             'EntryId'=>[
                 'orderBy'=>'Name',
                 'isAsc'=>FALSE,
