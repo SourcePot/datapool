@@ -371,16 +371,15 @@ class Explorer{
     
     private function addEntry(string $callingClass,array $stateKeys,array $selector,array $entry):array
     {
-        if (empty($this->isVisible[__FUNCTION__])){
+        if (empty($this->isVisible[__FUNCTION__]) || empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[]))){
             return ['html'=>''];
         }
-        $access=TRUE;
         $arr=['html'=>'','icon'=>'&#10010;','title'=>self::SELECTOR_KEY_DATA[$stateKeys['selectedKey']]['addTitle'],'class'=>'explorer'];
         if (strcmp($stateKeys['nextKey'],'Source')===0 || !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[])){
             return ['html'=>'','icon'=>'&#10010;','class'=>'explorer'];
         } else {
             $contentHtml='';
-            $btnId=md5(json_encode($selector+[__FUNCTION__]));
+            $btnId=hash('sha256',json_encode($selector+[__FUNCTION__]));
             if (strcmp($stateKeys['selectedKey'],'Folder')===0){
                 if ($this->addEntryByFileUpload){
                     $headline='Add file';
@@ -390,7 +389,7 @@ class Explorer{
                     $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'text','key'=>['add entry'],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']]);
                     $contentHtml.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'button','element-content'=>'Add entry','key'=>['add entry'],'value'=>$stateKeys['nextKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]]);
                 }
-            } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0 && $this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[])){
+            } else if (strcmp($stateKeys['selectedKey'],'EntryId')===0){
                 if ($this->addEntryByFileUpload){
                     $headline='Replace file';
                     $contentHtml.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->fileUpload(['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'key'=>['update file'],'element-content'=>'Update entry file'],['formProcessingClass'=>__CLASS__,'formProcessingFunction'=>'appProcessing','formProcessingArg'=>$callingClass]);
@@ -405,9 +404,6 @@ class Explorer{
             }
             $headlineHtml=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h3','element-content'=>$headline]);
             $arr['html']=$headlineHtml.$contentHtml;
-            if (empty($access)){
-                $arr['html']='';
-            }
         }
         return $arr;
     }
@@ -425,7 +421,7 @@ class Explorer{
             $selector=['Source'=>$selector['Source'],'EntryId'=>$selector['EntryId']];
             if (!empty($entry)){$html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Entry editor','entryEditor',$entry,['hideEntryControls'=>TRUE],[]);}
         } else {
-            $btnId=md5(json_encode($selector+[__FUNCTION__]));
+            $btnId=hash('sha256',json_encode($selector+[__FUNCTION__]));
             $fileElement=['tag'=>'input','type'=>'text','value'=>$selector[$stateKeys['selectedKey']],'key'=>[$stateKeys['selectedKey']],'trigger-id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>['clear'=>'left']];
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($fileElement);
             $addBtn=['tag'=>'button','element-content'=>'Edit '.$stateKeys['selectedKey'],'key'=>['edit'],'value'=>$stateKeys['selectedKey'],'id'=>$btnId,'callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__,'style'=>[]];
@@ -546,11 +542,8 @@ class Explorer{
         }
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
-        if (empty($selector['EntryId'])){
-            return ['html'=>''];
-        }
-        $html=$this->oc['SourcePot\Datapool\Foundation\Access']->accessInfoHtml(['selector'=>$selector]);
-        return ['html'=>$html,'icon'=>'i','title'=>'Info','class'=>'explorer'];
+        $html=$this->oc['SourcePot\Datapool\Foundation\Access']->accessInfoHtml(['selector'=>$this->getGuideEntry($selector)]);
+        return ['html'=>$html,'icon'=>'&#9740;','title'=>'Access info "'.$stateKeys['selectedKey'].'"','class'=>'explorer'];
     }
 
 }
