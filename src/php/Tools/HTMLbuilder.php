@@ -308,7 +308,7 @@ class HTMLbuilder{
         if (empty($arr['Source'])){
             return '';
         }
-        $arr['value']=(isset($arr['value']))?$arr['value']:'';
+        $arr['value']=$arr['value']??'';
         $stdKeys=$keys=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplate($arr['Source']);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr,['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Type'=>FALSE,'Read'=>FALSE,'Write'=>FALSE,'app'=>'']);
         $requestId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($selector,TRUE).(empty($arr['standardColumsOnly'])?'ALL':'STANDARD');
@@ -378,8 +378,6 @@ class HTMLbuilder{
     
     public function btn(array $arr=[]):string
     {
-        // This function returns standard buttons based on argument arr.
-        // If arr is empty, buttons will be processed
         $html='';
         $defaultValues=['Source'=>FALSE,'Group'=>FALSE,'Folder'=>FALSE,'Name'=>FALSE,'EntryId'=>FALSE,'Read'=>0,'Write'=>0,'Owner'=>'SYSTEM','app'=>''];
         if (isset($arr['cmd'])){
@@ -387,7 +385,7 @@ class HTMLbuilder{
             $arr['callingClass']=__CLASS__;
             $arr['callingFunction']=__FUNCTION__;
             // compile button
-            $arr['element-content']=(isset($arr['element-content']))?$arr['element-content']:ucfirst($arr['cmd']);
+            $arr['element-content']=$arr['element-content']??ucfirst($arr['cmd']);
             $arr['key']=[$arr['cmd']];
             $arr['selector']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($arr['selector'],$defaultValues);
             $arr['source']=$arr['selector']['Source'];
@@ -566,7 +564,9 @@ class HTMLbuilder{
         $summaryArr=['tag'=>'summary','element-content'=>$arr['icon'],'keep-element-content'=>TRUE,'title'=>$arr['title'],'class'=>$arr['class']];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($summaryArr);
         $detailsArr=['tag'=>'details','element-content'=>$html.$arr['html'],'keep-element-content'=>TRUE,'class'=>$arr['class'],'style'=>$arr['style']];
-        if (isset($arr['open'])){$detailsArr['open']=$arr['open'];}
+        if (isset($arr['open'])){
+            $detailsArr['open']=$arr['open'];
+        }
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element($detailsArr);
         return $html;   
     }
@@ -614,33 +614,27 @@ class HTMLbuilder{
     {
         $template=['key'=>'Read','integerDef'=>$this->oc['SourcePot\Datapool\Foundation\User']->getUserRoles(),'bitCount'=>16];
         $arr=array_replace_recursive($template,$arr);
+        $column=$arr['key'];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($arr['selector']??[],FALSE);
         if (empty($entry)){
             return '';
         }
-        // only the Admin has access to this method if columns 'Privileges' is selected
-        if (is_array($arr['key'])){
-            $arr['key']=array_shift($arr['key']);
-        }
-        if (strcmp($arr['key'],'Privileges')===0 && !$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[],FALSE,TRUE)){
+        if (empty($this->oc['SourcePot\Datapool\Foundation\Database']->hasColumnAccessRight($column,FALSE)) || empty($this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[],FALSE,FALSE))){
             return '';
         }
-        if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($entry,'Write',[],FALSE,FALSE)){
-            return '';
-        }
-        $integer=intval($entry[$arr['key']]);
+        $integer=intval($entry[$column]);
         $callingClass=__CLASS__;
-        $callingFunction=__FUNCTION__.$arr['key'];
+        $callingFunction=__FUNCTION__.$column;
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($callingClass,$callingFunction);
-        $saveRequest=isset($formData['cmd'][$arr['key']]['save']);
+        $saveRequest=isset($formData['cmd'][$column]['save']);
         $updatedInteger=0;
         $html='<fieldset>';
-        $html.='<legend>'.'"'.$arr['key'].'" right'.'</legend>';
+        $html.='<legend>'.'"'.$column.'" right'.'</legend>';
         for($bitIndex=0;$bitIndex<$arr['bitCount'];$bitIndex++){
             $currentVal=pow(2,$bitIndex);
             if ($saveRequest){
                 // get checkboxes from form
-                if (empty($formData['val'][$arr['key']][$bitIndex])){
+                if (empty($formData['val'][$column][$bitIndex])){
                     $checked=FALSE;
                 } else {
                     $updatedInteger+=$currentVal;
@@ -648,27 +642,22 @@ class HTMLbuilder{
                 }
             } else {
                 // get checkboxes from form
-                if (($currentVal & $integer)==0){$checked=FALSE;} else {$checked=TRUE;}
+                $checked=($currentVal & $integer)!==0;
             }
-            if (isset($arr['integerDef'][$bitIndex]['Name'])){
-                $label=$arr['integerDef'][$bitIndex]['Name'];
-            } else {
-                $label=$bitIndex;
-            }
-            $id=md5($callingClass.$callingFunction.$bitIndex);
-            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>[$arr['key'],$bitIndex],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex,'excontainer'=>TRUE]);
-            $htmlBit.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>strval($label)]);
+            $id=hash('sha256',$callingClass.$callingFunction.$bitIndex);
+            $htmlBit=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>[$column,$bitIndex],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction,'title'=>'Bit '.$bitIndex,'excontainer'=>TRUE]);
+            $htmlBit.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>strval($arr['integerDef'][$bitIndex]['Name']??$bitIndex)]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$htmlBit,'keep-element-content'=>TRUE,'class'=>'fieldset']);
         }
-        $updateBtn=['tag'=>'button','key'=>[$arr['key'],'save'],'element-content'=>'Save','style'=>['margin'=>'0','width'=>'100%'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
+        $updateBtn=['tag'=>'button','key'=>[$column,'save'],'element-content'=>'Save','style'=>['margin'=>'0','width'=>'100%'],'callingClass'=>$callingClass,'callingFunction'=>$callingFunction];
         $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element($updateBtn);
         if ($saveRequest){
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             $entry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($entry);
             $entry=$this->oc['SourcePot\Datapool\Root']->substituteWithPlaceholder($entry);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,[$arr['key']=>$updatedInteger],FALSE,'Write');
+            $this->oc['SourcePot\Datapool\Foundation\Database']->updateEntries($entry,[$column=>$updatedInteger],FALSE,'Write');
             $statistics=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
-            $context=['key'=>$arr['key'],'Source'=>$entry['Source'],'selector'=>'','statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics)];
+            $context=['key'=>$column,'Source'=>$entry['Source'],'selector'=>'','statistics'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->statistic2str($statistics)];
             $context['what']=(empty($entry['EntryId']))?'entries':'entry';
             $context['selector'].=(empty($entry['Group']))?'':' | Group='.$entry['Group'];
             $context['selector'].=(empty($entry['Folder']))?'':' | Folder='.$entry['Folder'];
@@ -718,7 +707,7 @@ class HTMLbuilder{
                 }
             }
             $checked=!empty($arr['selector']['Content'][$key][$class]);
-            $id=md5($arr['callingClass'].$arr['callingFunction'].$class);
+            $id=hash('sha256',$arr['callingClass'].$arr['callingFunction'].$class);
             $htmlClass=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'input','type'=>'checkbox','checked'=>$checked,'id'=>$id,'key'=>['Content',$key,$class],'callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'title'=>'','excontainer'=>TRUE]);
             $htmlClass.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'label','for'=>$id,'element-content'=>$class]);
             $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>$htmlClass,'keep-element-content'=>TRUE,'class'=>'fieldset']);

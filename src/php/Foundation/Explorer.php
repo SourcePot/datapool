@@ -95,13 +95,24 @@ class Explorer{
                 'isAsc'=>TRUE,
             ],
             'Folder'=>[
-                'isAsc'=>TRUE,
+                'isAsc'=>FALSE,
+            ],
+            'EntryId'=>[
+                'orderBy'=>'Name',
+                'isAsc'=>FALSE,
             ],
         ],
         'multimedia'=>[
-            'Date'=>[
+            'Group'=>[
+                'isAsc'=>TRUE,
+            ],
+            'Folder'=>[
                 'isAsc'=>FALSE,
-            ]
+            ],
+            'EntryId'=>[
+                'orderBy'=>'Name',
+                'isAsc'=>FALSE,
+            ],
         ],
     ];
 

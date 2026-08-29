@@ -13,28 +13,26 @@ namespace SourcePot\Datapool\GenericApps;
 class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapool\Interfaces\HomeApp,\SourcePot\Datapool\Interfaces\Haystack{
     
     private const TILE_STYLE=['clear'=>'none','width'=>320,'height'=>340,'padding'=>'0 5px','overflow'=>'hidden'];
-
     private const HAYSTACK_RESULT_LIMIT=30;
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
-    private $entryTemplate=[
-        'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
-        ];
+    private $entryTemplate=[];
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -49,9 +47,9 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
         return $this->entryTemplate;
     }
 
-    public function unifyEntry($entry):array
+    public function unifyEntry(array $entry):array
     {
-        // This function makes class specific corrections before the entry is inserted or updated.
+        // Add class specific entry template here
         return $entry;
     }
 
@@ -63,9 +61,10 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
             $html='';
             $arr['toReplace']['{{explorer}}']=$this->oc['SourcePot\Datapool\Foundation\Explorer']->getExplorer(__CLASS__);
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
-            if (empty($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector))){
+            $hasEntry=$this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($selector);
+            if (empty($hasEntry)){
                 $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'h2','element-content'=>'No entries yet...']);
-            } else if (empty($selector['Group']) || empty($selector['Folder']) || empty($selector['Name'])){
+            } else if (empty($selector['EntryId'])){
                 $settings=[
                     'orderBy'=>'Date',
                     'isAsc'=>TRUE,
@@ -91,7 +90,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
                 $html.=$mapHtml??'';
             } else {
                 $presentArr=['callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__];
-                $presentArr['selector']=$selector;
+                $presentArr['selector']=$hasEntry;
                 $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->presentEntry($presentArr);
             }
             $arr['toReplace']['{{content}}']=$html;
@@ -125,8 +124,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
     
     public function getHomeAppInfo():string
     {
-        $info='This widget presents a <b>Markdown document</b>. The content admin and admin will be able to change the content.<br/>The content must be entred for each web page language separately.';
-        return $info;
+        return 'This widget presents a <b>Markdown document</b>. The content admin and admin will be able to change the content.<br/>The content must be entred for each web page language separately.';
     }
 
     /******************************************************************************************************************************************

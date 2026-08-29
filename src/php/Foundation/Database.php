@@ -25,6 +25,13 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public const CHARACTER_SET='utf8mb4';
     public const TABLE_COLLATION='utf8mb4_unicode_ci';
     public const MAX_IDLIST_COUNT=2000;
+
+    // Entry column access protection: Privileges needed for update access (0 = Cannot be updated at all)
+    private const ENTRY_COLUMN_UPDATE_ACCESS=[
+        'Source'=>0,
+        'Owner'=>0,
+        'Privileges'=>32768,
+    ];
     
     private $rootEntryTemplate=[
         'EntryId'=>['type'=>'VARCHAR(1024)','value'=>'{{EntryId}}','Description'=>'This is the unique entry key, e.g. EntryId, User hash, etc.','Write'=>0],
@@ -461,7 +468,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     * If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
     * e.g. 'Date|[]|Start' -> refers to column 'Date'.
     */
-    private function selector2sql($selector,$removeGuideEntries=TRUE,$isDebugging=FALSE){
+    private function selector2sql($selector,$removeGuideEntries=TRUE){
         if ($removeGuideEntries){
             $selector['Type=!']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
         }
@@ -505,9 +512,6 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         }
         $sqlArr['sql']=implode(' AND ',$sqlArr['sql']);
         if (empty($sqlArr['sql'])){$sqlArr['sql']='';} else {$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
-        if ($isDebugging){
-            $this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2file(['selector'=>$selector,'sqlArr'=>$sqlArr,'entryTemplate'=>$entryTemplate]);
-        }
         return $sqlArr;        
     }    
     
@@ -788,7 +792,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
 
-    public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=FALSE,$isDebugging=FALSE):int
+    public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=FALSE):int
     {
         // only the Admin has the right to change data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
@@ -808,7 +812,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $inputs=[];
         $valueSql='';
         foreach($entry as $column=>$value){
-            if (!isset($entryTemplate[$column]) || $value===FALSE || strcmp($column,'Source')===0){continue;}
+            if (!isset($entryTemplate[$column]) || $value===FALSE || $this->hasColumnAccessRight($column,$isSystemCall)===FALSE){
+                continue;
+            }
             $sqlPlaceholder=':'.$column;
             $valueSql.="`".$column."`=".$sqlPlaceholder.",";
             if (is_array($value)){
@@ -823,6 +829,19 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $this->addStatistic('updated',$stmt->rowCount());    
         }
         return $this->getStatistic('updated');
+    }
+
+    public function hasColumnAccessRight(string $column, bool $isSystemCall):bool
+    {
+        $requiredRight=self::ENTRY_COLUMN_UPDATE_ACCESS[$column]??65535;
+        if ($requiredRight===0){
+            return FALSE;
+        } else if ($isSystemCall){
+            return TRUE;
+        } else {
+            $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
+            return (intval($user['Privileges']??0) & $requiredRight)>0;
+        }
     }
     
     public function updateEntry(array $entry,bool $isSystemCall=FALSE,bool $noUpdateButCreateIfMissing=FALSE,bool $addLog=TRUE):array|bool
@@ -870,7 +889,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             }
             // update entry
             $entry=$this->unifyEntry($entry,TRUE);
-            $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE,$isDebugging=FALSE);
+            $this->updateEntries($selector,$entry,$isSystemCall,'Write',FALSE,FALSE,FALSE,FALSE,[],FALSE);
             $entry=$this->entryById($selector,$isSystemCall,'Read');
             $context['Info']='Entry updated by "'.__FUNCTION__.'"';
         } else if (!$this->oc['SourcePot\Datapool\Foundation\Access']->access($existingEntry,'Write',[],$isSystemCall)){
