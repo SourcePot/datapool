@@ -539,7 +539,11 @@ class Explorer{
         }
         $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState($callingClass);
         $selector=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2selector($selector);
-        $html=$this->oc['SourcePot\Datapool\Foundation\Access']->accessInfoHtml(['selector'=>$this->getGuideEntry($selector)]);
+        if (empty($selector['Source']) || strpos($callingClass,'SourcePot\Datapool\GenericApps')===FALSE){
+            return ['html'=>''];
+        }
+        $guideEntry=$this->getGuideEntry($selector);
+        $html=$this->oc['SourcePot\Datapool\Foundation\Access']->accessInfoHtml(['selector'=>$guideEntry]);
         return ['html'=>$html,'icon'=>'&#9740;','title'=>'Access info "'.$stateKeys['selectedKey'].'"','class'=>'explorer'];
     }
 
