@@ -132,32 +132,13 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
     * Haystack interface
     */
 
-    public function query(string $query, int $limit=10, array $tags=[], string $language=''):array
+    public function query(string $query, int $limit=self::HAYSTACK_RESULT_LIMIT, array $tags=[], string $language=''):array
     {
         $entries=[];
-        $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',FALSE,$limit) as $entry){
+        $selector=['Source'=>$this->entryTable,'Content'=>'%'.$query.'%','Name'=>'%'.$query.'%','Folder'=>'%'.$query.'%','Params'=>'%'.$query.'%'];
+        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',$isAsc=FALSE,$limit,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=TRUE,$useOR=TRUE) as $entry){
             $entry['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Content',$query);
             $entries[]=$entry;
-            if (count($entries)>self::HAYSTACK_RESULT_LIMIT){return $entries;}
-        }
-        $selector=['Source'=>$this->entryTable,'Name'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',TRUE,$limit) as $entry){
-            $entry['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Name',$query);
-            $entries[]=$entry;
-            if (count($entries)>self::HAYSTACK_RESULT_LIMIT){return $entries;}
-        }
-        $selector=['Source'=>$this->entryTable,'Folder'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',TRUE,$limit) as $entry){
-            $entry['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Folder',$query);
-            $entries[]=$entry;
-            if (count($entries)>self::HAYSTACK_RESULT_LIMIT){return $entries;}
-        }
-        $selector=['Source'=>$this->entryTable,'Params'=>'%'.$query.'%'];
-        foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','rand()',TRUE,$limit) as $entry){
-            $entry['sample']=$this->oc['SourcePot\Datapool\Foundation\Haystack']->getQuerySampleText($entry,'Params',$query);
-            $entries[]=$entry;
-            if (count($entries)>self::HAYSTACK_RESULT_LIMIT){return $entries;}
         }
         return $entries;
     }

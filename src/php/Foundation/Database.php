@@ -12,9 +12,9 @@ namespace SourcePot\Datapool\Foundation;
 
 class Database implements \SourcePot\Datapool\Interfaces\Job{
 
-    private $oc;
+    private $oc=[];
     
-    private $dbObj;
+    private $dbObj=FALSE;
     
     public const TIME_BETWEEN_ACTIONS=[
         'Table optimized'=>['min'=>9000,'max'=>864000],
@@ -61,7 +61,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $this->rootEntryTemplate['Write']['value']=$accessOptions['ALL_CONTENTADMIN_R'];
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -468,26 +468,34 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     * If the selector-key contains the flat-array-key separator, the first part of the key is used as column, 
     * e.g. 'Date|[]|Start' -> refers to column 'Date'.
     */
-    private function selector2sql($selector,$removeGuideEntries=TRUE){
-        if ($removeGuideEntries){
-            $selector['Type=!']=\SourcePot\Datapool\Root::GUIDEINDICATOR.'%';
-        }
+    private function selector2sql(array $selector,bool $removeGuideEntries=TRUE, bool $useOR=FALSE):array
+    {
         $entryTemplate=$GLOBALS['dbInfo'][$selector['Source']];
         $opAlias=['<'=>'LT','<='=>'LE','=<'=>'LE','>'=>'GT','>='=>'GE','=>'=>'GE','='=>'EQ','!'=>'NOT','!='=>'NOT','=!'=>'NOT'];
         $sqlArr=['sql'=>[],'inputs'=>[]];            
         foreach($selector as $column=>$value){
-            if ($value===FALSE || $value==\SourcePot\Datapool\Root::GUIDEINDICATOR){continue;}
+            if ($value===FALSE || $value==\SourcePot\Datapool\Root::GUIDEINDICATOR){
+                continue;
+            }
             preg_match('/([^<>=!]+)([<>=!]+)/',$column,$match);
             $operator=$match[2]??'=';
-            $placeholder=':'.md5($column.$opAlias[$operator[0]]);
+            $placeholder=':'.hash('sha256',$column.$opAlias[$operator[0]]);
             $columns=explode(\SourcePot\Datapool\Root::ONEDIMSEPARATOR,$column);
             $column=trim($columns[0],' <>=!');
-            if (!isset($entryTemplate[$column])){continue;}
-            if (is_array($value)){$value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);}
+            if (!isset($entryTemplate[$column])){
+                continue;
+            }
+            if (is_array($value)){
+                $value=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2json($value);
+            }
             if ((strpos($entryTemplate[$column]['type'],'VARCHAR')!==FALSE || strpos($entryTemplate[$column]['type'],'BLOB')!==FALSE) || $this->containsStringWildCards(strval($value))){
                 $column='`'.$column.'`';
                 if (empty($value)){
-                    if ($operator[0]==='<' || $operator[0]==='>' || $operator[0]==='!'){$value='';} else {continue;}
+                    if ($operator[0]==='<' || $operator[0]==='>' || $operator[0]==='!'){
+                        $value='';
+                    } else {
+                        continue;
+                    }
                 } else {
                     $value=addslashes($value);
                 }
@@ -496,8 +504,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                     default => $column.' NOT LIKE '.$placeholder
                 };    
             } else {
-                if (empty($value)){$value=0;}
                 $column='`'.$column.'`';
+                $value=$value?:0;
                 $query=match($operator){
                     '<' => $column.'<'.$placeholder,
                     '<=','=<' => $column.'<='.$placeholder,
@@ -510,13 +518,27 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $sqlArr['sql'][]=$query;
             $sqlArr['inputs'][$placeholder]=$value;
         }
-        $sqlArr['sql']=implode(' AND ',$sqlArr['sql']);
-        if (empty($sqlArr['sql'])){$sqlArr['sql']='';} else {$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
+        if ($useOR){
+            $sqlArr['sql']=implode(' OR ',$sqlArr['sql']);
+        } else {
+            $sqlArr['sql']=implode(' AND ',$sqlArr['sql']);
+        }
+        if (empty($sqlArr['sql'])){
+            $sqlArr['sql']='';
+        } else {
+            $sqlArr['sql']=' WHERE ('.$sqlArr['sql'].')';
+            if ($removeGuideEntries){
+                $sqlArr['sql'].=" AND `Type` NOT LIKE '".\SourcePot\Datapool\Root::GUIDEINDICATOR."%'";
+            }
+        }
         return $sqlArr;        
     }    
     
-    private function addRights2sql($sqlArr,$user,$isSystemCall=FALSE,$rightType='Read'){
-        if ($isSystemCall===TRUE){return $sqlArr;}
+    private function addRights2sql(array $sqlArr,array $user,bool $isSystemCall=FALSE,string $rightType='Read'):array 
+    {
+        if ($isSystemCall===TRUE){
+            return $sqlArr;
+        }
         if (strcmp($rightType,'Read')!==0 && strcmp($rightType,'Write')!==0){
             throw new \ErrorException('Function '.__FUNCTION__.': right type '.$rightType.' unknown.',0,E_ERROR,__FILE__,__LINE__);    
         }
@@ -526,11 +548,14 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty($sqlArr['sql'])){$sqlArr['sql'].=" AND";}
         $sqlArr['sql'].=" (((`".$rightType."` & ".intval($user['Privileges']).")>0) OR (`Owner` LIKE :Owner))";
         $sqlArr['inputs'][':Owner']=$user['Owner'];
-        if (strpos($sqlArr['sql'],'WHERE')===FALSE){$sqlArr['sql']=' WHERE '.$sqlArr['sql'];}
+        if (strpos($sqlArr['sql'],'WHERE')===FALSE){
+            $sqlArr['sql']=' WHERE '.$sqlArr['sql'];
+        }
         return $sqlArr;
     }
     
-    private function addSuffix2sql($sqlArr,$entryTemplate,$orderBy='Name',$isAsc=TRUE,$limit=FALSE,$offset=FALSE){
+    private function addSuffix2sql(array $sqlArr,array $entryTemplate,string|bool $orderBy='Name',bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE):array
+    {
         if (!empty($orderBy) && isset($entryTemplate[$orderBy])){
             $sqlArr['sql'].=' ORDER BY `'.$orderBy.'`';
             if ($isAsc===TRUE){$sqlArr['sql'].=' ASC';} else {$sqlArr['sql'].=' DESC';}
@@ -544,7 +569,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $sqlArr;
     }
     
-    private function addColumnValue2result($result,$column,$value,$entryTemplate){
+    private function addColumnValue2result(array $result,string $column,$value,array $entryTemplate):array
+    {
         if (!isset($entryTemplate[$column]['value'])){
             $result[$column]=$value;
         } else if (is_array($entryTemplate[$column]['value'])){
@@ -562,17 +588,19 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $result;    
     }
 
-    private function standardSelectQuery($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
+    private function standardSelectQuery(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,bool $removeGuideEntries=TRUE,bool $useOR=FALSE):array
+    {
         $user=$this->oc['SourcePot\Datapool\Root']->getCurrentUser();
-        $sqlArr=$this->selector2sql($selector,$removeGuideEntries);
+        $sqlArr=$this->selector2sql($selector,$removeGuideEntries,$useOR);
         $sqlArr=$this->addRights2sql($sqlArr,$user,$isSystemCall,$rightType);
         $sqlArr=$this->addSuffix2sql($sqlArr,$GLOBALS['dbInfo'][$selector['Source']],$orderBy,$isAsc,$limit,$offset);
         return $sqlArr;
     }
     
-    public function getRowCount($selector,$isSystemCall=FALSE,$rightType='Read',$orderBy=FALSE,$isAsc=TRUE,$limit=FALSE,$offset=FALSE,$removeGuideEntries=TRUE){
+    public function getRowCount(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,bool $removeGuideEntries=TRUE,bool $useOR=FALSE):int
+    {
         if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
-        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
+        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
         $sqlArr['sql']='SELECT COUNT(*) FROM (SELECT `EntryId` FROM `'.$selector['Source'].'`'.$sqlArr['sql'].') AS a;';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
         $rowCount=current($stmt->fetch()?:[]);
@@ -603,7 +631,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entries;
     }
     
-    public function getDistinct(array $selector,string $column,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeGuideEntries=FALSE):\Generator
+    public function getDistinct(array $selector,string $column,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,bool $removeGuideEntries=FALSE,bool $useOR=FALSE):\Generator
     {
         $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>0,'hash'=>''];
         $column=trim($column,'!');
@@ -622,7 +650,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         } else if (!isset($GLOBALS['dbInfo'][$selector['Source']])){
             // selected table does not exist
         } else {
-            $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries);
+            $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
             $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
             $result=['isFirst'=>TRUE,'rowIndex'=>0,'rowCount'=>$stmt->rowCount(),'Source'=>$selector['Source'],'hash'=>'','unlock'=>$selector['unlock']??FALSE];
@@ -640,10 +668,10 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         }
     }
     
-    public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,array $selectExprArr=[],bool $removeGuideEntries=TRUE):\Generator
+    public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,array $selectExprArr=[],bool $removeGuideEntries=TRUE,bool $useOR=FALSE):\Generator
     {
         if (!isset($GLOBALS['dbInfo'][$selector['Source']])){return [];}
-        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries);
+        $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
         if (empty($selectExprArr)){
             $selectExprSQL=$selector['Source'].'.*';
         } else {
@@ -702,11 +730,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $result;
     }
     
-    private function selector2idGroups(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeFile=TRUE):array
+    private function selector2idGroups(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,int|bool|string $limit=FALSE,int|bool|string $offset=FALSE,bool $removeFile=TRUE,bool $useOR=FALSE):array
     {
         $groupIndex=$entryIndex=0;
         $entryIdGroups=[];
-        foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,['EntryId'],FALSE,FALSE) as $row){
+        foreach($this->entryIterator($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,['EntryId'],FALSE,$useOR) as $row){
             if ($entryIndex>self::MAX_IDLIST_COUNT){
                 $entryIndex=0;
                 $groupIndex++;
@@ -792,7 +820,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
 
-    public function updateEntries($selector,$entry,$isSystemCall=FALSE,string $rightType='Write',$orderBy=FALSE,$isAsc=FALSE,$limit=FALSE,$offset=FALSE,$selectExprArr=[],$removeGuideEntries=FALSE):int
+    public function updateEntries(array $selector,array $entry,bool $isSystemCall=FALSE,string $rightType='Write',string|bool $orderBy=FALSE,bool $isAsc=FALSE,int|string|bool $limit=FALSE,int|string|bool $offset=FALSE,$selectExprArr=[],bool $removeGuideEntries=FALSE,bool $useOR=FALSE):int
     {
         // only the Admin has the right to change data in the Privileges column
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
@@ -905,7 +933,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
     
-    public function entryByIdCreateIfMissing($entry,$isSystemCall=FALSE){
+    public function entryByIdCreateIfMissing(array $entry,bool $isSystemCall=FALSE):array
+    {
         $entry[__FUNCTION__]=['class'=>__CLASS__,'function'=>__FUNCTION__,'isSystemCall'=>$isSystemCall];
         if (empty($entry['EntryId'])){
             $entry[__FUNCTION__]['notice']='EntryId empty';
@@ -915,11 +944,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $entry;
     }
     
-    public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE):array|bool
+    public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE,bool $useOR=FALSE):array|bool
     {
         if (empty($selector['Source'])){return FALSE;}
         if (empty($selector['EntryId'])){
-            foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,2,FALSE,[],$removeGuideEntries) as $entry){
+            foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,2,FALSE,[],$removeGuideEntries,$useOR) as $entry){
                 return $entry;
             }
         } else {
