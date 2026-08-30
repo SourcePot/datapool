@@ -84,7 +84,7 @@ class Multimedia implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapo
                 } else {
                     $html.=(empty($settings['limit']))?'':$captionHtml;
                     foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read',$settings['orderBy'],$settings['isAsc'],$settings['limit'],) as $entry){
-                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>'.','keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>self::TILE_STYLE]);
+                        $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','element-content'=>($entry['rowIndex']+1),'keep-element-content'=>TRUE,'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'multimedia','style'=>self::TILE_STYLE]);
                     }
                 }
                 $html.=$mapHtml??'';

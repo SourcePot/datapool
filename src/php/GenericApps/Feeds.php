@@ -38,7 +38,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'EN - Science'=>'EN - Science',
         'EN - Weather'=>'EN - Weather',
         'EN - Tourism'=>'EN - Tourism',
-        'EN - Movies Music, Musik'=>'EN - Movies Music',
+        'EN - Movies, Music'=>'EN - Movies Music',
         'EN - Art'=>'EN - Art',
         'EN - Nature'=>'EN - Nature',
         'EN - Culinary'=>'EN - Culinary',
@@ -76,7 +76,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         'credit'=>'credit','author'=>'credit',
     ];
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[
@@ -93,23 +93,18 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
         $this->urlSelector=['Source'=>$this->oc['SourcePot\Datapool\AdminApps\Settings']->getEntryTable(),'Group'=>'Feeds','Folder'=>'Settings','Name'=>'URL'];
         $this->oc['SourcePot\Datapool\Foundation\Explorer']->getGuideEntry($this->urlSelector);
     }
 
-    /**
-    * Housekeeping method periodically executed by job.php (this script should be called once per minute through a CRON-job)
-    * @param    string $vars Initial persistent data space
-    * @return   array  Array Updateed persistent data space
-    */
     public function job(array $vars):array
     {
         if (empty($vars['URLs2do'])){
@@ -140,7 +135,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         return $this->entryTemplate;
     }
 
-    public function unifyEntry($feedEntry):array
+    public function unifyEntry(array $feedEntry):array
     {
         return $feedEntry;
     }
@@ -154,7 +149,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $selector=$this->oc['SourcePot\Datapool\Tools\NetworkTools']->getPageState(__CLASS__);
             $html='';
             foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($selector,FALSE,'Read','Date',FALSE) as $entry){
-                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>'.','function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'both']]);
+                $html.=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'div','keep-element-content'=>TRUE,'element-content'=>($entry['rowIndex']+1),'function'=>'loadEntry','source'=>$entry['Source'],'entry-id'=>$entry['EntryId'],'class'=>'feeds','style'=>['clear'=>'both']]);
             }
             $arr['toReplace']['{{content}}']=$html;
             return $arr;
@@ -178,7 +173,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     }
 
-    private function loadFeed(array $urlEntry)
+    private function loadFeed(array $urlEntry):void
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__]+$urlEntry['Content'];
         if (empty($urlEntry['Content']['URL'])){
@@ -257,7 +252,6 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             'Expires'=>$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('now','PT2H'),
         ];
         // create entries from items
-        $entries=[];
         $tmpDir=$this->oc['SourcePot\Datapool\Foundation\Filespace']->getTmpDir();
         foreach($items as $item){
             if (!is_array($item)){
@@ -265,6 +259,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 break;
             }
             $item=$this->mapArray($item,self::ITEM_MAPPING);
+            unset($link,$src);
             if (isset($item['link'])){
                 $link=$item['link'];
                 unset($item['link']);
@@ -312,6 +307,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
 
     private function mapArray(array $in, $mapping):array
     {
+        $mapping=(is_array($mapping))?$mapping:[(string)$mapping];
         $flatIn=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($in);
         $leafesIn=$this->oc['SourcePot\Datapool\Tools\MiscTools']->flatArrLeaves($flatIn);
         $out=[];
@@ -322,7 +318,6 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $key='url';
                 $value=$match[1];
             }
-            $mapping=(is_array($mapping))?$mapping:[strval($mapping)];
             foreach($mapping as $fromKey=>$toKey){
                 if (strpos(strval($key),$fromKey)===FALSE){continue;}
                 $out[$toKey]=$this->oc['SourcePot\Datapool\Tools\MiscTools']->stripTags((string)$value);
@@ -394,11 +389,10 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     
     public function getHomeAppWidget(string $name):array
     {
-        // get container
-        $elector=['Source'=>$this->entryTable,'refreshInterval'=>10];
+        $selector=['Source'=>$this->entryTable,'refreshInterval'=>10];
         $element=['element-content'=>'','style'=>[]];
         $element['element-content'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h1','element-content'=>'News','keep-element-content'=>TRUE]);
-        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('News item '.__FUNCTION__,'generic',$elector,['method'=>'userItemHtml','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
+        $element['element-content'].=$this->oc['SourcePot\Datapool\Foundation\Container']->container('News item '.__FUNCTION__,'generic',$selector,['method'=>'userItemHtml','classWithNamespace'=>__CLASS__],['style'=>['border'=>'none']]);
         return $element;
     }
     
