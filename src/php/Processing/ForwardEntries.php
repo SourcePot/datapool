@@ -267,16 +267,17 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetName=array_search($targetEntryId,$base['targets']);
             $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,['style'=>['min-width'=>'unset','padding'=>'0']]);
             $targetResultElement=$this->oc['SourcePot\Datapool\Foundation\Element']->element($targetResultElement);
-            if ($conditionMet && !$skipTargets){
+            $conditionMet=$conditionMet && !$skipTargets;
+            if ($conditionMet){
                 $success=TRUE;
                 $wasForwarded=!$testRun;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,!$moveForwardedEntry);
             }
+            if ($skipTargets){
+                $targetResultElement='∅';
+            }
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
             if (count($result['Forwarded'])<self::MAX_RESULT_TABLE_ROW_COUNT){
-                if ($skipTargets){
-                    $equations[$targetEntryId]=$targetResultElement='∅';
-                }
                 $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             } else {
                 $result['Forwarded']['...'][$targetName]='...';
