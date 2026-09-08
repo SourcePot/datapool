@@ -274,7 +274,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,!$moveForwardedEntry);
             }
             if ($skipTargets){
-                $targetResultElement='∅';
+                $equations[$targetEntryId]=$targetResultElement='∅';
             }
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
             if (count($result['Forwarded'])<self::MAX_RESULT_TABLE_ROW_COUNT){
