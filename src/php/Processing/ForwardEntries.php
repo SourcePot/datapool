@@ -285,7 +285,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Forwarded']['...'][$targetName]='...';
             }
         }
-        if ($wasForwarded && $removeForwardedEntries && !$testRun){
+        if ($wasForwarded && $removeForwardedEntries && empty($testRun)){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
         }
         if ($success){
