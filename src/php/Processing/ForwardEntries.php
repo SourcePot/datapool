@@ -260,30 +260,29 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $targetName=array_search($forwardOnSuccess,$base['targets']);
         }
-        $success=$wasForwarded=FALSE;
+        $success=$wasForwarded=$skipTargets=FALSE;
         $moveForwardedEntry=boolval($params['Move entries']??0);
         $removeForwardedEntries=boolval($params['Remove forwarded entries']??0);
         foreach($forwardTo as $targetEntryId=>$conditionMet){
-            $skipTarget=FALSE;
             $targetName=array_search($targetEntryId,$base['targets']);
             $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,['style'=>['min-width'=>'unset','padding'=>'0']]);
             $targetResultElement=$this->oc['SourcePot\Datapool\Foundation\Element']->element($targetResultElement);
-            if ($conditionMet && !$skipTarget){
+            if ($conditionMet && !$skipTargets){
                 $success=TRUE;
                 $wasForwarded=!$testRun;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,!$moveForwardedEntry);
-                if ($moveForwardedEntry){
-                    $skipTarget=TRUE;
-                }
             }
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
             if (count($result['Forwarded'])<self::MAX_RESULT_TABLE_ROW_COUNT){
-                if ($skipTarget){
+                if ($skipTargets){
                     $equations[$targetEntryId]=$targetResultElement='∅';
                 }
                 $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             } else {
                 $result['Forwarded']['...'][$targetName]='...';
+            }
+            if ($moveForwardedEntry && $success){
+                $skipTargets=TRUE;
             }
         }
         if ($wasForwarded && $removeForwardedEntries && empty($testRun)){
