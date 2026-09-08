@@ -279,9 +279,9 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
             if ($maxResultRowCountReached){
-                $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
-            } else {
                 $result['Forwarded']['...'][$targetName]='...';
+            } else {
+                $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             }
             if ($moveForwardedEntry && $success){
                 $skipTargets=TRUE;
