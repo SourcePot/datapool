@@ -263,6 +263,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         $success=$wasForwarded=$skipTargets=FALSE;
         $moveForwardedEntry=boolval($params['Move entries']??0);
         $removeForwardedEntries=boolval($params['Remove forwarded entries']??0);
+        $maxResultRowCountReached=(count($result['Forwarded'])>=self::MAX_RESULT_TABLE_ROW_COUNT);
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
             $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,['style'=>['min-width'=>'unset','padding'=>'0']]);
@@ -277,7 +278,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $equations[$targetEntryId]=$targetResultElement='∅';
             }
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
-            if (count($result['Forwarded'])<self::MAX_RESULT_TABLE_ROW_COUNT){
+            if ($maxResultRowCountReached){
                 $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
             } else {
                 $result['Forwarded']['...'][$targetName]='...';
