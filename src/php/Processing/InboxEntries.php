@@ -190,14 +190,17 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
    
-    public function runForwardEntries(array $callingElement, int $testRun=1):array{
-        $base=['forwardingparams'=>[],'forwardingrules'=>[]];
+    public function runForwardEntries(array $callingElement, int $testRun=1):array
+    {
+        $base=['inboxparams'=>[],'forwardingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);
         // get targets template
         $base['targets']=[];
         foreach($base['forwardingrules'] as $ruleId=>$rule){
-            if (!isset($rule['Content']['Forward on success'])){continue;}
+            if (!isset($rule['Content']['Forward on success'])){
+                continue;
+            }
             foreach($base['canvasElements'] as $targetName=>$target){
                 if ($target['EntryId']==$rule['Content']['Forward on success']){
                     $base['targets'][$targetName]=$target['EntryId'];
@@ -229,6 +232,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         // process entry forwarding
         if ($testRun<2){
+            $base['forwardingparams']=$base['inboxparams'];
             // loop through source entries and parse these entries
             $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
             // loop through entries
