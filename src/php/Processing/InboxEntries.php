@@ -12,10 +12,12 @@ namespace SourcePot\Datapool\Processing;
 
 class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
-    private $oc;
+    private $oc=[];
     
     private const CONTENT_STRUCTURE_PARAMS=[
         'Inbox source'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>[]],   
+        'Move entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, copy entry to target if forwarding rule is met',1=>'Yes, move entry if forwarding rule is met']],
+        'Remove forwarded entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, keep remaining forwarded entries',1=>'Yes, delete remaining forwarded entries']],
     ];
 
     private const INFO_MATRIX=[
@@ -29,18 +31,19 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -50,7 +53,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
 
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
@@ -62,7 +66,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info')
+    {
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -77,18 +82,21 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
     }
 
-    private function getInboxEntriesWidget($callingElement){
+    private function getInboxEntriesWidget(array $callingElement):string
+    {
         $html=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox','generic',$callingElement,['method'=>'getInboxEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
         return $html;
     }
-    
-     private function getInboxEntriesInfo($callingElement){
+
+    private function getInboxEntriesInfo(array $callingElement):string
+    {
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO_MATRIX,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
     
-    public function getInboxEntriesWidgetHtml($arr){
+    public function getInboxEntriesWidgetHtml(array $arr):array
+    {
         $arr['html']=$arr['html']??'';
         // command processing
         $result=[];
@@ -125,7 +133,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getInboxEntriesSettings($callingElement){
+    private function getInboxEntriesSettings(array $callingElement):string
+    {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Inbox entries settings','generic',$callingElement,['method'=>'getInboxEntriesSettingsHtml','classWithNamespace'=>__CLASS__],[]);
@@ -133,7 +142,8 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
     
-    public function getInboxEntriesSettingsHtml($arr){
+    public function getInboxEntriesSettingsHtml(array $arr):array
+    {
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->inboxParams($arr['selector']);
         $arr['callingClass']=$arr['selector']['Folder'];
@@ -149,9 +159,12 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
     
-    private function inboxParams($callingElement){
+    private function inboxParams(array $callingElement):string
+    {
         $return=['html'=>'','Parameter'=>[],'result'=>[]];
-        if (empty($callingElement['Content']['Selector']['Source'])){return $return;}
+        if (empty($callingElement['Content']['Selector']['Source'])){
+            return $return['html'];
+        }
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
         $contentStructure['Inbox source']['options']=$this->oc['SourcePot\Datapool\Root']->getImplementedInterfaces('SourcePot\Datapool\Interfaces\Receiver');
@@ -165,7 +178,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
-    private function forwardingRules($callingElement){
+    private function forwardingRules(array $callingElement):string{
         // build content structure
         $contentStructure=\SourcePot\Datapool\Processing\ForwardEntries::CONTENT_STRUCTURE_RULES;
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement);
@@ -177,7 +190,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
    
-    public function runForwardEntries($callingElement,$testRun=1){
+    public function runForwardEntries(array $callingElement, int $testRun=1):array{
         $base=['forwardingparams'=>[],'forwardingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);

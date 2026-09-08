@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
     
     private const MAX_RESULT_TABLE_ROW_COUNT=20;
     
@@ -21,7 +21,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     ];
     
     private const CONTENT_STRUCTURE_PARAMS=[
-        'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
+        'Move entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, copy entry to target if forwarding rule is met',1=>'Yes, move entry if forwarding rule is met']],
+        'Remove forwarded entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, keep remaining forwarded entries',1=>'Yes, delete remaining forwarded entries']],
     ];
 
     private const OPERATIONS=[
@@ -47,18 +48,19 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
 
-    public function init()
+    public function init():void
     {
         $this->entryTemplate=$this->oc['SourcePot\Datapool\Foundation\Database']->getEntryTemplateCreateTable($this->entryTable,__CLASS__);
     }
@@ -68,7 +70,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
 
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
@@ -80,7 +83,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
      *
      * @return string|bool Return the html-string or TRUE callingElement does not exist
      */
-    public function dataProcessor(array $callingElementSelector=[],string $action='info'){
+    public function dataProcessor(array $callingElementSelector=[],string $action='info')
+    {
         $callingElement=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($callingElementSelector,TRUE);
         if (empty($callingElement)){
             return TRUE;
@@ -95,17 +99,20 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
     }
 
-    private function getForwardEntriesWidget($callingElement){
+    private function getForwardEntriesWidget(array $callingElement):string
+    {
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Selecting','generic',$callingElement,['method'=>'getForwardEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
     
-     private function getForwardEntriesInfo($callingElement){
+     private function getForwardEntriesInfo(array $callingElement):string
+     {
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>self::INFO,'hideHeader'=>TRUE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>'Info']);
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'?']);
         return $html;
     }
     
-    public function getForwardEntriesWidgetHtml($arr){
+    public function getForwardEntriesWidgetHtml(array $arr):array
+    {
         $arr['html']=$arr['html']??'';
         // command processing
         $result=[];
@@ -135,7 +142,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getForwardEntriesSettings($callingElement){
+    private function getForwardEntriesSettings(array $callingElement):string
+    {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
             $html.=$this->oc['SourcePot\Datapool\Foundation\Container']->container('Forward entries params','generic',$callingElement,['method'=>'getForwardEntriesParamsHtml','classWithNamespace'=>__CLASS__],[]);
@@ -143,14 +151,15 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
         return $html;
     }
-    
-    public function getForwardEntriesParamsHtml($arr){
+
+    public function getForwardEntriesParamsHtml(array $arr):array
+    {
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->forwardingParams($arr['selector']);
         return $arr;
     }
 
-    private function forwardingParams($callingElement)
+    private function forwardingParams(array $callingElement):string
     {
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
@@ -163,13 +172,15 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>['Parameter'=>$row],'style'=>'clear:left;','hideHeader'=>FALSE,'hideKeys'=>TRUE,'keep-element-content'=>TRUE,'caption'=>$arr['caption']]);
     }
 
-    public function getForwardEntriesSettingsHtml($arr){
+    public function getForwardEntriesSettingsHtml(array $arr):array
+    {
         $arr['html']=$arr['html']??'';
         $arr['html'].=$this->forwardingRules($arr['selector']);
         return $arr;
     }
     
-    private function forwardingRules($callingElement){
+    private function forwardingRules(array $callingElement):string
+    {
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_RULES;
         $contentStructure=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeContentStructure($contentStructure,$callingElement??[]);
@@ -181,7 +192,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
         
-    public function runForwardEntries($callingElement,$testRun=1){
+    public function runForwardEntries(array $callingElement,$testRun=1):array
+    {
         $base=['forwardingparams'=>[],'forwardingrules'=>[],'processId'=>$callingElement['EntryId']];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
         $base['canvasElements']=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->getCanvasElements($callingElement['Folder']);
@@ -195,8 +207,9 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         // loop through source entries and parse these entries
+        $params=current($base['forwardingparams'])['Content']??[];
         $this->oc['SourcePot\Datapool\Foundation\Database']->resetStatistic();
-        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,current($base['forwardingparams'])['Content']['Keep source entries']??FALSE);
+        $result=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->initProcessorResult(__CLASS__,$testRun,!boolval($params['Remove forwarded entries']??FALSE));
         $result['Forwarded']=[];
         // loop through entries
         foreach($this->oc['SourcePot\Datapool\Foundation\Database']->entryIterator($callingElement['Content']['Selector'],TRUE) as $sourceEntry){
@@ -210,7 +223,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
-    public function forwardEntry($base,$sourceEntry,$result,$testRun){
+    public function forwardEntry(array $base, array $sourceEntry, array $result, int $testRun):array
+    {
         $params=current($base['forwardingparams'])['Content']??[];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
         $equations=$forwardTo=[];
@@ -247,6 +261,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $targetName=array_search($forwardOnSuccess,$base['targets']);
         }
         $success=$wasForwarded=FALSE;
+        $moveForwardedEntry=boolval($params['Move entries']??0);
+        $removeForwardedEntries=boolval($params['Remove forwarded entries']??0);
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
             $targetResultElement=$this->oc['SourcePot\Datapool\Tools\MiscTools']->bool2element($conditionMet,['style'=>['min-width'=>'unset','padding'=>'0']]);
@@ -254,7 +270,10 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if ($conditionMet){
                 $success=TRUE;
                 $wasForwarded=!$testRun;
-                $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,TRUE);
+                $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,!$moveForwardedEntry);
+                if ($moveForwardedEntry){
+                    break;
+                }
             }
             $result['Forwarded']['<i>FORWARDED</i>'][$targetName]=(isset($result['Forwarded']['<i>FORWARDED</i>'][$targetName]))?($result['Forwarded']['<i>FORWARDED</i>'][$targetName]+intval($conditionMet)):intval($conditionMet);   
             if (count($result['Forwarded'])<self::MAX_RESULT_TABLE_ROW_COUNT){
@@ -263,7 +282,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
                 $result['Forwarded']['...'][$targetName]='...';
             }
         }
-        if ($wasForwarded && !boolval($params['Keep source entries']??0)){
+        if ($wasForwarded && $removeForwardedEntries){
             $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
         }
         if ($success){

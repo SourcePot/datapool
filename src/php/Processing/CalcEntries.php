@@ -84,7 +84,8 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->entryTable;
     }
 
-    public function getEntryTemplate(){
+    public function getEntryTemplate():array
+    {
         return $this->entryTemplate;
     }
 
@@ -112,19 +113,19 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         }
     }
 
-    private function getCalcEntriesWidget($callingElement)
+    private function getCalcEntriesWidget(array $callingElement):string
     {
         return $this->oc['SourcePot\Datapool\Foundation\Container']->container('Calculate '.($callingElement['EntryId']??''),'generic',$callingElement,['method'=>'getCalcEntriesWidgetHtml','classWithNamespace'=>__CLASS__],[]);
     }
 
-    private function getCalcEntriesInfo($callingElement):string
+    private function getCalcEntriesInfo(array $callingElement):string
     {
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->arr2html(self::INFO_MATRIX,'std');
         $html=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->app(['html'=>$html,'icon'=>'!']);
         return $html;
     }
 
-    public function getCalcEntriesWidgetHtml($arr):array
+    public function getCalcEntriesWidgetHtml(array $arr):array
     {
         if (!isset($arr['html'])){$arr['html']='';}
         // command processing
@@ -154,7 +155,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function getCalcEntriesSettings($callingElement):string
+    private function getCalcEntriesSettings(array $callingElement):string
     {
         $html='';
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
@@ -182,7 +183,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $arr;
     }
 
-    private function calculationParams($callingElement)
+    private function calculationParams(array $callingElement):string
     {
         // build content structure
         $contentStructure=self::CONTENT_STRUCTURE_PARAMS;
@@ -265,7 +266,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
-    private function calcEntry(array $base,array $sourceEntry,array $result,bool $testRun)
+    private function calcEntry(array $base,array $sourceEntry,array $result,bool $testRun):array
     {
         $takeSample=empty($result['Calculation rules']) || mt_rand(0,100)>80;
         $params=current($base['calculationparams']);
@@ -326,7 +327,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             } else {
                 $validCondition=FALSE;
             }
-            $conditionMet=$this->oc['SourcePot\Datapool\Foundation\Computations']->isTrueConst($condition,$rule['Content']['Use value if...']);
+            $conditionMet=$this->oc['SourcePot\Datapool\Foundation\Computations']->isTrueConst($condition,$rule['Content']['Use value if...']?:'');
             $useValue=NULL;
             if ($validCondition && $conditionMet){
                 if (strlen($rule['Content']['Value'])>0){
@@ -344,7 +345,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $sample[$conditionalvalueRuleIndex]=[
                 'Condition'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($condition),
-                '...compare'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST[$rule['Content']['Use value if...']],
+                '...compare'=>\SourcePot\Datapool\Foundation\Computations::COMPARE_TYPES_CONST[$rule['Content']['Use value if...']?:''],
                 'Condition met?'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($conditionMet),
                 'Use this value, if TRUE'=>$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->value2tableCellContent($useValue),
                 ' | '=>' | ',
@@ -424,7 +425,7 @@ class CalcEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $entry;
     }
     
-    private function ruleId2ruleIndex($ruleId,$ruleType='Calculation rules')
+    private function ruleId2ruleIndex(string $ruleId,string $ruleType='Calculation rules'):string
     {
         $ruleIndex=$this->oc['SourcePot\Datapool\Foundation\Database']->getOrderedListIndexFromEntryId($ruleId);
         $ruleIndex=$ruleType.' '.$ruleIndex;
