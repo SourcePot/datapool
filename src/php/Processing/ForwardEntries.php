@@ -192,7 +192,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
         
-    public function runForwardEntries(array $callingElement,$testRun=1):array
+    public function runForwardEntries(array $callingElement,bool|int $testRun=1):array
     {
         $base=['forwardingparams'=>[],'forwardingrules'=>[],'processId'=>$callingElement['EntryId']];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
@@ -223,7 +223,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $this->oc['SourcePot\Datapool\Foundation\DataExplorer']->finalizeProcessorResult($result);
     }
     
-    public function forwardEntry(array $base, array $sourceEntry, array $result, int $testRun):array
+    public function forwardEntry(array $base, array $sourceEntry, array $result, bool|int $testRun):array
     {
         $params=current($base['forwardingparams'])['Content']??[];
         $flatSourceEntry=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($sourceEntry);
@@ -288,7 +288,13 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         if ($wasForwarded && $removeForwardedEntries && empty($testRun)){
-            $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
+            $statistic=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
+        }
+        $result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']=(isset($result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']))?($result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']+intval($conditionMet)):intval($conditionMet);   
+        if ($maxResultRowCountReached){
+            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']='...';
+        } else {
+            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']=($wasForwarded && $removeForwardedEntries)?'TRUE':'FALSE';
         }
         if ($success){
             $result['Statistics']['Entries moved (success)']['Value']++;
