@@ -190,7 +190,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
         return $html;
     }
    
-    public function runForwardEntries(array $callingElement, int $testRun=1):array
+    public function runForwardEntries(array $callingElement, bool|int $testRun=1):array
     {
         $base=['inboxparams'=>[],'forwardingrules'=>[]];
         $base=$this->oc['SourcePot\Datapool\Foundation\DataExplorer']->callingElement2settings(__CLASS__,__FUNCTION__,$callingElement,$base);
