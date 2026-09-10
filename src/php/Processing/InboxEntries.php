@@ -17,7 +17,7 @@ class InboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private const CONTENT_STRUCTURE_PARAMS=[
         'Inbox source'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'value'=>0,'options'=>[]],   
         'Move entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, copy entry to target if forwarding rule is met',1=>'Yes, move entry if forwarding rule is met']],
-        'Remove forwarded entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, keep remaining forwarded entries',1=>'Yes, delete remaining forwarded entries']],
+        'Target for the remaining entries'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
     ];
 
     private const INFO_MATRIX=[
