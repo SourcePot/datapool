@@ -22,7 +22,7 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private const CONTENT_STRUCTURE_PARAMS=[
         'Move entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, copy entry to target if forwarding rule is met',1=>'Yes, move entry if forwarding rule is met']],
-        'Remove forwarded entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, keep remaining forwarded entries',1=>'Yes, delete remaining forwarded entries']],
+        'Target for the remaining entries'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
     ];
 
     private const OPERATIONS=[
@@ -260,9 +260,8 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
             $targetName=array_search($forwardOnSuccess,$base['targets']);
         }
-        $success=$wasForwarded=$skipTargets=FALSE;
+        $success=$skipTargets=FALSE;
         $moveForwardedEntry=boolval($params['Move entries']??0);
-        $removeForwardedEntries=boolval($params['Remove forwarded entries']??0);
         $maxResultRowCountReached=(count($result['Forwarded'])>=self::MAX_RESULT_TABLE_ROW_COUNT);
         foreach($forwardTo as $targetEntryId=>$conditionMet){
             $targetName=array_search($targetEntryId,$base['targets']);
@@ -271,7 +270,6 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             $conditionMet=$conditionMet && !$skipTargets;
             if ($conditionMet){
                 $success=TRUE;
-                $wasForwarded=!$testRun;
                 $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,!$moveForwardedEntry);
             }
             if ($skipTargets){
@@ -281,21 +279,29 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             if ($maxResultRowCountReached){
                 $result['Forwarded']['...'][$targetName]='...';
             } else {
-                $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="">'.$equations[$targetEntryId].'<p style="clear:none;padding:0 0.3rem;">=</p>'.$targetResultElement.'</div>';
+                $result['Forwarded'][$sourceEntry['Name']][$targetName]='<div style="display:inline;padding:0 0.5rem;">'.$equations[$targetEntryId].'<p style="clear:none;">=</p>'.$targetResultElement.'</div>';
             }
             if ($moveForwardedEntry && $success){
                 $skipTargets=TRUE;
             }
         }
-        if ($wasForwarded && $removeForwardedEntries && empty($testRun)){
-            $statistic=$this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
-        }
-        $result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']=(isset($result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']))?($result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']+intval($conditionMet)):intval($conditionMet);   
-        if ($maxResultRowCountReached){
-            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']='...';
+        if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($sourceEntry,TRUE)){
+            $targetId=$params['Target for the remaining entries'];
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetId],TRUE,$testRun,FALSE);
+            $remainingEntry='DELETED';
         } else {
-            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']=($wasForwarded && $removeForwardedEntries)?'TRUE':'FALSE';
+            $remainingEntry='Not present';
         }
+        $result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']=0;   
+        $result['Forwarded']['<i>FORWARDED</i>']['trStyle']=['text-align'=>'center'];
+        if ($maxResultRowCountReached){
+            $result['Forwarded']['...']['Remaining entry']='...';
+        } else if (intval($testRun)===1){
+            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']='Test run';
+        } else {
+            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']=$remainingEntry;
+        }
+        $result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']=$result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']+intval($remainingEntry==='DELETED');   
         if ($success){
             $result['Statistics']['Entries moved (success)']['Value']++;
         } else {
