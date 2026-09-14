@@ -286,9 +286,10 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
             }
         }
         if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($sourceEntry,TRUE)){
-            $targetId=$params['Target for the remaining entries'];
-            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetId],TRUE,$testRun,FALSE);
-            $remainingEntry='DELETED';
+            $targetEntryId=$params['Target for the remaining entries'];
+            $targetName=array_search($targetEntryId,$base['targets']);
+            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,FALSE);
+            $remainingEntry=$targetName;
         } else {
             $remainingEntry='Not present';
         }
