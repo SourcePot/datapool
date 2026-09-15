@@ -128,6 +128,7 @@ class Menu{
         $categoryDef=self::CATEGORIES[$selectedApp['Category']];
         $html=$this->oc['SourcePot\Datapool\Foundation\Element']->element(['tag'=>'a','element-content'=>$categoryDef['Emoji'],'href'=>'#','title'=>$categoryDef['Label'],'class'=>'first-menu','keep-element-content'=>TRUE]);
         if (!empty($options)){
+            asort($options);
             $html.=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select(['options'=>$options,'selected'=>$selectedApp['Class'],'key'=>['Class'],'hasSelectBtn'=>TRUE,'title'=>'Select application','class'=>'menu','callingClass'=>__CLASS__,'callingFunction'=>__FUNCTION__]);
         }
         // compile html

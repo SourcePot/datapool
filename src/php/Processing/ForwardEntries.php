@@ -288,17 +288,26 @@ class ForwardEntries implements \SourcePot\Datapool\Interfaces\Processor{
         if ($this->oc['SourcePot\Datapool\Foundation\Database']->hasEntry($sourceEntry,TRUE)){
             $targetEntryId=$params['Target for the remaining entries'];
             $targetName=array_search($targetEntryId,$base['targets']);
-            $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,FALSE);
-            $remainingEntry=$targetName;
+            if ($success){
+                if (empty($testRun)){
+                    $this->oc['SourcePot\Datapool\Foundation\Database']->deleteEntries($sourceEntry,TRUE);
+                    $remainingEntry='DELETED';
+                } else if ($moveForwardedEntry){
+                    $remainingEntry='NOT PRESENT';
+                } else {
+                    $remainingEntry='DELETED';
+                }
+            } else {
+                $this->oc['SourcePot\Datapool\Foundation\Database']->moveEntryOverwriteTarget($sourceEntry,$base['entryTemplates'][$targetEntryId],TRUE,$testRun,FALSE);
+                $remainingEntry='Moved to: '.$targetName;
+            }
         } else {
-            $remainingEntry='Not present';
+            $remainingEntry='NOT PRESENT';
         }
         $result['Forwarded']['<i>FORWARDED</i>']['Remaining entry']=0;   
         $result['Forwarded']['<i>FORWARDED</i>']['trStyle']=['text-align'=>'center'];
         if ($maxResultRowCountReached){
             $result['Forwarded']['...']['Remaining entry']='...';
-        } else if (intval($testRun)===1){
-            $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']='Test run';
         } else {
             $result['Forwarded'][$sourceEntry['Name']]['Remaining entry']=$remainingEntry;
         }
