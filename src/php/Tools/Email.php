@@ -588,6 +588,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $template=$this->oc['SourcePot\Datapool\Foundation\Database']->entryByIdCreateIfMissing($template,TRUE);
         // process form
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing($arr['callingClass'],$arr['callingFunction']);
+        $values=$formData['val'];
         if (isset($formData['cmd']['send']) && empty($this->isInvalidForm($formData['val']))){
             $pageTitle=$this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('pageTitle');
             $email=htmlentities(mb_substr($formData['val']['Email'],0,255));
@@ -608,12 +609,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $refreshBtn=['tag'=>'input','type'=>'submit','value'=>'OK','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['refresh']];
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($refreshBtn);
             return $arr;
-        } else if (!empty($formData['val'])){
-            $values=$formData['val'];
-            if ($this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
-                $template['Content']=$formData['val'];
-                $template=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($template,TRUE);
-            }
+        } else if (isset($formData['cmd']['check'])){
+            //
+        } else if (isset($formData['cmd']['save']) && $this->oc['SourcePot\Datapool\Foundation\Access']->isContentAdmin()){
+            $template['Content']=$formData['val'];
+            $template=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($template,TRUE);
         }
         // compile html
         $arr['html']=$arr['html']??'';
@@ -633,17 +633,18 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             return $arr;
         }
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>'Subject','keep-element-content'=>TRUE]);
-        $subjectEl=['options'=>$this->getSubjectOptions($template['Content'],FALSE),'selected'=>intval($values['Subject']),'key'=>['Subject'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE];
+        $subjectEl=['options'=>$this->getSubjectOptions($template['Content'],FALSE),'selected'=>intval($values['Subject']??0),'key'=>['Subject'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->select($subjectEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>self::CONTACT_FORM['Message'],'keep-element-content'=>TRUE]);
         $messageEl=['tag'=>'textarea','minlength'=>10,'element-content'=>$values['Message']??'','placeholder'=>self::CONTACT_FORM['Message_placeholder'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Message'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($messageEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>self::CONTACT_FORM['From'],'keep-element-content'=>TRUE]);
-        $currentUserEmail=$values['Email']?:$flatCurrentUser[$this->getRelevantFlatUserContentKey()]??'';
+        $currentUserEmail=$values['Email']?:$flatCurrentUser['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Email']??'';
         $emailEl=['tag'=>'input','type'=>'email','minlength'=>6,'value'=>$currentUserEmail,'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Email'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($emailEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>self::CONTACT_FORM['Phone'],'keep-element-content'=>TRUE]);
-        $phoneEl=['tag'=>'input','type'=>'tel','value'=>$values['Phone']??'','placeholder'=>self::CONTACT_FORM['Phone_placeholder'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Phone'],'excontainer'=>TRUE];
+        $currentUserPhone=$values['Phone']?:$flatCurrentUser['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Phone']??'';
+        $phoneEl=['tag'=>'input','type'=>'tel','value'=>$currentUserPhone,'placeholder'=>self::CONTACT_FORM['Phone_placeholder'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Phone'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($phoneEl);
         // button div
         $problemStr=$this->isInvalidForm($values);
