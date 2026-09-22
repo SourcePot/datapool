@@ -596,12 +596,13 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
             $sentBy=$this->oc['SourcePot\Datapool\Foundation\User']->userAbstract($currentUser,4);
             $message=htmlentities(mb_substr($formData['val']['Message'],0,1000));
             $message=str_replace("\n",'<br/>',$message);
-            $content=[];
-            $content['Subject']=htmlentities($pageTitle).': '.$this->getSubjectOptions($template['Content'],intval($formData['val']['Subject']));
-            $content['Message']=$message;
-            $content['Provided email'].=$email;
-            $content['Provided phone number'].=$phone;
-            $content['Sent by'].=$sentBy;
+            $content=[
+                'Subject'=>htmlentities($pageTitle).': '.$this->getSubjectOptions($template['Content'],intval($formData['val']['Subject'])),
+                'Message'=>$message,
+                'Provided email'=>$email,
+                'Provided phone number'=>$phone,
+                'Sent by'=>$sentBy,
+            ];
             $this->send($template['Content']['To'],['Content'=>$content]);
             $this->oc['logger']->log('info','Message sent by "{Email}" via contact form.',$formData['val']);
             $sentMatix=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2matrix($content);
