@@ -256,37 +256,37 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
         // template selection
         $S=\SourcePot\Datapool\Root::ONEDIMSEPARATOR;
         if ($template===0){
-            $abtract='{{Content'.$S.'Contact details'.$S.'First name}}';
+            $abstract='{{Content'.$S.'Contact details'.$S.'First name}}';
         } else if ($template===1){
-            $abtract='{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}';
+            $abstract='{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}';
         } else if ($template===2){
-            $abtract='{{ICON}} <p class="user-abstract">{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}</p>';
+            $abstract='{{ICON}} <p class="user-abstract">{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}}</p>';
         } else if ($template===3){
-            $abtract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}}';
+            $abstract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}}';
         } else if ($template===4){
-            $abtract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}} ({{Content'.$S.'Contact details'.$S.'Email}})';
+            $abstract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}} ({{Content'.$S.'Contact details'.$S.'Email}})';
         } else if ($template===5){
-            $abtract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}} ({{Content'.$S.'Address'.$S.'Town}})';
+            $abstract='{{Content'.$S.'Contact details'.$S.'Family name}}, {{Content'.$S.'Contact details'.$S.'First name}} ({{Content'.$S.'Address'.$S.'Town}})';
         } else if ($template===6){
-            $abtract='{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}} <{{Content'.$S.'Contact details'.$S.'Email}}>';
+            $abstract='{{Content'.$S.'Contact details'.$S.'First name}} {{Content'.$S.'Contact details'.$S.'Family name}} <{{Content'.$S.'Contact details'.$S.'Email}}>';
         } else if ($template===7){
-            $abtract='{{Content'.$S.'Contact details'.$S.'Email}}';
+            $abstract='{{Content'.$S.'Contact details'.$S.'Email}}';
         } else if ($template===8){
-            $abtract='{{Content'.$S.'Contact details'.$S.'Phone}}';
+            $abstract='{{Content'.$S.'Contact details'.$S.'Phone}}';
         } else if ($template===9){
-            $abtract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
+            $abstract='{{Content'.$S.'Contact details'.$S.'Mobile}}';
         } else if ($template===10){
-            $abtract='{{ICON}}';
+            $abstract='{{ICON}}';
         }
         // compile html
-        $abtract=$this->template2string($abtract,$user,['class'=>'user-abstract']);
+        $abstract=$this->template2string($abstract??'',$user);
         if (!empty($arr['wrapResult'])){
             $wrapper=$arr['wrapResult'];
-            $wrapper['element-content']=$abtract;
+            $wrapper['element-content']=$abstract;
             $wrapper['keep-element-content']=TRUE;
-            $abtract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
+            $abstract=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($wrapper);
         }
-        return $abtract;
+        return $abstract;
     }
     
     private function template2string(string $template='Hello {{key}}...',array $arr=['key'=>'world']):string
