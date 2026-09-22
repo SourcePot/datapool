@@ -423,7 +423,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public function executeStatement(string $sql,array $inputs=[],object|bool $dbObj=FALSE):object
     {
         $startTimeStamp=hrtime(TRUE);
-        if ($dbObj===FALSE){$dbObj=$this->dbObj;}
+        if ($dbObj===FALSE){
+            $dbObj=$this->dbObj;
+        }
         $stmtArr=$this->bindValues($sql,$inputs,$dbObj);
         try{
             $stmtArr['stmt']->execute();
@@ -599,7 +601,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getRowCount(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,bool $removeGuideEntries=TRUE,bool $useOR=FALSE):int
     {
-        if (empty($selector['Source']) || !isset($GLOBALS['dbInfo'][$selector['Source']])){return 0;}
+        if (empty($selector['Source'])){
+            return 0;
+        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+            return 0;
+        }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
         $sqlArr['sql']='SELECT COUNT(*) FROM (SELECT `EntryId` FROM `'.$selector['Source'].'`'.$sqlArr['sql'].') AS a;';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
@@ -647,8 +654,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 yield $result;
                 $result['rowIndex']++;
             }
-        } else if (!isset($GLOBALS['dbInfo'][$selector['Source']])){
-            // selected table does not exist
+        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
         } else {
             $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
             $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
@@ -670,7 +677,10 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,array $selectExprArr=[],bool $removeGuideEntries=TRUE,bool $useOR=FALSE):\Generator
     {
-        if (!isset($GLOBALS['dbInfo'][$selector['Source']])){return [];}
+        if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+            return [];
+        }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
         if (empty($selectExprArr)){
             $selectExprSQL=$selector['Source'].'.*';
@@ -703,7 +713,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $result=[];
         if (empty($selector['Source'])){
             return $result;
-        } else if (strcmp($selector['Source'],'!GUIDE')===0){
+        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
             return $result;
         }
         // get entry
@@ -760,6 +771,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         // check for lock
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($selector['unlock'])){
             $this->oc['logger']->log('notice','Tried to delete table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
+            return $this->addStatistic('deleted',0);
+        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
             return $this->addStatistic('deleted',0);
         }
         // delete entries in groups
@@ -831,6 +845,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($entry['unlock'])){
             $this->oc['logger']->log('notice','Tried to update table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return 0;
+        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+            return 0;
         }
         // get entry list
         $idGroups=$this->selector2idGroups($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeFile=FALSE);
@@ -880,7 +897,10 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             unset($entry['Privileges']);
         }
         // test for required keys and set selector
-        if (empty($entry['Source']) || empty($entry['EntryId'])){
+        if (empty($GLOBALS['dbInfo'][$entry['Source']])){
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$entry);
+            return FALSE;
+        } else if (empty($entry['EntryId'])){
             return FALSE;
         }
         $selector=['Source'=>$entry['Source'],'EntryId'=>$entry['EntryId']];
@@ -946,7 +966,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE,bool $useOR=FALSE):array|bool
     {
-        if (empty($selector['Source'])){return FALSE;}
+        if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+            return FALSE;
+        }
         if (empty($selector['EntryId'])){
             foreach($this->entryIterator($selector,$isSystemCall,$rightType,FALSE,TRUE,2,FALSE,[],$removeGuideEntries,$useOR) as $entry){
                 return $entry;
