@@ -198,13 +198,14 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public function getEntryTemplate(string|bool $table=FALSE):array|bool
     {
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'table'=>$table];
-        if ($table){
-            if (isset($GLOBALS['dbInfo'][$table])){return $GLOBALS['dbInfo'][$table];}
-        } else {
+        if (empty($table)){
             return $GLOBALS['dbInfo'];
-        }
-        if (isset($this->oc['logger'])){
-            $this->oc['logger']->log('warning','Function "{class} &rarr; {function}()" called with table="{table}" returned false, table missing.',$context);
+        } else if (isset($GLOBALS['dbInfo'][$table])){
+            return $GLOBALS['dbInfo'][$table];
+        } else {
+            if (isset($this->oc['logger'])){
+                $this->oc['logger']->log('warning','Function "{class}→{function}()" called with table="{table}" returned false, table missing.',$context);
+            }    
         }
         return FALSE;
     }
@@ -244,7 +245,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public function getTableIndices(string $table):array
     {
         $indices=[];
-        if (!isset($GLOBALS['dbInfo'][$table])){
+        if ($this->isValidTable($table) === FALSE){
             return $indices;
         }
         $stmt=$this->executeStatement("SHOW INDEXES FROM `".$table."`;",[]);
@@ -256,7 +257,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function updateCollation(string $table):array|bool
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){
+        if ($this->isValidTable($table) === FALSE){
             return FALSE;
         }
         $updateSql=$result=[];
@@ -286,7 +287,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function setTableIndices(string $table):array|bool
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){
+        if ($this->isValidTable($table) === FALSE){
             return FALSE;
         }
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
@@ -302,7 +303,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function dropTableIndices(string $table):bool
     {
-        if (!isset($GLOBALS['dbInfo'][$table])){
+        if ($this->isValidTable($table) === FALSE){
             return FALSE;
         }
         $context=['table'=>$table,'class'=>__CLASS__,'function'=>__FUNCTION__,'dropped'=>''];
@@ -418,6 +419,17 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $GLOBALS['dbInfo'][$table]=$this->rootEntryTemplate;
         }
         return $GLOBALS['dbInfo'];
+    }
+
+    public function isValidTable(string|NULL $table):bool
+    {
+        $table=$table??'NULL';
+        if (isset($GLOBALS['dbInfo'][$table])){
+            return TRUE;
+        } else {
+            $this->oc['logger']->log('error','Maybe SQL injection attempt, table="{table}"',['table'=>$table]);
+            return FALSE;
+        }
     }
 
     public function executeStatement(string $sql,array $inputs=[],object|bool $dbObj=FALSE):object
@@ -603,8 +615,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     {
         if (empty($selector['Source'])){
             return 0;
-        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+        } else if ($this->isValidTable($selector['Source']) === FALSE){
             return 0;
         }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
@@ -652,8 +663,8 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 yield $result;
                 $result['rowIndex']++;
             }
-        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+        } else if ($this->isValidTable($selector['Source']) === FALSE){
+            // invalid table name, maybe SQL injection attempt?
         } else {
             $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
             $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
@@ -675,8 +686,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,array $selectExprArr=[],bool $removeGuideEntries=TRUE,bool $useOR=FALSE):\Generator
     {
-        if (empty($GLOBALS['dbInfo'][$selector['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+        if ($this->isValidTable($selector['Source']) === FALSE){
             return [];
         }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
@@ -711,8 +721,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $result=[];
         if (empty($selector['Source'])){
             return $result;
-        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+        } else if ($this->isValidTable($selector['Source']) === FALSE){
             return $result;
         }
         // get entry
@@ -770,8 +779,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($selector['unlock'])){
             $this->oc['logger']->log('notice','Tried to delete table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return $this->addStatistic('deleted',0);
-        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+        } else if ($this->isValidTable($selector['Source']) === FALSE){
             return $this->addStatistic('deleted',0);
         }
         // delete entries in groups
@@ -798,8 +806,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function insertEntry(array $entry,bool $addDefaults=TRUE):array
     {
-        if (!isset($GLOBALS['dbInfo'][$entry['Source']])){
-            $this->oc['logger']->log('warning','{class}&rarr;{function}() called with empty entry[Source]',$entry+['class'=>__FUNCTION__,'function'=>__FUNCTION__,]);
+        if ($this->isValidTable($entry['Source']) === FALSE){
             return [];
         } else if (!empty(self::TABLE_UNLOCK_REQUIRED[$entry['Source']]) && empty($entry['unlock'])){
             $this->oc['logger']->log('warning','{class}&rarr;{function}() called on locked table "{Source}" without setting entry[unlock]=TRUE',$entry+['class'=>__FUNCTION__,'function'=>__FUNCTION__,]);
@@ -845,8 +852,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($entry['unlock'])){
             $this->oc['logger']->log('notice','Tried to update table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return 0;
-        } else if (empty($GLOBALS['dbInfo'][$selector['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$selector);
+        } else if ($this->isValidTable($selector['Source']) === FALSE){
             return 0;
         }
         // get entry list
@@ -897,8 +903,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             unset($entry['Privileges']);
         }
         // test for required keys and set selector
-        if (empty($GLOBALS['dbInfo'][$entry['Source']])){
-            $this->oc['logger']->log('error','Maybe SQL injection attempt, selector[Source]="{Source}"',$entry);
+        if ($this->isValidTable($entry['Source']) === FALSE){
             return FALSE;
         } else if (empty($entry['EntryId'])){
             return FALSE;
@@ -966,7 +971,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE,bool $useOR=FALSE):array|bool
     {
-        if (empty($GLOBALS['dbInfo'][$selector['Source']])){
+        if ($this->isValidTable($selector['Source']) === FALSE){
             return FALSE;
         }
         if (empty($selector['EntryId'])){

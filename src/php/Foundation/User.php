@@ -355,7 +355,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
             if (!isset($user['Content']['Contact details'])){
                 continue;
             }
-            $options[$user['EntryId']]=$user['Content']['Contact details']['Family name'].', '.$user['Content']['Contact details']['First name'];
+            $options[$user['EntryId']]=($user['Content']['Contact details']['Family name']??'?').', '.($user['Content']['Contact details']['First name']??'?');
             if (!empty($flatContactDetailsKey)){
                 $flatUser=$this->oc['SourcePot\Datapool\Tools\MiscTools']->arr2flat($user);
                 if (!empty($flatUser[$flatContactDetailsKey])){
