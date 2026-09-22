@@ -423,8 +423,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
 
     public function isValidTable(string|NULL $table):bool
     {
-        $table=$table??'NULL';
-        if (isset($GLOBALS['dbInfo'][$table])){
+        if (empty($table)){
+            return FALSE;
+        } else if (isset($GLOBALS['dbInfo'][$table])){
             return TRUE;
         } else {
             $this->oc['logger']->log('error','Maybe SQL injection attempt, table="{table}"',['table'=>$table]);
