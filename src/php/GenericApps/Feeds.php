@@ -283,7 +283,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
                 $entry['Params']['Feed item']['Item media query']=$queryArr;
                 $fileName=preg_replace('/[^A-Za-z0-9]/','_',$entry['Name']??'Entry Name missing');
                 // store media file
-                $tmpFile=$tmpDir.$fileName.'.'.$fileNameComps['extension'];
+                $tmpFile=$tmpDir.$fileName.'.'.($fileNameComps['extension']??'file');
                 $fileContent=file_get_contents($src);
                 if (!empty($fileContent)){
                     file_put_contents($tmpFile,$fileContent);
