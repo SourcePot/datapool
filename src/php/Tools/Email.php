@@ -640,11 +640,11 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $messageEl=['tag'=>'textarea','minlength'=>10,'element-content'=>$values['Message']??'','placeholder'=>self::CONTACT_FORM['Message_placeholder'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Message'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($messageEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>self::CONTACT_FORM['From'],'keep-element-content'=>TRUE]);
-        $currentUserEmail=$values['Email']?:$flatCurrentUser['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Email']??'';
+        $currentUserEmail=($values['Email']??'')?:$flatCurrentUser['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Email']??'';
         $emailEl=['tag'=>'input','type'=>'email','minlength'=>6,'value'=>$currentUserEmail,'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Email'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($emailEl);
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element(['tag'=>'h2','element-content'=>self::CONTACT_FORM['Phone'],'keep-element-content'=>TRUE]);
-        $currentUserPhone=$values['Phone']?:$flatCurrentUser['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Phone']??'';
+        $currentUserPhone=($values['Phone']??'')?:$flatCurrentUser['Content'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Contact details'.(\SourcePot\Datapool\Root::ONEDIMSEPARATOR).'Phone']??'';
         $phoneEl=['tag'=>'input','type'=>'tel','value'=>$currentUserPhone,'placeholder'=>self::CONTACT_FORM['Phone_placeholder'],'class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['Phone'],'excontainer'=>TRUE];
         $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($phoneEl);
         // button div
