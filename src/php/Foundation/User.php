@@ -14,7 +14,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     public const TARGET_USER_GROUP='User_1';
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[
@@ -183,7 +183,7 @@ class User implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     public function initAdminAccount():bool
     {
-        $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->entriesByRight('Privileges','ADMIN_R',TRUE));
+        $noAdminAccountFound=empty($this->oc['SourcePot\Datapool\Foundation\Database']->getAdmins(TRUE));
         if ($noAdminAccountFound){
             $admin=[
                 'Source'=>$this->entryTable,'Privileges'=>'ADMIN_R',

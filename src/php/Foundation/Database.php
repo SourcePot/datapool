@@ -620,17 +620,15 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $this->deleteEntries($selector,TRUE);
     }
 
-    public function entriesByRight($column='Read',$right='ADMIN_R',$returnPrimaryKeyOnly=TRUE){
-        $selector=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable()];
-        if ($returnPrimaryKeyOnly){$return='EntryId';} else {$return='*';}
-        $rights=$this->oc['SourcePot\Datapool\Foundation\Access']->addRights([],$right,$right);
-        $right=intval($rights['Read']);
-        $sql="SELECT ".$return." FROM `".$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable()."` WHERE ((`".$column."` & ".$right.")>0);";
+    public function getAdmins($returnPrimaryKeyOnly=TRUE){
+        $source=$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
+        $right=$this->oc['SourcePot\Datapool\Foundation\Access']->accessString2int('ADMIN_R');
+        $sql="SELECT ".($returnPrimaryKeyOnly ? 'EntryId' : '*')." FROM `".$source."` WHERE ((`Privileges` & ".$right.")>0);";
         $stmt=$this->executeStatement($sql);
         $entries=[];
         while (($row=$stmt->fetch(\PDO::FETCH_ASSOC))!==FALSE){
             foreach($row as $columnName=>$value){
-                $row=$this->addColumnValue2result($row,$columnName,$value,$GLOBALS['dbInfo'][$selector['Source']]);
+                $row=$this->addColumnValue2result($row,$columnName,$value,$GLOBALS['dbInfo'][$source]);
             }
             $row=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($row);
             $entries[$row['EntryId']]=$row;
@@ -840,8 +838,10 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty($entry['Privileges']) && !$this->oc['SourcePot\Datapool\Foundation\Access']->isAdmin() && !$isSystemCall){
             unset($entry['Privileges']);
         }
-        if (empty($entry)){return 0;}
-        // check tables with locks
+        if (empty($entry)){
+            return 0;
+        }
+        // check tables with locks and check for valid table
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($entry['unlock'])){
             $this->oc['logger']->log('notice','Tried to update table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return 0;
