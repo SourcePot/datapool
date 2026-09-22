@@ -225,9 +225,12 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         // check if database table is missing
         if (!isset($GLOBALS['dbInfo'][$table])){
             // create column definition sql
+            $table=preg_replace('/[^a-z]/','',$table);
             $columnsDefSql='';
             foreach($entryTemplate as $column=>$colTemplate){
-                if (!empty($columnsDefSql)){$columnsDefSql.=", ";}
+                if (!empty($columnsDefSql)){
+                    $columnsDefSql.=", ";
+                }
                 $columnsDefSql.="`".$column."` ".$colTemplate['type'];
             }
             // create table
@@ -616,7 +619,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     {
         if (empty($selector['Source'])){
             return 0;
-        } else if ($this->isValidTable($selector['Source']) === FALSE){
+        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
             return 0;
         }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
@@ -664,9 +667,13 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 yield $result;
                 $result['rowIndex']++;
             }
-        } else if ($this->isValidTable($selector['Source']) === FALSE){
+        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
             // invalid table name, maybe SQL injection attempt?
+            return $result;
         } else {
+            if (!isset($GLOBALS['dbInfo'][$selector['Source']][$column])){
+                return $result;
+            }
             $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$column,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
             $sqlArr['sql']='SELECT DISTINCT '.$selector['Source'].'.'.$column.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'].';';
             $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs'],FALSE);
@@ -684,19 +691,28 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             }
         }
     }
+
+    private function arr2selectExpr(string $table,array $selectExprArr):string
+    {
+        if (empty($selectExprArr)){
+            return $table.'.*';
+        } 
+        $selectExprSQL=[];    
+        foreach($selectExprArr as $column){
+            if (isset($GLOBALS['dbInfo'][$table][$column])){
+                $selectExprSQL[]=$table.'.'.$column;
+            }
+        }
+        return implode(',',$selectExprSQL);
+    }
     
     public function entryIterator(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,array $selectExprArr=[],bool $removeGuideEntries=TRUE,bool $useOR=FALSE):\Generator
     {
-        if ($this->isValidTable($selector['Source']) === FALSE){
+        if ($this->isValidTable($selector['Source']??'') === FALSE){
             return [];
         }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
-        if (empty($selectExprArr)){
-            $selectExprSQL=$selector['Source'].'.*';
-        } else {
-            if (!in_array('EntryId',$selectExprArr)){$selectExprArr[]='EntryId';}
-            $selectExprSQL=$selector['Source'].'.'.implode(','.$selector['Source'].'.',$selectExprArr);
-        }
+        $selectExprSQL=$this->arr2selectExpr($selector['Source'],$selectExprArr);
         $sqlArr['sql']='SELECT '.$selectExprSQL.' FROM `'.$selector['Source'].'`'.$sqlArr['sql'];
         $sqlArr['sql'].=';';
         $stmt=$this->executeStatement($sqlArr['sql'],$sqlArr['inputs']);
@@ -722,7 +738,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $result=[];
         if (empty($selector['Source'])){
             return $result;
-        } else if ($this->isValidTable($selector['Source']) === FALSE){
+        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
             return $result;
         }
         // get entry
@@ -780,7 +796,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($selector['unlock'])){
             $this->oc['logger']->log('notice','Tried to delete table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return $this->addStatistic('deleted',0);
-        } else if ($this->isValidTable($selector['Source']) === FALSE){
+        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
             return $this->addStatistic('deleted',0);
         }
         // delete entries in groups
@@ -853,7 +869,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if (!empty(self::TABLE_UNLOCK_REQUIRED[$selector['Source']]) && empty($entry['unlock'])){
             $this->oc['logger']->log('notice','Tried to update table entry of locked table "{Source}" without setting entry[unlock]=TRUE',$selector);
             return 0;
-        } else if ($this->isValidTable($selector['Source']) === FALSE){
+        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
             return 0;
         }
         // get entry list
@@ -972,7 +988,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function hasEntry(array $selector,bool $isSystemCall=TRUE,string $rightType='Read',bool $removeGuideEntries=TRUE,bool $useOR=FALSE):array|bool
     {
-        if ($this->isValidTable($selector['Source']) === FALSE){
+        if ($this->isValidTable($selector['Source']??'') === FALSE){
             return FALSE;
         }
         if (empty($selector['EntryId'])){
