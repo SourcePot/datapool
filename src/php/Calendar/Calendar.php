@@ -225,7 +225,7 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
 
     public function unifyEntry($entry)
     {
-        $entry['Source']=$this->entryTable;    
+        $entry['Source']=$this->entryTable;
         $entry['Folder']=$this->oc['SourcePot\Datapool\Root']->getCurrentUserEntryId();
         if (empty($entry['Group'])){$entry['Group']='Events';}
         if ((strcmp($entry['Group'],'Events')===0 || strcmp($entry['Group'],'Bank holidays')===0) && isset($entry['addDate'])){
@@ -352,7 +352,8 @@ class Calendar implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->table(['matrix'=>$matrix,'caption'=>'Serial event','hideKeys'=>FALSE,'hideHeader'=>FALSE]);
             $arr['html'].=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->entryControls(['selector'=>$event]);
         } else {
-            // stanrad event selected
+            // standard event
+            $event['Source']=$this->entryTable;
             $event['calledBy']=__FUNCTION__;
             $event=$this->oc['SourcePot\Datapool\Foundation\Database']->unifyEntry($event);
             $arr['html'].=$this->oc['SourcePot\Datapool\Foundation\Definitions']->entry2form($event);
