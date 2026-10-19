@@ -19,14 +19,14 @@ class Job{
         'SourcePot\Datapool\GenericApps\Feeds'=>533,
     ];
 
-    private $oc;
+    private $oc=[];
     
     public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }

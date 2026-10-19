@@ -75,7 +75,7 @@ The web application requires:
 2. **PHP 8+** and 
 3. a **database** (and a database user, which will be used by the web application). 
 
-To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment.This works well as local host on a MS Windows computer or Linux system (e.g. Debian).
+To run Datapool on your computer as local host, you could install XAMPP Apache + MariaDB + PHP + Perl (see https://www.apachefriends.org/). The following example uses XAMPP as the software environment. This works well as local host on a MS Windows computer or Linux system (e.g. Debian).
 
 Personally, I use Composer to install the web application with all its dependencies and the folder structure. If you like to use Composer you will need to install the software on your computer or server, see https://getcomposer.org/download/ for details.
 
@@ -93,19 +93,15 @@ I tend to install the web application on my personal computer first. This serves
 This is based on a Debian 12 (bookworm) 64-bit system with a XAMPP installation.
 
 ```
-sudo apt-get install php-xml
-sudo apt-get install php-gd
-sudo apt-get install php-zip
-sudo apt-get install php-bcmath
-sudo apt-get install php-curl   
+sudo apt-get install php-xml php-gd php-zip php-bcmath php-curl   
 ```
 
 ## Connecting the web application with the database
-1. Create a database and a database user, for example using MySQL, as follows:
+1. Create a database **webpage** and a database user **webpageuser** with the password **password** and limited privileges, for example using MySQL, as follows:
 ```
 CREATE DATABASE webpage;
-CREATE USER 'webpageuser'@'localhost' IDENTIFIED BY '...enter..password..here....';
-GRANT ALL PRIVILEGES ON testdb.* TO 'webpageuser'@'localhost' WITH GRANT OPTION;
+CREATE USER 'webpageuser'@'localhost' IDENTIFIED BY 'password';
+GRANT alter,create,delete,drop,index,insert,select,update ON webpage.* TO 'webpageuser'@'localhost';
 FLUSH PRIVILEGES;
 ```
 You need to optimize your database settings to achieve optimal performance.
@@ -113,6 +109,9 @@ You need to optimize your database settings to achieve optimal performance.
 2. Call the webpage through a web browser. This will create an error message since the database access needs to be set up. You can check the error logs which are located in the `../src/debugging/`-subdirectory. Each error generates a JSON-file containing the error details.
 3. Calling the webpage creates the file `../src/setup/Database/connect.json` which contains the database user credentials. Use a text editor to update or match the credentials with the database user credentials.
 4. If the database as well as the database user are set up correctly, and the user credentials used by Datapool match the database user, the web application should (when reloaded) show an empty web page with a menu bar at the top and the logger at the bottom of the web browser. 
+
+>[!IMPORTANT]
+>Only grant necessary privileges to reduce cyber security risks.
 
 ## Create your Admin account for your web application
 1. Refresh the webpage. This will create an initial admin user account. 
@@ -128,7 +127,7 @@ You need to optimize your database settings to achieve optimal performance.
 After you have set up your admin account you should login and update the webmaster email address **Admin &rarr; Admin &rarr; Page settings &rarr; EmailWebmaster**. Always use the &check; button to save changes.
 
 >[!IMPORTANT]
->Displaying entries requires appropriate settings. An error message appears in the Logger list, if an entry presentation setting is missing. The settings can be found here: Admin &rarr; Settings Souce: settings, Group: Presentation
+>Displaying entries requires appropriate settings. An error message appears in the logger list, if an entry presentation setting is missing. The settings can be found here: Admin &rarr; Settings Souce: settings, Group: Presentation
 
 If a presentation setting is missing, an error e.g. _Entry presentation setting missing for "SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ appears in the Logger window. _"SourcePot\Datapool\GenericApps\Family::presentEntry|home"_ is equal to the Folder of the missing entry presentation setting. A starting point for a proper setting would be to add _getPreview()_ as "Entry key" as the first rule.
 
