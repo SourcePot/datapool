@@ -19,14 +19,14 @@ class Job{
         'SourcePot\Datapool\GenericApps\Feeds'=>533,
     ];
 
-    private $oc;
+    private $oc=[];
     
     public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
 
-    Public function loadOc(array $oc):void
+    public function loadOc(array $oc):void
     {
         $this->oc=$oc;
     }
@@ -112,7 +112,7 @@ class Job{
             } catch(\Exception $e){
                 $context['dueJob']=$dueJob;
                 $context['msg']=$e->getMessage();
-                $this->oc['logger']->log('error','"{class} &rarr; {function}()": job "{dueJob}" failed with "{msg}".',$context);
+                $this->oc['logger']->log('error','"{class}→{function}()": job "{dueJob}" failed with "{msg}".',$context);
             }            
             $jobStatistic=$this->oc['SourcePot\Datapool\Foundation\Database']->getStatistic();
             $allJobsSetting['Content'][$dueJob]['Last run']=time();

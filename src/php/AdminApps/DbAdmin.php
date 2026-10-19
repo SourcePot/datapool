@@ -14,10 +14,11 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
     
-    private $oc;
+    private $oc=[];
     private $entryTable='';
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable();
     }
@@ -111,7 +112,7 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
     {
         $db=$this->oc['SourcePot\Datapool\Foundation\Database']->getDbName();
         $table=$selector['Source'];
-        if (!isset($GLOBALS['dbInfo'][$table])){
+        if ($this->oc['SourcePot\Datapool\Foundation\Database']->isValidTable($table) === FALSE){
             return '';
         }
         $tableKey='Table "'.$table.'" of database "'.$db.'"';
@@ -182,14 +183,14 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
         $formData=$this->oc['SourcePot\Datapool\Foundation\Element']->formProcessing(__CLASS__,'addTableCmds');
         if (isset($formData['cmd']['INDICES'])){
             $context['table']=key($formData['cmd']['INDICES']);
-            if (isset($GLOBALS['dbInfo'][$context['table']])){
+            if ($this->oc['SourcePot\Datapool\Foundation\Database']->isValidTable($context['table']) !== FALSE){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->dropTableIndices($context['table']);
                 $this->oc['SourcePot\Datapool\Foundation\Database']->setTableIndices($context['table']);
                 $this->oc['logger']->log('notice','User "{currentUser}" set standard indices for table "{table}".',$context);
             }
         } else if (isset($formData['cmd']['DROP'])){
             $context['table']=key($formData['cmd']['DROP']);
-            if (isset($GLOBALS['dbInfo'][$context['table']])){
+            if ($this->oc['SourcePot\Datapool\Foundation\Database']->isValidTable($context['table']) !== FALSE){
                 $sql='DROP TABLE '.$context['table'].';';
                 $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
                 unset($GLOBALS['dbInfo'][$context['table']]);
@@ -197,14 +198,14 @@ class DbAdmin implements \SourcePot\Datapool\Interfaces\App{
             }
         } else if (isset($formData['cmd']['TRUNCATE'])){
             $context['table']=key($formData['cmd']['TRUNCATE']);
-            if (isset($GLOBALS['dbInfo'][$context['table']])){
+            if ( $this->oc['SourcePot\Datapool\Foundation\Database']->isValidTable($context['table']) !== FALSE){
                 $sql='TRUNCATE TABLE '.$context['table'].';';
                 $stmt=$this->oc['SourcePot\Datapool\Foundation\Database']->executeStatement($sql,[],FALSE);
                 $this->oc['logger']->log('notice','User "{currentUser}" emptied table "{table}".',$context);
             }
         } else if (isset($formData['cmd']['ALTERTABLE'])){
             $context['table']=key($formData['cmd']['ALTERTABLE']);
-            if (isset($GLOBALS['dbInfo'][$context['table']])){
+            if ($this->oc['SourcePot\Datapool\Foundation\Database']->isValidTable($context['table']) !== FALSE){
                 $this->oc['SourcePot\Datapool\Foundation\Database']->updateCollation($context['table']);
             }
         }

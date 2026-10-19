@@ -174,14 +174,14 @@ class XLStools{
         $spreadsheetFile=(is_array($selector))?$this->oc['SourcePot\Datapool\Foundation\Filespace']->selector2file($selector):$selector;
         $context+=pathinfo($spreadsheetFile);
         if (!is_file($spreadsheetFile)){
-            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to load open "{filename}"',$arr);         
+            $this->oc['logger']->log('notice','"{class}→{function}()" failed to load open "{filename}"',$arr);         
             return $arr;
         }
         try {
             $arr['readerClass']=IOFactory::identify($spreadsheetFile,NULL,TRUE);
         } catch (\Exception $e) {
             $context['msg']=$e->getMessage();
-            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to detect spreadsheet file type of "{basename}": "{msg}"',$context);
+            $this->oc['logger']->log('notice','"{class}→{function}()" failed to detect spreadsheet file type of "{basename}": "{msg}"',$context);
             return $arr;        
         }
         try{
@@ -197,7 +197,7 @@ class XLStools{
             $arr['Worksheets']=$reader->listWorksheetInfo($spreadsheetFile);
         } catch(\Exception $e){
             $context['msg']=$e->getMessage();
-            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to aquire spreadsheet information from "{basename}": "{msg}"',$context);     
+            $this->oc['logger']->log('notice','"{class}→{function}()" failed to aquire spreadsheet information from "{basename}": "{msg}"',$context);     
             return $arr;    
         }
         if (empty($loadSelectedWorksheet)){
@@ -211,10 +211,10 @@ class XLStools{
             $reader->setReadDataOnly(TRUE);
             $arr['spreadsheet']=$reader->load($spreadsheetFile);
             $arr['worksheet']=$arr['spreadsheet']->getActiveSheet();
-            $this->oc['logger']->log('info','"{class}&rarr;{function}()" got worksheet "{selectedWorksheet}" from "{basename}"',$context);         
+            $this->oc['logger']->log('info','"{class}→{function}()" got worksheet "{selectedWorksheet}" from "{basename}"',$context);         
         } catch(\Exception $e){
             $context['msg']=$e->getMessage();
-            $this->oc['logger']->log('notice','"{class}&rarr;{function}()" failed to load worksheet "{selectedWorksheet}" from "{basename}": "{msg}"',$context);         
+            $this->oc['logger']->log('notice','"{class}→{function}()" failed to load worksheet "{selectedWorksheet}" from "{basename}": "{msg}"',$context);         
         }
         return $arr;
     }

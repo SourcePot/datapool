@@ -95,14 +95,16 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $startTime=hrtime(TRUE);
             $this->resetStatistic();    
             if ($toDo['action']==='Table optimized'){
-                $sql='OPTIMIZE TABLE `'.$toDo['table'].'`;';
-                $stmt=$this->executeStatement($sql,[]);
-                $vars['OPTIMIZE TABLE'][$toDo['table']]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
-                // update signal
-                $params=['yMin'=>0];
-                $params['description']='Each data point represents a table optimisation. The data value represents the time consumption & the label the table name';
-                $params['label']=$toDo['table'];
-                $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000000),'int',$params);    
+                if ($this->isValidTable($toDo['table']) !== FALSE){
+                    $sql='OPTIMIZE TABLE `'.$toDo['table'].'`;';
+                    $stmt=$this->executeStatement($sql,[]);
+                    $vars['OPTIMIZE TABLE'][$toDo['table']]=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    // update signal
+                    $params=['yMin'=>0];
+                    $params['description']='Each data point represents a table optimisation. The data value represents the time consumption & the label the table name';
+                    $params['label']=$toDo['table'];
+                    $this->oc['SourcePot\Datapool\Foundation\Signals']->updateSignal(__CLASS__,__FUNCTION__,'Time consumption table optimization [ms]',round((hrtime(TRUE)-$startTime)/1000000),'int',$params);    
+                }
             } else if ($toDo['action']==='Table refreshed indices'){
                 $this->dropTableIndices($toDo['table']);
                 $this->setTableIndices($toDo['table']);
@@ -194,6 +196,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             return FALSE;
         }
     }
+
+    public function filterTableName(string $table):string
+    {
+        return preg_replace('/[^a-z]/','',$table);
+    }
     
     public function getEntryTemplate(string|bool $table=FALSE):array|bool
     {
@@ -225,7 +232,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         // check if database table is missing
         if (!isset($GLOBALS['dbInfo'][$table])){
             // create column definition sql
-            $table=preg_replace('/[^a-z]/','',$table);
+            $table=$this->filterTableName($table);
             $columnsDefSql='';
             foreach($entryTemplate as $column=>$colTemplate){
                 if (!empty($columnsDefSql)){
@@ -424,7 +431,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         return $GLOBALS['dbInfo'];
     }
 
-    public function isValidTable(string|NULL $table):bool
+    public function isValidTable(string|NULL|bool $table):bool
     {
         if (empty($table)){
             return FALSE;
@@ -617,9 +624,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     
     public function getRowCount(array $selector,bool $isSystemCall=FALSE,string $rightType='Read',string|bool $orderBy=FALSE,bool $isAsc=TRUE,bool|int|string $limit=FALSE,bool|int|string $offset=FALSE,bool $removeGuideEntries=TRUE,bool $useOR=FALSE):int
     {
-        if (empty($selector['Source'])){
-            return 0;
-        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
+        if ($this->isValidTable($selector['Source']??'') === FALSE){
             return 0;
         }
         $sqlArr=$this->standardSelectQuery($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeGuideEntries,$useOR);
@@ -736,9 +741,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
     public function entryById(array|bool $selector,bool $isSystemCall=FALSE,string $rightType='Read',bool $returnMetaOnNoMatch=FALSE):array
     {
         $result=[];
-        if (empty($selector['Source'])){
-            return $result;
-        } else if ($this->isValidTable($selector['Source']??'') === FALSE){
+        if ($this->isValidTable($selector['Source']??'') === FALSE){
             return $result;
         }
         // get entry
@@ -759,7 +762,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
                 $result=$this->oc['SourcePot\Datapool\Tools\FileContent']->enrichEntry($result);
                 $result=$this->addSelector2result($selector,$result);
             } else {
-                if (!$returnMetaOnNoMatch){$result=[];}
+                if (!$returnMetaOnNoMatch){
+                    $result=[];
+                }
             }
         }
         return $result;
@@ -826,7 +831,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         if ($this->isValidTable($entry['Source']) === FALSE){
             return [];
         } else if (!empty(self::TABLE_UNLOCK_REQUIRED[$entry['Source']]) && empty($entry['unlock'])){
-            $this->oc['logger']->log('warning','{class}&rarr;{function}() called on locked table "{Source}" without setting entry[unlock]=TRUE',$entry+['class'=>__FUNCTION__,'function'=>__FUNCTION__,]);
+            $this->oc['logger']->log('warning','{class}→{function}() called on locked table "{Source}" without setting entry[unlock]=TRUE',$entry+['class'=>__FUNCTION__,'function'=>__FUNCTION__,]);
             return [];
         }
         // complete entry
@@ -874,7 +879,9 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         }
         // get entry list
         $idGroups=$this->selector2idGroups($selector,$isSystemCall,$rightType,$orderBy,$isAsc,$limit,$offset,$removeFile=FALSE);
-        if (empty($idGroups)){return 0;}
+        if (empty($idGroups)){
+            return 0;
+        }
         // prepare update sql string, set values and add sql where clause
         $entryTemplate=$this->getEntryTemplate($selector['Source']);
         $inputs=[];
@@ -1006,7 +1013,7 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
         $context=['class'=>__CLASS__,'function'=>__FUNCTION__,'sourceUpdatedFirst'=>FALSE,'sourceTargetEntryIdMatch'=>FALSE,'copyAttachedFile'=>FALSE,'movedAttachedFile'=>FALSE,'attachedFileProcessed'=>FALSE,'noWriteAccess'=>FALSE];
         // test for required keys and set selector
         if (empty($sourceEntry['Source']) || empty($sourceEntry['EntryId']) || empty($targetSelector)){
-            $this->oc['logger']->log('error','{class} &rarr; {function} called with empty sourceEntry[Source], sourceEntry[EntryId] or targetEntry. Source entry was not moved.',$context);    
+            $this->oc['logger']->log('error','{class} → {function} called with empty sourceEntry[Source], sourceEntry[EntryId] or targetEntry. Source entry was not moved.',$context);    
             return [];
         }
         if ($this->oc['SourcePot\Datapool\Foundation\Access']->access($sourceEntry,'Write',[],$isSystemCall)){
