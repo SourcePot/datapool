@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 final class MiscTools{
 
-    private $oc=NULL;
+    private $oc=[];
 
     private const SERIALIZED_INDICATOR='@@@@';
     private const REGEX_TAG='/<[\/]{0,1}(([a-zA-Z]+)|(!--)|(![)|(![a-zA-Z]+))([^>]*)(--)*>/u';

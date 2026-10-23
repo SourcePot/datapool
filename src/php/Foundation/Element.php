@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Element{
     
-    private $oc;
+    private $oc=[];
     
     const TRANSLATE=[
         'p'=>'element-content|title',

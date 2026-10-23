@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class MediaTools{
 
-    private $oc;
+    private $oc=[];
 
     private const ICON_DEFAULT_SIZE=70;
     private const TMP_FILE_PERMISSIONS=0774;

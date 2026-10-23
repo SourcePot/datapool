@@ -15,7 +15,7 @@ final class FileContent{
     private const COST_TEXT_MAX_LENGTH=50;
     private const DEFAULT_CURRENCY='EUR';
 
-    private $oc;
+    private $oc=[];
     
     private $currencies=[];
     

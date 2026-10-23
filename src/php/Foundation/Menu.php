@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Menu{
     
-    private $oc;
+    private $oc=[];
     
     public const CATEGORIES=[
         'Home'=>['Category'=>'Home','Emoji'=>'&#9750;','Label'=>'Home','Class'=>'SourcePot\Datapool\Components\Home','Name'=>'Home app'],

@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
-    private $oc;
+    private $oc=[];
 
     private const SPLIT_MARKER='__SPLIT__';
 
@@ -65,7 +65,8 @@ class ParseEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $paramsTemplate=['Source column'=>'useValue','Target on success'=>'','Target on failure'=>''];
 
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

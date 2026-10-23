@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Filespace implements \SourcePot\Datapool\Interfaces\Job{
 
-    private $oc;
+    private $oc=[];
     
     const ENV_FILE='env.json';
     private const MAX_AGE=[

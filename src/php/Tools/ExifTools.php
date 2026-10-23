@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class ExifTools{
     
-    private $oc;
+    private $oc=[];
     
     public function __construct(array $oc)
     {

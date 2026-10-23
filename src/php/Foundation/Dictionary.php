@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Dictionary implements \SourcePot\Datapool\Interfaces\App{
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[];

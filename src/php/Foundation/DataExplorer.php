@@ -46,7 +46,7 @@ class DataExplorer implements \SourcePot\Datapool\Interfaces\Job{
         'average<'=>'x < average(x) - a',
     ];
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[

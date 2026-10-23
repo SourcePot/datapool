@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class NetworkTools implements \SourcePot\Datapool\Interfaces\Receiver{
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[

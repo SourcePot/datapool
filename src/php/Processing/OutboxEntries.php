@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
 
     private const CONTENT_STRUCTURE_PARAMS=[
         'Outbox class'=>['method'=>'select','excontainer'=>TRUE,'keep-element-content'=>TRUE,'options'=>[]],
@@ -37,7 +37,8 @@ class OutboxEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $recipientOptions=[];
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

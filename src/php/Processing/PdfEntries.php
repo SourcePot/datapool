@@ -15,7 +15,7 @@ require_once($GLOBALS['dirs']['php'].'Tools/ondemand/PdfDoc.php');
 
 class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
 
     private const CONTENT_STRUCTURE_PARAMS=[
         'Logo source'=>['method'=>'canvasElementSelect','excontainer'=>TRUE],
@@ -94,7 +94,7 @@ class PdfEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
     private $pageSettings=[];
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);

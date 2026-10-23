@@ -18,7 +18,7 @@ class Persistency implements \Psr\SimpleCache\CacheInterface{
     
     public const DEFAULT_TTL='P10Y';    // <-------- adjust for long term persistency
     
-    private $oc;
+    private $oc=[];
 
     private $tmpCallingClassFuntion=[];
 
@@ -30,7 +30,7 @@ class Persistency implements \Psr\SimpleCache\CacheInterface{
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'SYSTEM','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
         ];
                             
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);

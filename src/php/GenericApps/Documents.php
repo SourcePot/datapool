@@ -16,14 +16,14 @@ class Documents implements \SourcePot\Datapool\Interfaces\App,\SourcePot\Datapoo
 
     private const HAYSTACK_RESULT_LIMIT=30;
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[
         'Read'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_MEMBER_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
         ];
 
-    public function __construct($oc){
+    public function __construct(array $oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

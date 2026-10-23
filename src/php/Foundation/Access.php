@@ -14,7 +14,7 @@ class Access{
     
     private const APPLICATION_ID='kjHD1W82IQ9iBS';
     
-    private $oc;
+    private $oc=[];
 
     private $access=[
         'NO_R'=>0,
@@ -34,7 +34,7 @@ class Access{
         'ALL_R'=>65535
     ];
         
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
