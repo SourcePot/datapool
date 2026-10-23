@@ -14,9 +14,10 @@ class Jobs implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
     
-    private $oc;
+    private $oc=[];
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
     }
 

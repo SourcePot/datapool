@@ -14,12 +14,12 @@ class Transmitter implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ALL_CONTENTADMIN_R';
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[];
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->entryTable=$oc['SourcePot\Datapool\Foundation\User']->getEntryTable();
         $this->entryTemplate=$oc['SourcePot\Datapool\Foundation\User']->getEntryTemplate();

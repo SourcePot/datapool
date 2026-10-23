@@ -14,7 +14,7 @@ class Testing implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
     
-    private $oc;
+    private $oc=[];
 
     private $entryTable='';
     private $entryTemplate=[];
