@@ -42,10 +42,11 @@ class Admin implements \SourcePot\Datapool\Interfaces\App{
         'Spatie path to Xpdf pdftotext executable'=>['method'=>'element','tag'=>'input','type'=>'text','placeholder'=>'C:\Program Files\Xpdf\pdftotext.exe','style'=>['min-width'=>'50vw']],
     ];    
 
-    private $oc;
+    private $oc=[];
     private $entryTable='';
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $this->entryTable=$this->oc['SourcePot\Datapool\Foundation\Logger']->getEntryTable();
     }

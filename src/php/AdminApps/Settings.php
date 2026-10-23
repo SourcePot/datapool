@@ -13,7 +13,7 @@ namespace SourcePot\Datapool\AdminApps;
 class Settings implements \SourcePot\Datapool\Interfaces\App{
     
     private const APP_ACCESS='ADMIN_R';
-    private $oc;
+    private $oc=[];
     
     public  const SELECTORS=[
         'Logger errors'=>[
@@ -123,7 +123,7 @@ class Settings implements \SourcePot\Datapool\Interfaces\App{
         'Owner'=>['type'=>'VARCHAR(100)','value'=>'{{Owner}}','Description'=>'This is the Owner\'s EntryId or SYSTEM. The Owner has Read and Write access.']
     ];
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);

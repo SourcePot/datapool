@@ -13,7 +13,7 @@ namespace SourcePot\Datapool;
 	
 mb_internal_encoding("UTF-8");
 
-require_once('../php/Root.php');
+require_once(__DIR__.'/../php/Root.php');
 $pageObj=new Root('index.php');
 $arr=$pageObj->run();
 echo $arr['page html'];

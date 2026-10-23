@@ -552,7 +552,11 @@ class Database implements \SourcePot\Datapool\Interfaces\Job{
             $sqlArr['sql']='';
         } else {
             $sqlArr['sql']=' WHERE ('.$sqlArr['sql'].')';
-            if ($removeGuideEntries){
+        }
+        if ($removeGuideEntries){
+            if (empty($sqlArr['sql'])){
+                $sqlArr['sql']=" WHERE `Type` NOT LIKE '".\SourcePot\Datapool\Root::GUIDEINDICATOR."%'";
+            } else {
                 $sqlArr['sql'].=" AND `Type` NOT LIKE '".\SourcePot\Datapool\Root::GUIDEINDICATOR."%'";
             }
         }

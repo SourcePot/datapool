@@ -275,7 +275,7 @@ class Container{
             if ($newContent){
                 $anyUpdate=TRUE;
                 $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->updateEntry($entry,TRUE);
-                $success=file_put_contents($fileName,$fileContent?:$mdTemplate);
+                $success=file_put_contents($fileName,$fileContent??$mdTemplate);
                 $info=(boolval($success??FALSE))?('updated'):('failed');
             } else {
                 $info='skipped';
