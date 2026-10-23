@@ -136,7 +136,7 @@ class Computations{
 
     private $oc=[];
 
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
     }

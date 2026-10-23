@@ -64,7 +64,7 @@ class Backbone{
         'js'=>['tag'=>'script','element-content'=>'','srcAttr'=>'src'],
     ];
     
-    private $oc=NULL;
+    private $oc=[];
 
     private $webPageStyleSheet;
     

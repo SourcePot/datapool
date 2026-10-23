@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
 
-    private $oc;
+    private $oc=[];
 
     private const INFO_MATRIX=[
         'Headline'=>['Value'=>'<b>This processor merges entries into one or multiple target entries.</b>'],
@@ -55,7 +55,8 @@ class MergeEntries implements \SourcePot\Datapool\Interfaces\Processor{
     private $entryTemplate=[];
     private $caches=[];
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

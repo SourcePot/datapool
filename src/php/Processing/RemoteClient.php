@@ -31,13 +31,13 @@ class RemoteClient implements \SourcePot\Datapool\Interfaces\Processor,\SourcePo
 
     private const ONEDIMSEPARATOR='||';
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[
     ];
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);

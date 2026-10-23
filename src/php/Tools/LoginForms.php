@@ -14,7 +14,7 @@ class LoginForms{
 
     private const MIN_PSW_LENGTH=6;
     
-    private $oc;
+    private $oc=[];
 
     private $formType=0;
     

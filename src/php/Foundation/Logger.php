@@ -18,7 +18,7 @@ class Logger implements \SourcePot\Datapool\Interfaces\Job{
 
     private const MAX_DEBUG_FILE_COUNT=200;
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[];

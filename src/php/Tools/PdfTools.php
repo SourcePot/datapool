@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class PdfTools{
 
-    private $oc;
+    private $oc=[];
 
     private $pageSettings=[];
     

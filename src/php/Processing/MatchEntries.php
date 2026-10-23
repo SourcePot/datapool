@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
 
     private const MAX_TABLE_LENGTH=50;
     
@@ -43,7 +43,8 @@ class MatchEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

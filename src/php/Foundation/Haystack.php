@@ -16,7 +16,7 @@ class Haystack implements \SourcePot\Datapool\Interfaces\HomeApp{
 
     private const MAX_HEIGHT_RESULTS='55vh';
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[];

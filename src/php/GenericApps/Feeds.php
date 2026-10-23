@@ -87,7 +87,7 @@ class Feeds implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
     private $urlSelector=[];
     private $currentUrlEntryContent=[];
 
-    public function __construct($oc){
+    public function __construct(array $oc){
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

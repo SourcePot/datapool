@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Tools;
 
 class GeoTools{
 
-    private $oc;
+    private $oc=[];
 
     private const INIT_MAP_LOCATION='48.1520963,11.5111696,4';   // lat,lon,zoom
     private const MAX_LOCATION_AGE=120;

@@ -19,7 +19,7 @@ class Legal implements \SourcePot\Datapool\Interfaces\HomeApp{
     const DATA_PROTECTION_TEMPLATE="\n\n##Datenschutz\n\nDie Nutzung dieser Webseite ohne Registrierung ist mit Ausnahme des Kontaktformulars ohne Angabe personenbezogener Daten möglich. Soweit auf dieser Webseite personenbezogene Daten (beispielsweise Name, Anschrift oder E-Mail-Adressen) erhoben werden, erfolgt dies, soweit möglich, auf freiwilliger Basis. Diese Daten werden ohne Ihre ausdrückliche Zustimmung nicht an Dritte weitergegeben. Generell kann die Datenübertragung in Netzwerken und insbesondere im Internet unter anderem auch die Kommunikation per E-Mail Sicherheitslücken aufweisen. Ein lückenloser Schutz der Daten vor dem Zugriff durch Dritte ist unmöglich. Der Nutzung von im Rahmen der Impressumspflicht veröffentlichten Kontaktdaten durch Dritte zur Übersendung von nicht ausdrücklich angeforderter Werbung und Informationsmaterialien wird hiermit ausdrücklich widersprochen. Die Betreiber dieser Webseite behält sich ausdrücklich rechtliche Schritte im Falle der unverlangten Zusendung von Werbeinformationen vor.";
     const CONTACT_TEMPLATE="<img src=\"./assets/helen.jpg\" class=\"icon\"/>\n\nVorname Nachname\nStraße Hausnummer\nPLZ Ort\nLand\n\n##Vertreten durch:\n\nVorname Nachname\n\n##Umsatzsteuer-Identifikationsnummer gemäß §27a Umsatzsteuergesetz:\n\nGemäß § 19 Abs. 1 UStG nicht umsatzsteuerpflichtig.\n\n##Wirtschafts-ID:\n\n-\n\n##Aufsichtsbehörde:\n\n-";
 
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[

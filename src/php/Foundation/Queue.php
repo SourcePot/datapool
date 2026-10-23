@@ -14,7 +14,7 @@ class Queue implements \SourcePot\Datapool\Interfaces\Job{
 
     public const ID_STORE_ENTRYID_LIFETIME=604800;
     
-    private $oc;
+    private $oc=[];
     
     private $entryTable='';
     private $entryTemplate=[];

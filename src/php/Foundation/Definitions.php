@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Foundation;
 
 class Definitions{
     
-    private $oc;
+    private $oc=[];
     private $definition=[];
     
     public function __construct($oc)

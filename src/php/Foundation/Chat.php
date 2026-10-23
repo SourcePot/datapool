@@ -14,7 +14,7 @@ class Chat implements \SourcePot\Datapool\Interfaces\HomeApp{
     
     private const Expires='P30D';
     
-    private $oc;
+    private $oc=[];
 
     private $entryTable='';
     private $entryTemplate=[];

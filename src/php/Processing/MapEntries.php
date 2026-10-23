@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
     
     private const CONTENT_STRUCTURE_PARAMS=[
         'Keep source entries'=>['method'=>'select','excontainer'=>TRUE,'value'=>1,'options'=>[0=>'No, move entries',1=>'Yes, copy entries']],
@@ -39,7 +39,8 @@ class MapEntries implements \SourcePot\Datapool\Interfaces\Processor{
         'Write'=>['type'=>'SMALLINT UNSIGNED','value'=>'ALL_CONTENTADMIN_R','Description'=>'This is the entry specific Read access setting. It is a bit-array.'],
     ];
         
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));

@@ -14,7 +14,7 @@ use DateTime;
 
 class Money implements \SourcePot\Datapool\Interfaces\Job{
     
-    private $oc;
+    private $oc=[];
         
     private $entryTable='';
     private $entryTemplate=[];

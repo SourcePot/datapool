@@ -12,7 +12,7 @@ namespace SourcePot\Datapool\Processing;
 
 class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
     
-    private $oc;
+    private $oc=[];
     
     private const INFO_MATRIX=[
         'Caption'=>['Comment'=>'<b>External program execution</b>'],
@@ -114,7 +114,8 @@ class SystemProcessor implements \SourcePot\Datapool\Interfaces\Processor{
 
     private $placeholder=[];
     
-    public function __construct($oc){
+    public function __construct(array $oc)
+    {
         $this->oc=$oc;
         $table=str_replace(__NAMESPACE__,'',__CLASS__);
         $this->entryTable=mb_strtolower(trim($table,'\\'));
