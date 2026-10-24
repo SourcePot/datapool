@@ -122,6 +122,9 @@ class Container{
             $_SESSION['container store'][$containerId]['wrapperSettings']=$wrapperSettings;
             $this->containerMonitor($containerId,$selector);
         }
+        if (!method_exists($this,strval($function))){
+            return 'Container method "'.strval($function).'" missing...';
+        }
         $html='<div busy-id="busy-'.$containerId.'" class="container-busy"></div>';
         $return=$this->$function($_SESSION['container store'][$containerId]);
         if (empty($return['html'])){
@@ -155,7 +158,7 @@ class Container{
         return $html;
     }
 
-    private function containerMonitor($containerId,$registerSelector=FALSE):bool
+    private function containerMonitor(string $containerId,$registerSelector=FALSE):bool
     {
         if ($registerSelector===FALSE){
             // check if data selected by registered selector for the selected container has changed
