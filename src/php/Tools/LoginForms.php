@@ -17,6 +17,7 @@ class LoginForms{
     private $oc=[];
 
     private $formType=0;
+    private $userRegistrationEnabled=FALSE;
     
     private $digits=[
         ['key'=>'a','sizeScaler'=>1,'font'=>'OpenSansLight.ttf','symbol'=>'?','description'=>'Question mark'],
@@ -59,6 +60,7 @@ class LoginForms{
     public function init()
     {
         $this->formType=intval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('loginForm'));
+        $this->userRegistrationEnabled=boolval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('New users account registration'));
     }
     
     public function getOneTimePswArr():array
@@ -124,7 +126,9 @@ class LoginForms{
             $matrix['Email']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($email);
             $matrix['Passphrase']=['Value'=>$passphrase];
             $matrix['Btns']['Value']=$this->oc['SourcePot\Datapool\Foundation\Element']->element($loginBtn);
-            $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
+            if ($this->userRegistrationEnabled){
+                $matrix['Btns']['Value'].=$this->oc['SourcePot\Datapool\Foundation\Element']->element($registerBtn);
+            }
             $matrix['Recover']=['Value'=>$loginLinkBtn];
         }
         $matrix['Btns']['trStyle']=['height'=>'3em'];

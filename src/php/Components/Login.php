@@ -16,11 +16,12 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     private const FAILED_LOGIN_DETECTION_TIMESPAN=300; // seconds
     private const FAILED_LOGIN_COUNT_THRESHOLD=3; // number of failed login attempts within the time span
     
-    private $oc;
+    private $oc=[];
+    private $userRegistrationEnabled=FALSE;
     
     const MIN_PASSPHRASDE_LENGTH=5;
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
@@ -30,6 +31,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         $this->oc=$oc;
     }
 
+    public function init()
+    {
+        $this->userRegistrationEnabled=boolval($this->oc['SourcePot\Datapool\Foundation\Backbone']->getSettings('New users account registration'));
+    }
+    
     public function run(array|bool $arr=TRUE):array
     {
         if ($arr===TRUE){
@@ -75,7 +81,11 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         if (strcmp($loginArr['result']['cmd'],'Login')===0){
             $this->loginRequest($loginArr['result']);
         } else if (strcmp($loginArr['result']['cmd'],'Register')===0){
-            $this->registerRequest($loginArr['result']);
+            if ($this->userRegistrationEnabled){
+                $this->registerRequest($loginArr['result']);
+            } else {
+                $this->oc['logger']->log('notice','The administrator has currently disabled new user registration.',['lifetime'=>'P1D']);            
+            }
         } else if (strcmp($loginArr['result']['cmd'],'pswRequest')===0){
             $this->pswRequest($loginArr['result']);
         } else if (strcmp($loginArr['result']['cmd'],'Update')===0){
@@ -129,7 +139,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         exit;
     }
     
-    private function loginSuccess($user,$email)
+    private function loginSuccess(array $user,string $email)
     {
         $this->resetSession();
         $this->oc['SourcePot\Datapool\Cookies\Cookies']->setSettingsCookie('UserId',$user['EntryId']);
@@ -149,7 +159,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         exit;
     }
 
-    private function loginFailed($user,$email)
+    private function loginFailed(array $user,string $email)
     {
         $_SESSION['currentUser']=[];
         $this->oc['SourcePot\Datapool\Root']->updateCurrentUser();
@@ -168,7 +178,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     *   Register user request
     */
     
-    private function registerRequest($arr)
+    private function registerRequest(array $arr)
     {
         $err=FALSE;
         if (empty($arr['Passphrase']) || empty($arr['Email'])){
@@ -201,7 +211,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     *   User password update request
     */
     
-    private function updateRequest($arr)
+    private function updateRequest(array $arr)
     {
         $user=[
             'Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),
@@ -225,7 +235,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
     *   User one-time password request
     */
     
-    private function pswRequest($arr)
+    private function pswRequest(array $arr)
     {
         // check if email is valid
         if (empty($arr['Email'])){
@@ -245,7 +255,7 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         exit;
     }
     
-    private function sendOneTimePsw($email,$user):bool
+    private function sendOneTimePsw(string $email,array $user):bool
     {
         if ($this->getOneTimeEntry($email)){
             $this->oc['logger']->log('notice','Nothing was sent. Please use the password you have already received before.',['lifetime'=>'P30D','email'=>$email]);    
@@ -280,19 +290,19 @@ class Login implements \SourcePot\Datapool\Interfaces\App{
         }
     }
 
-    private function getOneTimeEntryEntryId($email):string
+    private function getOneTimeEntryEntryId(string $email):string
     {
         return $this->oc['SourcePot\Datapool\Foundation\Access']->emailId($email).'-oneTimeLink';
     }
 
-    private function getOneTimeEntry($email)
+    private function getOneTimeEntry(string $email)
     {
         $entry=['Source'=>$this->oc['SourcePot\Datapool\Foundation\User']->getEntryTable(),'EntryId'=>$this->getOneTimeEntryEntryId($email),];
         $entry=$this->oc['SourcePot\Datapool\Foundation\Database']->entryById($entry,TRUE);
         return $entry;
     }
 
-    private function tooManyLoginAttempts($email):bool
+    private function tooManyLoginAttempts(string $email):bool
     {
         $selector=['Source'=>'logger','Content'=>'%Login failed %'.$email.'%'];
         $selector['Date>']=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getDateTime('@'.(time()-self::FAILED_LOGIN_DETECTION_TIMESPAN));

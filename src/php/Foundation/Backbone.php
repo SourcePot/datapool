@@ -66,19 +66,22 @@ class Backbone{
     
     private $oc=[];
 
-    private $webPageStyleSheet;
+    private $webPageStyleSheet=self::DEFAULT_STYLESHEET;
     
     private $settings=[
+        'charset'=>'utf-8',
         'pageTitle'=>'Datapool',
         'metaViewport'=>'width=device-width, initial-scale=1',
         'metaDescription'=>'Light weight web application',
         'metaRobots'=>'index',
-        'loginForm'=>0,
-        'logLevel'=>'monitoring',
         'homePageContent'=>'video',
-        'charset'=>'utf-8',
+        'logLevel'=>'monitoring',
         'emailWebmaster'=>'admin@datapool.info',
-        'path to Xpdf pdftotext executable'=>'',
+        'emailJob'=>'job@datapool.info',
+        'loginForm'=>0,
+        'Two-factor authentication'=>0,
+        'New users account registration'=>1,
+        'Spatie path to Xpdf pdftotext executable'=>'',
     ];
     
     public function __construct(array $oc)
@@ -105,7 +108,9 @@ class Backbone{
     public function init():void
     {
         $this->styleClassSelectorCmdProcessing();
-        $this->webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style');
+        if ($webPageStyleSheet=$this->oc['SourcePot\Datapool\Cookies\Cookies']->getSettingsCookieValue('Web page style')){
+            $this->webPageStyleSheet=$webPageStyleSheet;
+        }
         // add placeholder
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{pageTitle}}',$this->settings['pageTitle']);
         $this->oc['SourcePot\Datapool\Root']->addPlaceholder('{{TIMEZONE-USER}}',\SourcePot\Datapool\Root::getUserTimezone());
@@ -180,7 +185,7 @@ class Backbone{
             if (!isset(self::HEADER_FILES_TEMPLATES[$fileArr['extension']])){
                 continue;
             }
-            if ($fileArr['extension']==='css' && strpos($fileArr['filename'],'main')===0 && $fileArr['filename']!==($this->webPageStyleSheet?:self::DEFAULT_STYLESHEET)){
+            if ($fileArr['extension']==='css' && strpos($fileArr['filename'],'main')===0 && $fileArr['filename']!==$this->webPageStyleSheet){
                 continue;
             }
             // add file to header
