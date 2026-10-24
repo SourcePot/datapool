@@ -14,9 +14,9 @@ class Logout implements \SourcePot\Datapool\Interfaces\App{
 
     private const APP_ACCESS='ALL_REGISTERED_R';
     
-    private $oc;
+    private $oc=[];
     
-    public function __construct($oc)
+    public function __construct(array $oc)
     {
         $this->oc=$oc;
     }
