@@ -653,7 +653,7 @@ class Email implements \SourcePot\Datapool\Interfaces\Job,\SourcePot\Datapool\In
         $checkEL=['tag'=>'p','element-content'=>$problemStr,'class'=>'contact-form'];
         $btnDivHtml=$this->oc['SourcePot\Datapool\Tools\HTMLbuilder']->element($checkEL);
         if (empty($problemStr)){
-            $btnEL=['tag'=>'input','type'=>'submit','value'=>'Send','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['send']];
+            $btnEL=['tag'=>'input','type'=>'submit','value'=>'Send','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['send'],'style'=>['background-color'=>'var(--greenH)','color'=>'var(--bgColor)']];
         } else {
             $btnEL=['tag'=>'input','type'=>'submit','value'=>'Check','class'=>'contact-form','callingClass'=>$arr['callingClass'],'callingFunction'=>$arr['callingFunction'],'key'=>['check']];
         }
