@@ -766,7 +766,7 @@ final class MiscTools{
         $maxColumnCount=0;
         foreach($this->arr2flat($arr) as $flatKey=>$value){
             if (is_string($value)){
-                $value=htmlspecialchars(strip_tags($value),ENT_QUOTES,'UTF-8');  // prevent XSS atacks
+                $value=htmlspecialchars(strip_tags($value), ENT_NOQUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', /*double_encode*/false);  // prevent XSS atacks
             }
             $columns=explode($S,strval($flatKey));
             $columnCount=count($columns);

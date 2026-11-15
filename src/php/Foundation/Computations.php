@@ -160,8 +160,14 @@ class Computations{
     * Array operations
     */
 
-    public function add2combineCache(string $combineOperation,string $column,string $key,$value, string $groupingColumnValue='',string $dataType='')
+    public function add2combineCache(string $combineOperation,string $column,string $key,$value, string $groupingColumnValue='',string $dataType=''):bool
     {
+        if (($value['isValid']??TRUE)===FALSE){
+            $this->oc['logger']->log('notice','Invalid value skipped: "{column}[{key}]": {error}',['column'=>$column,'key'=>$key,'error'=>$value['Error']??'']);
+            return False;
+        } else if (!empty($value['Warning'])){
+            $this->oc['logger']->log('info','Warning for value "{column}[{key}]": {warning}',['column'=>$column,'key'=>$key,'warning'=>$value['Warning']]);
+        }
         $cacheIdStr=$combineOperation.$column.$groupingColumnValue;
         $cacheIdStr.=(empty(self::ARR_COLUMNS[$column]))?'':$key;
         $cachId=$this->oc['SourcePot\Datapool\Tools\MiscTools']->getHash($cacheIdStr,TRUE);
@@ -181,22 +187,20 @@ class Computations{
                 $this->combineCache[$cachId]['__VALUES__'][$key]=$value;
             }
         }
+        return TRUE;
     }
 
     public function adjustDatatypeBasedOnOperation($value,string $combineOperation)
     {
+        $scalarValue=$this->arr2value($value);
         if (stripos($combineOperation,'float')!==FALSE){
-            $value=$this->arr2value($value);
-            $value=floatval($value);
+            $value=floatval($scalarValue);
         } else if (stripos($combineOperation,'int')!==FALSE || stripos($combineOperation,'byte')!==FALSE){
-            $value=$this->arr2value($value);
-            $value=intval(round(floatval($value)));
+            $value=intval(round(floatval($scalarValue)));
         } else if (stripos($combineOperation,'string')!==FALSE){
-            $value=$this->arr2value($value);
-            $value=strval($value);
+            $value=strval($scalarValue);
         } else if (stripos($combineOperation,'bool')!==FALSE){
-            $value=$this->arr2value($value);
-            $value=!empty($value);
+            $value=!empty($scalarValue);
         }
         return $value;
     }
