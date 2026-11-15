@@ -18,15 +18,15 @@
         "tecnickcom/tc-lib-pdf":"^8.22.0",
         "directorytree/imapengine":"^v1.15.5",
         "phpmailer/phpmailer": "^6.10.0",
-        "sourcepot/php-ole-msg-parser":">=v1.2.0",
+        "sourcepot/php-ole-msg-parser":">=v1.3.1",
         "sourcepot/ops":">=v1.3.0",
         "sourcepot/mediaplayer":">=v4.3.1",
-        "sourcepot/sms":">=v2.4.3",
-        "sourcepot/checkentries":">=v1.5.0",
+        "sourcepot/sms":">=v2.4.4",
+        "sourcepot/checkentries":">=v1.6.0",
         "sourcepot/statistic":">=v1.1.0",
         "sourcepot/bankholidays":">=v2.2.0",
-        "sourcepot/asset":">=v2.7.0",
-        "sourcepot/match":">=v1.7.1"
+        "sourcepot/asset":">=v2.8.0",
+        "sourcepot/match":">=v1.7.2"
     },
     "autoload":{
         "psr-4":{
