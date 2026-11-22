@@ -3,10 +3,14 @@
 Datapool is a versatile modular web application.
 
 ## Advantages of a web application in contrast to a desktop application
-- Runs on a wide range of devices, the web browser is the runtime environment
+- Self-hosted and fully open source
+- Runs on standard, widely available infrastructure, the web browser is the runtime environment
 - The user interface is always up-to-date thanks to the use of HTML as the living standard (less use of JavaScript) and modern web browsers
 - Simple interaction with other web services
 - Established infrastructures available for data backup
+- Rich built-in feature set (calendar, chat, RSS, media player, sensor integration)
+- Extensible architecture
+- Active development over many years
 
 ## Basic features
 - Media-/File-Explorer: structured data and file storage based on selectors Group, Folder, Name, EntryId
@@ -23,7 +27,17 @@ Datapool is a versatile modular web application.
 # Use cases
 The two typical use cases are process-driven data processing and a content management system. The functionality of complex spreadsheets can alternatively be easily implemented as a process data flow. Easily accessible intermediate results help to maintain an overview and to find and fix problems.
 
-![Home app](/assets/img/datapool.png "Home app")
+## Example Use Cases in Production
+ 
+1. **Invoice Parsing at Scale**
+   - Parsing **1,200+ PDF invoices per month**, consistently, for years
+   - Matching invoices with corresponding patent files
+   - Generating import files for **UNYCOM** (IP management system)
+2. **Multi-Currency Handling**
+   - For non-EUR invoices, the actual EUR value is fetched from **SAP**
+   - EUR values are appended to UNYCOM cost data
+3. **Patent Data Consistency Checks**
+   - Datapool is used for consistency validation of patent data
 
 ## Process-driven data processing - DataExplorer
 - Data sources can be media-files, pdf-documents, spreadsheet-files either uploaded manually or downloaded from an email inbox
@@ -140,6 +154,12 @@ In the _“examples”_ directory of this repository, you will find the file _�
 Any “dump file” can be imported this way, including backups of DataApps.
 
 # Under the Hood
+ 
+- Built around an **object collection** (`oc`) pattern — PHP class instances wired together at startup via `Root.php`
+- Object instantiation order controlled by `objectList.csv`
+- Extensible via interfaces for custom apps, processors, receivers, and transmitters
+- Processes can be exported/imported between Datapool instances
+
 Datapool is based on an **object collection** `oc`, i.e. a collection of objects instantiated from the PHP-classes of the `../php/` folder. The object collection is created by the constructor of class `../php/Root.php` each time the web application is called by a client e.g. web browser.
 `../php/Root.php` provides the collection to all instantiated classes which implement the method `loadOc(array $oc)`. Typically the classes have a private property `oc` which is set/updated by the loadOc method of the class.
 
